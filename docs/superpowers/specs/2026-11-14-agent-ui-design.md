@@ -527,12 +527,12 @@ Styled React and Web Components ship as copy-in shadcn registry items from this 
 - `registry/catalog.mjs` lists every item. `scripts/build-registry.mjs` reads it, stages item files, and runs a pinned `shadcn` CLI `build` executed ephemerally (not added to the dependency tree), writing the flat served catalog (`registry.json`) and per-item payloads (`<name>.json`) to `artifacts/registry/r/`.
 - Item names are `<component>` for React and `<component>-web` for Web Components (for example `composer` and `composer-web`), with no product prefix. Consumers address them through the registry namespace (for example `@kind-ui/composer`).
 - Internal general components ship as hidden `internal-<name>` items (for example `internal-button`), referenced through `registryDependencies` and excluded from docs listings.
-- The build fails if an item name collides with another item in the same namespace. If the namespace is shared with charts (§13), this check covers charts' published item names too.
+- Item names must be unique across the shared `@kind-ui` namespace, which also holds charts' items (§9.6). The build fails on duplicate names within this catalog; the release and the kindui.dev deployment fail on collisions with charts' items.
 - Item files are copied byte-for-byte from `packages/agent-ui/src/react/` or `packages/agent-ui/src/web/`. The build fails if a staged file differs from its source.
 - Items pin `@kind-ui/agent-ui`, `@ui-sdk/core`, and `@ui-sdk/react` or `@ui-sdk/web` to exact versions. The build fails when the catalog's `@kind-ui/agent-ui` version differs from `packages/agent-ui/package.json`, or when an item's `@ui-sdk/*` version differs from the package's `@ui-sdk/core` pin.
 - The item `css` field registers `@kind-ui/agent-ui/styles.css` (theme tokens and Tailwind v4 source registration) for the standard `src/`, `app/`, and `src/app/` stylesheet locations. Consumers with other layouts import it from their own stylesheet. Existing consumer theme variables remain authoritative.
 - Catalog file entries omit `content`; item payloads include source content. The catalog conforms to the official shadcn registry schema.
-- The build produces deployable output only. Deployment and shadcn directory submission are not part of any build or check; they depend on the hosting decision in §13.
+- The build output is served from kindui.dev as described in §9.6. Submitting the namespace to the shadcn directory is not part of any build or check.
 
 ### 9.3 Changesets and release workflow
 
@@ -560,7 +560,23 @@ All jobs run on every change; this repository has one product, so there is no pa
 
 ### 9.5 Docs site
 
-`apps/docs` gains one reference page per component covering exports, options, state ownership, callbacks, errors, keyboard behavior, agent actions, tested versions, and runnable React and Web Components examples, plus one showcase page per wave. Pages ship in the same wave as their components. The site's build is `npm run build:docs`; its deployment depends on §13.
+`apps/docs` gains one reference page per component covering exports, options, state ownership, callbacks, errors, keyboard behavior, agent actions, tested versions, and runnable React and Web Components examples, plus one showcase page per wave. Pages ship in the same wave as their components. The site's build is `npm run build:docs`, with base path `/agent-ui/`; it is served as described in §9.6.
+
+### 9.6 Hosting
+
+Decision: the docs site and registry are served from kindui.dev, and the registry shares the existing `@kind-ui` shadcn namespace with charts.
+
+| Output | Built by | Served at |
+| --- | --- | --- |
+| Docs site | `npm run build:docs` (base path `/agent-ui/`) | `https://kindui.dev/agent-ui/` |
+| Registry items | `npm run build:registry` → `artifacts/registry/r/<name>.json` | `https://kindui.dev/r/<name>.json`, beside charts' items |
+| Registry catalog | `npm run build:registry` → `artifacts/registry/r/registry.json` | Merged with charts' items into the single `https://kindui.dev/r/registry.json` |
+
+Consumers install with the existing namespace, for example `npx shadcn@latest add @kind-ui/composer`.
+
+- **Handoff.** After a successful publish, the release workflow (§9.3) builds the docs site and registry from the released commit and attaches them as one `agent-ui-site-<version>.tar.gz` asset, with its SHA-256, to the GitHub release. The served docs and registry therefore always match a published npm version.
+- **Deployment.** The kindui.dev deployment is owned by kind-ui/charts. It downloads the asset from the latest kind-ui/agent-ui GitHub release, verifies the checksum, serves the docs under `/agent-ui/`, copies item payloads into `/r/`, and merges both catalogs into one `registry.json`. Making that change to the kindui.dev deployment is a task in kind-ui/charts, required before the 0.1 release.
+- **Collisions.** The release workflow's validate job fetches `https://kindui.dev/r/registry.json` and fails if any agent-ui item name matches a live catalog item that is not listed in the previous agent-ui release's catalog, meaning a charts item. The kindui.dev deployment also fails on duplicate names when merging. Neither repository silently overwrites the other's items.
 
 ## 10. Testing
 
@@ -598,4 +614,4 @@ Tests use fixtures and explicitly resolved deferred promises; no live services a
 
 ## 13. Open questions
 
-1. **Registry and docs hosting.** Where are the agent-ui registry and docs site served? Options: (a) under `kindui.dev`, sharing the existing `@kind-ui` shadcn namespace (`https://kindui.dev/r/{name}.json`) with charts, which requires the kindui.dev deployment to serve this repository's `artifacts/registry/r/` output alongside charts' items; or (b) a separate host with its own namespace. This must be decided before the 0.1 release. Until then, builds produce host-independent output and no deployment workflow exists.
+None. Registry and docs hosting, formerly open, is decided in §9.6.
