@@ -1,5 +1,5 @@
 import { animateIn, animateOut } from "@ui-sdk/core";
-import { type AnimationPlaybackControls, animate, type DOMKeyframesDefinition, stagger } from "motion";
+import { type AnimationPlaybackControls, animate, type DOMKeyframesDefinition, frame, stagger } from "motion";
 import {
   DOT_FLOW,
   type Frame,
@@ -27,19 +27,22 @@ export interface MotionOptions {
 
 interface Run {
   controls: AnimationPlaybackControls;
+  /** CSS properties the run animates, held at their current values when it is interrupted. */
+  properties: string[];
   /** Ends the run's promise: resolves an enter or layout, rejects an exit with `AbortError`. */
   interrupt: () => void;
 }
 
-// motion replaces a running animation of the same property, so presets move with `translate`,
-// layout with `transform`, and layout runs are tracked apart from enter and exit.
+// motion replaces a running animation of the same property, so presets move with `transform`, which
+// stays on the compositor, and layout with the `translate` and `scale` properties, tracked apart.
 const running = new WeakMap<HTMLElement, Run>();
 const layouts = new WeakMap<HTMLElement, Run>();
 const presence = new WeakMap<HTMLElement, () => void>();
 const exits = new WeakMap<HTMLElement, Promise<void>>();
 const loops = new WeakMap<HTMLElement, AnimationPlaybackControls>();
 
-const ANIMATED = ["opacity", "translate", "height", "overflow"] as const;
+const ANIMATED = ["opacity", "transform", "height", "overflow"] as const;
+const LAYOUT = ["translate", "scale", "transform-origin"] as const;
 
 function prefersReduced(): boolean {
   return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -49,21 +52,28 @@ function modeOf(options: MotionOptions | undefined): ResolvedMotion {
   return resolveMotion(options?.motion ?? "auto", prefersReduced());
 }
 
-/** Stops the run tracked for `el` at its current value. Returns whether there was one. */
-function stop(runs: WeakMap<HTMLElement, Run>, el: HTMLElement): boolean {
+/**
+ * Cancels the run tracked for `el`; with `hold`, its properties stay inline at their current values.
+ * motion's `stop()` would commit them a frame later, over whatever runs next.
+ */
+function stop(runs: WeakMap<HTMLElement, Run>, el: HTMLElement, hold: boolean): boolean {
   const run = runs.get(el);
+  if (!run) return false;
   runs.delete(el);
-  run?.controls.stop();
-  run?.interrupt();
-  return run !== undefined;
+  const style = getComputedStyle(el);
+  const held = hold ? run.properties.map((name) => [name, style.getPropertyValue(name)] as const) : [];
+  run.controls.cancel();
+  for (const [property, value] of held) el.style.setProperty(property, value);
+  run.interrupt();
+  return true;
 }
 
-/** Stops an enter or exit, and its presence, at the current value. Returns whether one was running. */
-function interrupt(el: HTMLElement): boolean {
+/** Stops an enter or exit, and its presence. Returns whether one was running. */
+function interrupt(el: HTMLElement, hold: boolean): boolean {
   exits.delete(el);
   presence.get(el)?.();
   presence.delete(el);
-  return stop(running, el);
+  return stop(running, el, hold);
 }
 
 function stopLoop(el: HTMLElement): void {
@@ -72,8 +82,8 @@ function stopLoop(el: HTMLElement): void {
   for (const dot of el.querySelectorAll<HTMLElement>(DOT_FLOW.selector)) dot.style.removeProperty("opacity");
 }
 
-function clearStyles(el: HTMLElement): void {
-  for (const property of ANIMATED) el.style.removeProperty(property);
+function clearStyles(el: HTMLElement, properties: readonly string[] = ANIMATED): void {
+  for (const property of properties) el.style.removeProperty(property);
 }
 
 // `scrollHeight` covers content and padding only; the `height` it becomes depends on `box-sizing`.
@@ -109,34 +119,42 @@ function definitionFor(
     definition[key] = [start, value];
   }
   if (preset === "expand" && mode === "full") {
-    const height = `${el.getBoundingClientRect().height}px`;
+    const height = getComputedStyle(el).height;
     el.style.overflow = "hidden";
     definition.height = [fromCurrent ? height : "0px", direction === "in" ? naturalHeight(el) : "0px"];
   }
   return definition as DOMKeyframesDefinition;
 }
 
-/** Runs `definition` on `el` and tracks it. Resolves `true` when it finishes, `false` when interrupted. */
-function run(
+/** Tracks `controls` for `el`. Resolves `true` when it finishes, `false` when interrupted. */
+function track(
   el: HTMLElement,
-  definition: DOMKeyframesDefinition,
-  mode: "full" | "reduced",
-  runs = running,
+  controls: AnimationPlaybackControls,
+  properties: string[],
+  runs: WeakMap<HTMLElement, Run>,
 ): Promise<boolean> {
-  const transition = mode === "full" ? SPRING : { duration: DURATION.reduced, ease: EASE.out };
   return new Promise((resolve) => {
-    const controls = animate(el, definition, transition);
-    const entry: Run = { controls, interrupt: () => resolve(false) };
+    const entry: Run = { controls, properties, interrupt: () => resolve(false) };
     runs.set(el, entry);
     controls.finished.then(
       () => {
         if (runs.get(el) !== entry) return;
         runs.delete(el);
-        resolve(true);
+        // motion writes the end value in its next render step; resolving after it lets cleanup win.
+        frame.render(() => resolve(true));
       },
       () => resolve(false),
     );
   });
+}
+
+function run(
+  el: HTMLElement,
+  definition: DOMKeyframesDefinition,
+  mode: "full" | "reduced",
+): Promise<boolean> {
+  const transition = mode === "full" ? SPRING : { duration: DURATION.reduced, ease: EASE.out };
+  return track(el, animate(el, definition, transition), Object.keys(definition), running);
 }
 
 function startLoop(el: HTMLElement): void {
@@ -165,7 +183,7 @@ function startLoop(el: HTMLElement): void {
  */
 export function enter(el: HTMLElement, preset: MotionPreset, options?: MotionOptions): Promise<void> {
   const mode = modeOf(options);
-  const reversing = interrupt(el);
+  const reversing = interrupt(el, mode !== "none");
   if (preset === "dot-flow") stopLoop(el);
   if (mode === "none") {
     clearStyles(el);
@@ -189,9 +207,10 @@ export function exit(el: HTMLElement, preset: MotionPreset, options?: MotionOpti
   const pending = exits.get(el);
   if (pending) return pending;
   const mode = modeOf(options);
-  const fromCurrent = interrupt(el);
+  const fromCurrent = interrupt(el, mode !== "none");
   if (mode === "none") {
     stopLoop(el);
+    clearStyles(el);
     el.style.opacity = "0";
     return Promise.resolve();
   }
@@ -216,12 +235,13 @@ export function exit(el: HTMLElement, preset: MotionPreset, options?: MotionOpti
 
 /**
  * FLIP: animates `el` from `measureBefore` (its `getBoundingClientRect()` before the change) to
- * where it is now. Reduced motion and `"none"` apply the new layout at once, with no translate or scale.
+ * where it is now, on the `translate` and `scale` properties, so it runs alongside `enter` and `exit`.
+ * Reduced motion and `"none"` apply the new layout at once, with no translate or scale.
  */
 export function layout(el: HTMLElement, measureBefore: DOMRect, options?: MotionOptions): Promise<void> {
   const mode = modeOf(options);
-  stop(layouts, el);
-  el.style.removeProperty("transform");
+  stop(layouts, el, false);
+  clearStyles(el, LAYOUT);
   if (mode !== "full") return Promise.resolve();
   const after = el.getBoundingClientRect();
   const dx = measureBefore.left - after.left;
@@ -230,10 +250,14 @@ export function layout(el: HTMLElement, measureBefore: DOMRect, options?: Motion
   const sy = after.height > 0 ? measureBefore.height / after.height : 1;
   if (dx === 0 && dy === 0 && sx === 1 && sy === 1) return Promise.resolve();
   el.style.transformOrigin = "top left";
-  const from = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
-  return run(el, { transform: [from, "none"] } as DOMKeyframesDefinition, mode, layouts).then((finished) => {
-    if (!finished) return;
-    el.style.removeProperty("transform");
-    el.style.removeProperty("transform-origin");
+  const controls = animate(1, 0, {
+    ...SPRING,
+    onUpdate: (left) => {
+      el.style.translate = `${dx * left}px ${dy * left}px`;
+      el.style.scale = `${1 + (sx - 1) * left} ${1 + (sy - 1) * left}`;
+    },
+  });
+  return track(el, controls, [...LAYOUT], layouts).then((finished) => {
+    if (finished) clearStyles(el, LAYOUT);
   });
 }

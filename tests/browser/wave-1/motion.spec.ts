@@ -122,19 +122,22 @@ test("dot-flow staggers the dots instead of blinking together", async ({ page })
   expect(new Set(delays.flat()).size).toBe(3);
 });
 
-test("layout animates from the measured position", async ({ page }) => {
+test("layout animates from the measured position without resizing", async ({ page }) => {
   await open(page);
   const result = await page.evaluate(async () => {
     const box = document.getElementById("box") as HTMLElement;
     const before = box.getBoundingClientRect();
     box.style.marginLeft = "40px";
-    const done = window.kindMotion.layout(box, before);
+    const done = window.kindMotion.layout(box, before).then(() => true);
     await new Promise((r) => requestAnimationFrame(r));
     const moving = box.getBoundingClientRect().left < 40 + before.left;
-    await done;
-    return { moving, transform: getComputedStyle(box).transform };
+    let narrowest = before.width;
+    while (!(await Promise.race([done, new Promise((r) => requestAnimationFrame(() => r(false)))])))
+      narrowest = Math.min(narrowest, box.getBoundingClientRect().width);
+    return { moving, narrowest, inline: box.getAttribute("style") };
   });
-  expect(result).toEqual({ moving: true, transform: "none" });
+  expect(result.narrowest).toBeCloseTo(64, 3);
+  expect(result).toMatchObject({ moving: true, inline: "margin-left: 40px;" });
 });
 
 test("expand ends at natural height; motion none is instant", async ({ page }) => {
@@ -157,8 +160,11 @@ test("layout during enter or exit leaves them running", async ({ page }) => {
     const entering = window.kindMotion.enter(box, "fade-up");
     let before = box.getBoundingClientRect();
     box.style.marginLeft = "40px";
-    await Promise.all([entering, window.kindMotion.layout(box, before)]);
-    const entered = getComputedStyle(box).opacity;
+    const laidOut = window.kindMotion.layout(box, before);
+    await new Promise((r) => requestAnimationFrame(r));
+    const moving = box.getBoundingClientRect().left < 40 + before.left;
+    await Promise.all([entering, laidOut]);
+    const entered = { opacity: getComputedStyle(box).opacity, inline: box.getAttribute("style") };
     const exiting = window.kindMotion.exit(box, "fade").then(
       () => "resolved",
       (error: DOMException) => error.name,
@@ -166,22 +172,57 @@ test("layout during enter or exit leaves them running", async ({ page }) => {
     before = box.getBoundingClientRect();
     box.style.marginLeft = "0px";
     await window.kindMotion.layout(box, before);
-    return { entered, exit: await exiting, opacity: getComputedStyle(box).opacity };
+    return { moving, entered, exit: await exiting, opacity: getComputedStyle(box).opacity };
   });
-  expect(result).toEqual({ entered: "1", exit: "resolved", opacity: "0" });
+  expect(result).toEqual({
+    moving: true,
+    entered: { opacity: "1", inline: "margin-left: 40px;" },
+    exit: "resolved",
+    opacity: "0",
+  });
 });
 
-test("expand ends at the bordered element's own height", async ({ page }) => {
+test("a run that replaces an interrupted one leaves no stray inline style", async ({ page }) => {
   await open(page);
-  const result = await page.evaluate(async () => {
+  const inline = await page.evaluate(async () => {
     const box = document.getElementById("box") as HTMLElement;
-    box.style.border = "6px solid";
-    const natural = box.getBoundingClientRect().height;
-    let settling = 0;
-    const done = window.kindMotion.enter(box, "expand").then(() => true);
-    while (!(await Promise.race([done, new Promise((r) => requestAnimationFrame(() => r(false)))])))
-      settling = box.getBoundingClientRect().height;
-    return { natural, settling };
+    const frames = (n: number) =>
+      new Promise((r) => {
+        const tick = (left: number) => (left ? requestAnimationFrame(() => tick(left - 1)) : r(null));
+        tick(n);
+      });
+    const before = box.getBoundingClientRect();
+    box.style.marginLeft = "40px";
+    void window.kindMotion.layout(box, before);
+    await frames(3);
+    await window.kindMotion.layout(box, box.getBoundingClientRect(), { motion: "none" });
+    void window.kindMotion.enter(box, "fade-up");
+    await frames(3);
+    await window.kindMotion.exit(box, "fade-up", { motion: "none" });
+    await frames(2);
+    return box.getAttribute("style");
   });
-  expect(result.settling).toBeCloseTo(result.natural, 0);
+  expect(inline).toBe("margin-left: 40px; opacity: 0;");
 });
+
+for (const boxSizing of ["border-box", "content-box"]) {
+  test(`expand ends at the bordered ${boxSizing} element's own height`, async ({ page }) => {
+    await open(page);
+    const result = await page.evaluate(async (sizing) => {
+      const box = document.getElementById("box") as HTMLElement;
+      Object.assign(box.style, { border: "6px solid", padding: "10px", boxSizing: sizing });
+      const natural = box.getBoundingClientRect().height;
+      let settling = 0;
+      const done = window.kindMotion.enter(box, "expand").then(() => true);
+      while (!(await Promise.race([done, new Promise((r) => requestAnimationFrame(() => r(false)))])))
+        settling = box.getBoundingClientRect().height;
+      const exiting = window.kindMotion.exit(box, "expand");
+      await new Promise((r) => requestAnimationFrame(r));
+      const firstExitFrame = box.getBoundingClientRect().height;
+      await exiting;
+      return { natural, settling, firstExitFrame };
+    }, boxSizing);
+    expect(result.settling).toBeCloseTo(result.natural, 0);
+    expect(result.firstExitFrame).toBeLessThanOrEqual(result.natural);
+  });
+}

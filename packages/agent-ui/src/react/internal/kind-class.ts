@@ -18,9 +18,12 @@ function mergeClass(base: string, className: ClassName): ClassName {
 // A Kind part rendered as another (`<KindToolbarButton render={<KindMenuTrigger />}>`) renders the
 // target's bare UI SDK part, so the element gets the outer base classes once instead of both lists.
 function bareRender(render: unknown): unknown {
+  if (typeof render === "function") return (...args: unknown[]) => bareRender(render(...args));
   if (!isValidElement(render)) return render;
   const bare = bareParts.get(render.type as object);
-  return bare ? createElement(bare, { ...(render.props as KindProps), key: render.key }) : render;
+  if (!bare) return render;
+  const props = render.props as KindProps;
+  return createElement(bare, { ...props, render: bareRender(props.render), key: render.key });
 }
 
 export function withKindClass<C extends (props: never) => ReactNode>(

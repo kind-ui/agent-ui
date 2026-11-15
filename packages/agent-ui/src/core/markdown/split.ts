@@ -1,6 +1,16 @@
 // Adapted from Apache-2.0 code; see THIRD_PARTY_NOTICES.md. No HTML or math merging:
 // raw HTML renders as text and math is not supported.
-import { Lexer } from "marked";
+import { Lexer, Tokenizer, type Tokens } from "marked";
+
+const footnoteDefinition = /^ {0,3}\[\^[^\]\s]+\]:/;
+
+// marked has no footnotes and would take `[^x]: word` as a link definition, dropping its text.
+// micromark (gfm) never does, so leave it to the paragraph rule.
+class FootnoteTokenizer extends Tokenizer {
+  override def(src: string): Tokens.Def | undefined {
+    return footnoteDefinition.test(src) ? undefined : super.def(src);
+  }
+}
 
 export interface Split {
   input: string;
@@ -10,15 +20,21 @@ export interface Split {
 }
 
 // Returns null when the document has link definitions, which must share one parse with their references.
-// The lexer records only definitions outside code. Footnotes split freely: a reference renders as its
-// own text whether or not its definition is in the same parse.
+// The lexer records only definitions outside code. Footnote definitions split like other blocks,
+// keeping their indented continuation, which marked lexes as indented code.
 function lexBlocks(markdown: string): string[] | null {
-  const lexer = new Lexer({ gfm: true });
+  const lexer = new Lexer({ gfm: true, tokenizer: new FootnoteTokenizer() });
   const tokens = lexer.blockTokens(markdown);
   if (Object.keys(lexer.tokens.links).length > 0) return null;
   const blocks: string[] = [];
   for (const token of tokens) {
-    if (token.type === "space" && blocks.length > 0) blocks[blocks.length - 1] += token.raw;
+    const last = blocks.length - 1;
+    const continues =
+      token.type === "space" ||
+      (token.type === "code" &&
+        token.codeBlockStyle === "indented" &&
+        footnoteDefinition.test(blocks[last] ?? ""));
+    if (continues && last >= 0) blocks[last] += token.raw;
     else blocks.push(token.raw);
   }
   return blocks;

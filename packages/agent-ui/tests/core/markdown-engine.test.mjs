@@ -36,13 +36,23 @@ test("definition syntax inside code doesn't stop the split", () => {
   assert.equal(blocks.length, 4);
 });
 
-test("a late footnote keeps the final blocks", () => {
+test("a streamed footnote keeps the final blocks and its continuation", () => {
+  const head = "A claim[^1].\n\nB\n\nC\n\nD\n\n";
+  const source = `${head}[^1]: The source.\n\n    More of the note.\n`;
   const engine = createMarkdownEngine();
-  const before = engine.set("A claim[^1].\n\nB\n\nC\n\nD\n\n", true);
-  const after = engine.set("A claim[^1].\n\nB\n\nC\n\nD\n\n[^1]: The source.", true);
-  assert.ok(before[0].final);
-  assert.equal(after[0], before[0]);
-  assert.equal(text(after.at(-1).node), "The source.");
+  const [first] = engine.set(head, true);
+  let src = head;
+  for (const chunk of chunks(source.slice(head.length), 1)) {
+    src += chunk;
+    assert.equal(engine.set(src, true)[0], first);
+  }
+  assert.deepEqual(
+    engine.set(src, false).map((b) => b.node),
+    createMarkdownEngine()
+      .set(src, false)
+      .map((b) => b.node),
+  );
+  assert.equal(text(engine.set(src, false).at(-1).node), "The source.More of the note.");
 });
 
 test("final block keys are stable across appends", () => {

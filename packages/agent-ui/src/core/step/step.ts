@@ -47,6 +47,7 @@ export type StepState = {
 type Cause = { reason?: StepOpenChangeReason; event?: Event | undefined };
 
 export type StepApi = {
+  /** The current open state; the owner's `open` when controlled. */
   isOpen: () => boolean;
   setOpen: (open: boolean, cause?: Cause) => boolean;
   expand: () => boolean;
@@ -119,7 +120,12 @@ export const stepPrimitive: StepPrimitive = definePrimitive({
         open,
         auto ? { reason, source: "programmatic" } : event ? { reason, event } : { reason },
       );
-      if (changed && !auto) context.store.set({ userToggled: true });
+      // Spec §5: only a person or agent toggling stops auto behavior, not a host write.
+      if (changed && !auto && reason !== "imperative") context.store.set({ userToggled: true });
+      return changed;
+    };
+    const toggledBy = (changed: boolean) => {
+      if (changed) context.store.set({ userToggled: true });
       return changed;
     };
 
@@ -151,8 +157,8 @@ export const stepPrimitive: StepPrimitive = definePrimitive({
     return {
       isOpen: () => context.store.get().open,
       setOpen,
-      expand: () => setOpen(true),
-      collapse: () => setOpen(false),
+      expand: () => toggledBy(setOpen(true)),
+      collapse: () => toggledBy(setOpen(false)),
       toggle: (event?: Event) => setOpen(!context.store.get().open, { reason: "trigger-press", event }),
     };
   },

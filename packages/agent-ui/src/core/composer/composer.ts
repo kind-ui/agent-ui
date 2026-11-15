@@ -15,6 +15,7 @@ export type ComposerOptions = {
 export type ComposerState = { value: string; pending: boolean };
 
 export type ComposerApi = {
+  /** The current draft; the owner's `value` when controlled. */
   getValue: () => string;
   setValue: (value: string, event?: Event) => boolean;
   submit: () => void;

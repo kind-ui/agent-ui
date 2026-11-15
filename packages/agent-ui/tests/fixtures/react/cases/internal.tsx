@@ -101,9 +101,15 @@ export const cases = {
   "toolbar-menu": () => (
     <KindToolbar aria-label="Sharing">
       <KindMenu>
-        <KindToolbarButton render={<KindMenuTrigger />}>Share</KindToolbarButton>
+        <KindToolbarButton render={<KindMenuTrigger render={<KindButton />} />}>Share</KindToolbarButton>
         <KindMenuContent>
           <KindMenuItem value="link">Copy link</KindMenuItem>
+        </KindMenuContent>
+      </KindMenu>
+      <KindMenu>
+        <KindToolbarButton render={(props) => <KindMenuTrigger {...props} />}>Export</KindToolbarButton>
+        <KindMenuContent>
+          <KindMenuItem value="pdf">PDF</KindMenuItem>
         </KindMenuContent>
       </KindMenu>
     </KindToolbar>

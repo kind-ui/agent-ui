@@ -11,18 +11,18 @@ export function resolveMotion(mode: MotionMode, prefersReduced: boolean): Resolv
   return prefersReduced ? "reduced" : "full";
 }
 
-export type Frame = { opacity: number; translate?: string };
+export type Frame = { opacity: number; transform?: string };
 
 const HIDDEN: Record<MotionPreset, Frame> = {
   fade: { opacity: 0 },
-  "fade-up": { opacity: 0, translate: "0 8px" },
+  "fade-up": { opacity: 0, transform: "translateY(8px)" },
   expand: { opacity: 0 },
   "dot-flow": { opacity: 0 },
 };
 
 const SHOWN: Record<MotionPreset, Frame> = {
   fade: { opacity: 1 },
-  "fade-up": { opacity: 1, translate: "none" },
+  "fade-up": { opacity: 1, transform: "none" },
   expand: { opacity: 1 },
   "dot-flow": { opacity: 1 },
 };

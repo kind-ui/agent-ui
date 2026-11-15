@@ -153,3 +153,15 @@ test("kind-step exposes live open state and its api", async ({ page }, testInfo)
   await el.evaluate((s: KindStep) => s.api.collapse());
   await expect(el).not.toHaveAttribute("data-open");
 });
+
+test("setting kind-step open keeps auto close", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "wave-1-web", "web elements only");
+  await open(page);
+  const el = step(page, "Draft the summary");
+  await el.evaluate((s: HTMLElement & { open: boolean }) => {
+    s.open = true;
+  });
+  await setStatus(page, "draft", "running");
+  await setStatus(page, "draft", "complete");
+  await expect(el).not.toHaveAttribute("data-open");
+});
