@@ -98,6 +98,29 @@ test("full motion animates height; reduced motion animates no height or transfor
   expect(reduced.filter((p) => p === "height" || p === "transform")).toEqual([]);
 });
 
+test("reduced motion stops the chevron, spinner and shimmer", async ({ page }) => {
+  const stillness = (name: string) =>
+    trigger(page, name).evaluate((el) => {
+      const icon = el.querySelector('[data-slot="kind-step-icon"]') as Element;
+      const title = el.querySelector('[data-slot="kind-step-title"]') as Element;
+      return [
+        getComputedStyle(el, "::after").transitionDuration,
+        getComputedStyle(icon, "::before").animationName,
+        getComputedStyle(title).animationName,
+      ];
+    });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await open(page);
+  await setStatus(page, "draft", "running");
+  expect(await stillness("Draft the summary")).toEqual(["0s", "none", "none"]);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await open(page, "reduced");
+  await page.evaluate(() => {
+    for (const el of document.querySelectorAll("[data-status]")) el.setAttribute("data-status", "running");
+  });
+  expect(await stillness("Reduced")).toEqual(["0s", "none", "none"]);
+});
+
 test("has no axe violations", async ({ page }) => {
   await open(page);
   const { violations } = await new AxeBuilder({ page }).include("#root").analyze();

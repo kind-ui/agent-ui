@@ -17,15 +17,20 @@ import { nextOpen, type StepAutoOpen } from "./auto-open.js";
 export type StepOpenChangeReason = "trigger-press" | "find-in-page" | "imperative" | "auto";
 
 export type StepOptions = {
+  /** Defaults to `"pending"`. */
   status?: StepStatus;
+  /** Written as `data-kind`, for styling by step type. */
   kind?: string;
   /** Names the step in announcements. Defaults to the title part's text. */
   title?: string;
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean, details: ChangeDetails<StepOpenChangeReason>) => void;
+  /** Defaults to `"running"`: opens while running or awaiting input, closes on completion unless toggled. */
   autoOpen?: StepAutoOpen;
+  /** Written as `--kind-step-duration`. */
   durationSeconds?: number;
+  /** Defaults to `"auto"`, which follows `prefers-reduced-motion`. */
   motion?: MotionMode;
 };
 
@@ -127,16 +132,15 @@ export const stepPrimitive: StepPrimitive = definePrimitive({
     context.onOptions((options) => {
       const status = options.status ?? "pending";
       if (status === prevStatus) return;
-      const from = prevStatus;
-      prevStatus = status;
       const { open, userToggled } = context.store.get();
       const next = nextOpen({
         status,
-        prevStatus: from,
+        prevStatus,
         open,
         userToggled,
         autoOpen: options.autoOpen ?? "running",
       });
+      prevStatus = status;
       if (next !== open) setOpen(next, { reason: "auto" });
       const outcome = ANNOUNCED[status];
       const title = options.title ?? context.element("title")?.textContent?.trim();
@@ -173,14 +177,19 @@ export const stepPrimitive: StepPrimitive = definePrimitive({
         "aria-expanded": String(state.open),
         "aria-controls": `${part.id}-content`,
         "data-status": state.status,
+        "data-motion": state.motion,
         ...openAttrs(state.open),
       }),
     }),
     icon: slot({
-      attrs: (state) => ({ "aria-hidden": "true", "data-status": state.status }),
+      attrs: (state) => ({ "aria-hidden": "true", "data-status": state.status, "data-motion": state.motion }),
     }),
     title: slot({
-      attrs: (state, part) => ({ id: `${part.id}-title`, "data-status": state.status }),
+      attrs: (state, part) => ({
+        id: `${part.id}-title`,
+        "data-status": state.status,
+        "data-motion": state.motion,
+      }),
     }),
     meta: slot({
       attrs: (state) => ({ "data-status": state.status }),
