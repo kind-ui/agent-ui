@@ -38,9 +38,8 @@ test("styles.css holds only imports, @theme and @source", () => {
 test("theme tokens are declared under @theme default", () => {
   const theme = statements.find(({ prelude }) => /^@theme\s+default$/.test(prelude));
   assert.ok(theme, "no @theme default block");
-  const colors = "fg muted surface hover border ring shadow accent on-accent on-status success warning danger".split(
-    " ",
-  );
+  const colors =
+    "fg muted surface hover border ring shadow accent on-accent on-status success warning danger".split(" ");
   for (const token of [...colors.map((name) => `--kind-color-${name}`), "--kind-radius", "--kind-font-mono"])
     assert.match(theme.body, new RegExp(`${token}:`), token);
 });

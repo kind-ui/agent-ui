@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `9b766ae` (Task 12 Uploader and indicators)
+Last reviewed: `1e519b1` (Task 14 styles and theme tokens)
 
 ## Settled
 
