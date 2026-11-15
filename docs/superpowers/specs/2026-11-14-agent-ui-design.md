@@ -61,6 +61,27 @@ Rules:
 - Styling uses Tailwind v4 utilities keyed on UI SDK `data-*` state attributes (for example `data-[status=running]:`, `data-open:`). Data-dependent values (progress width, token ratios) use CSS variables set by the primitive. No runtime CSS-in-JS.
 - Web Components render into light DOM so Tailwind utilities and consumer styles apply. Custom element tags use the `kind-` prefix (for example `<kind-composer>`).
 
+### Building on UI SDK
+
+Components are built on UI SDK, not around it.
+
+- Every public component and every internal general component is a `definePrimitive` definition, or a ready-made UI SDK component. Every React and Web Components render file renders through `createParts` (React and Web Components) or wraps a ready-made UI SDK component.
+- Focus management, keyboard navigation, popups, dismissal, selection, scroll following, live announcements, and ARIA roles and states come from UI SDK: slot `role`/`focus`/`press`/`keys` declarations, UI SDK components, and `@ui-sdk/core` behaviors (for example `createRovingFocus`, `createStickToBottom`, `announce`). Hand-written versions of these are not allowed.
+- Code written outside UI SDK is limited to the exceptions below. Each exception sits in a primitive's `api`, a slot's `on` handler, or a framework-free module in `core`, never in a render layer:
+
+| Exception | Why UI SDK does not cover it |
+| --- | --- |
+| Streaming markdown engine (§6) | Content parsing, not interaction. |
+| Motion helper presets (§6) | Animation values. Presence still uses UI SDK `animateIn` / `animateOut`. |
+| Composer submit key policy (`submitOn`, Shift+Enter newline) | Application policy. It is declared as the input slot's `keys` and `on.keydown`, and uses UI SDK `isComposing`. |
+| Attachment removal on Delete/Backspace | Application action on a focused item. Focus movement stays with `createRovingFocus`, and the keys are declared on the slot. |
+| Conversation new-message counter | Counts messages added while not following. Following itself uses `createStickToBottom`. |
+| Streaming Text append diff and Composer draft settlement | Pure data rules. |
+| Clipboard writes for copy actions | `navigator.clipboard.writeText`, used only if the pinned UI SDK has no clipboard utility. |
+
+  A new exception requires a spec change that adds a row to this table.
+- Contributors and agents read the installed UI SDK docs before building a component: `node_modules/@ui-sdk/<framework>/docs/llms.txt`, plus `docs/core.md` and `docs/rendering.md` in the same package. They also use the official `ui-sdk` skill (`npx skills add vercel-labs/ui --skill ui-sdk`; a matching copy ships at `node_modules/@ui-sdk/core/skills/ui-sdk/SKILL.md`). `AGENTS.md` states this.
+
 ### Internal general components
 
 AI components need general controls. These are UI SDK components or `@ui-sdk/core` behaviors styled for Kind UI. They live in `packages/agent-ui/src/internal/` (behavior) and `src/react/internal/` / `src/web/internal/` (render), are not in package exports, and are not documented as public API. Registry items that need them pull them in as hidden registry dependencies (§9.2).
@@ -137,6 +158,7 @@ agent-ui/                         # repository root (kind-ui/agent-ui)
     build-registry.mjs            # builds the shadcn registry from registry/catalog.mjs
     check-package.mjs             # packed-package gate (§10)
     check-registry-consumers.mjs  # installs registry items into clean consumers (§10)
+    check-ui-sdk-usage.mjs        # fails when a component bypasses definePrimitive/createParts (§2)
     run-checks.mjs                # ordered check runner used by npm scripts and CI
   tests/
     browser/wave-<n>/*.spec.ts    # Playwright specs, both render layers
@@ -159,7 +181,7 @@ Every script below is defined in the root `package.json`. Package-scoped command
 | Script | Runs |
 | --- | --- |
 | `build` | `tsc -b packages/agent-ui` |
-| `lint` / `format` | `biome check .` / `biome check --write .` |
+| `lint` / `format` | `biome check . && node scripts/check-ui-sdk-usage.mjs` / `biome check --write .` |
 | `typecheck` | `build`, then `tsc` over `tests/types/`, fixtures, `apps/docs`, and tooling scripts |
 | `test:unit` | `node --test` over `packages/agent-ui/tests/core/` |
 | `test:browser` | `playwright test` (accepts `--project` and `--shard`) |
@@ -584,7 +606,8 @@ Consumers install with the existing namespace, for example `npx shadcn@latest ad
 | --- | --- | --- |
 | Core unit | Keyboard, focus, state transitions, Step auto open/close, composer draft snapshots, approval generations, markdown block finality, repair, URL sanitizing, ANSI parsing, adapter mapping | `packages/agent-ui/tests/core/`, with `@ui-sdk/core/testing` and `node --test` (`npm run test:unit`) |
 | Browser | Each component in the React and Web Components fixtures: rendering, keyboard-only paths, axe scan (`@axe-core/playwright`), streaming, scroll following | `tests/browser/wave-<n>/`, run by `playwright.config.mjs` projects per wave and render layer (fixed port, Chromium, Vite fixture web server) |
-| Agent actions | The `createAgent` snapshot lists the expected actions and keys; `act` runs each action and the resulting state matches; `data-agent-confirm` steps are refused without approval | Browser specs, both render layers |
+| UI SDK usage | Static check: every public component in `src/core/<component>/` is a `definePrimitive` result, every render file under `src/react/` and `src/web/` (including `internal/`) uses `createParts` or wraps a UI SDK component, and no file outside the exception list in §2 "Building on UI SDK" contains hand-written focus, key, scroll, or ARIA code. Runtime proof: the per-component `createAgent` snapshot test (next row), since the bridge registers only UI SDK primitives. | `scripts/check-ui-sdk-usage.mjs` (part of `npm run lint`) |
+| Agent actions | For each component, the `createAgent` snapshot lists the expected actions and keys; `act` runs each action and the resulting state matches; `data-agent-confirm` steps are refused without approval | Browser specs, both render layers |
 | Reduced motion | Each animated component under `reducedMotion: "reduce"` runs no transform or height animation and reaches its final state | Browser specs |
 | Types | Consumers compile under NodeNext and Bundler resolution; a core consumer compiles and runs without `ai`; the adapter compiles against pinned `ai` types | `tests/types/`, included in `npm run typecheck` |
 | Packed package | `npm pack` tarball exports resolve; `core` has no React or `ai` runtime import; CSS is included; `publint` and `@arethetypeswrong/cli` pass; a clean consumer installs the tarball without `ai` and imports every entry | `scripts/check-package.mjs` (`npm run check:package`) |
