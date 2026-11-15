@@ -31,11 +31,13 @@ Import `@kind-ui/agent-ui/styles.css` after `tailwindcss` in your stylesheet. It
 | `--kind-color-fg`, `--kind-color-muted` | Text and secondary text |
 | `--kind-color-surface`, `--kind-color-hover`, `--kind-color-border`, `--kind-color-ring`, `--kind-color-shadow` | Backgrounds, subtle fills, borders, focus rings, shadows |
 | `--kind-color-accent`, `--kind-color-on-accent` | Running and primary states, and text on them |
-| `--kind-color-success`, `--kind-color-warning`, `--kind-color-danger` | Statuses |
+| `--kind-color-success`, `--kind-color-warning`, `--kind-color-danger`, `--kind-color-on-status` | Statuses, and marks on them |
 | `--kind-radius` | Base corner radius; others scale from it |
 | `--kind-font-mono` | Code |
 
 Colors are `light-dark()` pairs, so dark mode follows `color-scheme`: `light dark` follows the system, and a class-based dark theme sets `color-scheme: dark` on its root. A Code Block `highlight` function can return `light-dark()` token colors to switch with them.
+
+Tailwind writes the defaults on `:root, :host`, so inside a shadow root that loads this stylesheet, set your values on `:host` too.
 
 ## AI SDK adapter
 

@@ -62,7 +62,7 @@
       display: grid;
       place-items: center;
       border: 1.5px dashed var(--kind-composer-accent);
-      border-radius: calc(var(--kind-radius) * 1.5);
+      border-radius: max(0px, calc(var(--kind-radius) * 1.5 - 0.3125rem));
       background-color: color-mix(in oklab, var(--kind-composer-accent) 8%, var(--kind-color-surface));
       color: var(--kind-composer-accent);
       font-size: 0.875rem;

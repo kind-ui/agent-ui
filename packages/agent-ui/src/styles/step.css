@@ -124,7 +124,7 @@
     }
 
     &::after {
-      background-color: var(--kind-color-on-accent);
+      background-color: var(--kind-color-on-status);
       mask: var(--kind-step-check) center / 10px no-repeat;
     }
 

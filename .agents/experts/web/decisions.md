@@ -6,6 +6,7 @@ Last reviewed: `4717d35` (Task 13 agent conformance)
 
 ## Settled
 
+- **Theme defaults land on `:root, :host`** (Tailwind's `@theme` output), so inside a shadow root that loads the stylesheet a page's `:root` override doesn't reach; the README tells consumers to set `:host` there too. It also makes the stylesheet work when loaded only in a shadow root.
 - **`can-<action>` attributes stand for a callback's presence;** the root's `options` hook sets the callback to `undefined` while one is off. A listener can't be seen, and `@ui-sdk/web`'s proxy fills in a dispatcher for any callback key that's missing.
 - Everything in AGENTS.md "UI SDK API notes".
 - **Internal host classes stay per file.** A shared `defineHost` helper in `src/web/internal/` would be a render file that neither calls `createParts` nor wraps a component, which the guard rejects.
