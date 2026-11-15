@@ -58,7 +58,7 @@ export function defineComposer(): void {
       target: wrappedChild("form"),
       display: "contents",
       kinds: { canStop: "boolean" },
-      // A listener can't be seen, so an attribute offers Stop and an unset one takes its callback away.
+      // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
       options: (el) => ((el as ComposerElement).canStop ? {} : { onStop: undefined }),
       events: { onSubmit: "composersubmit" },
       defaults: { agentConfirm: true },

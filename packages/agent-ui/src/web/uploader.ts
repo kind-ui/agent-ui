@@ -56,7 +56,7 @@ export function defineUploader(): void {
     root: {
       tag: "kind-uploader",
       kinds: { canCancel: "boolean", canRetry: "boolean" },
-      // A listener can't be seen, so an attribute offers each action and an unset one takes its callback away.
+      // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
       options: (el) => {
         const { canCancel, canRetry } = el as UploaderElement;
         return { ...(!canCancel && { onCancel: undefined }), ...(!canRetry && { onRetry: undefined }) };

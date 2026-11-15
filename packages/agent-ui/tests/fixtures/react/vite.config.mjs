@@ -5,7 +5,6 @@ import { defineConfig } from "vite";
 const here = (path) => fileURLToPath(new URL(path, import.meta.url));
 
 // Render layers import core through the public specifier; serve it from source so fixtures need no build.
-// Each mode gets its own cache, since the StrictMode server runs beside the default one.
 export default defineConfig(({ mode }) => ({
   root: here("."),
   cacheDir: here(`../../../../../node_modules/.vite/fixture-react-${mode}`),

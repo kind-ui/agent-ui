@@ -34,7 +34,6 @@ declare module "react" {
   }
 }
 
-// React 19 sets a custom element's properties and listens to `on<event>` props as its events.
 function WebElement() {
   defineUploader();
   const [items, setItems] = useState<UploadItem[]>(uploads);

@@ -13,7 +13,6 @@ export const replies = [
   "Fail fast and let the caller decide whether to retry.",
 ];
 
-// Rows above the messages, so the chat can scroll away from its end.
 export const filler = Array.from({ length: 12 }, (_, index) => `Earlier note ${index + 1}.`);
 
 export const files: AttachmentItem[] = [
@@ -21,10 +20,6 @@ export const files: AttachmentItem[] = [
   { id: "trace", name: "trace.log", size: 4096, mediaType: "text/plain" },
 ];
 
-/**
- * The page's host, on `window.kindAgent`: `change` records each change callback's source and cancels it while
- * `refuse` is set, `permit` answers steps marked `data-agent-confirm`, and submissions stay pending.
- */
 export function agentHost() {
   const host = {
     permit: true,

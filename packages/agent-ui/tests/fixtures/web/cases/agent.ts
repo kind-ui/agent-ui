@@ -24,7 +24,6 @@ export const allow = (step: AgentAction) => !step.confirm || host.permit;
 
 type ChangeEvent<Value> = CustomEvent<{ value: Value; source: string }>;
 
-// A web change event carries its details, and a listener cancels it with `preventDefault`.
 const recordChange = (component: string, event: Event) =>
   host.change(component, {
     source: (event as ChangeEvent<unknown>).detail.source,

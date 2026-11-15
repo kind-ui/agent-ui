@@ -45,7 +45,7 @@ export function defineAttachments(): void {
       kinds: { canRemove: "boolean" },
       // The composer hands its own `onRemove` in as a property, beside `can-remove`.
       properties: ["onRemove"],
-      // A listener can't be seen, so an attribute offers removal and an unset one takes its callback away.
+      // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
       options: (el) => ((el as AttachmentsElement).canRemove ? {} : { onRemove: undefined }),
       render: (el, instance) => {
         const api = instance.api as AttachmentsApi;

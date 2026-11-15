@@ -16,7 +16,7 @@ export function defineMessage(): void {
     root: {
       tag: "kind-message",
       kinds: { canRegenerate: "boolean", canEdit: "boolean" },
-      // A listener can't be seen, so an attribute offers the action and an unset one takes its callback away.
+      // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
       options: (el) => {
         const { canRegenerate, canEdit } = el as MessageElement;
         return {

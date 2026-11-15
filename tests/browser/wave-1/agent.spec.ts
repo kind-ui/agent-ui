@@ -69,7 +69,6 @@ type Conformance = {
   component: string;
   label: string;
   action: string;
-  /** The element whose attributes the action changes. */
   scope: (page: Page) => Locator;
   args?: (page: Page) => Promise<unknown[]> | unknown[];
   /** Brings the page to where the action applies, the same way for both paths. */
