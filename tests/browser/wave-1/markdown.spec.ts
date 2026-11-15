@@ -114,19 +114,23 @@ test("wrap toggles line wrapping", async ({ page }) => {
 test("shows highlighted tokens and ignores a late result for replaced code", async ({ page }) => {
   await open(page, "highlight");
   await expect(code(page)).toHaveText("const a = 1;");
-  const resolve = (index: number, tokens: { content: string; color?: string }[]) =>
+  // Resolves every request for `source`: under StrictMode, a discarded first instance asks too.
+  const resolve = (source: string, tokens: { content: string; color?: string }[]) =>
     page.evaluate(
-      ([i, t]) => (window as unknown as Fixture).kindCode.requests[i as number]?.resolve(t as never),
-      [index, tokens] as const,
+      ([c, t]) => {
+        for (const request of (window as unknown as Fixture).kindCode.requests)
+          if (request.code === c) request.resolve(t as never);
+      },
+      [source, tokens] as const,
     );
+  const requested = () =>
+    page.evaluate(() => (window as unknown as Fixture).kindCode.requests.map((request) => request.code));
   await page.evaluate(() => (window as unknown as Fixture).kindCode.setCode("let b = 2;"));
-  await resolve(0, [{ content: "const", color: "rgb(200, 0, 0)" }, { content: " a = 1;" }]);
-  await expect
-    .poll(() => page.evaluate(() => (window as unknown as Fixture).kindCode.requests.length))
-    .toBe(2);
+  await resolve("const a = 1;", [{ content: "const", color: "rgb(200, 0, 0)" }, { content: " a = 1;" }]);
+  await expect.poll(requested).toContain("let b = 2;");
   await expect(code(page)).toHaveText("let b = 2;");
   await expect(code(page).locator('[style*="--kind-code-block-token"]')).toHaveCount(0);
-  await resolve(1, [{ content: "let", color: "rgb(0, 0, 200)" }, { content: " b = 2;" }]);
+  await resolve("let b = 2;", [{ content: "let", color: "rgb(0, 0, 200)" }, { content: " b = 2;" }]);
   await expect(code(page).locator("span span").first()).toHaveCSS("color", "rgb(0, 0, 200)");
   await expect(code(page)).toHaveText("let b = 2;");
 });

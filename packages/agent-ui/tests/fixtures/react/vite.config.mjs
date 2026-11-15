@@ -5,9 +5,10 @@ import { defineConfig } from "vite";
 const here = (path) => fileURLToPath(new URL(path, import.meta.url));
 
 // Render layers import core through the public specifier; serve it from source so fixtures need no build.
-export default defineConfig({
+// Each mode gets its own cache, since the StrictMode server runs beside the default one.
+export default defineConfig(({ mode }) => ({
   root: here("."),
-  cacheDir: here("../../../../../node_modules/.vite/fixture-react"),
+  cacheDir: here(`../../../../../node_modules/.vite/fixture-react-${mode}`),
   plugins: [tailwindcss()],
   resolve: { alias: { "@kind-ui/agent-ui/core": here("../../../src/core/index.ts") } },
   optimizeDeps: {
@@ -32,4 +33,4 @@ export default defineConfig({
     ],
   },
   oxc: { jsx: { runtime: "automatic" } },
-});
+}));

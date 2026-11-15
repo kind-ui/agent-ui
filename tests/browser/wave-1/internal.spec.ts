@@ -58,7 +58,7 @@ test("toolbar: ArrowRight moves focus to the next item", async ({ page }) => {
 });
 
 test("toolbar: a Kind part rendered as a toolbar button gets one class list", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== "wave-1-react", "render composition is React only");
+  test.skip(!testInfo.project.name.startsWith("wave-1-react"), "render composition is React only");
   await page.goto("/?c=internal&case=toolbar-menu");
   for (const [name, item] of [
     ["Share", "Copy link"],
