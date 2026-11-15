@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `4bd6afd` (Task 15 packed check and budgets)
+Last reviewed: `ce0fafc` (Task 16 registry)
 
 ## Settled
 
