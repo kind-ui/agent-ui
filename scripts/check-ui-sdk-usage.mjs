@@ -7,6 +7,14 @@ import { fileURLToPath } from "node:url";
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const specPath = join(repoRoot, "docs/superpowers/specs/2026-11-14-agent-ui-design.md");
 
+// `scrollTo(` and `scrollTop` must not match UI SDK APIs such as `createStickToBottom().scrollToBottom()`.
+const matches = (source, pattern) =>
+  pattern === "scrollTo"
+    ? /\bscrollTo\s*\(/.test(source)
+    : pattern === "scrollTop"
+      ? /\bscrollTop\b/.test(source)
+      : source.includes(pattern);
+
 const CORE_EXEMPT_DIRS = new Set(["motion", "markdown"]);
 const RENDER_FORBIDDEN = [
   "addEventListener",
@@ -105,7 +113,7 @@ export function checkUiSdkUsage(root, exceptions) {
       errors.push(`${file}: render file must use createParts or wrap a UI SDK component`);
     }
     for (const pattern of RENDER_FORBIDDEN) {
-      if (source.includes(pattern)) errors.push(`${file}: ${pattern} belongs in the primitive (UI SDK)`);
+      if (matches(source, pattern)) errors.push(`${file}: ${pattern} belongs in the primitive (UI SDK)`);
     }
   }
 
@@ -115,7 +123,7 @@ export function checkUiSdkUsage(root, exceptions) {
     if (Object.hasOwn(exceptions, file)) continue;
     const source = stripComments(readFileSync(path, "utf8"));
     for (const pattern of CORE_FORBIDDEN) {
-      if (source.includes(pattern)) {
+      if (matches(source, pattern)) {
         errors.push(`${file}: ${pattern} must come from UI SDK (or be a spec §2 exception)`);
       }
     }
