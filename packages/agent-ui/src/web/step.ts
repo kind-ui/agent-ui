@@ -4,7 +4,16 @@ import { createParts, wrappedButton } from "@ui-sdk/web";
 export function defineStep(): void {
   if (customElements.get("kind-step")) return;
   createParts(stepPrimitive, {
-    root: "kind-step",
+    root: {
+      tag: "kind-step",
+      state: {
+        open: {
+          get: (api) => api.isOpen(),
+          set: (api, open) => api.setOpen(!!open),
+        },
+      },
+      api: ["isOpen", "setOpen", "expand", "collapse", "toggle"],
+    },
     trigger: { tag: "kind-step-trigger", target: wrappedButton, display: "contents" },
     icon: "kind-step-icon",
     title: "kind-step-title",

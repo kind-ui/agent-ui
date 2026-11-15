@@ -5,7 +5,7 @@ Read [`../README.md`](../README.md) first; it says how every expert works. Spec 
 ## What you know
 
 - `split.ts` splits with `marked`'s `Lexer#blockTokens`, folds `space` tokens into the block before, and marks a block final once it ends in `\n\n` with two blocks after it. Only text after the final blocks is lexed again.
-- Documents with link definitions or footnotes stay one block so references resolve.
+- Documents with link definitions outside code stay one block so references resolve. Footnotes split like other blocks.
 - `remend` repairs only the streaming last block (`katex: false`, `linkMode: "text-only"`). Open code fences need no repair: micromark runs them to the end.
 - URLs pass `sanitizeUri(url, /^(https?|mailto)$/i)` and fail closed. Raw HTML renders as text. No math, no highlighter.
 - Parse results are cached by block text without trailing newlines.

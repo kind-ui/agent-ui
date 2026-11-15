@@ -10,8 +10,12 @@ Last reviewed: `8ada14f8c3a01e81b4eceb89bc36c8a3300c7b6d` (Wave 1 Tasks 1–8, P
 
 ## Known and open (don't report again, check whether fixed)
 
-- **`layout()` during `enter` or `exit` freezes the element:** `interrupt` stops the fade mid-way (opacity stays ~0.08) or cancels the exit with `AbortError`. Keep layout runs separate from enter/exit runs.
-- **`expand` snaps at the end** for bordered elements: it animates to `scrollHeight`, which excludes borders.
+Nothing open.
+
+## Resolved
+
+- **`layout()` during `enter` or `exit` froze the element.** Fixed: presets move with `translate` and layout with `transform`, and layout runs are tracked apart, so neither stops the other.
+- **`expand` snapped for bordered elements.** Fixed: it animates to the `height` that `box-sizing` needs, borders included.
 
 ## Revisit
 

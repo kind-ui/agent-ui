@@ -15,6 +15,7 @@ export type ComposerOptions = {
 export type ComposerState = { value: string; pending: boolean };
 
 export type ComposerApi = {
+  getValue: () => string;
   setValue: (value: string, event?: Event) => boolean;
   submit: () => void;
 };
@@ -52,6 +53,7 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
   api: (context): ComposerApi => {
     const change = createChange(context);
     return {
+      getValue: () => context.store.get().value,
       setValue: (value: string, event?: Event) =>
         change("value", value, event ? { reason: "input", event } : { reason: "input" }),
       submit: () => {

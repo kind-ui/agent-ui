@@ -2,9 +2,6 @@
 // raw HTML renders as text and math is not supported.
 import { Lexer } from "marked";
 
-const footnotePattern = /\[\^[\w-]{1,200}\]/;
-const linkDefinitionPattern = /^ {0,3}\[[^\]]+\]:/m;
-
 export interface Split {
   input: string;
   blocks: string[];
@@ -13,6 +10,8 @@ export interface Split {
 }
 
 // Returns null when the document has link definitions, which must share one parse with their references.
+// The lexer records only definitions outside code. Footnotes split freely: a reference renders as its
+// own text whether or not its definition is in the same parse.
 function lexBlocks(markdown: string): string[] | null {
   const lexer = new Lexer({ gfm: true });
   const tokens = lexer.blockTokens(markdown);
@@ -58,10 +57,8 @@ function reuse(previous: Split, input: string): Split | null {
 export function splitBlocks(source: string, previous?: Split): Split {
   const input = source.replace(/\r\n?/g, "\n");
   if (previous?.input === input) return previous;
-  const single: Split = { input, blocks: input ? [input] : [], verifiedCount: 0, verifiedLength: 0 };
-  if (footnotePattern.test(input) || linkDefinitionPattern.test(input)) return single;
   const reused = previous ? reuse(previous, input) : null;
   if (reused) return reused;
-  const blocks = lexBlocks(input);
-  return blocks ? { input, blocks, verifiedCount: 0, verifiedLength: 0 } : single;
+  const blocks = lexBlocks(input) ?? (input ? [input] : []);
+  return { input, blocks, verifiedCount: 0, verifiedLength: 0 };
 }

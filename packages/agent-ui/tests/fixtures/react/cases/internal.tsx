@@ -98,6 +98,16 @@ export const cases = {
       <KindToolbarButton>Copy</KindToolbarButton>
     </KindToolbar>
   ),
+  "toolbar-menu": () => (
+    <KindToolbar aria-label="Sharing">
+      <KindMenu>
+        <KindToolbarButton render={<KindMenuTrigger />}>Share</KindToolbarButton>
+        <KindMenuContent>
+          <KindMenuItem value="link">Copy link</KindMenuItem>
+        </KindMenuContent>
+      </KindMenu>
+    </KindToolbar>
+  ),
   toggle: () => <KindToggle>Bold</KindToggle>,
   menu: () => (
     <KindMenu>

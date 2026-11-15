@@ -19,3 +19,21 @@ test("composer is a live UI SDK primitive", async ({ page }) => {
   await page.goto("/?c=composer&case=shell");
   await expectAgentActions(page, "Message", ["setValue", "submit"]);
 });
+
+test("kind-composer exposes a live value and its api", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "wave-1-web", "web elements only");
+  await page.goto("/?c=composer&case=shell");
+  const textbox = page.getByRole("textbox", { name: "Message" });
+  await expect(textbox).toBeVisible();
+  type KindComposer = HTMLElement & { value: string; api: { getValue(): string } };
+  const composer = page.locator("kind-composer");
+  await composer.evaluate((c: KindComposer) => {
+    c.value = "hello";
+  });
+  await expect(textbox).toHaveValue("hello");
+  await textbox.fill("typed");
+  expect(await composer.evaluate((c: KindComposer) => [c.value, c.api.getValue()])).toEqual([
+    "typed",
+    "typed",
+  ]);
+});

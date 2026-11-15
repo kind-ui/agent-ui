@@ -31,6 +31,20 @@ test("streaming the 10k-token fixture parses only blocks that were not final", (
   assert.ok(engine.stats().parses < (2 * longAnswer.length) / 20);
 });
 
+test("definition syntax inside code doesn't stop the split", () => {
+  const blocks = createMarkdownEngine().set("Use `[^x]` here.\n\n```md\n[x]: /docs\n```\n\nA\n\nB", true);
+  assert.equal(blocks.length, 4);
+});
+
+test("a late footnote keeps the final blocks", () => {
+  const engine = createMarkdownEngine();
+  const before = engine.set("A claim[^1].\n\nB\n\nC\n\nD\n\n", true);
+  const after = engine.set("A claim[^1].\n\nB\n\nC\n\nD\n\n[^1]: The source.", true);
+  assert.ok(before[0].final);
+  assert.equal(after[0], before[0]);
+  assert.equal(text(after.at(-1).node), "The source.");
+});
+
 test("final block keys are stable across appends", () => {
   const engine = createMarkdownEngine();
   let src = "";

@@ -1,3 +1,5 @@
+// biome-ignore lint/suspicious/noTsIgnore: `ai` resolves when installed, so `@ts-expect-error` would fail.
+/** @ts-ignore `ai` is an optional peer; without it these types are `any`. Kept in the emitted `.d.ts`. */
 import type { DynamicToolUIPart, ToolUIPart, UIMessage } from "ai";
 import type { Part, Step, StepStatus, ToolCall } from "../../types/index.js";
 import { fromSdkApproval } from "./approval.js";

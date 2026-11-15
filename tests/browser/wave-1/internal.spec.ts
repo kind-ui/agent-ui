@@ -57,6 +57,18 @@ test("toolbar: ArrowRight moves focus to the next item", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Redo" })).toBeFocused();
 });
 
+test("toolbar: a menu trigger rendered as a toolbar button gets one class list", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "wave-1-react", "render composition is React only");
+  await page.goto("/?c=internal&case=toolbar-menu");
+  const share = page.getByRole("button", { name: "Share" });
+  await expect(share).toHaveAttribute("aria-haspopup", "menu");
+  const classes = (await share.getAttribute("class"))?.split(" ") ?? [];
+  expect(classes).toContain("h-7");
+  expect(classes).not.toContain("h-8");
+});
+
 test("toggle: Space flips aria-pressed", async ({ page }) => {
   await open(page, "toggle");
   const toggle = page.getByRole("button", { name: "Bold" });

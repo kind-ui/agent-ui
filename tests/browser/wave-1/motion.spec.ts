@@ -149,3 +149,39 @@ test("expand ends at natural height; motion none is instant", async ({ page }) =
   });
   expect(result).toEqual({ expanded: { height: "64px", inline: "" }, gone: { opacity: "0", animations: 0 } });
 });
+
+test("layout during enter or exit leaves them running", async ({ page }) => {
+  await open(page);
+  const result = await page.evaluate(async () => {
+    const box = document.getElementById("box") as HTMLElement;
+    const entering = window.kindMotion.enter(box, "fade-up");
+    let before = box.getBoundingClientRect();
+    box.style.marginLeft = "40px";
+    await Promise.all([entering, window.kindMotion.layout(box, before)]);
+    const entered = getComputedStyle(box).opacity;
+    const exiting = window.kindMotion.exit(box, "fade").then(
+      () => "resolved",
+      (error: DOMException) => error.name,
+    );
+    before = box.getBoundingClientRect();
+    box.style.marginLeft = "0px";
+    await window.kindMotion.layout(box, before);
+    return { entered, exit: await exiting, opacity: getComputedStyle(box).opacity };
+  });
+  expect(result).toEqual({ entered: "1", exit: "resolved", opacity: "0" });
+});
+
+test("expand ends at the bordered element's own height", async ({ page }) => {
+  await open(page);
+  const result = await page.evaluate(async () => {
+    const box = document.getElementById("box") as HTMLElement;
+    box.style.border = "6px solid";
+    const natural = box.getBoundingClientRect().height;
+    let settling = 0;
+    const done = window.kindMotion.enter(box, "expand").then(() => true);
+    while (!(await Promise.race([done, new Promise((r) => requestAnimationFrame(() => r(false)))])))
+      settling = box.getBoundingClientRect().height;
+    return { natural, settling };
+  });
+  expect(result.settling).toBeCloseTo(result.natural, 0);
+});

@@ -13,7 +13,7 @@ Styled React and Web Components are distributed through the registry, not this p
 
 ## AI SDK adapter
 
-`@kind-ui/agent-ui/adapters/ai-sdk` maps AI SDK `UIMessage`s to the neutral types. It imports `ai` with `import type` only and never calls the SDK, so its emitted JavaScript has no `ai` import. A consumer without `ai` can still import `toApprovalResponse` and `fromChatStatus`. The adapter's declarations reference `ai` types, so such a consumer needs `skipLibCheck` (TypeScript's common default for app projects).
+`@kind-ui/agent-ui/adapters/ai-sdk` maps AI SDK `UIMessage`s to the neutral types. It imports `ai` with `import type` only and never calls the SDK, so its emitted JavaScript has no `ai` import. A consumer without `ai` can still import `toApprovalResponse` and `fromChatStatus`. Its declarations type-check without `ai` too, even with `skipLibCheck` off: there, the `ai` types it references are `any`.
 
 | Export | Maps |
 | --- | --- |

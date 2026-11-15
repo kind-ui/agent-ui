@@ -47,6 +47,7 @@ export type StepState = {
 type Cause = { reason?: StepOpenChangeReason; event?: Event | undefined };
 
 export type StepApi = {
+  isOpen: () => boolean;
   setOpen: (open: boolean, cause?: Cause) => boolean;
   expand: () => boolean;
   collapse: () => boolean;
@@ -148,6 +149,7 @@ export const stepPrimitive: StepPrimitive = definePrimitive({
     });
 
     return {
+      isOpen: () => context.store.get().open,
       setOpen,
       expand: () => setOpen(true),
       collapse: () => setOpen(false),

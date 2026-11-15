@@ -31,12 +31,15 @@ interface Run {
   interrupt: () => void;
 }
 
+// motion replaces a running animation of the same property, so presets move with `translate`,
+// layout with `transform`, and layout runs are tracked apart from enter and exit.
 const running = new WeakMap<HTMLElement, Run>();
+const layouts = new WeakMap<HTMLElement, Run>();
 const presence = new WeakMap<HTMLElement, () => void>();
 const exits = new WeakMap<HTMLElement, Promise<void>>();
 const loops = new WeakMap<HTMLElement, AnimationPlaybackControls>();
 
-const ANIMATED = ["opacity", "transform", "height", "overflow", "transform-origin"] as const;
+const ANIMATED = ["opacity", "translate", "height", "overflow"] as const;
 
 function prefersReduced(): boolean {
   return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -46,16 +49,21 @@ function modeOf(options: MotionOptions | undefined): ResolvedMotion {
   return resolveMotion(options?.motion ?? "auto", prefersReduced());
 }
 
-/** Stops whatever is animating `el` at its current value. Returns whether something was. */
-function interrupt(el: HTMLElement): boolean {
-  const run = running.get(el);
-  running.delete(el);
-  exits.delete(el);
-  presence.get(el)?.();
-  presence.delete(el);
+/** Stops the run tracked for `el` at its current value. Returns whether there was one. */
+function stop(runs: WeakMap<HTMLElement, Run>, el: HTMLElement): boolean {
+  const run = runs.get(el);
+  runs.delete(el);
   run?.controls.stop();
   run?.interrupt();
   return run !== undefined;
+}
+
+/** Stops an enter or exit, and its presence, at the current value. Returns whether one was running. */
+function interrupt(el: HTMLElement): boolean {
+  exits.delete(el);
+  presence.get(el)?.();
+  presence.delete(el);
+  return stop(running, el);
 }
 
 function stopLoop(el: HTMLElement): void {
@@ -66,6 +74,17 @@ function stopLoop(el: HTMLElement): void {
 
 function clearStyles(el: HTMLElement): void {
   for (const property of ANIMATED) el.style.removeProperty(property);
+}
+
+// `scrollHeight` covers content and padding only; the `height` it becomes depends on `box-sizing`.
+function naturalHeight(el: HTMLElement): string {
+  const style = getComputedStyle(el);
+  const px = Number.parseFloat;
+  const height =
+    style.boxSizing === "border-box"
+      ? el.scrollHeight + px(style.borderTopWidth) + px(style.borderBottomWidth)
+      : el.scrollHeight - px(style.paddingTop) - px(style.paddingBottom);
+  return `${height}px`;
 }
 
 // Explicit `[from, to]` keyframes start motion's WAAPI animation at once, so UI SDK `animateOut`
@@ -92,7 +111,7 @@ function definitionFor(
   if (preset === "expand" && mode === "full") {
     const height = `${el.getBoundingClientRect().height}px`;
     el.style.overflow = "hidden";
-    definition.height = [fromCurrent ? height : "0px", direction === "in" ? `${el.scrollHeight}px` : "0px"];
+    definition.height = [fromCurrent ? height : "0px", direction === "in" ? naturalHeight(el) : "0px"];
   }
   return definition as DOMKeyframesDefinition;
 }
@@ -102,16 +121,17 @@ function run(
   el: HTMLElement,
   definition: DOMKeyframesDefinition,
   mode: "full" | "reduced",
+  runs = running,
 ): Promise<boolean> {
   const transition = mode === "full" ? SPRING : { duration: DURATION.reduced, ease: EASE.out };
   return new Promise((resolve) => {
     const controls = animate(el, definition, transition);
     const entry: Run = { controls, interrupt: () => resolve(false) };
-    running.set(el, entry);
+    runs.set(el, entry);
     controls.finished.then(
       () => {
-        if (running.get(el) !== entry) return;
-        running.delete(el);
+        if (runs.get(el) !== entry) return;
+        runs.delete(el);
         resolve(true);
       },
       () => resolve(false),
@@ -200,7 +220,7 @@ export function exit(el: HTMLElement, preset: MotionPreset, options?: MotionOpti
  */
 export function layout(el: HTMLElement, measureBefore: DOMRect, options?: MotionOptions): Promise<void> {
   const mode = modeOf(options);
-  interrupt(el);
+  stop(layouts, el);
   el.style.removeProperty("transform");
   if (mode !== "full") return Promise.resolve();
   const after = el.getBoundingClientRect();
@@ -211,7 +231,7 @@ export function layout(el: HTMLElement, measureBefore: DOMRect, options?: Motion
   if (dx === 0 && dy === 0 && sx === 1 && sy === 1) return Promise.resolve();
   el.style.transformOrigin = "top left";
   const from = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
-  return run(el, { transform: [from, "none"] } as DOMKeyframesDefinition, mode).then((finished) => {
+  return run(el, { transform: [from, "none"] } as DOMKeyframesDefinition, mode, layouts).then((finished) => {
     if (!finished) return;
     el.style.removeProperty("transform");
     el.style.removeProperty("transform-origin");

@@ -138,3 +138,18 @@ test("is a live UI SDK primitive agents can collapse", async ({ page }) => {
   );
   await expect(step(page, "Search the web")).not.toHaveAttribute("data-open");
 });
+
+test("kind-step exposes live open state and its api", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "wave-1-web", "web elements only");
+  await open(page);
+  const el = step(page, "Plan the answer");
+  type KindStep = HTMLElement & { open: boolean; api: { isOpen(): boolean; collapse(): boolean } };
+  expect(await el.evaluate((s: KindStep) => s.open)).toBe(false);
+  await el.evaluate((s: KindStep) => {
+    s.open = true;
+  });
+  await expect(el).toHaveAttribute("data-open", "");
+  expect(await el.evaluate((s: KindStep) => [s.open, s.api.isOpen()])).toEqual([true, true]);
+  await el.evaluate((s: KindStep) => s.api.collapse());
+  await expect(el).not.toHaveAttribute("data-open");
+});
