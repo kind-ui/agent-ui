@@ -5,7 +5,6 @@ import {
   createFocusRecovery,
   createInputHistory,
   definePrimitive,
-  isComposing,
   type SlotDefinition,
 } from "@ui-sdk/core";
 import type { FileInputOptions, FileInputValueChangeReason } from "@ui-sdk/core/file-input";
@@ -20,7 +19,7 @@ import {
 } from "@ui-sdk/core/token-input";
 import type { TriggerDefinition } from "@ui-sdk/core/trigger-menu";
 import type { AttachmentsOptions } from "../attachments/index.js";
-import type { MotionMode } from "../motion/index.js";
+import { enter, type MotionMode } from "../motion/index.js";
 import {
   type ComposerAttachment,
   type ComposerDraft,
@@ -32,14 +31,24 @@ import {
 } from "./draft.js";
 import { type FileIntake, forwardFileInputEvents } from "./file-input-events.js";
 
-/** Typing and tokens, a File Input change, a settled submission, or an `api` call. */
-export type ComposerValueChangeReason = "input-change" | FileInputValueChangeReason | "submit";
+/**
+ * `"input-change"`: typing, tokens or `setValue` with an event. `"history-key"`: ArrowUp or ArrowDown brought
+ * back an earlier prompt. `"picker"`, `"drop"`, `"paste"`, `"reset"`: File Input attached files.
+ * `"remove-press"`: an attachment was removed. `"submit"`: a resolved submission cleared the draft.
+ * `"imperative"`: an `api` call without an event.
+ */
+export type ComposerValueChangeReason =
+  | "input-change"
+  | "history-key"
+  | FileInputValueChangeReason
+  | "submit";
 
 export type ComposerOptions = {
   /** Controlled draft. Don't pass with `defaultValue`. */
   value?: ComposerDraft;
   /** Uncontrolled initial draft. */
   defaultValue?: ComposerDraft;
+  /** Cancel `details` to refuse an edit: the editor goes back to the draft. A controlled owner that refuses passes the old `value` and cancels. */
   onValueChange?: (value: ComposerDraft, details: ChangeDetails<ComposerValueChangeReason>) => void;
   /**
    * Called with a snapshot of the draft on submit. A returned thenable keeps `pending` until it settles:
@@ -60,6 +69,7 @@ export type ComposerOptions = {
   maxSize?: number;
   /** Earlier prompts as draft `text`, oldest first. ArrowUp in an empty field brings them back. */
   history?: readonly string[];
+  /** Stops editing, attaching, submitting and every agent action. Defaults to `false`. */
   disabled?: boolean;
   /**
    * Writes `data-agent-confirm` on the form, so an agent needs a person to send. The bridge applies the mark
@@ -71,10 +81,13 @@ export type ComposerOptions = {
 };
 
 export type ComposerState = {
+  /** The draft: its text, tokens and attachments. */
   value: ComposerDraft;
+  /** Whether a submission is in flight; Send is locked until it settles. */
   pending: boolean;
-  /** Whether `onStop` is set. */
+  /** Whether `onStop` is set, so Stop takes Send's place while pending. */
   canStop: boolean;
+  /** The options of the same name, with their defaults. */
   disabled: boolean;
   submitOn: "enter" | "mod-enter";
   agentConfirm: boolean;
@@ -102,10 +115,15 @@ export type ComposerApi = {
   tokenInput: TokenInputController;
   /** Takes in what File Input accepted or rejected. */
   intake: FileIntake;
-  /** Reads the Token Input into the draft after an edit. */
-  readInput: () => void;
+  /**
+   * Starts syncing the draft and the Token Input once the Token Input has attached the controller, which on web
+   * can happen after the input part binds. Returns a cleanup; calling it again while connected does nothing.
+   */
+  connectInput: () => () => void;
   history: ReturnType<typeof createInputHistory<string>>;
   recovery: ReturnType<typeof createFocusRecovery>;
+  /** Plays Send's entrance when it comes back from Stop, not when the composer mounts. */
+  enterSubmit: (el: HTMLElement) => void;
   /** Each part's state for render functions, kept while what it's built from stays the same. */
   partState: {
     root: (state: ComposerState) => ComposerRootState;
@@ -121,8 +139,6 @@ export type ComposerRootState = {
     FileInputOptions,
     "accept" | "maxSize" | "multiple" | "disabled" | "onValueChange" | "onReject"
   >;
-  /** The File Input drop zone's `pasteTarget`: the editor, so pasted files attach. */
-  pasteTarget: () => Element | undefined;
 };
 
 export type ComposerInputState = {
@@ -263,6 +279,7 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
 
     const settle = (submitted: ComposerDraft, outcome: "resolved" | "rejected") => {
       if (destroyed) return;
+      returningFromStop = store.get().canStop;
       store.set({ pending: false });
       if (outcome === "rejected") announce("Message not sent", { priority: "polite" });
       const current = store.get().value;
@@ -273,7 +290,12 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
     const history = createInputHistory<string>({
       entries: () => context.options().history,
       read: () => store.get().value.text,
-      write: (text, event) => setValue(text, event),
+      write: (text, event) =>
+        change(
+          "value",
+          { text, tokens: tokensOf(fromText(text)), attachments: store.get().value.attachments },
+          { reason: "history-key", event },
+        ),
       atEdge: (direction) => {
         const length = lengthOf(tokenInput.getValue());
         // The editor reports no selection until the first `selectionchange` after focus.
@@ -316,6 +338,38 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       );
     };
     const initialText = fromText(store.get().value.text);
+    let returningFromStop = false;
+
+    const readInput = () => {
+      const segments = tokenInput.getValue();
+      const { value } = store.get();
+      const text = toText(segments);
+      if (text === value.text) return;
+      if (!change("value", { ...value, text, tokens: tokensOf(segments) }, { reason: "input-change" })) {
+        tokenInput.setValue(fromText(value.text));
+      }
+    };
+    const writeInput = () => {
+      const { text } = store.get().value;
+      if (toText(tokenInput.getValue()) !== text) tokenInput.setValue(fromText(text));
+    };
+    let disconnect: (() => void) | undefined;
+    const connectInput = () => {
+      // The controller reads undefined until a Token Input attaches it.
+      if (!disconnect && tokenInput.getValue() !== undefined) {
+        writeInput();
+        const unlisten = tokenInput.editor.subscribe((edit) => {
+          if (edit.type === "input") readInput();
+        });
+        const unsubscribe = store.subscribe(writeInput);
+        disconnect = () => {
+          unlisten();
+          unsubscribe();
+          disconnect = undefined;
+        };
+      }
+      return () => disconnect?.();
+    };
 
     const root = memo(
       (disabled: boolean, accept: string | undefined, maxSize: number | undefined): ComposerRootState => ({
@@ -327,7 +381,6 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
           onValueChange: (_files, details) => intake.accept(details.added, details.reason, details.cancel),
           onReject: (rejected, details) => intake.reject(rejected, details.reason),
         },
-        pasteTarget: () => tokenInput.editor.element,
       }),
     );
     const input = memo(
@@ -385,15 +438,14 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       },
       tokenInput,
       intake,
-      readInput: () => {
-        const segments = tokenInput.getValue();
-        const { value } = store.get();
-        const text = toText(segments);
-        if (text === value.text) return;
-        change("value", { ...value, text, tokens: tokensOf(segments) }, { reason: "input-change" });
-      },
+      connectInput,
       history,
       recovery,
+      enterSubmit: (el) => {
+        if (!returningFromStop) return;
+        returningFromStop = false;
+        void enter(el, "fade", { motion: store.get().motion });
+      },
       partState: {
         root: (state) => root(state.disabled, state.accept, state.maxSize),
         input: (state) => input(state.submitOn, state.disabled),
@@ -422,39 +474,23 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       },
       bind: (el, { api }) => forwardFileInputEvents(el, api.intake),
     }),
-    // Wraps the Token Input and hears its keys bubble, for ArrowUp history (spec §2, composing UI SDK).
+    // Wraps the Token Input and hears its keys bubble for ArrowUp history, as the skill's "wrap ours" seam does.
     input: slot<BaseSlotProps, ComposerInputState>({
       attrs: (state) => ({ "data-pending": state.pending ? "" : undefined }),
       state: (state, { api }) => api.partState.input(state),
       on: {
         keydown: (event, { api }) => {
-          const key = event as KeyboardEvent;
-          if (key.defaultPrevented || isComposing(key) || key.altKey || key.ctrlKey || key.metaKey) return;
-          if (!key.shiftKey) api.history.keydown(key);
+          if (!event.defaultPrevented) api.history.keydown(event as KeyboardEvent);
         },
       },
-      bind: (_el, { api, store }) => {
-        const write = () => {
-          const { text } = store.get().value;
-          // The controller reads undefined until the Token Input attaches it.
-          if (toText(api.tokenInput.getValue() ?? []) !== text) api.tokenInput.setValue(fromText(text));
-        };
-        write();
-        const unsubscribe = store.subscribe(write);
-        const unlisten = api.tokenInput.editor.subscribe((edit) => {
-          if (edit.type === "input") api.readInput();
-        });
-        return () => {
-          unsubscribe();
-          unlisten();
-        };
-      },
+      bind: (_el, { api }) => api.connectInput(),
     }),
     "trigger-menu": slot<BaseSlotProps, ComposerTriggerMenuState>({
       state: (state, { api }) => api.partState.triggerMenu(state),
     }),
+    // Stays mounted while empty, so the first attachment plays its entrance like the rest.
     attachments: slot<BaseSlotProps, ComposerAttachmentsState>({
-      present: (state) => state.value.attachments.length > 0,
+      attrs: (state) => ({ "data-empty": state.value.attachments.length === 0 ? "" : undefined }),
       state: (state, { api }) => api.partState.attachments(state),
     }),
     submit: slot({
@@ -471,7 +507,10 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       }),
       // Keeps focus in the editor when a pointer presses it.
       on: { mousedown: (event) => event.preventDefault() },
-      bind: (el, part) => part.api.recovery.bind(el, part),
+      bind: (el, part) => {
+        part.api.enterSubmit(el);
+        return part.api.recovery.bind(el, part);
+      },
     }),
     stop: slot({
       role: "button",

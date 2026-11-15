@@ -47,6 +47,9 @@ function full(root: HTMLElement, submitOn: "enter" | "mod-enter") {
     const { detail } = event as CustomEvent<UiActionDetail & { value: Parameters<typeof onSubmit>[0] }>;
     detail.waitUntil(onSubmit(detail.value));
   });
+  composer.addEventListener("valuechange", (event) => {
+    if ((window as { refuseEdits?: boolean }).refuseEdits) event.preventDefault();
+  });
   root.querySelector("ui-token-input-editor")?.addEventListener("keydown", (event) => {
     if ((event as KeyboardEvent).key === "Enter" && (window as { blockEnter?: boolean }).blockEnter) {
       event.preventDefault();

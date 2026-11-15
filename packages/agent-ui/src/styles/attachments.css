@@ -136,9 +136,20 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    [data-slot="kind-attachments-remove"] {
+    [data-slot="kind-attachments"][data-motion="auto"] [data-slot="kind-attachments-remove"] {
       scale: 1;
+      transition-duration: var(--kind-duration-reduced);
     }
+  }
+
+  [data-slot="kind-attachments"][data-motion="reduced"] [data-slot="kind-attachments-remove"] {
+    scale: 1;
+    transition-duration: var(--kind-duration-reduced);
+  }
+
+  [data-slot="kind-attachments"][data-motion="none"] [data-slot="kind-attachments-remove"] {
+    scale: 1;
+    transition: none;
   }
 
   /* Web keeps parts that aren't present in the page, with `hidden`. */

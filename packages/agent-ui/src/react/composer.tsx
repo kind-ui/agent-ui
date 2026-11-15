@@ -30,15 +30,15 @@ const parts = createParts(composerPrimitive, {
 export type ComposerProps = Omit<ComponentProps<typeof parts.Root>, "children"> & { children?: ReactNode };
 
 /**
- * A form whose content is a File Input drop zone: files attach by choosing, dropping or pasting anywhere in it.
+ * A form whose content is a File Input drop zone: files attach by choosing, dropping, or pasting while focus is in it.
  * Name it with `aria-label`.
  */
 export function Composer({ children, ...props }: ComposerProps) {
   return (
     <parts.Root {...props}>
-      {({ fileInput, pasteTarget }) => (
+      {({ fileInput }) => (
         <FileInput {...fileInput}>
-          <FileInputDropzone pasteTarget={pasteTarget}>{children}</FileInputDropzone>
+          <FileInputDropzone>{children}</FileInputDropzone>
         </FileInput>
       )}
     </parts.Root>
@@ -96,7 +96,7 @@ export function ComposerTriggerMenu(props: ComponentProps<typeof KindTriggerMenu
   );
 }
 
-/** The draft's attachments, shown while there are any. */
+/** The draft's attachments, hidden while there are none. */
 export function ComposerAttachments(props: Omit<AttachmentsProps, "items" | "onRemove" | "motion">) {
   return (
     <parts.Attachments>

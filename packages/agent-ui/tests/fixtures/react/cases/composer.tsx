@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Attachments } from "../../../../src/react/attachments.js";
 import {
   Composer,
@@ -13,11 +13,13 @@ import { commands, history, imageFile, mentions, recorder } from "../../shared/c
 
 const unsettled = new Promise<void>(() => {});
 const params = new URLSearchParams(location.search);
+const { onSubmit, onStop } = recorder();
 
 function Full({ submitOn }: { submitOn?: "enter" | "mod-enter" }) {
-  const [{ onSubmit, onStop }] = useState(recorder);
   const [mounted, setMounted] = useState(true);
-  Object.assign(window, { unmountComposer: () => setMounted(false) });
+  useEffect(() => {
+    Object.assign(window, { unmountComposer: () => setMounted(false) });
+  }, []);
   if (!mounted) return null;
   return (
     <div className="mx-auto max-w-xl p-6">
@@ -30,6 +32,9 @@ function Full({ submitOn }: { submitOn?: "enter" | "mod-enter" }) {
         maxSize={3072}
         submitOn={submitOn ?? "enter"}
         onSubmit={onSubmit}
+        onValueChange={(_value, details) => {
+          if ((window as { refuseEdits?: boolean }).refuseEdits) details.cancel();
+        }}
         {...(params.has("stop") ? { onStop } : {})}
       >
         <ComposerAttachments />

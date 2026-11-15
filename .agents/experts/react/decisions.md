@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `13d7a856f18a3d7da27479114b204f28ee47cbdf` (Task 10 Message, Markdown, Code Block, Markdown Table)
+Last reviewed: `75c679c` (Task 11 Composer and Attachments)
 
 ## Settled
 
@@ -18,9 +18,13 @@ Last reviewed: `13d7a856f18a3d7da27479114b204f28ee47cbdf` (Task 10 Message, Mark
 - **Every code block and table in one Markdown view is named "Code" / "Table",** so an agent `ref` by label is ambiguous with two of them.
 - **Each streamed chunk renders the Markdown root twice:** blocks arrive through `onOptions` (a layout effect), after the render-time preview. Before paint and absorbed by the block memo.
 - **Index keys carry a code block's `wrap` / `copied` state across a replaced `source`** (branch switch, regenerate), in both layers. Follows from keying blocks by place.
+- **Token chips render without `renderToken` on the server** and take their chip markup when the Token Input binds (UI SDK; report upstream).
+- **A consumer cancels a key with `onKeyDownCapture`, not `onKeyDown`:** the Token Input handles keys on its element before React's bubbling handlers (UI SDK; report upstream). Documented on `ComposerInput`.
 
 ## Resolved
 
+- **A server-rendered image attachment pointed at a `blob:nodedata:` URL.** Fixed: object URLs are made when an item binds, so the server and hydration render the icon.
+- **The first attachment skipped its entrance in React.** Fixed: the composer's attachments part stays mounted while empty (`data-empty`).
 - **Two Kind wrappers composed through `render` stacked both base class lists.** Fixed: `withKindClass` renders a Kind `render` target as its bare UI SDK part, so the outer base applies once, for element and function `render` targets and nested targets alike.
 
 ## Revisit

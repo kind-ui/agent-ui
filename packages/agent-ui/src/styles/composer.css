@@ -85,6 +85,10 @@
     grid-area: attachments;
   }
 
+  [data-slot="kind-composer-attachments"][data-empty] {
+    display: none;
+  }
+
   [data-slot="kind-composer-input"] {
     display: block;
     grid-area: input;
@@ -114,7 +118,7 @@
     white-space: nowrap;
   }
 
-  [data-slot="kind-composer"] [data-slot="token-input-token"] {
+  :where([data-slot="kind-composer"]) [data-slot="token-input-token"] {
     --kind-composer-token-icon: var(--kind-composer-mention-icon);
 
     display: inline-flex;
@@ -139,20 +143,20 @@
       mask: var(--kind-composer-token-icon) center / contain no-repeat;
     }
 
-    &[data-token-type="command"] {
+    &:where([data-token-type="command"]) {
       --kind-composer-token-icon: var(--kind-composer-command-icon);
 
       background-color: var(--kind-hover);
       color: var(--kind-fg);
     }
 
-    &[data-selected] {
+    &:where([data-selected]) {
       background-color: var(--kind-composer-accent);
       color: var(--kind-on-status);
     }
   }
 
-  [data-slot="kind-composer"] [data-slot="token-input-token-remove"] {
+  :where([data-slot="kind-composer"]) [data-slot="token-input-token-remove"] {
     display: inline-grid;
     place-items: center;
     width: 1rem;
@@ -230,18 +234,12 @@
     background-color: var(--kind-fg);
     color: var(--kind-surface);
 
-    /* Send and Stop take one place: whichever arrives grows in where the other was. */
-    @starting-style {
-      opacity: 0;
-      scale: 0.6;
-    }
-
     &:hover:not([aria-disabled="true"]) {
       background-color: color-mix(in oklab, var(--kind-fg) 82%, var(--kind-surface));
     }
   }
 
-  [data-slot="kind-composer-submit"][aria-disabled="true"] {
+  [data-slot="kind-composer-submit"]:where([aria-disabled="true"]) {
     background-color: color-mix(in oklab, var(--kind-fg) 12%, var(--kind-surface));
     color: var(--kind-muted-fg);
     cursor: default;
@@ -259,6 +257,14 @@
     animation: kind-spin 0.8s linear infinite;
   }
 
+  /* Stop grows in where Send was; Send's return fades in from `enterSubmit`. */
+  [data-slot="kind-composer-stop"] {
+    @starting-style {
+      opacity: 0;
+      scale: 0.6;
+    }
+  }
+
   [data-slot="kind-composer-stop"]::before {
     width: 0.625rem;
     height: 0.625rem;
@@ -268,7 +274,8 @@
 
   /* Reduced motion: no scale, a short fade. `none`: no transition at all. */
   @media (prefers-reduced-motion: reduce) {
-    :is([data-slot="kind-composer-submit"], [data-slot="kind-composer-stop"])[data-motion="auto"] {
+    [data-slot="kind-composer-stop"][data-motion="auto"],
+    [data-slot="kind-composer"][data-motion="auto"] [data-slot="file-input-dropzone"]::after {
       transition-duration: var(--kind-duration-reduced);
 
       @starting-style {
@@ -277,7 +284,8 @@
     }
   }
 
-  :is([data-slot="kind-composer-submit"], [data-slot="kind-composer-stop"])[data-motion="reduced"] {
+  [data-slot="kind-composer-stop"][data-motion="reduced"],
+  [data-slot="kind-composer"][data-motion="reduced"] [data-slot="file-input-dropzone"]::after {
     transition-duration: var(--kind-duration-reduced);
 
     @starting-style {
@@ -285,7 +293,8 @@
     }
   }
 
-  :is([data-slot="kind-composer-submit"], [data-slot="kind-composer-stop"])[data-motion="none"] {
+  :is([data-slot="kind-composer-submit"], [data-slot="kind-composer-stop"])[data-motion="none"],
+  [data-slot="kind-composer"][data-motion="none"] [data-slot="file-input-dropzone"]::after {
     transition: none;
   }
 

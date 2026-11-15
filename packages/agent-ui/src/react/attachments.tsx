@@ -1,18 +1,19 @@
 import { attachmentsPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/react/primitive";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 const parts = createParts(attachmentsPrimitive, { root: "ul", item: "li", remove: "span" });
 
-export type AttachmentsProps = Omit<ComponentProps<typeof parts.Root>, "children">;
+export type AttachmentsProps = Omit<ComponentProps<typeof parts.Root>, "children"> & { children?: ReactNode };
 
-/** The `items` as chips, one Tab stop with arrow keys between them. Name it with `aria-label`. */
-export function Attachments(props: AttachmentsProps) {
+/**
+ * The `items` as chips, one Tab stop with arrow keys between them. Name it with `aria-label`. Pass an `Attachment`
+ * per item as children to style them; without children, each item gets one.
+ */
+export function Attachments({ children, ...props }: AttachmentsProps) {
   return (
     <parts.Root {...props}>
-      {props.items?.map((item) => (
-        <Attachment key={item.id} value={item.id} />
-      ))}
+      {children ?? props.items?.map((item) => <Attachment key={item.id} value={item.id} />)}
     </parts.Root>
   );
 }

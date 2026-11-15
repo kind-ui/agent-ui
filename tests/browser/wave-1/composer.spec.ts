@@ -236,3 +236,31 @@ test("Attachments is a live UI SDK primitive with a remove action", async ({ pag
   await expect(list.locator("img")).toHaveCount(1);
   await expectAgentActions(page, "Files", ["remove"]);
 });
+
+test("an edit the owner cancels puts the editor back to the draft", async ({ page }) => {
+  const editor = await open(page);
+  await editor.click();
+  await page.keyboard.type("kept");
+  await page.evaluate(() => Object.assign(window, { refuseEdits: true }));
+  await page.keyboard.type("x");
+  await expect(editor).toHaveText("kept");
+});
+
+test("kind-composer wires content added after it connects", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "wave-1-web", "web elements only");
+  await open(page);
+  await page.evaluate(() => {
+    const form = document.querySelector("kind-composer form") as HTMLFormElement;
+    const late = document.createElement("kind-composer");
+    document.querySelector("kind-composer")?.remove();
+    document.body.append(late);
+    late.append(form);
+  });
+  const editor = page.getByRole("textbox", { name: "Prompt" });
+  await editor.click();
+  await page.keyboard.type("late");
+  type KindComposer = HTMLElement & { value: { text: string } };
+  await expect
+    .poll(() => page.locator("kind-composer").evaluate((c: KindComposer) => c.value.text))
+    .toBe("late");
+});

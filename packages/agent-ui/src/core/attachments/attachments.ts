@@ -29,6 +29,7 @@ export const attachmentDetail = (item: AttachmentItem): string =>
   item.error ? ATTACHMENT_ERRORS[item.error] : item.size === undefined ? "" : formatFileSize(item.size);
 
 export type AttachmentsOptions = {
+  /** The chips, in order, keyed by `id`. Defaults to none. */
   items?: readonly AttachmentItem[];
   /** Offers removal while set: the remove part, Delete and Backspace, and the `remove` action. Web: a property. */
   onRemove?: (id: string, details: ChangeDetails<"remove-press" | "imperative">) => void;
@@ -38,9 +39,13 @@ export type AttachmentsOptions = {
 
 export type AttachmentsState = {
   items: readonly AttachmentItem[];
+  /** The item holding the list's Tab stop. */
   focused: string | null;
+  /** Whether `onRemove` is set. */
   canRemove: boolean;
   motion: MotionMode;
+  /** Object URLs for image files, by item id, made once each item binds. */
+  previews: Readonly<Record<string, string>>;
 };
 
 type ItemProps = { value: string };
@@ -58,7 +63,10 @@ export type AttachmentsApi = {
   readonly remove: ((id: string, event?: Event) => void) | undefined;
   roving: ReturnType<typeof createRovingFocus<AttachmentsState, ItemProps>>;
   recovery: ReturnType<typeof createFocusRecovery<ItemProps>>;
+  /** A host `url`, else the object URL made for an image file once its item bound. */
   previewOf: (item: AttachmentItem) => string | undefined;
+  /** Makes an image file's object URL in the browser, so the server and hydration render the icon. */
+  bindPreview: (id: string) => void;
   /** Plays an item's entrance when it's added, not when the list mounts with it. */
   enterItem: (el: HTMLElement, id: string) => void;
 };
@@ -97,7 +105,11 @@ const isImage = (item: AttachmentItem) => item.mediaType?.startsWith("image/") ?
 export const attachmentsPrimitive: AttachmentsPrimitive = definePrimitive({
   name: "kind-attachments",
   options: { items: "value", onRemove: "callback", motion: "string" },
-  state: (options: AttachmentsOptions): AttachmentsState => ({ ...presentation(options), focused: null }),
+  state: (options: AttachmentsOptions): AttachmentsState => ({
+    ...presentation(options),
+    focused: null,
+    previews: {},
+  }),
   sync: presentation,
   controlled: ["items"],
   api: (context): AttachmentsApi => {
@@ -124,16 +136,25 @@ export const attachmentsPrimitive: AttachmentsPrimitive = definePrimitive({
       },
     });
 
-    const previews = new Map<File, string>();
+    const made = new Map<string, { file: File; url: string }>();
     const revokeGone = (items: readonly AttachmentItem[]) => {
-      for (const [file, url] of previews) {
-        if (items.some((item) => item.file === file)) continue;
+      const gone = [...made].filter(
+        ([id, { file }]) => !items.some((item) => item.id === id && item.file === file),
+      );
+      for (const [id, { url }] of gone) {
         URL.revokeObjectURL(url);
-        previews.delete(file);
+        made.delete(id);
       }
+      return gone.map(([id]) => id);
     };
-    context.onOptions((options) => revokeGone(options.items ?? NO_ITEMS));
-    context.onDestroy(() => revokeGone(NO_ITEMS));
+    context.onOptions((options) => {
+      const gone = revokeGone(options.items ?? NO_ITEMS);
+      if (gone.length === 0) return;
+      const previews = { ...store.get().previews };
+      for (const id of gone) delete previews[id];
+      store.set({ previews });
+    });
+    context.onDestroy(() => void revokeGone(NO_ITEMS));
 
     const mounted = new Set(store.get().items.map((item) => item.id));
 
@@ -151,17 +172,14 @@ export const attachmentsPrimitive: AttachmentsPrimitive = definePrimitive({
       },
       roving,
       recovery,
-      previewOf: (item) => {
-        if (!isImage(item)) return undefined;
-        if (item.url !== undefined || item.file === undefined) return item.url;
-        // Object URLs exist only in a browser; the server renders the icon instead.
-        if (typeof URL.createObjectURL !== "function") return undefined;
-        let url = previews.get(item.file);
-        if (url === undefined) {
-          url = URL.createObjectURL(item.file);
-          previews.set(item.file, url);
-        }
-        return url;
+      previewOf: (item) => (isImage(item) ? (item.url ?? store.get().previews[item.id]) : undefined),
+      bindPreview: (id) => {
+        const item = store.get().items.find((entry) => entry.id === id);
+        if (!item?.file || item.url !== undefined || !isImage(item) || made.get(id)?.file === item.file)
+          return;
+        const url = URL.createObjectURL(item.file);
+        made.set(id, { file: item.file, url });
+        store.set({ previews: { ...store.get().previews, [id]: url } });
       },
       enterItem: (el, id) => {
         if (mounted.has(id)) return;
@@ -171,7 +189,7 @@ export const attachmentsPrimitive: AttachmentsPrimitive = definePrimitive({
     };
   },
   slots: (slot) => ({
-    root: slot({ role: "list" }),
+    root: slot({ role: "list", attrs: (state) => ({ "data-motion": state.motion }) }),
     item: slot<ItemProps, AttachmentState>({
       role: "listitem",
       props: { value: "string" },
@@ -205,6 +223,7 @@ export const attachmentsPrimitive: AttachmentsPrimitive = definePrimitive({
         },
       },
       bind: (el, part) => {
+        part.api.bindPreview(part.props.value);
         part.api.enterItem(el, part.props.value);
         const unbindFocus = part.api.roving.bind(el, part);
         const unbindRecovery = part.api.recovery.bind(el, part);

@@ -73,7 +73,6 @@ Components are built on UI SDK, not around it.
 | --- | --- |
 | Streaming markdown engine (§6) | Content parsing, not interaction. |
 | Motion helper presets (§6) | Animation values. Presence still uses UI SDK `animateIn` / `animateOut`. |
-| Composer submit key policy (`submitOn`, Shift+Enter newline) | Application policy. It is declared as the input slot's `keys` and `on.keydown`, and uses UI SDK `isComposing`. |
 | Attachment removal on Delete/Backspace | Application action on a focused item. Focus movement stays with `createRovingFocus`, and the keys are declared on the slot. |
 | Composer File Input events on Web Components | `@ui-sdk/web` reports File Input's changes only as `valuechange` and `reject` events on its own element, which don't bubble. The composer hears them as they capture through its form and hands them to the callbacks React passes as props. |
 | Conversation new-message counter | Counts messages added while not following. Following itself uses `createStickToBottom`. |

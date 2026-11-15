@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `13d7a856f18a3d7da27479114b204f28ee47cbdf` (Task 10 Message, Markdown, Code Block, Markdown Table)
+Last reviewed: `75c679c` (Task 11 Composer and Attachments)
 
 ## Settled
 
@@ -13,6 +13,8 @@ Last reviewed: `13d7a856f18a3d7da27479114b204f28ee47cbdf` (Task 10 Message, Mark
 - **Highlighter colors don't follow dark mode:** a token's color is one value; hosts must pass `light-dark()` colors, which need `color-scheme` on the page. Revisit with the Task 14 theme tokens.
 - **The table copy button is styled in `code-block.css`** (shared icon-button rule). Split it out if the registry ever ships per-component stylesheets.
 - **`field-sizing: content` on the message editor grows only in Chromium;** elsewhere it keeps its 2.5rem minimum.
+- **The attachment remove button is 20 px,** under the 24 px target size on touch; Delete on the chip is the keyboard path.
+- **Removed chips leave without an exit animation,** and the chips after them jump into place.
 
 ## Resolved
 

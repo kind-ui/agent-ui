@@ -35,7 +35,7 @@ function renderToken(token: Token, host: HTMLElement): void {
  *           <ui-trigger-menu-empty>No matches</ui-trigger-menu-empty><ui-trigger-menu-list></ui-trigger-menu-list>
  *         </ui-trigger-menu-content></ui-trigger-menu></kind-internal-trigger-menu></kind-composer-trigger-menu>
  *       </ui-token-input></kind-composer-input>
- *       <ui-file-input-trigger><button aria-label="Attach files"></button></ui-file-input-trigger>
+ *       <ui-file-input-trigger><button type="button" aria-label="Attach files"></button></ui-file-input-trigger>
  *       <kind-composer-submit><button></button></kind-composer-submit>
  *       <kind-composer-stop><button></button></kind-composer-stop>
  *     </ui-file-input-dropzone></ui-file-input>
@@ -70,7 +70,7 @@ export function defineComposer(): void {
         const api = instance.api as ComposerApi;
         const draw = () => {
           const state = instance.get() as ComposerState;
-          const { fileInput, pasteTarget } = api.partState.root(state);
+          const { fileInput } = api.partState.root(state);
           const { tokenInput } = api.partState.input(state);
           assign(el.querySelector("ui-file-input"), {
             multiple: fileInput.multiple,
@@ -78,13 +78,13 @@ export function defineComposer(): void {
             accept: fileInput.accept,
             maxSize: fileInput.maxSize,
           });
-          assign(el.querySelector("ui-file-input-dropzone"), { pasteTarget });
           assign(el.querySelector("ui-token-input"), {
             controller: tokenInput.controller,
             submitShortcut: tokenInput.submitShortcut,
             disabled: tokenInput.disabled,
             renderToken,
           });
+          api.connectInput();
           assign(
             el.querySelector("kind-composer-trigger-menu ui-trigger-menu"),
             api.partState.triggerMenu(state),
@@ -95,7 +95,17 @@ export function defineComposer(): void {
           );
         };
         draw();
-        return instance.subscribe(draw);
+        const unsubscribe = instance.subscribe(draw);
+        // Content added after the composer connects, like a framework's conditional markup, needs its props too.
+        const arrivals = new MutationObserver((records) => {
+          if (records.some((record) => [...record.addedNodes].some((node) => node instanceof Element)))
+            draw();
+        });
+        arrivals.observe(el, { childList: true, subtree: true });
+        return () => {
+          unsubscribe();
+          arrivals.disconnect();
+        };
       },
     },
     input: "kind-composer-input",
