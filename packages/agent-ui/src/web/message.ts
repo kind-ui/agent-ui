@@ -1,10 +1,12 @@
 import { messagePrimitive } from "@kind-ui/agent-ui/core";
 import { createParts, wrappedButton, wrappedChild } from "@ui-sdk/web";
 
+type MessageElement = HTMLElement & { canRegenerate: boolean; canEdit: boolean };
+
 /**
- * Set `onRegenerate` and `onEdit` as properties: whether they're set decides which actions show.
- * The other callbacks are events: `branchchange`, `messagecopy`. Write each action as a wrapper around a
- * toolbar button, `<kind-message-copy><ui-toolbar-button><button aria-label="Copy">`, inside a
+ * The `can-regenerate` and `can-edit` attributes offer those actions. Callbacks are events: `regenerate`, `edit`,
+ * `branchchange` and `messagecopy`. Write each action as a wrapper around a toolbar button,
+ * `<kind-message-copy><ui-toolbar-button><button aria-label="Copy">`, inside a
  * `<kind-internal-toolbar><ui-toolbar aria-label="Message actions">`, and the editor as
  * `<kind-message-editor><textarea hidden></textarea></kind-message-editor>`.
  */
@@ -13,8 +15,15 @@ export function defineMessage(): void {
   createParts(messagePrimitive, {
     root: {
       tag: "kind-message",
-      kinds: { onRegenerate: "value", onEdit: "value" },
-      silent: ["onRegenerate", "onEdit"],
+      kinds: { canRegenerate: "boolean", canEdit: "boolean" },
+      // A listener can't be seen, so an attribute offers the action and an unset one takes its callback away.
+      options: (el) => {
+        const { canRegenerate, canEdit } = el as MessageElement;
+        return {
+          ...(!canRegenerate && { onRegenerate: undefined }),
+          ...(!canEdit && { onEdit: undefined }),
+        };
+      },
       events: { onCopy: "messagecopy" },
       api: ["copy"],
     },

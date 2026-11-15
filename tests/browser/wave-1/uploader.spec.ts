@@ -7,8 +7,8 @@ type Fixture = {
   kindUploader: { calls: Calls; setStatus(id: string, status: string, progress?: number): void };
 };
 
-const open = async (page: Page) => {
-  await page.goto("/?c=uploader&case=mixed");
+const open = async (page: Page, name = "mixed") => {
+  await page.goto(`/?c=uploader&case=${name}`);
   await expect(page.getByRole("group", { name: "Uploads" })).toBeVisible();
   await expect(page.getByRole("listitem")).toHaveCount(4);
 };
@@ -94,4 +94,13 @@ test("axe reports no violations", async ({ page }) => {
   await page.waitForFunction(() => document.getAnimations().length === 0);
   const { violations } = await new AxeBuilder({ page }).include("#root").analyze();
   expect(violations).toEqual([]);
+});
+
+test("React 19 sets kind-uploader's properties and hears its events", async ({ page }, testInfo) => {
+  test.skip(!testInfo.project.name.startsWith("wave-1-react"), "React renders the web element");
+  await open(page, "web-element");
+  await page.getByRole("button", { name: "Retry training-set.csv" }).click();
+  await page.getByRole("button", { name: "Cancel quarterly-report.pdf" }).click();
+  expect(await calls(page)).toMatchObject({ retries: ["dataset"], cancels: ["report"] });
+  await expect(page.getByRole("button", { name: "Cancel quarterly-report.pdf" })).toHaveCount(0);
 });

@@ -32,9 +32,9 @@ export type MessageOptions = {
   onBranchChange?: (index: number, details: ChangeDetails<MessageBranchChangeReason>) => void;
   /** Called before `text` is copied. Cancel it to copy something else yourself. Web: a `messagecopy` event. */
   onCopy?: (text: string, details: ChangeDetails<"copy-press" | "imperative">) => void;
-  /** Offers `regenerate` while set. Web: a property, since a listener can't be seen. */
+  /** Offers `regenerate` while set. Web: `can-regenerate` and a `regenerate` event. */
   onRegenerate?: (text: string, details: ChangeDetails<"regenerate-press" | "imperative">) => void;
-  /** Offers `edit` on user messages while set; called with the new text. Web: a property. */
+  /** Offers `edit` on user messages while set; called with the new text. Web: `can-edit` and an `edit` event. */
   onEdit?: (text: string, details: ChangeDetails<InlineEditReason>) => void;
   /** Defaults to `"auto"`, which follows `prefers-reduced-motion`. */
   motion?: MotionMode;

@@ -40,11 +40,11 @@ export type UploaderOptions = {
   items?: readonly UploadItem[];
   /** Files chosen, dropped or pasted that pass `accept` and `maxSize`. Web: a `files` event. */
   onFiles?: (files: File[], details: UploaderFilesDetails) => void;
-  /** Files turned down by `accept` or `maxSize`, with File Input's `reasons`. Web: a `reject` event. */
+  /** Files turned down by `accept` or `maxSize`, with File Input's `reasons`. Web: an `uploadreject` event. */
   onReject?: (rejected: FileRejection[], details: UploaderFilesDetails) => void;
-  /** Offers Cancel on queued and uploading items, and the `cancel` action. Web: a property. */
+  /** Offers Cancel on queued and uploading items, and the `cancel` action. Web: `can-cancel` and an `uploadcancel` event. */
   onCancel?: (id: string, details: ChangeDetails<"cancel-press" | "imperative">) => void;
-  /** Offers Retry on failed items, and the `retry` action. Web: a property. */
+  /** Offers Retry on failed items, and the `retry` action. Web: `can-retry` and an `uploadretry` event. */
   onRetry?: (id: string, details: ChangeDetails<"retry-press" | "imperative">) => void;
   /** The files to accept, like the `accept` attribute. Defaults to any. */
   accept?: string;

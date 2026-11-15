@@ -31,17 +31,22 @@ function fill(el: Element, item: AttachmentItem, preview: string | undefined): v
   );
 }
 
+type AttachmentsElement = HTMLElement & { canRemove: boolean };
+
 /**
  * `<kind-attachments aria-label="Files">` renders a `kind-attachments-item` for each entry of its `items`
- * property. Set `onRemove` as a property: whether it's set decides whether items can be removed.
+ * property. The `can-remove` attribute lets items be removed, each firing `remove` with the item's id.
  */
 export function defineAttachments(): void {
   if (customElements.get("kind-attachments")) return;
   createParts(attachmentsPrimitive, {
     root: {
       tag: "kind-attachments",
-      kinds: { onRemove: "value" },
-      silent: ["onRemove"],
+      kinds: { canRemove: "boolean" },
+      // The composer hands its own `onRemove` in as a property, beside `can-remove`.
+      properties: ["onRemove"],
+      // A listener can't be seen, so an attribute offers removal and an unset one takes its callback away.
+      options: (el) => ((el as AttachmentsElement).canRemove ? {} : { onRemove: undefined }),
       render: (el, instance) => {
         const api = instance.api as AttachmentsApi;
         const drawn = new WeakMap<Element, { item: AttachmentItem; preview: string | undefined }>();

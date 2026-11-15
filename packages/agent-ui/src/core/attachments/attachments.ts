@@ -31,7 +31,7 @@ export const attachmentDetail = (item: AttachmentItem): string =>
 export type AttachmentsOptions = {
   /** The chips, in order, keyed by `id`. Defaults to none. */
   items?: readonly AttachmentItem[];
-  /** Offers removal while set: the remove part, Delete and Backspace, and the `remove` action. Web: a property. */
+  /** Offers removal while set: the remove part, Delete and Backspace, and the `remove` action. Web: `can-remove` and a `remove` event. */
   onRemove?: (id: string, details: ChangeDetails<"remove-press" | "imperative">) => void;
   /** Defaults to `"auto"`, which follows `prefers-reduced-motion`. */
   motion?: MotionMode;

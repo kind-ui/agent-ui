@@ -56,7 +56,7 @@ export type ComposerOptions = {
    * resolving clears the draft unless it changed meanwhile, rejecting keeps it.
    */
   onSubmit?: (draft: ComposerDraft) => unknown;
-  /** Offers the stop control and action while a submission is pending. */
+  /** Offers the stop control and action while a submission is pending. Web: `can-stop` and a `stop` event. */
   onStop?: () => void;
   /** Which keys submit. `"enter"` (default) takes Shift+Enter as a new line; `"mod-enter"` takes Enter as one. */
   submitOn?: "enter" | "mod-enter";

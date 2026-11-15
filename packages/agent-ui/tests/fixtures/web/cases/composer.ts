@@ -42,7 +42,8 @@ function full(root: HTMLElement, submitOn: "enter" | "mod-enter") {
   root.innerHTML = markup(`accept="image/*,.txt,.md" max-size="3072" submit-on="${submitOn}"`);
   const composer = root.querySelector("kind-composer") as HTMLElement & Record<string, unknown>;
   const { onSubmit, onStop } = recorder();
-  Object.assign(composer, { mentions, commands, history, ...(params.has("stop") ? { onStop } : {}) });
+  Object.assign(composer, { mentions, commands, history, canStop: params.has("stop") });
+  composer.addEventListener("stop", onStop);
   composer.addEventListener("composersubmit", (event) => {
     const { detail } = event as CustomEvent<UiActionDetail & { value: Parameters<typeof onSubmit>[0] }>;
     detail.waitUntil(onSubmit(detail.value));
@@ -80,12 +81,11 @@ export const cases = {
       { id: "b", name: "notes.md", size: 812, mediaType: "text/markdown" },
       { id: "c", name: "archive.zip", size: 9_000_000, mediaType: "application/zip", error: "type" },
     ];
-    Object.assign(list, {
-      items,
-      onRemove: (id: string) => {
-        items = items.filter((item) => item.id !== id);
-        list.items = items;
-      },
+    Object.assign(list, { items, canRemove: true });
+    list.addEventListener("remove", (event) => {
+      const id = (event as CustomEvent<{ value: string }>).detail.value;
+      items = items.filter((item) => item.id !== id);
+      list.items = items;
     });
   },
 };

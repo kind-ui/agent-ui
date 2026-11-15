@@ -42,19 +42,27 @@ function fill(el: Element, item: UploadItem): void {
   if (detail && detail.textContent !== text) detail.textContent = text;
 }
 
+type UploaderElement = HTMLElement & { canCancel: boolean; canRetry: boolean };
+
 /**
  * `<kind-uploader aria-label="Uploads">` fills in a File Input drop zone and its list when it has no children, and
- * renders a `kind-uploader-item` for each entry of its `items` property. Set `onCancel` and `onRetry` as
- * properties: whether each is set decides whether its button shows. Accepted files fire `files` and turned-down
- * ones `reject`, each with `event.detail.value`.
+ * renders a `kind-uploader-item` for each entry of its `items` property. The `can-cancel` and `can-retry` attributes
+ * show those buttons, which fire `uploadcancel` and `uploadretry` with the item's id. Accepted files fire `files`
+ * and turned-down ones `uploadreject`, each with `event.detail.value`.
  */
 export function defineUploader(): void {
   if (customElements.get("kind-uploader")) return;
   createParts(uploaderPrimitive, {
     root: {
       tag: "kind-uploader",
-      kinds: { onCancel: "value", onRetry: "value" },
-      silent: ["onCancel", "onRetry"],
+      kinds: { canCancel: "boolean", canRetry: "boolean" },
+      // A listener can't be seen, so an attribute offers each action and an unset one takes its callback away.
+      options: (el) => {
+        const { canCancel, canRetry } = el as UploaderElement;
+        return { ...(!canCancel && { onCancel: undefined }), ...(!canRetry && { onRetry: undefined }) };
+      },
+      // The File Input inside fires `cancel` (from its native input, bubbling) and `reject`.
+      events: { onCancel: "uploadcancel", onRetry: "uploadretry", onReject: "uploadreject" },
       render: (el, instance) => {
         if (!el.firstElementChild) el.innerHTML = parts;
         const fileInput = el.querySelector("ui-file-input") as (Element & Record<string, unknown>) | null;

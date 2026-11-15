@@ -21,6 +21,8 @@ function renderToken(token: Token, host: HTMLElement): void {
   (host.querySelector("span") as HTMLSpanElement).textContent = token.label;
 }
 
+type ComposerElement = HTMLElement & { canStop: boolean };
+
 /**
  * `<kind-composer>` wraps a `<form aria-label="…">` whose content is a File Input drop zone:
  *
@@ -43,8 +45,8 @@ function renderToken(token: Token, host: HTMLElement): void {
  * </kind-composer>
  * ```
  *
- * Set `mentions`, `commands`, `history` and `onStop` as properties; whether `onStop` is set decides whether Stop
- * shows. `onSubmit` is a `composersubmit` event whose listeners call `event.detail.waitUntil(promise)`.
+ * Set `mentions`, `commands` and `history` as properties. `onSubmit` is a `composersubmit` event whose listeners
+ * call `event.detail.waitUntil(promise)`. The `can-stop` attribute shows Stop while pending; it fires `stop`.
  */
 export function defineComposer(): void {
   if (customElements.get("kind-composer")) return;
@@ -55,8 +57,9 @@ export function defineComposer(): void {
       tag: "kind-composer",
       target: wrappedChild("form"),
       display: "contents",
-      kinds: { onStop: "value" },
-      silent: ["onStop"],
+      kinds: { canStop: "boolean" },
+      // A listener can't be seen, so an attribute offers Stop and an unset one takes its callback away.
+      options: (el) => ((el as ComposerElement).canStop ? {} : { onStop: undefined }),
       events: { onSubmit: "composersubmit" },
       defaults: { agentConfirm: true },
       state: {
@@ -89,10 +92,10 @@ export function defineComposer(): void {
             el.querySelector("kind-composer-trigger-menu ui-trigger-menu"),
             api.partState.triggerMenu(state),
           );
-          assign(
-            el.querySelector("kind-composer-attachments kind-attachments"),
-            api.partState.attachments(state),
-          );
+          assign(el.querySelector("kind-composer-attachments kind-attachments"), {
+            ...api.partState.attachments(state),
+            canRemove: true,
+          });
         };
         draw();
         const unsubscribe = instance.subscribe(draw);

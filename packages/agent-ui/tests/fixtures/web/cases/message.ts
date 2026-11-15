@@ -12,11 +12,6 @@ const replies = [
 ];
 const question = "How should the client handle a flaky upstream?";
 
-type MessageElement = HTMLElement & {
-  onRegenerate?: (text: string) => void;
-  onEdit?: (text: string) => void;
-};
-
 const calls: string[] = [];
 
 function define() {
@@ -34,7 +29,7 @@ const actions = (more = "") => `
   <kind-internal-toolbar><ui-toolbar aria-label="Message actions">${button("copy", "Copy")}${more}</ui-toolbar></kind-internal-toolbar>`;
 
 const user = `
-  <kind-message aria-label="User message" message-role="user">
+  <kind-message aria-label="User message" message-role="user" can-edit>
     <kind-message-content></kind-message-content>
     <kind-message-editor><textarea hidden></textarea></kind-message-editor>
     <kind-message-toolbar>${actions(button("edit", "Edit"))}</kind-message-toolbar>
@@ -56,20 +51,21 @@ const assistant = (branches: boolean) => `
     </kind-message-toolbar>
   </kind-message>`;
 
-function wireUser(el: MessageElement) {
+function wireUser(el: HTMLElement) {
   const content = el.querySelector("kind-message-content") as HTMLElement;
   const show = (text: string) => {
     el.setAttribute("text", text);
     content.textContent = text;
   };
   show(question);
-  el.onEdit = (text) => {
+  el.addEventListener("edit", (event) => {
+    const text = (event as CustomEvent<{ value: string }>).detail.value;
     calls.push(`edit:${text}`);
     show(text);
-  };
+  });
 }
 
-function wireAssistant(el: MessageElement, callbacks: boolean) {
+function wireAssistant(el: HTMLElement & { canRegenerate?: boolean }, callbacks: boolean) {
   const markdown = el.querySelector("kind-markdown") as HTMLElement;
   const show = (index: number) => {
     const text = replies[index] as string;
@@ -85,21 +81,22 @@ function wireAssistant(el: MessageElement, callbacks: boolean) {
   el.addEventListener("messagecopy", (event) =>
     calls.push(`copy:${(event as CustomEvent<{ value: string }>).detail.value}`),
   );
-  el.onRegenerate = () => calls.push("regenerate");
+  el.canRegenerate = true;
+  el.addEventListener("regenerate", () => calls.push("regenerate"));
 }
 
 export const cases = {
   all: (root: HTMLElement) => {
     define();
     root.innerHTML = `<div class="m-4 flex w-[36rem] flex-col gap-6">${user}${assistant(true)}</div>`;
-    const [first, second] = root.querySelectorAll<MessageElement>("kind-message");
-    wireUser(first as MessageElement);
-    wireAssistant(second as MessageElement, true);
+    const [first, second] = root.querySelectorAll<HTMLElement>("kind-message");
+    wireUser(first as HTMLElement);
+    wireAssistant(second as HTMLElement, true);
   },
   "no-callbacks": (root: HTMLElement) => {
     define();
     root.innerHTML = `<div class="m-4 w-[36rem]">${assistant(false)}</div>`;
-    wireAssistant(root.querySelector("kind-message") as MessageElement, false);
+    wireAssistant(root.querySelector("kind-message") as HTMLElement, false);
   },
   chat: (root: HTMLElement) => {
     define();
@@ -111,7 +108,7 @@ export const cases = {
           <kind-conversation-content>
             <kind-conversation-row value="q" index="0">${user}</kind-conversation-row>
             <kind-conversation-row value="a" index="1">
-              <kind-message aria-label="Assistant message" message-role="assistant" status="streaming">
+              <kind-message aria-label="Assistant message" message-role="assistant" status="streaming" can-regenerate>
                 <kind-message-content><kind-markdown streaming></kind-markdown></kind-message-content>
                 <kind-message-toolbar hidden>${actions(button("regenerate", "Regenerate"))}</kind-message-toolbar>
               </kind-message>
@@ -119,10 +116,10 @@ export const cases = {
           </kind-conversation-content>
         </kind-conversation-viewport>
       </kind-conversation>`;
-    const [first, second] = root.querySelectorAll<MessageElement>("kind-message");
-    wireUser(first as MessageElement);
-    const reply = second as MessageElement;
-    reply.onRegenerate = () => calls.push("regenerate");
+    const [first, second] = root.querySelectorAll<HTMLElement>("kind-message");
+    wireUser(first as HTMLElement);
+    const reply = second as HTMLElement;
+    reply.addEventListener("regenerate", () => calls.push("regenerate"));
     const markdown = reply.querySelector("kind-markdown") as HTMLElement;
     let text = "";
     Object.assign(window, {
