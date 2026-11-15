@@ -1,0 +1,46 @@
+---
+title: Markdown Table
+description: Show a table that scrolls sideways instead of squeezing its columns, with a copy button.
+---
+
+import MarkdownTableExample from "@/examples/markdown-table/basic";
+
+Use a markdown table for tabular data in a reply. Markdown renders its tables in one, and you can use it on its own: put a `thead` and a `tbody` inside, and name it with `aria-label`.
+
+<Example caption="Press the copy button to copy the table as tab-separated text, ready to paste into a spreadsheet.">
+  <MarkdownTableExample />
+
+  <include cwd lang="tsx">./examples/markdown-table/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/markdown-table
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/markdown-table-web
+```
+
+## Usage
+
+### Columns
+
+Set `--kind-markdown-table-columns` to the number of columns. Each column then keeps at least `--kind-markdown-table-column-width` (8rem by default), and a wider table scrolls sideways. Columns hold their width as rows stream in, so the table doesn't reflow. Set `data-align` to `right` or `center` on a cell to align it.
+
+### Copying
+
+The copy button copies the table as tab-separated text, a row per line, and turns into a check for two seconds. Tab reaches it, and Enter or Space presses it. It tells screen readers "Copied", or "Copy failed" when the browser refuses the clipboard write.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/react/markdown-table.tsx" name="MarkdownTableProps" type='Pick<MarkdownTableProps, "children">' />
+
+### Agent
+
+An agent connected with `createAgent` sees the table by its name. It can run this action, and press the copy button like a person would:
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/markdown-table/markdown-table.ts" name="MarkdownTableAgentActions" type='Pick<MarkdownTableApi, "copy">' />
+
+Runs in React and Web Components. On `<kind-markdown-table>`, write a `table` inside the element, and it moves into place beside the copy button.

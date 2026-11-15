@@ -4,11 +4,20 @@ import { enter, type MotionMode, resolvedMotion } from "../motion/index.js";
 import { streamingTextDiff } from "./diff.js";
 
 export type StreamingTextOptions = {
-  /** The text so far. Defaults to `""`. Text that extends the last fades its new part in; any other text replaces it at once. */
+  /**
+   * The whole text so far: text that extends the last fades its new part in, and any other text replaces it at once.
+   * @default ""
+   */
   text?: string;
-  /** Shows a caret after the text, while it streams. Defaults to `false`. */
+  /**
+   * Shows a caret after the text, for while it streams.
+   * @default false
+   */
   caret?: boolean;
-  /** Defaults to `"auto"`, which follows `prefers-reduced-motion`. Reduced and `"none"` append at once. */
+  /**
+   * Whether new text fades in: `"auto"` follows `prefers-reduced-motion`, and `"reduced"` or `"none"` append it at once.
+   * @default "auto"
+   */
   motion?: MotionMode;
 };
 

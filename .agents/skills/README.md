@@ -1,12 +1,15 @@
 # Skills
 
-Skills for working on `@kind-ui/agent-ui`. Each one is a folder with a `SKILL.md` in plain Markdown, so it works in any agent harness. Adapted from Apache-2.0 work; see `THIRD_PARTY_NOTICES.md` at the repo root.
+Skills for working on `@kind-ui/agent-ui`. Each one is a folder with a `SKILL.md` in plain Markdown, so it works in any agent harness. Adapted from Apache-2.0 and MIT work; see `THIRD_PARTY_NOTICES.md` at the repo root.
 
 | Skill | Use it when | What it does |
 | --- | --- | --- |
 | [`ui-sdk`](ui-sdk/SKILL.md) | You build or change a component. | The official UI SDK skill, installed from `@ui-sdk/core` (`skills-lock.json`). How to compose UI SDK and build on `@ui-sdk/core`. |
 | [`write-code`](write-code/SKILL.md) | You write or change code anywhere in the repo. | Starts from the file that already does the same job, writes the code, runs the checks the change reaches and rereads the diff cold. |
 | [`unslop`](unslop/SKILL.md) | You're finishing a change, or a file reads as generated. | Removes comments that restate the code, filler JSDoc, checks for impossible cases, one-caller helpers and vague names. Behavior stays the same. |
+| [`write-docs`](write-docs/SKILL.md) | You write or review a docs page. | The site's voice and component page outline: open with the point, explain one thing at a time, check every claim against the code. |
+| [`fumadocs`](fumadocs/SKILL.md) | You change `apps/docs`. | Where pages, examples and generated API tables live, which Fumadocs CLIs to use, static export limits and upgrades. |
+| [`documentation-writer`](documentation-writer/SKILL.md) | You plan a new kind of page. | Installed from github/awesome-copilot (`skills-lock.json`). Picks the Diátaxis type (tutorial, how-to, reference, explanation) and outlines the page. |
 | [`expert-review`](expert-review/SKILL.md) | Before every push. | Picks the layer experts the diff reaches (`node scripts/expert-scope.mjs`), runs them in parallel and hands back one table of findings. |
 
 The chain: write with `write-code`, finish with `unslop`, then run `expert-review` before you push.

@@ -6,8 +6,15 @@
 
 - Source: https://github.com/vercel-labs/ui, commit `220c1a0d7278872286a620a8e4ee4210ca46f9bd` (`.agents/skills/`, `.agents/experts/`, `.claude/agents/`, `scripts/expert-scope.mjs`).
 - Used in: `.agents/skills/write-code`, `.agents/skills/unslop`, `.agents/skills/expert-review`, `.agents/skills/README.md`, `.agents/experts/`, `.claude/agents/`, `scripts/expert-scope.mjs`. Not shipped in the package.
-- Changes: renamed the skills; rewrote the twin tables, commands and checks for this repository; replaced the per-framework experts with per-layer experts (core, react, web, styles, markdown); dropped the docs-writing skill and the ESLint steps.
+- Changes: renamed the skills; rewrote the twin tables, commands and checks for this repository; replaced the per-framework experts with per-layer experts (core, react, web, styles, markdown); dropped the ESLint steps.
+- Also adapted, from commit `a3a505994cda205c0d5c8fc9d4bee306ebe0f6b7`: `.agents/skills/ui-sdk-write-docs/SKILL.md` and `contributing/docs-writing.md`, merged into `.agents/skills/write-docs` with this site's page outline and references.
 - Copyright 2026 Vercel, Inc. Licensed under the Apache License, Version 2.0.
+
+## github/awesome-copilot
+
+- Source: https://github.com/github/awesome-copilot, commit `8ecd5b17f02fe5fbebf35eccd1867265eded811f`, `skills/documentation-writer/SKILL.md`.
+- Used in: `.agents/skills/documentation-writer`, installed unchanged with `npx skills add` (`skills-lock.json`). Not shipped in the package.
+- Copyright GitHub, Inc. Licensed under the MIT License.
 
 ## vercel/streamdown
 
@@ -233,6 +240,30 @@ airplay, alert-circle, alert-octagon, alert-triangle, aperture, arrow-down-circl
 The MIT License (MIT) (for the icons listed above)
 
 Copyright (c) 2013-present Cole Bemis
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+## github/awesome-copilot license
+
+MIT License
+
+Copyright GitHub, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

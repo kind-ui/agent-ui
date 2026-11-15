@@ -1,0 +1,85 @@
+---
+title: Composer
+description: Let people write to the agent, with mentions, commands and files.
+---
+
+import ComposerExample from "@/examples/composer/basic";
+
+Use a composer where someone writes a prompt. It holds the text, the mentions and commands typed into it, and the attached files, and sends them together as one draft.
+
+<Example caption="Type @ or / to pick a suggestion, then press Enter to send. While it sends, press Stop to end it early.">
+  <ComposerExample />
+
+  <include cwd lang="tsx">./examples/composer/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/composer
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/composer-web
+```
+
+## Composition
+
+```text
+Composer
+├── ComposerAttachments
+├── ComposerInput
+│   └── ComposerTriggerMenu
+├── ComposerAttach
+├── ComposerSubmit
+└── ComposerStop
+```
+
+The composer renders a form, and everything inside it takes dropped files. `ComposerAttachments` shows the attached files as [Attachments](/docs/components/attachments), and stays empty until there are some. `ComposerInput` is the prompt, and `ComposerTriggerMenu` inside it shows the suggestions. `ComposerAttach` opens the file picker. `ComposerSubmit` and `ComposerStop` are Send and Stop, which take turns in the same place. Name the composer and its input with `aria-label`.
+
+## Usage
+
+### Sending
+
+Enter sends the draft to `onSubmit`, and Shift+Enter starts a new line. Pass `submitOn="mod-enter"` to send with Ctrl+Enter or Cmd+Enter instead, so Enter starts a new line. A draft with only whitespace doesn't send.
+
+The draft has `text`, `tokens` and `attachments`. In `text`, each mention or command reads `[@label](kind:value)`, and `tokens` lists them in order:
+
+```tsx
+<Composer
+  aria-label="Message"
+  onSubmit={(draft) => chat.send(draft.text, draft.attachments)}
+>
+```
+
+Return a promise from `onSubmit` to keep the composer pending: Send is locked, and screen readers hear "Sending". When the promise resolves, the draft clears, unless someone kept typing in the meantime. When it rejects, the draft stays and screen readers hear "Message not sent".
+
+To own the draft, pass `value` and `onValueChange`. Cancel the change's `details` to refuse an edit, and the prompt goes back to the draft.
+
+### Stop
+
+Pass `onStop` to show Stop in Send's place while a submission is pending, so someone can end the agent's reply. Settle the `onSubmit` promise once it stops, and Send comes back. When the button that had focus leaves, focus moves to the one that took its place.
+
+### Mentions and Commands
+
+Pass `mentions` to suggest them after `@`, and `commands` to suggest them after `/` at the start of a line. Each item has a `value`, a `label` and an optional `description`. Choosing one inserts it into the prompt as a token, and Escape closes the suggestions.
+
+### Files
+
+Files attach when someone presses `ComposerAttach`, drops them on the composer, or pastes them while it has focus. Pass `accept` and `maxSize` to limit them. A file they rule out still attaches, with its error on the chip, so the person sees why; it has an `error` in the draft, and a draft with only those files doesn't send. Each chip has a remove button, and Delete or Backspace removes the focused one.
+
+### History
+
+Pass earlier prompts as `history`, oldest first. ArrowUp at the start of the prompt brings back the previous one, and ArrowDown moves forward again, back to what was being typed.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/composer/composer.ts" name="ComposerOptions" />
+
+### Agent
+
+An agent connected with `createAgent` reads the composer's `value`, and whether it's pending. It can run these actions, and `stop` only while Stop shows. While `agentConfirm` is on, every one of them waits for a person to confirm, unless the host's `allow` lets it through:
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/composer/composer.ts" name="ComposerAgentActions" type='Pick<ComposerApi, "setValue" | "insertToken" | "removeAttachment" | "submit" | "stop">' />
+
+Runs in React and Web Components. On `<kind-composer>`, each prop is a kebab-case attribute, so `submitOn` is `submit-on`, and `value`, `mentions`, `commands` and `history` are properties. Each callback is a lowercase event, so `onValueChange` fires `valuechange`, but `onSubmit` fires `composersubmit`, whose listeners call `event.detail.waitUntil(promise)`, and Stop shows with the `can-stop` attribute and fires `stop`.

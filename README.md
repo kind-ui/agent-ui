@@ -6,7 +6,7 @@ This repository builds and releases [`@kind-ui/agent-ui`](packages/agent-ui), it
 
 ## Develop
 
-Requires Node 22.12 or newer and npm 11.9.
+Requires Node 22.22 (or 24.11) or newer and npm 11.9.
 
 ```bash
 npm ci

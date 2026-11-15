@@ -1,0 +1,44 @@
+---
+title: Typing Indicator
+description: Show that the agent is typing, with three dots in a bubble.
+---
+
+import TypingIndicatorExample from "@/examples/typing-indicator/basic";
+
+Use a typing indicator where the agent's next message will appear, until its first words arrive. The bubble shows no text, so its label is only for screen readers.
+
+<Example caption="The dots flow while the assistant types. With reduced motion on, they hold still.">
+  <TypingIndicatorExample />
+
+  <include cwd lang="tsx">./examples/typing-indicator/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/typing-indicator
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/typing-indicator-web
+```
+
+## Usage
+
+### Label
+
+Pass `label` to say who's typing. It names the indicator, "Typing" by default, and stays hidden on screen. The indicator is a polite status, so screen readers read a new label when it changes. The dots are hidden from them.
+
+### Motion
+
+The dots flow one after another. Under `prefers-reduced-motion`, or with `motion="reduced"` or `"none"`, they hold still. The indicator takes no focus and has no keys.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/indicator.ts" name="IndicatorOptions" />
+
+### Agent
+
+An agent connected with `createAgent` sees the typing indicator as a status named by its label. It has no actions of its own.
+
+Runs in React and Web Components. On `<kind-typing-indicator>`, `label` and `motion` are attributes of the same name, and the element fills in its label and dots when it has no children.

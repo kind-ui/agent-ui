@@ -45,8 +45,8 @@ const stages = {
     needs: "scripts/check-registry-consumers.mjs",
     run: ["node", "scripts/check-registry-consumers.mjs"],
   },
-  "dev:docs": { needs: "apps/docs/package.json", run: ["npm", "run", "dev", "-w", "apps/docs"] },
-  "build:docs": { needs: "apps/docs/package.json", run: ["npm", "run", "build", "-w", "apps/docs"] },
+  "dev:docs:run": { needs: "apps/docs/package.json", run: ["npm", "run", "dev", "-w", "apps/docs"] },
+  "build:docs:run": { needs: "apps/docs/package.json", run: ["npm", "run", "build", "-w", "apps/docs"] },
 };
 
 const groups = {
@@ -62,9 +62,12 @@ const groups = {
   // Unit tests import the package by name, which resolves to the built dist.
   "test:unit": ["build", "test:unit:run"],
   "check:size": ["build", "check:size:run"],
+  // The docs render the registry's source files, which import the package's built core.
+  "dev:docs": ["build", "dev:docs:run"],
+  "build:docs": ["build", "build:docs:run"],
   "check:fast": ["lint", "typecheck", "test:scripts", "test:unit"],
   "check:packed": ["check:package", "check:size", "build:registry", "check:registry-consumers"],
-  check: ["check:fast", "check:packed", "test:browser"],
+  check: ["check:fast", "check:packed", "build:docs:run", "test:browser"],
 };
 
 function expand(name) {

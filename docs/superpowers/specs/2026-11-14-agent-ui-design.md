@@ -106,7 +106,7 @@ AI components need general controls. These are UI SDK components or `@ui-sdk/cor
 
 ### Repository layout
 
-The repository is an npm workspace. It mirrors kind-ui/charts conventions (npm 11.9 with a committed root lockfile, Node 22.12 or newer, strict TypeScript with NodeNext modules and explicit `.js` imports, Biome, Changesets, Tailwind v4, Vite fixtures, Playwright) without depending on that repository.
+The repository is an npm workspace. It mirrors kind-ui/charts conventions (npm 11.9 with a committed root lockfile, Node 22.22 or newer (24.11 on Node 24), strict TypeScript with NodeNext modules and explicit `.js` imports, Biome, Changesets, Tailwind v4, Vite fixtures, Playwright) without depending on that repository.
 
 ```text
 agent-ui/                         # repository root (kind-ui/agent-ui)

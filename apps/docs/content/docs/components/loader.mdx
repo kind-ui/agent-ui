@@ -1,0 +1,44 @@
+---
+title: Loader
+description: Show that something is on its way, with three flowing dots and a label.
+---
+
+import LoaderExample from "@/examples/loader/basic";
+
+Use a loader while a conversation, a file or a tool result loads. Its label says what's loading.
+
+<Example caption="The dots flow while the conversation loads. With reduced motion on, they hold still.">
+  <LoaderExample />
+
+  <include cwd lang="tsx">./examples/loader/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/loader
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/loader-web
+```
+
+## Usage
+
+### Label
+
+Pass `label` to say what's loading. It shows beside the dots and names the loader, "Loading" by default. The loader is a polite status, so screen readers read a new label when it changes. The dots are hidden from them.
+
+### Motion
+
+The dots flow one after another. Under `prefers-reduced-motion`, or with `motion="reduced"` or `"none"`, they hold still. The loader takes no focus and has no keys.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/indicator.ts" name="IndicatorOptions" />
+
+### Agent
+
+An agent connected with `createAgent` sees the loader as a status named by its label. It has no actions of its own.
+
+Runs in React and Web Components. On `<kind-loader>`, `label` and `motion` are attributes of the same name, and the element fills in its label and dots when it has no children.

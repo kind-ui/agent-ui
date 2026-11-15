@@ -1,0 +1,85 @@
+---
+title: Get Started
+description: Add AI chat components that people and agents can both use, in React or Web Components.
+---
+
+Agent UI has the pieces of an AI interface: steps, a conversation, messages, streaming markdown, a composer, uploads and status indicators. Each one is built on [UI SDK](https://ui-sdk.dev/docs), so focus, keys and screen reader announcements work the way UI SDK's own components do, and an agent connected with `createAgent` can read and use the same component a person sees.
+
+You copy the styled components into your project with the shadcn CLI, and they import their behavior from the `@kind-ui/agent-ui` package.
+
+<Callout type="warn">`@kind-ui/agent-ui` and its registry are not published yet.</Callout>
+
+## Quick Start
+
+Copy this prompt into your agent:
+
+```text title="Prompt"
+Set up Agent UI in this project. It needs Tailwind CSS v4, and React 19 for the React components.
+
+1. Install @kind-ui/agent-ui and @ui-sdk/core with the project's package manager, plus @ui-sdk/react for React or @ui-sdk/web for Web Components.
+2. Add a note to AGENTS.md, creating it if needed: before using Agent UI components, read node_modules/@kind-ui/agent-ui/README.md and the AGENTS.md beside the components, follow the ui-sdk skill if it's installed (node_modules/@ui-sdk/core/skills/ui-sdk/SKILL.md), and read node_modules/@ui-sdk/react/docs/llms.txt (node_modules/@ui-sdk/web/docs/llms.txt for Web Components).
+3. Add "registries": { "@kind-ui": "https://kindui.dev/r/{name}.json" } to components.json (run npx shadcn@latest init first if it has none), then add the components you need with npx shadcn@latest add @kind-ui/<name>, using the <name>-web items for Web Components.
+```
+
+## Install with the shadcn CLI
+
+Add the `@kind-ui` registry to your `components.json`:
+
+```json title="components.json"
+{
+  "registries": {
+    "@kind-ui": "https://kindui.dev/r/{name}.json"
+  }
+}
+```
+
+Then add components by name. Each component page lists its React and Web Components items:
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/composer
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/composer-web
+```
+
+Every component depends on the `agent-ui-setup` item, so the first `add` also:
+
+- installs `@kind-ui/agent-ui` and `@ui-sdk/core` at their pinned versions,
+- adds `@import "@kind-ui/agent-ui/styles.css";` to the stylesheet in `components.json`,
+- writes an `AGENTS.md` beside the components that points coding agents at the package docs and the ui-sdk skill.
+
+Tailwind finds the copied components on its own. If they live outside the app that builds them, add an `@source` for them to that stylesheet:
+
+```css title="app.css"
+@import "tailwindcss";
+@import "@kind-ui/agent-ui/styles.css";
+@source "../packages/ui/components";
+```
+
+## Install with npm
+
+The package has the primitives, types and styles the copied components import:
+
+```bash
+npm install @kind-ui/agent-ui @ui-sdk/core
+```
+
+| Entry | Contents |
+| --- | --- |
+| `@kind-ui/agent-ui` | Neutral types for messages, parts, steps, tool calls and approvals |
+| `@kind-ui/agent-ui/core` | The primitives, the markdown engine and the motion helper |
+| `@kind-ui/agent-ui/adapters/ai-sdk` | [AI SDK](/docs/adapters/ai-sdk) message mapping |
+| `@kind-ui/agent-ui/styles.css` | Component styles and theme tokens |
+
+## Theme
+
+The colors are `--kind-color-*` tokens. Each is a `light-dark()` pair, so dark mode follows the page's `color-scheme`: set `color-scheme: light dark` to follow the system, or `color-scheme: dark` on the root of a class-based dark theme. To change a token, set it in your own `@theme` or `:root`:
+
+```css
+:root {
+  color-scheme: light dark;
+  --kind-color-accent: var(--color-violet-600);
+  --kind-radius: 0.5rem;
+}
+```

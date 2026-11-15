@@ -1,0 +1,74 @@
+---
+title: Step
+description: Show what the agent did, one collapsible step at a time.
+---
+
+import StepExample from "@/examples/step/basic";
+
+Use a step for each thing the agent does, like reading a file or running a command. Its icon shows the status, and its panel holds the details.
+
+<Example caption="Press Read the logs, or focus it and press Enter or Space, to show its details.">
+  <StepExample />
+
+  <include cwd lang="tsx">./examples/step/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/step
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/step-web
+```
+
+## Composition
+
+```text
+Step
+├── StepTrigger
+│   ├── StepIcon
+│   ├── StepTitle
+│   └── StepMeta
+├── StepContent
+└── StepChildren
+```
+
+The trigger renders a native button that shows or hides the content. Put a duration or a count in `StepMeta`, and nested steps in `StepChildren`, which stays visible while the step is closed.
+
+## Usage
+
+### Status
+
+Set `status` as the work moves along: `pending`, `running`, `awaiting-input`, `complete`, `error` or `cancelled`. A step opens on its own while it's running or waiting for input, and closes when it completes. Once someone opens or closes it, it stays that way. Pass `autoOpen="never"` to leave every step closed until someone opens it.
+
+When a step completes, fails, is cancelled or needs input, it tells screen readers politely. The content stays in the page while it's closed, so the browser's find in page still reaches it.
+
+### A List of Steps
+
+Put steps in a `StepList` so the keyboard moves between them with the arrow keys, and Tab leaves the list in one press. Render each trigger through a `StepListItem`:
+
+```tsx
+<StepList aria-label="Agent steps">
+  <Step status="complete">
+    <StepListItem value="logs" render={<StepTrigger />}>
+      <StepIcon />
+      <StepTitle>Read the logs</StepTitle>
+    </StepListItem>
+    <StepContent>Three requests timed out.</StepContent>
+  </Step>
+</StepList>
+```
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/step/step.ts" name="StepOptions" />
+
+### Agent
+
+An agent connected with `createAgent` reads each step's `open` and `status`. It can run these actions, and press the trigger like a person would:
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/step/step.ts" name="StepAgentActions" type='Pick<StepApi, "expand" | "collapse">' />
+
+Runs in React and Web Components. On `<kind-step>`, each prop is a kebab-case attribute, so `autoOpen` is `auto-open`, and each callback is a lowercase event, so `onOpenChange` fires `openchange`.

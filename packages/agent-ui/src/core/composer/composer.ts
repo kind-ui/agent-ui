@@ -45,40 +45,48 @@ export type ComposerValueChangeReason =
   | "submit";
 
 export type ComposerOptions = {
-  /** Controlled draft. Don't pass with `defaultValue`. */
+  /** The draft, when you control it with `onValueChange`. Don't pass it with `defaultValue`. */
   value?: ComposerDraft;
-  /** Uncontrolled initial draft. */
+  /** The draft at first, when you don't control it. */
   defaultValue?: ComposerDraft;
-  /** Cancel `details` to refuse an edit: the editor goes back to the draft. A controlled owner that refuses passes the old `value` and cancels. */
+  /** Called when the draft changes, with what caused it. Cancel `details` to refuse the change. */
   onValueChange?: (value: ComposerDraft, details: ChangeDetails<ComposerValueChangeReason>) => void;
   /**
-   * Called with a snapshot of the draft on submit. A returned thenable keeps `pending` until it settles:
-   * resolving clears the draft unless it changed meanwhile, rejecting keeps it. Web: a `composersubmit` event whose
-   * listeners call `event.detail.waitUntil(promise)`.
+   * Called with the draft when it's sent. Return a promise to keep the composer pending: resolving clears the
+   * draft unless it changed meanwhile, and rejecting keeps it.
    */
   onSubmit?: (draft: ComposerDraft) => unknown;
-  /** Offers the stop control and action while a submission is pending. Web: `can-stop` and a `stop` event. */
+  /** Called when Stop is pressed. While it's set, Stop takes Send's place during a pending submission. */
   onStop?: () => void;
-  /** Which keys submit. `"enter"` (default) takes Shift+Enter as a new line; `"mod-enter"` takes Enter as one. */
+  /**
+   * Which keys send. With `"enter"`, Shift+Enter starts a new line; with `"mod-enter"`, Enter does.
+   * @default "enter"
+   */
   submitOn?: "enter" | "mod-enter";
-  /** What `@` suggests. */
+  /** What typing `@` suggests. */
   mentions?: readonly ComposerTriggerItem[];
-  /** What `/` at the start of a line suggests. */
+  /** What typing `/` at the start of a line suggests. */
   commands?: readonly ComposerTriggerItem[];
-  /** The files to accept, like the `accept` attribute. Others attach with an error. */
+  /** The file types to accept, like the `accept` attribute. Other files attach with an error. */
   accept?: string;
-  /** The largest file accepted, in bytes. Larger ones attach with an error. */
+  /** The largest file to accept, in bytes. Larger files attach with an error. */
   maxSize?: number;
-  /** Earlier prompts as draft `text`, oldest first. ArrowUp in an empty field brings them back. */
+  /** Earlier prompts, oldest first, that ArrowUp brings back. */
   history?: readonly string[];
-  /** Stops editing, attaching, submitting and every agent action. Defaults to `false`. */
+  /**
+   * Stops editing, attaching, sending and every agent action.
+   * @default false
+   */
   disabled?: boolean;
   /**
-   * Writes `data-agent-confirm` on the form, so an agent needs a person to send. The bridge applies the mark
-   * to every composer action, not just `submit`; a host's `allow` can let the others through. Defaults to `true`.
+   * Makes an agent ask a person before it runs any composer action, unless the host's `allow` lets it through.
+   * @default true
    */
   agentConfirm?: boolean;
-  /** Defaults to `"auto"`, which follows `prefers-reduced-motion`. */
+  /**
+   * `"auto"` follows `prefers-reduced-motion`.
+   * @default "auto"
+   */
   motion?: MotionMode;
 };
 
@@ -105,13 +113,15 @@ type TokenToInsert = Omit<ComposerToken, "id">;
 export type ComposerApi = {
   /** The current draft; the owner's `value` when controlled. */
   getValue: () => ComposerDraft;
-  /** A string replaces the text and keeps the attachments. */
+  /** Replaces the draft. A string replaces only the text and keeps the attachments. Returns whether it changed. */
   setValue: (value: ComposerDraft | string, event?: Event) => boolean;
-  /** Inserts a mention or command at the caret. */
+  /** Inserts a mention or command at the caret. Returns whether it was inserted. */
   insertToken: (token: TokenToInsert) => boolean;
+  /** Removes an attachment from the draft by its `id`. Returns whether it changed. */
   removeAttachment: (id: string, event?: Event) => boolean;
+  /** Sends the draft, unless it's empty, pending or disabled. */
   submit: (event?: Event) => void;
-  /** Present only while a submission is pending and `onStop` is set. */
+  /** Calls `onStop`. Offered only while a submission is pending and `onStop` is set. */
   readonly stop: ((event?: Event) => void) | undefined;
   /** Drives the Token Input; render layers pass it as its `controller`. */
   tokenInput: TokenInputController;

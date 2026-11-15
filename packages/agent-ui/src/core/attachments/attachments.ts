@@ -29,11 +29,17 @@ export const attachmentDetail = (item: AttachmentItem): string =>
   item.error ? ATTACHMENT_ERRORS[item.error] : item.size === undefined ? "" : formatFileSize(item.size);
 
 export type AttachmentsOptions = {
-  /** The chips, in order, keyed by `id`. Defaults to none. */
+  /**
+   * The chips, in order, keyed by `id`.
+   * @default []
+   */
   items?: readonly AttachmentItem[];
-  /** Offers removal while set: the remove part, Delete and Backspace, and the `remove` action. Web: `can-remove` and a `remove` event. */
+  /** Called with an item's `id` when someone removes it. While it's set, chips can be removed. */
   onRemove?: (id: string, details: ChangeDetails<"remove-press" | "imperative">) => void;
-  /** Defaults to `"auto"`, which follows `prefers-reduced-motion`. */
+  /**
+   * `"auto"` follows `prefers-reduced-motion`.
+   * @default "auto"
+   */
   motion?: MotionMode;
 };
 
@@ -59,7 +65,7 @@ export type AttachmentState = {
 };
 
 export type AttachmentsApi = {
-  /** Present only while `onRemove` is set. */
+  /** Removes an item by its `id`, through `onRemove`. Offered only while `onRemove` is set. */
   readonly remove: ((id: string, event?: Event) => void) | undefined;
   roving: ReturnType<typeof createRovingFocus<AttachmentsState, ItemProps>>;
   recovery: ReturnType<typeof createFocusRecovery<ItemProps>>;

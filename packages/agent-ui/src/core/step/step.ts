@@ -17,20 +17,32 @@ import { nextOpen, type StepAutoOpen } from "./auto-open.js";
 export type StepOpenChangeReason = "trigger-press" | "find-in-page" | "imperative" | "auto";
 
 export type StepOptions = {
-  /** Defaults to `"pending"`. */
+  /**
+   * What the step is doing. The icon shows it.
+   * @default "pending"
+   */
   status?: StepStatus;
   /** Written as `data-kind`, for styling by step type. */
   kind?: string;
   /** Names the step in announcements. Defaults to the title part's text. */
   title?: string;
+  /** Whether the content shows, when you control it with `onOpenChange`. */
   open?: boolean;
+  /** Whether the content shows at first, when you don't control it. */
   defaultOpen?: boolean;
+  /** Called when the step opens or closes, with what caused it. */
   onOpenChange?: (open: boolean, details: ChangeDetails<StepOpenChangeReason>) => void;
-  /** Defaults to `"running"`: opens while running or awaiting input, closes on completion unless toggled. */
+  /**
+   * Opens while running or awaiting input, and closes on completion unless toggled.
+   * @default "running"
+   */
   autoOpen?: StepAutoOpen;
   /** Written as `--kind-step-duration`. */
   durationSeconds?: number;
-  /** Defaults to `"auto"`, which follows `prefers-reduced-motion`. */
+  /**
+   * `"auto"` follows `prefers-reduced-motion`.
+   * @default "auto"
+   */
   motion?: MotionMode;
 };
 
@@ -50,7 +62,9 @@ export type StepApi = {
   /** The current open state; the owner's `open` when controlled. */
   isOpen: () => boolean;
   setOpen: (open: boolean, cause?: Cause) => boolean;
+  /** Opens the step. Returns whether it changed. */
   expand: () => boolean;
+  /** Closes the step. Returns whether it changed. */
   collapse: () => boolean;
   toggle: (event?: Event) => boolean;
 };

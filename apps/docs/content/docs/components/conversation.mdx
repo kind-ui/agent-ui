@@ -1,0 +1,102 @@
+---
+title: Conversation
+description: Hold a chat's messages in a log that follows new content and offers a jump back to the latest.
+---
+
+import ConversationExample from "@/examples/conversation/basic";
+
+Use a conversation to scroll the messages of a chat. It keeps the newest message in view while the reader is at the end, and lets go as soon as they scroll away.
+
+<Example caption="Scroll up to read earlier messages, then press Jump to latest to return to the end and follow again.">
+  <ConversationExample />
+
+  <include cwd lang="tsx">./examples/conversation/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/conversation
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/conversation-web
+```
+
+## Composition
+
+```text
+Conversation
+├── ConversationViewport
+│   └── ConversationContent
+│       └── ConversationRow
+├── ConversationJump
+└── ConversationEmpty
+```
+
+The viewport is the part that scrolls, and the content holds a `ConversationRow` for each message, with its `value` and `index`. `ConversationJump` renders a button that shows while the reader is away from the end. `ConversationEmpty` shows while there are no messages.
+
+## Usage
+
+### Following New Messages
+
+Pass the number of messages as `messageCount`. While the reader is at the end, new messages and messages that grow as they stream stay in view. Once they scroll up, the conversation stops following and counts the messages that arrive. Scrolling back to the end follows again.
+
+Each new row fades in once, when it mounts. A row that renders again, or a message that keeps streaming, doesn't replay it.
+
+### Jump to Latest
+
+While the reader is away from the end, `ConversationJump` shows **Jump to latest**, or the count, like **3 new messages**, once messages arrive. Pressing it scrolls to the end and follows again. The button writes its own text, so render it without children.
+
+The conversation tells screen readers the new-message count politely as it grows. The viewport is a single Tab stop, so the keyboard can scroll the log even when nothing in it is focusable.
+
+### Scrolling From Outside
+
+Pass a `controller` from `createConversationController()` to scroll and read the conversation from your own code. Call its `scrollToEnd()` to jump to the newest message, for example after the person sends one. Before you add older messages above, call `prepend()`, so the reader keeps their place and the older messages aren't counted as new:
+
+```tsx
+import { createConversationController } from "@kind-ui/agent-ui/core";
+
+const controller = createConversationController();
+
+async function loadOlder() {
+  const older = await fetchOlderMessages();
+  controller.prepend();
+  setMessages((messages) => [...older, ...messages]);
+}
+```
+
+### Long Conversations
+
+Pass `virtualize` to render only the rows in view. Render rows from the content's `rows`, keyed by index, and pass `rowKey` so each measured height stays with its message:
+
+```tsx
+<Conversation messageCount={messages.length} virtualize rowKey={(index) => messages[index].id}>
+  <ConversationViewport>
+    <ConversationContent>
+      {({ rows }) =>
+        rows.map((row) => (
+          <ConversationRow key={row.index} value={row.key} index={row.index}>
+            {messages[row.index].text}
+          </ConversationRow>
+        ))
+      }
+    </ConversationContent>
+  </ConversationViewport>
+  <ConversationJump />
+</Conversation>
+```
+
+`virtualize` is read once, when the conversation mounts. Until a row is measured, it's `estimateRowHeight` tall.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/conversation/conversation.ts" name="ConversationOptions" />
+
+### Agent
+
+An agent connected with `createAgent` reads whether the conversation is `following` and its `newCount`. It can run this action, and press the jump control like a person would while it shows:
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/conversation/conversation.ts" name="ConversationAgentActions" type='Pick<ConversationApi, "scrollToEnd">' />
+
+Runs in React and Web Components. On `<kind-conversation>`, each prop is a kebab-case attribute, so `messageCount` is `message-count`, and each callback is a lowercase event, so `onRowsChange` fires `rowschange`. The element's `api` has the controller's methods: `scrollToEnd`, `prepend`, `isFollowing` and `getRows`.

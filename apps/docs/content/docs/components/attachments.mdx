@@ -1,0 +1,59 @@
+---
+title: Attachments
+description: Show the files attached to a message, and let people remove them.
+---
+
+import AttachmentsExample from "@/examples/attachments/basic";
+
+Use attachments to show files as chips, with an image's preview or a file icon, the name, and the size or what's wrong with the file. The [Composer](/docs/components/composer) uses them for its draft's files.
+
+<Example caption="Press Tab to focus the chips, move between them with the arrow keys, and press Delete to remove one.">
+  <AttachmentsExample />
+
+  <include cwd lang="tsx">./examples/attachments/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/attachments
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/attachments-web
+```
+
+## Composition
+
+```text
+Attachments
+└── Attachment
+```
+
+`Attachments` renders a list, and an `Attachment` chip for each of its `items`. Pass `Attachment` children yourself, each with the item's `id` as its `value`, when you want to style the chips. Name the list with `aria-label`.
+
+## Usage
+
+### Items
+
+Pass `items`, each with an `id`, a `name` and optionally its `size` in bytes and `mediaType`. An image shows a preview from its `url`, or from its `file` once the chip is on the page. Set `error` to `"type"` or `"size"` to show "File type not accepted" or "File is too large" in place of the size. A chip added later fades in; the ones there at first don't.
+
+### Removing
+
+Pass `onRemove` to let people remove chips. It gets the item's `id`, and you take the item out of `items`. Each chip shows a remove button for the pointer, and Delete or Backspace removes the focused chip. Focus then moves to the next chip, or the previous one at the end.
+
+### Keyboard
+
+The list takes one Tab stop. The arrow keys move between chips, and Tab leaves the list.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/attachments/attachments.ts" name="AttachmentsOptions" />
+
+### Agent
+
+An agent connected with `createAgent` reads the list's `items`. While `onRemove` is set, it can run this action:
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/attachments/attachments.ts" name="AttachmentsAgentActions" type='Pick<AttachmentsApi, "remove">' />
+
+Runs in React and Web Components. On `<kind-attachments>`, `items` is a property and `motion` an attribute. Removal needs the `can-remove` attribute, and each removal fires `remove` with the item's `id`.

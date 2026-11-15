@@ -17,10 +17,11 @@ import { enter, exit, type MotionMode, resolveMotion } from "../motion/index.js"
 import { nextFollowState } from "./follow.js";
 
 export type ConversationController = {
-  /** Scrolls to the newest message and follows again. */
+  /** Scrolls to the newest message and follows new content again. */
   scrollToEnd: () => void;
   /** Call right before adding older messages above: the next `messageCount` increase keeps the reader's place and isn't counted as new. */
   prepend: () => void;
+  /** Whether new content scrolls into view. */
   isFollowing: () => boolean;
   /** The rows to render now, with `virtualize`. */
   getRows: () => readonly VirtualItem[];
@@ -31,18 +32,34 @@ export const createConversationController = (): ConversationController =>
   createController<ConversationController>();
 
 export type ConversationOptions = {
-  /** How many messages the conversation holds. Drives the new-message count, the empty part and virtualization. Defaults to 0. */
+  /**
+   * How many messages the conversation holds. Drives the new-message count, the empty part and virtualization.
+   * @default 0
+   */
   messageCount?: number;
-  /** Renders only the rows in view, with `createVirtualizer`. Read once, when the conversation mounts. Defaults to `false`. */
+  /**
+   * Renders only the rows in view, with `createVirtualizer`. Read once, when the conversation mounts.
+   * @default false
+   */
   virtualize?: boolean;
-  /** A row's height before it is measured, in pixels, with `virtualize`. Defaults to 120. */
+  /**
+   * A row's height before it is measured, in pixels, with `virtualize`.
+   * @default 120
+   */
   estimateRowHeight?: number;
-  /** A stable key for the message at an index, so measured heights follow messages when the list changes. Defaults to the index. */
+  /**
+   * A stable key for the message at an index, so measured heights follow messages when the list changes, with `virtualize`.
+   * @default String(index)
+   */
   rowKey?: (index: number) => string;
-  /** Called with the rows to render whenever they change, with `virtualize`. Web: a `rowschange` event. */
+  /** Called with the rows to render whenever they change, with `virtualize`. */
   onRowsChange?: (rows: readonly VirtualItem[]) => void;
+  /** A handle from `createConversationController()`, to scroll and read the conversation from outside it. */
   controller?: ConversationController;
-  /** Defaults to `"auto"`, which follows `prefers-reduced-motion`. */
+  /**
+   * `"auto"` follows `prefers-reduced-motion`.
+   * @default "auto"
+   */
   motion?: MotionMode;
 };
 

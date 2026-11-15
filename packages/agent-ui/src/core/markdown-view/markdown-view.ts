@@ -4,13 +4,19 @@ import type { Highlight } from "../code-block/code-block.js";
 import { createMarkdownEngine, type MarkdownBlock, type MarkdownEngine } from "../markdown/index.js";
 
 export type MarkdownOptions = {
-  /** The markdown so far. Appending re-parses only the blocks that aren't final. */
+  /** The markdown to show, so far. Appending parses only the blocks that changed. */
   source?: string;
-  /** Whether `source` is still growing: the last block is repaired and blocks only become final as more follow. Defaults to `false`. */
+  /**
+   * Whether `source` is still growing, so the last block is repaired before it renders.
+   * @default false
+   */
   streaming?: boolean;
-  /** Passed to each code block, which reads it when it asks for tokens: a new function doesn't re-highlight code already shown. */
+  /** Passed to each code block to color its code. A new function doesn't color code already shown again. */
   highlight?: Highlight;
-  /** Parses `source`. Read once, when the view mounts. Defaults to a new `createMarkdownEngine()`; pass one to read its `stats()`. */
+  /**
+   * Parses `source`, read once when the view mounts; pass your own to read its `stats()`.
+   * @default createMarkdownEngine()
+   */
   engine?: MarkdownEngine;
 };
 

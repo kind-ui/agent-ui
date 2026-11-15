@@ -29,28 +29,37 @@ export type UploadItem = {
   /** From 0 to 100. */
   progress: number;
   status: UploadStatus;
-  /** Shown in place of the size while `status` is `"error"`. Defaults to "Upload failed". */
+  /**
+   * Shown in place of the size while `status` is `"error"`.
+   * @default "Upload failed"
+   */
   error?: string;
 };
 
 export type UploaderFilesDetails = ChangeDetails<FileInputValueChangeReason>;
 
 export type UploaderOptions = {
-  /** The uploads, in order, keyed by `id`. The host owns them; the uploader holds no files. Defaults to none. */
+  /**
+   * The uploads, in order, keyed by `id`.
+   * @default []
+   */
   items?: readonly UploadItem[];
-  /** Files chosen, dropped or pasted that pass `accept` and `maxSize`. Web: a `files` event. */
+  /** Called with the files someone chooses, drops or pastes that pass `accept` and `maxSize`. */
   onFiles?: (files: File[], details: UploaderFilesDetails) => void;
-  /** Files turned down by `accept` or `maxSize`, with File Input's `reasons`. Web: an `uploadreject` event. */
+  /** Called with the files `accept` or `maxSize` turns down, each with its `reasons`. */
   onReject?: (rejected: FileRejection[], details: UploaderFilesDetails) => void;
-  /** Offers Cancel on queued and uploading items, and the `cancel` action. Web: `can-cancel` and an `uploadcancel` event. */
+  /** Called with an item's `id` when it's cancelled. While it's set, queued and uploading items show Cancel. */
   onCancel?: (id: string, details: ChangeDetails<"cancel-press" | "imperative">) => void;
-  /** Offers Retry on failed items, and the `retry` action. Web: `can-retry` and an `uploadretry` event. */
+  /** Called with an item's `id` when it's retried. While it's set, failed items show Retry. */
   onRetry?: (id: string, details: ChangeDetails<"retry-press" | "imperative">) => void;
-  /** The files to accept, like the `accept` attribute. Defaults to any. */
+  /** The file types to accept, like the `accept` attribute. Without it, any file. */
   accept?: string;
-  /** The largest file accepted, in bytes. Defaults to no limit. */
+  /** The largest file to accept, in bytes. Without it, any size. */
   maxSize?: number;
-  /** Defaults to `"auto"`, which follows `prefers-reduced-motion`. */
+  /**
+   * `"auto"` follows `prefers-reduced-motion`.
+   * @default "auto"
+   */
   motion?: MotionMode;
 };
 
@@ -79,9 +88,9 @@ type UploadAction = "cancel" | "retry";
 type ItemProps = { value: string };
 
 export type UploaderApi = {
-  /** Present only while an item is queued or uploading and `onCancel` is set. */
+  /** Cancels a queued or uploading item by its `id`, through `onCancel`. Offered while one can be cancelled. */
   readonly cancel: ((id: string, event?: Event) => void) | undefined;
-  /** Present only while an item has failed and `onRetry` is set. */
+  /** Retries a failed item by its `id`, through `onRetry`. Offered while one has failed. */
   readonly retry: ((id: string, event?: Event) => void) | undefined;
   /** Plays an item's entrance when it's added, not when the uploader mounts with it. */
   enterItem: (el: HTMLElement, id: string) => void;

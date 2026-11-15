@@ -14,25 +14,37 @@ export type Highlight = (code: string, language: string | undefined) => Promise<
 export type CodeBlockWrapChangeReason = "wrap-press" | "imperative";
 
 export type CodeBlockOptions = {
-  /** Defaults to `""`. */
+  /**
+   * The code to show.
+   * @default ""
+   */
   code?: string;
-  /** The fence's language, like `"ts"`: shown in the header and passed to `highlight`. Not `lang`, the element's human language. */
+  /** The code's language, like `"ts"`, shown in the header and passed to `highlight`. */
   language?: string;
   /**
-   * Plain text shows until it resolves. A result whose code is no longer the start of `code` is discarded;
-   * while code streams in, the highlighted start shows with the rest plain until the next result. Read when a
-   * request starts, so a new function each render is fine. A rejection isn't retried until `code` changes.
+   * Resolves colored tokens for the code; plain text shows until it does. While code streams in, the highlighted
+   * start shows with the rest plain. A new function each render is fine, and a rejection isn't retried until `code`
+   * or `language` changes.
    */
   highlight?: Highlight;
-  /** Controlled line wrapping. Don't pass with `defaultWrap`. */
+  /** Whether long lines wrap, when you control it with `onWrapChange`. */
   wrap?: boolean;
-  /** Uncontrolled initial line wrapping. Defaults to `false`. */
+  /**
+   * Whether long lines wrap at first, when you don't control it.
+   * @default false
+   */
   defaultWrap?: boolean;
-  /** Called before wrapping changes; cancel `details` to keep it. */
+  /** Called before wrapping turns on or off; cancel `details` to keep it as it is. */
   onWrapChange?: (wrap: boolean, details: ChangeDetails<CodeBlockWrapChangeReason>) => void;
-  /** Numbers each line. Defaults to `false`. */
+  /**
+   * Numbers each line.
+   * @default false
+   */
   lineNumbers?: boolean;
-  /** Whether code is still streaming in, so the view follows its end. Defaults to `false`. */
+  /**
+   * Whether the code is still arriving, so the view follows its end.
+   * @default false
+   */
   streaming?: boolean;
 };
 
@@ -48,12 +60,12 @@ export type CodeBlockState = {
 };
 
 export type CodeBlockApi = {
-  /** Resolves with whether the clipboard write went through. */
+  /** Copies the code, and resolves with whether the clipboard write went through. */
   copy: () => Promise<boolean>;
   isWrapped: () => boolean;
   /** Returns whether the change was accepted. */
   setWrap: (wrap: boolean, event?: Event) => boolean;
-  /** Returns whether the change was accepted. */
+  /** Turns line wrapping on or off, and returns whether the change was accepted. */
   toggleWrap: (event?: Event) => boolean;
 };
 

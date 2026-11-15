@@ -3,10 +3,15 @@ import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { cancel, enter, flow, type MotionMode, onReducedMotionChange } from "./motion/index.js";
 
 export type IndicatorOptions = {
-  /** Names the status for assistive technology and agents, and is its visible text. Defaults to "Loading",
-   * "Thinking" or "Typing". A new label is read out, as the status's content. */
+  /**
+   * Names the status, and screen readers read it again when it changes. Loader and Thinking Indicator also show
+   * it; it defaults to "Loading", "Thinking" or "Typing".
+   */
   label?: string;
-  /** Defaults to `"auto"`, which follows `prefers-reduced-motion`. Reduced and `"none"` hold the dots still. */
+  /**
+   * Whether the dots move: `"auto"` follows `prefers-reduced-motion`, and `"reduced"` or `"none"` hold them still.
+   * @default "auto"
+   */
   motion?: MotionMode;
 };
 

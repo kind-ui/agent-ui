@@ -1,0 +1,56 @@
+---
+title: Markdown
+description: Render the agent's markdown as it streams in, with code blocks and tables.
+---
+
+import MarkdownExample from "@/examples/markdown/basic";
+
+Use Markdown for the text of an assistant's reply. Pass the text so far as `source`, and it parses only the blocks that changed, so a long answer costs no more per chunk than a short one.
+
+<Example caption="Press the copy button above the code or the table to copy it, or the wrap button to wrap long lines.">
+  <MarkdownExample />
+
+  <include cwd lang="tsx">./examples/markdown/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/markdown
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/markdown-web
+```
+
+## Usage
+
+### Streaming
+
+Set `streaming` while the reply is still arriving, and pass the whole text each time it grows:
+
+```tsx
+<Markdown source={text} streaming={status === "streaming"} />
+```
+
+While it streams, the last block is repaired before it renders, so an unclosed `**` or link shows as formatted text instead of flashing its markup. A block is final once more text follows it, and final blocks don't render again. Turn `streaming` off when the reply ends, and the last block becomes final too.
+
+### What It Renders
+
+Markdown follows GitHub Flavored Markdown: headings, paragraphs, emphasis, strikethrough, quotes, lists, task lists, links, images, rules, tables and fenced code. Fenced code renders in a [Code Block](/docs/components/code-block) labeled "Code", and tables in a [Markdown Table](/docs/components/markdown-table) labeled "Table", each with its own buttons.
+
+Raw HTML shows as text. Links and images keep relative, `http`, `https` and `mailto` URLs; any other URL renders as its text, with no link.
+
+### Highlighting
+
+No highlighter ships with Markdown. Pass a `highlight` function and every code block uses it to color its code; [Code Block](/docs/components/code-block#highlighting) explains what it returns.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/markdown-view/markdown-view.ts" name="MarkdownOptions" />
+
+### Agent
+
+Markdown has no role, so an agent connected with `createAgent` sees it by kind, with no name and no actions of its own. The code blocks and tables inside it show up as their own components, with their actions.
+
+Runs in React and Web Components. On `<kind-markdown>`, `source` and `streaming` are attributes, and `highlight` and `engine` are properties you set from script.

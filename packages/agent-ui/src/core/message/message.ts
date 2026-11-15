@@ -18,25 +18,43 @@ export const branchLabel = (index: number, count: number): string => `${index + 
 export type MessageBranchChangeReason = "previous-press" | "next-press" | "imperative";
 
 export type MessageOptions = {
-  /** Who wrote it, written as `data-role`. Not `role`, which names the element's ARIA role. Defaults to `"assistant"`. */
+  /**
+   * Who wrote it. Not `role`, which is the element's ARIA role.
+   * @default "assistant"
+   */
   messageRole?: Role;
-  /** Written as `data-status`. The toolbar shows once the message settles. Defaults to `"complete"`. */
+  /**
+   * Where the response is. The toolbar shows once it's no longer submitted or streaming.
+   * @default "complete"
+   */
   status?: MessageStatus;
-  /** What `copy` writes and editing starts from. Defaults to `""`. */
+  /**
+   * What `copy` writes and editing starts from.
+   * @default ""
+   */
   text?: string;
-  /** The response shown, from 0. Owned by the host, which changes it in `onBranchChange`. Defaults to 0. */
+  /**
+   * The response shown, from 0. Change it in `onBranchChange`.
+   * @default 0
+   */
   branchIndex?: number;
-  /** How many responses there are. The switcher shows above 1. Defaults to 1. */
+  /**
+   * How many responses there are. The switcher shows above 1.
+   * @default 1
+   */
   branchCount?: number;
-  /** Asks the host to show another branch; it answers by passing the new `branchIndex`. */
+  /** Called with the index of the response someone asks for. Pass it back as `branchIndex` to show it. */
   onBranchChange?: (index: number, details: ChangeDetails<MessageBranchChangeReason>) => void;
-  /** Called before `text` is copied. Cancel it to copy something else yourself. Web: a `messagecopy` event. */
+  /** Called before `text` is copied. Cancel it to copy something else yourself. */
   onCopy?: (text: string, details: ChangeDetails<"copy-press" | "imperative">) => void;
-  /** Offers `regenerate` while set. Web: `can-regenerate` and a `regenerate` event. */
+  /** Called to ask for a new response. Shows the regenerate action while set. */
   onRegenerate?: (text: string, details: ChangeDetails<"regenerate-press" | "imperative">) => void;
-  /** Offers `edit` on user messages while set; called with the new text. Web: `can-edit` and an `edit` event. */
+  /** Called with the new text when someone saves an edit. Shows the edit action on user messages while set. */
   onEdit?: (text: string, details: ChangeDetails<InlineEditReason>) => void;
-  /** Defaults to `"auto"`, which follows `prefers-reduced-motion`. */
+  /**
+   * `"auto"` follows `prefers-reduced-motion`.
+   * @default "auto"
+   */
   motion?: MotionMode;
 };
 
@@ -57,12 +75,13 @@ export type MessageState = {
 };
 
 export type MessageApi = {
+  /** Copies `text` and resolves with whether it worked. */
   copy: (event?: Event) => Promise<boolean>;
-  /** Present only once the message settles, while `onRegenerate` is set. */
+  /** Calls `onRegenerate`. Offered once the message settles, while `onRegenerate` is set. */
   readonly regenerate: ((event?: Event) => void) | undefined;
-  /** Starts editing in place. Present only once a user message with `onEdit` settles. */
+  /** Starts editing in place. Offered once a user message with `onEdit` settles. */
   readonly edit: ((event?: Event) => void) | undefined;
-  /** Present only when there's more than one branch. */
+  /** Asks `onBranchChange` for the response at an index, from 0. Offered when there's more than one. */
   readonly setBranch: ((index: number, event?: Event) => void) | undefined;
   inlineEdit: InlineEdit;
   /** Plays the toolbar's entrance when the message settles while mounted, not when it mounts settled. */
