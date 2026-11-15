@@ -26,12 +26,13 @@ test("subpaths, reexports and dynamic imports of react-dom and ai are forbidden"
     ["react", "react-dom", "ai"],
   ));
 
-test("other packages and look-alike names pass", () =>
+test("other packages, look-alike names and comments pass", () =>
   assert.deepEqual(
     findForbiddenImports([
       fixtureWith(
         'import { definePrimitive } from "@ui-sdk/core";\nimport "./ai.js";\nimport "react-markdown";',
       ),
+      fixtureWith('/** Pass it the messages from `import { useChat } from "ai"`. */'),
     ]),
     [],
   ));
