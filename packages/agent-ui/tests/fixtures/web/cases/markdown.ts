@@ -10,7 +10,7 @@ import {
   wideTable,
 } from "../../shared/markdown.js";
 
-const frame = "m-4 w-[36rem] text-[var(--kind-fg)]";
+const frame = "m-4 w-[36rem] text-[var(--kind-color-fg)]";
 
 type MarkdownElement = HTMLElement & { engine?: MarkdownEngine };
 type CodeElement = HTMLElement & { highlight?: Highlight; api: CodeBlockApi };

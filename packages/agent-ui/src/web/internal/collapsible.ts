@@ -14,16 +14,16 @@ const classes = [
   "[&_[data-slot=collapsible-trigger]]:py-1",
   "[&_[data-slot=collapsible-trigger]]:text-sm",
   "[&_[data-slot=collapsible-trigger]]:font-medium",
-  "[&_[data-slot=collapsible-trigger]]:text-neutral-900",
-  "[&_[data-slot=collapsible-trigger]]:hover:bg-neutral-100",
+  "[&_[data-slot=collapsible-trigger]]:text-[var(--kind-color-fg)]",
+  "[&_[data-slot=collapsible-trigger]]:hover:bg-[var(--kind-color-hover)]",
   "[&_[data-slot=collapsible-trigger]]:focus-visible:outline-2",
   "[&_[data-slot=collapsible-trigger]]:focus-visible:outline-offset-2",
-  "[&_[data-slot=collapsible-trigger]]:focus-visible:outline-neutral-900",
+  "[&_[data-slot=collapsible-trigger]]:focus-visible:outline-[var(--kind-color-ring)]",
   "[&_[data-slot=collapsible-trigger]]:data-disabled:opacity-50",
   "[&_[data-slot=collapsible-panel]]:overflow-hidden",
   "[&_[data-slot=collapsible-panel]]:px-2",
   "[&_[data-slot=collapsible-panel]]:text-sm",
-  "[&_[data-slot=collapsible-panel]]:text-neutral-700",
+  "[&_[data-slot=collapsible-panel]]:text-[var(--kind-color-fg)]",
 ];
 
 export function defineInternalCollapsible(): void {

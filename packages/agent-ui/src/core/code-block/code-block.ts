@@ -2,7 +2,10 @@ import { type ChangeDetails, createChange, css, definePrimitive, type SlotDefini
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { createCopy } from "../clipboard.js";
 
-/** A run of highlighted code. Its `content` may hold line breaks. */
+/**
+ * A run of highlighted code. Its `content` may hold line breaks. `color` is any CSS color: a
+ * `light-dark()` pair follows `color-scheme` like the theme tokens do.
+ */
 export type Token = { content: string; color?: string; fontStyle?: "italic" | "bold" };
 
 /** Resolves the tokens of `code`, whose contents joined are `code`. No highlighter ships with Kind UI. */

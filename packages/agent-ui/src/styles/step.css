@@ -11,7 +11,7 @@
     flex-direction: column;
     font-size: 0.875rem;
     line-height: 1.25rem;
-    color: var(--kind-fg);
+    color: var(--kind-color-fg);
   }
 
   [data-slot="kind-step-trigger"] {
@@ -19,22 +19,22 @@
     width: 100%;
     align-items: center;
     gap: 8px;
-    border-radius: 6px;
+    border-radius: calc(var(--kind-radius) / 2);
     padding: 4px 6px;
     text-align: left;
-    color: var(--kind-muted-fg);
+    color: var(--kind-color-muted);
     transition:
       color var(--kind-duration-fast),
       background-color var(--kind-duration-fast);
 
     &:hover {
-      color: var(--kind-fg);
-      background-color: var(--kind-hover);
+      color: var(--kind-color-fg);
+      background-color: var(--kind-color-hover);
     }
     &:focus-visible {
-      color: var(--kind-fg);
-      background-color: var(--kind-hover);
-      outline: 1.5px solid color-mix(in oklab, var(--kind-ring) 50%, transparent);
+      color: var(--kind-color-fg);
+      background-color: var(--kind-color-hover);
+      outline: 1.5px solid color-mix(in oklab, var(--kind-color-ring) 50%, transparent);
       outline-offset: -1.5px;
     }
     &::after {
@@ -70,8 +70,14 @@
     &[data-status="running"] {
       color: transparent;
       background:
-        linear-gradient(90deg, var(--kind-muted-fg) 40%, var(--kind-fg) 50%, var(--kind-muted-fg) 60%) 0 0 /
-        200% 100%;
+        linear-gradient(
+          90deg,
+          var(--kind-color-muted) 40%,
+          var(--kind-color-fg) 50%,
+          var(--kind-color-muted) 60%
+        )
+        0 0 / 200% 100%;
+      -webkit-background-clip: text;
       background-clip: text;
       animation: kind-shimmer 2s linear infinite;
     }
@@ -81,7 +87,7 @@
     flex-shrink: 0;
     font-variant-numeric: tabular-nums;
     font-size: 0.75rem;
-    color: var(--kind-muted-fg);
+    color: var(--kind-color-muted);
   }
 
   /* Status mark: one element whose ring, fill, and glyph morph between states. Glyphs are
@@ -97,7 +103,7 @@
     width: 16px;
     height: 16px;
     border-radius: 9999px;
-    border: 1.5px dashed color-mix(in oklab, var(--kind-muted-fg) 70%, transparent);
+    border: 1.5px dashed color-mix(in oklab, var(--kind-color-muted) 70%, transparent);
     background-color: transparent;
     transition:
       border-color var(--kind-duration-base),
@@ -118,16 +124,16 @@
     }
 
     &::after {
-      background-color: var(--kind-on-status);
+      background-color: var(--kind-color-on-accent);
       mask: var(--kind-step-check) center / 10px no-repeat;
     }
 
     &[data-status="running"] {
       border-style: solid;
-      border-color: color-mix(in oklab, var(--kind-running) 25%, transparent);
+      border-color: color-mix(in oklab, var(--kind-color-accent) 25%, transparent);
       &::before {
         border: 1.5px solid transparent;
-        border-top-color: var(--kind-running);
+        border-top-color: var(--kind-color-accent);
         opacity: 1;
         transform: none;
         animation: kind-spin 0.8s linear infinite;
@@ -136,10 +142,10 @@
 
     &[data-status="awaiting-input"] {
       border-style: solid;
-      border-color: var(--kind-warning);
+      border-color: var(--kind-color-warning);
       &::before {
         inset: 3.5px;
-        background-color: var(--kind-warning);
+        background-color: var(--kind-color-warning);
         opacity: 1;
         transform: none;
         animation: kind-pulse 1.6s ease-in-out infinite;
@@ -148,8 +154,8 @@
 
     &[data-status="complete"] {
       border-style: solid;
-      border-color: var(--kind-success);
-      background-color: var(--kind-success);
+      border-color: var(--kind-color-success);
+      background-color: var(--kind-color-success);
       &::after {
         opacity: 1;
         transform: none;
@@ -158,8 +164,8 @@
 
     &[data-status="error"] {
       border-style: solid;
-      border-color: var(--kind-danger);
-      background-color: var(--kind-danger);
+      border-color: var(--kind-color-danger);
+      background-color: var(--kind-color-danger);
       &::after {
         mask-image: var(--kind-step-x);
         opacity: 1;
@@ -169,10 +175,10 @@
 
     &[data-status="cancelled"] {
       border-style: solid;
-      border-color: var(--kind-muted-fg);
+      border-color: var(--kind-color-muted);
       &::after {
         mask-image: var(--kind-step-minus);
-        background-color: var(--kind-muted-fg);
+        background-color: var(--kind-color-muted);
         opacity: 1;
         transform: none;
       }
@@ -184,13 +190,13 @@
   [data-slot="kind-step-children"] {
     margin-inline-start: 13.25px;
     padding-inline-start: 15.25px;
-    border-inline-start: 1.5px solid var(--kind-border);
+    border-inline-start: 1.5px solid var(--kind-color-border);
   }
 
   [data-slot="kind-step-content"] {
     height: var(--kind-step-content-height);
     overflow: hidden;
-    color: var(--kind-muted-fg);
+    color: var(--kind-color-muted);
     transition: opacity var(--kind-duration-base) var(--kind-ease-out);
 
     &:is([data-starting-style], [data-ending-style]) {
@@ -234,7 +240,7 @@
       animation: none;
     }
     [data-slot="kind-step-title"][data-status="running"] {
-      color: var(--kind-fg);
+      color: var(--kind-color-fg);
       background: none;
     }
   }
@@ -247,7 +253,7 @@
     animation: none;
   }
   [data-slot="kind-step-title"][data-status="running"]:is([data-motion="reduced"], [data-motion="none"]) {
-    color: var(--kind-fg);
+    color: var(--kind-color-fg);
     background: none;
   }
 

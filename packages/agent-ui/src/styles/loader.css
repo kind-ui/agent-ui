@@ -4,7 +4,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    color: var(--kind-muted-fg);
+    color: var(--kind-color-muted);
     font-size: 0.875rem;
     line-height: 1.25rem;
   }

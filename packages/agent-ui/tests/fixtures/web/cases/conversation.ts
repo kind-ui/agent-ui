@@ -9,7 +9,7 @@ const lines = [
   "Render only the rows in view and measure each one as it mounts, so the scrollbar stays steady.",
 ];
 
-const bubble = "ms-auto w-fit max-w-[80%] rounded-2xl bg-[var(--kind-hover)] px-3.5 py-2";
+const bubble = "ms-auto w-fit max-w-[80%] rounded-2xl bg-[var(--kind-color-hover)] px-3.5 py-2";
 
 function row(serial: number, index: number, prefix = "m"): HTMLElement {
   const el = document.createElement("kind-conversation-row");
@@ -27,7 +27,7 @@ function chat(root: HTMLElement, count: number, virtualize = false) {
   defineConversation();
   root.innerHTML = `
     <kind-conversation aria-label="Conversation" message-count="${count}"${virtualize ? " virtualize" : ""}
-      class="m-4 h-[28rem] w-[32rem] rounded-xl border border-[var(--kind-border)]">
+      class="m-4 h-[28rem] w-[32rem] rounded-xl border border-[var(--kind-color-border)]">
       <kind-conversation-viewport>
         <kind-conversation-content></kind-conversation-content>
       </kind-conversation-viewport>

@@ -4,7 +4,7 @@
     display: inline-flex;
     align-items: baseline;
     gap: 0.375rem;
-    color: var(--kind-muted-fg);
+    color: var(--kind-color-muted);
     font-size: 0.875rem;
     font-weight: 500;
     line-height: 1.25rem;
@@ -13,8 +13,13 @@
   [data-slot="kind-thinking-indicator-label"] {
     color: transparent;
     background:
-      linear-gradient(90deg, var(--kind-muted-fg) 40%, var(--kind-fg) 50%, var(--kind-muted-fg) 60%) 0 0 /
-      200% 100%;
+      linear-gradient(
+        90deg,
+        var(--kind-color-muted) 40%,
+        var(--kind-color-fg) 50%,
+        var(--kind-color-muted) 60%
+      )
+      0 0 / 200% 100%;
     -webkit-background-clip: text;
     background-clip: text;
     animation: kind-shimmer 2s linear infinite;
@@ -35,7 +40,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     [data-slot="kind-thinking-indicator-label"][data-motion="auto"] {
-      color: var(--kind-muted-fg);
+      color: var(--kind-color-muted);
       background: none;
       animation: none;
     }
@@ -46,7 +51,7 @@
   }
 
   [data-slot="kind-thinking-indicator-label"]:is([data-motion="reduced"], [data-motion="none"]) {
-    color: var(--kind-muted-fg);
+    color: var(--kind-color-muted);
     background: none;
     animation: none;
   }

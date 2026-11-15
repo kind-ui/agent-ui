@@ -103,7 +103,7 @@ export const cases = {
     defineConversation();
     root.innerHTML = `
       <kind-conversation aria-label="Conversation" message-count="2"
-        class="m-4 h-[40rem] w-[44rem] rounded-xl border border-[var(--kind-border)]">
+        class="m-4 h-[40rem] w-[44rem] rounded-xl border border-[var(--kind-color-border)]">
         <kind-conversation-viewport>
           <kind-conversation-content>
             <kind-conversation-row value="q" index="0">${user}</kind-conversation-row>

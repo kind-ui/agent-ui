@@ -5,7 +5,7 @@
     min-width: 0;
     font-size: 0.9375rem;
     line-height: 1.7;
-    color: var(--kind-fg);
+    color: var(--kind-color-fg);
     overflow-wrap: break-word;
 
     & > :first-child > :first-child {
@@ -50,7 +50,7 @@
       padding-inline-start: 0.25em;
 
       &::marker {
-        color: var(--kind-muted-fg);
+        color: var(--kind-color-muted);
       }
     }
     & :where(li[data-task]) {
@@ -60,7 +60,7 @@
     & :where(li[data-task] > input) {
       margin-inline-end: 0.5em;
       vertical-align: -0.125em;
-      accent-color: var(--kind-fg);
+      accent-color: var(--kind-color-fg);
     }
     & :where(li > p) {
       margin-block: 0.25em;
@@ -71,7 +71,7 @@
     & :where(a) {
       color: inherit;
       text-decoration: underline;
-      text-decoration-color: color-mix(in oklab, var(--kind-fg) 35%, transparent);
+      text-decoration-color: color-mix(in oklab, var(--kind-color-fg) 35%, transparent);
       text-underline-offset: 0.2em;
       transition: text-decoration-color var(--kind-duration-fast);
 
@@ -79,30 +79,30 @@
         text-decoration-color: currentColor;
       }
       &:focus-visible {
-        outline: 1.5px solid var(--kind-ring);
+        outline: 1.5px solid var(--kind-color-ring);
         outline-offset: 2px;
         border-radius: 2px;
       }
     }
     & :where(:not(pre) > code) {
       padding: 0.125em 0.375em;
-      border-radius: 0.375em;
-      background-color: var(--kind-hover);
+      border-radius: calc(var(--kind-radius) / 2);
+      background-color: var(--kind-color-hover);
       font-family: var(--kind-font-mono);
       font-size: 0.875em;
     }
     & :where(blockquote) {
       padding-inline-start: 1em;
-      border-inline-start: 2px solid var(--kind-border);
-      color: var(--kind-muted-fg);
+      border-inline-start: 2px solid var(--kind-color-border);
+      color: var(--kind-color-muted);
     }
     & :where(hr) {
       border: 0;
-      border-top: 1px solid var(--kind-border);
+      border-top: 1px solid var(--kind-color-border);
     }
     & :where(img) {
       max-width: 100%;
-      border-radius: 0.5rem;
+      border-radius: calc(var(--kind-radius) * 2 / 3);
     }
     & :where([data-slot="kind-code-block"], [data-slot="kind-markdown-table"]) {
       margin-block: 1em;

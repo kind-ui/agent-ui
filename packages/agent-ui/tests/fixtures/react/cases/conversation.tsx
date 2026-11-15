@@ -30,7 +30,7 @@ function Bubble({ message }: { message: Message }) {
   return message.role === "user" ? (
     <p
       data-message={message.id}
-      className="ms-auto w-fit max-w-[80%] rounded-2xl bg-[var(--kind-hover)] px-3.5 py-2"
+      className="ms-auto w-fit max-w-[80%] rounded-2xl bg-[var(--kind-color-hover)] px-3.5 py-2"
     >
       {message.text}
     </p>
@@ -76,7 +76,7 @@ function Chat({ count, virtualize = false }: { count: number; virtualize?: boole
       virtualize={virtualize}
       rowKey={(index) => all[index]?.id ?? String(index)}
       controller={controller}
-      className="m-4 h-[28rem] w-[32rem] rounded-xl border border-[var(--kind-border)]"
+      className="m-4 h-[28rem] w-[32rem] rounded-xl border border-[var(--kind-color-border)]"
     >
       <ConversationViewport>
         <ConversationContent>

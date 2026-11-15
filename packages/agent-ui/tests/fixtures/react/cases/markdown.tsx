@@ -11,7 +11,7 @@ import {
   wideTable,
 } from "../../shared/markdown.js";
 
-const frame = "m-4 w-[36rem] text-[var(--kind-fg)]";
+const frame = "m-4 w-[36rem] text-[var(--kind-color-fg)]";
 
 function Stream() {
   const [{ engine, records }] = useState(recordedEngine);

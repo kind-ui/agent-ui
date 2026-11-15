@@ -31,7 +31,7 @@
     min-height: 0;
     font-size: 0.875rem;
     line-height: 1.5rem;
-    color: var(--kind-fg);
+    color: var(--kind-color-fg);
   }
 
   [data-slot="kind-conversation-viewport"] {
@@ -41,7 +41,7 @@
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
-    scrollbar-color: var(--kind-border) transparent;
+    scrollbar-color: var(--kind-color-border) transparent;
     border-radius: inherit;
 
     &:focus-visible {
@@ -51,7 +51,7 @@
 
   /* The viewport's edge fade would mask its own ring, so the root draws it. */
   [data-slot="kind-conversation"]:has(> [data-slot="kind-conversation-viewport"]:focus-visible) {
-    outline: 1.5px solid color-mix(in oklab, var(--kind-ring) 50%, transparent);
+    outline: 1.5px solid color-mix(in oklab, var(--kind-color-ring) 50%, transparent);
     outline-offset: -1.5px;
   }
 
@@ -117,7 +117,7 @@
     margin: auto;
     padding: 3rem 1rem;
     text-align: center;
-    color: var(--kind-muted-fg);
+    color: var(--kind-color-muted);
   }
 
   [data-slot="kind-conversation-jump"] {
@@ -133,31 +133,31 @@
     gap: 6px;
     height: 2rem;
     padding-inline: 0.75rem 0.875rem;
-    border: 1px solid var(--kind-border);
+    border: 1px solid var(--kind-color-border);
     border-radius: 9999px;
-    background-color: var(--kind-surface);
+    background-color: var(--kind-color-surface);
     box-shadow:
-      0 1px 2px color-mix(in oklab, var(--kind-shadow) 6%, transparent),
-      0 4px 16px -4px color-mix(in oklab, var(--kind-shadow) 12%, transparent);
+      0 1px 2px color-mix(in oklab, var(--kind-color-shadow) 6%, transparent),
+      0 4px 16px -4px color-mix(in oklab, var(--kind-color-shadow) 12%, transparent);
     font-size: 0.8125rem;
     font-weight: 500;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
-    color: var(--kind-fg);
+    color: var(--kind-color-fg);
     transition: background-color var(--kind-duration-fast);
 
     &::before {
       content: "";
       width: 14px;
       height: 14px;
-      background-color: var(--kind-muted-fg);
+      background-color: var(--kind-color-muted);
       mask: var(--kind-conversation-arrow) center / contain no-repeat;
     }
     &:hover {
-      background-color: var(--kind-hover);
+      background-color: var(--kind-color-hover);
     }
     &:focus-visible {
-      outline: 1.5px solid var(--kind-ring);
+      outline: 1.5px solid var(--kind-color-ring);
       outline-offset: 2px;
     }
   }

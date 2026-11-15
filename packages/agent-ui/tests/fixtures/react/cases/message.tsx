@@ -134,7 +134,7 @@ function Chat() {
     <Conversation
       aria-label="Conversation"
       messageCount={2}
-      className="m-4 h-[40rem] w-[44rem] rounded-xl border border-[var(--kind-border)]"
+      className="m-4 h-[40rem] w-[44rem] rounded-xl border border-[var(--kind-color-border)]"
     >
       <ConversationViewport>
         <ConversationContent>

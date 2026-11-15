@@ -11,6 +11,32 @@ Agent-operable AI components built on [UI SDK](https://ui-sdk.dev/docs). Not yet
 
 Styled React and Web Components are distributed through the registry, not this package.
 
+## Styles
+
+Import `@kind-ui/agent-ui/styles.css` after `tailwindcss` in your stylesheet. It registers the components' styles and declares the theme tokens under `@theme default`, so your own `@theme` or `:root` values win:
+
+```css
+@import "tailwindcss";
+@import "@kind-ui/agent-ui/styles.css";
+
+:root {
+  color-scheme: light dark;
+  --kind-color-accent: var(--color-violet-600);
+  --kind-radius: 0.5rem;
+}
+```
+
+| Token | Use |
+| --- | --- |
+| `--kind-color-fg`, `--kind-color-muted` | Text and secondary text |
+| `--kind-color-surface`, `--kind-color-hover`, `--kind-color-border`, `--kind-color-ring`, `--kind-color-shadow` | Backgrounds, subtle fills, borders, focus rings, shadows |
+| `--kind-color-accent`, `--kind-color-on-accent` | Running and primary states, and text on them |
+| `--kind-color-success`, `--kind-color-warning`, `--kind-color-danger` | Statuses |
+| `--kind-radius` | Base corner radius; others scale from it |
+| `--kind-font-mono` | Code |
+
+Colors are `light-dark()` pairs, so dark mode follows `color-scheme`: `light dark` follows the system, and a class-based dark theme sets `color-scheme: dark` on its root. A Code Block `highlight` function can return `light-dark()` token colors to switch with them.
+
 ## AI SDK adapter
 
 `@kind-ui/agent-ui/adapters/ai-sdk` maps AI SDK `UIMessage`s to the neutral types. It imports `ai` with `import type` only and never calls the SDK, so its emitted JavaScript has no `ai` import. A consumer without `ai` can still import `toApprovalResponse` and `fromChatStatus`. Its declarations type-check without `ai` too, even with `skipLibCheck` off: there, the `ai` types it references are `any`.

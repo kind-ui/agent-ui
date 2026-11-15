@@ -12,7 +12,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    color: var(--kind-fg);
+    color: var(--kind-color-fg);
     font-size: 0.875rem;
     line-height: 1.25rem;
 
@@ -27,22 +27,22 @@
       justify-content: center;
       gap: 0.75rem 0.25rem;
       padding: 1.5rem 1rem;
-      border: 1px dashed color-mix(in oklab, var(--kind-muted-fg) 40%, var(--kind-border));
-      border-radius: 1rem;
-      background-color: var(--kind-surface);
-      color: var(--kind-muted-fg);
+      border: 1px dashed color-mix(in oklab, var(--kind-color-muted) 40%, var(--kind-color-border));
+      border-radius: calc(var(--kind-radius) * 1.5);
+      background-color: var(--kind-color-surface);
+      color: var(--kind-color-muted);
       transition:
         border-color var(--kind-duration-fast),
         background-color var(--kind-duration-fast);
 
       &[data-dragging] {
-        border-color: var(--kind-running);
-        background-color: color-mix(in oklab, var(--kind-running) 6%, var(--kind-surface));
+        border-color: var(--kind-color-accent);
+        background-color: color-mix(in oklab, var(--kind-color-accent) 6%, var(--kind-color-surface));
       }
 
       &[data-drag-reject] {
-        border-color: var(--kind-danger);
-        background-color: color-mix(in oklab, var(--kind-danger) 6%, var(--kind-surface));
+        border-color: var(--kind-color-danger);
+        background-color: color-mix(in oklab, var(--kind-color-danger) 6%, var(--kind-color-surface));
       }
 
       & > [data-upload-icon] {
@@ -56,7 +56,7 @@
           width: 2.5rem;
           height: 2.5rem;
           border-radius: 999px;
-          background-color: var(--kind-hover);
+          background-color: var(--kind-color-hover);
         }
 
         &::after {
@@ -75,13 +75,13 @@
     & [data-slot="file-input-trigger"] {
       padding: 0;
       border: 0;
-      border-radius: 0.25rem;
+      border-radius: calc(var(--kind-radius) / 3);
       background: none;
-      color: var(--kind-fg);
+      color: var(--kind-color-fg);
       font: inherit;
       font-weight: 500;
       text-decoration: underline;
-      text-decoration-color: color-mix(in oklab, var(--kind-fg) 30%, transparent);
+      text-decoration-color: color-mix(in oklab, var(--kind-color-fg) 30%, transparent);
       text-underline-offset: 0.2em;
       cursor: pointer;
       transition: text-decoration-color var(--kind-duration-fast);
@@ -91,7 +91,7 @@
       }
 
       &:focus-visible {
-        outline: 2px solid var(--kind-ring);
+        outline: 2px solid var(--kind-color-ring);
         outline-offset: 2px;
       }
     }
@@ -111,7 +111,7 @@
   }
 
   [data-slot="kind-uploader-item"] {
-    --kind-uploader-tone: var(--kind-running);
+    --kind-uploader-tone: var(--kind-color-accent);
 
     display: grid;
     grid-template-columns: 2.25rem minmax(0, 1fr) auto;
@@ -119,24 +119,24 @@
     align-items: center;
     gap: 0.25rem 0.75rem;
     padding: 0.625rem 0.75rem 0.625rem 0.625rem;
-    border: 1px solid var(--kind-border);
-    border-radius: 0.875rem;
-    background-color: var(--kind-surface);
+    border: 1px solid var(--kind-color-border);
+    border-radius: var(--kind-radius);
+    background-color: var(--kind-color-surface);
     transition: border-color var(--kind-duration-fast);
 
     &[data-status="queued"],
     &[data-status="cancelled"] {
-      --kind-uploader-tone: var(--kind-muted-fg);
+      --kind-uploader-tone: var(--kind-color-muted);
     }
 
     &[data-status="done"] {
-      --kind-uploader-tone: var(--kind-success);
+      --kind-uploader-tone: var(--kind-color-success);
     }
 
     &[data-status="error"] {
-      --kind-uploader-tone: var(--kind-danger);
+      --kind-uploader-tone: var(--kind-color-danger);
 
-      border-color: color-mix(in oklab, var(--kind-danger) 45%, var(--kind-border));
+      border-color: color-mix(in oklab, var(--kind-color-danger) 45%, var(--kind-color-border));
     }
 
     & > [data-icon] {
@@ -145,9 +145,9 @@
       place-items: center;
       width: 2.25rem;
       height: 2.25rem;
-      border-radius: 0.625rem;
-      background-color: var(--kind-hover);
-      color: var(--kind-muted-fg);
+      border-radius: calc(var(--kind-radius) * 2 / 3);
+      background-color: var(--kind-color-hover);
+      color: var(--kind-color-muted);
       transition:
         color var(--kind-duration-base),
         background-color var(--kind-duration-base);
@@ -193,7 +193,7 @@
       height: 0.25rem;
       overflow: hidden;
       border-radius: 999px;
-      background-color: var(--kind-border);
+      background-color: var(--kind-color-border);
     }
 
     & [data-slot="progress-indicator"] {
@@ -212,14 +212,14 @@
 
     & > [data-detail] {
       grid-column: 2;
-      color: var(--kind-muted-fg);
+      color: var(--kind-color-muted);
       font-size: 0.75rem;
       line-height: 1rem;
       font-variant-numeric: tabular-nums;
     }
 
     &[data-status="error"] > [data-detail] {
-      color: var(--kind-danger);
+      color: var(--kind-color-danger);
     }
   }
 
@@ -234,7 +234,7 @@
     border: 0;
     border-radius: 999px;
     background: none;
-    color: var(--kind-muted-fg);
+    color: var(--kind-color-muted);
     cursor: pointer;
     transition:
       color var(--kind-duration-fast),
@@ -253,12 +253,12 @@
     }
 
     &:hover {
-      background-color: var(--kind-hover);
-      color: var(--kind-fg);
+      background-color: var(--kind-color-hover);
+      color: var(--kind-color-fg);
     }
 
     &:focus-visible {
-      outline: 2px solid var(--kind-ring);
+      outline: 2px solid var(--kind-color-ring);
       outline-offset: 1px;
     }
   }

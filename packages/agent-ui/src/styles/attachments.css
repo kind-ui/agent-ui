@@ -12,7 +12,7 @@
     margin: 0;
     padding: 0;
     list-style: none;
-    color: var(--kind-fg);
+    color: var(--kind-color-fg);
   }
 
   [data-slot="kind-attachments-item"] {
@@ -25,39 +25,39 @@
     max-width: 15rem;
     min-height: 2.25rem;
     padding: 0.3125rem 0.75rem 0.3125rem 0.3125rem;
-    border: 1px solid var(--kind-border);
-    border-radius: 0.75rem;
-    background-color: var(--kind-surface);
+    border: 1px solid var(--kind-color-border);
+    border-radius: var(--kind-radius);
+    background-color: var(--kind-color-surface);
     font-size: 0.8125rem;
     line-height: 1.125rem;
     transition: border-color var(--kind-duration-fast);
 
     &:focus-visible {
-      outline: 2px solid var(--kind-ring);
+      outline: 2px solid var(--kind-color-ring);
       outline-offset: 2px;
     }
 
     &[data-error] {
-      border-color: color-mix(in oklab, var(--kind-danger) 45%, var(--kind-border));
+      border-color: color-mix(in oklab, var(--kind-color-danger) 45%, var(--kind-color-border));
     }
 
     & > :is([data-preview], [data-icon]) {
       grid-row: span 2;
       width: 2.25rem;
       height: 2.25rem;
-      border-radius: 0.5rem;
+      border-radius: calc(var(--kind-radius) * 2 / 3);
     }
 
     & > [data-preview] {
       object-fit: cover;
-      background-color: var(--kind-hover);
+      background-color: var(--kind-color-hover);
     }
 
     & > [data-icon] {
       display: grid;
       place-items: center;
-      background-color: var(--kind-hover);
-      color: var(--kind-muted-fg);
+      background-color: var(--kind-color-hover);
+      color: var(--kind-color-muted);
 
       &::before {
         content: "";
@@ -69,8 +69,8 @@
     }
 
     &[data-error] > [data-icon] {
-      background-color: color-mix(in oklab, var(--kind-danger) 12%, transparent);
-      color: var(--kind-danger);
+      background-color: color-mix(in oklab, var(--kind-color-danger) 12%, transparent);
+      color: var(--kind-color-danger);
 
       &::before {
         mask-image: var(--kind-attachments-error-icon);
@@ -85,13 +85,13 @@
     }
 
     & > [data-detail] {
-      color: var(--kind-muted-fg);
+      color: var(--kind-color-muted);
       font-size: 0.75rem;
       font-variant-numeric: tabular-nums;
     }
 
     &[data-error] > [data-detail] {
-      color: var(--kind-danger);
+      color: var(--kind-color-danger);
     }
   }
 
@@ -103,10 +103,10 @@
     place-items: center;
     width: 1.25rem;
     height: 1.25rem;
-    border: 2px solid var(--kind-surface);
+    border: 2px solid var(--kind-color-surface);
     border-radius: 999px;
-    background-color: var(--kind-fg);
-    color: var(--kind-surface);
+    background-color: var(--kind-color-fg);
+    color: var(--kind-color-surface);
     cursor: pointer;
     opacity: 0;
     scale: 0.8;
@@ -120,6 +120,12 @@
       height: 0.5625rem;
       background-color: currentColor;
       mask: var(--kind-attachments-remove-icon) center / contain no-repeat;
+    }
+    /* Grows the 20 px badge's pointer target to 24 px (the inset starts inside its 2 px border). */
+    &::after {
+      content: "";
+      position: absolute;
+      inset: -0.25rem;
     }
   }
 

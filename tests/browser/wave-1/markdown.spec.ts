@@ -135,6 +135,23 @@ test("shows highlighted tokens and ignores a late result for replaced code", asy
   await expect(code(page)).toHaveText("let b = 2;");
 });
 
+test("a light-dark() token color follows color-scheme", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await open(page, "highlight");
+  await expect(code(page)).toHaveText("const a = 1;");
+  await page.evaluate(() => {
+    for (const request of (window as unknown as Fixture).kindCode.requests)
+      request.resolve([
+        { content: "const", color: "light-dark(rgb(0, 0, 200), rgb(0, 200, 0))" },
+        { content: " a = 1;" },
+      ]);
+  });
+  const keyword = code(page).locator("span span").first();
+  await expect(keyword).toHaveCSS("color", "rgb(0, 200, 0)");
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(keyword).toHaveCSS("color", "rgb(0, 0, 200)");
+});
+
 test("streaming code follows its end", async ({ page }) => {
   await open(page, "code-stream");
   const viewport = page.locator('[data-slot="scroll-area-viewport"]');
