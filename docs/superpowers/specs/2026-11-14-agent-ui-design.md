@@ -525,8 +525,9 @@ These apply to every component:
 Styled React and Web Components ship as copy-in shadcn registry items from this repository's own registry. Nothing extends or imports the kind-ui/charts registry.
 
 - `registry/catalog.mjs` lists every item. `scripts/build-registry.mjs` reads it, stages item files, and runs a pinned `shadcn` CLI `build` executed ephemerally (not added to the dependency tree), writing the flat served catalog (`registry.json`) and per-item payloads (`<name>.json`) to `artifacts/registry/r/`.
-- Item names are `agent-<component>` for React and `agent-<component>-web` for Web Components (for example `agent-composer` and `agent-composer-web`).
-- Internal general components ship as hidden `agent-internal-<name>` items, referenced through `registryDependencies` and excluded from docs listings.
+- Item names are `<component>` for React and `<component>-web` for Web Components (for example `composer` and `composer-web`), with no product prefix. Consumers address them through the registry namespace (for example `@kind-ui/composer`).
+- Internal general components ship as hidden `internal-<name>` items (for example `internal-button`), referenced through `registryDependencies` and excluded from docs listings.
+- The build fails if an item name collides with another item in the same namespace. If the namespace is shared with charts (§13), this check covers charts' published item names too.
 - Item files are copied byte-for-byte from `packages/agent-ui/src/react/` or `packages/agent-ui/src/web/`. The build fails if a staged file differs from its source.
 - Items pin `@kind-ui/agent-ui`, `@ui-sdk/core`, and `@ui-sdk/react` or `@ui-sdk/web` to exact versions. The build fails when the catalog's `@kind-ui/agent-ui` version differs from `packages/agent-ui/package.json`, or when an item's `@ui-sdk/*` version differs from the package's `@ui-sdk/core` pin.
 - The item `css` field registers `@kind-ui/agent-ui/styles.css` (theme tokens and Tailwind v4 source registration) for the standard `src/`, `app/`, and `src/app/` stylesheet locations. Consumers with other layouts import it from their own stylesheet. Existing consumer theme variables remain authoritative.
