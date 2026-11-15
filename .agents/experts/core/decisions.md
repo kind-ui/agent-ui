@@ -28,6 +28,7 @@ Last reviewed: `9b766ae` (Task 12 Uploader and indicators)
 
 ## Resolved
 
+- **A disabled composer still let a person or an agent remove attachments.** Fixed: `partState.attachments` leaves `onRemove` out while disabled, and `removeAttachment` refuses.
 - **A double click on uploader Retry also cancelled** (Retry turns into Cancel under the pointer). Fixed: a click with `detail > 1` is ignored, and an item takes no second cancel or retry until the host changes its status.
 - **Uploader focus recovery went to the first row when the host removed a cancelled item.** Fixed: the fallback reads the order from before the change.
 - **Web uploader rows played their entrance on mount.** Fixed: rows in the first frame after the root binds count as mounted.

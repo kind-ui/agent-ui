@@ -16,7 +16,7 @@ import { defineUploader } from "../../../../src/web/uploader.js";
 import { agentHost, files, filler, question, replies, steps } from "../../shared/agent.js";
 import { commands, mentions } from "../../shared/composer.js";
 import { answer } from "../../shared/markdown.js";
-import { uploadHost, uploads } from "../../shared/uploader.js";
+import { uploads } from "../../shared/uploader.js";
 
 const host = agentHost();
 
@@ -155,7 +155,7 @@ function wireComposer(root: HTMLElement) {
     const { detail } = event as CustomEvent<UiActionDetail & { value: ComposerDraft }>;
     detail.waitUntil(host.submit(detail.value));
   });
-  composer.addEventListener("stop", () => host.calls.push("stop"));
+  composer.addEventListener("stop", host.stop);
   composer.addEventListener("valuechange", (event) => recordChange("composer", event));
 }
 
@@ -173,10 +173,9 @@ function wireAttachments(root: HTMLElement) {
 function wireUploader(root: HTMLElement) {
   const uploader = root.querySelector("kind-uploader") as HTMLElement & { items: UploadItem[] };
   uploader.items = uploads;
-  const { fixture, onCancel, onRetry } = uploadHost((change) => {
+  const { onCancel, onRetry } = host.uploads((change) => {
     uploader.items = change(uploader.items);
   });
-  Object.assign(window, { kindUploader: fixture });
   uploader.addEventListener("uploadcancel", (event) =>
     onCancel((event as CustomEvent<{ value: string }>).detail.value),
   );

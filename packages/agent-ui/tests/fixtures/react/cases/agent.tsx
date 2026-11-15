@@ -1,6 +1,6 @@
 import type { AttachmentItem, UploadItem } from "@kind-ui/agent-ui/core";
 import type { AgentAction } from "@ui-sdk/react/agent";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Attachments } from "../../../../src/react/attachments.js";
 import {
   Composer,
@@ -50,7 +50,7 @@ import { Uploader } from "../../../../src/react/uploader.js";
 import { agentHost, files, filler, question, replies, steps } from "../../shared/agent.js";
 import { commands, mentions } from "../../shared/composer.js";
 import { answer } from "../../shared/markdown.js";
-import { uploadHost, uploads } from "../../shared/uploader.js";
+import { uploads } from "../../shared/uploader.js";
 
 const host = agentHost();
 
@@ -169,10 +169,7 @@ function Files() {
 
 function Uploads() {
   const [items, setItems] = useState<UploadItem[]>(uploads);
-  const [{ fixture, ...callbacks }] = useState(() => uploadHost(setItems));
-  useEffect(() => {
-    Object.assign(window, { kindUploader: fixture });
-  }, [fixture]);
+  const [callbacks] = useState(() => host.uploads(setItems));
   return <Uploader aria-label="Uploads" items={items} {...callbacks} />;
 }
 
@@ -191,7 +188,7 @@ export const cases = {
           mentions={mentions}
           commands={commands}
           onSubmit={host.submit}
-          onStop={() => host.calls.push("stop")}
+          onStop={host.stop}
           onValueChange={(_value, details) => host.change("composer", details)}
         >
           <ComposerAttachments />

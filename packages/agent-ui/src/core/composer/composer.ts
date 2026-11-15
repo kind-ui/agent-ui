@@ -53,7 +53,8 @@ export type ComposerOptions = {
   onValueChange?: (value: ComposerDraft, details: ChangeDetails<ComposerValueChangeReason>) => void;
   /**
    * Called with a snapshot of the draft on submit. A returned thenable keeps `pending` until it settles:
-   * resolving clears the draft unless it changed meanwhile, rejecting keeps it.
+   * resolving clears the draft unless it changed meanwhile, rejecting keeps it. Web: a `composersubmit` event whose
+   * listeners call `event.detail.waitUntil(promise)`.
    */
   onSubmit?: (draft: ComposerDraft) => unknown;
   /** Offers the stop control and action while a submission is pending. Web: `can-stop` and a `stop` event. */
@@ -149,8 +150,9 @@ export type ComposerInputState = {
 
 export type ComposerTriggerMenuState = { triggers: TriggerDefinition[] };
 
-/** Props for the Attachments inside the attachments part. */
-export type ComposerAttachmentsState = Required<Pick<AttachmentsOptions, "items" | "onRemove" | "motion">>;
+/** Props for the Attachments inside the attachments part. `onRemove` is left out while the composer is disabled. */
+export type ComposerAttachmentsState = Required<Pick<AttachmentsOptions, "items" | "motion">> &
+  Pick<AttachmentsOptions, "onRemove">;
 
 type ComposerSlot<Public extends object = Record<never, never>> = SlotDefinition<
   ComposerState,
@@ -320,8 +322,8 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
         ),
     };
     const removeAttachment = (id: string, event?: Event) => {
-      const { value } = store.get();
-      if (!value.attachments.some((item) => item.id === id)) return false;
+      const { value, disabled } = store.get();
+      if (disabled || !value.attachments.some((item) => item.id === id)) return false;
       return change(
         "value",
         { ...value, attachments: value.attachments.filter((item) => item.id !== id) },
@@ -396,10 +398,10 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       },
     );
     const attachments = memo(
-      (items: ComposerAttachment[], motion: MotionMode): ComposerAttachmentsState => ({
+      (items: ComposerAttachment[], motion: MotionMode, disabled: boolean): ComposerAttachmentsState => ({
         items,
-        onRemove: (id, details) => void removeAttachment(id, details.event),
         motion,
+        ...(!disabled && { onRemove: (id, details) => void removeAttachment(id, details.event) }),
       }),
     );
 
@@ -441,7 +443,7 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
         root: (state) => root(state.disabled, state.accept, state.maxSize),
         input: (state) => input(state.submitOn, state.disabled),
         triggerMenu: (state) => triggerMenu(state.mentions, state.commands),
-        attachments: (state) => attachments(state.value.attachments, state.motion),
+        attachments: (state) => attachments(state.value.attachments, state.motion, state.disabled),
       },
     };
   },

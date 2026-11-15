@@ -1,6 +1,7 @@
 import {
   type AttachmentItem,
   type AttachmentsApi,
+  type AttachmentsOptions,
   attachmentDetail,
   attachmentsPrimitive,
 } from "@kind-ui/agent-ui/core";
@@ -31,7 +32,10 @@ function fill(el: Element, item: AttachmentItem, preview: string | undefined): v
   );
 }
 
-type AttachmentsElement = HTMLElement & { canRemove: boolean };
+type AttachmentsElement = HTMLElement & {
+  canRemove: boolean;
+  removeHandler: AttachmentsOptions["onRemove"];
+};
 
 /**
  * `<kind-attachments aria-label="Files">` renders a `kind-attachments-item` for each entry of its `items`
@@ -43,10 +47,14 @@ export function defineAttachments(): void {
     root: {
       tag: "kind-attachments",
       kinds: { canRemove: "boolean" },
-      // The composer hands its own `onRemove` in as a property, beside `can-remove`.
-      properties: ["onRemove"],
-      // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
-      options: (el) => ((el as AttachmentsElement).canRemove ? {} : { onRemove: undefined }),
+      // The composer's own handler, which offers removal without the attribute.
+      properties: ["removeHandler"],
+      // Without either, the callback is left out; with only the attribute, `@ui-sdk/web` fills it in with an event.
+      options: (el) => {
+        const { canRemove, removeHandler } = el as AttachmentsElement;
+        if (removeHandler) return { onRemove: removeHandler };
+        return canRemove ? {} : { onRemove: undefined };
+      },
       render: (el, instance) => {
         const api = instance.api as AttachmentsApi;
         const drawn = new WeakMap<Element, { item: AttachmentItem; preview: string | undefined }>();

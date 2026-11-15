@@ -1,4 +1,5 @@
-import type { AttachmentItem } from "@kind-ui/agent-ui/core";
+import type { AttachmentItem, UploadItem } from "@kind-ui/agent-ui/core";
+import { uploadHost } from "./uploader.js";
 
 export const steps = [
   { id: "logs", title: "Read the logs", body: "Three timeouts in the last hour.", open: false },
@@ -21,9 +22,11 @@ export const files: AttachmentItem[] = [
 ];
 
 export function agentHost() {
+  let release = () => {};
   const host = {
     permit: true,
     refuse: false,
+    hold: false,
     changes: [] as string[],
     calls: [] as string[],
     change: (component: string, details: { source: string; cancel: () => void }): boolean => {
@@ -33,7 +36,24 @@ export function agentHost() {
     },
     submit: (draft: { text: string }) => {
       host.calls.push(`submit:${draft.text}`);
-      return new Promise<void>(() => {});
+      return host.hold ? new Promise<void>((resolve) => (release = resolve)) : Promise.resolve();
+    },
+    stop: () => {
+      host.calls.push("stop");
+      release();
+    },
+    uploads: (update: (change: (items: UploadItem[]) => UploadItem[]) => void) => {
+      const { onCancel, onRetry } = uploadHost(update);
+      return {
+        onCancel: (id: string) => {
+          host.calls.push(`cancel:${id}`);
+          onCancel(id);
+        },
+        onRetry: (id: string) => {
+          host.calls.push(`retry:${id}`);
+          onRetry(id);
+        },
+      };
     },
   };
   Object.assign(window, { kindAgent: host });

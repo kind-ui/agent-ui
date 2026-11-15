@@ -4,6 +4,8 @@ import { Uploader } from "../../../../src/react/uploader.js";
 import { defineUploader } from "../../../../src/web/uploader.js";
 import { uploadHost, uploads } from "../../shared/uploader.js";
 
+defineUploader();
+
 function Mixed() {
   const [items, setItems] = useState<UploadItem[]>(uploads);
   const [{ fixture, ...host }] = useState(() => uploadHost(setItems));
@@ -35,7 +37,6 @@ declare module "react" {
 }
 
 function WebElement() {
-  defineUploader();
   const [items, setItems] = useState<UploadItem[]>(uploads);
   const [{ fixture, onCancel, onRetry }] = useState(() => uploadHost(setItems));
   useEffect(() => {

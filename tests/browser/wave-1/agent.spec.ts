@@ -12,7 +12,7 @@ type Entry = {
 type ActResult = { ok: boolean; error?: { message: string } };
 type Fixture = {
   agent: { snapshot(): Entry[]; act(input: { steps: unknown[] }): Promise<ActResult> };
-  kindAgent: { permit: boolean; refuse: boolean; changes: string[]; calls: string[] };
+  kindAgent: { permit: boolean; refuse: boolean; hold: boolean; changes: string[]; calls: string[] };
 };
 
 const open = async (page: Page) => {
@@ -22,7 +22,7 @@ const open = async (page: Page) => {
 const snapshot = (page: Page) => page.evaluate(() => (window as Partial<Fixture>).agent?.snapshot() ?? []);
 const components = async (page: Page) => (await snapshot(page)).map((entry) => entry.component);
 const host = (page: Page) => page.evaluate(() => (window as unknown as Fixture).kindAgent);
-const setHost = (page: Page, values: Partial<Pick<Fixture["kindAgent"], "permit" | "refuse">>) =>
+const setHost = (page: Page, values: Partial<Pick<Fixture["kindAgent"], "permit" | "refuse" | "hold">>) =>
   page.evaluate((next) => Object.assign((window as unknown as Fixture).kindAgent, next), values);
 
 async function act(page: Page, component: string, label: string, action: string, args: unknown[] = []) {
@@ -182,6 +182,15 @@ const conformance: Conformance[] = [
     before: async (page) => {
       await attachToComposer(page);
       await expect(page.getByRole("list", { name: "Attachments" }).getByRole("listitem")).toHaveCount(1);
+      await page.waitForFunction(() =>
+        document
+          .getAnimations()
+          .every(
+            (animation) =>
+              animation.playState !== "running" ||
+              animation.effect?.getComputedTiming().iterations === Number.POSITIVE_INFINITY,
+          ),
+      );
     },
     args: async (page) => {
       const composer = (await snapshot(page)).find((entry) => entry.component === "kind-composer");
@@ -203,6 +212,7 @@ const conformance: Conformance[] = [
     action: "stop",
     scope: slot("kind-composer"),
     before: async (page) => {
+      await setHost(page, { hold: true });
       await type(page, "Hello");
       await page.keyboard.press("Enter");
       await expect(page.getByRole("button", { name: "Stop" })).toBeVisible();
@@ -327,4 +337,34 @@ test("composer.submit is refused when the permission callback denies it", async 
   await setHost(page, { permit: true });
   expect((await act(page, "kind-composer", "Compose", "submit")).ok).toBe(true);
   expect((await host(page)).calls).toEqual(["submit:Hello"]);
+});
+
+const actionsOf = async (page: Page, component: string, label: string) =>
+  (await snapshot(page)).find((entry) => entry.component === component && entry.label === label)?.actions;
+
+test("an action is listed only while it's available", async ({ page }) => {
+  await open(page);
+  expect(await actionsOf(page, "kind-composer", "Compose")).not.toContain("stop");
+  await setHost(page, { hold: true });
+  await type(page, "Hello");
+  await page.keyboard.press("Enter");
+  await expect.poll(() => actionsOf(page, "kind-composer", "Compose")).toContain("stop");
+});
+
+test("a can-* attribute offers its action, and a disabled composer offers no removal", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "wave-1-web", "web attributes only");
+  await open(page);
+  await page.locator("kind-uploader").evaluate((el) => el.removeAttribute("can-retry"));
+  await expect.poll(() => actionsOf(page, "kind-uploader", "Uploads")).toEqual(["cancel"]);
+  await expect(page.getByRole("button", { name: /^Retry/ })).toHaveCount(0);
+  await page.locator("kind-uploader").evaluate((el) => el.setAttribute("can-retry", ""));
+  await expect.poll(() => actionsOf(page, "kind-uploader", "Uploads")).toEqual(["cancel", "retry"]);
+
+  await attachToComposer(page);
+  await expect.poll(() => actionsOf(page, "kind-attachments", "Attachments")).toEqual(["remove"]);
+  await page.locator("kind-composer").evaluate((el) => el.setAttribute("disabled", ""));
+  await expect.poll(() => actionsOf(page, "kind-attachments", "Attachments")).toEqual([]);
+  await expect(page.locator('[data-case="composer"] [data-slot="kind-attachments-remove"]')).toBeHidden();
 });

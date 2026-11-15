@@ -92,9 +92,10 @@ export function defineComposer(): void {
             el.querySelector("kind-composer-trigger-menu ui-trigger-menu"),
             api.partState.triggerMenu(state),
           );
+          const { onRemove, ...attachments } = api.partState.attachments(state);
           assign(el.querySelector("kind-composer-attachments kind-attachments"), {
-            ...api.partState.attachments(state),
-            canRemove: true,
+            ...attachments,
+            removeHandler: onRemove,
           });
         };
         draw();

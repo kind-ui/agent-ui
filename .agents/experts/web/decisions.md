@@ -22,9 +22,11 @@ Last reviewed: `9b766ae` (Task 12 Uploader and indicators)
 - **A code block removed and put back after a tick asks for highlighting again** and shows plain text meanwhile: same rebuilt-from-state cause as the Step entry above.
 - **Trigger Menu items show no description on web:** the list renders its own items from data, label only. React renders the description.
 - **Inside a shadow root, Enter with the Trigger Menu open submits the form** instead of choosing the item (UI SDK; report upstream).
+- **The `can-*` attributes and `removeHandler` have no types either;** part of the `HTMLElementTagNameMap` entry above.
 
 ## Resolved
 
+- **`kind-attachments` kept a public `onRemove` property, and the composer wrote `can-remove` into the user's markup.** Fixed: the composer hands its function in as `removeHandler`.
 - **`on…` function properties (`onRegenerate`, `onEdit`, `onStop`, `onRemove`, `onCancel`, `onRetry`) couldn't be set from React 19,** which turns `on…` props on a custom element into listeners. Fixed: every callback is a DOM event, and a `can-<action>` attribute offers what a callback's presence did (AGENTS.md, "Web callbacks and availability"). React 19 rendering `kind-uploader` is tested.
 - **`kind-uploader`'s `reject` shared its name with File Input's.** Fixed: `uploadreject`, beside `uploadcancel` and `uploadretry` (its native file input fires a bubbling `cancel`).
 - **Reordering uploader `items` blurred a focused action button.** Fixed: rows move with `moveBefore` where the browser has it.
