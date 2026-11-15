@@ -108,7 +108,10 @@ export function checkUiSdkUsage(root, exceptions) {
       (importsFrom(source, "createParts", "@ui-sdk/react/primitive") ||
         importsFrom(source, "createParts", "@ui-sdk/web")) &&
       /\bcreateParts\s*\(/.test(source);
-    const wrapsComponent = /from\s*["']@ui-sdk\/(react\/(?!primitive["'])|web\/)[\w-]+["']/.test(source);
+    // Web entries register their elements on import, so a bare `import "@ui-sdk/web/<name>"` wraps one too.
+    const wrapsComponent = /(from|import)\s*["']@ui-sdk\/(react\/(?!primitive["'])|web\/)[\w-]+["']/.test(
+      source,
+    );
     if (!usesParts && !wrapsComponent) {
       errors.push(`${file}: render file must use createParts or wrap a UI SDK component`);
     }

@@ -10,5 +10,22 @@ export default defineConfig({
   cacheDir: here("../../../../../node_modules/.vite/fixture-web"),
   plugins: [tailwindcss()],
   resolve: { alias: { "@kind-ui/agent-ui/core": here("../../../src/core/index.ts") } },
-  optimizeDeps: { include: ["@ui-sdk/core", "@ui-sdk/web", "@ui-sdk/web/agent"] },
+  optimizeDeps: {
+    include: [
+      "@ui-sdk/core",
+      "@ui-sdk/web",
+      "@ui-sdk/web/agent",
+      "@ui-sdk/web/avatar",
+      "@ui-sdk/web/button",
+      "@ui-sdk/web/collapsible",
+      "@ui-sdk/web/file-input",
+      "@ui-sdk/web/menu",
+      "@ui-sdk/web/progress",
+      "@ui-sdk/web/scroll-area",
+      "@ui-sdk/web/toggle",
+      "@ui-sdk/web/token-input",
+      "@ui-sdk/web/toolbar",
+      "@ui-sdk/web/trigger-menu",
+    ],
+  },
 });
