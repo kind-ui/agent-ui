@@ -29,6 +29,8 @@ const scrollUp = async (page: Page, by: number) => {
   await viewport(page).hover();
   await page.mouse.wheel(0, -by);
   await expect(page.locator('[data-slot="kind-conversation"]')).not.toHaveAttribute("data-following");
+  // Firefox scrolls a wheel smoothly, so wait for the whole distance before the next scroll.
+  await expect.poll(() => distanceFromEnd(page)).toBeGreaterThanOrEqual(by - 1);
 };
 const atEnd = async (page: Page) => expect.poll(() => distanceFromEnd(page)).toBeLessThanOrEqual(1);
 // One rendered frame between chunks: a replayed stream, with no timers.

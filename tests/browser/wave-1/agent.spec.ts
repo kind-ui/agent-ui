@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { allowClipboard } from "../clipboard.js";
 
 type Entry = {
   ref: string;
@@ -251,7 +252,7 @@ const conformance: Conformance[] = [
   },
 ];
 
-test.use({ permissions: ["clipboard-read", "clipboard-write"] });
+test.beforeEach(({ context, browserName }) => allowClipboard(context, browserName));
 
 test("one snapshot lists every Wave 1 component, named where it has a role", async ({ page }) => {
   await open(page);

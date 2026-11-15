@@ -36,7 +36,9 @@ async function attach(
       const event =
         as === "drop"
           ? new DragEvent("drop", { dataTransfer: data, bubbles: true, cancelable: true })
-          : new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true });
+          : new ClipboardEvent("paste", { bubbles: true, cancelable: true });
+      // Firefox gives a constructed ClipboardEvent an empty copy of `clipboardData`, so the files go on it here.
+      if (as === "paste") Object.defineProperty(event, "clipboardData", { value: data });
       el.dispatchEvent(event);
     },
     { files, as },

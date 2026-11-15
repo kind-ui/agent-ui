@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { allowClipboard, readClipboard } from "../clipboard.js";
 
 type Fixture = {
   kindMessage: { calls: string[]; source: string; append(chunk: string): void; finish(): void };
@@ -57,12 +58,12 @@ test("edits a user message in place: Escape restores it, Enter saves it", async 
   expect(await calls(page)).toEqual(["edit:How do I retry safely?"]);
 });
 
-test("copy writes the text to the clipboard and announces it", async ({ page, context }) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+test("copy writes the text to the clipboard and announces it", async ({ page, context, browserName }) => {
+  await allowClipboard(context, browserName);
   await open(page, "all");
   await assistant(page).getByRole("button", { name: "Copy" }).click();
   await expect
-    .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .poll(() => readClipboard(page, browserName))
     .toBe("Retry with exponential backoff, and cap the number of attempts.");
   await expect(assistant(page).locator('[data-slot="kind-message-copy"]')).toHaveAttribute("data-copied", "");
   await expect
@@ -96,8 +97,9 @@ test("offers only the actions its callbacks allow", async ({ page }) => {
 test("is a live UI SDK primitive agents can copy, regenerate and switch branches on", async ({
   page,
   context,
+  browserName,
 }) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await allowClipboard(context, browserName);
   await open(page, "all");
   await expectAgentActions(page, "Assistant message", ["copy", "regenerate", "setBranch"]);
   await expectAgentActions(page, "User message", ["copy", "edit"]);

@@ -103,7 +103,8 @@ test("token input: Backspace removes the last token", async ({ page }) => {
   const tokens = page.locator('#root [data-slot="token-input-token"]');
   await expect(tokens).toHaveCount(1);
   await page.getByRole("textbox", { name: "Prompt" }).focus();
-  await page.keyboard.press("End");
+  // macOS keeps End for scrolling in Firefox and WebKit; Meta+ArrowRight moves to the end of the line there.
+  await page.keyboard.press(process.platform === "darwin" ? "Meta+ArrowRight" : "End");
   await page.keyboard.press("Backspace");
   await expect(tokens).toHaveCount(0);
 });

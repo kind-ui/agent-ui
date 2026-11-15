@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 
 type Calls = { files: string[]; rejected: string[]; cancels: string[]; retries: string[] };
@@ -19,6 +19,12 @@ const setStatus = (page: Page, id: string, status: string, progress?: number) =>
       (window as unknown as Fixture).kindUploader.setStatus(i as string, s as string, p as number),
     [id, status, progress] as const,
   );
+// WebKit, like Safari, doesn't focus a button on click, so there it presses the focused button with Enter.
+const activate = async (button: Locator, browserName: string) => {
+  if (browserName !== "webkit") return button.click();
+  await button.focus();
+  await button.press("Enter");
+};
 const announced = (page: Page) =>
   page.evaluate(() =>
     [...document.querySelectorAll("[aria-live]")].map((el) => el.textContent ?? "").join("|"),
@@ -37,18 +43,24 @@ test("progress is exposed through aria-valuenow", async ({ page }) => {
   );
 });
 
-test("Cancel calls onCancel with the item's id, and focus moves to a neighbor", async ({ page }) => {
+test("Cancel calls onCancel with the item's id, and focus moves to a neighbor", async ({
+  page,
+  browserName,
+}) => {
   await open(page);
-  await page.getByRole("button", { name: "Cancel quarterly-report.pdf" }).click();
+  await activate(page.getByRole("button", { name: "Cancel quarterly-report.pdf" }), browserName);
   expect((await calls(page)).cancels).toEqual(["report"]);
   await expect(page.getByRole("button", { name: "Cancel quarterly-report.pdf" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Cancel meeting-notes.md" })).toBeFocused();
 });
 
-test("Retry shows only on failed items, and keeps focus as it turns into Cancel", async ({ page }) => {
+test("Retry shows only on failed items, and keeps focus as it turns into Cancel", async ({
+  page,
+  browserName,
+}) => {
   await open(page);
   await expect(page.getByRole("button", { name: /^Retry/ })).toHaveCount(1);
-  await page.getByRole("button", { name: "Retry training-set.csv" }).click();
+  await activate(page.getByRole("button", { name: "Retry training-set.csv" }), browserName);
   expect((await calls(page)).retries).toEqual(["dataset"]);
   await expect(page.getByRole("button", { name: "Cancel training-set.csv" })).toBeFocused();
   await expect(page.getByRole("button", { name: /^Retry/ })).toHaveCount(0);

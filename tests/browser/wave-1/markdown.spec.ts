@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { allowClipboard, readClipboard } from "../clipboard.js";
 
 type HighlightRequest = { code: string; resolve: (tokens: { content: string; color?: string }[]) => void };
 type Fixture = {
@@ -85,13 +86,11 @@ test("unsafe links and raw HTML render as text", async ({ page }) => {
   await expect(view.locator("img")).toHaveCount(0);
 });
 
-test("copies code to the clipboard and announces it", async ({ page, context }) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+test("copies code to the clipboard and announces it", async ({ page, context, browserName }) => {
+  await allowClipboard(context, browserName);
   await open(page, "answer");
   await page.getByRole("button", { name: "Copy code" }).click();
-  await expect
-    .poll(() => page.evaluate(() => navigator.clipboard.readText()))
-    .toContain("async function retry<T>");
+  await expect.poll(() => readClipboard(page, browserName)).toContain("async function retry<T>");
   await expect(page.getByRole("button", { name: "Copy code" })).toHaveAttribute("data-copied", "");
   await expect
     .poll(() =>
@@ -165,8 +164,12 @@ test("streaming code follows its end", async ({ page }) => {
   await expect(page.locator('[data-slot="kind-code-block-code"]')).toHaveAttribute("data-line-numbers", "");
 });
 
-test("a wide table scrolls sideways inside its container and copies as TSV", async ({ page, context }) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+test("a wide table scrolls sideways inside its container and copies as TSV", async ({
+  page,
+  context,
+  browserName,
+}) => {
+  await allowClipboard(context, browserName);
   await open(page, "table");
   const table = page.locator('[data-slot="kind-markdown-table"]');
   const viewport = table.locator('[data-slot="scroll-area-viewport"]');
@@ -178,7 +181,7 @@ test("a wide table scrolls sideways inside its container and copies as TSV", asy
   expect(await viewport.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
   await page.getByRole("button", { name: "Copy table" }).click();
   await expect
-    .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .poll(() => readClipboard(page, browserName))
     .toMatch(/^Region\tRequests\tErrors\t.*\nus-east-1\t18,204,113\t/);
 });
 

@@ -1,52 +1,29 @@
 #!/usr/bin/env node
 // Ordered check runner for the root scripts (spec §2 "Root scripts").
-// A stage whose script file does not exist yet is skipped with `skipped: <stage>`.
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 const stages = {
-  "lint:biome": { needs: "biome.json", run: ["npx", "biome", "check", "."] },
-  "lint:guard": { needs: "scripts/check-ui-sdk-usage.mjs", run: ["node", "scripts/check-ui-sdk-usage.mjs"] },
-  build: {
-    needs: "packages/agent-ui/tsconfig.json",
-    run: ["npm", "run", "build", "-w", "@kind-ui/agent-ui"],
-  },
-  "typecheck:extra": { needs: "tsconfig.checks.json", run: ["npx", "tsc", "-p", "tsconfig.checks.json"] },
-  "typecheck:types": {
-    needs: "tests/types/nodenext/tsconfig.json",
-    run: ["npx", "tsc", "-p", "tests/types/nodenext/tsconfig.json"],
-  },
-  "typecheck:bundler": {
-    needs: "tests/types/bundler/tsconfig.json",
-    run: ["npx", "tsc", "-p", "tests/types/bundler/tsconfig.json"],
-  },
-  "typecheck:with-ai": {
-    needs: "tests/types/with-ai/tsconfig.json",
-    run: ["npx", "tsc", "-p", "tests/types/with-ai/tsconfig.json"],
-  },
-  "typecheck:no-ai": {
-    needs: "tests/types/no-ai/tsconfig.json",
-    run: ["npx", "tsc", "-p", "tests/types/no-ai/tsconfig.json"],
-  },
-  "test:scripts": { needs: "scripts/tests", run: ["node", "--test", "scripts/tests/*.test.mjs"] },
-  "test:unit:run": {
-    needs: "packages/agent-ui/tests/core",
-    run: ["node", "--test", "packages/agent-ui/tests/core/*.test.mjs"],
-  },
-  "test:browser": { needs: "playwright.config.mjs", run: ["npx", "playwright", "test"] },
-  "check:package": { needs: "scripts/check-package.mjs", run: ["node", "scripts/check-package.mjs"] },
-  "check:size:run": { needs: "size-budget.json", run: ["node", "scripts/check-size.mjs"] },
-  "build:registry": { needs: "scripts/build-registry.mjs", run: ["node", "scripts/build-registry.mjs"] },
-  "check:registry-consumers": {
-    needs: "scripts/check-registry-consumers.mjs",
-    run: ["node", "scripts/check-registry-consumers.mjs"],
-  },
-  "dev:docs:run": { needs: "apps/docs/package.json", run: ["npm", "run", "dev", "-w", "apps/docs"] },
-  "build:docs:run": { needs: "apps/docs/package.json", run: ["npm", "run", "build", "-w", "apps/docs"] },
+  "lint:biome": ["npx", "biome", "check", "."],
+  "lint:guard": ["node", "scripts/check-ui-sdk-usage.mjs"],
+  build: ["npm", "run", "build", "-w", "@kind-ui/agent-ui"],
+  "typecheck:extra": ["npx", "tsc", "-p", "tsconfig.checks.json"],
+  "typecheck:types": ["npx", "tsc", "-p", "tests/types/nodenext/tsconfig.json"],
+  "typecheck:bundler": ["npx", "tsc", "-p", "tests/types/bundler/tsconfig.json"],
+  "typecheck:with-ai": ["npx", "tsc", "-p", "tests/types/with-ai/tsconfig.json"],
+  "typecheck:no-ai": ["npx", "tsc", "-p", "tests/types/no-ai/tsconfig.json"],
+  "test:scripts": ["node", "--test", "scripts/tests/*.test.mjs"],
+  "test:unit:run": ["node", "--test", "packages/agent-ui/tests/core/*.test.mjs"],
+  "test:browser": ["npx", "playwright", "test"],
+  "check:package": ["node", "scripts/check-package.mjs"],
+  "check:size:run": ["node", "scripts/check-size.mjs"],
+  "build:registry": ["node", "scripts/build-registry.mjs"],
+  "check:registry-consumers": ["node", "scripts/check-registry-consumers.mjs"],
+  "dev:docs:run": ["npm", "run", "dev", "-w", "apps/docs"],
+  "build:docs:run": ["npm", "run", "build", "-w", "apps/docs"],
 };
 
 const groups = {
@@ -70,29 +47,27 @@ const groups = {
   check: ["check:fast", "check:packed", "build:docs:run", "test:browser"],
 };
 
-function expand(name) {
+export function expand(name) {
   if (groups[name]) return groups[name].flatMap(expand);
-  const stage = stages[name];
-  if (!stage) throw new Error(`unknown stage: ${name}`);
+  if (!stages[name]) throw new Error(`unknown stage: ${name}`);
   return [name];
 }
 
-const [target, ...extra] = process.argv.slice(2);
-if (!target) {
-  console.error(`usage: run-checks.mjs <${[...Object.keys(groups), ...Object.keys(stages)].join("|")}>`);
-  process.exit(2);
-}
-
-const plan = expand(target);
-for (const name of plan) {
-  const stage = stages[name];
-  if (!existsSync(join(root, stage.needs))) {
-    console.log(`skipped: ${name}`);
-    continue;
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  const [target, ...extra] = process.argv.slice(2);
+  if (!target) {
+    console.error(`usage: run-checks.mjs <${[...Object.keys(groups), ...Object.keys(stages)].join("|")}>`);
+    process.exit(2);
   }
-  const args = name === plan.at(-1) ? [...stage.run.slice(1), ...extra] : stage.run.slice(1);
-  console.log(`> ${name}`);
-  const result = spawnSync(stage.run[0], args, { cwd: root, stdio: "inherit" });
-  if (result.error) console.error(`${name}: ${result.error.message}`);
-  if (result.status !== 0) process.exit(result.status ?? 1);
+  const plan = expand(target);
+  for (const name of plan) {
+    const [command, ...args] = stages[name];
+    console.log(`> ${name}`);
+    const result = spawnSync(command, name === plan.at(-1) ? [...args, ...extra] : args, {
+      cwd: root,
+      stdio: "inherit",
+    });
+    if (result.error) console.error(`${name}: ${result.error.message}`);
+    if (result.status !== 0) process.exit(result.status ?? 1);
+  }
 }

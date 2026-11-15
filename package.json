@@ -27,7 +27,8 @@
     "check": "node scripts/run-checks.mjs check",
     "dev:docs": "node scripts/run-checks.mjs dev:docs",
     "build:docs": "node scripts/run-checks.mjs build:docs",
-    "changeset": "changeset"
+    "changeset": "changeset",
+    "version-packages": "changeset version && npm install --package-lock-only --ignore-scripts"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
@@ -44,6 +45,7 @@
     "react-dom": "19.3.1",
     "tailwindcss": "4.3.5",
     "typescript": "5.9.3",
-    "vite": "8.3.8"
+    "vite": "8.3.8",
+    "yaml": "2.9.1"
   }
 }
