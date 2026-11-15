@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { reducedKeyframes, resolveMotion } from "@kind-ui/agent-ui/core";
+import { DURATION, EASE } from "../../dist/core/motion/tokens.js";
 
 const presets = ["fade", "fade-up", "expand", "dot-flow"];
 
@@ -13,14 +15,19 @@ test("auto follows prefers-reduced-motion", () => {
 });
 
 test("reduced keyframes animate only opacity", () => {
-  for (const p of presets)
-    for (const k of reducedKeyframes(p))
-      assert.deepEqual(
-        Object.keys(k).filter((x) => x !== "offset"),
-        ["opacity"],
-      );
+  for (const preset of presets)
+    for (const frame of reducedKeyframes(preset)) assert.deepEqual(Object.keys(frame), ["opacity"]);
 });
 
 test("reduced keyframes end fully shown", () => {
-  for (const p of presets) assert.equal(reducedKeyframes(p).at(-1).opacity, 1);
+  for (const preset of presets) assert.equal(reducedKeyframes(preset).at(-1).opacity, 1);
+});
+
+test("agent-ui.css mirrors the motion tokens", () => {
+  const css = readFileSync(new URL("../../src/styles/agent-ui.css", import.meta.url), "utf8");
+  const value = (name) => css.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1];
+  for (const [name, seconds] of Object.entries(DURATION))
+    assert.equal(value(`--kind-duration-${name}`), `${Math.round(seconds * 1000)}ms`, name);
+  assert.equal(value("--kind-ease"), `cubic-bezier(${EASE.standard.join(", ")})`);
+  assert.equal(value("--kind-ease-out"), `cubic-bezier(${EASE.out.join(", ")})`);
 });

@@ -2,15 +2,15 @@ import { animateIn, animateOut } from "@ui-sdk/core";
 import { type AnimationPlaybackControls, animate, type DOMKeyframesDefinition, stagger } from "motion";
 import {
   DOT_FLOW,
+  type Frame,
   fullKeyframes,
   type MotionMode,
   type MotionPreset,
-  REDUCED_DURATION,
   type ResolvedMotion,
   reducedKeyframes,
   resolveMotion,
-  SPRING,
 } from "./presets.js";
+import { DURATION, EASE, SPRING } from "./tokens.js";
 
 export {
   type MotionMode,
@@ -31,9 +31,7 @@ interface Run {
   interrupt: () => void;
 }
 
-/** The value animation running on each element. A new `enter`, `exit`, or `layout` starts from its current value. */
 const running = new WeakMap<HTMLElement, Run>();
-/** UI SDK presence cleanup (`animateIn` / `animateOut`) for each element. */
 const presence = new WeakMap<HTMLElement, () => void>();
 const exits = new WeakMap<HTMLElement, Promise<void>>();
 const loops = new WeakMap<HTMLElement, AnimationPlaybackControls>();
@@ -70,11 +68,8 @@ function clearStyles(el: HTMLElement): void {
   for (const property of ANIMATED) el.style.removeProperty(property);
 }
 
-/**
- * `[from, to]` keyframes as motion's value map. When continuing, `from` is the current computed
- * value. Explicit keyframes let motion start its WAAPI animation at once, so UI SDK `animateOut`
- * sees it running and waits for it.
- */
+// Explicit `[from, to]` keyframes start motion's WAAPI animation at once, so UI SDK `animateOut`
+// sees it running and waits for it. When continuing, `from` is the current computed value.
 function definitionFor(
   el: HTMLElement,
   preset: MotionPreset,
@@ -83,17 +78,16 @@ function definitionFor(
   reversing: boolean,
 ): DOMKeyframesDefinition {
   const frames = mode === "full" ? fullKeyframes(preset) : reducedKeyframes(preset);
-  const [from = {}, to = {}] = direction === "in" ? frames : [...frames].reverse();
+  const [from, to] = direction === "in" ? frames : [frames[1], frames[0]];
   const fromCurrent = reversing || direction === "out";
   const current = fromCurrent ? getComputedStyle(el) : undefined;
   const definition: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(to)) {
-    if (key === "offset" || key === "easing" || key === "composite") continue;
+  for (const key of Object.keys(to) as (keyof Frame)[]) {
+    const value = to[key];
     const now = current?.getPropertyValue(key);
-    definition[key] = [
-      now === undefined ? from[key] : typeof value === "number" ? Number.parseFloat(now) : now,
-      value,
-    ];
+    let start = from[key];
+    if (now !== undefined) start = typeof value === "number" ? Number.parseFloat(now) : now;
+    definition[key] = [start, value];
   }
   if (preset === "expand" && mode === "full") {
     const height = `${el.getBoundingClientRect().height}px`;
@@ -109,7 +103,7 @@ function run(
   definition: DOMKeyframesDefinition,
   mode: "full" | "reduced",
 ): Promise<boolean> {
-  const transition = mode === "full" ? SPRING : { duration: REDUCED_DURATION, ease: "easeOut" as const };
+  const transition = mode === "full" ? SPRING : { duration: DURATION.reduced, ease: EASE.out };
   return new Promise((resolve) => {
     const controls = animate(el, definition, transition);
     const entry: Run = { controls, interrupt: () => resolve(false) };

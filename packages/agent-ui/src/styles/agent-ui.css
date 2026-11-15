@@ -1,4 +1,4 @@
-/* Tailwind v4 source registration and theme tokens (spec §3). Task 14 finalizes the tokens. */
+/* Theme and motion tokens (spec §3, §6). */
 @import "./step.css";
 
 :root {
@@ -12,7 +12,13 @@
   --kind-success: oklch(0.6 0.15 155);
   --kind-warning: oklch(0.72 0.16 65);
   --kind-danger: oklch(0.58 0.21 27);
+  /* Mirrors src/core/motion/tokens.ts; tests/core/motion.test.mjs keeps them equal. */
   --kind-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --kind-ease-out: cubic-bezier(0, 0, 0.58, 1);
+  --kind-duration-fast: 150ms;
+  --kind-duration-base: 200ms;
+  --kind-duration-panel: 280ms;
+  --kind-duration-reduced: 120ms;
 }
 
 @media (prefers-color-scheme: dark) {
