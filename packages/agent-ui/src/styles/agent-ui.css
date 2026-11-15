@@ -1,1 +1,52 @@
-/* Tailwind v4 source registration and theme tokens (spec §3). Populated by Task 14. */
+/* Tailwind v4 source registration and theme tokens (spec §3). Task 14 finalizes the tokens. */
+@import "./step.css";
+
+:root {
+  --kind-fg: oklch(0.21 0.006 286);
+  --kind-muted-fg: oklch(0.52 0.014 286);
+  --kind-border: oklch(0.92 0.004 286);
+  --kind-hover: oklch(0.967 0.001 286);
+  --kind-ring: oklch(0.55 0.014 286);
+  --kind-on-status: oklch(1 0 0);
+  --kind-running: oklch(0.55 0.2 262);
+  --kind-success: oklch(0.6 0.15 155);
+  --kind-warning: oklch(0.72 0.16 65);
+  --kind-danger: oklch(0.58 0.21 27);
+  --kind-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --kind-fg: oklch(0.96 0.003 286);
+    --kind-muted-fg: oklch(0.72 0.012 286);
+    --kind-border: oklch(0.32 0.006 286);
+    --kind-hover: oklch(0.27 0.006 286);
+    --kind-ring: oklch(0.72 0.012 286);
+    --kind-on-status: oklch(0.18 0.006 286);
+    --kind-running: oklch(0.7 0.15 262);
+    --kind-success: oklch(0.74 0.15 155);
+    --kind-warning: oklch(0.8 0.14 70);
+    --kind-danger: oklch(0.7 0.18 25);
+  }
+}
+
+@keyframes kind-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes kind-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes kind-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}

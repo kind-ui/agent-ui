@@ -14,4 +14,5 @@ test("bypassing UI SDK fails", () => {
   assert.match(errors, /render file must use createParts/);
   assert.match(errors, /onKeyDown belongs in the primitive/);
   assert.match(errors, /not a spec exception/);
+  assert.match(errors, /widget\/widget.ts: tabindex must come from UI SDK/);
 });

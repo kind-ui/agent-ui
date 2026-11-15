@@ -124,7 +124,11 @@ export function checkUiSdkUsage(root, exceptions) {
   for (const path of walk(coreDir).filter((f) => f.endsWith(".ts"))) {
     const file = rel(path);
     if (Object.hasOwn(exceptions, file)) continue;
-    const source = stripComments(readFileSync(path, "utf8"));
+    // A tabindex whose value comes from a UI SDK focus helper (`roving.tabIndex(state, part)`) is UI SDK's.
+    const source = stripComments(readFileSync(path, "utf8")).replace(
+      /\btabindex["']?\s*:\s*[\w.]+\.tabIndex\(/g,
+      "",
+    );
     for (const pattern of CORE_FORBIDDEN) {
       if (matches(source, pattern)) {
         errors.push(`${file}: ${pattern} must come from UI SDK (or be a spec §2 exception)`);

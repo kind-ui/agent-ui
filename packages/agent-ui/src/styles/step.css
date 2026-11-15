@@ -1,0 +1,243 @@
+/* Step base (spec §5). Keyed on UI SDK data-slot and the primitive's data-* state, so both render layers share it. */
+@layer components {
+  [data-slot="kind-step-list"] {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  [data-slot="kind-step"] {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--kind-fg);
+  }
+
+  [data-slot="kind-step-trigger"] {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 8px;
+    border-radius: 6px;
+    padding: 4px 6px;
+    text-align: left;
+    color: var(--kind-muted-fg);
+    transition:
+      color 150ms,
+      background-color 150ms;
+
+    &:hover {
+      color: var(--kind-fg);
+      background-color: var(--kind-hover);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-ring);
+      outline-offset: 1px;
+    }
+    &::after {
+      content: "";
+      flex-shrink: 0;
+      width: 6px;
+      height: 6px;
+      margin-inline: 2px 4px;
+      border-right: 1.5px solid currentColor;
+      border-bottom: 1.5px solid currentColor;
+      transform: translateX(-1px) rotate(-45deg);
+      transition: transform 200ms var(--kind-ease);
+    }
+    &[data-open]::after {
+      transform: translateY(-2px) rotate(45deg);
+    }
+    &:dir(rtl)::after {
+      transform: translateX(1px) rotate(135deg);
+    }
+    &:dir(rtl)[data-open]::after {
+      transform: translateY(-2px) rotate(45deg);
+    }
+  }
+
+  [data-slot="kind-step-title"] {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+
+    &[data-status="running"] {
+      color: transparent;
+      background:
+        linear-gradient(90deg, var(--kind-muted-fg) 40%, var(--kind-fg) 50%, var(--kind-muted-fg) 60%) 0 0 /
+        200% 100%;
+      background-clip: text;
+      animation: kind-shimmer 2s linear infinite;
+    }
+  }
+
+  [data-slot="kind-step-meta"] {
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.75rem;
+    color: var(--kind-muted-fg);
+  }
+
+  /* Status mark: one element whose ring, fill, and glyph morph between states. */
+  [data-slot="kind-step-icon"] {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 9999px;
+    border: 1.5px dashed color-mix(in oklab, var(--kind-muted-fg) 70%, transparent);
+    background-color: transparent;
+    transition:
+      border-color 200ms,
+      background-color 200ms,
+      transform 200ms var(--kind-ease);
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      opacity: 0;
+      transform: scale(0.4);
+      transition:
+        opacity 150ms,
+        transform 200ms var(--kind-ease);
+    }
+
+    &[data-status="running"] {
+      border-style: solid;
+      border-color: var(--kind-running);
+      border-top-color: transparent;
+      animation: kind-spin 0.8s linear infinite;
+    }
+
+    &[data-status="awaiting-input"] {
+      border-style: solid;
+      border-color: var(--kind-warning);
+      &::before {
+        width: 6px;
+        height: 6px;
+        border-radius: 9999px;
+        background-color: var(--kind-warning);
+        opacity: 1;
+        transform: none;
+        animation: kind-pulse 1.6s ease-in-out infinite;
+      }
+    }
+
+    &[data-status="complete"] {
+      border-style: solid;
+      border-color: var(--kind-success);
+      background-color: var(--kind-success);
+      &::after {
+        width: 4px;
+        height: 7px;
+        margin-top: -2px;
+        border-right: 1.5px solid var(--kind-on-status);
+        border-bottom: 1.5px solid var(--kind-on-status);
+        opacity: 1;
+        transform: rotate(45deg);
+      }
+    }
+
+    &[data-status="error"] {
+      border-style: solid;
+      border-color: var(--kind-danger);
+      background-color: var(--kind-danger);
+      &::before,
+      &::after {
+        width: 7px;
+        height: 1.5px;
+        border-radius: 1px;
+        background-color: var(--kind-on-status);
+        opacity: 1;
+      }
+      &::before {
+        transform: rotate(45deg);
+      }
+      &::after {
+        transform: rotate(-45deg);
+      }
+    }
+
+    &[data-status="cancelled"] {
+      border-style: solid;
+      border-color: var(--kind-muted-fg);
+      &::before {
+        width: 6px;
+        height: 1.5px;
+        border-radius: 1px;
+        background-color: var(--kind-muted-fg);
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+
+  /* Indented under the title, with a guide line under the status mark. */
+  [data-slot="kind-step-content"],
+  [data-slot="kind-step-children"] {
+    margin-inline-start: 13.25px;
+    padding-inline-start: 15.25px;
+    border-inline-start: 1.5px solid var(--kind-border);
+  }
+
+  [data-slot="kind-step-content"] {
+    height: var(--kind-step-content-height);
+    overflow: hidden;
+    color: var(--kind-muted-fg);
+    transition: opacity 200ms ease-out;
+
+    &:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+    }
+    & > * {
+      padding-block: 4px;
+    }
+  }
+
+  [data-slot="kind-step-children"]:empty {
+    display: none;
+  }
+
+  /* Full motion only: reduced motion keeps the 120 ms fade, "none" keeps nothing (spec §6). */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-slot="kind-step-content"][data-motion="auto"] {
+      transition:
+        height 280ms var(--kind-ease),
+        opacity 200ms ease-out;
+
+      &:is([data-starting-style], [data-ending-style]) {
+        height: 0;
+      }
+    }
+  }
+
+  [data-slot="kind-step-content"][data-motion="reduced"] {
+    transition-duration: 120ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot="kind-step-content"] {
+      transition-duration: 120ms;
+    }
+    [data-slot="kind-step-icon"][data-status],
+    [data-slot="kind-step-icon"][data-status]::before,
+    [data-slot="kind-step-title"][data-status] {
+      animation: none;
+    }
+    [data-slot="kind-step-title"][data-status="running"] {
+      color: var(--kind-fg);
+      background: none;
+    }
+  }
+
+  [data-slot="kind-step-content"][data-motion="none"] {
+    transition: none;
+  }
+}
