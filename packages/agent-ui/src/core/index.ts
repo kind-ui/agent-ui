@@ -6,6 +6,12 @@ export {
   composerPrimitive,
 } from "./composer/index.js";
 export {
+  createMarkdownEngine,
+  type MarkdownBlock,
+  type MarkdownEngine,
+  type MdNode,
+} from "./markdown/index.js";
+export {
   enter,
   exit,
   layout,

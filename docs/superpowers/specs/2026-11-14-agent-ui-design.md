@@ -48,7 +48,7 @@ flowchart TD
 | Layer | Depends on | Must not import |
 | --- | --- | --- |
 | `types` | nothing | any runtime module |
-| `core` | `types`, `@ui-sdk/core`, `motion`, mdast/micromark (§6) | React, other UI frameworks, `ai`, Tailwind |
+| `core` | `types`, `@ui-sdk/core`, `motion`, the markdown libraries (§6) | React, other UI frameworks, `ai`, Tailwind |
 | `adapters/ai-sdk` | `types`, `ai` types | `core`, React, `@ui-sdk/*` |
 | `react` | `@kind-ui/agent-ui/core`, `@ui-sdk/react` | `ai`, `web` |
 | `web` | `@kind-ui/agent-ui/core`, `@ui-sdk/web` | React, `ai` |
@@ -203,7 +203,7 @@ Every new check script joins `npm run check`.
 | Specifier | Contents | Runtime deps |
 | --- | --- | --- |
 | `@kind-ui/agent-ui` | Neutral types and type guards | none |
-| `@kind-ui/agent-ui/core` | Every public primitive definition (`stepPrimitive`, `composerPrimitive`, …), their option and state types, the markdown engine, the motion helper | `@ui-sdk/core`, `motion`, mdast/micromark |
+| `@kind-ui/agent-ui/core` | Every public primitive definition (`stepPrimitive`, `composerPrimitive`, …), their option and state types, the markdown engine, the motion helper | `@ui-sdk/core`, `motion`, the markdown libraries (§6) |
 | `@kind-ui/agent-ui/adapters/ai-sdk` | `fromUIMessages`, `fromUIMessagePart`, `toApprovalResponse`, `fromChatStatus` | none (`ai` types only) |
 | `@kind-ui/agent-ui/styles.css` | Tailwind v4 source registration and theme tokens | none |
 
@@ -212,7 +212,7 @@ Dependency policy:
 - `@ui-sdk/core` is a dependency pinned to an exact version (no range). The latest at spec time is `0.1.0-beta.1`; Wave 1 pins the exact version it is built and tested against.
 - `@ui-sdk/react` and `@ui-sdk/web` are not dependencies of the npm package. Registry items declare them at the same exact version as `@ui-sdk/core`.
 - `motion` is a dependency pinned exactly. Only its framework-agnostic API (`animate`, spring options) is used.
-- `mdast-util-from-markdown`, `mdast-util-gfm`, and `micromark-extension-gfm` are dependencies pinned exactly (reason: §6).
+- The markdown libraries are dependencies pinned exactly (reason: §6): `mdast-util-from-markdown`, `mdast-util-gfm`, `micromark-extension-gfm`, `mdast-util-definitions`, `micromark-util-sanitize-uri`, `marked` (block lexer only), and `remend`.
 - `ai` is an optional peer dependency used only for adapter types. A consumer without `ai` must install, typecheck, and run every entry, including the adapter's other exports.
 - No React peer dependency on the npm package.
 
@@ -400,12 +400,12 @@ Built on Step: Reasoning, Chain of Thought, Tool, Task, Plan, Subagent, Action, 
 
 ### Streaming Markdown renderer
 
-This is the hardest piece. Streamdown is React-only, so `core` owns a framework-agnostic engine:
+This is the hardest piece. Streamdown is React-only, so `core` owns a framework-agnostic engine. It follows Streamdown's design and reuses its framework-agnostic parts, so Kind UI writes only the glue:
 
-1. **Block splitting.** A line scanner splits source into top-level blocks (paragraph, heading, list, blockquote, fenced code, table, thematic break). Every block before the last is final: immutable, keyed by `index:hash`, and never re-parsed.
-2. **Tail parsing.** On each append, only the open tail block is parsed, with `mdast-util-from-markdown`, `micromark-extension-gfm`, and `mdast-util-gfm`. These are framework-agnostic and CommonMark/GFM compliant, so Kind UI does not maintain a parser.
-3. **Repair.** While streaming, the tail is repaired before parsing: unterminated emphasis, inline code, links, and code fences are temporarily closed so partial syntax does not flash as raw text. Repair never applies to final blocks.
-4. **Sanitize.** Raw HTML renders as text. Link and image URLs allow `http:`, `https:`, `mailto:`, and relative URLs; any other URL renders its label as plain text. Generated code is never evaluated.
+1. **Block splitting.** As in Streamdown's `parseMarkdownIntoBlocks`, the `marked` block lexer splits source into top-level blocks, and only the text after the final blocks is lexed again on append. A block is final once it ends with a blank line and is followed by two more blocks: final blocks are immutable, keyed by `index:hash`, and never re-parsed. A document with link reference definitions or footnotes stays one block.
+2. **Tail parsing.** On each append, only the open (non-final) blocks are parsed, with `mdast-util-from-markdown`, `micromark-extension-gfm`, and `mdast-util-gfm`. These are framework-agnostic and CommonMark/GFM compliant, so Kind UI does not maintain a parser.
+3. **Repair.** While streaming, the last block is repaired with `remend` (Streamdown's self-healing markdown) before parsing: unterminated emphasis, inline code, and strikethrough are closed and an unfinished link shows its text, so partial syntax does not flash as raw text. An open code fence needs no repair: CommonMark runs it to the end of the block. Repair never applies to final blocks.
+4. **Sanitize.** Raw HTML renders as text. Link and image URLs allow `http:`, `https:`, `mailto:`, and relative URLs, checked with micromark's `sanitizeUri`; any other URL renders its label as plain text. Generated code is never evaluated.
 5. **Render.** The engine emits a neutral AST. The React layer maps it to elements keyed by block key. The Web Components layer maps it to DOM nodes and patches only the tail block.
 
 Code highlighting is pluggable through `highlight?: (code, lang) => Promise<Token[]>`. No highlighter ships by default. Code Block renders plain text until tokens resolve and discards results for outdated code.
