@@ -11,6 +11,20 @@ Agent-operable AI components built on [UI SDK](https://ui-sdk.dev/docs). Not yet
 
 Styled React and Web Components are distributed through the registry, not this package.
 
+## Registry
+
+Add the `@kind-ui` namespace to your `components.json`:
+
+```json
+{
+  "registries": {
+    "@kind-ui": "https://kindui.dev/r/{name}.json"
+  }
+}
+```
+
+Then install a component with `npx shadcn@latest add @kind-ui/<name>`: `<component>` for React (for example `@kind-ui/composer`) and `<component>-web` for Web Components (`@kind-ui/composer-web`). The CLI copies the component into your `ui` directory, installs this package and UI SDK at the pinned versions, imports `styles.css` into your stylesheet, and writes an `AGENTS.md` for coding agents beside the components. Tailwind finds the copied files on its own; if they live outside the app that builds them, add an `@source` for them to your stylesheet.
+
 ## Styles
 
 Import `@kind-ui/agent-ui/styles.css` after `tailwindcss` in your stylesheet. It registers the components' styles and declares the theme tokens under `@theme default`, so your own `@theme` or `:root` values win:
