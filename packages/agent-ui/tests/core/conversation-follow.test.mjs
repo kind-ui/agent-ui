@@ -34,3 +34,7 @@ test("letting go keeps the count until more arrive", () => {
   assert.deepEqual(released, { following: false, newCount: 0, count: 10 });
   assert.equal(nextFollowState(released, { type: "count", count: 11 }).newCount, 1);
 });
+
+test("older messages prepended above are never counted as new", () => {
+  assert.deepEqual(nextFollowState(away, { type: "prepend", count: 15 }), { ...away, count: 15 });
+});

@@ -45,9 +45,14 @@
     border-radius: inherit;
 
     &:focus-visible {
-      outline: 1.5px solid color-mix(in oklab, var(--kind-ring) 50%, transparent);
-      outline-offset: -1.5px;
+      outline: none;
     }
+  }
+
+  /* The viewport's edge fade would mask its own ring, so the root draws it. */
+  [data-slot="kind-conversation"]:has(> [data-slot="kind-conversation-viewport"]:focus-visible) {
+    outline: 1.5px solid color-mix(in oklab, var(--kind-ring) 50%, transparent);
+    outline-offset: -1.5px;
   }
 
   /* The edges fade with the scroll position, through a scroll timeline: no script, and no fade
@@ -68,6 +73,11 @@
       animation-range:
         0 2rem,
         calc(100% - 2rem) 100%;
+
+      /* While following, the view trails new lines by a frame, which would flicker the end fade. */
+      &[data-following] {
+        animation-name: kind-conversation-fade-start, none;
+      }
     }
   }
 
@@ -127,8 +137,8 @@
     border-radius: 9999px;
     background-color: var(--kind-surface);
     box-shadow:
-      0 1px 2px color-mix(in oklab, var(--kind-fg) 6%, transparent),
-      0 4px 16px -4px color-mix(in oklab, var(--kind-fg) 12%, transparent);
+      0 1px 2px color-mix(in oklab, var(--kind-shadow) 6%, transparent),
+      0 4px 16px -4px color-mix(in oklab, var(--kind-shadow) 12%, transparent);
     font-size: 0.8125rem;
     font-weight: 500;
     font-variant-numeric: tabular-nums;

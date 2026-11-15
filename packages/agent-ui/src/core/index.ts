@@ -7,10 +7,12 @@ export {
 } from "./composer/index.js";
 export {
   type ConversationApi,
+  type ConversationController,
   type ConversationOptions,
   type ConversationPrimitive,
   type ConversationState,
   conversationPrimitive,
+  createConversationController,
   type FollowEvent,
   type FollowState,
   nextFollowState,

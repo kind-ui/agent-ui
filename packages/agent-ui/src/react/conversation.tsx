@@ -10,9 +10,13 @@ const conversation = createParts(conversationPrimitive, {
   empty: "div",
 });
 
+/** Pass `controller={createConversationController()}` (from `@kind-ui/agent-ui/core`) to scroll it from outside. */
 export const Conversation = conversation.Root;
 export const ConversationViewport = conversation.Viewport;
-/** With `virtualize`, render rows from its state: `{({ rows }) => rows.map((row) => <ConversationRow …/>)}`. */
+/**
+ * With `virtualize`, render rows from its state, keyed by index so each measurement stays with its row:
+ * `{({ rows }) => rows.map((row) => <ConversationRow key={row.index} value={row.key} index={row.index} …/>)}`.
+ */
 export const ConversationContent = conversation.Content;
 export const ConversationRow = conversation.Row;
 /** Its text is the new-message count, written by the primitive; render it without children. */

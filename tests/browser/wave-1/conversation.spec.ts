@@ -3,7 +3,12 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 
 type Fixture = {
-  kindConversation: { append(n?: number): void; stream(chunk: string): void; remove(n?: number): void };
+  kindConversation: {
+    append(n?: number): void;
+    prepend(n?: number): void;
+    stream(chunk: string): void;
+    remove(n?: number): void;
+  };
 };
 
 const open = async (page: Page, name = "chat") => {
@@ -79,6 +84,19 @@ test("removed messages never take the count below zero, and reaching the end res
   await expect(jump(page)).toHaveText("1 new message");
   await viewport(page).evaluate((el) => el.scrollBy(0, el.scrollHeight));
   await expect(jump(page)).toHaveCount(0);
+});
+
+test("older messages added above keep the reader's place and aren't counted", async ({ page }) => {
+  await open(page);
+  await scrollUp(page, 200);
+  const reading = page.locator(`[data-message="m28"]`);
+  const before = await reading.evaluate((el) => el.getBoundingClientRect().top);
+  await call(page, "prepend", 5);
+  await expect(page.locator('[data-message="o0"]')).toBeAttached();
+  await expect.poll(() => reading.evaluate((el) => el.getBoundingClientRect().top)).toBeCloseTo(before, 0);
+  await expect(jump(page)).toHaveText("Jump to latest");
+  await call(page, "append");
+  await expect(jump(page)).toHaveText("1 new message");
 });
 
 test("streaming into the last row while scrolled up keeps the reader's place", async ({ page }) => {

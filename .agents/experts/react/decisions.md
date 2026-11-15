@@ -12,6 +12,8 @@ Last reviewed: `f121ef05955c7871ed404b9460d8529b7a299146` (Wave 1 review fixes)
 
 - **A Step without `StepTitle` has a dangling `aria-labelledby`** on its group.
 - **Server markup writes `hidden=""` on closed content**, not `until-found`, until it binds (UI SDK `toReactProps`; report upstream).
+- **Server-rendered Conversation markup starts at the top** and jumps to the end when `createStickToBottom` connects at hydration.
+- **`ConversationJump` children are replaced silently** by the text its `bind` writes; only the JSDoc says to render it empty.
 - **Button, menu and focus-ring class strings are repeated** across `src/react/internal/*.tsx`; fold into shared constants with the Task 14 tokens.
 
 ## Resolved

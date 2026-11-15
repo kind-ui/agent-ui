@@ -1,5 +1,6 @@
 import {
   announce,
+  createController,
   createFocusRecovery,
   createStickToBottom,
   createVirtualizer,
@@ -15,26 +16,46 @@ import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { enter, exit, type MotionMode, resolveMotion } from "../motion/index.js";
 import { nextFollowState } from "./follow.js";
 
+export type ConversationController = {
+  /** Scrolls to the newest message and follows again. */
+  scrollToEnd: () => void;
+  /** Call right before adding older messages above: the next `messageCount` increase keeps the reader's place and isn't counted as new. */
+  prepend: () => void;
+  isFollowing: () => boolean;
+  /** The rows to render now, with `virtualize`. */
+  getRows: () => readonly VirtualItem[];
+};
+
+/** A handle for the `controller` option, to scroll and read a conversation from outside it. */
+export const createConversationController = (): ConversationController =>
+  createController<ConversationController>();
+
 export type ConversationOptions = {
-  /** How many messages the conversation holds. Drives the new-message count, the empty part and virtualization. */
+  /** How many messages the conversation holds. Drives the new-message count, the empty part and virtualization. Defaults to 0. */
   messageCount?: number;
-  /** Renders only the rows in view, with `createVirtualizer`. Read when the viewport mounts. Defaults to `false`. */
+  /** Renders only the rows in view, with `createVirtualizer`. Read once, when the conversation mounts. Defaults to `false`. */
   virtualize?: boolean;
   /** A row's height before it is measured, in pixels, with `virtualize`. Defaults to 120. */
   estimateRowHeight?: number;
+  /** A stable key for the message at an index, so measured heights follow messages when the list changes. Defaults to the index. */
+  rowKey?: (index: number) => string;
   /** Called with the rows to render whenever they change, with `virtualize`. Web: a `rowschange` event. */
   onRowsChange?: (rows: readonly VirtualItem[]) => void;
+  controller?: ConversationController;
   /** Defaults to `"auto"`, which follows `prefers-reduced-motion`. */
   motion?: MotionMode;
 };
 
 export type ConversationState = {
+  /** The `messageCount` option. */
   messageCount: number;
+  /** The `virtualize` option the conversation mounted with. */
   virtualize: boolean;
+  /** The `motion` option. */
   motion: MotionMode;
-  /** Whether new content scrolls into view. Set by `createStickToBottom`. */
+  /** Whether new content scrolls into view. Set by `createStickToBottom`; listed in `controlled` for the agent snapshot only. */
   following: boolean;
-  /** Messages added while not following. */
+  /** Messages added while not following. In the agent snapshot too. */
   newCount: number;
   /** Whether the jump control is still animating out after following resumed. */
   jumpExiting: boolean;
@@ -44,11 +65,12 @@ export type ConversationState = {
   size: number;
 };
 
-export type ConversationApi = {
-  /** Scrolls to the newest message and follows again. */
-  scrollToEnd: () => void;
+export type ConversationApi = ConversationController & {
+  /** Follows the viewport's end, for its slot. */
   stick: StickToBottom;
+  /** Picks the rows in view with `virtualize`, for the viewport and row slots. */
   virtual: Virtualizer;
+  /** Moves focus to the viewport when a focused row or the jump control leaves. */
   recovery: FocusRecovery;
   /** Plays the mount-only entrance on a row that wasn't rendered before. */
   enterRow: (el: HTMLElement, index: number) => void;
@@ -84,7 +106,6 @@ const newMessages = (count: number) => `${count} new message${count === 1 ? "" :
 
 const presentation = (options: ConversationOptions) => ({
   messageCount: options.messageCount ?? 0,
-  virtualize: options.virtualize ?? false,
   motion: options.motion ?? "auto",
 });
 
@@ -97,11 +118,14 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
     messageCount: "number",
     virtualize: "boolean",
     estimateRowHeight: "number",
+    rowKey: "value",
     onRowsChange: "callback",
+    controller: "value",
     motion: "string",
   },
   state: (options: ConversationOptions): ConversationState => ({
     ...presentation(options),
+    virtualize: options.virtualize ?? false,
     following: true,
     newCount: 0,
     jumpExiting: false,
@@ -109,12 +133,13 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
     size: 0,
   }),
   sync: presentation,
-  controlled: ["following"],
+  controlled: ["following", "newCount"],
   api: (context): ConversationApi => {
     const { store } = context;
     let follow = { following: true, newCount: 0, count: store.get().messageCount };
     // Rows up to this index have entered already, so a row that remounts (virtualized, or re-rendered) stays still.
     let newestEntered = follow.count - 1;
+    let prepending = false;
 
     const apply = (next: typeof follow) => {
       const wasFollowing = follow.following;
@@ -137,6 +162,7 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
     const virtual = createVirtualizer({
       count: () => context.options().messageCount ?? 0,
       estimate: () => context.options().estimateRowHeight ?? 120,
+      key: (index) => context.options().rowKey?.(index) ?? String(index),
     });
     virtual.subscribe(() => {
       const rows = virtual.items();
@@ -147,8 +173,14 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
     context.onOptions((options) => {
       const count = options.messageCount ?? 0;
       if (count === follow.count) return;
-      newestEntered = Math.min(newestEntered, count - 1);
-      apply(nextFollowState(follow, { type: "count", count }));
+      if (prepending) {
+        prepending = false;
+        newestEntered += count - follow.count;
+        follow = nextFollowState(follow, { type: "prepend", count });
+      } else {
+        newestEntered = Math.min(newestEntered, count - 1);
+        apply(nextFollowState(follow, { type: "count", count }));
+      }
       if (store.get().virtualize) virtual.refresh();
     });
 
@@ -159,6 +191,12 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
         const instant = resolveMotion(store.get().motion, prefersReduced()) !== "full";
         stick.scrollToBottom({ behavior: instant ? "instant" : "smooth" });
       },
+      prepend: () => {
+        prepending = true;
+        stick.prepend();
+      },
+      isFollowing: () => store.get().following,
+      getRows: () => store.get().rows,
       stick,
       virtual,
       recovery,

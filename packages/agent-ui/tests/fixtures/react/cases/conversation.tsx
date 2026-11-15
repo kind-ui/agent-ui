@@ -1,3 +1,4 @@
+import { createConversationController } from "@kind-ui/agent-ui/core";
 import { useEffect, useState } from "react";
 import {
   Conversation,
@@ -17,12 +18,13 @@ const lines = [
   "Render only the rows in view and measure each one as it mounts, so the scrollbar stays steady.",
 ];
 
-const message = (index: number): Message => ({
-  id: `m${index}`,
-  role: index % 2 === 0 ? "user" : "assistant",
-  text: lines[index % lines.length] as string,
+const message = (serial: number, prefix = "m"): Message => ({
+  id: `${prefix}${serial}`,
+  role: serial % 2 === 0 ? "user" : "assistant",
+  text: lines[serial % lines.length] as string,
 });
-const messages = (from: number, count: number) => Array.from({ length: count }, (_, i) => message(from + i));
+const messages = (from: number, count: number, prefix?: string) =>
+  Array.from({ length: count }, (_, i) => message(from + i, prefix));
 
 function Bubble({ message }: { message: Message }) {
   return message.role === "user" ? (
@@ -39,18 +41,31 @@ function Bubble({ message }: { message: Message }) {
 
 function Chat({ count, virtualize = false }: { count: number; virtualize?: boolean }) {
   const [all, setAll] = useState(() => messages(0, count));
+  const [controller] = useState(createConversationController);
   useEffect(() => {
+    let appended = count;
+    let older = 0;
     Object.assign(window, {
       kindConversation: {
-        append: (n = 1) => setAll((list) => [...list, ...messages(list.length, n)]),
+        append: (n = 1) => {
+          const added = messages(appended, n);
+          appended += n;
+          setAll((list) => [...list, ...added]);
+        },
+        prepend: (n = 1) => {
+          const added = messages(older, n, "o");
+          older += n;
+          controller.prepend();
+          setAll((list) => [...added, ...list]);
+        },
         stream: (chunk: string) =>
           setAll((list) => list.map((m, i) => (i === list.length - 1 ? { ...m, text: m.text + chunk } : m))),
         remove: (n = 1) => setAll((list) => list.slice(0, -n)),
       },
     });
-  }, []);
-  const row = (m: Message, index: number) => (
-    <ConversationRow key={m.id} value={m.id} index={index}>
+  }, [count, controller]);
+  const row = (m: Message, index: number, key: string | number = m.id) => (
+    <ConversationRow key={key} value={m.id} index={index}>
       <Bubble message={m} />
     </ConversationRow>
   );
@@ -59,13 +74,19 @@ function Chat({ count, virtualize = false }: { count: number; virtualize?: boole
       aria-label="Conversation"
       messageCount={all.length}
       virtualize={virtualize}
+      rowKey={(index) => all[index]?.id ?? String(index)}
+      controller={controller}
       className="m-4 h-[28rem] w-[32rem] rounded-xl border border-[var(--kind-border)]"
     >
       <ConversationViewport>
         <ConversationContent>
           {virtualize
-            ? ({ rows }) => rows.flatMap((r) => (all[r.index] ? [row(all[r.index] as Message, r.index)] : []))
-            : [...all.map(row), <ConversationEmpty key="empty">No messages yet.</ConversationEmpty>]}
+            ? ({ rows }) =>
+                rows.flatMap((r) => (all[r.index] ? [row(all[r.index] as Message, r.index, r.index)] : []))
+            : [
+                ...all.map((m, i) => row(m, i)),
+                <ConversationEmpty key="empty">No messages yet.</ConversationEmpty>,
+              ]}
         </ConversationContent>
       </ConversationViewport>
       <ConversationJump />
