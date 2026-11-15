@@ -18,10 +18,10 @@
 
 ## Lucide
 
-- Source: https://github.com/lucide-icons/lucide, the `check`, `x`, `minus`, `arrow-down`, `copy`, `wrap-text`, `refresh-cw`, `pencil`, `chevron-left` and `chevron-right` icon paths.
-- Used in: `packages/agent-ui/src/styles/step.css` (Step status glyphs), `packages/agent-ui/src/styles/conversation.css` (the jump control's arrow), `packages/agent-ui/src/styles/agent-ui.css` (copy and copied), `packages/agent-ui/src/styles/code-block.css` (wrap) and `packages/agent-ui/src/styles/message.css` (regenerate, edit and the branch arrows), as CSS mask images.
-- Changes: stroke width set to 3.5 (Step) and 2.5 (Conversation); the others are unchanged.
-- Licensed under the ISC License; the icons that derive from Feather (all but `wrap-text` and `pencil`) are also under the MIT License.
+- Source: https://github.com/lucide-icons/lucide, the `check`, `x`, `minus`, `arrow-down`, `copy`, `wrap-text`, `refresh-cw`, `pencil`, `chevron-left`, `chevron-right`, `arrow-up`, `paperclip`, `at-sign`, `square-slash`, `file` and `circle-alert` icon paths.
+- Used in: `packages/agent-ui/src/styles/step.css` (Step status glyphs), `packages/agent-ui/src/styles/conversation.css` (the jump control's arrow), `packages/agent-ui/src/styles/agent-ui.css` (copy and copied), `packages/agent-ui/src/styles/code-block.css` (wrap) and `packages/agent-ui/src/styles/message.css` (regenerate, edit and the branch arrows), `packages/agent-ui/src/styles/composer.css` (send, attach, token kinds and token removal) and `packages/agent-ui/src/styles/attachments.css` (file, error and removal), as CSS mask images.
+- Changes: stroke width set to 3.5 (Step), 2.5 (Conversation), 2.25 and 2.5 (Composer) and 3 (Attachments); the others are unchanged.
+- Licensed under the ISC License; the icons that derive from Feather (all but `wrap-text`, `pencil`, `paperclip`, `square-slash` and `file`) are also under the MIT License.
 
 ---
 

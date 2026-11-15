@@ -1,1 +1,3 @@
-{}
+{
+  "src/core/composer/file-input-events.ts": "Composer File Input events on Web Components"
+}

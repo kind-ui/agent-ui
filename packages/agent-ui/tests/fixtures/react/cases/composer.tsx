@@ -1,16 +1,85 @@
-import { Composer, ComposerInput, ComposerSubmit } from "../../../../src/react/composer.js";
+import { useState } from "react";
+import { Attachments } from "../../../../src/react/attachments.js";
+import {
+  Composer,
+  ComposerAttach,
+  ComposerAttachments,
+  ComposerInput,
+  ComposerStop,
+  ComposerSubmit,
+  ComposerTriggerMenu,
+} from "../../../../src/react/composer.js";
+import { commands, history, imageFile, mentions, recorder } from "../../shared/composer.js";
 
 const unsettled = new Promise<void>(() => {});
+const params = new URLSearchParams(location.search);
+
+function Full({ submitOn }: { submitOn?: "enter" | "mod-enter" }) {
+  const [{ onSubmit, onStop }] = useState(recorder);
+  const [mounted, setMounted] = useState(true);
+  Object.assign(window, { unmountComposer: () => setMounted(false) });
+  if (!mounted) return null;
+  return (
+    <div className="mx-auto max-w-xl p-6">
+      <Composer
+        aria-label="Message"
+        mentions={mentions}
+        commands={commands}
+        history={history}
+        accept="image/*,.txt,.md"
+        maxSize={3072}
+        submitOn={submitOn ?? "enter"}
+        onSubmit={onSubmit}
+        {...(params.has("stop") ? { onStop } : {})}
+      >
+        <ComposerAttachments />
+        <ComposerInput
+          aria-label="Prompt"
+          placeholder="Ask anything. Type @ to mention, / for commands"
+          onKeyDownCapture={(event) => {
+            if (event.key === "Enter" && (window as { blockEnter?: boolean }).blockEnter)
+              event.preventDefault();
+          }}
+        >
+          <ComposerTriggerMenu />
+        </ComposerInput>
+        <ComposerAttach />
+        <ComposerSubmit />
+        <ComposerStop />
+      </Composer>
+    </div>
+  );
+}
+
+function AttachmentsCase() {
+  const [items, setItems] = useState(() => [
+    { id: "a", name: "diagram.png", size: 2048, mediaType: "image/png", file: imageFile() },
+    { id: "b", name: "notes.md", size: 812, mediaType: "text/markdown" },
+    { id: "c", name: "archive.zip", size: 9_000_000, mediaType: "application/zip", error: "type" as const },
+  ]);
+  return (
+    <div className="p-6">
+      <Attachments
+        aria-label="Files"
+        items={items}
+        onRemove={(id) => setItems((current) => current.filter((item) => item.id !== id))}
+      />
+    </div>
+  );
+}
 
 export const cases = {
   shell: () => (
     <Composer
       aria-label="Message"
-      className="flex gap-2 border border-[rgb(1,2,3)] p-2 data-[pending]:opacity-50"
+      className="border-[rgb(1,2,3)] data-[pending]:opacity-50"
       onSubmit={() => unsettled}
     >
-      <ComposerInput aria-label="Message" className="flex-1" />
+      <ComposerInput aria-label="Prompt" />
       <ComposerSubmit>Send</ComposerSubmit>
     </Composer>
   ),
+  full: () => <Full />,
+  "mod-enter": () => <Full submitOn="mod-enter" />,
+  attachments: () => <AttachmentsCase />,
 };

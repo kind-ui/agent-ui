@@ -5,6 +5,8 @@
 @import "./code-block.css";
 @import "./markdown-table.css";
 @import "./message.css";
+@import "./composer.css";
+@import "./attachments.css";
 
 :root {
   --kind-fg: oklch(0.21 0.006 286);

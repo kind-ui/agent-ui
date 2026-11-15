@@ -1,4 +1,15 @@
 export {
+  ATTACHMENT_ERRORS,
+  type AttachmentItem,
+  type AttachmentState,
+  type AttachmentsApi,
+  type AttachmentsOptions,
+  type AttachmentsPrimitive,
+  type AttachmentsState,
+  attachmentDetail,
+  attachmentsPrimitive,
+} from "./attachments/index.js";
+export {
   type CodeBlockApi,
   type CodeBlockOptions,
   type CodeBlockPrimitive,
@@ -10,10 +21,21 @@ export {
 } from "./code-block/index.js";
 export {
   type ComposerApi,
+  type ComposerAttachment,
+  type ComposerAttachmentsState,
+  type ComposerDraft,
+  type ComposerInputState,
   type ComposerOptions,
   type ComposerPrimitive,
+  type ComposerRootState,
   type ComposerState,
+  type ComposerToken,
+  type ComposerTriggerItem,
+  type ComposerTriggerMenuState,
+  type ComposerValueChangeReason,
   composerPrimitive,
+  draftAfterSettle,
+  isSubmittable,
 } from "./composer/index.js";
 export {
   type ConversationApi,

@@ -1,7 +1,20 @@
 export {
   type ComposerApi,
+  type ComposerAttachmentsState,
+  type ComposerInputState,
   type ComposerOptions,
   type ComposerPrimitive,
+  type ComposerRootState,
   type ComposerState,
+  type ComposerTriggerMenuState,
+  type ComposerValueChangeReason,
   composerPrimitive,
 } from "./composer.js";
+export {
+  type ComposerAttachment,
+  type ComposerDraft,
+  type ComposerToken,
+  type ComposerTriggerItem,
+  draftAfterSettle,
+  isSubmittable,
+} from "./draft.js";
