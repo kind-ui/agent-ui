@@ -6,6 +6,16 @@ export {
   composerPrimitive,
 } from "./composer/index.js";
 export {
+  type ConversationApi,
+  type ConversationOptions,
+  type ConversationPrimitive,
+  type ConversationState,
+  conversationPrimitive,
+  type FollowEvent,
+  type FollowState,
+  nextFollowState,
+} from "./conversation/index.js";
+export {
   createMarkdownEngine,
   type MarkdownBlock,
   type MarkdownEngine,

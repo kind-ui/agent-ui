@@ -1,8 +1,10 @@
 /* Theme and motion tokens (spec §3, §6). */
 @import "./step.css";
+@import "./conversation.css";
 
 :root {
   --kind-fg: oklch(0.21 0.006 286);
+  --kind-surface: oklch(1 0 0);
   --kind-muted-fg: oklch(0.52 0.014 286);
   --kind-border: oklch(0.92 0.004 286);
   --kind-hover: oklch(0.967 0.001 286);
@@ -24,6 +26,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --kind-fg: oklch(0.96 0.003 286);
+    --kind-surface: oklch(0.24 0.006 286);
     --kind-muted-fg: oklch(0.72 0.012 286);
     --kind-border: oklch(0.32 0.006 286);
     --kind-hover: oklch(0.27 0.006 286);

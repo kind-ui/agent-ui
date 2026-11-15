@@ -15,6 +15,8 @@ Last reviewed: `f121ef05955c7871ed404b9460d8529b7a299146` (Wave 1 review fixes)
 - **Find-in-page sets `userToggled`**, so a step revealed by search no longer auto-closes on `complete`. Spec §5 needs to say whether search counts as a person.
 - **Composer `disabled` is not exposed** on the submit part (`aria-disabled`), so assistive tech and the agent snapshot see an enabled button.
 - **`src/internal/index.ts` is imported by nothing.**
+- **Conversation `virtualize` is read when the viewport mounts:** turning it on later doesn't connect the virtualizer.
+- **Virtualized rows are keyed by index:** `createVirtualizer` gets no `key`, so measured heights follow positions, not messages, when older messages are prepended.
 
 ## Resolved
 
