@@ -1,2 +1,7 @@
-// Public primitive definitions (spec §3). Populated by later tasks with named reexports only.
-export {};
+export {
+  type ComposerApi,
+  type ComposerOptions,
+  type ComposerPrimitive,
+  type ComposerState,
+  composerPrimitive,
+} from "./composer/index.js";

@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "exactOptionalPropertyTypes": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "jsx": "react-jsx",
+    "types": ["node", "vite/client"]
+  },
+  "include": [
+    "packages/agent-ui/src/react",
+    "packages/agent-ui/src/web",
+    "packages/agent-ui/tests/fixtures",
+    "tests/browser",
+    "playwright.config.mjs"
+  ]
+}
