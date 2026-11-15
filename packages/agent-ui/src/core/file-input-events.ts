@@ -1,6 +1,6 @@
 import type { FileInputValueChangeReason, FileRejection } from "@ui-sdk/core/file-input";
 
-/** What the composer does with files File Input took in or turned down. */
+/** What a composer or uploader does with files File Input took in or turned down. */
 export type FileIntake = {
   accept: (files: File[], reason: FileInputValueChangeReason, cancel: () => void) => void;
   reject: (rejected: FileRejection[], reason: FileInputValueChangeReason) => void;
@@ -9,10 +9,10 @@ export type FileIntake = {
 type Detail<Value> = { value: Value; added: File[]; reason: FileInputValueChangeReason };
 
 /**
- * Hands `<ui-file-input>`'s `valuechange` and `reject` events to the composer, as React's props do.
- * `@ui-sdk/web` fires them on the file input alone, without bubbling, so the form hears them as they capture.
+ * Hands `<ui-file-input>`'s `valuechange` and `reject` events to `intake`, as React's props do.
+ * `@ui-sdk/web` fires them on the file input alone, without bubbling, so `container` hears them as they capture.
  */
-export function forwardFileInputEvents(form: HTMLElement, intake: FileIntake): () => void {
+export function forwardFileInputEvents(container: HTMLElement, intake: FileIntake): () => void {
   const fromFileInput = (event: Event) => (event.target as Element).localName === "ui-file-input";
   const valueChange = (event: Event) => {
     if (!fromFileInput(event)) return;
@@ -24,10 +24,10 @@ export function forwardFileInputEvents(form: HTMLElement, intake: FileIntake): (
     const { value, reason } = (event as CustomEvent<Detail<FileRejection[]>>).detail;
     intake.reject(value, reason);
   };
-  form.addEventListener("valuechange", valueChange, true);
-  form.addEventListener("reject", reject, true);
+  container.addEventListener("valuechange", valueChange, true);
+  container.addEventListener("reject", reject, true);
   return () => {
-    form.removeEventListener("valuechange", valueChange, true);
-    form.removeEventListener("reject", reject, true);
+    container.removeEventListener("valuechange", valueChange, true);
+    container.removeEventListener("reject", reject, true);
   };
 }

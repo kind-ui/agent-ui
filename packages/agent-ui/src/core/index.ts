@@ -49,6 +49,8 @@ export {
   type FollowState,
   nextFollowState,
 } from "./conversation/index.js";
+export type { IndicatorOptions, IndicatorPrimitive, IndicatorState } from "./indicator.js";
+export { loaderPrimitive } from "./loader/index.js";
 export {
   createMarkdownEngine,
   type MarkdownBlock,
@@ -103,3 +105,28 @@ export {
   stepListPrimitive,
   stepPrimitive,
 } from "./step/index.js";
+export {
+  type StreamingTextApi,
+  type StreamingTextChunk,
+  type StreamingTextDiff,
+  type StreamingTextOptions,
+  type StreamingTextPrimitive,
+  type StreamingTextState,
+  streamingTextDiff,
+  streamingTextPrimitive,
+} from "./streaming-text/index.js";
+export { thinkingIndicatorPrimitive } from "./thinking-indicator/index.js";
+export { typingIndicatorPrimitive } from "./typing-indicator/index.js";
+export {
+  type UploaderApi,
+  type UploaderFilesDetails,
+  type UploaderOptions,
+  type UploaderPrimitive,
+  type UploaderRootState,
+  type UploaderState,
+  type UploadItem,
+  type UploadItemState,
+  type UploadStatus,
+  uploadDetail,
+  uploaderPrimitive,
+} from "./uploader/index.js";

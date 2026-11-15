@@ -7,6 +7,11 @@
 @import "./message.css";
 @import "./composer.css";
 @import "./attachments.css";
+@import "./uploader.css";
+@import "./loader.css";
+@import "./thinking-indicator.css";
+@import "./typing-indicator.css";
+@import "./streaming-text.css";
 
 :root {
   --kind-fg: oklch(0.21 0.006 286);

@@ -3,7 +3,7 @@ export type MotionPreset = "fade" | "fade-up" | "expand" | "dot-flow";
 export type ResolvedMotion = "full" | "reduced" | "none";
 
 /** Staggered fade that flows across loading dots, never synchronized blinking. */
-export const DOT_FLOW = { selector: "[data-dot]", duration: 1.2, stagger: 0.16, dim: 0.3 } as const;
+export const DOT_FLOW = { selector: "[data-dot]", duration: 1.2, stagger: 0.15, dim: 0.3 } as const;
 
 /** `"auto"` follows `prefers-reduced-motion`. */
 export function resolveMotion(mode: MotionMode, prefersReduced: boolean): ResolvedMotion {

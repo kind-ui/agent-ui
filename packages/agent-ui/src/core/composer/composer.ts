@@ -19,6 +19,8 @@ import {
 } from "@ui-sdk/core/token-input";
 import type { TriggerDefinition } from "@ui-sdk/core/trigger-menu";
 import type { AttachmentsOptions } from "../attachments/index.js";
+import { type FileIntake, forwardFileInputEvents } from "../file-input-events.js";
+import { memo } from "../memo.js";
 import { enter, type MotionMode } from "../motion/index.js";
 import {
   type ComposerAttachment,
@@ -29,7 +31,6 @@ import {
   emptyDraft,
   isSubmittable,
 } from "./draft.js";
-import { type FileIntake, forwardFileInputEvents } from "./file-input-events.js";
 
 /**
  * `"input-change"`: typing, tokens or `setValue` with an event. `"history-key"`: ArrowUp or ArrowDown brought
@@ -174,16 +175,6 @@ export type ComposerPrimitive = ReturnType<
     }
   >
 >;
-
-// A part re-renders when its state changes identity, so state built from the same inputs is reused.
-function memo<Args extends unknown[], Value>(build: (...args: Args) => Value): (...args: Args) => Value {
-  let last: { args: Args; value: Value } | undefined;
-  return (...args) => {
-    if (last?.args.every((arg, index) => Object.is(arg, args[index]))) return last.value;
-    last = { args, value: build(...args) };
-    return last.value;
-  };
-}
 
 const isThenable = (value: unknown): value is PromiseLike<unknown> =>
   typeof (value as PromiseLike<unknown> | null)?.then === "function";

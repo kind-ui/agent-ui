@@ -74,7 +74,7 @@ Components are built on UI SDK, not around it.
 | Streaming markdown engine (§6) | Content parsing, not interaction. |
 | Motion helper presets (§6) | Animation values. Presence still uses UI SDK `animateIn` / `animateOut`. |
 | Attachment removal on Delete/Backspace | Application action on a focused item. Focus movement stays with `createRovingFocus`, and the keys are declared on the slot. |
-| Composer File Input events on Web Components | `@ui-sdk/web` reports File Input's changes only as `valuechange` and `reject` events on its own element, which don't bubble. The composer hears them as they capture through its form and hands them to the callbacks React passes as props. |
+| Composer and Uploader File Input events on Web Components | `@ui-sdk/web` reports File Input's changes only as `valuechange` and `reject` events on its own element, which don't bubble. The composer (through its form) and the uploader (through its root) hear them as they capture, and hand them to the callbacks React passes as props. |
 | Conversation new-message counter | Counts messages added while not following. Following itself uses `createStickToBottom`. |
 | Streaming Text append diff and Composer draft settlement | Pure data rules. |
 | Clipboard writes for copy actions | `navigator.clipboard.writeText`, used only if the pinned UI SDK has no clipboard utility. |

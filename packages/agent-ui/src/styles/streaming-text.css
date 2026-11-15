@@ -1,0 +1,41 @@
+/* Streaming Text (spec §7), shared by both render layers. */
+@layer components {
+  [data-slot="kind-streaming-text"] {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  /* Takes no width, so the text never reflows when the caret comes or goes. */
+  [data-slot="kind-streaming-text-caret"] {
+    position: relative;
+    display: inline-block;
+    width: 0;
+    height: 1em;
+    vertical-align: text-bottom;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset-block: 0;
+      inset-inline-start: 0.125em;
+      width: 0.125em;
+      border-radius: 1px;
+      background-color: currentColor;
+      animation: kind-pulse 1s var(--kind-ease) infinite;
+    }
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot="kind-streaming-text-caret"][data-motion="auto"]::after {
+      animation: none;
+    }
+  }
+
+  [data-slot="kind-streaming-text-caret"]:is([data-motion="reduced"], [data-motion="none"])::after {
+    animation: none;
+  }
+}

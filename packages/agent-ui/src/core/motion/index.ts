@@ -44,12 +44,15 @@ const loops = new WeakMap<HTMLElement, AnimationPlaybackControls>();
 const ANIMATED = ["opacity", "transform", "height", "overflow"] as const;
 const LAYOUT = ["translate", "scale", "transform-origin"] as const;
 
-function prefersReduced(): boolean {
-  return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+/** What `motion` resolves to on this page: `"auto"` follows `prefers-reduced-motion`. */
+export function resolvedMotion(motion: MotionMode = "auto"): ResolvedMotion {
+  const prefersReduced =
+    typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return resolveMotion(motion, prefersReduced);
 }
 
 function modeOf(options: MotionOptions | undefined): ResolvedMotion {
-  return resolveMotion(options?.motion ?? "auto", prefersReduced());
+  return resolvedMotion(options?.motion);
 }
 
 /**
@@ -260,4 +263,11 @@ export function layout(el: HTMLElement, measureBefore: DOMRect, options?: Motion
   return track(el, controls, [...LAYOUT], layouts).then((finished) => {
     if (finished) clearStyles(el, LAYOUT);
   });
+}
+
+/** Stops `el`'s enter, exit and `"dot-flow"` loop at once and clears their styles, for a part that unbinds. */
+export function cancel(el: HTMLElement): void {
+  interrupt(el, false);
+  stopLoop(el);
+  clearStyles(el);
 }
