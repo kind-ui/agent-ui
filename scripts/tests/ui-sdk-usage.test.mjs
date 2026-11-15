@@ -1,0 +1,17 @@
+import assert from "node:assert/strict";
+import { dirname, join } from "node:path";
+import { test } from "node:test";
+import { fileURLToPath } from "node:url";
+import { checkUiSdkUsage } from "../check-ui-sdk-usage.mjs";
+
+const fx = (name) => join(dirname(fileURLToPath(import.meta.url)), "fixtures", "ui-sdk-usage", name);
+
+test("conforming tree passes", () => assert.deepEqual(checkUiSdkUsage(fx("ok"), {}), []));
+
+test("bypassing UI SDK fails", () => {
+  const errors = checkUiSdkUsage(fx("bad"), { "src/core/x.ts": "Not in spec" }).join("\n");
+  assert.match(errors, /src\/core\/widget\/widget.ts: component must be defined with definePrimitive/);
+  assert.match(errors, /render file must use createParts/);
+  assert.match(errors, /onKeyDown belongs in the primitive/);
+  assert.match(errors, /not a spec exception/);
+});

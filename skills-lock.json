@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "ui-sdk": {
+      "source": "node_modules/@ui-sdk/core/skills",
+      "sourceType": "local",
+      "computedHash": "76946872dfa4db3d144c1629ce2fe8a44b1cd4442ef70eeb82f3da4cb5f68f07"
+    }
+  }
+}
