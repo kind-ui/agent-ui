@@ -11,7 +11,7 @@ import { withKindClass } from "./kind-class.js";
 export const KindScrollArea = withKindClass(ScrollArea, "relative overflow-hidden", "KindScrollArea");
 export const KindScrollAreaViewport = withKindClass(
   ScrollAreaViewport,
-  "size-full rounded-[inherit] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900",
+  "size-full rounded-[inherit] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--kind-ring)]",
   "KindScrollAreaViewport",
 );
 export const KindScrollAreaContent = withKindClass(ScrollAreaContent, "min-w-full", "KindScrollAreaContent");

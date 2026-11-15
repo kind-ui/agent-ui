@@ -1,4 +1,14 @@
 export {
+  type CodeBlockApi,
+  type CodeBlockOptions,
+  type CodeBlockPrimitive,
+  type CodeBlockState,
+  type CodeBlockWrapChangeReason,
+  codeBlockPrimitive,
+  type Highlight,
+  type Token,
+} from "./code-block/index.js";
+export {
   type ComposerApi,
   type ComposerOptions,
   type ComposerPrimitive,
@@ -23,6 +33,27 @@ export {
   type MarkdownEngine,
   type MdNode,
 } from "./markdown/index.js";
+export {
+  type MarkdownTableApi,
+  type MarkdownTablePrimitive,
+  type MarkdownTableState,
+  markdownTablePrimitive,
+} from "./markdown-table/index.js";
+export {
+  type MarkdownOptions,
+  type MarkdownState,
+  type MarkdownViewPrimitive,
+  markdownViewPrimitive,
+} from "./markdown-view/index.js";
+export {
+  branchLabel,
+  type MessageApi,
+  type MessageBranchChangeReason,
+  type MessageOptions,
+  type MessagePrimitive,
+  type MessageState,
+  messagePrimitive,
+} from "./message/index.js";
 export {
   enter,
   exit,

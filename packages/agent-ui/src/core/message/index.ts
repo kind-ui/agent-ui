@@ -1,0 +1,9 @@
+export {
+  branchLabel,
+  type MessageApi,
+  type MessageBranchChangeReason,
+  type MessageOptions,
+  type MessagePrimitive,
+  type MessageState,
+  messagePrimitive,
+} from "./message.js";

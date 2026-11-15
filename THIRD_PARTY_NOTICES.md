@@ -18,10 +18,10 @@
 
 ## Lucide
 
-- Source: https://github.com/lucide-icons/lucide, the `check`, `x`, `minus` and `arrow-down` icon paths.
-- Used in: `packages/agent-ui/src/styles/step.css` (Step status glyphs) and `packages/agent-ui/src/styles/conversation.css` (the jump control's arrow), as CSS mask images.
-- Changes: stroke width set to 3.5 (Step) and 2.5 (Conversation).
-- Licensed under the ISC License; these four icons derive from Feather and are also under the MIT License.
+- Source: https://github.com/lucide-icons/lucide, the `check`, `x`, `minus`, `arrow-down`, `copy`, `wrap-text`, `refresh-cw`, `pencil`, `chevron-left` and `chevron-right` icon paths.
+- Used in: `packages/agent-ui/src/styles/step.css` (Step status glyphs), `packages/agent-ui/src/styles/conversation.css` (the jump control's arrow), `packages/agent-ui/src/styles/agent-ui.css` (copy and copied), `packages/agent-ui/src/styles/code-block.css` (wrap) and `packages/agent-ui/src/styles/message.css` (regenerate, edit and the branch arrows), as CSS mask images.
+- Changes: stroke width set to 3.5 (Step) and 2.5 (Conversation); the others are unchanged.
+- Licensed under the ISC License; the icons that derive from Feather (all but `wrap-text` and `pencil`) are also under the MIT License.
 
 ---
 
