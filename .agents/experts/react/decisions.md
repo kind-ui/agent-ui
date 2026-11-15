@@ -12,7 +12,6 @@ Last reviewed: `9b766ae` (Task 12 Uploader and indicators)
 
 - **Streaming Text renders twice per `text` change,** like Markdown: `text` reaches state through `onOptions`, a layout effect. Before paint.
 - **Uploader progress bars have no accessible name in server markup** until hydration adds `aria-labelledby` (UI SDK Progress; report upstream).
-- **No browser spec runs a fixture under StrictMode;** replayed refs and effects are checked by hand.
 - **A Step without `StepTitle` has a dangling `aria-labelledby`** on its group.
 - **Server markup writes `hidden=""` on closed content**, not `until-found`, until it binds (UI SDK `toReactProps`; report upstream).
 - **Server-rendered Conversation markup starts at the top** and jumps to the end when `createStickToBottom` connects at hydration.
@@ -26,6 +25,7 @@ Last reviewed: `9b766ae` (Task 12 Uploader and indicators)
 
 ## Resolved
 
+- **No browser spec ran a fixture under StrictMode.** Fixed: the `wave-1-react-strict` project runs every spec with each case in `<StrictMode>`. It caught a highlight spec counting requests by index (StrictMode's discarded instance asks too).
 - **The uploader fixture wrote `window.kindUploader` during render,** so StrictMode's discarded copy received the calls. Fixed: published in an effect.
 - **A server-rendered image attachment pointed at a `blob:nodedata:` URL.** Fixed: object URLs are made when an item binds, so the server and hydration render the icon.
 - **The first attachment skipped its entrance in React.** Fixed: the composer's attachments part stays mounted while empty (`data-empty`).

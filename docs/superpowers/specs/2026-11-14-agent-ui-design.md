@@ -415,10 +415,10 @@ Code highlighting is pluggable through `highlight?: (code, lang) => Promise<Toke
 ### Agent actions
 
 - Each primitive declares `agent: { actions: [...] }` and `controlled` snapshot keys in its `definePrimitive` definition. This spec writes actions as `component.action` (for example `composer.submit`); a snapshot shows them as `component: "composer"`, `actions: ["submit"]`.
-- An action is listed only while available. `composer.stop` appears only while a submission is in flight and the host supplies `onStop`. Host-callback actions (for example `message.regenerate`) appear only when the host supplies the callback.
+- An action is listed only while available. `composer.stop` appears only while a submission is in flight and the host supplies `onStop`. Host-callback actions (for example `message.regenerate`) appear only when the host supplies the callback. On Web Components, where a listener can't be seen, a `can-<action>` boolean attribute (for example `can-regenerate`) stands for the callback, and the callback is a DOM event.
 - Actions run the same code paths as pointer and keyboard input. Change callbacks receive `details.source === "agent"` so hosts can distinguish and cancel agent changes.
 - These consequential actions render `data-agent-confirm`, so `createAgent` permissions and WebMCP `registerTools` `allow` require a person: `composer.submit`, `confirmation.approve`, `confirmation.deny`, `checkpoint.restore`, `plan.accept`, `subagent.cancel`, `question.submit`. Confirmation's marking cannot be turned off; the others accept the primitive option `agentConfirm: false`.
-- Every component root requires an accessible name; agents address components by that label or by `ref`.
+- Every component root with a role requires an accessible name; agents address components by that label or by `ref`. Markdown and Streaming Text are content with no role, which ARIA does not let a name sit on, and offer no actions.
 - Kind UI ships no agent bridge. Hosts create one with `createAgent` from `@ui-sdk/react/agent` or `@ui-sdk/web/agent`. Docs show both, plus `registerTools` for WebMCP.
 
 ## 7. Components by wave
