@@ -10,6 +10,7 @@ Last reviewed: `29e518f` (Task 17 docs site)
 - **Theme defaults land on `:root, :host`** (Tailwind's `@theme` output), so inside a shadow root that loads the stylesheet a page's `:root` override doesn't reach; the README tells consumers to set `:host` there too. It also makes the stylesheet work when loaded only in a shadow root.
 - **`can-<action>` attributes stand for a callback's presence;** the root's `options` hook sets the callback to `undefined` while one is off. A listener can't be seen, and `@ui-sdk/web`'s proxy fills in a dispatcher for any callback key that's missing.
 - Everything in AGENTS.md "UI SDK API notes".
+- **WebKit presses Uploader's Cancel and Retry with Enter in `uploader.spec.ts`:** WebKit doesn't focus a button on click, so focus recovery can only be checked from the keyboard there; Chromium and Firefox cover the click.
 - **Internal host classes stay per file.** A shared `defineHost` helper in `src/web/internal/` would be a render file that neither calls `createParts` nor wraps a component, which the guard rejects.
 
 ## Known and open (don't report again, check whether fixed)
@@ -29,6 +30,7 @@ Last reviewed: `29e518f` (Task 17 docs site)
 
 ## Resolved
 
+- **WebKit `following a new message` read 16 layouts:** the opening scroll-to-end's late scroll event landed in the measured window; the test now waits two frames after opening (Task 18).
 - **Docs captions (Task 17):** the Conversation and Composer pages now say `rowKey`, `controller` and `defaultValue` are properties only.
 - **`kind-attachments` kept a public `onRemove` property, and the composer wrote `can-remove` into the user's markup.** Fixed: the composer hands its function in as `removeHandler`.
 - **`on…` function properties (`onRegenerate`, `onEdit`, `onStop`, `onRemove`, `onCancel`, `onRetry`) couldn't be set from React 19,** which turns `on…` props on a custom element into listeners. Fixed: every callback is a DOM event, and a `can-<action>` attribute offers what a callback's presence did (AGENTS.md, "Web callbacks and availability"). React 19 rendering `kind-uploader` is tested.

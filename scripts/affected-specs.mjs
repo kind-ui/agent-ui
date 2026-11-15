@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Prints the browser specs a change can reach, so CI runs only those on pull requests:
-// "all" when unsure, nothing when no spec is reached, else the spec paths.
+// Prints the browser specs a change can reach, so CI runs only those on pull requests: "all" when a change
+// reaches a fixture page or render file no spec is known to cover, nothing when it reaches neither.
 //
 //   node scripts/affected-specs.mjs              A pull request's merge commit against its base (HEAD^1).
 //   node scripts/affected-specs.mjs main HEAD    Any `git diff` range.
@@ -16,7 +16,6 @@ const coreIndex = `${src}core/index.ts`;
 
 const unrelated = [
   /^(docs|apps\/docs|registry|tests\/types|\.agents|\.claude|\.changeset|\.vscode)\//,
-  /^packages\/agent-ui\/tests\/core\//,
   /^scripts\/(?!affected-specs\.mjs$|run-checks\.mjs$)/,
   /^\.github\/workflows\/(?!ci\.yml$)/,
   /\.md$/,
@@ -26,7 +25,7 @@ const unrelated = [
 const read = (file) => readFileSync(join(root, file), "utf8");
 
 function resolveRelative(from, specifier) {
-  const base = posix.join(posix.dirname(from), specifier);
+  const base = posix.join(posix.dirname(from), specifier.replace(/\?.*$/, ""));
   const stem = base.replace(/\.js$/, "");
   return [base, `${stem}.ts`, `${stem}.tsx`].find((file) => existsSync(join(root, file))) ?? base;
 }
@@ -61,15 +60,15 @@ function importsOf(file) {
 }
 
 function loadGraph() {
-  const files = execFileSync("git", ["ls-files", src, "packages/agent-ui/tests/fixtures", "tests/browser"], {
+  const files = execFileSync("git", ["ls-files", src, "packages/agent-ui/tests", "tests/browser"], {
     cwd: root,
     encoding: "utf8",
   })
     .split("\n")
-    .filter((file) => /\.(tsx?|css)$/.test(file));
+    .filter(Boolean);
   const dependents = new Map(files.map((file) => [file, new Set()]));
   for (const file of files) {
-    if (file.endsWith(".css")) continue;
+    if (!/\.tsx?$/.test(file)) continue;
     for (const dependency of importsOf(file)) dependents.get(dependency)?.add(file);
   }
   const specs = new Map(
@@ -84,8 +83,10 @@ function loadGraph() {
 export function affectedSpecs(changed, { dependents, specs } = loadGraph()) {
   const affected = new Set();
   for (const file of changed) {
-    if (unrelated.some((pattern) => pattern.test(file))) continue;
-    if (!dependents.has(file)) return "all";
+    if (!dependents.has(file)) {
+      if (unrelated.some((pattern) => pattern.test(file))) continue;
+      return "all";
+    }
     const reached = new Set([file]);
     for (const each of reached) for (const dependent of dependents.get(each)) reached.add(dependent);
     const cases = new Set(
@@ -96,7 +97,11 @@ export function affectedSpecs(changed, { dependents, specs } = loadGraph()) {
     const hits = [...specs].filter(
       ([spec, used]) => reached.has(spec) || [...used].some((name) => cases.has(name)),
     );
-    if (!hits.length) return "all";
+    if (!hits.length) {
+      if ([...reached].some((each) => /\/tests\/fixtures\/|\/src\/(react|web|styles)\//.test(each)))
+        return "all";
+      continue;
+    }
     for (const [spec] of hits) affected.add(spec);
   }
   return [...affected].sort();

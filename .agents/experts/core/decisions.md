@@ -8,6 +8,7 @@ Last reviewed: `29e518f` (Task 17 docs site)
 
 - **Markdown and Streaming Text have no accessible name:** they're content with no role, which ARIA doesn't let a name sit on, and they offer no actions (spec §6).
 - Everything in AGENTS.md "UI SDK API notes".
+- **`affected-specs.mjs` runs every spec for a file it can't place,** and none for code no fixture page loads (the AI SDK adapter); nightly runs cover what a PR skips.
 - **Conversation `virtualize` is mount-only,** like a `default*` option: it is read in `state` and not synced.
 - **The composer's draft `text` is the Token Input's codec text** and edits sync through the controller's `editor.subscribe`; a cancelled change writes the draft back to the editor. A controlled owner refuses an edit by cancelling it (AGENTS.md, Task 11).
 - **`validateCatalog` forwarding UI SDK guard errors has no unit test:** a failing render file would have to sit in `src/`, where the guard's own tests and `npm run lint` already fail it.
@@ -30,6 +31,7 @@ Last reviewed: `29e518f` (Task 17 docs site)
 
 ## Resolved
 
+- **`affected-specs.mjs` missed imports with a query** (`long-answer.md?raw`) and ran every spec for files no fixture loads (Task 18).
 - **Docs TSDoc (Task 17):** Step's `defaultOpen` names its computed default and `autoOpen` names both values; `setValue`, `removeAttachment`, `expand` and `collapse` say "whether the change was accepted"; `onSubmit` says a plain return clears the draft; `submit` lists every case it does nothing; controlled options say passing them controls them.
 - **Registry (Task 16):** the registry tests now cover bare imports, exact versions, missing files and the setup file type; the consumer check reports missing tokens or Tailwind utilities once rather than per item, fails on a busy port with a message, checks the tarball's sha256 against the manifest, reports a missing package as `missing`, and refuses `..` paths; the build fails when shadcn drops a file.
 - **Packed-package gate (Task 15):** the tarball no longer ships source maps pointing at unshipped `src/`; `findForbiddenImports` reads imports with TypeScript's `preProcessFile`, so comments don't match; the size check walks `exports` and fails an entry with no limit; `dist/styles` is cleared before the copy.

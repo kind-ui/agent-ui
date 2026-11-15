@@ -149,12 +149,10 @@ for (const size of SIZES) {
     expect(counts.notified).toBeLessThanOrEqual(BUDGETS.conversationStream.notified);
   });
 
-  test(`following a new message in a ${size}-row conversation`, async ({ page, browserName }, testInfo) => {
-    test.fixme(
-      browserName === "webkit" && testInfo.project.name.startsWith("wave-1-web"),
-      "Web Components on WebKit take 16 layout reads to follow a new message, over the budget of 12",
-    );
+  test(`following a new message in a ${size}-row conversation`, async ({ page }) => {
     await openConversation(page, `chat-${size}`);
+    // WebKit fires the opening scroll-to-end's scroll event late; let it land before counting.
+    await page.evaluate(frames);
     const counts = await most(page, 5, "kindConversation.append()");
     expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS.conversationFollow.layoutReads);
   });

@@ -249,7 +249,7 @@ test("an edit the owner cancels puts the editor back to the draft", async ({ pag
 });
 
 test("kind-composer wires content added after it connects", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== "wave-1-web", "web elements only");
+  test.skip(!testInfo.project.name.startsWith("wave-1-web"), "web elements only");
   await open(page);
   await page.evaluate(() => {
     const form = document.querySelector("kind-composer form") as HTMLFormElement;

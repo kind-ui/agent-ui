@@ -140,7 +140,7 @@ test("is a live UI SDK primitive agents can collapse", async ({ page }) => {
 });
 
 test("kind-step exposes live open state and its api", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== "wave-1-web", "web elements only");
+  test.skip(!testInfo.project.name.startsWith("wave-1-web"), "web elements only");
   await open(page);
   const el = step(page, "Plan the answer");
   type KindStep = HTMLElement & { open: boolean; api: { isOpen(): boolean; collapse(): boolean } };
@@ -155,7 +155,7 @@ test("kind-step exposes live open state and its api", async ({ page }, testInfo)
 });
 
 test("setting kind-step open keeps auto close", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== "wave-1-web", "web elements only");
+  test.skip(!testInfo.project.name.startsWith("wave-1-web"), "web elements only");
   await open(page);
   const el = step(page, "Draft the summary");
   await el.evaluate((s: HTMLElement & { open: boolean }) => {

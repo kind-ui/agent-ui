@@ -14,6 +14,14 @@ test("docs and tooling reach no spec", () =>
     [],
   ));
 
+test("code no fixture loads reaches no spec", () =>
+  assert.deepEqual(affectedSpecs(["packages/agent-ui/src/adapters/ai-sdk/parts.ts"]), []));
+
+test("a file a fixture imports with a query reaches its specs", () =>
+  assert.ok(
+    affectedSpecs(["packages/agent-ui/tests/core/fixtures/long-answer.md"]).includes(spec("markdown")),
+  ));
+
 test("a spec reaches itself", () => assert.deepEqual(affectedSpecs([spec("motion")]), [spec("motion")]));
 
 test("a component reaches the specs whose fixtures render it", () => {

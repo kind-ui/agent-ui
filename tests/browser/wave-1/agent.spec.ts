@@ -355,7 +355,7 @@ test("an action is listed only while it's available", async ({ page }) => {
 test("a can-* attribute offers its action, and a disabled composer offers no removal", async ({
   page,
 }, testInfo) => {
-  test.skip(testInfo.project.name !== "wave-1-web", "web attributes only");
+  test.skip(!testInfo.project.name.startsWith("wave-1-web"), "web attributes only");
   await open(page);
   await page.locator("kind-uploader").evaluate((el) => el.removeAttribute("can-retry"));
   await expect.poll(() => actionsOf(page, "kind-uploader", "Uploads")).toEqual(["cancel"]);

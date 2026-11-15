@@ -39,7 +39,7 @@ function previousNames() {
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  const response = await fetch(LIVE_CATALOG);
+  const response = await fetch(LIVE_CATALOG, { signal: AbortSignal.timeout(30_000) });
   if (!response.ok) throw new Error(`${LIVE_CATALOG}: ${response.status}`);
   const collisions = findCollisions(
     await response.json(),

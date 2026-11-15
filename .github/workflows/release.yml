@@ -198,6 +198,18 @@ jobs:
         with:
           name: package
           path: artifacts/package
+      # The site handoff feeds the kindui.dev deployment; skipped until that hosting is approved.
+      # It is attached when the release is created, so a release never lacks it while hosting is on.
+      - if: vars.KINDUI_HOSTING == 'true'
+        uses: ./.github/actions/setup
+      - if: vars.KINDUI_HOSTING == 'true'
+        env:
+          NEXT_PUBLIC_DOCS_ORIGIN: https://kindui.dev
+          NEXT_PUBLIC_DOCS_BASE_PATH: /agent-ui
+        run: |
+          npm run build:docs
+          npm run build:registry
+          node scripts/pack-site.mjs
       - env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.plan.outputs.version }}
@@ -210,19 +222,6 @@ jobs:
           # shellcheck disable=SC2016 # The backticks are Markdown.
           printf '\n`%s`\n\n- SHA-256: `%s`\n- Integrity: `%s`\n' \
             "$TARBALL" "$(sha256sum "artifacts/package/$TARBALL" | cut -d' ' -f1)" "$INTEGRITY" >> notes.md
-          gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" --notes-file notes.md
-      # The site handoff feeds the kindui.dev deployment; skipped until that hosting is approved.
-      - if: vars.KINDUI_HOSTING == 'true'
-        uses: ./.github/actions/setup
-      - if: vars.KINDUI_HOSTING == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ needs.plan.outputs.version }}
-          NEXT_PUBLIC_DOCS_ORIGIN: https://kindui.dev
-          NEXT_PUBLIC_DOCS_BASE_PATH: /agent-ui
-        run: |
-          npm run build:docs
-          npm run build:registry
-          node scripts/pack-site.mjs
-          gh release upload "v$VERSION" --clobber \
-            "artifacts/site/agent-ui-site-$VERSION.tar.gz" "artifacts/site/agent-ui-site-$VERSION.tar.gz.sha256"
+          shopt -s nullglob
+          gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" --notes-file notes.md \
+            artifacts/site/agent-ui-site-*

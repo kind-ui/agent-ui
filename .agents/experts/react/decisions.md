@@ -8,6 +8,7 @@ Last reviewed: `29e518f` (Task 17 docs site)
 
 - **Count budgets render counting** (`budgets.spec.ts`) follows DevTools: a render that bails out on equal state isn't counted, and a compare-`memo` wrapper (tag 14) is left out so its component counts once.
 - Everything in AGENTS.md "UI SDK API notes".
+- **StrictMode runs on Chromium only:** its double render doesn't depend on the engine, so the cross-browser projects are `wave-1-react` and `wave-1-web`.
 
 ## Known and open (don't report again, check whether fixed)
 
