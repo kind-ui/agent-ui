@@ -1,2 +1,26 @@
-// Neutral types and type guards (spec §3). Populated by later tasks with named reexports only.
-export {};
+export type {
+  Approval,
+  Message,
+  MessageStatus,
+  Part,
+  PlanItem,
+  Role,
+  Source,
+  Step,
+  StepBase,
+  StepStatus,
+  TaskItem,
+  TestCase,
+  TestSuite,
+  ToolCall,
+} from "./types/index.js";
+export {
+  hasOutput,
+  isDataPart,
+  isFilePart,
+  isReasoningPart,
+  isSourcePart,
+  isStepPart,
+  isTextPart,
+  isToolStep,
+} from "./types/index.js";

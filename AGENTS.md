@@ -42,6 +42,7 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 - **Option kind `"action"`:** in React the option is a function whose return value the primitive receives. On web it is a DOM event named after the option without `on` (`onSubmit` fires `submit` on the root element), and listeners call `event.detail.waitUntil(promise)`. Either way, the primitive gets a thenable to track pending state.
 - **Declaration emit (TS2742):** an exported `definePrimitive(...)` result has an inferred type that references `SlotProps`, which no public `@ui-sdk/core` entry exports. Annotate it explicitly as `ReturnType<typeof definePrimitive<Options, State, Api, Record<SlotNames, SlotDefinition<State, Api, BaseSlotProps, Record<never, never>>>>>`. `BaseSlotProps` comes from `@ui-sdk/core/renderer`. `src/core/composer/composer.ts` shows the pattern.
 - **`exactOptionalPropertyTypes`:** the type `definePrimitive` returns (`options: … | undefined`) is not assignable to UI SDK's own `Primitive` (`options?: …`) when this flag is on. `tsconfig.checks.json`, which covers the render layers, fixtures, and browser specs, turns the flag off. Core keeps it on.
+- **Neutral types (Task 3):** `src/types/` models host data only (messages, parts, steps, tool calls, approvals). No UI SDK type describes this data, so nothing is reused from `@ui-sdk/*` there, and the `types` layer imports no runtime module. Component state and actions reuse UI SDK types in `core`.
 - **Agent bridge:** `createAgent` comes from `@ui-sdk/react/agent` or `@ui-sdk/web/agent`. A `definePrimitive` primitive's snapshot entry has `component` set to the primitive `name`, `label` set to the root's accessible name, the state keys listed in `controlled`, and `pending`.
 
 ## Root scripts
@@ -50,8 +51,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 | --- | --- |
 | `npm run build` | `tsc -b packages/agent-ui` |
 | `npm run lint` / `npm run format` | `biome check . && node scripts/check-ui-sdk-usage.mjs` / `biome check --write .` |
-| `npm run typecheck` | `build`, then `tsc` over type tests, fixtures, docs, and tooling |
-| `npm run test:unit` | `node --test` over `packages/agent-ui/tests/core/` |
+| `npm run typecheck` | `build`, then `tsc` over render layers and fixtures (`tsconfig.checks.json`) and consumer type tests (`tests/types/nodenext/`) |
+| `npm run test:unit` | `build`, then `node --test` over `packages/agent-ui/tests/core/` (tests import `@kind-ui/agent-ui` by name, which resolves to `dist`) |
 | `npm run test:scripts` | `node --test` over `scripts/tests/` (tooling and guard tests) |
 | `npm run test:browser` | `playwright test` (accepts `--project` and `--shard`) |
 | `npm run check:package` / `build:registry` / `check:registry-consumers` | packed-package gate / registry build / registry consumer installs |

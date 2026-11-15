@@ -14,8 +14,12 @@ const stages = {
   "lint:guard": { needs: "scripts/check-ui-sdk-usage.mjs", run: ["node", "scripts/check-ui-sdk-usage.mjs"] },
   build: { needs: "packages/agent-ui/tsconfig.json", run: ["npx", "tsc", "-b", "packages/agent-ui"] },
   "typecheck:extra": { needs: "tsconfig.checks.json", run: ["npx", "tsc", "-p", "tsconfig.checks.json"] },
+  "typecheck:types": {
+    needs: "tests/types/nodenext/tsconfig.json",
+    run: ["npx", "tsc", "-p", "tests/types/nodenext/tsconfig.json"],
+  },
   "test:scripts": { needs: "scripts/tests", run: ["node", "--test", "scripts/tests/*.test.mjs"] },
-  "test:unit": {
+  "test:unit:run": {
     needs: "packages/agent-ui/tests/core",
     run: ["node", "--test", "packages/agent-ui/tests/core/*.test.mjs"],
   },
@@ -32,7 +36,9 @@ const stages = {
 
 const groups = {
   lint: ["lint:biome", "lint:guard"],
-  typecheck: ["build", "typecheck:extra"],
+  typecheck: ["build", "typecheck:extra", "typecheck:types"],
+  // Unit tests import the package by name, which resolves to the built dist.
+  "test:unit": ["build", "test:unit:run"],
   "check:fast": ["lint", "typecheck", "test:scripts", "test:unit"],
   "check:packed": ["check:package", "build:registry", "check:registry-consumers"],
   check: ["check:fast", "check:packed", "test:browser"],
