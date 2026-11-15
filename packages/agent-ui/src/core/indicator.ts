@@ -1,9 +1,10 @@
 import type { definePrimitive, SlotDefinition, SlotFactory } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
-import { cancel, enter, type MotionMode } from "./motion/index.js";
+import { cancel, enter, flow, type MotionMode, onReducedMotionChange } from "./motion/index.js";
 
 export type IndicatorOptions = {
-  /** Names the status for assistive technology and agents, and is its visible text. */
+  /** Names the status for assistive technology and agents, and is its visible text. Defaults to "Loading",
+   * "Thinking" or "Typing". A new label is read out, as the status's content. */
   label?: string;
   /** Defaults to `"auto"`, which follows `prefers-reduced-motion`. Reduced and `"none"` hold the dots still. */
   motion?: MotionMode;
@@ -37,7 +38,7 @@ export type IndicatorPrimitive = ReturnType<
 
 /**
  * Everything but the name of Loader, Thinking Indicator and Typing Indicator: a polite `status` named by its
- * label, and decorative dots that flow with the `"dot-flow"` preset. Nothing is announced after mount.
+ * label, and decorative dots that flow with the `"dot-flow"` preset.
  */
 export const indicator = (defaultLabel: string) => {
   const presentation = (options: IndicatorOptions): IndicatorState => ({
@@ -70,11 +71,15 @@ export const indicator = (defaultLabel: string) => {
           const unsubscribe = store.subscribe(() => {
             if (store.get().motion === motion) return;
             motion = store.get().motion;
-            void enter(el, "dot-flow", { motion });
+            flow(el, { motion });
+          });
+          const unwatch = onReducedMotionChange(() => {
+            if (motion === "auto") flow(el, { motion });
           });
           return () => {
             bound = false;
             unsubscribe();
+            unwatch();
             cancel(el);
           };
         },

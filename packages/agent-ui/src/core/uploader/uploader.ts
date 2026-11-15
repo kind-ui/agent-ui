@@ -38,17 +38,17 @@ export type UploaderFilesDetails = ChangeDetails<FileInputValueChangeReason>;
 export type UploaderOptions = {
   /** The uploads, in order, keyed by `id`. The host owns them; the uploader holds no files. Defaults to none. */
   items?: readonly UploadItem[];
-  /** Files chosen, dropped or pasted that pass `accept` and `maxSize`. */
+  /** Files chosen, dropped or pasted that pass `accept` and `maxSize`. Web: a `files` event. */
   onFiles?: (files: File[], details: UploaderFilesDetails) => void;
-  /** Files turned down by `accept` or `maxSize`, with File Input's `reasons`. */
+  /** Files turned down by `accept` or `maxSize`, with File Input's `reasons`. Web: a `reject` event. */
   onReject?: (rejected: FileRejection[], details: UploaderFilesDetails) => void;
   /** Offers Cancel on queued and uploading items, and the `cancel` action. Web: a property. */
   onCancel?: (id: string, details: ChangeDetails<"cancel-press" | "imperative">) => void;
   /** Offers Retry on failed items, and the `retry` action. Web: a property. */
   onRetry?: (id: string, details: ChangeDetails<"retry-press" | "imperative">) => void;
-  /** The files to accept, like the `accept` attribute. */
+  /** The files to accept, like the `accept` attribute. Defaults to any. */
   accept?: string;
-  /** The largest file accepted, in bytes. */
+  /** The largest file accepted, in bytes. Defaults to no limit. */
   maxSize?: number;
   /** Defaults to `"auto"`, which follows `prefers-reduced-motion`. */
   motion?: MotionMode;
@@ -83,10 +83,10 @@ export type UploaderApi = {
   readonly cancel: ((id: string, event?: Event) => void) | undefined;
   /** Present only while an item has failed and `onRetry` is set. */
   readonly retry: ((id: string, event?: Event) => void) | undefined;
-  /** Takes in what File Input accepted or rejected. */
-  intake: FileIntake;
   /** Plays an item's entrance when it's added, not when the uploader mounts with it. */
   enterItem: (el: HTMLElement, id: string) => void;
+  /** Hears File Input's events on web, and marks the end of the first frame. */
+  bindRoot: (el: HTMLElement) => () => void;
   /** Tracks an action button, so focus moves to a neighbor's when a cancelled item's button leaves. */
   bindAction: (el: HTMLElement, part: Part<UploaderState, UploaderApi, ItemProps>) => () => void;
   partState: { root: (state: UploaderState) => UploaderRootState };
@@ -175,8 +175,14 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
     const { store } = context;
 
     let statuses = new Map(store.get().items.map((item) => [item.id, item.status]));
+    // Focus recovery runs after a removed item has left `items`, so keep the order from before.
+    let order = [...statuses.keys()];
+    let previousOrder = order;
+    // An item asked to cancel or retry takes no second request until the host changes its status.
+    const requested = new Set<string>();
     context.onOptions((options) => {
       const items = options.items ?? NO_ITEMS;
+      const next = new Map(items.map((item) => [item.id, item.status]));
       for (const item of items) {
         const outcome = ANNOUNCED[item.status];
         const before = statuses.get(item.id);
@@ -184,7 +190,10 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
           announce(`${item.name} ${outcome}`, { priority: "polite" });
         }
       }
-      statuses = new Map(items.map((item) => [item.id, item.status]));
+      for (const id of requested) if (next.get(id) !== statuses.get(id)) requested.delete(id);
+      statuses = next;
+      previousOrder = order;
+      order = [...next.keys()];
     });
 
     const intake: FileIntake = {
@@ -198,7 +207,8 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
 
     const cancel = (id: string, event?: Event) => {
       const item = itemOf(store.get(), id);
-      if (!item || !isActive(item)) return;
+      if (!item || !isActive(item) || requested.has(id)) return;
+      requested.add(id);
       void dispatch(
         context,
         "onCancel",
@@ -207,7 +217,8 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
       );
     };
     const retry = (id: string, event?: Event) => {
-      if (itemOf(store.get(), id)?.status !== "error") return;
+      if (itemOf(store.get(), id)?.status !== "error" || requested.has(id)) return;
+      requested.add(id);
       void dispatch(
         context,
         "onRetry",
@@ -229,11 +240,13 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
     );
 
     const mounted = new Set(store.get().items.map((item) => item.id));
+    // Web hosts can only set `items` once the element exists, so rows in the first frame count as mounted.
+    let mounting = true;
 
     const actions = new Map<string, HTMLElement>();
     const recovery = createFocusRecovery<ItemProps>({
       fallback: (lost) => {
-        const ids = store.get().items.map((item) => item.id);
+        const ids = order.includes(lost.props.value) ? order : previousOrder;
         const index = ids.indexOf(lost.props.value);
         const after = ids.slice(index + 1);
         const before = ids.slice(0, Math.max(index, 0)).reverse();
@@ -251,11 +264,20 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
         const { canRetry, items } = store.get();
         return canRetry && items.some((item) => item.status === "error") ? retry : undefined;
       },
-      intake,
       enterItem: (el, id) => {
         if (mounted.has(id)) return;
         mounted.add(id);
-        void enter(el, "fade-up", { motion: store.get().motion });
+        if (!mounting) void enter(el, "fade-up", { motion: store.get().motion });
+      },
+      bindRoot: (el) => {
+        const frame = requestAnimationFrame(() => {
+          mounting = false;
+        });
+        const unforward = forwardFileInputEvents(el, intake);
+        return () => {
+          cancelAnimationFrame(frame);
+          unforward();
+        };
       },
       bindAction: (el, part) => {
         actions.set(part.props.value, el);
@@ -273,7 +295,7 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
       role: "group",
       attrs: (state) => ({ "data-motion": state.motion }),
       state: (state, { api }) => api.partState.root(state),
-      bind: (el, { api }) => forwardFileInputEvents(el, api.intake),
+      bind: (el, { api }) => api.bindRoot(el),
     }),
     // Stays mounted while empty, so the first upload plays its entrance like the rest.
     list: slot({
@@ -296,6 +318,8 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
       props: { value: { kind: "string", from: "item" } },
       present: (state, { props }) => actionOf(state, props.value) !== undefined,
       press: ({ api, props, store }, event) => {
+        // Retry turns into Cancel under the pointer, so a double click's second click must not cancel.
+        if (event instanceof MouseEvent && event.detail > 1) return;
         const action = actionOf(store.get(), props.value);
         if (action) api[action]?.(props.value, event);
       },

@@ -8,9 +8,10 @@ export const cases = {
     root.innerHTML = `<div class="mx-auto max-w-lg p-6"><kind-uploader aria-label="Uploads" max-size="5000000"></kind-uploader></div>`;
     const uploader = root.querySelector("kind-uploader") as HTMLElement & { items: UploadItem[] };
     uploader.items = uploads;
-    const { onFiles, onReject, onCancel, onRetry } = uploadHost((change) => {
+    const { fixture, onFiles, onReject, onCancel, onRetry } = uploadHost((change) => {
       uploader.items = change(uploader.items);
     });
+    Object.assign(window, { kindUploader: fixture });
     Object.assign(uploader, { onCancel, onRetry });
     uploader.addEventListener("files", (event) =>
       onFiles((event as CustomEvent<{ value: File[] }>).detail.value),

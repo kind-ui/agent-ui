@@ -64,6 +64,20 @@ test("reduced motion holds the dots still", async ({ page }) => {
   await expect.poll(() => dotAnimations(page)).toBe(0);
 });
 
+test("turning on reduced motion after mount stills the dots at one opacity", async ({ page }) => {
+  await open(page);
+  await expect.poll(() => dotAnimations(page)).toBeGreaterThan(0);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect.poll(() => dotAnimations(page)).toBe(0);
+  await page.evaluate(
+    () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+  );
+  const opacities = await page.evaluate(() =>
+    [...document.querySelectorAll("[data-dot]")].map((dot) => getComputedStyle(dot).opacity),
+  );
+  expect(new Set(opacities)).toEqual(new Set(["0.6"]));
+});
+
 test("appended text fades in; a reset replaces it without fading", async ({ page }) => {
   await open(page);
   await settled(page);

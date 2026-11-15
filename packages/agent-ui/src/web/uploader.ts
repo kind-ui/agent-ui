@@ -22,6 +22,14 @@ const row = `
   <span data-detail></span>
   <kind-uploader-action><button></button></kind-uploader-action>`;
 
+type Movable = Element & { moveBefore?: (node: Node, child: Node | null) => void };
+
+// `moveBefore` keeps a focused action button focused where the browser has it; `insertBefore` blurs it.
+function move(list: Movable, row: Element, before: Element | null): void {
+  if (list.moveBefore && row.isConnected) list.moveBefore(row, before);
+  else list.insertBefore(row, before);
+}
+
 // Updates a row in place, so its action button keeps focus and its bar moves rather than restarts.
 function fill(el: Element, item: UploadItem): void {
   if (!el.firstElementChild) el.innerHTML = row;
@@ -72,7 +80,7 @@ export function defineUploader(): void {
               fill(child, item);
               drawn.set(child, item);
             }
-            if (list.children[index] !== child) list.insertBefore(child, list.children[index] ?? null);
+            if (list.children[index] !== child) move(list, child, list.children[index] ?? null);
           });
           for (const child of existing.values()) child.remove();
         };

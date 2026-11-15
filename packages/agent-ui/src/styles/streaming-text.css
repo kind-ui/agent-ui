@@ -5,19 +5,15 @@
     overflow-wrap: anywhere;
   }
 
-  /* Takes no width, so the text never reflows when the caret comes or goes. */
+  /* An empty inline with its bar laid over the end of the text, so the caret never adds width or line height. */
   [data-slot="kind-streaming-text-caret"] {
     position: relative;
-    display: inline-block;
-    width: 0;
-    height: 1em;
-    vertical-align: text-bottom;
 
     &::after {
       content: "";
       position: absolute;
       inset-block: 0;
-      inset-inline-start: 0.125em;
+      inset-inline-end: 0;
       width: 0.125em;
       border-radius: 1px;
       background-color: currentColor;

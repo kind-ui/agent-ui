@@ -14,7 +14,7 @@ export const uploads: UploadItem[] = [
   },
 ];
 
-/** What the host was asked to do, and a `setStatus` the test drives. */
+/** Host callbacks, plus the `fixture` (what the host was asked to do, and a `setStatus`) a test reads as `window.kindUploader`. */
 export function uploadHost(update: (change: (items: UploadItem[]) => UploadItem[]) => void) {
   const calls = {
     files: [] as string[],
@@ -26,8 +26,8 @@ export function uploadHost(update: (change: (items: UploadItem[]) => UploadItem[
     update((items) =>
       items.map((item) => (item.id === id ? { ...item, status, progress: progress ?? item.progress } : item)),
     );
-  Object.assign(window, { kindUploader: { calls, setStatus } });
   return {
+    fixture: { calls, setStatus },
     onFiles: (files: File[]) => {
       calls.files.push(...files.map((file) => file.name));
       update((items) => [

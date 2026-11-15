@@ -54,6 +54,12 @@ test("Retry shows only on failed items, and keeps focus as it turns into Cancel"
   await expect(page.getByRole("button", { name: /^Retry/ })).toHaveCount(0);
 });
 
+test("a double click on Retry retries once, without cancelling", async ({ page }) => {
+  await open(page);
+  await page.getByRole("button", { name: "Retry training-set.csv" }).dblclick();
+  expect(await calls(page)).toMatchObject({ retries: ["dataset"], cancels: [] });
+});
+
 test("announces uploads that finish or fail, once each", async ({ page }) => {
   await open(page);
   await setStatus(page, "report", "uploading", 90);

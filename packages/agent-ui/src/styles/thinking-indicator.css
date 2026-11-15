@@ -15,6 +15,7 @@
     background:
       linear-gradient(90deg, var(--kind-muted-fg) 40%, var(--kind-fg) 50%, var(--kind-muted-fg) 60%) 0 0 /
       200% 100%;
+    -webkit-background-clip: text;
     background-clip: text;
     animation: kind-shimmer 2s linear infinite;
   }

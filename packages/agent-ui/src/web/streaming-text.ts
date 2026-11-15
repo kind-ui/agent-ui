@@ -14,18 +14,29 @@ export function defineStreamingText(): void {
         const caret =
           el.querySelector("kind-streaming-text-caret") ??
           document.createElement("kind-streaming-text-caret");
+        // Text written as children before upgrade is redrawn as chunks.
+        for (const node of [...el.childNodes]) if (node.nodeType === Node.TEXT_NODE) node.remove();
         let drawn: readonly StreamingTextChunk[] = [];
         const draw = () => {
           const { chunks } = instance.get();
           if (chunks === drawn) return;
-          // Chunks are only ever appended, or replaced all at once by a reset.
-          const appended = drawn.length > 0 && chunks[0]?.id === drawn[0]?.id;
-          if (!appended) el.replaceChildren(caret);
-          for (const chunk of chunks.slice(appended ? drawn.length : 0)) {
-            const part = document.createElement("kind-streaming-text-chunk");
-            part.setAttribute("value", String(chunk.id));
-            part.textContent = chunk.text;
-            el.insertBefore(part, caret);
+          const ids = new Set(chunks.map((chunk) => String(chunk.id)));
+          const parts = new Map<string, Element>();
+          for (const child of [...el.children]) {
+            if (child === caret) continue;
+            const value = child.getAttribute("value") ?? "";
+            if (ids.has(value)) parts.set(value, child);
+            else child.remove();
+          }
+          if (caret.parentNode !== el) el.append(caret);
+          for (const chunk of chunks) {
+            let part = parts.get(String(chunk.id));
+            if (!part) {
+              part = document.createElement("kind-streaming-text-chunk");
+              part.setAttribute("value", String(chunk.id));
+              el.insertBefore(part, caret);
+            }
+            if (part.textContent !== chunk.text) part.textContent = chunk.text;
           }
           drawn = chunks;
         };

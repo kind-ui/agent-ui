@@ -44,11 +44,19 @@ const loops = new WeakMap<HTMLElement, AnimationPlaybackControls>();
 const ANIMATED = ["opacity", "transform", "height", "overflow"] as const;
 const LAYOUT = ["translate", "scale", "transform-origin"] as const;
 
+const REDUCED_QUERY = "(prefers-reduced-motion: reduce)";
+
 /** What `motion` resolves to on this page: `"auto"` follows `prefers-reduced-motion`. */
 export function resolvedMotion(motion: MotionMode = "auto"): ResolvedMotion {
-  const prefersReduced =
-    typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  return resolveMotion(motion, prefersReduced);
+  return resolveMotion(motion, typeof matchMedia === "function" && matchMedia(REDUCED_QUERY).matches);
+}
+
+/** Calls `listener` when the person turns reduced motion on or off. Returns a cleanup. */
+export function onReducedMotionChange(listener: () => void): () => void {
+  if (typeof matchMedia !== "function") return () => {};
+  const query = matchMedia(REDUCED_QUERY);
+  query.addEventListener("change", listener);
+  return () => query.removeEventListener("change", listener);
 }
 
 function modeOf(options: MotionOptions | undefined): ResolvedMotion {
@@ -80,7 +88,8 @@ function interrupt(el: HTMLElement, hold: boolean): boolean {
 }
 
 function stopLoop(el: HTMLElement): void {
-  loops.get(el)?.stop();
+  // `cancel`, not `stop`: motion's `stop()` writes the current opacity back a frame later.
+  loops.get(el)?.cancel();
   loops.delete(el);
   for (const dot of el.querySelectorAll<HTMLElement>(DOT_FLOW.selector)) dot.style.removeProperty("opacity");
 }
@@ -270,4 +279,13 @@ export function cancel(el: HTMLElement): void {
   interrupt(el, false);
   stopLoop(el);
   clearStyles(el);
+}
+
+/**
+ * Starts or stops `el`'s `"dot-flow"` loop for `motion` without playing its entrance again, for a motion change
+ * after `enter`. Reduced motion and `"none"` hold the dots still.
+ */
+export function flow(el: HTMLElement, options?: MotionOptions): void {
+  stopLoop(el);
+  if (modeOf(options) === "full") startLoop(el);
 }

@@ -28,3 +28,14 @@ test("appends keep earlier chunks; a shrink replaces them with one", () => {
   text.setOptions({ id: "t", text: "" });
   assert.deepEqual(text.get().chunks, []);
 });
+
+test("chunks that aren't fading fold into one", () => {
+  const text = streamingTextPrimitive({ id: "t", text: "Hel", motion: "none" });
+  for (const next of ["Hello", "Hello there", "Hello there!"])
+    text.setOptions({ id: "t", text: next, motion: "none" });
+  assert.deepEqual(
+    text.get().chunks.map((chunk) => chunk.text),
+    ["Hello there", "!"],
+  );
+  assert.equal(text.get().chunks[0].id, 0);
+});

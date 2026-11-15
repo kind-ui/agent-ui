@@ -4,7 +4,7 @@ import { enter, type MotionMode, resolvedMotion } from "../motion/index.js";
 import { streamingTextDiff } from "./diff.js";
 
 export type StreamingTextOptions = {
-  /** The text so far. Text that extends the last fades its new part in; any other text replaces it at once. */
+  /** The text so far. Defaults to `""`. Text that extends the last fades its new part in; any other text replaces it at once. */
   text?: string;
   /** Shows a caret after the text, while it streams. Defaults to `false`. */
   caret?: boolean;
@@ -12,7 +12,7 @@ export type StreamingTextOptions = {
   motion?: MotionMode;
 };
 
-/** A run of text that arrived at once. `id` keys its element. */
+/** A run of text: one still fading in, or everything before those, folded into one. `id` keys its element. */
 export type StreamingTextChunk = { id: number; text: string };
 
 export type StreamingTextState = {
@@ -23,7 +23,7 @@ export type StreamingTextState = {
 };
 
 export type StreamingTextApi = {
-  /** Fades a chunk in when it was appended, never one that mounted with the text or replaced it. */
+  /** Fades a chunk in when it was appended at full motion, never one that mounted with the text or replaced it. */
   enterChunk: (el: HTMLElement, id: number) => void;
 };
 
@@ -67,28 +67,46 @@ export const streamingTextPrimitive: StreamingTextPrimitive = definePrimitive({
   api: (context): StreamingTextApi => {
     const { store } = context;
     let nextId = 1;
-    const appended = new Set<number>();
+    // Chunks still fading in. Every chunk before the first of them folds into one, so parts stay few.
+    const fading = new Set<number>();
+    // A part can bind twice (React StrictMode); its entrance plays once.
+    const entering = new Set<number>();
+    const settled = (chunks: readonly StreamingTextChunk[]) => {
+      const end = chunks.findIndex((chunk) => fading.has(chunk.id));
+      const count = end === -1 ? chunks.length : end;
+      if (count < 2) return chunks;
+      const [first] = chunks as [StreamingTextChunk];
+      const text = chunks
+        .slice(0, count)
+        .map((chunk) => chunk.text)
+        .join("");
+      return [{ id: first.id, text }, ...chunks.slice(count)];
+    };
 
     context.onOptions((options) => {
       const text = options.text ?? "";
-      const { text: previous, chunks } = store.get();
+      const { text: previous, chunks, motion } = store.get();
       if (text === previous) return;
       const id = nextId++;
       const diff = streamingTextDiff(previous, text);
       if (diff.kind === "append") {
-        appended.add(id);
-        store.set({ text, chunks: [...chunks, { id, text: diff.appended }] });
+        if (resolvedMotion(motion) === "full") fading.add(id);
+        store.set({ text, chunks: [...settled(chunks), { id, text: diff.appended }] });
       } else {
-        appended.clear();
+        fading.clear();
+        entering.clear();
         store.set({ text, chunks: text ? [{ id, text }] : [] });
       }
     });
 
     return {
       enterChunk: (el, id) => {
-        if (!appended.delete(id)) return;
-        const { motion } = store.get();
-        if (resolvedMotion(motion) === "full") void enter(el, "fade", { motion });
+        if (!fading.has(id) || entering.has(id)) return;
+        entering.add(id);
+        void enter(el, "fade", { motion: store.get().motion }).then(() => {
+          fading.delete(id);
+          entering.delete(id);
+        });
       },
     };
   },
