@@ -611,6 +611,8 @@ Consumers install with the existing namespace, for example `npx shadcn@latest ad
 | Reduced motion | Each animated component under `reducedMotion: "reduce"` runs no transform or height animation and reaches its final state | Browser specs |
 | Types | Consumers compile under NodeNext and Bundler resolution; a core consumer compiles and runs without `ai`; the adapter compiles against pinned `ai` types | `tests/types/`, included in `npm run typecheck` |
 | Packed package | `npm pack` tarball exports resolve; `core` has no React or `ai` runtime import; CSS is included; `publint` and `@arethetypeswrong/cli` pass; a clean consumer installs the tarball without `ai` and imports every entry | `scripts/check-package.mjs` (`npm run check:package`) |
+| Size | Each public JS entry, bundled with its dependencies, minified and gzipped, stays within its limit | `size-budget.json`, `scripts/check-size.mjs` (`npm run check:size`) |
+| Count budgets | DOM writes, renders, parts notified, layout reads and markdown parses per streamed delta stay within fixed counts at 10 and 500 rows; mounting and unmounting Conversation leaves no DOM nodes or listeners | `tests/browser/wave-1/budgets.spec.ts` |
 | Registry consumers | Each wave's items install from the local registry build and local tarball into clean Vite React and Vite Web Components consumers under `artifacts/`, then build and render; installed `@ui-sdk/*` and `@kind-ui/agent-ui` versions match the pins | `scripts/check-registry-consumers.mjs` (`npm run check:registry-consumers`) |
 
 Tests use fixtures and explicitly resolved deferred promises; no live services and no timing sleeps. Accessibility automation is supplemented by manual keyboard and screen-reader review of each wave's fixtures before release.

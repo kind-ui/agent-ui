@@ -6,10 +6,12 @@ Last reviewed: `1e519b1` (Task 14 styles and theme tokens)
 
 ## Settled
 
+- **Count budgets render counting** (`budgets.spec.ts`) follows DevTools: a render that bails out on equal state isn't counted, and a compare-`memo` wrapper (tag 14) is left out so its component counts once.
 - Everything in AGENTS.md "UI SDK API notes".
 
 ## Known and open (don't report again, check whether fixed)
 
+- **React hosts must memo Conversation rows** for a streamed token to render one row; the fixture does. The Conversation docs page (Wave 1 docs) should say so.
 - **Streaming Text renders twice per `text` change,** like Markdown: `text` reaches state through `onOptions`, a layout effect. Before paint.
 - **Uploader progress bars have no accessible name in server markup** until hydration adds `aria-labelledby` (UI SDK Progress; report upstream).
 - **A Step without `StepTitle` has a dangling `aria-labelledby`** on its group.

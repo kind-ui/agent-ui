@@ -15,6 +15,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import ts from "typescript";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const packageDir = join(root, "packages/agent-ui");
@@ -28,21 +29,21 @@ const REQUIRED_FILES = ["dist/styles/agent-ui.css", "LICENSE", "THIRD_PARTY_NOTI
 export function findForbiddenImports(files) {
   const found = new Set();
   for (const file of files) {
-    const source = readFileSync(file, "utf8");
-    for (const [, specifier] of source.matchAll(/\b(?:from|import)\s*\(?\s*["']([^"']+)["']/g)) {
-      const name = specifier.split("/")[0];
+    const { importedFiles } = ts.preProcessFile(readFileSync(file, "utf8"), true, true);
+    for (const { fileName } of importedFiles) {
+      const name = fileName.split("/")[0];
       if (FORBIDDEN_IMPORTS.includes(name)) found.add(name);
     }
   }
   return [...found];
 }
 
-function run(command, args, cwd = root) {
+function run(command, args, cwd = root, name = `${command} ${args[0]}`) {
   console.log(`$ ${command} ${args.join(" ")}`);
   const result = spawnSync(command, args, { cwd, stdio: ["ignore", "pipe", "inherit"], encoding: "utf8" });
   if (result.status !== 0) {
     process.stdout.write(result.stdout ?? "");
-    throw new Error(`${command} ${args[0]} failed`);
+    throw new Error(`${name} failed${result.error ? `: ${result.error.message}` : ""}`);
   }
   return result.stdout;
 }
@@ -63,7 +64,7 @@ const compilerOptions = {
 function typecheck(consumer, name, options, files) {
   const config = join(consumer, `tsconfig.${name}.json`);
   writeFileSync(config, JSON.stringify({ compilerOptions: { ...compilerOptions, ...options }, files }));
-  run("node", [tsc, "-p", config], consumer);
+  run("node", [tsc, "-p", config], consumer, `tsc ${name}`);
 }
 
 function check() {

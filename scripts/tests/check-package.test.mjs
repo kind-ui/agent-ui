@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { test } from "node:test";
+import { after, test } from "node:test";
 import { findForbiddenImports } from "../check-package.mjs";
 
 const dir = mkdtempSync(join(tmpdir(), "check-package-"));
+after(() => rmSync(dir, { recursive: true, force: true }));
 let serial = 0;
 const fixtureWith = (source) => {
   const file = join(dir, `${serial++}.js`);

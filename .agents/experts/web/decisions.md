@@ -6,6 +6,7 @@ Last reviewed: `1e519b1` (Task 14 styles and theme tokens)
 
 ## Settled
 
+- **`notified` in `budgets.spec.ts` counts shown parts only** (hidden parts sync without `getAttribute`), at most the jump and empty parts, constant across list sizes. The `remount` fixture keeps the last unmounted tree until the next mount; leaks are measured while mounted.
 - **Theme defaults land on `:root, :host`** (Tailwind's `@theme` output), so inside a shadow root that loads the stylesheet a page's `:root` override doesn't reach; the README tells consumers to set `:host` there too. It also makes the stylesheet work when loaded only in a shadow root.
 - **`can-<action>` attributes stand for a callback's presence;** the root's `options` hook sets the callback to `undefined` while one is off. A listener can't be seen, and `@ui-sdk/web`'s proxy fills in a dispatcher for any callback key that's missing.
 - Everything in AGENTS.md "UI SDK API notes".

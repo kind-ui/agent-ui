@@ -9,6 +9,7 @@ import { build } from "vite";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const budget = JSON.parse(readFileSync(join(root, "size-budget.json"), "utf8"));
+const pkg = JSON.parse(readFileSync(join(root, "packages/agent-ui/package.json"), "utf8"));
 
 async function gzippedSize(entry) {
   const [output] = await build({
@@ -24,8 +25,14 @@ async function gzippedSize(entry) {
 }
 
 let over = false;
-for (const [entry, limit] of Object.entries(budget)) {
-  const size = await gzippedSize(`@kind-ui/agent-ui${entry.slice(1)}`);
+for (const entry of Object.keys(pkg.exports).filter((entry) => !entry.endsWith(".css"))) {
+  const limit = budget[entry];
+  if (limit === undefined) {
+    console.log(`missing: ${entry} has no limit in size-budget.json`);
+    over = true;
+    continue;
+  }
+  const size = await gzippedSize(pkg.name + entry.slice(1));
   over ||= size > limit;
   console.log(`${size > limit ? "over" : "ok"}: ${entry} ${size} B gzip (limit ${limit} B)`);
 }

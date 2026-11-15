@@ -85,8 +85,7 @@ function chat(root: HTMLElement, count: number, virtualize = false) {
         setCount(total + n);
       },
       stream: (chunk: string) => {
-        const text = rows().at(-1)?.querySelector("p");
-        if (text) text.textContent += chunk;
+        (rows().at(-1)?.querySelector("p")?.firstChild as Text | undefined)?.appendData(chunk);
       },
       remove: (n = 1) => {
         for (const el of rows().slice(-n)) el.remove();

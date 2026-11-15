@@ -28,6 +28,7 @@ Last reviewed: `1e519b1` (Task 14 styles and theme tokens)
 
 ## Resolved
 
+- **Packed-package gate (Task 15):** the tarball no longer ships source maps pointing at unshipped `src/`; `findForbiddenImports` reads imports with TypeScript's `preProcessFile`, so comments don't match; the size check walks `exports` and fails an entry with no limit; `dist/styles` is cleared before the copy.
 - **A disabled composer still let a person or an agent remove attachments.** Fixed: `partState.attachments` leaves `onRemove` out while disabled, and `removeAttachment` refuses.
 - **A double click on uploader Retry also cancelled** (Retry turns into Cancel under the pointer). Fixed: a click with `detail > 1` is ignored, and an item takes no second cancel or retry until the host changes its status.
 - **Uploader focus recovery went to the first row when the host removed a cancelled item.** Fixed: the fallback reads the order from before the change.

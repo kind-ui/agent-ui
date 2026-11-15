@@ -2,11 +2,11 @@ import { expect, type Page, test } from "@playwright/test";
 
 // Count budgets: deterministic counts, never timings. Each runs at two list sizes against one limit, so
 // work that grows with the list fails. `renders` counts React component renders and `notified` the
-// elements UI SDK re-reads on web, so each is 0 in the other layer.
+// shown parts UI SDK re-reads on web, so each is 0 in the other layer.
 const BUDGETS = {
   conversationStream: { writes: 1, renders: 9, notified: 0 },
   conversationFollow: { layoutReads: 12 },
-  markdownStream: { parses: 1, writes: 4, renders: 8, notified: 3 },
+  markdownStream: { parses: 1, writes: 4, renders: 6, notified: 3 },
   remount: { nodes: 0, listeners: 0 },
 };
 const SIZES = [10, 500];
@@ -30,7 +30,7 @@ function instrument() {
   let writes = 0;
   let renders = 0;
   let layoutReads = 0;
-  // UI SDK reads each attribute of a part it notifies before it writes, so the elements read are the parts notified.
+  // UI SDK reads each attribute of a shown part it notifies before it writes, so the elements read are those parts.
   let notified = 0;
   let read = new WeakSet<Element>();
   const { getAttribute } = Element.prototype;
@@ -74,10 +74,11 @@ function instrument() {
   ]);
   countGetters(HTMLElement.prototype, ["offsetWidth", "offsetHeight", "offsetTop", "offsetLeft"]);
 
-  // React DevTools' global hook: a function component rendered when it performed work, and an unchanged
-  // subtree keeps its children (as DevTools decides).
+  // React DevTools' global hook: a function component rendered when it performed work (a render that bails
+  // out on equal state did not), and an unchanged subtree keeps its children. A `memo` with a compare
+  // function (tag 14) is left out, since the component inside it counts.
   const performedWork = 1;
-  const components = new Set([0, 11, 14, 15]);
+  const components = new Set([0, 11, 15]);
   const countRenders = (fiber: Fiber) => {
     const previous = fiber.alternate;
     if (components.has(fiber.tag) && (!previous || fiber.flags & performedWork)) renders++;
