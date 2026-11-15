@@ -85,7 +85,7 @@ function update(el: Element, node: MdNode, context: Context): void {
     case "code": {
       attribute(el, "aria-label", "Code");
       attribute(el, "code", node.value);
-      attribute(el, "lang", node.lang);
+      attribute(el, "language", node.lang);
       attribute(el, "streaming", context.streaming ? "" : undefined);
       const block = el as HTMLElement & { highlight?: Highlight };
       if (block.highlight !== context.highlight) block.highlight = context.highlight;
@@ -156,14 +156,17 @@ export function defineMarkdown(): void {
     root: {
       tag: "kind-markdown",
       render: (el, instance) => {
+        // Content written before upgrade, like a fallback, makes way for the blocks.
+        for (const child of [...el.childNodes]) {
+          if (!(child instanceof HTMLElement && child.dataset.blockKey)) child.remove();
+        }
         let drawn: MarkdownBlock[] = [];
-        let drawnHighlight: Highlight | undefined;
         const draw = () => {
           const { blocks, highlight, streaming } = instance.get() as MarkdownState;
-          if (blocks === drawn && highlight === drawnHighlight) return;
+          if (blocks === drawn) return;
           // A final block is the same object on every append, so only the blocks after it are patched.
           blocks.forEach((block, index) => {
-            if (block === drawn[index] && highlight === drawnHighlight) return;
+            if (block === drawn[index]) return;
             const wrapper = el.children[index] ?? el.appendChild(document.createElement("div"));
             attribute(wrapper, "data-block-key", block.key);
             const context = { highlight, streaming: streaming && !block.final, cell: "td" } as const;
@@ -171,7 +174,6 @@ export function defineMarkdown(): void {
           });
           while (el.children.length > blocks.length) el.lastElementChild?.remove();
           drawn = blocks;
-          drawnHighlight = highlight;
         };
         draw();
         return instance.subscribe(draw);

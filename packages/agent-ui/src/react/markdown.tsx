@@ -55,7 +55,7 @@ function render(node: MdNode, key: number, context: Context): ReactNode {
           key={key}
           aria-label="Code"
           code={node.value}
-          lang={node.lang}
+          language={node.lang}
           highlight={context.highlight}
           streaming={context.streaming}
         />
@@ -69,7 +69,11 @@ function render(node: MdNode, key: number, context: Context): ReactNode {
         </a>
       );
     case "image":
-      return node.url === null ? node.alt : <img key={key} src={node.url} alt={node.alt} />;
+      return node.url === null ? (
+        <span key={key}>{node.alt}</span>
+      ) : (
+        <img key={key} src={node.url} alt={node.alt} />
+      );
     case "list":
       return node.ordered ? (
         <ol key={key} start={node.start}>
@@ -109,10 +113,14 @@ function render(node: MdNode, key: number, context: Context): ReactNode {
   }
 }
 
-// A final block is the same object on every append, so it never renders again.
-const Block = memo(function Block({ block, ...context }: { block: MarkdownBlock } & Context) {
-  return <div data-block-key={block.key}>{children(block.node as { children: MdNode[] }, context)}</div>;
-});
+// A final block is the same object on every append, so it never renders again. Code blocks read `highlight`
+// when they ask for tokens, so a new function each render doesn't render them again either.
+const Block = memo(
+  function Block({ block, ...context }: { block: MarkdownBlock } & Context) {
+    return <div data-block-key={block.key}>{children(block.node as { children: MdNode[] }, context)}</div>;
+  },
+  (before, after) => before.block === after.block && before.streaming === after.streaming,
+);
 
 export type MarkdownProps = Omit<ComponentProps<typeof parts.Root>, "children">;
 

@@ -1,5 +1,6 @@
 import { messagePrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/react/primitive";
+import type { ComponentProps } from "react";
 
 const message = createParts(messagePrimitive, {
   root: "div",
@@ -30,6 +31,8 @@ export const MessageRegenerate = message.Regenerate;
 export const MessageEdit = message.Edit;
 export const MessageBranch = message.Branch;
 export const MessageBranchPrevious = message.BranchPrevious;
-/** Its text, like "2 of 3", is written by the primitive; render it without children. */
-export const MessageBranchLabel = message.BranchLabel;
+/** Shows the branch, like "2 of 3". */
+export function MessageBranchLabel(props: Omit<ComponentProps<typeof message.BranchLabel>, "children">) {
+  return <message.BranchLabel {...props}>{({ label }) => label}</message.BranchLabel>;
+}
 export const MessageBranchNext = message.BranchNext;

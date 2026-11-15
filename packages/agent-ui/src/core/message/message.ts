@@ -22,12 +22,13 @@ export type MessageOptions = {
   messageRole?: Role;
   /** Written as `data-status`. The toolbar shows once the message settles. Defaults to `"complete"`. */
   status?: MessageStatus;
-  /** What `copy` writes and editing starts from. */
+  /** What `copy` writes and editing starts from. Defaults to `""`. */
   text?: string;
   /** The response shown, from 0. Owned by the host, which changes it in `onBranchChange`. Defaults to 0. */
   branchIndex?: number;
   /** How many responses there are. The switcher shows above 1. Defaults to 1. */
   branchCount?: number;
+  /** Asks the host to show another branch; it answers by passing the new `branchIndex`. */
   onBranchChange?: (index: number, details: ChangeDetails<MessageBranchChangeReason>) => void;
   /** Called before `text` is copied. Cancel it to copy something else yourself. Web: a `messagecopy` event. */
   onCopy?: (text: string, details: ChangeDetails<"copy-press" | "imperative">) => void;
@@ -40,11 +41,14 @@ export type MessageOptions = {
 };
 
 export type MessageState = {
+  /** The `messageRole` option. */
   role: Role;
   status: MessageStatus;
   branchIndex: number;
   branchCount: number;
+  /** Whether `onRegenerate` is set. */
   canRegenerate: boolean;
+  /** Whether it's a user message with `onEdit`. */
   canEdit: boolean;
   motion: MotionMode;
   /** `"message"` while the text is being edited, else `null`. */
@@ -54,9 +58,9 @@ export type MessageState = {
 
 export type MessageApi = {
   copy: (event?: Event) => Promise<boolean>;
-  /** Present only while `onRegenerate` is set. */
+  /** Present only once the message settles, while `onRegenerate` is set. */
   readonly regenerate: ((event?: Event) => void) | undefined;
-  /** Starts editing in place. Present only on user messages with `onEdit`. */
+  /** Starts editing in place. Present only once a user message with `onEdit` settles. */
   readonly edit: ((event?: Event) => void) | undefined;
   /** Present only when there's more than one branch. */
   readonly setBranch: ((index: number, event?: Event) => void) | undefined;
@@ -65,7 +69,12 @@ export type MessageApi = {
   enterToolbar: (el: HTMLElement) => void;
 };
 
-type MessageSlot = SlotDefinition<MessageState, MessageApi, BaseSlotProps, Record<never, never>>;
+type MessageSlot<Public extends object = Record<never, never>> = SlotDefinition<
+  MessageState,
+  MessageApi,
+  BaseSlotProps,
+  Public
+>;
 
 // Named explicitly because the inferred type references UI SDK types that no public entry exports (TS2742).
 export type MessagePrimitive = ReturnType<
@@ -84,10 +93,9 @@ export type MessagePrimitive = ReturnType<
       | "edit"
       | "branch"
       | "branch-previous"
-      | "branch-label"
       | "branch-next",
       MessageSlot
-    >
+    > & { "branch-label": MessageSlot<{ label: string }> }
   >
 >;
 
@@ -128,7 +136,7 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     copied: false,
   }),
   sync: presentation,
-  controlled: ["branchIndex", "status"],
+  controlled: ["branchIndex", "branchCount", "status"],
   api: (context): MessageApi => {
     const { store } = context;
     const copy = createCopy(context);
@@ -166,7 +174,8 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
         return copy(value);
       },
       get regenerate() {
-        if (!store.get().canRegenerate) return undefined;
+        const { canRegenerate, status } = store.get();
+        if (!canRegenerate || !settled(status)) return undefined;
         return (event?: Event) =>
           void dispatch(
             context,
@@ -176,7 +185,8 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
           );
       },
       get edit() {
-        if (!store.get().canEdit) return undefined;
+        const { canEdit, status } = store.get();
+        if (!canEdit || !settled(status)) return undefined;
         return (event?: Event) =>
           void inlineEdit.start(EDITING, event ? { reason: "imperative", event } : undefined);
       },
@@ -247,7 +257,9 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
         "aria-disabled": state.branchIndex <= 0 ? "true" : undefined,
       }),
     }),
-    "branch-label": slot({
+    // Web has no render function to show `label`, so `bind` writes it; React renders the same text first.
+    "branch-label": slot<BaseSlotProps, { label: string }>({
+      state: (state) => ({ label: branchLabel(state.branchIndex, state.branchCount) }),
       bind: (el, { store }) => {
         const write = () => {
           const { branchIndex, branchCount } = store.get();

@@ -28,7 +28,7 @@ export function CodeBlock(props: CodeBlockProps) {
   return (
     <parts.Root {...props}>
       <parts.Header>
-        <parts.Language>{({ lang }) => lang}</parts.Language>
+        <parts.Language>{({ language }) => language}</parts.Language>
         <parts.Wrap />
         <parts.Copy />
       </parts.Header>

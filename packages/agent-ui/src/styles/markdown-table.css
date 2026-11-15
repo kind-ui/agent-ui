@@ -21,6 +21,8 @@
     top: 0.25rem;
     inset-inline-end: 0.25rem;
     display: flex;
+    border-radius: 0.375rem;
+    background-color: color-mix(in oklab, var(--kind-hover) 55%, var(--kind-surface));
   }
 
   /* Fixed layout, so columns hold their width while rows stream in. With `--kind-markdown-table-columns`

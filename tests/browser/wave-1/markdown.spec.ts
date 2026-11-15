@@ -141,6 +141,7 @@ test("streaming code follows its end", async ({ page }) => {
     .toBeLessThanOrEqual(1);
   expect(await viewport.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
   await expect(page.locator("[data-line]")).toHaveCount(60);
+  await expect(page.locator('[data-slot="kind-code-block-code"]')).toHaveAttribute("data-line-numbers", "");
 });
 
 test("a wide table scrolls sideways inside its container and copies as TSV", async ({ page, context }) => {

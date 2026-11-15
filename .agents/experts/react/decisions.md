@@ -15,6 +15,9 @@ Last reviewed: `91b7a9c3e0bbcd2a88f90b8a444fe43616c7a820` (Task 9 Conversation)
 - **Server-rendered Conversation markup starts at the top** and jumps to the end when `createStickToBottom` connects at hydration.
 - **`ConversationJump` children are replaced silently** by the text its `bind` writes; only the JSDoc says to render it empty.
 - **Button, menu and focus-ring class strings are repeated** across `src/react/internal/*.tsx`; fold into shared constants with the Task 14 tokens.
+- **Every code block and table in one Markdown view is named "Code" / "Table",** so an agent `ref` by label is ambiguous with two of them.
+- **Each streamed chunk renders the Markdown root twice:** blocks arrive through `onOptions` (a layout effect), after the render-time preview. Before paint and absorbed by the block memo.
+- **Index keys carry a code block's `wrap` / `copied` state across a replaced `source`** (branch switch, regenerate), in both layers. Follows from keying blocks by place.
 
 ## Resolved
 

@@ -10,7 +10,9 @@ Last reviewed: `91b7a9c3e0bbcd2a88f90b8a444fe43616c7a820` (Task 9 Conversation)
 
 ## Known and open (don't report again, check whether fixed)
 
-Nothing open.
+- **Highlighter colors don't follow dark mode:** a token's color is one value; hosts must pass `light-dark()` colors, which need `color-scheme` on the page. Revisit with the Task 14 theme tokens.
+- **The table copy button is styled in `code-block.css`** (shared icon-button rule). Split it out if the registry ever ships per-component stylesheets.
+- **`field-sizing: content` on the message editor grows only in Chromium;** elsewhere it keeps its 2.5rem minimum.
 
 ## Resolved
 

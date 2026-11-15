@@ -8,7 +8,7 @@ export type MarkdownOptions = {
   source?: string;
   /** Whether `source` is still growing: the last block is repaired and blocks only become final as more follow. Defaults to `false`. */
   streaming?: boolean;
-  /** Passed to every code block. */
+  /** Passed to each code block, which reads it when it asks for tokens: a new function doesn't re-highlight code already shown. */
   highlight?: Highlight;
   /** Parses `source`. Read once, when the view mounts. Defaults to a new `createMarkdownEngine()`; pass one to read its `stats()`. */
   engine?: MarkdownEngine;
@@ -17,8 +17,11 @@ export type MarkdownOptions = {
 export type MarkdownState = {
   /** The `engine` option, or the view's own. */
   engine: MarkdownEngine;
+  /** The engine's blocks for `source`: final ones keep their object across appends. */
   blocks: MarkdownBlock[];
+  /** The `streaming` option. */
   streaming: boolean;
+  /** The `highlight` option. */
   highlight: Highlight | undefined;
 };
 

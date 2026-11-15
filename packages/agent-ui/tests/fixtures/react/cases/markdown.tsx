@@ -38,7 +38,7 @@ function Highlighted() {
       kindCode: { requests, setCode: (next: string) => flushSync(() => setCode(next)) },
     });
   }, [requests]);
-  return <CodeBlock aria-label="Code" className={frame} code={code} lang="ts" highlight={highlight} />;
+  return <CodeBlock aria-label="Code" className={frame} code={code} language="ts" highlight={highlight} />;
 }
 
 function Streaming() {
@@ -48,7 +48,7 @@ function Streaming() {
       kindCode: { append: (chunk: string) => flushSync(() => setCode((current) => current + chunk)) },
     });
   }, []);
-  return <CodeBlock aria-label="Code" className={frame} code={code} lang="ts" streaming lineNumbers />;
+  return <CodeBlock aria-label="Code" className={frame} code={code} language="ts" streaming lineNumbers />;
 }
 
 export const cases = {

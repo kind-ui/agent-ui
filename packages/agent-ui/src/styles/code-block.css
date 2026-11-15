@@ -94,6 +94,8 @@
 
   [data-slot="kind-code-block-code"] {
     --kind-code-block-gap: 1.25rem;
+    /* At least three digits wide, so numbers don't push the code sideways as lines stream in. */
+    --kind-code-block-gutter: calc(max(3, var(--kind-code-block-digits, 1)) * 1ch);
 
     margin: 0;
     padding: 0.75rem 1rem;

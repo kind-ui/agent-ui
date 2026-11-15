@@ -15,6 +15,8 @@ export function createCopy(context: CopyContext): (text: string) => Promise<bool
     try {
       await navigator.clipboard.writeText(text);
     } catch {
+      clearTimeout(timer);
+      context.store.set({ copied: false });
       announce("Copy failed", { priority: "polite" });
       return false;
     }

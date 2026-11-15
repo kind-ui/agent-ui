@@ -21,7 +21,7 @@ const classes = [
   "[&_[data-slot=scroll-area-scrollbar]]:data-[orientation=vertical]:w-2.5",
   "[&_[data-slot=scroll-area-thumb]]:flex-1",
   "[&_[data-slot=scroll-area-thumb]]:rounded-full",
-  "[&_[data-slot=scroll-area-thumb]]:bg-neutral-400",
+  "[&_[data-slot=scroll-area-thumb]]:bg-[color-mix(in_oklab,var(--kind-muted-fg)_55%,transparent)]",
   "[&_[data-slot=scroll-area-scroll-to-end]]:inline-flex",
   "[&_[data-slot=scroll-area-scroll-to-end]]:h-8",
   "[&_[data-slot=scroll-area-scroll-to-end]]:items-center",

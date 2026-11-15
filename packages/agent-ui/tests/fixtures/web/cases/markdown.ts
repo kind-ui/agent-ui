@@ -26,7 +26,7 @@ function markdown(root: HTMLElement, source: string, className = frame): Markdow
 
 function code(root: HTMLElement, attributes: string): CodeElement {
   defineCodeBlock();
-  root.innerHTML = `<kind-code-block aria-label="Code" class="${frame}" lang="ts" ${attributes}></kind-code-block>`;
+  root.innerHTML = `<kind-code-block aria-label="Code" class="${frame}" language="ts" ${attributes}></kind-code-block>`;
   return root.querySelector("kind-code-block") as CodeElement;
 }
 

@@ -20,6 +20,13 @@ test("asks for in-range branches only, and offers setBranch only with more than 
   assert.equal(message.api.setBranch, undefined);
 });
 
+test("offers regenerate only once the message settles", () => {
+  const message = messagePrimitive({ status: "streaming", onRegenerate: () => {} });
+  assert.equal(message.api.regenerate, undefined);
+  message.setOptions({ status: "complete", onRegenerate: () => {} });
+  assert.equal(typeof message.api.regenerate, "function");
+});
+
 test("offers regenerate while its callback is set, and edit only on user messages", () => {
   const message = messagePrimitive({ messageRole: "assistant", onRegenerate: () => {}, onEdit: () => {} });
   assert.equal(typeof message.api.regenerate, "function");

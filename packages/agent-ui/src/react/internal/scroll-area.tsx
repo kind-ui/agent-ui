@@ -22,7 +22,7 @@ export const KindScrollAreaScrollbar = withKindClass(
 );
 export const KindScrollAreaThumb = withKindClass(
   ScrollAreaThumb,
-  "flex-1 rounded-full bg-neutral-400",
+  "flex-1 rounded-full bg-[color-mix(in_oklab,var(--kind-muted-fg)_55%,transparent)]",
   "KindScrollAreaThumb",
 );
 export const KindScrollAreaScrollToEnd = withKindClass(

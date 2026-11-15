@@ -22,6 +22,21 @@ test("shows a result for code that has since grown, with the new text plain, the
   assert.equal(requests[1]?.code, "let a = 1;\nlet b");
 });
 
+test("doesn't ask again for code whose highlighting failed", async () => {
+  let calls = 0;
+  const highlight = () => {
+    calls += 1;
+    return Promise.reject(new Error("unknown language"));
+  };
+  const block = codeBlockPrimitive({ code: "x", language: "zzz", highlight });
+  await settle();
+  await settle();
+  assert.equal(calls, 1);
+  block.setOptions({ code: "xy", language: "zzz", highlight });
+  await settle();
+  assert.equal(calls, 2);
+});
+
 test("discards a result for code that was replaced", async () => {
   const { highlight, requests } = deferred();
   const block = codeBlockPrimitive({ code: "const a = 1;", highlight });

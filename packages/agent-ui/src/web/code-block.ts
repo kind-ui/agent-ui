@@ -36,7 +36,7 @@ function tokenElement(token: Token): HTMLElement {
 }
 
 /**
- * `<kind-code-block code="…" lang="ts" aria-label="Code">` fills in its header and scroll area when it has
+ * `<kind-code-block code="…" language="ts" aria-label="Code">` fills in its header and scroll area when it has
  * no children. Set `highlight` as a property.
  */
 export function defineCodeBlock(): void {
@@ -54,13 +54,13 @@ export function defineCodeBlock(): void {
       api: ["copy", "isWrapped", "setWrap", "toggleWrap"],
       render: (el, instance) => {
         if (!el.firstElementChild) el.innerHTML = parts;
-        const language = el.querySelector("kind-code-block-language");
+        const label = el.querySelector("kind-code-block-language");
         const scrollArea = el.querySelector("ui-scroll-area");
         const code = el.querySelector("kind-code-block-code code");
         let drawn: Token[][] = [];
         const draw = () => {
-          const { lang, lines, streaming } = instance.get() as CodeBlockState;
-          if (language && language.textContent !== (lang ?? "")) language.textContent = lang ?? "";
+          const { language, lines, streaming } = instance.get() as CodeBlockState;
+          if (label && label.textContent !== (language ?? "")) label.textContent = language ?? "";
           scrollArea?.toggleAttribute("stick-to-end", streaming);
           if (!code || lines === drawn) return;
           lines.forEach((tokens, index) => {

@@ -15,6 +15,8 @@ Last reviewed: `91b7a9c3e0bbcd2a88f90b8a444fe43616c7a820` (Task 9 Conversation)
 - **Removing a `kind-step` and putting it back forgets a person's toggle:** `createParts` rebuilds the instance from the `state` getters only, so `userToggled` is lost and auto close resumes. Needs a `@ui-sdk/web` hook to carry non-public state across instances.
 - **No `HTMLElementTagNameMap` entries** for `kind-*` tags.
 - **The step panel finds its trigger with `ownerDocument.querySelector`**, which misses a trigger inside a user's shadow root.
+- **A `kind-code-block` written with children (pre-upgrade `<pre>`) never fills in its parts.** Documented ("when it has no children"); a hand-written fallback needs a marker the element can replace.
+- **A code block removed and put back after a tick asks for highlighting again** and shows plain text meanwhile: same rebuilt-from-state cause as the Step entry above.
 
 ## Resolved
 
