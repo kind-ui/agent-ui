@@ -1,6 +1,5 @@
 import "@ui-sdk/web/trigger-menu";
 
-// The import registers the ready-made <ui-trigger-menu> elements. This light-DOM host styles their data-slot parts.
 const classes = [
   "contents",
   "[&_[data-slot=trigger-menu-input]]:min-h-16",

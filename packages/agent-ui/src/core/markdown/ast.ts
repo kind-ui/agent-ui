@@ -30,7 +30,6 @@ export function toMdNode(tree: Root): MdNode {
 
   function convert(node: Nodes): MdNode[] {
     switch (node.type) {
-      case "root":
       case "paragraph":
       case "emphasis":
       case "strong":
@@ -88,5 +87,5 @@ export function toMdNode(tree: Root): MdNode {
     }
   }
 
-  return convert(tree)[0] as MdNode;
+  return { type: "root", children: children(tree) };
 }

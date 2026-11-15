@@ -1,6 +1,5 @@
 import "@ui-sdk/web/progress";
 
-// The import registers the ready-made <ui-progress> elements. This light-DOM host styles their data-slot parts.
 const classes = [
   "contents",
   "[&_[data-slot=progress]]:flex",

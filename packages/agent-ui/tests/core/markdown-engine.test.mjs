@@ -12,32 +12,32 @@ function* chunks(source, size) {
 const text = (node) => ("value" in node ? node.value : (node.children ?? []).map(text).join(""));
 const find = (node, type) =>
   node.type === type ? node : (node.children ?? []).map((child) => find(child, type)).find(Boolean);
-const only = (source, streaming = false) => createMarkdownEngine().set(source, streaming)[0].node;
+const parseOne = (source, streaming = false) => createMarkdownEngine().set(source, streaming)[0].node;
 
 test("streaming the 10k-token fixture parses only blocks that were not final", () => {
-  const e = createMarkdownEngine();
+  const engine = createMarkdownEngine();
   let src = "";
   let previous = [];
-  for (const c of chunks(longAnswer, 20)) {
-    const n = e.stats().parses;
-    src += c;
-    const blocks = e.set(src, true);
+  for (const chunk of chunks(longAnswer, 20)) {
+    const parsesBefore = engine.stats().parses;
+    src += chunk;
+    const blocks = engine.set(src, true);
     const finalBefore = previous.filter((b) => b.final).length;
-    assert.ok(e.stats().parses - n <= blocks.length - finalBefore);
+    assert.ok(engine.stats().parses - parsesBefore <= blocks.length - finalBefore);
     for (const [i, block] of previous.entries()) if (block.final) assert.equal(blocks[i], block);
     previous = blocks;
   }
   assert.ok(previous.filter((b) => b.final).length > 100);
-  assert.ok(e.stats().parses < (2 * longAnswer.length) / 20);
+  assert.ok(engine.stats().parses < (2 * longAnswer.length) / 20);
 });
 
 test("final block keys are stable across appends", () => {
-  const e = createMarkdownEngine();
+  const engine = createMarkdownEngine();
   let src = "";
   let finalKeys = [];
-  for (const c of chunks(longAnswer, 20)) {
-    src += c;
-    const blocks = e.set(src, true);
+  for (const chunk of chunks(longAnswer, 20)) {
+    src += chunk;
+    const blocks = engine.set(src, true);
     assert.deepEqual(
       blocks.slice(0, finalKeys.length).map((b) => b.key),
       finalKeys,
@@ -47,13 +47,13 @@ test("final block keys are stable across appends", () => {
 });
 
 test("a finished stream matches a one-shot parse", () => {
-  const e = createMarkdownEngine();
+  const engine = createMarkdownEngine();
   let src = "";
-  for (const c of chunks(longAnswer, 20)) {
-    src += c;
-    e.set(src, true);
+  for (const chunk of chunks(longAnswer, 20)) {
+    src += chunk;
+    engine.set(src, true);
   }
-  const streamed = e.set(src, false);
+  const streamed = engine.set(src, false);
   const oneShot = createMarkdownEngine().set(src, false);
   assert.ok(streamed.every((b) => b.final));
   assert.deepEqual(
@@ -63,29 +63,29 @@ test("a finished stream matches a one-shot parse", () => {
 });
 
 test("replaced source rebuilds", () => {
-  const e = createMarkdownEngine();
-  e.set("# A\n\nfoo", true);
-  const blocks = e.set("# B", true);
+  const engine = createMarkdownEngine();
+  engine.set("# A\n\nfoo", true);
+  const blocks = engine.set("# B", true);
   assert.equal(blocks.length, 1);
   assert.equal(text(blocks[0].node), "B");
 });
 
 test("the streaming tail is repaired, and only while streaming", () => {
-  assert.equal(text(find(only("a **b", true), "strong")), "b");
-  assert.equal(find(only("a `b", true), "inlineCode").value, "b");
-  assert.equal(find(only("a **b"), "strong"), undefined);
-  const code = find(only("```js\nlet a", true), "code");
+  assert.equal(text(find(parseOne("a **b", true), "strong")), "b");
+  assert.equal(find(parseOne("a `b", true), "inlineCode").value, "b");
+  assert.equal(find(parseOne("a **b"), "strong"), undefined);
+  const code = find(parseOne("```js\nlet a", true), "code");
   assert.deepEqual(code, { type: "code", lang: "js", value: "let a" });
-  assert.equal(find(only("see [docs](https://exa", true), "link"), undefined);
+  assert.equal(find(parseOne("see [docs](https://exa", true), "link"), undefined);
 });
 
 test("raw html renders as text", () => {
-  assert.equal(text(only("<script>alert(1)</script>")), "<script>alert(1)</script>");
-  assert.equal(text(only("a <b>c</b>")), "a <b>c</b>");
+  assert.equal(text(parseOne("<script>alert(1)</script>")), "<script>alert(1)</script>");
+  assert.equal(text(parseOne("a <b>c</b>")), "a <b>c</b>");
 });
 
 test("unsafe link and image urls become null", () => {
-  const url = (md) => (find(only(md), "link") ?? find(only(md), "image")).url;
+  const url = (md) => (find(parseOne(md), "link") ?? find(parseOne(md), "image")).url;
   assert.equal(url("[x](javascript:alert(1))"), null);
   assert.equal(url("[x](< JaVaScRiPt:x>)"), null);
   assert.equal(url("[x](data:text/html,x)"), null);

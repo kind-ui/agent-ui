@@ -28,7 +28,7 @@ const toolStatus: Record<ToolPart["state"], StepStatus> = {
 function fromToolPart(part: ToolPart): Extract<Part, { type: "step" }> {
   const dynamic = part.type === "dynamic-tool";
   // A `dynamic-tool` part with `dynamic: false` is a static tool the SDK normalized; it keeps its static origin.
-  const name = part.type === "dynamic-tool" ? part.toolName : part.type.slice("tool-".length);
+  const name = dynamic ? part.toolName : part.type.slice("tool-".length);
   const call: ToolCall = {
     toolCallId: part.toolCallId,
     name,

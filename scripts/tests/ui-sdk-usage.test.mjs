@@ -12,6 +12,7 @@ test("bypassing UI SDK fails", () => {
   const errors = checkUiSdkUsage(fx("bad"), { "src/core/x.ts": "Not in spec" }).join("\n");
   assert.match(errors, /src\/core\/widget\/widget.ts: component must be defined with definePrimitive/);
   assert.match(errors, /render file must use createParts/);
+  assert.match(errors, /typed\.tsx: render file must use createParts/);
   assert.match(errors, /onKeyDown belongs in the primitive/);
   assert.match(errors, /not a spec exception/);
   assert.match(errors, /widget\/widget.ts: tabindex must come from UI SDK/);

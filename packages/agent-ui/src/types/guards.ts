@@ -30,7 +30,6 @@ export function isToolStep(step: Step): step is Extract<Step, { kind: "tool" }> 
   return step.kind === "tool";
 }
 
-// Presence comes from the field, never from truthiness: 0, false, "", and null are valid output values.
 export function hasOutput(call: ToolCall): call is ToolCall & { output: NonNullable<ToolCall["output"]> } {
   return call.output !== undefined;
 }

@@ -1,6 +1,5 @@
 import "@ui-sdk/web/collapsible";
 
-// The import registers the ready-made <ui-collapsible> elements. This light-DOM host styles their data-slot parts.
 const classes = [
   "contents",
   "[&_[data-slot=collapsible]]:flex",

@@ -1,4 +1,4 @@
-// AI SDK adapter (spec §4.3). A pure mapping module: imports only `types` and `ai` types, never calls the SDK.
+// Spec §4.3.
 import type { ChatStatus, UIMessage } from "ai";
 import type { Message, Part } from "../../types/index.js";
 import { fromUIMessagePart } from "./parts.js";
@@ -17,12 +17,10 @@ export { fromChatStatus } from "./status.js";
 export function fromUIMessages(messages: readonly UIMessage[], status?: ChatStatus): Message[] {
   const last = messages.length - 1;
   return messages.map((message, messageIndex) => {
-    const parts: Part[] = [];
-    message.parts.forEach((part, index) => {
-      const mapped = fromUIMessagePart(part, { messageId: message.id, index });
-      if (mapped) parts.push(mapped);
-    });
-    const mapped: Message = {
+    const parts: Part[] = message.parts.flatMap(
+      (part, index) => fromUIMessagePart(part, { messageId: message.id, index }) ?? [],
+    );
+    const neutral: Message = {
       id: message.id,
       role: message.role,
       status: messageIndex === last && status !== undefined ? fromChatStatus(status) : "complete",
@@ -30,8 +28,8 @@ export function fromUIMessages(messages: readonly UIMessage[], status?: ChatStat
     };
     const metadata: unknown = message.metadata;
     if (typeof metadata === "object" && metadata !== null && !Array.isArray(metadata)) {
-      mapped.metadata = metadata as Record<string, unknown>;
+      neutral.metadata = metadata as Record<string, unknown>;
     }
-    return mapped;
+    return neutral;
   });
 }

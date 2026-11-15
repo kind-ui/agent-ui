@@ -1,6 +1,5 @@
 import "@ui-sdk/web/scroll-area";
 
-// The import registers the ready-made <ui-scroll-area> elements. This light-DOM host styles their data-slot parts.
 const classes = [
   "contents",
   "[&_[data-slot=scroll-area]]:relative",

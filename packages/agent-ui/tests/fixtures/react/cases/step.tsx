@@ -1,5 +1,5 @@
 import type { StepStatus } from "@kind-ui/agent-ui";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Step,
   StepChildren,
@@ -38,13 +38,15 @@ const initial: Row[] = [
 
 function Steps() {
   const [rows, setRows] = useState(initial);
-  Object.assign(window, {
-    kindSteps: {
-      setStatus: (id: string, status: StepStatus) =>
-        setRows((all) => all.map((row) => (row.id === id ? { ...row, status } : row))),
-      remove: (id: string) => setRows((all) => all.filter((row) => row.id !== id)),
-    },
-  });
+  useEffect(() => {
+    Object.assign(window, {
+      kindSteps: {
+        setStatus: (id: string, status: StepStatus) =>
+          setRows((all) => all.map((row) => (row.id === id ? { ...row, status } : row))),
+        remove: (id: string) => setRows((all) => all.filter((row) => row.id !== id)),
+      },
+    });
+  }, []);
   return (
     <StepList aria-label="Agent steps" className="w-96 p-4">
       {rows.map((row) => (

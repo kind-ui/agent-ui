@@ -1,6 +1,5 @@
 import "@ui-sdk/web/file-input";
 
-// The import registers the ready-made <ui-file-input> elements. This light-DOM host styles their data-slot parts.
 const classes = [
   "contents",
   "[&_[data-slot=file-input]]:flex",

@@ -5,10 +5,8 @@ export interface ApprovalDecision {
   reason?: string;
 }
 
-export interface ApprovalResponse {
+export interface ApprovalResponse extends ApprovalDecision {
   id: string;
-  approved: boolean;
-  reason?: string;
 }
 
 /** The argument a host passes to the SDK's `addToolApprovalResponse`. */
@@ -26,8 +24,7 @@ export interface SdkApproval {
   isAutomatic?: boolean;
 }
 
-// The SDK has no request generation, so every mapped approval is generation 0.
-// Opaque fields (`descriptor`, `signature`, …) carry no authority and are not mapped.
+// The SDK has no request generation. Opaque fields (`descriptor`, `signature`, …) carry no authority.
 export function fromSdkApproval(approval: SdkApproval): Approval {
   const answered = approval.approved !== undefined;
   const mapped: Approval = {

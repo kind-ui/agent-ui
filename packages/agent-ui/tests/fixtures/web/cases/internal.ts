@@ -21,9 +21,9 @@ export const cases = {
       <output>Pressed 0</output>
     `;
     let presses = 0;
+    const output = root.querySelector("output") as HTMLOutputElement;
     root.querySelector("ui-button")?.addEventListener("action", () => {
-      const output = root.querySelector("output");
-      if (output) output.textContent = `Pressed ${++presses}`;
+      output.textContent = `Pressed ${++presses}`;
     });
   },
   collapsible: (root: HTMLElement) => {
@@ -122,8 +122,7 @@ export const cases = {
         </ui-trigger-menu>
       </kind-internal-trigger-menu>
     `;
-    const menu = root.querySelector("ui-trigger-menu");
-    if (menu) Object.assign(menu, { triggers: [{ char: "@" }] });
+    Object.assign(root.querySelector("ui-trigger-menu") as HTMLElement, { triggers: [{ char: "@" }] });
   },
   "file-input": (root: HTMLElement) => {
     defineInternalFileInput();

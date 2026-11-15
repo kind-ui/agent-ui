@@ -45,7 +45,7 @@ export function createMarkdownEngine(): MarkdownEngine {
         const key = `${index}:${fnv1a32hex(block)}`;
         // Trailing blank lines don't change a block's tree, so a block that just ended is not parsed again.
         const trimmed = block.replace(/\n+$/, "");
-        // Only the streaming tail can hold unterminated syntax; remend closes it before parsing.
+        // remend never touches final blocks (spec §6).
         const text =
           streaming && index === sources.length - 1
             ? remend(trimmed, { katex: false, linkMode: "text-only" })

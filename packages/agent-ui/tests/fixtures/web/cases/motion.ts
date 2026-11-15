@@ -1,6 +1,5 @@
 import { enter, exit, layout } from "@kind-ui/agent-ui/core";
 
-// The motion helper is framework-free; the fixture exposes it to drive a plain element.
 Object.assign(window, { kindMotion: { enter, exit, layout } });
 
 export const cases = {

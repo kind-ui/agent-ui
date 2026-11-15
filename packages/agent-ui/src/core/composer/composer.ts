@@ -2,9 +2,12 @@ import { type ChangeDetails, createChange, definePrimitive, type SlotDefinition 
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 
 export type ComposerOptions = {
+  /** Controlled draft. Don't pass with `defaultValue`. */
   value?: string;
+  /** Uncontrolled initial draft. */
   defaultValue?: string;
   onValueChange?: (value: string, details: ChangeDetails<"input">) => void;
+  /** Called with the draft on submit. A returned thenable keeps `pending` until it settles. */
   onSubmit?: (value: string) => unknown;
   disabled?: boolean;
 };
@@ -55,11 +58,11 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
         const { onSubmit, disabled } = context.options();
         const { value, pending } = context.store.get();
         if (disabled || pending || !onSubmit) return;
-        const result = onSubmit(value);
-        if (!isThenable(result)) return;
+        const submission = onSubmit(value);
+        if (!isThenable(submission)) return;
         context.store.set({ pending: true });
         const settle = () => context.store.set({ pending: false });
-        result.then(settle, settle);
+        submission.then(settle, settle);
       },
     };
   },

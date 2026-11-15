@@ -1,6 +1,5 @@
 import "@ui-sdk/web/menu";
 
-// The import registers the ready-made <ui-menu> elements. This light-DOM host styles their data-slot parts.
 const classes = [
   "contents",
   "[&_[data-slot=menu-trigger]]:inline-flex",

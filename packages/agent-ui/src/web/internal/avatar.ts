@@ -1,6 +1,5 @@
 import "@ui-sdk/web/avatar";
 
-// The import registers the ready-made <ui-avatar> elements. This light-DOM host styles their data-slot parts.
 const classes = [
   "contents",
   "[&_[data-slot=avatar]]:relative",

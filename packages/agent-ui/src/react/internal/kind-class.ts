@@ -12,12 +12,12 @@ function mergeClass(base: string, className: ClassName): ClassName {
   return className ? `${base} ${className}` : base;
 }
 
-// Adds Kind UI classes in front of the caller's `className` and passes every other prop through.
 export function withKindClass<C extends (props: never) => ReactNode>(
   component: C,
   base: string,
   displayName: string,
 ): C {
+  // UI SDK parts are generic over their props; the wrapper keeps the caller's component type.
   const Inner = component as unknown as FunctionComponent<{ className?: ClassName }>;
   const Kind: FunctionComponent<{ className?: ClassName }> = (props) =>
     createElement(Inner, { ...props, className: mergeClass(base, props.className) });

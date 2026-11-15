@@ -9,7 +9,7 @@ export interface Message {
   role: Role;
   status: MessageStatus;
   parts: Part[];
-  // ISO 8601.
+  /** ISO 8601. */
   createdAt?: string;
   metadata?: Record<string, unknown>;
 }

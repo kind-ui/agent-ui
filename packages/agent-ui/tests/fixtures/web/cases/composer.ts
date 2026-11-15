@@ -15,7 +15,7 @@ export const cases = {
       </kind-composer>
     `;
     root.querySelector("kind-composer")?.addEventListener("submit", (event) => {
-      (event as CustomEvent<UiActionDetail>).detail?.waitUntil?.(unsettled);
+      (event as CustomEvent<UiActionDetail>).detail.waitUntil(unsettled);
     });
   },
 };

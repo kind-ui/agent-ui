@@ -1,6 +1,5 @@
 import "@ui-sdk/web/toggle";
 
-// The import registers the ready-made <ui-toggle> elements. This light-DOM host styles their data-slot parts.
 const classes = [
   "contents",
   "[&_[data-slot=toggle]]:inline-flex",

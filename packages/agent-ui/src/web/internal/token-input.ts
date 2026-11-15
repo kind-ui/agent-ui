@@ -1,6 +1,5 @@
 import "@ui-sdk/web/token-input";
 
-// The import registers the ready-made <ui-token-input> elements. This light-DOM host styles their data-slot parts.
 const classes = [
   "contents",
   "[&_[data-slot=token-input-editor]]:min-h-16",

@@ -109,9 +109,12 @@ export function checkUiSdkUsage(root, exceptions) {
         importsFrom(source, "createParts", "@ui-sdk/web")) &&
       /\bcreateParts\s*\(/.test(source);
     // Web entries register their elements on import, so a bare `import "@ui-sdk/web/<name>"` wraps one too.
-    const wrapsComponent = /(from|import)\s*["']@ui-sdk\/(react\/(?!primitive["'])|web\/)[\w-]+["']/.test(
-      source,
-    );
+    // Type-only imports and the agent bridge wrap nothing.
+    const valueImports = source.replace(/import\s+type\b[^;]*;/g, "");
+    const wrapsComponent =
+      /(from|import)\s*["']@ui-sdk\/(react\/(?!(primitive|agent)["'])|web\/(?!agent["']))[\w-]+["']/.test(
+        valueImports,
+      );
     if (!usesParts && !wrapsComponent) {
       errors.push(`${file}: render file must use createParts or wrap a UI SDK component`);
     }

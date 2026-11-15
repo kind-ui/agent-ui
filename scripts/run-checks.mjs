@@ -8,7 +8,6 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-/** Each leaf stage: the file it needs and the command that runs it. */
 const stages = {
   "lint:biome": { needs: "biome.json", run: ["npx", "biome", "check", "."] },
   "lint:guard": { needs: "scripts/check-ui-sdk-usage.mjs", run: ["node", "scripts/check-ui-sdk-usage.mjs"] },
@@ -75,5 +74,6 @@ for (const name of plan) {
   const args = name === plan.at(-1) ? [...stage.run.slice(1), ...extra] : stage.run.slice(1);
   console.log(`> ${name}`);
   const result = spawnSync(stage.run[0], args, { cwd: root, stdio: "inherit" });
+  if (result.error) console.error(`${name}: ${result.error.message}`);
   if (result.status !== 0) process.exit(result.status ?? 1);
 }

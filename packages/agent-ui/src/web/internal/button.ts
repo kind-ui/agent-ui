@@ -1,6 +1,5 @@
 import "@ui-sdk/web/button";
 
-// The import registers the ready-made <ui-button> elements. This light-DOM host styles their data-slot parts.
 const classes = [
   "contents",
   "[&_[data-slot=button]]:inline-flex",
