@@ -363,7 +363,7 @@ interface Approval {
 
 ## 5. Step base
 
-All agent steps share one primitive, matching the AI Elements pattern where steps build on a common Trace base.
+All agent steps share one primitive: every step component builds on a common Step base.
 
 **Parts:** `root`, `trigger`, `icon`, `title`, `meta` (duration, counts), `content`, `children`.
 
@@ -400,11 +400,11 @@ Built on Step: Reasoning, Chain of Thought, Tool, Task, Plan, Subagent, Action, 
 
 ### Streaming Markdown renderer
 
-This is the hardest piece. Streamdown is React-only, so `core` owns a framework-agnostic engine. It follows Streamdown's design and reuses its framework-agnostic parts, so Kind UI writes only the glue:
+This is the hardest piece. `core` owns a framework-agnostic engine built from framework-agnostic open-source parts, so Kind UI writes only the glue:
 
-1. **Block splitting.** As in Streamdown's `parseMarkdownIntoBlocks`, the `marked` block lexer splits source into top-level blocks, and only the text after the final blocks is lexed again on append. A block is final once it ends with a blank line and is followed by two more blocks: final blocks are immutable, keyed by `index:hash`, and never re-parsed. A document with link reference definitions or footnotes stays one block.
+1. **Block splitting.** The `marked` block lexer splits source into top-level blocks, and only the text after the final blocks is lexed again on append. A block is final once it ends with a blank line and is followed by two more blocks: final blocks are immutable, keyed by `index:hash`, and never re-parsed. A document with link reference definitions or footnotes stays one block.
 2. **Tail parsing.** On each append, only the open (non-final) blocks are parsed, with `mdast-util-from-markdown`, `micromark-extension-gfm`, and `mdast-util-gfm`. These are framework-agnostic and CommonMark/GFM compliant, so Kind UI does not maintain a parser.
-3. **Repair.** While streaming, the last block is repaired with `remend` (Streamdown's self-healing markdown) before parsing: unterminated emphasis, inline code, and strikethrough are closed and an unfinished link shows its text, so partial syntax does not flash as raw text. An open code fence needs no repair: CommonMark runs it to the end of the block. Repair never applies to final blocks.
+3. **Repair.** While streaming, the last block is repaired with `remend` (self-healing markdown) before parsing: unterminated emphasis, inline code, and strikethrough are closed and an unfinished link shows its text, so partial syntax does not flash as raw text. An open code fence needs no repair: CommonMark runs it to the end of the block. Repair never applies to final blocks.
 4. **Sanitize.** Raw HTML renders as text. Link and image URLs allow `http:`, `https:`, `mailto:`, and relative URLs, checked with micromark's `sanitizeUri`; any other URL renders its label as plain text. Generated code is never evaluated.
 5. **Render.** The engine emits a neutral AST. The React layer maps it to elements keyed by block key. The Web Components layer maps it to DOM nodes and patches only the tail block.
 
@@ -423,7 +423,7 @@ Code highlighting is pluggable through `highlight?: (code, lang) => Promise<Toke
 
 ## 7. Components by wave
 
-Each wave is a minor release of `@kind-ui/agent-ui` (0.1 to 0.4) with its registry items, docs reference pages, and docs showcase page. "Replaces" names the kind-ui/charts `packages/ai/src` file used as a catalog reference, kind-ui/charts#253 (unmerged), or AI Elements for new additions.
+Each wave is a minor release of `@kind-ui/agent-ui` (0.1 to 0.4) with its registry items, docs reference pages, and docs showcase page. "Replaces" names the kind-ui/charts `packages/ai/src` file used as a catalog reference, kind-ui/charts#253 (unmerged), or "(new)" for new additions.
 
 ### Wave 1 (0.1): foundation
 
@@ -506,10 +506,10 @@ Behavior requirements:
 | **Inline Citation** | Hover Card, Carousel | `open`, `close`, `next`, `previous` | inline-citation |
 | **Document** | Toolbar, Menu, Scroll Area, Collapsible | `copy`, `download`, `expand`, `collapse` | document |
 | **Generated Image** | Dialog, Button | `open`, `close`, `download` | generated-image |
-| **File Tree** | Tree, `treeFromPaths`, `createTypeahead` | `expand(path)`, `collapse(path)`, `select(path)` | AI Elements |
-| **Terminal** | Step, Scroll Area, `createStickToBottom`, `createVirtualizer` | `expand`, `collapse`, `copy` | AI Elements |
-| **Stack Trace** | Step, `createRovingFocus` | `copy`, `toggleLibraryFrames`, `openFrame(index)` | AI Elements |
-| **Test Results** | Step, Tree, Segmented Control | `setFilter(status)`, `expand(id)`, `collapse(id)` | AI Elements |
+| **File Tree** | Tree, `treeFromPaths`, `createTypeahead` | `expand(path)`, `collapse(path)`, `select(path)` | (new) |
+| **Terminal** | Step, Scroll Area, `createStickToBottom`, `createVirtualizer` | `expand`, `collapse`, `copy` | (new) |
+| **Stack Trace** | Step, `createRovingFocus` | `copy`, `toggleLibraryFrames`, `openFrame(index)` | (new) |
+| **Test Results** | Step, Tree, Segmented Control | `setFilter(status)`, `expand(id)`, `collapse(id)` | (new) |
 | **Transcript** | `createRovingFocus`, `fuzzyScore`, `matchSegments` | `search(text)`, `seek(segmentId)` | transcript |
 | **Selection** + **Action** | Selection: Toolbar, `position`, `bindLayer`. Action: Step | Selection: `run(actionId)`, `dismiss`. Action: `expand`, `collapse` | selection, action |
 

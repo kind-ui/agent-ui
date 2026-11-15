@@ -1,6 +1,5 @@
-// Block splitting follows Streamdown's `parseMarkdownIntoBlocks`
-// (vercel/streamdown, packages/streamdown/lib/parse-blocks.tsx, Apache-2.0),
-// without its HTML and math merging: raw HTML renders as text and math is not supported.
+// Adapted from Apache-2.0 code; see THIRD_PARTY_NOTICES.md. No HTML or math merging:
+// raw HTML renders as text and math is not supported.
 import { Lexer } from "marked";
 
 const footnotePattern = /\[\^[\w-]{1,200}\]/;
@@ -35,9 +34,7 @@ export function countFinalBlocks(blocks: string[]): number {
 }
 
 function reuse(previous: Split, input: string): Split | null {
-  if (input.length <= previous.input.length || input.slice(0, previous.input.length) !== previous.input) {
-    return null;
-  }
+  if (input.length <= previous.input.length || !input.startsWith(previous.input)) return null;
   const finalCount = countFinalBlocks(previous.blocks);
   if (finalCount === 0) return null;
   let { verifiedCount, verifiedLength } = previous;
@@ -48,8 +45,8 @@ function reuse(previous: Split, input: string): Split | null {
   }
   // marked trims some raws (a bare "- " lexes to "-\n"), so check offsets before trusting them.
   while (verifiedCount < finalCount) {
-    const block = previous.blocks[verifiedCount] as string;
-    if (!input.startsWith(block, verifiedLength)) return null;
+    const block = previous.blocks[verifiedCount];
+    if (block === undefined || !input.startsWith(block, verifiedLength)) return null;
     verifiedLength += block.length;
     verifiedCount += 1;
   }
@@ -59,7 +56,7 @@ function reuse(previous: Split, input: string): Split | null {
 }
 
 export function splitBlocks(source: string, previous?: Split): Split {
-  const input = source.includes("\r") ? source.replace(/\r\n|\r/g, "\n") : source;
+  const input = source.replace(/\r\n?/g, "\n");
   if (previous?.input === input) return previous;
   const single: Split = { input, blocks: input ? [input] : [], verifiedCount: 0, verifiedLength: 0 };
   if (footnotePattern.test(input) || linkDefinitionPattern.test(input)) return single;
