@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `ce0fafc` (Task 16 registry)
+Last reviewed: `29e518f` (Task 17 docs site)
 
 ## Settled
 
@@ -14,6 +14,7 @@ Last reviewed: `ce0fafc` (Task 16 registry)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **`ComposerApi.setValue` with the draft's own text still fires `onValueChange`** with a new draft object and returns `true`; nothing changes on screen.
 - **Enter held or pressed twice on an uploader Cancel cancels the next row too:** focus recovery moves to the neighbor's Cancel between presses. Spec §7 needs to say whether that's the list-deletion pattern or needs a pause.
 - **The uploader's `mounted` set never forgets ids,** so an item removed and re-added under the same id gets no entrance.
 - **An indicator's new `label` is read out,** as its status content changes; documented on the option. Spec §6 should say whether a label change counts as a terminal transition.
@@ -29,6 +30,7 @@ Last reviewed: `ce0fafc` (Task 16 registry)
 
 ## Resolved
 
+- **Docs TSDoc (Task 17):** Step's `defaultOpen` names its computed default and `autoOpen` names both values; `setValue`, `removeAttachment`, `expand` and `collapse` say "whether the change was accepted"; `onSubmit` says a plain return clears the draft; `submit` lists every case it does nothing; controlled options say passing them controls them.
 - **Registry (Task 16):** the registry tests now cover bare imports, exact versions, missing files and the setup file type; the consumer check reports missing tokens or Tailwind utilities once rather than per item, fails on a busy port with a message, checks the tarball's sha256 against the manifest, reports a missing package as `missing`, and refuses `..` paths; the build fails when shadcn drops a file.
 - **Packed-package gate (Task 15):** the tarball no longer ships source maps pointing at unshipped `src/`; `findForbiddenImports` reads imports with TypeScript's `preProcessFile`, so comments don't match; the size check walks `exports` and fails an entry with no limit; `dist/styles` is cleared before the copy.
 - **A disabled composer still let a person or an agent remove attachments.** Fixed: `partState.attachments` leaves `onRemove` out while disabled, and `removeAttachment` refuses.

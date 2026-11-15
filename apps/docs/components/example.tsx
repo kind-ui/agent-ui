@@ -29,7 +29,7 @@ export function Example({ caption, children }: { caption?: string; children: Rea
         </TabsContent>
         <TabsContent
           value="code"
-          className="max-h-72 overflow-auto [&_figure]:my-0 [&_figure]:rounded-none [&_figure]:border-0 [&_figure]:bg-transparent [&_figure]:shadow-none"
+          className="[&_.fd-scroll-container]:max-h-72 [&_figure]:my-0 [&_figure]:rounded-none [&_figure]:border-0 [&_figure]:bg-transparent [&_figure]:shadow-none"
         >
           {code}
         </TabsContent>

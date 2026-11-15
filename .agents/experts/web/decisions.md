@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `4bd6afd` (Task 15 packed check and budgets)
+Last reviewed: `29e518f` (Task 17 docs site)
 
 ## Settled
 
@@ -14,6 +14,7 @@ Last reviewed: `4bd6afd` (Task 15 packed check and budgets)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **`title` on `<kind-step>` is also HTML's tooltip attribute,** so setting it probably shows a native tooltip over the whole step (suspected, unchecked in a browser).
 - **Indicators and `kind-uploader` fill in their parts when they connect with no children,** so a definition loaded before hand-written markup is parsed could double them (unconfirmed; `ui-calendar` does the same).
 - **`<kind-streaming-text text="…">` and an empty `kind-uploader` show nothing before upgrade.** Writing the text as children avoids it; undocumented.
 - **`kind-step-list-item` misses a button that arrives late or is replaced:** its target is `querySelector("button")`, and UI SDK's retarget observer only watches direct children. Deferred: one element can fill only one primitive's slot, so whichever of list item and trigger wraps the other has a nested target; `@ui-sdk/web`'s own `ui-toolbar-button` (nested `wrappedControl`) has the same gap. Needs an upstream subtree retarget.
@@ -28,6 +29,7 @@ Last reviewed: `4bd6afd` (Task 15 packed check and budgets)
 
 ## Resolved
 
+- **Docs captions (Task 17):** the Conversation and Composer pages now say `rowKey`, `controller` and `defaultValue` are properties only.
 - **`kind-attachments` kept a public `onRemove` property, and the composer wrote `can-remove` into the user's markup.** Fixed: the composer hands its function in as `removeHandler`.
 - **`on…` function properties (`onRegenerate`, `onEdit`, `onStop`, `onRemove`, `onCancel`, `onRetry`) couldn't be set from React 19,** which turns `on…` props on a custom element into listeners. Fixed: every callback is a DOM event, and a `can-<action>` attribute offers what a callback's presence did (AGENTS.md, "Web callbacks and availability"). React 19 rendering `kind-uploader` is tested.
 - **`kind-uploader`'s `reject` shared its name with File Input's.** Fixed: `uploadreject`, beside `uploadcancel` and `uploadretry` (its native file input fires a bubbling `cancel`).

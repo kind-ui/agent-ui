@@ -82,4 +82,6 @@ An agent connected with `createAgent` reads the composer's `value`, and whether 
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/composer/composer.ts" name="ComposerAgentActions" type='Pick<ComposerApi, "setValue" | "insertToken" | "removeAttachment" | "submit" | "stop">' />
 
-Runs in React and Web Components. On `<kind-composer>`, each prop is a kebab-case attribute, so `submitOn` is `submit-on`, and `value`, `mentions`, `commands` and `history` are properties. Each callback is a lowercase event, so `onValueChange` fires `valuechange`, but `onSubmit` fires `composersubmit`, whose listeners call `event.detail.waitUntil(promise)`, and Stop shows with the `can-stop` attribute and fires `stop`.
+<Caption>
+  Runs in React and Web Components. On `<kind-composer>`, each prop is a kebab-case attribute, so `submitOn` is `submit-on`, and `value`, `defaultValue`, `mentions`, `commands` and `history` are properties. Each callback is a lowercase event, so `onValueChange` fires `valuechange`, but `onSubmit` fires `composersubmit`, whose listeners call `event.detail.waitUntil(promise)`, and Stop shows with the `can-stop` attribute and fires `stop`.
+</Caption>

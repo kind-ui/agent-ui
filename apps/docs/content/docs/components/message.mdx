@@ -91,4 +91,6 @@ An agent connected with `createAgent` reads each message's `status`, `branchInde
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/message/message.ts" name="MessageAgentActions" type='Pick<MessageApi, "copy" | "regenerate" | "edit" | "setBranch">' />
 
-Runs in React and Web Components. On `<kind-message>`, each prop is a kebab-case attribute, so `messageRole` is `message-role`, and each callback is a lowercase event, so `onBranchChange` fires `branchchange`. `onCopy` fires `messagecopy`, since `copy` is a native event. Add the `can-regenerate` and `can-edit` attributes to offer those actions, which then fire `regenerate` and `edit`.
+<Caption>
+  Runs in React and Web Components. On `<kind-message>`, each prop is a kebab-case attribute, so `messageRole` is `message-role`, and each callback is a lowercase event, so `onBranchChange` fires `branchchange`. `onCopy` fires `messagecopy`, since `copy` is a native event. Add the `can-regenerate` and `can-edit` attributes to offer those actions, which then fire `regenerate` and `edit`.
+</Caption>

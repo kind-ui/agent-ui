@@ -21,7 +21,7 @@ for (const name of components) {
     assert.ok(source.includes("\n## Usage\n"));
     assert.ok(source.includes("\n## API Reference\n\n<auto-type-table "));
     assert.ok(source.includes("\n### Agent\n"));
-    assert.match(source, /\nRuns in React and Web Components\. .+\n$/);
+    assert.match(source, /\n<Caption>\n {2}Runs in React and Web Components\. .+\n<\/Caption>\n$/);
   });
 }
 

@@ -45,15 +45,15 @@ export type ComposerValueChangeReason =
   | "submit";
 
 export type ComposerOptions = {
-  /** The draft, when you control it with `onValueChange`. Don't pass it with `defaultValue`. */
+  /** The draft. Passing it controls it: change it in `onValueChange`. Don't pass it with `defaultValue`. */
   value?: ComposerDraft;
-  /** The draft at first, when you don't control it. */
+  /** The draft at first, when `value` isn't passed. */
   defaultValue?: ComposerDraft;
   /** Called when the draft changes, with what caused it. Cancel `details` to refuse the change. */
   onValueChange?: (value: ComposerDraft, details: ChangeDetails<ComposerValueChangeReason>) => void;
   /**
    * Called with the draft when it's sent. Return a promise to keep the composer pending: resolving clears the
-   * draft unless it changed meanwhile, and rejecting keeps it.
+   * draft unless it changed meanwhile, and rejecting keeps it. Otherwise the draft clears right away.
    */
   onSubmit?: (draft: ComposerDraft) => unknown;
   /** Called when Stop is pressed. While it's set, Stop takes Send's place during a pending submission. */
@@ -113,13 +113,13 @@ type TokenToInsert = Omit<ComposerToken, "id">;
 export type ComposerApi = {
   /** The current draft; the owner's `value` when controlled. */
   getValue: () => ComposerDraft;
-  /** Replaces the draft. A string replaces only the text and keeps the attachments. Returns whether it changed. */
+  /** Replaces the draft. A string replaces only the text and keeps the attachments. Returns whether the change was accepted. */
   setValue: (value: ComposerDraft | string, event?: Event) => boolean;
   /** Inserts a mention or command at the caret. Returns whether it was inserted. */
   insertToken: (token: TokenToInsert) => boolean;
-  /** Removes an attachment from the draft by its `id`. Returns whether it changed. */
+  /** Removes an attachment from the draft by its `id`. Returns whether the change was accepted. */
   removeAttachment: (id: string, event?: Event) => boolean;
-  /** Sends the draft, unless it's empty, pending or disabled. */
+  /** Sends the draft, unless there's nothing to send, it's pending or disabled, or `onSubmit` isn't set. */
   submit: (event?: Event) => void;
   /** Calls `onStop`. Offered only while a submission is pending and `onStop` is set. */
   readonly stop: ((event?: Event) => void) | undefined;

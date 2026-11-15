@@ -27,10 +27,10 @@ export type CodeBlockOptions = {
    * or `language` changes.
    */
   highlight?: Highlight;
-  /** Whether long lines wrap, when you control it with `onWrapChange`. */
+  /** Whether long lines wrap. Passing it controls it: change it in `onWrapChange`. Don't pass it with `defaultWrap`. */
   wrap?: boolean;
   /**
-   * Whether long lines wrap at first, when you don't control it.
+   * Whether long lines wrap at first, when `wrap` isn't passed.
    * @default false
    */
   defaultWrap?: boolean;

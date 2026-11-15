@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `4bd6afd` (Task 15 packed check and budgets)
+Last reviewed: `29e518f` (Task 17 docs site)
 
 ## Settled
 
@@ -28,6 +28,7 @@ Last reviewed: `4bd6afd` (Task 15 packed check and budgets)
 
 ## Resolved
 
+- **Docs (Task 17):** the Markdown Table page's `Pick` alias collided with `MarkdownTableProps` and listed every DOM prop; it's `MarkdownTableChildren` now.
 - **The agent fixture's submissions never settled,** so each agent `submit` and `stop` waited UI SDK's 15 s for pending work. Fixed: the host settles them, holding only for Stop.
 - **No browser spec ran a fixture under StrictMode.** Fixed: the `wave-1-react-strict` project runs every spec with each case in `<StrictMode>`. It caught a highlight spec counting requests by index (StrictMode's discarded instance asks too).
 - **The uploader fixture wrote `window.kindUploader` during render,** so StrictMode's discarded copy received the calls. Fixed: published in an effect.

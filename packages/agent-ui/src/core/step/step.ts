@@ -26,14 +26,18 @@ export type StepOptions = {
   kind?: string;
   /** Names the step in announcements. Defaults to the title part's text. */
   title?: string;
-  /** Whether the content shows, when you control it with `onOpenChange`. */
+  /** Whether the content shows. Passing it controls it: change it in `onOpenChange`. */
   open?: boolean;
-  /** Whether the content shows at first, when you don't control it. */
+  /**
+   * Whether the content shows at first, when `open` isn't passed. Defaults to open while `status` is `running` or
+   * `awaiting-input`, unless `autoOpen` is `"never"`.
+   */
   defaultOpen?: boolean;
   /** Called when the step opens or closes, with what caused it. */
   onOpenChange?: (open: boolean, details: ChangeDetails<StepOpenChangeReason>) => void;
   /**
-   * Opens while running or awaiting input, and closes on completion unless toggled.
+   * With `"running"`, the step opens while running or awaiting input and closes on completion, until someone
+   * toggles it. With `"never"`, only a person or your code opens it.
    * @default "running"
    */
   autoOpen?: StepAutoOpen;
@@ -62,9 +66,9 @@ export type StepApi = {
   /** The current open state; the owner's `open` when controlled. */
   isOpen: () => boolean;
   setOpen: (open: boolean, cause?: Cause) => boolean;
-  /** Opens the step. Returns whether it changed. */
+  /** Opens the step. Returns whether the change was accepted. */
   expand: () => boolean;
-  /** Closes the step. Returns whether it changed. */
+  /** Closes the step. Returns whether the change was accepted. */
   collapse: () => boolean;
   toggle: (event?: Event) => boolean;
 };
