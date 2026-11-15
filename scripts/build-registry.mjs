@@ -130,7 +130,9 @@ export function toRegistry(input) {
 function run(args) {
   console.log(`$ npx ${args.join(" ")}`);
   const result = spawnSync("npx", ["--yes", ...args], { cwd: root, stdio: "inherit" });
-  if (result.status !== 0) throw new Error(`${args.slice(0, 2).join(" ")} failed`);
+  if (result.status !== 0) {
+    throw new Error(`${args.slice(0, 2).join(" ")} failed${result.error ? `: ${result.error.message}` : ""}`);
+  }
 }
 
 function build() {
@@ -148,6 +150,7 @@ function build() {
 
   for (const item of catalog.items) {
     const built = JSON.parse(readFileSync(join(outDir, "r", `${item.name}.json`), "utf8"));
+    if (built.files.length !== item.files.length) throw new Error(`${item.name}: the build dropped a file`);
     built.files.forEach((file, index) => {
       if (file.content !== readFileSync(join(root, item.files[index]), "utf8")) {
         throw new Error(`${item.name}: ${item.files[index]} differs from its source after the build`);

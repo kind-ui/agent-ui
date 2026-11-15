@@ -105,16 +105,19 @@ function serve(tarball) {
       if (rest.join("/") === pkg.name) return response.end(JSON.stringify(packument));
     } else if (area === "r") file = join(registryDir, ...rest);
     else if (sites[area]) file = join(sites[area], ...(rest.join("/") ? rest : ["index.html"]));
-    if (!file || !existsSync(file)) {
+    if (!file || rest.includes("..") || !existsSync(file)) {
       response.statusCode = 404;
       return response.end();
     }
     response.setHeader("content-type", types[extname(file)] ?? "application/octet-stream");
     response.end(readFileSync(file));
   });
-  return new Promise((resolve) =>
-    server.listen(4320, "127.0.0.1", () => resolve({ sites, close: () => server.close() })),
-  );
+  return new Promise((resolve, reject) => {
+    server.once("error", (error) =>
+      reject(error.code === "EADDRINUSE" ? new Error("port 4320 is in use") : error),
+    );
+    server.listen(4320, "127.0.0.1", () => resolve({ sites, close: () => server.close() }));
+  });
 }
 
 async function install(layer, dir) {
@@ -169,8 +172,10 @@ async function install(layer, dir) {
 
 function checkInstall(layer, dir, items) {
   const errors = [];
-  const version = (name) =>
-    JSON.parse(readFileSync(join(dir, "node_modules", name, "package.json"), "utf8")).version;
+  const version = (name) => {
+    const manifest = join(dir, "node_modules", name, "package.json");
+    return existsSync(manifest) ? JSON.parse(readFileSync(manifest, "utf8")).version : "missing";
+  };
   const pins = {
     [pkg.name]: pkg.version,
     "@ui-sdk/core": catalog.uiSdkVersion,
@@ -207,19 +212,22 @@ async function render(browser, layer, items) {
   page.on("console", (message) => message.type() === "error" && problems.push(message.text()));
   await page.goto(`${origin}/${layer}/`);
   await page.locator("[data-item]").first().waitFor();
-  const rendered = await page.evaluate((names) => {
-    const tokens =
-      getComputedStyle(document.documentElement).getPropertyValue("--kind-color-fg").trim() !== "";
+  const { tokens, utilities, rendered } = await page.evaluate((names) => {
     const button = document.querySelector('[data-slot="toolbar-button"]');
-    const utilities = button !== null && getComputedStyle(button).minWidth === "28px";
-    return Object.fromEntries(
-      names.map((name) => {
-        const section = document.querySelector(`[data-item="${name.replace(/-web$/, "")}"]`);
-        return [name, tokens && utilities && Boolean(section?.querySelector("[data-slot]"))];
-      }),
-    );
+    return {
+      tokens: getComputedStyle(document.documentElement).getPropertyValue("--kind-color-fg").trim() !== "",
+      utilities: button !== null && getComputedStyle(button).minWidth === "28px",
+      rendered: Object.fromEntries(
+        names.map((name) => {
+          const section = document.querySelector(`[data-item="${name.replace(/-web$/, "")}"]`);
+          return [name, Boolean(section?.querySelector("[data-slot]"))];
+        }),
+      ),
+    };
   }, items);
   await page.close();
+  if (!tokens) problems.push(`the theme tokens from ${pkg.name}/styles.css are missing`);
+  if (!utilities) problems.push("Tailwind generated no utilities for the copied files");
   return { rendered, problems };
 }
 
@@ -230,6 +238,11 @@ async function check() {
   if (integrity.length) throw new Error(`registry integrity:\n  ${integrity.join("\n  ")}`);
 
   const manifest = JSON.parse(readFileSync(manifestFile, "utf8"));
+  const sha256 = createHash("sha256")
+    .update(readFileSync(join(root, manifest.tarball)))
+    .digest("hex");
+  if (sha256 !== manifest.sha256)
+    throw new Error(`${manifest.tarball} changed since \`npm run check:package\``);
   const server = await serve(join(root, manifest.tarball));
   const browser = await chromium.launch();
   const dirs = [];

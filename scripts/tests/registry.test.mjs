@@ -98,3 +98,23 @@ test("the integrity check finds unbuilt dependencies and visible internals", () 
   assert.match(errors, /message: @kind-ui\/internal-toolbar is not served/);
   assert.match(errors, /internal-scroll-area: hidden is wrong/);
 });
+
+test("an import outside the item's dependencies, a range and a missing file fail", () => {
+  const file = join(dir, "imports.tsx");
+  writeFileSync(file, 'import debounce from "lodash";\n');
+  const items = [
+    ...catalog.items,
+    { ...item("step"), name: "imports", files: [file] },
+    { ...item("step-web"), name: "range", dependencies: ["@ui-sdk/web@^0.1.0"] },
+    { ...item("step"), name: "missing", files: [join(dir, "missing.tsx")] },
+  ];
+  const errors = errorsWith({ items });
+  assert.match(errors, /imports lodash, not a dependency/);
+  assert.match(errors, /@ui-sdk\/web@\^0\.1\.0 is not an exact version/);
+  assert.match(errors, /missing\.tsx does not exist/);
+});
+
+test("the setup note is a plain file beside the components", () =>
+  assert.deepEqual(toRegistry(catalog).items.find((each) => each.name === "agent-ui-setup").files, [
+    { path: "registry/agent-ui-setup/AGENTS.md", type: "registry:file", target: "@ui/AGENTS.md" },
+  ]));

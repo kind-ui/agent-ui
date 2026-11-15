@@ -10,6 +10,7 @@ Last reviewed: `4bd6afd` (Task 15 packed check and budgets)
 - Everything in AGENTS.md "UI SDK API notes".
 - **Conversation `virtualize` is mount-only,** like a `default*` option: it is read in `state` and not synced.
 - **The composer's draft `text` is the Token Input's codec text** and edits sync through the controller's `editor.subscribe`; a cancelled change writes the draft back to the editor. A controlled owner refuses an edit by cancelling it (AGENTS.md, Task 11).
+- **`validateCatalog` forwarding UI SDK guard errors has no unit test:** a failing render file would have to sit in `src/`, where the guard's own tests and `npm run lint` already fail it.
 
 ## Known and open (don't report again, check whether fixed)
 
@@ -28,6 +29,7 @@ Last reviewed: `4bd6afd` (Task 15 packed check and budgets)
 
 ## Resolved
 
+- **Registry (Task 16):** the registry tests now cover bare imports, exact versions, missing files and the setup file type; the consumer check reports missing tokens or Tailwind utilities once rather than per item, fails on a busy port with a message, checks the tarball's sha256 against the manifest, reports a missing package as `missing`, and refuses `..` paths; the build fails when shadcn drops a file.
 - **Packed-package gate (Task 15):** the tarball no longer ships source maps pointing at unshipped `src/`; `findForbiddenImports` reads imports with TypeScript's `preProcessFile`, so comments don't match; the size check walks `exports` and fails an entry with no limit; `dist/styles` is cleared before the copy.
 - **A disabled composer still let a person or an agent remove attachments.** Fixed: `partState.attachments` leaves `onRemove` out while disabled, and `removeAttachment` refuses.
 - **A double click on uploader Retry also cancelled** (Retry turns into Cancel under the pointer). Fixed: a click with `detail > 1` is ignored, and an item takes no second cancel or retry until the host changes its status.
