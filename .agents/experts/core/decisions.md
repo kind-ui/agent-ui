@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `75c679c` (Task 11 Composer and Attachments)
+Last reviewed: `9b766ae` (Task 12 Uploader and indicators)
 
 ## Settled
 
@@ -12,6 +12,9 @@ Last reviewed: `75c679c` (Task 11 Composer and Attachments)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Enter held or pressed twice on an uploader Cancel cancels the next row too:** focus recovery moves to the neighbor's Cancel between presses. Spec §7 needs to say whether that's the list-deletion pattern or needs a pause.
+- **The uploader's `mounted` set never forgets ids,** so an item removed and re-added under the same id gets no entrance.
+- **An indicator's new `label` is read out,** as its status content changes; documented on the option. Spec §6 should say whether a label change counts as a terminal transition.
 - **Guard comment stripping is regex-based:** a `//` inside a string hides the rest of the line from the forbidden-pattern checks. Use the TypeScript scanner.
 - **Guard rule 1 misses `definePrimitive<…Record<…>>(`** with nested generics.
 - **Find-in-page sets `userToggled`**, so a step revealed by search no longer auto-closes on `complete`. Spec §5 needs to say whether search counts as a person.
@@ -24,6 +27,11 @@ Last reviewed: `75c679c` (Task 11 Composer and Attachments)
 
 ## Resolved
 
+- **A double click on uploader Retry also cancelled** (Retry turns into Cancel under the pointer). Fixed: a click with `detail > 1` is ignored, and an item takes no second cancel or retry until the host changes its status.
+- **Uploader focus recovery went to the first row when the host removed a cancelled item.** Fixed: the fallback reads the order from before the change.
+- **Web uploader rows played their entrance on mount.** Fixed: rows in the first frame after the root binds count as mounted.
+- **Streaming Text kept one chunk per append.** Fixed: chunks before the first one still fading fold into one.
+- **Dots kept flowing when reduced motion was turned on after mount.** Fixed: `onReducedMotionChange` restarts the loop with `flow` while `motion` is `"auto"`.
 - **No-`ai` consumers needed `skipLibCheck`.** Fixed: each adapter `import type … from "ai"` carries a JSDoc `/** @ts-ignore */` that survives into the `.d.ts`; `tests/types/no-ai` runs with `skipLibCheck: false`.
 - **A host `setOpen` turned off auto close.** Fixed: only the trigger, find in page and `expand`/`collapse` set `userToggled` (spec §5).
 - **Composer `disabled` is now exposed on the submit part** (`aria-disabled`), and a disabled composer offers the agent no actions.

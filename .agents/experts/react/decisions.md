@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `75c679c` (Task 11 Composer and Attachments)
+Last reviewed: `9b766ae` (Task 12 Uploader and indicators)
 
 ## Settled
 
@@ -10,6 +10,9 @@ Last reviewed: `75c679c` (Task 11 Composer and Attachments)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Streaming Text renders twice per `text` change,** like Markdown: `text` reaches state through `onOptions`, a layout effect. Before paint.
+- **Uploader progress bars have no accessible name in server markup** until hydration adds `aria-labelledby` (UI SDK Progress; report upstream).
+- **No browser spec runs a fixture under StrictMode;** replayed refs and effects are checked by hand.
 - **A Step without `StepTitle` has a dangling `aria-labelledby`** on its group.
 - **Server markup writes `hidden=""` on closed content**, not `until-found`, until it binds (UI SDK `toReactProps`; report upstream).
 - **Server-rendered Conversation markup starts at the top** and jumps to the end when `createStickToBottom` connects at hydration.
@@ -23,6 +26,7 @@ Last reviewed: `75c679c` (Task 11 Composer and Attachments)
 
 ## Resolved
 
+- **The uploader fixture wrote `window.kindUploader` during render,** so StrictMode's discarded copy received the calls. Fixed: published in an effect.
 - **A server-rendered image attachment pointed at a `blob:nodedata:` URL.** Fixed: object URLs are made when an item binds, so the server and hydration render the icon.
 - **The first attachment skipped its entrance in React.** Fixed: the composer's attachments part stays mounted while empty (`data-empty`).
 - **Two Kind wrappers composed through `render` stacked both base class lists.** Fixed: `withKindClass` renders a Kind `render` target as its bare UI SDK part, so the outer base applies once, for element and function `render` targets and nested targets alike.
