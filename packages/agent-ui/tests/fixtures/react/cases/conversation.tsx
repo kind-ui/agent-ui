@@ -1,5 +1,6 @@
 import { createConversationController } from "@kind-ui/agent-ui/core";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
+import { flushSync } from "react-dom";
 import {
   Conversation,
   ConversationContent,
@@ -39,6 +40,14 @@ function Bubble({ message }: { message: Message }) {
   );
 }
 
+const Row = memo(function Row({ message, index }: { message: Message; index: number }) {
+  return (
+    <ConversationRow value={message.id} index={index}>
+      <Bubble message={message} />
+    </ConversationRow>
+  );
+});
+
 function Chat({ count, virtualize = false }: { count: number; virtualize?: boolean }) {
   const [all, setAll] = useState(() => messages(0, count));
   const [controller] = useState(createConversationController);
@@ -65,9 +74,7 @@ function Chat({ count, virtualize = false }: { count: number; virtualize?: boole
     });
   }, [count, controller]);
   const row = (m: Message, index: number, key: string | number = m.id) => (
-    <ConversationRow key={key} value={m.id} index={index}>
-      <Bubble message={m} />
-    </ConversationRow>
+    <Row key={key} message={m} index={index} />
   );
   return (
     <Conversation
@@ -94,8 +101,19 @@ function Chat({ count, virtualize = false }: { count: number; virtualize?: boole
   );
 }
 
+function Remount() {
+  const [shown, setShown] = useState(true);
+  useEffect(() => {
+    Object.assign(window, { kindRemount: () => flushSync(() => setShown((current) => !current)) });
+  }, []);
+  return shown ? <Chat count={31} /> : null;
+}
+
 export const cases = {
   chat: () => <Chat count={31} />,
   empty: () => <Chat count={0} />,
+  "chat-10": () => <Chat count={10} />,
+  "chat-500": () => <Chat count={500} />,
   virtual: () => <Chat count={1000} virtualize />,
+  remount: () => <Remount />,
 };

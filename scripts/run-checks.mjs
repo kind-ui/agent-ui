@@ -11,11 +11,18 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const stages = {
   "lint:biome": { needs: "biome.json", run: ["npx", "biome", "check", "."] },
   "lint:guard": { needs: "scripts/check-ui-sdk-usage.mjs", run: ["node", "scripts/check-ui-sdk-usage.mjs"] },
-  build: { needs: "packages/agent-ui/tsconfig.json", run: ["npx", "tsc", "-b", "packages/agent-ui"] },
+  build: {
+    needs: "packages/agent-ui/tsconfig.json",
+    run: ["npm", "run", "build", "-w", "@kind-ui/agent-ui"],
+  },
   "typecheck:extra": { needs: "tsconfig.checks.json", run: ["npx", "tsc", "-p", "tsconfig.checks.json"] },
   "typecheck:types": {
     needs: "tests/types/nodenext/tsconfig.json",
     run: ["npx", "tsc", "-p", "tests/types/nodenext/tsconfig.json"],
+  },
+  "typecheck:bundler": {
+    needs: "tests/types/bundler/tsconfig.json",
+    run: ["npx", "tsc", "-p", "tests/types/bundler/tsconfig.json"],
   },
   "typecheck:with-ai": {
     needs: "tests/types/with-ai/tsconfig.json",
@@ -32,6 +39,7 @@ const stages = {
   },
   "test:browser": { needs: "playwright.config.mjs", run: ["npx", "playwright", "test"] },
   "check:package": { needs: "scripts/check-package.mjs", run: ["node", "scripts/check-package.mjs"] },
+  "check:size:run": { needs: "size-budget.json", run: ["node", "scripts/check-size.mjs"] },
   "build:registry": { needs: "scripts/build-registry.mjs", run: ["node", "scripts/build-registry.mjs"] },
   "check:registry-consumers": {
     needs: "scripts/check-registry-consumers.mjs",
@@ -43,11 +51,19 @@ const stages = {
 
 const groups = {
   lint: ["lint:biome", "lint:guard"],
-  typecheck: ["build", "typecheck:extra", "typecheck:types", "typecheck:with-ai", "typecheck:no-ai"],
+  typecheck: [
+    "build",
+    "typecheck:extra",
+    "typecheck:types",
+    "typecheck:bundler",
+    "typecheck:with-ai",
+    "typecheck:no-ai",
+  ],
   // Unit tests import the package by name, which resolves to the built dist.
   "test:unit": ["build", "test:unit:run"],
+  "check:size": ["build", "check:size:run"],
   "check:fast": ["lint", "typecheck", "test:scripts", "test:unit"],
-  "check:packed": ["check:package", "build:registry", "check:registry-consumers"],
+  "check:packed": ["check:package", "check:size", "build:registry", "check:registry-consumers"],
   check: ["check:fast", "check:packed", "test:browser"],
 };
 

@@ -16,7 +16,8 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
   ],
   "exports": {
     ".": {
@@ -34,7 +35,8 @@
     "./styles.css": "./dist/styles/agent-ui.css"
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b && node --eval \"fs.cpSync('src/styles', 'dist/styles', { recursive: true })\"",
+    "prepack": "npm run build && node --eval \"fs.copyFileSync('../../THIRD_PARTY_NOTICES.md', 'THIRD_PARTY_NOTICES.md')\"",
     "lint": "node ../../scripts/check-ui-sdk-usage.mjs",
     "test:unit": "node --test \"tests/core/*.test.mjs\""
   },

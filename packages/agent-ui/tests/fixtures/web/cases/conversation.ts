@@ -99,5 +99,13 @@ function chat(root: HTMLElement, count: number, virtualize = false) {
 export const cases = {
   chat: (root: HTMLElement) => chat(root, 31),
   empty: (root: HTMLElement) => chat(root, 0),
+  "chat-10": (root: HTMLElement) => chat(root, 10),
+  "chat-500": (root: HTMLElement) => chat(root, 500),
   virtual: (root: HTMLElement) => chat(root, 1000, true),
+  remount: (root: HTMLElement) => {
+    chat(root, 31);
+    Object.assign(window, {
+      kindRemount: () => (root.firstElementChild ? root.replaceChildren() : chat(root, 31)),
+    });
+  },
 };

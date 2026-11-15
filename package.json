@@ -11,7 +11,7 @@
   },
   "packageManager": "npm@11.9.0",
   "scripts": {
-    "build": "tsc -b packages/agent-ui",
+    "build": "npm run build -w @kind-ui/agent-ui",
     "lint": "biome check . && node scripts/check-ui-sdk-usage.mjs",
     "format": "biome check --write .",
     "typecheck": "node scripts/run-checks.mjs typecheck",
@@ -19,6 +19,7 @@
     "test:scripts": "node --test \"scripts/tests/*.test.mjs\"",
     "test:browser": "node scripts/run-checks.mjs test:browser",
     "check:package": "node scripts/run-checks.mjs check:package",
+    "check:size": "node scripts/run-checks.mjs check:size",
     "build:registry": "node scripts/run-checks.mjs build:registry",
     "check:registry-consumers": "node scripts/run-checks.mjs check:registry-consumers",
     "check:fast": "node scripts/run-checks.mjs check:fast",
