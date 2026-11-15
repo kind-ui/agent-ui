@@ -80,7 +80,7 @@ test("toggle: Space flips aria-pressed", async ({ page }) => {
   await toggle.focus();
   await page.keyboard.press("Space");
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
-  await expect(toggle).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(toggle).toHaveCSS("color", "oklch(1 0 0)");
 });
 
 test("menu: ArrowDown moves focus, Escape closes and returns focus", async ({ page }) => {
