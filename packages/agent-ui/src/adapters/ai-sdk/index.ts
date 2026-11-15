@@ -1,2 +1,37 @@
-// AI SDK adapter (spec §4.3). Imports only `types` and `ai` types. Populated by Task 4.
-export {};
+// AI SDK adapter (spec §4.3). A pure mapping module: imports only `types` and `ai` types, never calls the SDK.
+import type { ChatStatus, UIMessage } from "ai";
+import type { Message, Part } from "../../types/index.js";
+import { fromUIMessagePart } from "./parts.js";
+import { fromChatStatus } from "./status.js";
+
+export type { ApprovalDecision, ApprovalResponse } from "./approval.js";
+export { toApprovalResponse } from "./approval.js";
+export type { PartContext } from "./parts.js";
+export { fromUIMessagePart } from "./parts.js";
+export { fromChatStatus } from "./status.js";
+
+/**
+ * Maps AI SDK UI messages to neutral messages. The chat `status` describes the in-flight turn, so it applies to
+ * the last message; every earlier message is `"complete"`.
+ */
+export function fromUIMessages(messages: readonly UIMessage[], status?: ChatStatus): Message[] {
+  const last = messages.length - 1;
+  return messages.map((message, messageIndex) => {
+    const parts: Part[] = [];
+    message.parts.forEach((part, index) => {
+      const mapped = fromUIMessagePart(part, { messageId: message.id, index });
+      if (mapped) parts.push(mapped);
+    });
+    const mapped: Message = {
+      id: message.id,
+      role: message.role,
+      status: messageIndex === last && status !== undefined ? fromChatStatus(status) : "complete",
+      parts,
+    };
+    const metadata: unknown = message.metadata;
+    if (typeof metadata === "object" && metadata !== null && !Array.isArray(metadata)) {
+      mapped.metadata = metadata as Record<string, unknown>;
+    }
+    return mapped;
+  });
+}

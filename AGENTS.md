@@ -44,6 +44,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 - **`exactOptionalPropertyTypes`:** the type `definePrimitive` returns (`options: … | undefined`) is not assignable to UI SDK's own `Primitive` (`options?: …`) when this flag is on. `tsconfig.checks.json`, which covers the render layers, fixtures, and browser specs, turns the flag off. Core keeps it on.
 - **Neutral types (Task 3):** `src/types/` models host data only (messages, parts, steps, tool calls, approvals). No UI SDK type describes this data, so nothing is reused from `@ui-sdk/*` there, and the `types` layer imports no runtime module. Component state and actions reuse UI SDK types in `core`.
 - **Agent bridge:** `createAgent` comes from `@ui-sdk/react/agent` or `@ui-sdk/web/agent`. A `definePrimitive` primitive's snapshot entry has `component` set to the primitive `name`, `label` set to the root's accessible name, the state keys listed in `controlled`, and `pending`.
+- **AI SDK adapter (Task 4):** `adapters/ai-sdk` is not a UI SDK component, so the guard does not scan it. It imports `ai` with `import type` only. Differences between `ai@7.0.173` and spec §4.3 are recorded in `packages/agent-ui/README.md` under "Tested AI SDK version". `fromUIMessages` applies the chat status to the last message (any role), because with `submitted` the last message is the user's.
+- **`tests/types/no-ai`:** `ai` is hoisted at the root, and a `paths` entry pointing at a missing file falls back to `node_modules`. The project maps `ai` to an empty stub (`ai-absent.d.ts`) instead. Types from `ai` need `skipLibCheck` (on in `tsconfig.base.json`), because `ai`'s own declarations fail under `exactOptionalPropertyTypes`.
 
 ## Root scripts
 
@@ -51,7 +53,7 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 | --- | --- |
 | `npm run build` | `tsc -b packages/agent-ui` |
 | `npm run lint` / `npm run format` | `biome check . && node scripts/check-ui-sdk-usage.mjs` / `biome check --write .` |
-| `npm run typecheck` | `build`, then `tsc` over render layers and fixtures (`tsconfig.checks.json`) and consumer type tests (`tests/types/nodenext/`) |
+| `npm run typecheck` | `build`, then `tsc` over render layers and fixtures (`tsconfig.checks.json`) and consumer type tests (`tests/types/{nodenext,with-ai,no-ai}/`) |
 | `npm run test:unit` | `build`, then `node --test` over `packages/agent-ui/tests/core/` (tests import `@kind-ui/agent-ui` by name, which resolves to `dist`) |
 | `npm run test:scripts` | `node --test` over `scripts/tests/` (tooling and guard tests) |
 | `npm run test:browser` | `playwright test` (accepts `--project` and `--shard`) |

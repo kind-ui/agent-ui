@@ -1,0 +1,14 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "types": [],
+    // `ai` is hoisted in this workspace, and a missing `paths` target falls back to node_modules.
+    // Map it to an empty module instead, so no `ai` types exist, as for a consumer without `ai`.
+    "paths": { "ai": ["./ai-absent.d.ts"] }
+  },
+  "include": ["*.ts"]
+}
