@@ -6,6 +6,7 @@ Last reviewed: `9b766ae` (Task 12 Uploader and indicators)
 
 ## Settled
 
+- **The Streaming Text caret bar sits 0.15 em past the text:** laid over the last glyph it cuts the letter; past it, a scroll container sized to `max-content` gains about 0.3 em of overflow. Width and line height never change.
 - **The uploader progress fill transitions `width`:** UI SDK Progress writes the fill's width inline, and the bar is a 4 px leaf in an `overflow: hidden` track. A `scale` fill would squash its rounded ends.
 - Everything in AGENTS.md "UI SDK API notes".
 
@@ -23,7 +24,7 @@ Last reviewed: `9b766ae` (Task 12 Uploader and indicators)
 
 - **Changing `motion` froze the dots at uneven opacities:** motion's `stop()` wrote opacity back a frame later. Fixed: loops end with `cancel()`.
 - **A motion change replayed the dots' entrance.** Fixed: it restarts only the loop (`flow`).
-- **The Streaming Text caret added 1 px of line height and scroll overflow.** Fixed: an empty inline whose bar lies over the end of the text.
+- **The Streaming Text caret added 1 px of line height and scroll overflow.** Fixed: an empty inline with a positioned bar.
 - **`layout()` during `enter` or `exit` froze the element.** Fixed: presets keep `transform` (compositor); layout drives `translate` and `scale` from a motion value, tracked apart, so neither stops the other.
 - **`layout()` collapsed the element to `scale(0, 0)` on every run** (motion zeroed `"none"`). Fixed with the move to `translate`/`scale`, whose end is identity.
 - **An interrupted run left stray inline styles** (motion's `stop()` commits a frame later). Fixed: runs are cancelled with values held inline, and a finished run resolves in motion's render step.

@@ -5,7 +5,7 @@
     overflow-wrap: anywhere;
   }
 
-  /* An empty inline with its bar laid over the end of the text, so the caret never adds width or line height. */
+  /* An empty inline with a positioned bar after the text, so the caret never adds width or line height. */
   [data-slot="kind-streaming-text-caret"] {
     position: relative;
 
@@ -13,7 +13,7 @@
       content: "";
       position: absolute;
       inset-block: 0;
-      inset-inline-end: 0;
+      inset-inline-start: 0.15em;
       width: 0.125em;
       border-radius: 1px;
       background-color: currentColor;
