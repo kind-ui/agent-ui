@@ -39,6 +39,7 @@ import { StreamingText } from "./components/ui/streaming-text.js";
 import { Subagent } from "./components/ui/subagent.js";
 import { Suggestion } from "./components/ui/suggestion.js";
 import { Task } from "./components/ui/task.js";
+import { Terminal } from "./components/ui/terminal.js";
 import { ThinkingIndicator } from "./components/ui/thinking-indicator.js";
 import { Tool } from "./components/ui/tool.js";
 import { TypingIndicator } from "./components/ui/typing-indicator.js";
@@ -166,6 +167,7 @@ const items = {
     <GeneratedImage alt="A lighthouse at dusk" status="generating" progress={40} width={768} height={512} />
   ),
   "file-tree": <FileTree entries={[{ path: "src/index.ts", change: "modified", additions: 2 }]} />,
+  terminal: <Terminal command="npm test" output={"\x1b[32m✓\x1b[0m 22 passed"} exitCode={0} defaultOpen />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
       <ConversationViewport>

@@ -32,6 +32,7 @@ import { defineStreamingText } from "./components/ui/web/streaming-text.js";
 import { defineSubagent } from "./components/ui/web/subagent.js";
 import { defineSuggestion } from "./components/ui/web/suggestion.js";
 import { defineTask } from "./components/ui/web/task.js";
+import { defineTerminal } from "./components/ui/web/terminal.js";
 import { defineThinkingIndicator } from "./components/ui/web/thinking-indicator.js";
 import { defineTool } from "./components/ui/web/tool.js";
 import { defineTypingIndicator } from "./components/ui/web/typing-indicator.js";
@@ -63,6 +64,7 @@ for (const define of [
   defineDocument,
   defineGeneratedImage,
   defineFileTree,
+  defineTerminal,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -110,6 +112,7 @@ const items = {
   document: `<kind-document label="README.md" content="Back off on a 429."></kind-document>`,
   "generated-image": `<kind-generated-image alt="A lighthouse at dusk" status="generating" progress="40" width="768" height="512"></kind-generated-image>`,
   "file-tree": `<kind-file-tree></kind-file-tree>`,
+  terminal: `<kind-terminal command="npm test" exit-code="0" default-open></kind-terminal>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>
@@ -194,6 +197,7 @@ Object.assign(main.querySelector("kind-task") as HTMLElement, {
 Object.assign(main.querySelector("kind-sources") as HTMLElement, {
   sources: [{ id: "docs", title: "Rate limits", url: "https://docs.github.com/en/rest" }],
 });
+Object.assign(main.querySelector("kind-terminal") as HTMLElement, { output: "\x1b[32m✓\x1b[0m 22 passed" });
 Object.assign(main.querySelector("kind-file-tree") as HTMLElement, {
   entries: [{ path: "src/index.ts", change: "modified", additions: 2 }],
 });
