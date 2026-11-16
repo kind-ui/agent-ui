@@ -121,7 +121,7 @@ export type FeedbackCommentTextState = {
 type Popup = ReturnType<typeof createPopup<FeedbackOptions, FeedbackState, PopupPreset>>;
 
 export type FeedbackApi = Popup & {
-  /** The rating. */
+  /** The rating, `null` before there is one. */
   getRating: () => FeedbackRating;
   /** Rates the response, or clears the rating with `null`, as a press does. Returns whether the change was accepted. */
   rate: (rating: FeedbackRating) => boolean;
