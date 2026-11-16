@@ -23,9 +23,12 @@ const act = (page: Page, value: string) =>
         .then(JSON.stringify, (error: Error) => error.message),
     value,
   );
+// The list shows a frame before its entrance starts: UI SDK holds `data-starting-style` on it for that frame.
 const settled = (page: Page) =>
-  page.waitForFunction(() =>
-    document.getAnimations().every((animation) => animation.playState !== "running"),
+  page.waitForFunction(
+    () =>
+      !document.querySelector("[data-starting-style]") &&
+      document.getAnimations().every((animation) => animation.playState !== "running"),
   );
 
 const open = async (page: Page, name = "all") => {

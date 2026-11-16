@@ -262,6 +262,19 @@ export const stepBase = <
               state.durationSeconds === undefined ? undefined : `${state.durationSeconds}s`,
           }),
         }),
+        // Web parts get their attributes as each connects, and a style read while they connect (UI SDK's panel and
+        // Scroll Area measure as they bind) sees the later ones bare, so their colors would fade in from the
+        // browser's. `step.css` holds transitions while `data-mounting` is on, through the first frame's style pass.
+        bind: (el) => {
+          el.setAttribute("data-mounting", "");
+          let frame = requestAnimationFrame(() => {
+            frame = requestAnimationFrame(() => el.removeAttribute("data-mounting"));
+          });
+          return () => {
+            cancelAnimationFrame(frame);
+            el.removeAttribute("data-mounting");
+          };
+        },
       }),
       trigger: slot({
         role: "button",

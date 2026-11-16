@@ -321,7 +321,17 @@ export const chainOfThoughtPrimitive: ChainOfThoughtPrimitive = definePrimitive<
   slots: (slot) => {
     const { root, trigger, icon, title, meta, content } = base.slots(slot);
     return {
-      root: slot({ ...root, bind: (_el, { api }) => api.bindRoot() }),
+      root: slot({
+        ...root,
+        bind: (el, part) => {
+          const release = root.bind?.(el, part);
+          const unbind = part.api.bindRoot();
+          return () => {
+            release?.();
+            unbind();
+          };
+        },
+      }),
       trigger,
       icon,
       title: slot<BaseSlotProps, { title: string }>({ ...title, state: (state) => ({ title: state.title }) }),
