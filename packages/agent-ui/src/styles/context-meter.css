@@ -96,7 +96,6 @@
   :where([data-slot="kind-context-meter"]) [data-slot="meter-value"] {
     min-width: calc(4ch + 1em);
     font-variant-numeric: tabular-nums;
-    text-align: end;
   }
 
   [data-slot="kind-context-meter-content"] {
