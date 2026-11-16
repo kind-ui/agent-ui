@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `c3bf470` (Wave 2 Task 9 exits)
+Last reviewed: `fd660f7` (Wave 2 Task 10 agent conformance)
 
 ## Settled
 
@@ -19,7 +19,7 @@ Last reviewed: `c3bf470` (Wave 2 Task 9 exits)
 
 - **`kind-subagent` adds its trigger above server-rendered steps on upgrade,** shifting them down once, the same class as the empty `<kind-task>`/`<kind-plan>` entry.
 - **An empty `<kind-task>` or `<kind-plan>` inserts its parts on upgrade** (same class as `kind-chain-of-thought` and `kind-reasoning`), which can shift layout before the element is defined.
-- **Web Task and Plan play color transitions on first render** (progress fill, Accept, item titles) as `data-*` attributes land after the first style pass; Chain of Thought's marks do the same. Trace which upgrade step causes it.
+- **Web Task and Plan play color transitions on first render** (progress fill, Accept, item titles) as `data-*` attributes land after the first style pass; Chain of Thought's marks and the Tool copy buttons do the same. Trace which upgrade step causes it. In Firefox those transitions never finish under hidden content, so `wave-2/agent.spec.ts`'s `settled` skips animations whose target isn't visible.
 - **`kind-tool` draws twice for one `call` change** (the store subscription and one more notification). Harmless, since every write is guarded.
 - **`<kind-reasoning text="…">` shows nothing before upgrade,** then inserts its trigger and content, which shifts layout; same class as `kind-streaming-text` below. Writing the parts as children avoids it; undocumented.
 - **Indicators and `kind-uploader` fill in their parts when they connect with no children,** so a definition loaded before hand-written markup is parsed could double them (unconfirmed; `ui-calendar` does the same).
@@ -35,6 +35,8 @@ Last reviewed: `c3bf470` (Wave 2 Task 9 exits)
 - **An empty `<kind-chain-of-thought>` inserts its parts on upgrade** (same class as `kind-reasoning`), which can shift layout before the element is defined.
 
 ## Resolved
+
+- **Tool code-block names (Wave 2 Task 10):** `kind-tool` names only the code blocks it wrote, so a host's own code block keeps its `aria-label` (tested).
 
 - **A focused chip or uploader row blurred when an earlier one was dropped (Wave 2 Task 9).** Fixed: `draw` removes dropped rows before placing the rest, so no row after them moves; the focus specs check again once the row is gone, and pass in Chromium, Firefox and WebKit.
 - **Queue (Wave 2 Task 8):** `kind-queue` keeps its open sections when it leaves the page and comes back (`openSections` root state, restored through `defaultOpenSections`); sections written after it connects are filled in through a `MutationObserver`; `KindQueueElement` types its `api`.

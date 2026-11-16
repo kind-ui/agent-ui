@@ -229,4 +229,20 @@ test("kind-tool fills in input and output parts written empty", async ({ page },
   await expect(part(page, "written", "output").locator('[data-slot="kind-code-block-header"]')).toHaveCount(
     0,
   );
+  await expect(part(page, "written", "input").locator("kind-code-block")).toHaveAttribute(
+    "aria-label",
+    "search_docs input",
+  );
+  await part(page, "written", "input").evaluate((el) => {
+    el.innerHTML = `<kind-code-block headerless aria-label="Query"></kind-code-block>`;
+  });
+  await set(page, "written", { label: "Docs search" });
+  await expect(part(page, "written", "output").locator("kind-code-block")).toHaveAttribute(
+    "aria-label",
+    "Docs search output",
+  );
+  await expect(part(page, "written", "input").locator("kind-code-block")).toHaveAttribute(
+    "aria-label",
+    "Query",
+  );
 });

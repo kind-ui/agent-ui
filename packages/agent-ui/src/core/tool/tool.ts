@@ -11,7 +11,10 @@ export type ToolOptions = Omit<StepOptions, "status" | "label"> & {
   call?: ToolCall;
   /** Defaults to the call's: `error`, `cancelled`, `awaiting-input`, `complete` or `running`, as `toolStatus` reads it. */
   status?: StepStatus;
-  /** Replaces the title, which is the tool's name, and names the tool in announcements. */
+  /**
+   * Replaces the title, which is the tool's name, and names the tool in announcements and in its copy buttons and
+   * code blocks ("<label> input"), so keep it a name.
+   */
   label?: string;
   /** What went wrong, shown while the status is `error`. Without it, the tool shows "The tool failed." */
   error?: { message: string };
@@ -26,9 +29,9 @@ export type ToolState = StepState & {
   approval: Approval["state"] | undefined;
   /** Where the approval stands, in words, from `approvalLabel`. */
   approvalLabel: string | undefined;
-  /** The input code block's name, like "search_docs input". */
+  /** The input code block's name, like "search_docs input", or "Input" without a title. */
   inputLabel: string;
-  /** The output code block's name, like "search_docs output". */
+  /** The output code block's name, like "search_docs output", or "Output" without a title. */
   outputLabel: string;
   /** The input as indented JSON, empty before any arrives. */
   input: string;
@@ -120,9 +123,9 @@ const presentation = ({ call, label, error, highlight }: ToolOptions) => {
   };
 };
 
-const copyAttrs = (title: string, part: "input" | "output", copied: boolean) => ({
+const copyAttrs = (name: string, copied: boolean) => ({
   type: "button",
-  "aria-label": title ? `Copy ${title} ${part}` : `Copy ${part}`,
+  "aria-label": `Copy ${name}`,
   "data-copied": copied ? "" : undefined,
 });
 
@@ -183,7 +186,7 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
         role: "button",
         focus: "native",
         press: ({ api }) => void api.copyInput?.(),
-        attrs: (state) => copyAttrs(state.title, "input", state.inputCopied),
+        attrs: (state) => copyAttrs(state.title ? state.inputLabel : "input", state.inputCopied),
       }),
       output: slot<
         BaseSlotProps,
@@ -212,7 +215,7 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
         role: "button",
         focus: "native",
         press: ({ api }) => void api.copyOutput?.(),
-        attrs: (state) => copyAttrs(state.title, "output", state.outputCopied),
+        attrs: (state) => copyAttrs(state.title ? state.outputLabel : "output", state.outputCopied),
       }),
       error: slot<BaseSlotProps, { message: string }>({
         present: (state) => state.status === "error",

@@ -40,7 +40,8 @@ async function act(page: Page, component: string, label: string, action: string,
   return run(page, found?.ref, action, args);
 }
 
-// Every animation but the endless loops (spinners, dots) has finished.
+// Every animation but the endless loops (spinners, dots) has finished. Firefox never advances a transition inside
+// hidden content, so those are skipped.
 const settled = (page: Page) =>
   page.waitForFunction(() =>
     document
@@ -48,7 +49,8 @@ const settled = (page: Page) =>
       .every(
         (animation) =>
           animation.playState !== "running" ||
-          animation.effect?.getComputedTiming().iterations === Number.POSITIVE_INFINITY,
+          animation.effect?.getComputedTiming().iterations === Number.POSITIVE_INFINITY ||
+          (animation.effect as KeyframeEffect | null)?.target?.checkVisibility() === false,
       ),
   );
 

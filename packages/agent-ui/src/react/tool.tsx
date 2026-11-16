@@ -80,7 +80,7 @@ export type ToolOutputProps = ComponentProps<typeof parts.Output>;
 
 /**
  * The output, once there is one: text as markdown, any other value as code. Labeled "Preliminary" until it's final,
- * with its copy button, unless you pass children.
+ * with its copy button, unless you pass children. The code block is named by the tool, like "search_docs output".
  */
 export function ToolOutput({
   children = ({ label, kind, text, preliminary, highlight }) => (
