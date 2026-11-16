@@ -89,7 +89,8 @@ export function defineTerminal(): void {
       },
       // A native `copy` event bubbles from the selection.
       events: { onCopy: "terminalcopy" },
-      api: ["isOpen", "setOpen", "expand", "collapse", "toggle", "copy", "scrollToEnd"],
+      // `copy` is a getter, offered only with output, which a copied list of methods would freeze.
+      api: ["isOpen", "setOpen", "expand", "collapse", "toggle", "scrollToEnd"],
       render: (el, instance) => {
         if (!el.firstElementChild) el.innerHTML = DEFAULT_PARTS;
         const draw = () => {
@@ -130,7 +131,7 @@ export interface KindTerminalElement
   extends UiElement<KindTerminalEvents>,
     AttributeProperties<typeof terminalPrimitive, "api" | "open"> {
   open: boolean;
-  api: Pick<TerminalApi, "isOpen" | "setOpen" | "expand" | "collapse" | "toggle" | "copy" | "scrollToEnd">;
+  api: Pick<TerminalApi, "isOpen" | "setOpen" | "expand" | "collapse" | "toggle" | "scrollToEnd">;
 }
 
 declare global {

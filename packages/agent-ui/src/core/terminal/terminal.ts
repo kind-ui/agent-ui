@@ -67,13 +67,18 @@ export type TerminalState = StepState & {
   rows: readonly VirtualItem[];
   /** The height of every line together, in pixels. */
   size: number;
+  /** Whether the output shows any text, so there's something to copy. */
+  hasOutput: boolean;
   /** True for 2 s after the output is copied. */
   copied: boolean;
 };
 
 export type TerminalApi = StepApi & {
-  /** Copies the output without its escapes, and resolves with whether the clipboard write went through. */
-  copy: (event?: Event) => Promise<boolean>;
+  /**
+   * Copies the output without its escapes, and resolves with whether the clipboard write went through. Only while
+   * there's output.
+   */
+  readonly copy: ((event?: Event) => Promise<boolean>) | undefined;
   /** Scrolls to the newest line and follows new output again. */
   scrollToEnd: () => void;
   /** Follows the viewport's end and picks the lines in view. Called by the viewport slot. */
@@ -128,6 +133,19 @@ const presentation = ({ command = "", label, exitCode, durationSeconds }: Termin
   duration: stepDuration(durationSeconds),
 });
 
+const hasText = (lines: readonly AnsiLine[]) => lines.length > 1 || (lines[0]?.spans.length ?? 0) > 0;
+
+// Until the viewport binds and the virtualizer measures, the first screenful of lines at a guessed height, so server
+// markup shows the output and hydrating it moves nothing: 16 lines of 20px fill the default `--kind-terminal-max-height`.
+const LINE_HEIGHT_GUESS = 20;
+const firstRows = (lines: readonly AnsiLine[]): VirtualItem[] =>
+  lines.slice(0, 16).map((_, index) => ({
+    index,
+    key: String(index),
+    start: index * LINE_HEIGHT_GUESS,
+    size: LINE_HEIGHT_GUESS,
+  }));
+
 const byIndex = ({ props }: { props: LineProps }) => [String(props.index)];
 
 // A line hears only about its own entry and its own place, so a chunk reaches only the lines it changed.
@@ -150,6 +168,10 @@ const ownLine = selects<TerminalState, TerminalApi, LineProps>({
     },
   },
   size: [],
+  following: [],
+  jumpExiting: [],
+  hasOutput: [],
+  copied: [],
 });
 
 // The parts around the output read neither the lines nor where they sit, so new output reaches only the output and
@@ -173,15 +195,17 @@ export const terminalPrimitive: TerminalPrimitive = definePrimitive<
   },
   state: (options) => {
     const ansi = createAnsiLines();
+    const lines = ansi.update(options.output ?? "");
     return {
       ...base.state(options),
       ...presentation(options),
       ansi,
-      lines: ansi.update(options.output ?? ""),
+      lines,
       following: true,
       jumpExiting: false,
-      rows: [],
-      size: 0,
+      rows: firstRows(lines),
+      size: lines.length * LINE_HEIGHT_GUESS,
+      hasOutput: hasText(lines),
       copied: false,
     };
   },
@@ -192,7 +216,7 @@ export const terminalPrimitive: TerminalPrimitive = definePrimitive<
     const { store } = context;
     const copy = createCopy(context);
     // Read from the viewport as it binds, so a line that doesn't wrap measures what it was guessed at.
-    let lineHeight = 20;
+    let lineHeight = LINE_HEIGHT_GUESS;
 
     const stick = createStickToBottom({
       onChange: ({ following }) => {
@@ -210,24 +234,24 @@ export const terminalPrimitive: TerminalPrimitive = definePrimitive<
       const { ansi, lines } = store.get();
       const next = ansi.update(options.output ?? "");
       if (next === lines) return;
-      store.set({ lines: next });
+      store.set({ lines: next, hasOutput: hasText(next) });
+      // Fewer lines, or a new first line among several, means the output started over: its measured heights are stale.
+      if (next.length < lines.length || (lines.length > 1 && next[0] !== lines[0])) virtual.reset();
       if (next.length !== lines.length) virtual.refresh();
     });
 
     return {
       ...base.api(context),
-      copy: async (event) => {
-        const text = store.get().ansi.text();
-        if (
-          dispatch(
-            context,
-            "onCopy",
-            text,
-            event ? { reason: "copy-press", event } : { reason: "imperative" },
-          )
-        )
-          return false;
-        return copy(text);
+      get copy() {
+        if (!store.get().hasOutput) return undefined;
+        return async (event?: Event) => {
+          const text = store.get().ansi.text();
+          const details = event
+            ? { reason: "copy-press" as const, event }
+            : { reason: "imperative" as const };
+          if (dispatch(context, "onCopy", text, details)) return false;
+          return copy(text);
+        };
       },
       scrollToEnd: () => {
         const reduced =
@@ -280,7 +304,8 @@ export const terminalPrimitive: TerminalPrimitive = definePrimitive<
         selects: outsideOutput,
         role: "button",
         focus: "native",
-        press: ({ api }, event) => void api.copy(event),
+        present: (state) => state.hasOutput,
+        press: ({ api }, event) => void api.copy?.(event),
         attrs: (state) => ({
           type: "button",
           "aria-label": "Copy output",
@@ -335,7 +360,7 @@ export const terminalPrimitive: TerminalPrimitive = definePrimitive<
           // exit makes it inert.
           let unbindRecovery = api.recovery.bind(el, part);
           let stop = animateIn(el);
-          const unsubscribe = store.subscribe(() => {
+          const follow = () => {
             const { following } = store.get();
             if (following === leaving) return;
             leaving = following;
@@ -348,7 +373,10 @@ export const terminalPrimitive: TerminalPrimitive = definePrimitive<
             unbindRecovery();
             unbindRecovery = () => {};
             stop = animateOut(el, () => store.set({ jumpExiting: false }));
-          });
+          };
+          // It may bind while following resumed and it's still leaving, as when a web element is put back.
+          follow();
+          const unsubscribe = store.subscribe(follow);
           return () => {
             unsubscribe();
             stop();

@@ -2,9 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `ee4fcca` (Wave 4 Task 6 File Tree)
+Last reviewed: `5d56e76` (Wave 4 Task 7 Terminal)
 
 ## Settled
+
+- **Terminal's Copy hover fade runs under every `motion`** (Wave 4 Task 7), as the Step trigger's and Tool's copy buttons' do: a 150 ms color change on hover isn't movement.
 
 - **The `--kind-ansi-*` colors are `@theme default static`** (Wave 4 Task 7): only Terminal's script reads them, as inline `color: var(--kind-ansi-red)`, which Tailwind can't see, so it never emitted them from the main block. Light darkens the 16 colors to read on `--kind-color-hover`, dark lightens them; black and white map to grays that read in both. Axe checks them in both schemes.
 
@@ -45,6 +47,8 @@ Last reviewed: `ee4fcca` (Wave 4 Task 6 File Tree)
 - **Chain of Thought: the line to a new step appears at once** while the step fades up (`--kind-duration-base`), pointing 2px into the space it's about to take. No layout moves; drawing it from the new item can't reach a previous item's open content.
 
 ## Resolved
+
+- **Terminal (Wave 4 Task 7):** the cursor blinked under `prefers-reduced-motion` (a 4-attribute base rule beat the media override) and wrapped a full last line; it now blinks only inside `no-preference` at `motion="auto"` and overhangs into the line's padding. Jump to latest moved 8px under reduced motion; its offset is now full motion only. Extra attributes sit in `:where()`, and the header's padding is logical.
 
 - **File Tree in forced colors, specificity, `motion="none"` and the warning dot** (Wave 4 Task 6): a selected row is `SelectedItem`, qualifiers sit in `:where()`, the start opacity skips `motion="none"`, and the dot mixes toward the text color for 3:1.
 - **Generated Image redesign: paints, contrast and regenerate** (Wave 4 Task 5): the drifting field repainted every frame (240 paints in 2 s); it is now static gradients on an oversized `::before` that only rotates and breathes, and the grain an oversized `::after` that jumps with `translate`, 42 paints in 2 s. The corner chip is 90% surface (the percentage was 3.35:1 in light), its value reserves `7ch`, and the preview fades back in on regenerate instead of popping. The sheen is dropped: it repainted and the grain already moves.

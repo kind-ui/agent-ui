@@ -50,11 +50,11 @@ const palette = createColorPalette({
 });
 
 // Every escape the parser shouldn't see: control sequences, OSC strings (titles, links), other escapes and C0
-// controls. The parser reads any `ESC [` up to the next `m` as SGR, so only SGR may reach it. An OSC string ends at
-// the next line break too, where a terminal would keep reading it: one left open would hide every later line.
+// controls. The parser reads any `ESC [` up to the next `m` as SGR, so only SGR may reach it. An OSC string also ends
+// at the next line break or escape, where a terminal would keep reading it: one left open would hide later lines.
 const ESCAPE =
   // biome-ignore lint/suspicious/noControlCharactersInRegex: matching terminal escapes is the point.
-  /\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1b\n]*(?:\x07|\x1b\\|(?=\n))|[ -/]*[0-~])?|[\x00-\x08\x0b\x0c\x0e-\x1a\x1c-\x1f\x7f]/g;
+  /\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1b\n]*(?:\x07|\x1b\\|(?=[\n\x1b]))|[ -/]*[0-~])?|[\x00-\x08\x0b\x0c\x0e-\x1a\x1c-\x1f\x7f]/g;
 // biome-ignore lint/suspicious/noControlCharactersInRegex: matching terminal escapes is the point.
 const SGR = /^\x1b\[[\d;]*m$/;
 // An escape cut off by the end of a chunk.

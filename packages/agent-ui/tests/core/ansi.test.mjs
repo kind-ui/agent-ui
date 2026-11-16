@@ -33,6 +33,12 @@ test("an OSC left open ends at the next line break", () => {
   assert.deepEqual(lines.update("ok\n\x1b]0;title\nnext").map(plain), ["ok", "", "next"]);
 });
 
+test("an OSC cut short by another escape shows none of its text", () => {
+  assert.deepEqual(createAnsiLines().update("ok\x1b]0;title\x1b\nnext").map(plain), ["ok", "next"]);
+  const [line] = createAnsiLines().update("\x1b]0;t\x1b[31mred");
+  assert.deepEqual(line.spans, [{ text: "red", fg: "var(--kind-ansi-red)" }]);
+});
+
 test("\\r\\n split across chunks is one newline", () => {
   const lines = createAnsiLines();
   lines.update("a\r");

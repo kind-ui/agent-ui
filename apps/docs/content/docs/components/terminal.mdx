@@ -33,15 +33,17 @@ Terminal
 │   ├── TerminalExit
 │   └── TerminalMeta
 └── TerminalContent
-    ├── TerminalCommand
-    ├── TerminalCopy
-    ├── TerminalViewport
-    │   └── TerminalOutput
-    │       └── TerminalLine
-    └── TerminalJump
+    └── div[data-terminal-screen]
+        ├── div[data-terminal-header]
+        │   ├── TerminalCommand
+        │   └── TerminalCopy
+        ├── TerminalViewport
+        │   └── TerminalOutput
+        │       └── TerminalLine
+        └── TerminalJump
 ```
 
-`TerminalTrigger` opens and closes the run, with its status mark in `TerminalIcon`, the command in `TerminalTitle`, "Exit N" in `TerminalExit` and the duration in `TerminalMeta`. `TerminalContent` is the screen: `TerminalCommand` shows the command after a `$` prompt, `TerminalCopy` copies the output, and `TerminalViewport` scrolls `TerminalOutput`, which renders a `TerminalLine` for each line in view. `TerminalJump` shows while you've scrolled away from the end.
+`TerminalTrigger` opens and closes the run, with its status mark in `TerminalIcon`, the command in `TerminalTitle`, "Exit N" in `TerminalExit` and the duration in `TerminalMeta`. `TerminalContent` holds the screen, a `div` with `data-terminal-screen` that the stylesheet draws and places **Jump to latest** in. In its header row (`data-terminal-header`), `TerminalCommand` shows the command after a `$` prompt, `TerminalCopy` copies the output, and `TerminalViewport` scrolls `TerminalOutput`, which renders a `TerminalLine` for each line in view. `TerminalJump` shows while you've scrolled away from the end.
 
 ## Usage
 
@@ -65,7 +67,7 @@ While new output arrives, the view stays at the end. Scroll up and it stays wher
 
 ### Copying
 
-**Copy output** copies the output without its escapes and shows a check for 2 seconds. Pass `onCopy` to hear about it; cancel its `details` to copy something else yourself.
+**Copy output** shows once there's output, copies it without its escapes and shows a check for 2 seconds. Pass `onCopy` to hear about it; cancel its `details` to copy something else yourself.
 
 ### Keyboard and Motion
 
@@ -77,7 +79,7 @@ Tab reaches the header, **Copy output** and the output, which scrolls with the a
 
 ### Agent
 
-An agent connected with `createAgent` finds the run by its title, the command unless you pass `label`, and reads `open`, `status` and `following`. It can `expand` and `collapse` the run and `copy` its output, which calls `onCopy` too.
+An agent connected with `createAgent` finds the run by its title, the command unless you pass `label`, and reads `open`, `status` and `following`. It can `expand` and `collapse` the run and, once there's output, `copy` it, which calls `onCopy` too.
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/terminal/terminal.ts" name="TerminalAgentActions" type='Pick<TerminalApi, "expand" | "collapse" | "copy">' />
 

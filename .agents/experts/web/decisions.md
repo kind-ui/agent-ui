@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `ee4fcca` (Wave 4 Task 6 File Tree)
+Last reviewed: `5d56e76` (Wave 4 Task 7 Terminal)
 
 ## Settled
 
@@ -20,6 +20,8 @@ Last reviewed: `ee4fcca` (Wave 4 Task 6 File Tree)
 - **A status change while a `kind-status` is out of the document isn't announced when it returns:** nobody could see the change.
 
 ## Known and open (don't report again, check whether fixed)
+
+- **macOS WebKit's Tab skips Terminal's Copy button** (Wave 4 Task 7), as it skips buttons without Full Keyboard Access; the keyboard test fails there locally. CI's WebKit runs on Linux, where Tab reaches buttons; not checked there yet.
 
 - **An empty `<kind-generated-image>` takes no height until it upgrades** (Wave 4 Task 5): its frame and `aspect-ratio` come from the element, and a `:not(:defined)` rule can't read `width`/`height`, as with the empty Task, Plan and Document. The fixture has no moved, shadow-root, written-part or `can-download`-toggle case; each was checked by hand in review.
 - **An empty `<kind-document>` shows nothing before upgrade,** then adds its whole card, which moves what's below it; same class as `kind-reasoning` and `kind-streaming-text`. Moving it and a shadow root were checked by hand, not in the spec.
@@ -53,6 +55,8 @@ Last reviewed: `ee4fcca` (Wave 4 Task 6 File Tree)
 - **An empty `<kind-chain-of-thought>` inserts its parts on upgrade** (same class as `kind-reasoning`), which can shift layout before the element is defined.
 
 ## Resolved
+
+- **Terminal (Wave 4 Task 7):** the follow test used a click WebKit doesn't focus with and read `scrollTop` mid smooth scroll in Firefox; it now presses Enter in WebKit and waits for the scroll to rest. A put-back element is tested to redraw its lines and keep `open`.
 
 - **`kind-file-tree` put back after a tick lost its controller and state, and WebKit blurred a row** (Wave 4 Task 6): `render` sets the Tree's `controller` each draw, root `state` maps `value` and `expanded` (new `setValue`/`setExpanded`), and `drawRows` removes rows that left before placing the rest. Pinned in `file-tree.spec.ts` (moved case); `@ui-sdk/web/tree` joins `optimizeDeps`.
 - **Generated Image's axe test crashed Firefox** (Wave 4 Task 5): a locator query right after axe and a DOM change crashes the page; the spec waits for the phase with `waitForFunction` first. Add this trigger to the upstream report beside the `ui-radio` one.

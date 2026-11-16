@@ -34,7 +34,7 @@
     color: color-mix(in oklab, var(--kind-color-success) 55%, var(--kind-color-fg));
     background-color: color-mix(in oklab, var(--kind-color-success) 12%, transparent);
 
-    &[data-exit="failure"] {
+    &:where([data-exit="failure"]) {
       color: color-mix(in oklab, var(--kind-color-danger) 60%, var(--kind-color-fg));
       background-color: color-mix(in oklab, var(--kind-color-danger) 12%, transparent);
     }
@@ -67,7 +67,8 @@
     display: flex;
     align-items: flex-start;
     gap: 0.5rem;
-    padding: 0.5rem 0.375rem 0 0.75rem;
+    padding-block: 0.5rem 0;
+    padding-inline: 0.75rem 0.375rem;
   }
 
   [data-slot="kind-terminal-command"] {
@@ -141,7 +142,7 @@
   }
 
   /* The viewport scrolls under the screen's rounded corners, so the screen draws its ring. */
-  [data-terminal-screen]:has([data-slot="kind-terminal-viewport"]:focus-visible) {
+  [data-terminal-screen]:where(:has([data-slot="kind-terminal-viewport"]:focus-visible)) {
     outline: 1.5px solid color-mix(in oklab, var(--kind-color-ring) 50%, transparent);
     outline-offset: -1.5px;
   }
@@ -160,36 +161,45 @@
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 
-    & > [data-bold] {
+    & > :where([data-bold]) {
       font-weight: 700;
     }
-    & > [data-dim] {
+    & > :where([data-dim]) {
       opacity: 0.7;
     }
-    & > [data-italic] {
+    & > :where([data-italic]) {
       font-style: italic;
     }
-    & > [data-underline] {
+    & > :where([data-underline]) {
       text-decoration-line: underline;
     }
-    & > [data-strike] {
+    & > :where([data-strike]) {
       text-decoration-line: line-through;
     }
-    & > [data-underline][data-strike] {
+    & > :where([data-underline][data-strike]) {
       text-decoration-line: underline line-through;
     }
   }
 
-  /* A cursor after the last line while the command runs. */
-  [data-slot="kind-terminal"][data-status="running"] [data-slot="kind-terminal-line"][data-last]::after {
+  /* A cursor after the last line while the command runs. It overhangs into the line's padding, so it never wraps a
+     full line. */
+  [data-slot="kind-terminal-line"]:where(
+    [data-slot="kind-terminal"][data-status="running"] *,
+    [data-last]
+  )::after {
     content: "";
     display: inline-block;
     width: 0.5em;
     height: 1.1em;
-    margin-inline-start: 1px;
+    margin-inline: 1px calc(-0.5em - 1px);
     vertical-align: text-bottom;
     background-color: var(--kind-color-muted);
-    animation: kind-terminal-blink 1s steps(1) infinite;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    [data-slot="kind-terminal-line"]:where([data-slot="kind-terminal-content"][data-motion="auto"] *)::after {
+      animation: kind-terminal-blink 1s steps(1) infinite;
+    }
   }
 
   [data-slot="kind-terminal-jump"] {
@@ -221,14 +231,13 @@
       translate var(--kind-duration-base) var(--kind-ease),
       background-color var(--kind-duration-fast);
 
-    &:is([data-starting-style], [data-ending-style]) {
+    &:where([data-starting-style], [data-ending-style]) {
       opacity: 0;
-      translate: -50% 0.5rem;
     }
-    &[data-motion="reduced"] {
+    &:where([data-motion="reduced"]) {
       transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
     }
-    &[data-motion="none"] {
+    &:where([data-motion="none"]) {
       transition: none;
     }
 
@@ -253,18 +262,20 @@
     display: none;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    [data-slot="kind-terminal-line"][data-last]::after {
-      animation: none;
-    }
-    [data-slot="kind-terminal-jump"][data-motion="auto"] {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+  /* Full motion only: reduced motion fades over 120 ms with no move, "none" keeps nothing (spec §6). */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-slot="kind-terminal-jump"]:where([data-motion="auto"]):where(
+        [data-starting-style],
+        [data-ending-style]
+      ) {
+      translate: -50% 0.5rem;
     }
   }
 
-  [data-slot="kind-terminal-content"]:is([data-motion="reduced"], [data-motion="none"])
-    [data-slot="kind-terminal-line"][data-last]::after {
-    animation: none;
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot="kind-terminal-jump"]:where([data-motion="auto"]) {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+    }
   }
 }
 

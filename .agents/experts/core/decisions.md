@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `ee4fcca` (Wave 4 Task 6 File Tree)
+Last reviewed: `5d56e76` (Wave 4 Task 7 Terminal)
 
 ## Settled
 
@@ -67,6 +67,8 @@ Last reviewed: `ee4fcca` (Wave 4 Task 6 File Tree)
 - **`setValue` with a draft trusts its `tokens`;** they're rebuilt from `text` only on the next edit.
 
 ## Resolved
+
+- **Terminal (Wave 4 Task 7):** Copy and the agent's `copy` emptied the clipboard before any output; `copy` is now a getter and the button is present only with output (`hasOutput`). An OSC cut short by another escape showed its text; it now ends at the next ESC too. Line parts skip `following`, `jumpExiting`, `hasOutput` and `copied`; output that starts over calls `virtual.reset()`; Jump to latest syncs with `following` as it binds. `terminal.spec.ts` pins `data-last` moving and output replaced whole.
 
 - **`createAnsiLines`' logged costs (Wave 4 Task 1), measured by Terminal's budgets (Task 7):** an unterminated OSC now ends at the next line break instead of holding back every later chunk. The `startsWith` scan and the line array copy stay: both are linear memory work per update, not parsing or rendering, and the 10 and 1,000 line budgets show identical render and DOM counts.
 

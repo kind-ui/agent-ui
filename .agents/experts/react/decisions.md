@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `ee4fcca` (Wave 4 Task 6 File Tree)
+Last reviewed: `5d56e76` (Wave 4 Task 7 Terminal)
 
 ## Settled
 
@@ -43,6 +43,8 @@ Last reviewed: `ee4fcca` (Wave 4 Task 6 File Tree)
 - **Chain of Thought: a host `steps` update renders every step's parts (Wave 2 Task 5),** 609 renders for one status change among 100 steps; `memo` on the items doesn't help, as the parts re-render from UI SDK's options change. A press reaches one step. Report to UI SDK; no budget, since it's per step, not per token.
 
 ## Resolved
+
+- **Terminal server markup had no lines (Wave 4 Task 7),** so the screen grew ~312px on hydration: `state` now seeds the first 16 lines at the 20px guess (`firstRows`), which the virtualizer replaces once it connects. Owner-held `open` and a cancelled `onCopy` have an `owned` case; the docs' composition tree shows the `data-terminal-screen` and `data-terminal-header` wrappers the stylesheet styles.
 
 - **File Tree's row parts couldn't be composed and no owner refused** (Wave 4 Task 6): `FileTree` takes `children` inside the Tree and exports `FileTreeRows`; `refused` fixture cases pin the write-back.
 - **Generated Image's fixture had no pending download or progress tick** (Wave 4 Task 5): `onDownload` returns a promise the host settles (pending, the agent's `download` withdrawn, rejection and "Download failed"), and a tick updates `aria-valuenow`. A controlled `open` an owner keeps through a regeneration shows the image that last loaded (`full-image` reads `loadedSrc`), not a blank view.

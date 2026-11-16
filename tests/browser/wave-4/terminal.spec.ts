@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { allowClipboard, readClipboard } from "../clipboard.js";
 import { layerOf } from "../layer.js";
@@ -33,6 +33,23 @@ const settled = (page: Page) =>
           animation.playState !== "running" || animation.effect?.getTiming().iterations === Infinity,
       ),
   );
+// WebKit, like Safari, doesn't focus a button on click, so there it presses the focused button with Enter.
+const activate = async (button: Locator, browserName: string) => {
+  if (browserName !== "webkit") return button.click();
+  await button.focus();
+  await button.press("Enter");
+};
+const scrollTopAtRest = (page: Page, id: string) =>
+  viewport(page, id).evaluate(async (el) => {
+    const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+    let top = -1;
+    while (top !== el.scrollTop) {
+      top = el.scrollTop;
+      await frame();
+      await frame();
+    }
+    return top;
+  });
 const scrolledToEnd = (page: Page, id: string) =>
   viewport(page, id).evaluate((el) => el.scrollHeight - el.clientHeight - el.scrollTop <= 1);
 
@@ -49,7 +66,7 @@ const open = async (page: Page, name = "all") => {
     }).observe(document, { childList: true, subtree: true });
   });
   await page.goto(`/?c=terminal&case=${name}`);
-  await expect(part(page, name === "all" ? "test" : "stream", "line").first()).toBeVisible();
+  await expect(page.locator('[data-slot="kind-terminal"]').first()).toBeVisible();
 };
 
 test("shows the command, its colored output, exit code and duration", async ({ page }) => {
@@ -108,7 +125,7 @@ test("exit 0 completes and collapses, a failure stays open and names its exit co
   await expect.poll(() => announced(page)).toContain("npm test complete");
 });
 
-test("follows new output, and releases when the reader scrolls up", async ({ page }) => {
+test("follows new output, and releases when the reader scrolls up", async ({ page, browserName }) => {
   await open(page, "stream-10");
   for (let chunk = 0; chunk < 20; chunk++) {
     await append(page, "stream", Array.from({ length: 100 }, (_, i) => `\nline ${chunk * 100 + i}`).join(""));
@@ -122,7 +139,7 @@ test("follows new output, and releases when the reader scrolls up", async ({ pag
   await expect(viewport(page, "stream")).not.toHaveAttribute("data-following", "");
   const jump = part(page, "stream", "jump");
   await expect(jump).toBeVisible();
-  const top = await viewport(page, "stream").evaluate((el) => el.scrollTop);
+  const top = await scrollTopAtRest(page, "stream");
   const first = part(page, "stream", "line").first();
   const before = await first.evaluate((el) => [el.textContent, el.getBoundingClientRect().top]);
   await append(page, "stream", "\nmore\nand more");
@@ -130,11 +147,48 @@ test("follows new output, and releases when the reader scrolls up", async ({ pag
   expect(await viewport(page, "stream").evaluate((el) => el.scrollTop)).toBe(top);
   expect(await first.evaluate((el) => [el.textContent, el.getBoundingClientRect().top])).toEqual(before);
 
-  await jump.click();
+  await activate(jump, browserName);
   await expect(viewport(page, "stream")).toHaveAttribute("data-following", "");
   await expect(jump).toBeHidden();
   await expect(viewport(page, "stream")).toBeFocused();
   await expect(part(page, "stream", "line").last()).toHaveText("and more");
+});
+
+test("a chunk updates only the lines it reaches, and output that starts over replaces them all", async ({
+  page,
+}) => {
+  await open(page, "stream-10");
+  const lines = part(page, "stream", "line");
+  await append(page, "stream", "\nd");
+  await expect(lines.last()).toHaveText("d");
+  await expect(terminal(page, "stream").locator("[data-last]")).toHaveCount(1);
+  await expect(lines.last()).toHaveAttribute("data-last", "");
+  await set(page, "stream", { output: "a\nb\x1b[31mc" });
+  await expect(lines).toHaveText(["a", "bc"]);
+  await expect(lines.nth(1)).toHaveAttribute("data-last", "");
+  await expect(lines.nth(0)).not.toHaveAttribute("data-last", "");
+});
+
+test("an owner keeps the run open and the clipboard, and empty output offers no copy", async ({
+  page,
+  context,
+  browserName,
+}) => {
+  await allowClipboard(context, browserName);
+  await open(page, "owned");
+  await trigger(page, "held").click();
+  await expect(terminal(page, "held")).toHaveAttribute("data-open", "");
+  await page.evaluate(() => navigator.clipboard.writeText("kept"));
+  await part(page, "held", "copy").click();
+  await expect.poll(() => page.evaluate(() => (window as unknown as Fixture).kindHost.copies.length)).toBe(1);
+  expect(await readClipboard(page, browserName)).toBe("kept");
+  await expect(part(page, "held", "copy")).not.toHaveAttribute("data-copied", "");
+
+  await expect(part(page, "empty", "copy")).toBeHidden();
+  await expectAgentActions(page, "npm run build", ["collapse", "expand", "press"]);
+  await append(page, "empty", "building");
+  await expect(part(page, "empty", "copy")).toBeVisible();
+  await expectAgentActions(page, "npm run build", ["collapse", "copy", "expand", "press"]);
 });
 
 test("the keyboard opens the run, copies its output and scrolls it", async ({
@@ -193,6 +247,22 @@ for (const colorScheme of ["light", "dark"] as const) {
     expect(violations).toEqual([]);
   });
 }
+
+test("kind-terminal put back in the page draws its lines and keeps open", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await open(page);
+  const failed = terminal(page, "failed");
+  await failed.evaluate(async (el) => {
+    const parent = el.parentElement as HTMLElement;
+    el.remove();
+    await new Promise((resolve) => setTimeout(resolve));
+    parent.append(el);
+  });
+  await expect(failed).toHaveAttribute("data-open", "");
+  await expect(part(page, "failed", "line").nth(6)).toHaveText("building 100%");
+  await append(page, "failed", "\nagain");
+  await expect(part(page, "failed", "line").last()).toHaveText("again");
+});
 
 test("kind-terminal exposes live open state and its api", async ({ page }, testInfo) => {
   test.skip(layerOf(testInfo) !== "web", "web elements only");
