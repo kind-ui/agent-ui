@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `a6a6440` (Wave 3 Task 5 Checkpoint)
+Last reviewed: `623765f` (Wave 3 Task 6 Model Selector and Reasoning Effort)
 
 ## Settled
 
+- **Model Selector marks matches only in the name** (Wave 3 Task 6): a model the query found through its group or description shows no mark. Spec §7 asks for match highlighting on the options, which are named by the model; marking descriptions would add a second highlighted line per row.
 - **Checkpoint `defaultOpen` logs UI SDK's dev warning that `agent.actions` lists `restore`** (Wave 3 Task 5): `restore` is a getter that returns `undefined` while the dialog is open, as the other Wave 3 actions do.
 - **Checkpoint's `restored` isn't in `controlled`** (Wave 3 Task 5): on web a boolean attribute turned off reads `undefined`, which made UI SDK warn that it stopped controlling it. An agent sees Restore gone and "Restored" instead.
 - **A denial in a Tool is announced twice, "Denied" then "<name> denied" (Wave 3 Task 3):** spec §4.1 keeps the recorded response and the resulting execution state apart; Confirmation announces the first and Tool its outcome, and a host sets them in separate updates.
@@ -50,6 +51,7 @@ Last reviewed: `a6a6440` (Wave 3 Task 5 Checkpoint)
 
 ## Resolved
 
+- **Model Selector and Reasoning Effort (Wave 3 Task 6):** `agent.items` carry `disabled`, so the bridge refuses a disabled model instead of reporting a silent `false`; the open button's name is an `openLabel` option rather than an English plural of `label`; the Combobox and Segmented Control state types have JSDoc; the radio group is named by `label`.
 - **Checkpoint (Wave 3 Task 5):** `open` stuck `true` and the web page left `inert` when `restored` was set with the dialog open (the dialog now closes when Restore leaves, and an `"unmount"` close reports `open: false`); a refused press-open left the dialog showing (`follow` changes `open` first and closes it again); a failed restore then a new press closed and reopened the dialog; a detached controller threw on `defaultOpen` without `onRestore` (the dialog opens only while the `restore` part is bound); an agent's `press` on the dialog's Restore wasn't always gated (the confirm part always renders `data-agent-confirm`); web ignored `agentConfirm = false` (`defaults`).
 - **Question ids like `constructor` crashed, new questions kept the last round's answers, `setValue` ignored the lock, and an answer no option matches read as blank (Wave 3 Task 4).** Fixed: answers and questions are read by own key (`answerOf`, `questionOf`), new question ids drop the answers and controllers of the questions that left (uncontrolled), `setValue` returns `false` while locked or answered, and `answerText` returns `undefined` (unit tests in `question.test.mjs`).
 - **"Decision not sent" wasn't announced (Wave 3 Task 3).** Fixed: Confirmation announces it on entering `submit-failed`, and the recorded outcome on `responded` or `auto`; Tool embeds it and announces nothing more (tested in `confirmation.spec.ts` and `tool.spec.ts`, both layers).

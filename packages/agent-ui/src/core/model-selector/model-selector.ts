@@ -11,7 +11,10 @@ import { filterModels } from "./filter.js";
 export type ModelSelectorValueChangeReason = "input-change" | "imperative";
 
 export type ModelSelectorOptions = {
-  /** The models to choose from, grouped by their `group` in the order groups first appear. */
+  /**
+   * The models to choose from, grouped by their `group` in the order groups first appear.
+   * @default []
+   */
   models?: ModelOption[];
   /** The chosen model's id. Passing it controls it: change it in `onValueChange`. */
   value?: string | null;
@@ -33,6 +36,11 @@ export type ModelSelectorOptions = {
    */
   placeholder?: string;
   /**
+   * Names the button that opens the list.
+   * @default "Show models"
+   */
+  openLabel?: string;
+  /**
    * Whether the picker can't be focused or changed.
    * @default false
    */
@@ -53,6 +61,8 @@ export type ModelSelectorState = {
   label: string;
   /** The `placeholder`, else "Search models". */
   placeholder: string;
+  /** The `openLabel`, else "Show models". */
+  openLabel: string;
   /** The `disabled` option. */
   disabled: boolean;
   /** The `motion` option. */
@@ -65,11 +75,17 @@ export type ModelSelectorState = {
 
 /** What the root hands the Combobox: pass every key to it. */
 export type ModelSelectorComboboxState = {
+  /** The primitive's own, which it reads and writes the chosen model through. */
   controller: ComboboxController;
+  /** The chosen model when the Combobox mounted. */
   defaultValue: string | null;
+  /** A model's name from its id, for a chosen model the filter hides. */
   itemToLabel: (id: string) => string;
+  /** The primitive filters and ranks the list itself. */
   filter: false;
+  /** Highlights the best match as a person types, so Enter chooses it. */
   autoHighlight: true;
+  /** The `disabled` option. */
   disabled: boolean;
 };
 
@@ -78,6 +94,7 @@ export type ModelSelectorItem = ModelOption & { segments: MatchSegment[] };
 
 /** What the content renders: the matching models by group, best match first. */
 export type ModelSelectorContentState = {
+  /** The groups with a match, in the order they first appear, each with its matching models, best first. */
   groups: { group: string | undefined; models: ModelSelectorItem[] }[];
 };
 
@@ -127,6 +144,7 @@ const presentation = (options: ModelSelectorOptions) => ({
   models: options.models ?? noModels,
   label: options.label ?? "Model",
   placeholder: options.placeholder ?? "Search models",
+  openLabel: options.openLabel ?? "Show models",
   disabled: options.disabled ?? false,
   motion: options.motion ?? "auto",
 });
@@ -148,6 +166,7 @@ export const modelSelectorPrimitive: ModelSelectorPrimitive = definePrimitive<
     onValueChange: "callback",
     label: "string",
     placeholder: "string",
+    openLabel: "string",
     disabled: "boolean",
     motion: "string",
   },
@@ -261,7 +280,7 @@ export const modelSelectorPrimitive: ModelSelectorPrimitive = definePrimitive<
     trigger: slot<BaseSlotProps, { group: string; buttonLabel: string }>({
       state: (state) => ({
         group: modelOf(state, state.value)?.group ?? "",
-        buttonLabel: `Show ${state.label.toLowerCase()}s`,
+        buttonLabel: state.openLabel,
       }),
       on: {
         keydown: (_event, { api }) => api.follow(),
@@ -281,11 +300,11 @@ export const modelSelectorPrimitive: ModelSelectorPrimitive = definePrimitive<
       state: (state, { api }) => api.contentState(state),
     }),
   }),
-  // Models are listed by name, so an agent can name one to `setValue`, and an unknown one is refused.
+  // Models are listed by name, so an agent can name one to `setValue`; an unknown or disabled one is refused.
   agent: {
     actions: ["setValue"],
     items: (api: ModelSelectorApi) =>
-      api.getModels().map((model) => ({ value: model.id, label: model.name })),
+      api.getModels().map(({ id, name, disabled }) => ({ value: id, label: name, disabled })),
     closed: true,
   },
 });

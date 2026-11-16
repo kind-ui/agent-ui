@@ -101,24 +101,30 @@ export function ModelSelectorContent({
   return <parts.Content {...props}>{children}</parts.Content>;
 }
 
-export type ModelSelectorGroupProps = { label: string | undefined; children?: ReactNode };
+export type ModelSelectorGroupProps = Omit<ComponentProps<typeof KindComboboxGroup>, "children"> & {
+  label: string | undefined;
+  children?: ReactNode;
+};
 
 /** A group of models, named by its `label` when it has one. */
-export function ModelSelectorGroup({ label, children }: ModelSelectorGroupProps) {
+export function ModelSelectorGroup({ label, children, ...props }: ModelSelectorGroupProps) {
   return (
-    <KindComboboxGroup>
+    <KindComboboxGroup {...props}>
       {label ? <KindComboboxGroupLabel>{label}</KindComboboxGroupLabel> : null}
       {children}
     </KindComboboxGroup>
   );
 }
 
-export type ModelSelectorItemProps = { model: Item };
+export type ModelSelectorItemProps = Omit<
+  ComponentProps<typeof KindComboboxItem>,
+  "value" | "label" | "disabled" | "children"
+> & { model: Item };
 
 /** A model in the list: its name, with what the query matched marked, its description and a check when chosen. */
-export function ModelSelectorItem({ model }: ModelSelectorItemProps) {
+export function ModelSelectorItem({ model, ...props }: ModelSelectorItemProps) {
   return (
-    <KindComboboxItem value={model.id} label={model.name} disabled={model.disabled}>
+    <KindComboboxItem {...props} value={model.id} label={model.name} disabled={model.disabled}>
       <span data-model-selector-item-text="">
         <span data-model-selector-name="">
           {model.segments.map((segment, index) =>

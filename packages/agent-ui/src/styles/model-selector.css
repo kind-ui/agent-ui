@@ -22,7 +22,7 @@
     border: 1px solid var(--kind-color-border);
     border-radius: calc(var(--kind-radius) / 2);
     background-color: var(--kind-color-surface);
-    transition: border-color var(--kind-duration-fast);
+    transition: border-color var(--kind-duration-fast) var(--kind-ease-out);
 
     &:hover {
       border-color: color-mix(in oklab, var(--kind-color-border), var(--kind-color-fg) 15%);
@@ -113,6 +113,9 @@
       opacity: 0;
       translate: 0 -4px;
       scale: 0.98;
+    }
+    &[data-ending-style] {
+      transition-duration: var(--kind-duration-fast);
     }
   }
 

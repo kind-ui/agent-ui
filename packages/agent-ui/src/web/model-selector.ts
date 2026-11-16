@@ -15,10 +15,10 @@ import { defineInternalCombobox } from "./internal/combobox.js";
 const CHEVRON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
-const DEFAULT_PARTS = `<kind-internal-combobox><ui-combobox><kind-model-selector-trigger><kind-model-selector-input><ui-combobox-input><input data-agent-hidden></ui-combobox-input></kind-model-selector-input><span data-model-selector-group></span><ui-combobox-trigger><button>${CHEVRON}</button></ui-combobox-trigger></kind-model-selector-trigger><kind-model-selector-content><ui-combobox-content hidden><ui-combobox-empty>No models found.</ui-combobox-empty><ui-combobox-list></ui-combobox-list></ui-combobox-content></kind-model-selector-content></ui-combobox></kind-internal-combobox>`;
+const DEFAULT_PARTS = `<kind-internal-combobox><ui-combobox><kind-model-selector-trigger><kind-model-selector-input><ui-combobox-input><input data-agent-hidden></ui-combobox-input></kind-model-selector-input><span data-model-selector-group></span><ui-combobox-trigger><button>${CHEVRON}</button></ui-combobox-trigger></kind-model-selector-trigger><kind-model-selector-content><ui-combobox-content hidden side-offset="6" align="start"><ui-combobox-empty>No models found.</ui-combobox-empty><ui-combobox-list></ui-combobox-list></ui-combobox-content></kind-model-selector-content></ui-combobox></kind-internal-combobox>`;
 
-// Lists this element filled in, and so draws. A list someone wrote keeps its items, as React's children do. Kept
-// across instances, because UI SDK rebuilds one when the element returns to the page.
+// Fields and lists this element filled in, and so writes. A part someone wrote keeps its own, as React's children do.
+// Kept across instances, because UI SDK rebuilds one when the element returns to the page.
 const owned = new WeakSet<Element>();
 // The content each list was last drawn from, so a redraw for another part's change leaves it alone.
 const drawn = new WeakMap<Element, ModelSelectorContentState>();
@@ -105,7 +105,7 @@ const drawList = (list: Element, content: ModelSelectorContentState) => {
 
 /**
  * `<kind-model-selector>` fills in its field and list when it has no children. Set `models` and `value` as
- * properties; choosing a model fires `valuechange` with its id as `detail.value`.
+ * properties; choosing a model fires `modelchange` with its id as `detail.value`.
  */
 export function defineModelSelector(): void {
   if (customElements.get("kind-model-selector")) return;
@@ -119,12 +119,14 @@ export function defineModelSelector(): void {
           set: (api, value) => api.setValue(String(value)),
         },
       },
+      // The inner Combobox fires a `valuechange` of its own, which a capture listener would hear first.
+      events: { onValueChange: "modelchange" },
       api: ["getValue", "setValue"],
       render: (el, instance) => {
         if (!el.firstElementChild) {
           el.innerHTML = DEFAULT_PARTS;
-          const list = el.querySelector("ui-combobox-list");
-          if (list) owned.add(list);
+          for (const part of el.querySelectorAll("kind-model-selector-trigger, ui-combobox-list"))
+            owned.add(part);
         }
         const api = instance.api as ModelSelectorApi;
         const draw = () => {
@@ -132,18 +134,21 @@ export function defineModelSelector(): void {
           const combobox = api.comboboxState(state);
           const root = el.querySelector<Element & Record<string, unknown>>("ui-combobox");
           if (root) for (const [key, value] of Object.entries(combobox)) write(root, key, value);
-          const input = el.querySelector<HTMLInputElement>("kind-model-selector-input input");
-          write(input, "ariaLabel", state.label);
-          write(input, "placeholder", state.placeholder);
-          const group = el.querySelector("kind-model-selector-trigger [data-model-selector-group]");
-          const selected = state.models.find((model) => model.id === state.value);
-          if (group && group.textContent !== (selected?.group ?? ""))
-            group.textContent = selected?.group ?? "";
-          write(
-            el.querySelector<HTMLButtonElement>("kind-model-selector-trigger ui-combobox-trigger button"),
-            "ariaLabel",
-            `Show ${state.label.toLowerCase()}s`,
-          );
+          const trigger = el.querySelector("kind-model-selector-trigger");
+          if (trigger && owned.has(trigger)) {
+            const input = trigger.querySelector<HTMLInputElement>("kind-model-selector-input input");
+            write(input, "ariaLabel", state.label);
+            write(input, "placeholder", state.placeholder);
+            write(
+              trigger.querySelector<HTMLButtonElement>("ui-combobox-trigger button"),
+              "ariaLabel",
+              state.openLabel,
+            );
+            const group = trigger.querySelector("[data-model-selector-group]");
+            const selected = state.models.find((model) => model.id === state.value);
+            if (group && group.textContent !== (selected?.group ?? ""))
+              group.textContent = selected?.group ?? "";
+          }
           const list = el.querySelector("kind-model-selector-content ui-combobox-list");
           const content = api.contentState(state);
           if (list && owned.has(list) && drawn.get(list) !== content) {
@@ -164,14 +169,15 @@ export function defineModelSelector(): void {
 }
 
 export type KindModelSelectorEvents = {
-  valuechange: UiChangeEvent<string | null, ModelSelectorValueChangeReason>;
+  modelchange: UiChangeEvent<string | null, ModelSelectorValueChangeReason>;
 };
 
 export interface KindModelSelectorElement
   extends UiElement<KindModelSelectorEvents>,
     AttributeProperties<typeof modelSelectorPrimitive, "api" | "models" | "value" | "defaultValue"> {
   models?: ModelSelectorOptions["models"];
-  value: string | null;
+  get value(): string | null;
+  set value(id: string);
   defaultValue?: string | null;
   api: Pick<ModelSelectorApi, "getValue" | "setValue">;
 }

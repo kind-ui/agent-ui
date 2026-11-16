@@ -1,6 +1,7 @@
 import { fuzzyScore } from "@ui-sdk/core/text-match";
 import type { ModelOption } from "../../types/index.js";
 
+/** Models that share a `group`, or have none. */
 export type ModelGroup = { group: string | undefined; models: ModelOption[] };
 
 const scoreOf = (model: ModelOption, query: string) =>

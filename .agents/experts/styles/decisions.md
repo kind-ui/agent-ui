@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `a6a6440` (Wave 3 Task 5 Checkpoint)
+Last reviewed: `623765f` (Wave 3 Task 6 Model Selector and Reasoning Effort)
 
 ## Settled
 
@@ -32,6 +32,7 @@ Last reviewed: `a6a6440` (Wave 3 Task 5 Checkpoint)
 
 ## Resolved
 
+- **Model Selector and Reasoning Effort (Wave 3 Task 6):** the effort mark slides with `translate` and `width`, not `left`/`top`; the reduced fill runs color, background and border in 120 ms together; the list's exit runs every property at `--kind-duration-fast`; the search field is `h-full`, inside the field's border.
 - **Checkpoint (Wave 3 Task 5):** a wrapped error made the dialog 8px taller on narrow screens (the error's line height is 1rem, so two lines fit the row); the backdrop closed 50ms after the dialog (both use the fast duration); reduced-motion fades were `linear` (now `--kind-ease-out`, as the JS helper's).
 - **The internal Textarea was 14px beside 13px Confirmation and Question text (Wave 3 Task 4).** Fixed: it inherits its font size and line height. Question's option rows wrap their context in `:where()`, so they stay one attribute deep.
 - **The composer's attachments area opened and closed in one frame (Wave 3 Task 2).** Fixed: the area plays the motion helper's `expand` in the frame after its first chip arrives (so the chip has rendered and measures) and its `expand` exit when the last is removed, and stays shown until the collapse and the chip's exit both end. The dropzone grid has no row gap; the area's spacing is inside it, so a collapsed area takes no room. Reduced motion fades it with no height change; `motion="none"` opens and closes at once. The helper's springs start at rest (`velocity: 0`), so a chip attached mid-collapse reverses it without overshooting, and the area's top padding holds a chip's remove badge inside the box the expand clips. `composer.spec.ts` follows `kind-composer-input` each painted frame in both layers.

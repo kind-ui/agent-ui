@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `a6a6440` (Wave 3 Task 5 Checkpoint)
+Last reviewed: `623765f` (Wave 3 Task 6 Model Selector and Reasoning Effort)
 
 ## Settled
 
@@ -17,6 +17,7 @@ Last reviewed: `a6a6440` (Wave 3 Task 5 Checkpoint)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **An empty `kind-model-selector` or `kind-reasoning-effort` adds its parts on upgrade,** shifting layout once, as Task and Plan do.
 - **`kind-checkpoint` fills in its parts when it upgrades empty,** the same layout-shift class as the empty `kind-task`/`kind-plan` entry.
 - **Firefox crashes running axe after Playwright's role query on a UI SDK `ui-radio`/`ui-checkbox`** (bare UI SDK markup reproduces it; report upstream). `question.spec.ts`'s axe tests click through a CSS locator.
 - **A `<kind-question-item>` written directly in `<kind-question>`, outside a `<form>`, isn't supported;** the JSDoc says to write items inside a `<form>` child, since moving the host's nodes breaks React 19.
@@ -40,6 +41,7 @@ Last reviewed: `a6a6440` (Wave 3 Task 5 Checkpoint)
 
 ## Resolved
 
+- **Model Selector and Reasoning Effort (Wave 3 Task 6):** the web events are `modelchange` and `effortchange`, since the inner Combobox and Segmented Control fire a composed `valuechange` a capture listener hears first; equal `levels` keep a focused level focused (levels are moved only when out of place); a written field keeps its own labels; the list opens 6px below the field with `align="start"` as in React; `value` is typed to take a string.
 - **Checkpoint (Wave 3 Task 5):** setting `restored` with the dialog open left the page `inert` (a hidden web part keeps its dialog), and Firefox crashed running axe after a role query on the trigger (axe tests reach it with a CSS locator; add the Tooltip/Alert Dialog trigger to the upstream report).
 - **`kind-question` rebuilt its choices for a new array with the same content, and written items didn't win (Wave 3 Task 4).** Fixed: options are compared by content, a written item replaces the added one wherever it sits, and one written empty is filled in (`question.spec.ts`, web).
 - **Tool code-block names (Wave 2 Task 10):** `kind-tool` names only the code blocks it wrote, so a host's own code block keeps its `aria-label` (tested).

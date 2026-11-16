@@ -2,7 +2,7 @@ import "@ui-sdk/web/combobox";
 
 const classes = [
   "contents",
-  "[&_[data-slot=combobox-input]]:h-8",
+  "[&_[data-slot=combobox-input]]:h-full",
   "[&_[data-slot=combobox-input]]:min-w-0",
   "[&_[data-slot=combobox-input]]:flex-1",
   "[&_[data-slot=combobox-input]]:bg-transparent",

@@ -6,7 +6,7 @@ import { levels, models, selectionHost } from "../../shared/model-selector.js";
 
 const { host, record } = selectionHost();
 
-function Toolbar({ motion }: { motion?: MotionMode }) {
+function Toolbar({ motion, refusing }: { motion?: MotionMode; refusing?: boolean }) {
   useEffect(() => {
     Object.assign(window, { kindHost: host });
   }, []);
@@ -17,14 +17,14 @@ function Toolbar({ motion }: { motion?: MotionMode }) {
         <ModelSelector
           id="model"
           models={models}
-          defaultValue="gpt-5"
+          {...(refusing ? { value: "gpt-5" } : { defaultValue: "gpt-5" })}
           onValueChange={record("model")}
           motion={motion}
         />
         <ReasoningEffort
           id="effort"
           levels={levels}
-          defaultValue="medium"
+          {...(refusing ? { value: "medium" } : { defaultValue: "medium" })}
           onValueChange={record("effort")}
           motion={motion}
         />
@@ -34,4 +34,8 @@ function Toolbar({ motion }: { motion?: MotionMode }) {
   );
 }
 
-export const cases = { all: () => <Toolbar />, reduced: () => <Toolbar motion="reduced" /> };
+export const cases = {
+  all: () => <Toolbar />,
+  reduced: () => <Toolbar motion="reduced" />,
+  refusing: () => <Toolbar refusing />,
+};

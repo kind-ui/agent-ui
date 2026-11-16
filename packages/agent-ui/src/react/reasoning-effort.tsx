@@ -25,7 +25,9 @@ export function ReasoningEffort({ children, ...props }: ReasoningEffortProps) {
       {({ levels, ...control }) => (
         // Hidden from agents, which use the Reasoning Effort's own `setValue`.
         <KindSegmentedControl {...control} data-agent-hidden="">
-          {children ?? (
+          {children !== undefined ? (
+            children
+          ) : (
             <>
               <ReasoningEffortIndicator />
               {levels.map((level) => (

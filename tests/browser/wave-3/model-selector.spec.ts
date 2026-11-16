@@ -97,9 +97,18 @@ test("a disabled model can't be chosen by pointer, keys or setValue", async ({ p
   await input(page).fill("opus");
   await page.keyboard.press("Enter");
   await page.keyboard.press("Escape");
-  expect(await act(page, "opus-4")).toContain('"result":false');
+  expect(await act(page, "opus-4")).toContain("is disabled");
   await expect(input(page)).toHaveValue("GPT-5");
   expect(await changes(page)).toEqual([]);
+});
+
+test("a host that refuses the change keeps the chosen model", async ({ page }) => {
+  await open(page, "refusing");
+  await showModels(page).click();
+  await option(page, /Sonnet 4/).click();
+  await expect(input(page)).toHaveValue("GPT-5");
+  await expect(group(page)).toHaveText("OpenAI");
+  expect(await changes(page)).toEqual([{ component: "model", value: "sonnet-4", reason: "input-change" }]);
 });
 
 test("the field keeps its width when a longer name is chosen", async ({ page }) => {

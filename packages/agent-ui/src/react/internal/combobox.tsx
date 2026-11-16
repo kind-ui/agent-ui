@@ -17,7 +17,7 @@ import { withKindClass } from "./kind-class.js";
 export const KindCombobox = Combobox;
 export const KindComboboxInput = withKindClass(
   ComboboxInput,
-  "h-8 min-w-0 flex-1 bg-transparent px-2 text-sm text-[var(--kind-color-fg)] outline-none placeholder:text-[var(--kind-color-muted)] data-disabled:cursor-not-allowed",
+  "h-full min-w-0 flex-1 bg-transparent px-2 text-sm text-[var(--kind-color-fg)] outline-none placeholder:text-[var(--kind-color-muted)] data-disabled:cursor-not-allowed",
   "KindComboboxInput",
 );
 export const KindComboboxTrigger = withKindClass(

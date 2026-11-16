@@ -10,14 +10,15 @@
 
   :where([data-slot="kind-reasoning-effort"]) {
     & [data-slot="segmented-control-indicator"] {
-      transition-property: top, left, width, height;
+      transition-property: translate, width;
       transition-duration: var(--kind-duration-base);
       transition-timing-function: var(--kind-ease);
     }
     & [data-slot="segmented-control-item"] {
       transition:
-        color var(--kind-duration-fast),
-        background-color var(--kind-duration-reduced) var(--kind-ease-out);
+        color var(--kind-duration-fast) var(--kind-ease-out),
+        background-color var(--kind-duration-reduced) var(--kind-ease-out),
+        box-shadow var(--kind-duration-reduced) var(--kind-ease-out);
     }
   }
 
@@ -26,6 +27,9 @@
     :where([data-slot="kind-reasoning-effort"][data-motion="auto"]) {
       & [data-slot="segmented-control-indicator"] {
         display: none;
+      }
+      & [data-slot="segmented-control-item"] {
+        transition-duration: var(--kind-duration-reduced);
       }
       & [data-slot="segmented-control-item"][data-checked] {
         background-color: var(--kind-color-surface);
@@ -37,6 +41,9 @@
   :where([data-slot="kind-reasoning-effort"]:is([data-motion="reduced"], [data-motion="none"])) {
     & [data-slot="segmented-control-indicator"] {
       display: none;
+    }
+    & [data-slot="segmented-control-item"] {
+      transition-duration: var(--kind-duration-reduced);
     }
     & [data-slot="segmented-control-item"][data-checked] {
       background-color: var(--kind-color-surface);

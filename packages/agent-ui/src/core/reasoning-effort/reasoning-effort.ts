@@ -61,9 +61,15 @@ export type ReasoningEffortState = {
 
 /** What the root hands the Segmented Control: pass every key to it. */
 export type ReasoningEffortControlState = {
+  /** The primitive's own, which it reads and writes the chosen level through. */
   controller: SegmentedControlController;
+  /** The chosen level when the Segmented Control mounted. */
   defaultValue: string | null;
+  /** The `disabled` option. */
   disabled: boolean;
+  /** The `label`, which names the radio group. */
+  "aria-label": string;
+  /** The levels to render, not a prop of the Segmented Control. */
   levels: ReasoningEffortLevel[];
 };
 
@@ -151,10 +157,11 @@ export const reasoningEffortPrimitive: ReasoningEffortPrimitive = definePrimitiv
     store.subscribe(syncValue);
 
     const controlState = memo(
-      (disabled: boolean, levels: ReasoningEffortLevel[]): ReasoningEffortControlState => ({
+      (disabled: boolean, label: string, levels: ReasoningEffortLevel[]): ReasoningEffortControlState => ({
         controller,
         defaultValue: initial,
         disabled,
+        "aria-label": label,
         levels,
       }),
     );
@@ -179,7 +186,7 @@ export const reasoningEffortPrimitive: ReasoningEffortPrimitive = definePrimitiv
         }
       },
       syncValue,
-      controlState: (state) => controlState(state.disabled, state.levels),
+      controlState: (state) => controlState(state.disabled, state.label, state.levels),
     };
   },
   slots: (slot) => ({

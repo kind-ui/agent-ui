@@ -48,11 +48,23 @@ test("a press chooses a level and the mark slides to it", async ({ page }) => {
   await open(page);
   const left = () => indicator(page).evaluate((el) => el.getBoundingClientRect().left);
   const before = await left();
-  await expect(indicator(page)).toHaveCSS("transition-property", "top, left, width, height");
+  await expect(indicator(page)).toHaveCSS("transition-property", "translate, width");
   await level(page, "High").click();
   await settled(page);
   expect(await left()).toBeGreaterThan(before);
   expect(await changes(page)).toEqual([{ component: "effort", value: "high", reason: "input-change" }]);
+});
+
+test("a host that refuses the change keeps the chosen level", async ({ page }) => {
+  await open(page, "refusing");
+  await level(page, "High").click();
+  await expect(level(page, "Medium")).toBeChecked();
+  expect(await changes(page)).toEqual([{ component: "effort", value: "high", reason: "input-change" }]);
+});
+
+test("the radio group is named by the label", async ({ page }) => {
+  await open(page);
+  await expect(effort(page).getByRole("radiogroup", { name: "Reasoning effort" })).toBeVisible();
 });
 
 test("an agent's setValue chooses a listed level and refuses an unknown one", async ({ page }) => {
@@ -73,7 +85,7 @@ for (const [name, fixture, reducedMotion] of [
     await page.emulateMedia({ reducedMotion });
     await open(page, fixture);
     await expect(indicator(page)).toBeHidden();
-    await expect(level(page, "Medium")).toHaveCSS("transition-duration", /0\.12s/);
+    await expect(level(page, "Medium")).toHaveCSS("transition-duration", /^0\.12s(, 0\.12s)*$/);
   });
 }
 
