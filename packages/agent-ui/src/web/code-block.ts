@@ -1,5 +1,13 @@
-import { type CodeBlockState, codeBlockPrimitive, type Token } from "@kind-ui/agent-ui/core";
+import {
+  type CodeBlockApi,
+  type CodeBlockOptions,
+  type CodeBlockState,
+  type CodeBlockWrapChangeReason,
+  codeBlockPrimitive,
+  type Token,
+} from "@kind-ui/agent-ui/core";
 import { createParts, wrappedButton, wrappedChild } from "@ui-sdk/web";
+import type { AttributeProperties, UiChangeEvent, UiElement } from "@ui-sdk/web/events";
 import { defineInternalScrollArea } from "./internal/scroll-area.js";
 
 const parts = `
@@ -82,4 +90,25 @@ export function defineCodeBlock(): void {
     copy: { tag: "kind-code-block-copy", target: wrappedButton, display: "contents" },
     code: { tag: "kind-code-block-code", target: wrappedChild("pre"), display: "contents" },
   });
+}
+
+export type KindCodeBlockEvents = { wrapchange: UiChangeEvent<boolean, CodeBlockWrapChangeReason> };
+
+export interface KindCodeBlockElement
+  extends UiElement<KindCodeBlockEvents>,
+    AttributeProperties<typeof codeBlockPrimitive, "api" | "highlight" | "wrap"> {
+  wrap: boolean;
+  highlight?: CodeBlockOptions["highlight"];
+  api: Pick<CodeBlockApi, "copy" | "isWrapped" | "setWrap" | "toggleWrap">;
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-code-block": KindCodeBlockElement;
+    "kind-code-block-header": HTMLElement;
+    "kind-code-block-language": HTMLElement;
+    "kind-code-block-wrap": HTMLElement;
+    "kind-code-block-copy": HTMLElement;
+    "kind-code-block-code": HTMLElement;
+  }
 }

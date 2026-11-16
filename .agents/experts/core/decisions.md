@@ -21,7 +21,6 @@ Last reviewed: `5c45892` (Task 18 CI and release)
 - **An indicator's new `label` is read out,** as its status content changes; documented on the option. Spec §6 should say whether a label change counts as a terminal transition.
 - **Guard comment stripping is regex-based:** a `//` inside a string hides the rest of the line from the forbidden-pattern checks. Use the TypeScript scanner.
 - **Guard rule 1 misses `definePrimitive<…Record<…>>(`** with nested generics.
-- **Find-in-page sets `userToggled`**, so a step revealed by search no longer auto-closes on `complete`. Spec §5 needs to say whether search counts as a person.
 - **`src/internal/index.ts` is imported by nothing.**
 - **A batch of rows added at once all play the entrance** (an async first load into an empty conversation). Animating only the newest needs the count before the rows bind, which web markup doesn't guarantee.
 - **Exported `Token` and `Highlight` are generic names** for the core entry; they may clash with later exports (Token Input). Consider `CodeToken` / `CodeHighlight` before 0.1.
@@ -31,6 +30,8 @@ Last reviewed: `5c45892` (Task 18 CI and release)
 
 ## Resolved
 
+- **Find in page counts as a person (Wave 2 D3):** spec §5 now says a step search opens stays open when it completes, which is what `userToggled` already did.
+- **Step behavior was one primitive's, with no way to share it (Wave 2 Task 1):** `stepBase` in `core/step/base.ts` is spread by `stepPrimitive` and every Step-based component; StepList's roving focus and recovery are `createListFocus` in `core/list-focus.ts`.
 - **`affected-specs.mjs` missed imports with a query** (`long-answer.md?raw`) and ran every spec for files no fixture loads (Task 18).
 - **Docs TSDoc (Task 17):** Step's `defaultOpen` names its computed default and `autoOpen` names both values; `setValue`, `removeAttachment`, `expand` and `collapse` say "whether the change was accepted"; `onSubmit` says a plain return clears the draft; `submit` lists every case it does nothing; controlled options say passing them controls them.
 - **Registry (Task 16):** the registry tests now cover bare imports, exact versions, missing files and the setup file type; the consumer check reports missing tokens or Tailwind utilities once rather than per item, fails on a busy port with a message, checks the tarball's sha256 against the manifest, reports a missing package as `missing`, and refuses `..` paths; the build fails when shadcn drops a file.

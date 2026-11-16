@@ -1,5 +1,6 @@
-import { markdownTablePrimitive } from "@kind-ui/agent-ui/core";
+import { type MarkdownTableApi, markdownTablePrimitive } from "@kind-ui/agent-ui/core";
 import { createParts, wrappedButton, wrappedChild } from "@ui-sdk/web";
+import type { AttributeProperties, UiElement } from "@ui-sdk/web/events";
 import { defineInternalScrollArea } from "./internal/scroll-area.js";
 
 const parts = `
@@ -36,4 +37,19 @@ export function defineMarkdownTable(): void {
     copy: { tag: "kind-markdown-table-copy", target: wrappedButton, display: "contents" },
     table: { tag: "kind-markdown-table-table", target: wrappedChild("table"), display: "contents" },
   });
+}
+
+export interface KindMarkdownTableElement
+  extends UiElement<Record<never, never>>,
+    AttributeProperties<typeof markdownTablePrimitive, "api"> {
+  api: Pick<MarkdownTableApi, "copy">;
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-markdown-table": KindMarkdownTableElement;
+    "kind-markdown-table-header": HTMLElement;
+    "kind-markdown-table-copy": HTMLElement;
+    "kind-markdown-table-table": HTMLElement;
+  }
 }

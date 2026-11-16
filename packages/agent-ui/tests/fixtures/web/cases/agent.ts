@@ -1,4 +1,4 @@
-import type { AttachmentItem, ComposerDraft, UploadItem } from "@kind-ui/agent-ui/core";
+import type { AttachmentItem, ComposerDraft } from "@kind-ui/agent-ui/core";
 import type { UiActionDetail } from "@ui-sdk/web";
 import type { AgentAction } from "@ui-sdk/web/agent";
 import { defineAttachments } from "../../../../src/web/attachments.js";
@@ -12,7 +12,7 @@ import { defineStep, defineStepList } from "../../../../src/web/step.js";
 import { defineStreamingText } from "../../../../src/web/streaming-text.js";
 import { defineThinkingIndicator } from "../../../../src/web/thinking-indicator.js";
 import { defineTypingIndicator } from "../../../../src/web/typing-indicator.js";
-import { defineUploader } from "../../../../src/web/uploader.js";
+import { defineUploader, type KindUploaderElement } from "../../../../src/web/uploader.js";
 import { agentHost, files, filler, question, replies, steps } from "../../shared/agent.js";
 import { commands, mentions } from "../../shared/composer.js";
 import { answer } from "../../shared/markdown.js";
@@ -171,10 +171,10 @@ function wireAttachments(root: HTMLElement) {
 }
 
 function wireUploader(root: HTMLElement) {
-  const uploader = root.querySelector("kind-uploader") as HTMLElement & { items: UploadItem[] };
+  const uploader = root.querySelector("kind-uploader") as KindUploaderElement;
   uploader.items = uploads;
   const { onCancel, onRetry } = host.uploads((change) => {
-    uploader.items = change(uploader.items);
+    uploader.items = change(uploader.items ?? []);
   });
   uploader.addEventListener("uploadcancel", (event) =>
     onCancel((event as CustomEvent<{ value: string }>).detail.value),

@@ -375,11 +375,11 @@ All agent steps share one primitive: every step component builds on a common Ste
 - `createFocusRecovery` keeps focus valid when a step is removed.
 - `announce` (polite) fires only on transitions to `awaiting-input`, `complete`, `error`, and `cancelled`. Streaming updates are never announced.
 
-**Options:** `status`, `open` / `defaultOpen` / `onOpenChange`, `autoOpen: "running" | "never"` (default `"running"`), `motion` (§6).
+**Options:** `status`, `label`, `open` / `defaultOpen` / `onOpenChange`, `autoOpen: "running" | "never"` (default `"running"`), `motion` (§6).
 
 **Auto open and close:** With `autoOpen: "running"`, a step opens when it enters `running` or `awaiting-input` and closes when it reaches `complete`. It stays open on `error`. Once a person or agent toggles a step, auto behavior stops for that step. Find in page counts as a person: a step it opens stays open when it completes.
 
-**Web Components `title`:** if the `title` attribute on `<kind-step>` shows a native tooltip over the step, the option is named `label` in both render layers. Wave 2 Task 1 checks this in a browser.
+**Web Components `title`:** the option that names a step in announcements is `label` in both render layers, not `title`. On `<kind-step>`, `title` is HTML's advisory attribute: it stays on the element, so it is the tooltip over the whole step, and Chromium reads it as the step's accessible description (checked in Wave 2 Task 1).
 
 **Attributes:** `data-status`, `data-open`, `data-kind`, and `--kind-step-duration` (seconds, when known).
 

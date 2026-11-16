@@ -42,7 +42,7 @@ export function agentHost() {
       host.calls.push("stop");
       release();
     },
-    uploads: (update: (change: (items: UploadItem[]) => UploadItem[]) => void) => {
+    uploads: (update: (change: (items: readonly UploadItem[]) => UploadItem[]) => void) => {
       const { onCancel, onRetry } = uploadHost(update);
       return {
         onCancel: (id: string) => {

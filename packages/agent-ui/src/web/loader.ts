@@ -1,5 +1,6 @@
 import { loaderPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/web";
+import type { AttributeProperties, UiElement } from "@ui-sdk/web/events";
 
 const parts = `<kind-loader-dots><kind-loader-dot></kind-loader-dot><kind-loader-dot></kind-loader-dot><kind-loader-dot></kind-loader-dot></kind-loader-dots><kind-loader-label></kind-loader-label>`;
 
@@ -24,4 +25,17 @@ export function defineLoader(): void {
     dots: "kind-loader-dots",
     dot: "kind-loader-dot",
   });
+}
+
+export interface KindLoaderElement
+  extends UiElement<Record<never, never>>,
+    AttributeProperties<typeof loaderPrimitive> {}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-loader": KindLoaderElement;
+    "kind-loader-label": HTMLElement;
+    "kind-loader-dots": HTMLElement;
+    "kind-loader-dot": HTMLElement;
+  }
 }

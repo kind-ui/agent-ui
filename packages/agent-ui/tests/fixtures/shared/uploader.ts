@@ -15,7 +15,7 @@ export const uploads: UploadItem[] = [
 ];
 
 /** Host callbacks, plus the `fixture` (what the host was asked to do, and a `setStatus`) a test reads as `window.kindUploader`. */
-export function uploadHost(update: (change: (items: UploadItem[]) => UploadItem[]) => void) {
+export function uploadHost(update: (change: (items: readonly UploadItem[]) => UploadItem[]) => void) {
   const calls = {
     files: [] as string[],
     rejected: [] as string[],

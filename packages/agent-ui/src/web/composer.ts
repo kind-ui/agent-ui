@@ -1,7 +1,15 @@
 import "@ui-sdk/web/file-input";
 import "@ui-sdk/web/token-input";
-import { type ComposerApi, type ComposerState, composerPrimitive } from "@kind-ui/agent-ui/core";
-import { createParts, wrappedButton, wrappedChild } from "@ui-sdk/web";
+import {
+  type ComposerApi,
+  type ComposerDraft,
+  type ComposerOptions,
+  type ComposerState,
+  type ComposerValueChangeReason,
+  composerPrimitive,
+} from "@kind-ui/agent-ui/core";
+import { createParts, type UiActionDetail, wrappedButton, wrappedChild } from "@ui-sdk/web";
+import type { AttributeProperties, UiChangeEvent, UiElement } from "@ui-sdk/web/events";
 import type { Token } from "@ui-sdk/web/token-input";
 import { defineAttachments } from "./attachments.js";
 import { defineInternalTriggerMenu } from "./internal/trigger-menu.js";
@@ -20,8 +28,6 @@ function renderToken(token: Token, host: HTMLElement): void {
     "<ui-token-input-token><span></span><ui-token-input-token-remove></ui-token-input-token-remove></ui-token-input-token>";
   (host.querySelector("span") as HTMLSpanElement).textContent = token.label;
 }
-
-type ComposerElement = HTMLElement & { canStop: boolean };
 
 /**
  * `<kind-composer>` wraps a `<form aria-label="…">` whose content is a File Input drop zone:
@@ -59,7 +65,7 @@ export function defineComposer(): void {
       display: "contents",
       kinds: { canStop: "boolean" },
       // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
-      options: (el) => ((el as ComposerElement).canStop ? {} : { onStop: undefined }),
+      options: (el) => ((el as KindComposerElement).canStop ? {} : { onStop: undefined }),
       events: { onSubmit: "composersubmit" },
       defaults: { agentConfirm: true },
       state: {
@@ -118,4 +124,37 @@ export function defineComposer(): void {
     submit: { tag: "kind-composer-submit", target: wrappedButton, display: "contents" },
     stop: { tag: "kind-composer-stop", target: wrappedButton, display: "contents" },
   });
+}
+
+export type KindComposerEvents = {
+  valuechange: UiChangeEvent<ComposerDraft, ComposerValueChangeReason>;
+  composersubmit: CustomEvent<{ value: ComposerDraft } & Pick<UiActionDetail, "waitUntil">>;
+  stop: CustomEvent<{ value: undefined }>;
+};
+
+export interface KindComposerElement
+  extends UiElement<KindComposerEvents>,
+    AttributeProperties<
+      typeof composerPrimitive,
+      "api" | "commands" | "defaultValue" | "history" | "mentions" | "value"
+    > {
+  canStop: boolean;
+  get value(): ComposerDraft;
+  set value(value: ComposerDraft | string);
+  defaultValue?: ComposerOptions["defaultValue"];
+  mentions?: ComposerOptions["mentions"];
+  commands?: ComposerOptions["commands"];
+  history?: ComposerOptions["history"];
+  api: Pick<ComposerApi, "getValue" | "setValue" | "insertToken" | "removeAttachment" | "submit">;
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-composer": KindComposerElement;
+    "kind-composer-input": HTMLElement;
+    "kind-composer-trigger-menu": HTMLElement;
+    "kind-composer-attachments": HTMLElement;
+    "kind-composer-submit": HTMLElement;
+    "kind-composer-stop": HTMLElement;
+  }
 }

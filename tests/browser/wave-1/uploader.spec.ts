@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Calls = { files: string[]; rejected: string[]; cancels: string[]; retries: string[] };
 type Fixture = {
@@ -109,7 +110,7 @@ test("axe reports no violations", async ({ page }) => {
 });
 
 test("React 19 sets kind-uploader's properties and hears its events", async ({ page }, testInfo) => {
-  test.skip(!testInfo.project.name.startsWith("wave-1-react"), "React renders the web element");
+  test.skip(layerOf(testInfo) !== "react", "React renders the web element");
   await open(page, "web-element");
   await page.getByRole("button", { name: "Retry training-set.csv" }).click();
   await page.getByRole("button", { name: "Cancel quarterly-report.pdf" }).click();

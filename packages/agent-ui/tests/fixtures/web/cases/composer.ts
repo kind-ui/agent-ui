@@ -1,6 +1,7 @@
+import type { AttachmentItem } from "@kind-ui/agent-ui/core";
 import type { UiActionDetail } from "@ui-sdk/web";
-import { defineAttachments } from "../../../../src/web/attachments.js";
-import { defineComposer } from "../../../../src/web/composer.js";
+import { defineAttachments, type KindAttachmentsElement } from "../../../../src/web/attachments.js";
+import { defineComposer, type KindComposerElement } from "../../../../src/web/composer.js";
 import { commands, history, imageFile, mentions, recorder } from "../../shared/composer.js";
 
 const unsettled = new Promise<void>(() => {});
@@ -40,7 +41,7 @@ const markup = (attributes: string) => `
 function full(root: HTMLElement, submitOn: "enter" | "mod-enter") {
   defineComposer();
   root.innerHTML = markup(`accept="image/*,.txt,.md" max-size="3072" submit-on="${submitOn}"`);
-  const composer = root.querySelector("kind-composer") as HTMLElement & Record<string, unknown>;
+  const composer = root.querySelector("kind-composer") as KindComposerElement;
   const { onSubmit, onStop } = recorder();
   Object.assign(composer, { mentions, commands, history, canStop: params.has("stop") });
   composer.addEventListener("stop", onStop);
@@ -67,7 +68,7 @@ export const cases = {
       '<form aria-label="Message" class="border-[rgb(1,2,3)] data-[pending]:opacity-50">',
     );
     root.querySelector("kind-composer")?.addEventListener("composersubmit", (event) => {
-      (event as CustomEvent<UiActionDetail>).detail.waitUntil(unsettled);
+      event.detail.waitUntil(unsettled);
     });
   },
   full: (root: HTMLElement) => full(root, "enter"),
@@ -75,8 +76,8 @@ export const cases = {
   attachments: (root: HTMLElement) => {
     defineAttachments();
     root.innerHTML = `<div class="p-6"><kind-attachments aria-label="Files"></kind-attachments></div>`;
-    const list = root.querySelector("kind-attachments") as HTMLElement & Record<string, unknown>;
-    let items = [
+    const list = root.querySelector("kind-attachments") as KindAttachmentsElement;
+    let items: AttachmentItem[] = [
       { id: "a", name: "diagram.png", size: 2048, mediaType: "image/png", file: imageFile() },
       { id: "b", name: "notes.md", size: 812, mediaType: "text/markdown" },
       { id: "c", name: "archive.zip", size: 9_000_000, mediaType: "application/zip", error: "type" },

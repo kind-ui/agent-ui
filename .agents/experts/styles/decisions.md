@@ -15,12 +15,13 @@ Last reviewed: `1e519b1` (Task 14 styles and theme tokens)
 
 ## Known and open (don't report again, check whether fixed)
 
-- **Uploader rows leave without an exit animation,** and the rows after them jump up (same gap as attachment chips). Not cheap: the host removes the item, so an exit needs the primitive to keep leaving items in state (changing `items` and the agent snapshot) or a post-render hook for `layout`. Needs a spec decision.
+- **Uploader rows leave without an exit animation,** and the rows after them jump up (same gap as attachment chips). Not cheap: the host removes the item, so an exit needs the primitive to keep leaving items in state (changing `items` and the agent snapshot) or a post-render hook for `layout`. Decided in spec §6 "Removed items" (leaving rows, `core/leaving.ts`); Wave 2 Task 9 builds it.
 - **`field-sizing: content` on the message editor grows only in Chromium;** elsewhere it keeps its 2.5rem minimum.
 - **Removed chips leave without an exit animation,** and the chips after them jump into place.
 
 ## Resolved
 
+- **The status mark scaled its glyph under reduced motion, and only Step could draw it (Wave 2 Task 1).** Fixed: `status-mark.css` draws any `[data-status-mark]`, fades the fill and glyph over `--kind-duration-reduced` with no scale under reduced motion, and transitions nothing under `motion="none"`.
 - **The Step title shimmer lacked `-webkit-background-clip`.** Fixed, as the Thinking label has it.
 - **Highlighter colors didn't follow dark mode.** Fixed by the `light-dark()` theme: hosts pass `light-dark()` token colors (tested in `markdown.spec.ts`).
 - **The table copy button was styled in `code-block.css`.** Fixed: `markdown-table.css` has its own rule.

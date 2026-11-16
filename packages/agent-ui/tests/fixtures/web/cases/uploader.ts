@@ -1,15 +1,14 @@
-import type { UploadItem } from "@kind-ui/agent-ui/core";
-import { defineUploader } from "../../../../src/web/uploader.js";
+import { defineUploader, type KindUploaderElement } from "../../../../src/web/uploader.js";
 import { uploadHost, uploads } from "../../shared/uploader.js";
 
 export const cases = {
   mixed: (root: HTMLElement) => {
     defineUploader();
     root.innerHTML = `<div class="mx-auto max-w-lg p-6"><kind-uploader aria-label="Uploads" max-size="5000000" can-cancel can-retry></kind-uploader></div>`;
-    const uploader = root.querySelector("kind-uploader") as HTMLElement & { items: UploadItem[] };
+    const uploader = root.querySelector("kind-uploader") as KindUploaderElement;
     uploader.items = uploads;
     const { fixture, onFiles, onReject, onCancel, onRetry } = uploadHost((change) => {
-      uploader.items = change(uploader.items);
+      uploader.items = change(uploader.items ?? []);
     });
     Object.assign(window, { kindUploader: fixture });
     uploader.addEventListener("files", (event) =>

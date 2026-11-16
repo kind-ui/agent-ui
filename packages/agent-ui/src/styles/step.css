@@ -1,4 +1,4 @@
-/* Step base (spec §5), shared by both render layers. */
+/* Step base (spec §5), shared by both render layers and every Step-based component through `data-step-part`. */
 @layer components {
   [data-slot="kind-step-list"] {
     display: flex;
@@ -6,7 +6,7 @@
     gap: 2px;
   }
 
-  [data-slot="kind-step"] {
+  [data-step-part="root"] {
     display: flex;
     flex-direction: column;
     font-size: 0.875rem;
@@ -14,7 +14,7 @@
     color: var(--kind-color-fg);
   }
 
-  [data-slot="kind-step-trigger"] {
+  [data-step-part="trigger"] {
     display: flex;
     width: 100%;
     align-items: center;
@@ -59,7 +59,7 @@
     }
   }
 
-  [data-slot="kind-step-title"] {
+  [data-step-part="title"] {
     flex: 1;
     min-width: 0;
     overflow: hidden;
@@ -83,117 +83,22 @@
     }
   }
 
-  [data-slot="kind-step-meta"] {
+  [data-step-part="meta"] {
     flex-shrink: 0;
     font-variant-numeric: tabular-nums;
     font-size: 0.75rem;
     color: var(--kind-color-muted);
   }
 
-  /* Status mark: one element whose ring, fill, and glyph morph between states. Glyphs are
-     SVG masks centered by their viewBox (paths from Lucide, see THIRD_PARTY_NOTICES.md). */
-  [data-slot="kind-step-icon"] {
-    --kind-step-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
-    --kind-step-x: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E");
-    --kind-step-minus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.5' stroke-linecap='round'%3E%3Cpath d='M5 12h14'/%3E%3C/svg%3E");
-
-    position: relative;
-    flex-shrink: 0;
-    box-sizing: border-box;
-    width: 16px;
-    height: 16px;
-    border-radius: 9999px;
-    border: 1.5px dashed color-mix(in oklab, var(--kind-color-muted) 70%, transparent);
-    background-color: transparent;
-    transition:
-      border-color var(--kind-duration-base),
-      background-color var(--kind-duration-base);
-
-    /* Both cover the border box, so the arc sits on the track and glyphs center on 8px. */
-    &::before,
-    &::after {
-      content: "";
-      position: absolute;
-      inset: -1.5px;
-      border-radius: inherit;
-      opacity: 0;
-      transform: scale(0.4);
-      transition:
-        opacity var(--kind-duration-fast),
-        transform var(--kind-duration-base) var(--kind-ease);
-    }
-
-    &::after {
-      background-color: var(--kind-color-on-status);
-      mask: var(--kind-step-check) center / 10px no-repeat;
-    }
-
-    &[data-status="running"] {
-      border-style: solid;
-      border-color: color-mix(in oklab, var(--kind-color-accent) 25%, transparent);
-      &::before {
-        border: 1.5px solid transparent;
-        border-top-color: var(--kind-color-accent);
-        opacity: 1;
-        transform: none;
-        animation: kind-spin 0.8s linear infinite;
-      }
-    }
-
-    &[data-status="awaiting-input"] {
-      border-style: solid;
-      border-color: var(--kind-color-warning);
-      &::before {
-        inset: 3.5px;
-        background-color: var(--kind-color-warning);
-        opacity: 1;
-        transform: none;
-        animation: kind-pulse 1.6s ease-in-out infinite;
-      }
-    }
-
-    &[data-status="complete"] {
-      border-style: solid;
-      border-color: var(--kind-color-success);
-      background-color: var(--kind-color-success);
-      &::after {
-        opacity: 1;
-        transform: none;
-      }
-    }
-
-    &[data-status="error"] {
-      border-style: solid;
-      border-color: var(--kind-color-danger);
-      background-color: var(--kind-color-danger);
-      &::after {
-        mask-image: var(--kind-step-x);
-        opacity: 1;
-        transform: none;
-      }
-    }
-
-    &[data-status="cancelled"] {
-      border-style: solid;
-      border-color: var(--kind-color-muted);
-      &::after {
-        mask-image: var(--kind-step-minus);
-        background-color: var(--kind-color-muted);
-        opacity: 1;
-        transform: none;
-      }
-    }
-  }
-
   /* Indented under the title, with a guide line under the status mark. */
-  [data-slot="kind-step-content"],
-  [data-slot="kind-step-children"] {
+  [data-step-part="content"],
+  [data-step-part="children"] {
     margin-inline-start: 13.25px;
     padding-inline-start: 15.25px;
     border-inline-start: 1.5px solid var(--kind-color-border);
   }
 
-  [data-slot="kind-step-content"] {
+  [data-step-part="content"] {
     height: var(--kind-step-content-height);
     overflow: hidden;
     color: var(--kind-color-muted);
@@ -207,13 +112,13 @@
     }
   }
 
-  [data-slot="kind-step-children"]:empty {
+  [data-step-part="children"]:empty {
     display: none;
   }
 
   /* Full motion only: reduced motion keeps the 120 ms fade, "none" keeps nothing (spec §6). */
   @media (prefers-reduced-motion: no-preference) {
-    [data-slot="kind-step-content"][data-motion="auto"] {
+    [data-step-part="content"][data-motion="auto"] {
       transition:
         height var(--kind-duration-panel) var(--kind-ease),
         opacity var(--kind-duration-base) var(--kind-ease-out);
@@ -224,40 +129,38 @@
     }
   }
 
-  [data-slot="kind-step-content"][data-motion="reduced"] {
+  [data-step-part="content"][data-motion="reduced"] {
     transition-duration: var(--kind-duration-reduced);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    [data-slot="kind-step-content"] {
+    [data-step-part="content"] {
       transition-duration: var(--kind-duration-reduced);
     }
-    [data-slot="kind-step-trigger"]::after {
+    [data-step-part="trigger"]::after {
       transition: none;
     }
-    [data-slot="kind-step-icon"][data-status]::before,
-    [data-slot="kind-step-title"][data-status] {
+    [data-step-part="title"][data-status] {
       animation: none;
     }
-    [data-slot="kind-step-title"][data-status="running"] {
+    [data-step-part="title"][data-status="running"] {
       color: var(--kind-color-fg);
       background: none;
     }
   }
 
-  [data-slot="kind-step-trigger"]:is([data-motion="reduced"], [data-motion="none"])::after {
+  [data-step-part="trigger"]:is([data-motion="reduced"], [data-motion="none"])::after {
     transition: none;
   }
-  [data-slot="kind-step-icon"]:is([data-motion="reduced"], [data-motion="none"])::before,
-  [data-slot="kind-step-title"]:is([data-motion="reduced"], [data-motion="none"]) {
+  [data-step-part="title"]:is([data-motion="reduced"], [data-motion="none"]) {
     animation: none;
   }
-  [data-slot="kind-step-title"][data-status="running"]:is([data-motion="reduced"], [data-motion="none"]) {
+  [data-step-part="title"][data-status="running"]:is([data-motion="reduced"], [data-motion="none"]) {
     color: var(--kind-color-fg);
     background: none;
   }
 
-  [data-slot="kind-step-content"][data-motion="none"] {
+  [data-step-part="content"][data-motion="none"] {
     transition: none;
   }
 }

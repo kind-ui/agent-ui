@@ -15,21 +15,20 @@ Last reviewed: `5c45892` (Task 18 CI and release)
 
 ## Known and open (don't report again, check whether fixed)
 
-- **`title` on `<kind-step>` is also HTML's tooltip attribute,** so setting it probably shows a native tooltip over the whole step (suspected, unchecked in a browser).
 - **Indicators and `kind-uploader` fill in their parts when they connect with no children,** so a definition loaded before hand-written markup is parsed could double them (unconfirmed; `ui-calendar` does the same).
 - **`<kind-streaming-text text="…">` and an empty `kind-uploader` show nothing before upgrade.** Writing the text as children avoids it; undocumented.
 - **`kind-step-list-item` misses a button that arrives late or is replaced:** its target is `querySelector("button")`, and UI SDK's retarget observer only watches direct children. Deferred: one element can fill only one primitive's slot, so whichever of list item and trigger wraps the other has a nested target; `@ui-sdk/web`'s own `ui-toolbar-button` (nested `wrappedControl`) has the same gap. Needs an upstream subtree retarget.
 - **Removing a `kind-step` and putting it back forgets a person's toggle:** `createParts` rebuilds the instance from the `state` getters only, so `userToggled` is lost and auto close resumes. Needs a `@ui-sdk/web` hook to carry non-public state across instances.
-- **No `HTMLElementTagNameMap` entries** for `kind-*` tags.
 - **The step panel finds its trigger with `ownerDocument.querySelector`**, which misses a trigger inside a user's shadow root.
 - **A `kind-code-block` written with children (pre-upgrade `<pre>`) never fills in its parts.** Documented ("when it has no children"); a hand-written fallback needs a marker the element can replace.
 - **A code block removed and put back after a tick asks for highlighting again** and shows plain text meanwhile: same rebuilt-from-state cause as the Step entry above.
 - **Trigger Menu items show no description on web:** the list renders its own items from data, label only. React renders the description.
 - **Inside a shadow root, Enter with the Trigger Menu open submits the form** instead of choosing the item (UI SDK; report upstream).
-- **The `can-*` attributes and `removeHandler` have no types either;** part of the `HTMLElementTagNameMap` entry above.
 
 ## Resolved
 
+- **`title` on `<kind-step>` was HTML's advisory attribute (Wave 2 D4).** Checked in Chromium: it stays on the element, so it's the tooltip over the whole step and the group's accessible description. Fixed: the option is `label` in both layers.
+- **No `HTMLElementTagNameMap` entries, and no types for `can-*` or `removeHandler` (Wave 2 Task 1).** Fixed: each web file exports `Kind<Name>Element` (events, live state, `api`, `can-*` properties, host-set properties) and declares every tag it defines.
 - **WebKit `following a new message` read 16 layouts:** the opening scroll-to-end's late scroll event landed in the measured window; the test now waits two frames after opening (Task 18).
 - **Docs captions (Task 17):** the Conversation and Composer pages now say `rowKey`, `controller` and `defaultValue` are properties only.
 - **`kind-attachments` kept a public `onRemove` property, and the composer wrote `can-remove` into the user's markup.** Fixed: the composer hands its function in as `removeHandler`.

@@ -50,6 +50,8 @@ export {
   nextFollowState,
 } from "./conversation/index.js";
 export type { IndicatorOptions, IndicatorPrimitive, IndicatorState } from "./indicator.js";
+export { dropRow, type LeavingRow, mergeLeaving } from "./leaving.js";
+export { createListFocus, type ListFocus } from "./list-focus.js";
 export { loaderPrimitive } from "./loader/index.js";
 export {
   createMarkdownEngine,
@@ -90,18 +92,23 @@ export {
   resolveMotion,
 } from "./motion/index.js";
 export {
+  bindStepPanel,
   type NextOpenInput,
   nextOpen,
   type StepApi,
   type StepAutoOpen,
+  type StepBaseConfig,
   type StepListApi,
   type StepListOptions,
   type StepListPrimitive,
   type StepListState,
   type StepOpenChangeReason,
   type StepOptions,
+  type StepPanelOptions,
   type StepPrimitive,
   type StepState,
+  stepAnnouncement,
+  stepBase,
   stepListPrimitive,
   stepPrimitive,
 } from "./step/index.js";
