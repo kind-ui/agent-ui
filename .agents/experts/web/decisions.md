@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `c66ae7c` (Wave 3 Task 8 Context Meter)
+Last reviewed: `0134874` (Wave 3 Task 9 Feedback)
 
 ## Settled
 
@@ -30,7 +30,7 @@ Last reviewed: `c66ae7c` (Wave 3 Task 8 Context Meter)
 - **Web Task and Plan play color transitions on first render** (progress fill, Accept, item titles) as `data-*` attributes land after the first style pass; Chain of Thought's marks and the Tool copy buttons do the same. Trace which upgrade step causes it. In Firefox those transitions never finish under hidden content, so `wave-2/agent.spec.ts`'s `settled` skips animations whose target isn't visible.
 - **`kind-tool` draws twice for one `call` change** (the store subscription and one more notification). Harmless, since every write is guarded.
 - **`<kind-reasoning text="…">` shows nothing before upgrade,** then inserts its trigger and content, which shifts layout; same class as `kind-streaming-text` below. Writing the parts as children avoids it; undocumented.
-- **Indicators and `kind-uploader` fill in their parts when they connect with no children,** so a definition loaded before hand-written markup is parsed could double them (unconfirmed; `ui-calendar` does the same).
+- **Elements that fill in their parts when they connect with no children** (indicators, `kind-uploader`, `kind-feedback`, …) can double them when a definition loads before hand-written markup is parsed: simulated for `kind-feedback` (two Toggle groups), not seen in a real streamed parse; `ui-calendar` does the same.
 - **`<kind-streaming-text text="…">` and an empty `kind-uploader` show nothing before upgrade.** Writing the text as children avoids it; undocumented.
 - **`kind-step-list-item` misses a button that arrives late or is replaced:** its target is `querySelector("button")`, and UI SDK's retarget observer only watches direct children. Deferred: one element can fill only one primitive's slot, so whichever of list item and trigger wraps the other has a nested target; `@ui-sdk/web`'s own `ui-toolbar-button` (nested `wrappedControl`) has the same gap. Needs an upstream subtree retarget.
 - **Removing a `kind-step` and putting it back forgets a person's toggle:** `createParts` rebuilds the instance from the `state` getters only, so `userToggled` is lost and auto close resumes. Needs a `@ui-sdk/web` hook to carry non-public state across instances. The same drops a pending Plan Accept or Subagent Stop (`pending` isn't carried), so a press after the move calls the host a second time.
@@ -44,6 +44,7 @@ Last reviewed: `c66ae7c` (Wave 3 Task 8 Context Meter)
 
 ## Resolved
 
+- **Feedback (Wave 3 Task 9):** a `kind-feedback` removed and put back a tick later couldn't send the comment its textarea kept (the comment text slot binds `bindText`, tested); the docs say `rating` and `defaultRating` are properties only.
 - **Context Meter (Wave 3 Task 8):** a content part written by hand left focus moving into the details (`render` now sets `initial-focus="none"` on one without it, tested with a `written` case); the title is an `h2`, as React's and UI SDK's PopoverTitle are.
 - **Suggestion (Wave 3 Task 7):** `el.api.getSuggestions()` works (the root lists it in `api`); a chip in a `<form>` doesn't submit it (`form` fixture case, both layers).
 - **Model Selector and Reasoning Effort (Wave 3 Task 6):** the web events are `modelchange` and `effortchange`, since the inner Combobox and Segmented Control fire a composed `valuechange` a capture listener hears first; equal `levels` keep a focused level focused (levels are moved only when out of place); a written field keeps its own labels; the list opens 6px below the field with `align="start"` as in React; `value` is typed to take a string.

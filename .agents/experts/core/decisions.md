@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `c66ae7c` (Wave 3 Task 8 Context Meter)
+Last reviewed: `0134874` (Wave 3 Task 9 Feedback)
 
 ## Settled
 
+- **A Feedback comment that failed keeps its error and text until the next send** (Wave 3 Task 9), through a close and a rating change: the error belongs to the text it failed to send, which the box still holds.
 - **Suggestion's `pick` has no lock** (Wave 3 Task 7): `onPick` is a `callback`, as the plan says, so a double press calls it twice. A host whose pick sends a prompt drops a repeat itself, as it would for a double-clicked send.
 - **Model Selector marks matches only in the name** (Wave 3 Task 6): a model the query found through its group or description shows no mark. Spec §7 asks for match highlighting on the options, which are named by the model; marking descriptions would add a second highlighted line per row.
 - **Checkpoint `defaultOpen` logs UI SDK's dev warning that `agent.actions` lists `restore`** (Wave 3 Task 5): `restore` is a getter that returns `undefined` while the dialog is open, as the other Wave 3 actions do.
@@ -55,6 +56,7 @@ Last reviewed: `c66ae7c` (Wave 3 Task 8 Context Meter)
 
 ## Resolved
 
+- **Feedback (Wave 3 Task 9):** the comment text slot now binds `bindText`, so a web element put back in the page sends the text its box kept; the box can't start open without **Add a comment**, and closes only when that button leaves, not on every update; `submitComment` with blank text, or while a send is pending, leaves the box's text alone; an invalid `rating` reads as none; focus recovery picks the pressed thumb, else the first.
 - **Context Meter (Wave 3 Task 8):** numbers format in `locale`, else the page's language read in `bind`, else English, so server markup and the Meter beside it agree; the level follows the rounded percentage shown; a non-finite `used` or `total` reads as 0; a small cost keeps two significant digits (`roundingPriority`, with `ES2023.Intl` in the base `lib`); controlled and cancelled opens and the rows memo are unit-tested.
 - **Suggestion (Wave 3 Task 7):** `pick` and the chips read suggestions by own key, so `pick("constructor")` is refused (`suggestion.test.mjs`); an id that leaves `suggestions` is forgotten, so it plays its entrance when added again; a removed chip's focus moves to its neighbor (`createFocusRecovery`); the chips are `type="button"`; the render-state types have JSDoc.
 - **Model Selector and Reasoning Effort (Wave 3 Task 6):** `agent.items` carry `disabled`, so the bridge refuses a disabled model instead of reporting a silent `false`; the open button's name is an `openLabel` option rather than an English plural of `label`; the Combobox and Segmented Control state types have JSDoc; the radio group is named by `label`.
