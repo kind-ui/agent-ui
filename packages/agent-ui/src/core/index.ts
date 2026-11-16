@@ -92,6 +92,12 @@ export {
   resolveMotion,
 } from "./motion/index.js";
 export {
+  type StatusOptions,
+  type StatusPrimitive,
+  type StatusState,
+  statusPrimitive,
+} from "./status/index.js";
+export {
   bindStepPanel,
   type NextOpenInput,
   nextOpen,
