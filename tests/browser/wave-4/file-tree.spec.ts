@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Log = { selected: string[]; values: string[]; expanded: string[][] };
 type Fixture = {
@@ -152,6 +153,51 @@ test("agents expand, collapse and select by path, and an unknown path changes no
 test("without onSelect agents can't select", async ({ page }) => {
   await open(page, "static");
   await expectAgentActions(page, "Files", ["expand", "collapse"]);
+});
+
+test("a press on a folder selects it, and Ctrl+Enter selects nothing", async ({ page }) => {
+  await open(page);
+  await row(page, /^docs/).click();
+  await expect(row(page, /^docs/)).toHaveAttribute("aria-selected", "true");
+  await expect.poll(async () => (await log(page)).values).toEqual(["docs item-press"]);
+  await row(page, /^README\.md/).click();
+  await row(page, /^package\.json/).focus();
+  await page.keyboard.press("Control+Enter");
+  await expect(row(page, /^README\.md/)).toHaveAttribute("aria-selected", "true");
+  expect((await log(page)).selected).toEqual(["README.md item-press mouse"]);
+});
+
+test("an owner that refuses keeps the folders and selection, and no file opens", async ({ page }) => {
+  await open(page, "refused");
+  await row(page, /^docs/).click();
+  await row(page, /^README\.md/).click();
+  await expect
+    .poll(async () => (await log(page)).values)
+    .toEqual(["docs item-press", "README.md item-press"]);
+  await expect(row(page, /^docs/)).toHaveAttribute("aria-expanded", "false");
+  await expect(row(page, /^README\.md/)).toHaveAttribute("aria-selected", "false");
+  expect((await log(page)).selected).toEqual([]);
+});
+
+test("a web tree put back in the page keeps its state and keeps reporting", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "moving an element is a web case");
+  await open(page, "moved");
+  await row(page, /^docs/).click();
+  await page.evaluate(async () => {
+    const element = document.querySelector("kind-file-tree") as HTMLElement;
+    const parent = element.parentElement as HTMLElement;
+    element.remove();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    parent.append(element);
+  });
+  await expect(row(page, /^docs/)).toHaveAttribute("aria-expanded", "true");
+  await row(page, /^lib/).click();
+  await expect.poll(async () => (await log(page)).expanded.at(-1)).toEqual(["src", "docs", "src/lib"]);
+  expect(
+    await page.evaluate(
+      () => (document.querySelector("kind-file-tree") as unknown as { value: string }).value,
+    ),
+  ).toBe("src/lib");
 });
 
 for (const colorScheme of ["light", "dark"] as const) {

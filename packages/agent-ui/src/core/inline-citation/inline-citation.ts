@@ -19,7 +19,7 @@ import type { PopoverOpenChangeReason } from "@ui-sdk/core/popover";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { Source } from "../../types/index.js";
 import { hoverPopupPreset, withHover } from "../hover-popup.js";
-import { memo } from "../memo.js";
+import { cached, memo } from "../memo.js";
 import type { MotionMode } from "../motion/index.js";
 import { type SourceEntry, sourceEntry } from "../sources/entry.js";
 import { holdTransitions } from "../step/base.js";
@@ -141,22 +141,10 @@ const noEntry: SourceEntry = {
   initial: "",
 };
 
-// Cached by object rather than with `memo`, so citations in one paragraph don't evict each other's entries.
+// Cached by object, so citations in one paragraph don't evict each other's entries.
 const entryCache = new WeakMap<Source, SourceEntry>();
 const entriesCache = new WeakMap<Source[], Record<string, SourceEntry>>();
 const idsCache = new WeakMap<Source[], string[]>();
-const cached = <Key extends object, Value>(
-  cache: WeakMap<Key, Value>,
-  key: Key,
-  build: (key: Key) => Value,
-) => {
-  let value = cache.get(key);
-  if (value === undefined) {
-    value = build(key);
-    cache.set(key, value);
-  }
-  return value;
-};
 const entries = (sources: Source[]) =>
   cached(entriesCache, sources, () =>
     Object.fromEntries(sources.map((source) => [source.id, cached(entryCache, source, sourceEntry)])),

@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `7e7a593` (Wave 4 Task 5 Generated Image)
+Last reviewed: `HEAD_SHA` (Wave 4 Task 6 File Tree)
 
 ## Settled
 
@@ -14,6 +14,7 @@ Last reviewed: `7e7a593` (Wave 4 Task 5 Generated Image)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **File Tree: the root `group` and the Tree are both named "Files"** (Wave 4 Task 6), so a screen reader may say it twice; and a function `className` on the root gets the Tree's props. Not checked with a screen reader.
 - **A server-rendered ready Generated Image shows "Loading image" and a shimmer until it hydrates** (Wave 4 Task 5): the phase comes from the `<img>`'s `load`, which only the client hears; the frame keeps its size. Each progress tick renders every part (UI SDK options change), as Chain of Thought's steps do.
 - **Sources re-renders every item's parts on any `sources` change** (Wave 4 Task 2), once per update, not per token: the same UI SDK options-change behavior as Chain of Thought, Task and Plan items despite `selects`.
 - **A Context Meter root `className` or `render` function gets `{}`,** as Status's root does (Wave 3 Task 8): style by `data-level`. The docs should say this covers every root.
@@ -43,6 +44,7 @@ Last reviewed: `7e7a593` (Wave 4 Task 5 Generated Image)
 
 ## Resolved
 
+- **File Tree's row parts couldn't be composed and no owner refused** (Wave 4 Task 6): `FileTree` takes `children` inside the Tree and exports `FileTreeRows`; `refused` fixture cases pin the write-back.
 - **Generated Image's fixture had no pending download or progress tick** (Wave 4 Task 5): `onDownload` returns a promise the host settles (pending, the agent's `download` withdrawn, rejection and "Download failed"), and a tick updates `aria-valuenow`. A controlled `open` an owner keeps through a regeneration shows the image that last loaded (`full-image` reads `loadedSrc`), not a blank view.
 - **Document had no owner-refusal, pending-download or cancelled-copy case, and its shared-tree comment overclaimed** (Wave 4 Task 4): the `refused` case and spec cover a refused `open`, `data-pending` with `download` leaving the agent actions, a rejection clearing it, and `onCopy` cancelling; the comment says only the viewport and scrollbar skip a chunk's render (the rest is the known options-change cost).
 - **Inline Citation re-rendered every slide on each page, and its card took the marker's name** (Wave 4 Task 3): `carouselState` is memoized on the ids alone with `defaultPage` a getter read at mount, and the content drops UI SDK's `aria-labelledby` for the summary. The fixture gained a `refused` case.

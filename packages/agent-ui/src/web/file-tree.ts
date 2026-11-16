@@ -67,8 +67,13 @@ const place = (parent: Movable, child: Element, before: Element | null) => {
 const drawRows = (parent: Element, items: TreeItemData[], rows: FileTreeState["rows"]) => {
   const document = parent.ownerDocument;
   const existing = new Map<string, Element>();
-  for (const row of parent.querySelectorAll(":scope > ui-tree-item"))
-    existing.set(row.getAttribute("value") ?? "", row);
+  const wanted = new Set(items.map((data) => data.value));
+  // Rows that left go first, so the rest are already in place and keep focus where the browser has no `moveBefore`.
+  for (const row of parent.querySelectorAll(":scope > ui-tree-item")) {
+    const value = row.getAttribute("value") ?? "";
+    if (wanted.has(value)) existing.set(value, row);
+    else row.remove();
+  }
   let previous: Element | null = null;
   for (const data of items) {
     const row = existing.get(data.value) ?? newRow(document, data.value);
@@ -92,7 +97,6 @@ const drawRows = (parent: Element, items: TreeItemData[], rows: FileTreeState["r
     place(parent, row, previous ? previous.nextElementSibling : parent.firstElementChild);
     previous = row;
   }
-  for (const row of existing.values()) row.remove();
 };
 
 /**
@@ -107,10 +111,17 @@ export function defineFileTree(): void {
     root: {
       tag: "kind-file-tree",
       kinds: { canSelect: "boolean" },
+      state: {
+        value: { get: (api) => api.getValue(), set: (api, value) => api.setValue(value as string | null) },
+        expanded: {
+          get: (api) => api.getExpanded(),
+          set: (api, value) => api.setExpanded(value as string[]),
+        },
+      },
       // The inner Tree fires `valuechange` and `expandedchange` of its own, which a capture listener would hear first,
       // and a native `select` bubbles from text fields.
       events: { onValueChange: "pathchange", onExpandedChange: "expandchange", onSelect: "fileselect" },
-      api: ["getValue", "getExpanded", "expand", "collapse"],
+      api: ["getValue", "setValue", "getExpanded", "setExpanded", "expand", "collapse"],
       // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
       options: (el) => ((el as KindFileTreeElement).canSelect ? {} : { onSelect: undefined }),
       render: (el, instance) => {
@@ -139,7 +150,9 @@ export function defineFileTree(): void {
             drawnRows = current.rows;
             drawRows(tree, current.items, current.rows);
           }
-          const { "aria-label": label, items } = api.treeState(current);
+          // UI SDK builds a new instance, with a new controller, when the element returns to the page.
+          const { "aria-label": label, items, controller } = api.treeState(current);
+          if (tree.controller !== controller) tree.controller = controller;
           if (tree.items !== items) tree.items = items;
           if (tree.ariaLabel !== label) tree.ariaLabel = label;
           api.syncTree();
@@ -167,13 +180,15 @@ export interface KindFileTreeElement
       "api" | "entries" | "value" | "defaultValue" | "expanded" | "defaultExpanded"
     > {
   entries?: FileTreeOptions["entries"];
-  value?: string | null;
+  get value(): string | null;
+  set value(path: string | null);
   defaultValue?: string | null;
-  expanded?: string[];
+  get expanded(): string[];
+  set expanded(paths: string[]);
   defaultExpanded?: string[];
   /** Whether a press or Enter on a file fires `fileselect`, and agents may `select`. */
   canSelect: boolean;
-  api: Pick<FileTreeApi, "getValue" | "getExpanded" | "expand" | "collapse">;
+  api: Pick<FileTreeApi, "getValue" | "setValue" | "getExpanded" | "setExpanded" | "expand" | "collapse">;
 }
 
 declare global {

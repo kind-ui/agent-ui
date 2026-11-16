@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `7e7a593` (Wave 4 Task 5 Generated Image)
+Last reviewed: `HEAD_SHA` (Wave 4 Task 6 File Tree)
 
 ## Settled
 
+- **A double-click on a File Tree file calls `onSelect` twice** (Wave 4 Task 6): each press is an activation, as Suggestion's `onPick` is; a host that opens files dedupes.
 - **Generated Image with `status` `"ready"` and no `src` shows "Loading image"** (Wave 4 Task 5): an error there would flash, and announce, whenever a web host sets `status` before `src`; the `src` JSDoc says to set it with or before `ready`.
 - **The Step root writes `data-mounting` in its `bind`, not through `attrs`** (Wave 3 Task 11): it lasts two frames per element and isn't state, so a store flag would render every React part again to clear it; `wave-3/agent.spec.ts` checks no Step part runs a transition on load. **`imports` in `size-budget.json` is required:** the file is ours, and a missing key fails the check.
 - **A dismissed notice the host never removes stays faded and inert** (Wave 3 Task 10, D10): the host removes it in `onDismiss`; only a rejection brings it back.
@@ -32,6 +33,7 @@ Last reviewed: `7e7a593` (Wave 4 Task 5 Generated Image)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **File Tree hears `onSelect` from bubbled clicks and keyups, not the Tree's `onAction`** (Wave 4 Task 6): web's `action` doesn't bubble, so `read` calls `onSelect` only when the event's row is the selection, the owner took it, and no modifier is held. Needs a spec §2 row or a bubbling UI SDK event.
 - **A Document without `document.css` never overflows** (Wave 4 Task 4): `--kind-document-max-height` doesn't parse, so `overflowing` stays false and Show more never shows. Nothing is clipped without the stylesheet either; undocumented.
 - **Inline Citation's "N of M" doesn't follow a page the Carousel changes on its own** (Wave 4 Task 3), like a host reordering `sources` or a web element put back after paging: the Carousel's page events don't bubble and no render layer may listen, so `syncPage` runs on a click, a keyup and the api's own paging. Needs a spec §2 row or a bubbling UI SDK event.
 - **`treeFromPaths` drops a leading `/` below the top level** (Wave 4 Task 1): `/a/b.ts` becomes a `""` folder holding `a/b.ts`. `pathItems` documents relative paths; report upstream.
@@ -67,6 +69,7 @@ Last reviewed: `7e7a593` (Wave 4 Task 5 Generated Image)
 
 ## Resolved
 
+- **File Tree's `onSelect`, cache and folder selection** (Wave 4 Task 6): `read` reads the Tree before reporting and holds `syncTree` meanwhile (a press on a folder lost its selection), opens a file only when the selection the owner took is the event's row with no modifier, caches tree data and rows by object (`cached` in `memo.ts`), so two trees don't rebuild each other's, and `sameFolders` compares sets. Pinned in `file-tree.spec.ts` (refused, folder and Ctrl+Enter cases).
 - **`pathItems` gave a folder and a file the same value for `src` and `src/a.ts`** (Wave 4 Task 1): fixed in Task 6; a file whose path is also a folder of another entry is left out, so the folder holds the other entries (`tree.test.mjs`).
 - **Generated Image's announcements, `defaultOpen` and input checks** (Wave 4 Task 5): a retry that failed again stayed quiet (announcements now fire on each phase change of an image the instance saw generating); `defaultOpen` opened an empty view (it now waits for the first `loaded`); an unknown `status` reads as `"ready"`; a non-finite `progress`, `width` or `height` falls back; `load`/`error` decide the outcome, `naturalWidth` only in `bind`; `onDownload`'s JSDoc says what a rejection does (`tests/core/generated-image.test.mjs`).
 - **Document's download lock, size and JSDoc** (Wave 4 Task 4): the lock is `pending`, the key the agent bridge reads and waits on (it was `downloading`); `documentSize` switches to MB from 999,950 bytes, not "1,000 kB", and counts a lone surrogate as 3 bytes, as `TextEncoder` does; state and types have JSDoc; `document.test.mjs` pins the one-at-a-time download, the refused id, the first-id default and a controlled `open`.

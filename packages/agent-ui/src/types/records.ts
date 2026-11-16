@@ -89,9 +89,9 @@ export interface FileTreeEntry {
   path: string;
   /** How the change being shown touched the file, shown as a badge. */
   change?: "added" | "modified" | "deleted" | "renamed";
-  /** Lines the change added, shown as `+N`. */
+  /** Lines the change added, a whole number from 0, shown as `+N`. */
   additions?: number;
-  /** Lines the change removed, shown as `−N`. */
+  /** Lines the change removed, a whole number from 0, shown as `−N`. */
   deletions?: number;
 }
 

@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `7e7a593` (Wave 4 Task 5 Generated Image)
+Last reviewed: `HEAD_SHA` (Wave 4 Task 6 File Tree)
 
 ## Settled
 
+- **A File Tree file the host removes leaves at once** (Wave 4 Task 6): spec §6 "Removed items" names Queue, Attachments and Uploader; a file tree reflects the change set, as Sources does.
 - **The Context Meter ring sweeps by transitioning `--meter-value`** (Wave 3 Task 8), which repaints its `conic-gradient` on the main thread: a 16 px element for 280 ms, never on mount, and off under reduced motion.
 - **Reasoning restyles nested parts through variables** (`--kind-markdown-*`, `--kind-status-mark-complete`) set with one attribute selector, so a class on the content or icon part wins. Code blocks and tables in the thoughts keep their own colors.
 - **The Streaming Text caret bar sits 0.15 em past the text:** laid over the last glyph it cuts the letter; past it, a scroll container sized to `max-content` gains about 0.3 em of overflow. Width and line height never change.
@@ -18,6 +19,7 @@ Last reviewed: `7e7a593` (Wave 4 Task 5 Generated Image)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A file added to a folder while it opens may be clipped until the open ends** (Wave 4 Task 6): `--tree-group-height` is measured as the open starts. Not reproduced.
 - **The shimmer's band snaps to its start as it fades out when the image loads** (Wave 4 Task 5, suspected, not measured frame by frame): the animation stops with the phase; the image fades in over it.
 - **An expanded Document whose content resizes after streaming ends eases to the new height over `--kind-duration-panel`** (suspected, not reproduced), so its last lines could be clipped that long.
 - **On web, a step's content that starts closed can fade its parts' colors in the first time it opens** (Wave 3 Task 11): `hidden="until-found"` skips style updates, so parts styled bare by a bind's style read before their attributes landed keep that style until the reveal, after `data-mounting` is gone. Rows and roots hold through their first frames; ending the hold at a part's first styled frame needs UI SDK binds not to read style while parts connect (upstream).
@@ -41,6 +43,7 @@ Last reviewed: `7e7a593` (Wave 4 Task 5 Generated Image)
 
 ## Resolved
 
+- **File Tree in forced colors, specificity, `motion="none"` and the warning dot** (Wave 4 Task 6): a selected row is `SelectedItem`, qualifiers sit in `:where()`, the start opacity skips `motion="none"`, and the dot mixes toward the text color for 3:1.
 - **Generated Image's dialog, reduced motion and specificity** (Wave 4 Task 5): a long `alt` stretched the full image (the actions row is `contain: inline-size`, the image `object-fit: contain`); reduced motion and `none` left a still shimmer band (the `::after` now hides) and ran the 150 ms hover fades; the frame, progress and preview contexts sit in `:where()`; the preview fades out under the loaded image, so a transparent image doesn't show it.
 - **Document's Show more moved the card 40px in one frame, its focus ring was invisible, it sat off-centre in right-to-left text, and its selectors were five attributes deep** (Wave 4 Task 4): Show more stays absolute over a spacer kept whenever the content overflows, and the expanded `max-height` adds that space; the body draws the viewport's ring (`:has(:focus-visible)`), as Conversation's root does; it centres with `left: 50%`; the context is in `:where()`; the header's padding is logical. Its rules also now reach only the outermost scroll area, not a table's or Code Block's inside it.
 - **The Inline Citation marker made a line under 1.3 line height taller, and the carousel clipped a focused link's ring** (Wave 4 Task 3): the marker has `margin-block: -0.25em` (spec at line height 1), and the slides have 4 px padding inside a viewport pulled out by as much.

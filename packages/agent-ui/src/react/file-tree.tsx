@@ -3,7 +3,7 @@
 import { fileTreePrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/react/primitive";
 import type { TreeItemData } from "@ui-sdk/react/tree";
-import { type ComponentProps, memo } from "react";
+import { type ComponentProps, memo, type ReactNode } from "react";
 import {
   KindTree,
   KindTreeGroup,
@@ -26,21 +26,17 @@ const CHEVRON = (
   </svg>
 );
 
-export type FileTreeProps = Omit<ComponentProps<typeof parts.Root>, "children">;
+export type FileTreeProps = Omit<ComponentProps<typeof parts.Root>, "children"> & { children?: ReactNode };
 
 /**
  * Changed files as a folder tree: each file shows its change as a badge and its added and removed lines; a folder
  * shows the most significant change inside it as a dot. The arrow keys, Home and End, and typing a name move
- * between rows, as in UI SDK's Tree.
+ * between rows, as in UI SDK's Tree. Any `children` replace the rows inside the Tree; `FileTreeRows` draws them.
  */
-export function FileTree(props: FileTreeProps) {
+export function FileTree({ children, ...props }: FileTreeProps) {
   return (
     <parts.Root {...props}>
-      {(tree) => (
-        <KindTree {...tree}>
-          <Rows items={tree.items} />
-        </KindTree>
-      )}
+      {(tree) => <KindTree {...tree}>{children ?? <FileTreeRows items={tree.items} />}</KindTree>}
     </parts.Root>
   );
 }
@@ -48,7 +44,10 @@ export function FileTree(props: FileTreeProps) {
 // Every row has an indicator, a file's an empty spacer that lines its name up with a folder's. It's hidden from agents,
 // which hides UI SDK's Tree from them (a component with a part under `data-agent-hidden` is off limits) while the rows
 // stay the File Tree's.
-const Rows = memo(function Rows({ items }: { items: TreeItemData[] }) {
+export type FileTreeRowsProps = { items: TreeItemData[] };
+
+/** A Tree row for each item, with a `FileTreeItem` in its label, and its children in a group. */
+export const FileTreeRows = memo(function FileTreeRows({ items }: FileTreeRowsProps) {
   return items.map((item) => (
     <KindTreeItem key={item.value} value={item.value}>
       <KindTreeItemLabel>
@@ -57,7 +56,7 @@ const Rows = memo(function Rows({ items }: { items: TreeItemData[] }) {
       </KindTreeItemLabel>
       {item.children ? (
         <KindTreeGroup>
-          <Rows items={item.children} />
+          <FileTreeRows items={item.children} />
         </KindTreeGroup>
       ) : null}
     </KindTreeItem>

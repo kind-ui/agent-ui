@@ -14,7 +14,7 @@
 
   /* A press on the arrow lands on its row, which opens a folder too: UI SDK's indicator cancels its own click, which
      the root then couldn't hear. A file's indicator is an empty spacer. */
-  [data-file-tree-part="root"] [data-slot="tree-indicator"] {
+  :where([data-file-tree-part="root"]) [data-slot="tree-indicator"] {
     pointer-events: none;
 
     & svg {
@@ -38,15 +38,15 @@
       background-color: var(--kind-color-muted);
       mask: var(--kind-file-tree-file-icon) center / contain no-repeat;
     }
-    &[data-kind="folder"]::before {
+    &:where([data-kind="folder"])::before {
       mask-image: var(--kind-file-tree-folder-icon);
     }
-    &[data-kind="folder"]:where([data-expanded] > *)::before {
+    &:where([data-kind="folder"]):where([data-expanded] > *)::before {
       mask-image: var(--kind-file-tree-folder-open-icon);
     }
 
     /* A folder's dot, in the color of the most significant change inside it. */
-    &[data-kind="folder"][data-change]::after {
+    &:where([data-kind="folder"][data-change])::after {
       content: "";
       flex-shrink: 0;
       width: 6px;
@@ -54,11 +54,12 @@
       /* Centered on the badges' column. */
       margin-inline: 6px;
       border-radius: 9999px;
-      background-color: var(--kind-file-tree-change);
+      /* Mixed toward the text color, so the warning dot keeps 3:1 on a light surface. */
+      background-color: color-mix(in oklab, var(--kind-file-tree-change) 80%, var(--kind-color-fg));
     }
   }
 
-  :is([data-file-tree-part="item"], [data-file-tree-part="badge"]) {
+  :where([data-file-tree-part="item"], [data-file-tree-part="badge"]) {
     &[data-change="added"] {
       --kind-file-tree-change: var(--kind-color-success);
     }
@@ -97,11 +98,11 @@
     font-size: 0.75rem;
     font-variant-numeric: tabular-nums;
 
-    &[data-additions]::before {
+    &:where([data-additions])::before {
       content: attr(data-additions);
       color: color-mix(in oklab, var(--kind-color-success) 55%, var(--kind-color-fg));
     }
-    &[data-deletions]::after {
+    &:where([data-deletions])::after {
       content: attr(data-deletions);
       color: color-mix(in oklab, var(--kind-color-danger) 60%, var(--kind-color-fg));
     }
@@ -128,14 +129,14 @@
   }
 
   /* Folders open and close by height at full motion, fade under reduced motion, and switch at once with "none". */
-  [data-file-tree-part="root"] [data-slot="tree-group"] {
+  :where([data-file-tree-part="root"]) [data-slot="tree-group"] {
     height: var(--tree-group-height);
     overflow: hidden;
     transition: opacity var(--kind-duration-base) var(--kind-ease-out);
-
-    &:is([data-starting-style], [data-ending-style]) {
-      opacity: 0;
-    }
+  }
+  :where([data-file-tree-part="root"]:not([data-motion="none"]))
+    [data-slot="tree-group"]:is([data-starting-style], [data-ending-style]) {
+    opacity: 0;
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -179,6 +180,14 @@
     }
     [data-file-tree-part="badge"] {
       border: 1px solid CanvasText;
+    }
+    :where([data-file-tree-part="root"]) [data-slot="tree-label"][data-selected] {
+      forced-color-adjust: none;
+      background-color: SelectedItem;
+      color: SelectedItemText;
+    }
+    [data-selected] > [data-file-tree-part="item"]::before {
+      background-color: SelectedItemText;
     }
   }
 }

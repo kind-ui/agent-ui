@@ -3,7 +3,15 @@ import { defineFileTree } from "../../../../src/web/file-tree.js";
 import { entries, type FileTreeLog, nextEntries } from "../../shared/file-tree.js";
 
 const page =
-  ({ motion, selectable = true }: { motion?: MotionMode; selectable?: boolean } = {}) =>
+  ({
+    motion,
+    selectable = true,
+    refuse,
+  }: {
+    motion?: MotionMode;
+    selectable?: boolean;
+    refuse?: boolean;
+  } = {}) =>
   (root: HTMLElement) => {
     defineFileTree();
     const log: FileTreeLog = { selected: [], values: [], expanded: [] };
@@ -14,10 +22,14 @@ const page =
     if (motion) element.motion = motion;
     element.canSelect = selectable;
     element.defaultExpanded = ["src"];
-    element.addEventListener("pathchange", (event) =>
-      log.values.push(`${event.detail.value} ${event.detail.reason}`),
-    );
-    element.addEventListener("expandchange", (event) => log.expanded.push(event.detail.value));
+    element.addEventListener("pathchange", (event) => {
+      log.values.push(`${event.detail.value} ${event.detail.reason}`);
+      if (refuse) event.preventDefault();
+    });
+    element.addEventListener("expandchange", (event) => {
+      log.expanded.push(event.detail.value);
+      if (refuse) event.preventDefault();
+    });
     element.addEventListener("fileselect", (event) =>
       log.selected.push(`${event.detail.value} ${event.detail.reason} ${event.detail.source}`),
     );
@@ -41,4 +53,6 @@ export const cases = {
   all: page(),
   reduced: page({ motion: "reduced" }),
   static: page({ selectable: false }),
+  refused: page({ refuse: true }),
+  moved: page(),
 };

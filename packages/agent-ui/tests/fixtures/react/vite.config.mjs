@@ -35,6 +35,7 @@ export default defineConfig(({ mode }) => ({
       "@ui-sdk/react/token-input",
       "@ui-sdk/react/toolbar",
       "@ui-sdk/react/tooltip",
+      "@ui-sdk/react/tree",
       "@ui-sdk/react/trigger-menu",
     ],
   },

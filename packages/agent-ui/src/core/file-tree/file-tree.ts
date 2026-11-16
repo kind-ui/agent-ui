@@ -10,11 +10,12 @@ import {
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { createTreeController, type TreeController } from "@ui-sdk/core/tree";
 import type { FileTreeEntry } from "../../types/index.js";
-import { memo } from "../memo.js";
+import { cached, memo } from "../memo.js";
 import { enter, type MotionMode } from "../motion/index.js";
 import { holdTransitions } from "../step/base.js";
 import { parentFolders, pathItems, treeValues } from "../tree.js";
 
+/** How a change touched a file: `"added"`, `"modified"`, `"deleted"` or `"renamed"`. */
 export type FileTreeChange = NonNullable<FileTreeEntry["change"]>;
 
 /**
@@ -59,7 +60,10 @@ export type FileTreeOptions = {
   defaultExpanded?: string[];
   /** Called when folders open or close, with why. */
   onExpandedChange?: (expanded: string[], details: ChangeDetails<FileTreeExpandedChangeReason>) => void;
-  /** Called with a file's path when a person presses it or presses Enter on it, or an agent selects it. */
+  /**
+   * Called with a file's path when a person presses it or presses Enter on it, or an agent selects it, once the
+   * selection moved to it; not when `onValueChange` refused that.
+   */
   onSelect?: (path: string, details: ChangeDetails<FileTreeSelectReason>) => void;
   /**
    * How folders open and close, and how files added after the first frame come in. `"auto"` follows
@@ -73,12 +77,15 @@ export type FileTreeOptions = {
 export type FileTreeRow = {
   /** The last part of its path. */
   name: string;
+  /** Whether it's a folder, which holds other rows, rather than a file. */
   folder: boolean;
   /** A file's own change, or the most significant change inside a folder. */
   change: FileTreeChange | undefined;
   /** A file's change as its badge's letter, like `M` for modified; empty for a folder or an unchanged file. */
   letter: string;
+  /** A file's added lines, shown as `+N`. */
   additions: number | undefined;
+  /** A file's removed lines, shown as `−N`. */
   deletions: number | undefined;
 };
 
@@ -97,6 +104,7 @@ export type FileTreeState = {
   expanded: string[];
   /** Whether `onSelect` is set. */
   canSelect: boolean;
+  /** The `motion` option. */
   motion: MotionMode;
 };
 
@@ -123,6 +131,10 @@ export type FileTreeApi = {
   getExpanded: () => string[];
   /** The `entries`. */
   getEntries: () => FileTreeEntry[];
+  /** Selects a file or folder, or nothing with `null`. Returns `false` for an unknown path or a refused change. */
+  setValue: (path: string | null) => boolean;
+  /** Opens exactly these folders. Returns `false` when one isn't a folder, or for a refused change. */
+  setExpanded: (paths: string[]) => boolean;
   /** Opens a folder and the folders it's in. Returns `false` for a file or an unknown path, or a refused change. */
   expand: (path: string) => boolean;
   /** Closes a folder. Returns `false` for a file or an unknown path, or a refused change. */
@@ -177,52 +189,53 @@ const letters: Record<FileTreeChange, string> = { added: "A", modified: "M", del
 // What a folder shows when files inside it changed differently: the first of these it holds.
 const significance: FileTreeChange[] = ["deleted", "added", "modified", "renamed"];
 
-const sameRow = (a: FileTreeRow, b: FileTreeRow) =>
-  a.name === b.name &&
-  a.folder === b.folder &&
-  a.change === b.change &&
-  a.letter === b.letter &&
-  a.additions === b.additions &&
-  a.deletions === b.deletions;
+const itemsCache = new WeakMap<FileTreeEntry[], TreeItemData[]>();
+const valuesCache = new WeakMap<TreeItemData[], { branches: string[]; leaves: string[] }>();
+const rowsCache = new WeakMap<FileTreeEntry[], Record<string, FileTreeRow>>();
+const fileRows = new WeakMap<FileTreeEntry, FileTreeRow>();
+const itemsOf = (entries: FileTreeEntry[]) => cached(itemsCache, entries, pathItems);
+const valuesOf = (items: TreeItemData[]) => cached(valuesCache, items, treeValues);
 
-const itemsOf = memo(pathItems);
-const valuesOf = memo(treeValues);
-
-// An unchanged row keeps its object, even from new entries, so only a changed row's parts render again.
-let previousRows: Record<string, FileTreeRow> = {};
-const rowsOf = memo((entries: FileTreeEntry[], items: TreeItemData[]) => {
-  const byPath = new Map(entries.map((entry) => [entry.path, entry]));
-  const folderChanges = new Map<string, FileTreeChange>();
-  for (const { path, change } of entries) {
-    if (!change) continue;
-    for (const folder of parentFolders(path)) {
-      const shown = folderChanges.get(folder);
-      if (!shown || significance.indexOf(change) < significance.indexOf(shown))
-        folderChanges.set(folder, change);
-    }
-  }
-  const rows: Record<string, FileTreeRow> = {};
-  const visit = (level: TreeItemData[]) => {
-    for (const item of level) {
-      const folder = item.children !== undefined;
-      const entry = folder ? undefined : byPath.get(item.value);
-      const row: FileTreeRow = {
-        name: item.label,
-        folder,
-        change: folder ? folderChanges.get(item.value) : entry?.change,
-        letter: entry?.change ? letters[entry.change] : "",
-        additions: entry?.additions,
-        deletions: entry?.deletions,
-      };
-      const kept = previousRows[item.value];
-      rows[item.value] = kept && sameRow(kept, row) ? kept : row;
-      if (item.children) visit(item.children);
-    }
-  };
-  visit(items);
-  previousRows = rows;
-  return rows;
+const fileRow = (entry: FileTreeEntry, name: string): FileTreeRow => ({
+  name,
+  folder: false,
+  change: entry.change,
+  letter: entry.change ? letters[entry.change] : "",
+  additions: entry.additions,
+  deletions: entry.deletions,
 });
+
+// A file's row keeps its object while the host keeps its entry, so only a changed file's parts have new state.
+const rowsOf = (entries: FileTreeEntry[]) =>
+  cached(rowsCache, entries, () => {
+    const byPath = new Map(entries.map((entry) => [entry.path, entry]));
+    const folderChanges = new Map<string, FileTreeChange>();
+    for (const { path, change } of entries) {
+      if (!change) continue;
+      for (const folder of parentFolders(path)) {
+        const shown = folderChanges.get(folder);
+        if (!shown || significance.indexOf(change) < significance.indexOf(shown))
+          folderChanges.set(folder, change);
+      }
+    }
+    const rows: Record<string, FileTreeRow> = {};
+    const visit = (level: TreeItemData[]) => {
+      for (const item of level) {
+        const entry = byPath.get(item.value);
+        if (item.children) {
+          rows[item.value] = {
+            ...noRow,
+            name: item.label,
+            folder: true,
+            change: folderChanges.get(item.value),
+          };
+          visit(item.children);
+        } else if (entry) rows[item.value] = cached(fileRows, entry, () => fileRow(entry, item.label));
+      }
+    };
+    visit(itemsOf(entries));
+    return rows;
+  });
 
 // Own keys only, so a path like "constructor" doesn't find `Object`'s.
 const rowAt = ({ rows }: FileTreeState, path: string) =>
@@ -236,8 +249,11 @@ const own = selects<FileTreeState, FileTreeApi, ItemPartProps>({
   items: [],
 });
 
-const sameFolders = (a: readonly string[], b: readonly string[]) =>
-  a.length === b.length && a.every((path) => b.includes(path));
+const sameFolders = (a: readonly string[], b: readonly string[]) => {
+  const shown = new Set(a);
+  const wanted = new Set(b);
+  return shown.size === wanted.size && [...shown].every((path) => wanted.has(path));
+};
 
 const countsLabel = ({ additions, deletions }: FileTreeRow) =>
   [
@@ -248,11 +264,10 @@ const countsLabel = ({ additions, deletions }: FileTreeRow) =>
     .join(", ");
 
 const presentation = ({ entries = noEntries, label, onSelect, motion = "auto" }: FileTreeOptions) => {
-  const items = itemsOf(entries);
   return {
     entries,
-    items,
-    rows: rowsOf(entries, items),
+    items: itemsOf(entries),
+    rows: rowsOf(entries),
     label: label ?? "Files",
     canSelect: onSelect !== undefined,
     motion,
@@ -301,13 +316,16 @@ export const fileTreePrimitive: FileTreePrimitive = definePrimitive<
     // play the entrance.
     let mounting = true;
     const known = new Set<string>();
-    context.onOptions((options) => {
-      const { rows } = presentation(options);
+    context.onOptions(({ entries = noEntries }) => {
+      const rows = rowsOf(entries);
       // Forgotten, so a file added again plays its entrance.
       for (const path of known) if (!Object.hasOwn(rows, path)) known.delete(path);
     });
 
+    // Held while `read` reports a person's change, so writing the open folders doesn't undo a selection not yet read.
+    let reading = false;
     const syncTree = () => {
+      if (reading) return;
       const { value, expanded } = store.get();
       // The controller reads `undefined` until the Tree attaches it.
       const shown = controller.getExpanded();
@@ -317,20 +335,12 @@ export const fileTreePrimitive: FileTreePrimitive = definePrimitive<
     };
     store.subscribe(syncTree);
 
-    // A change the owner cancels is written back, and so is one a controlling owner didn't take by the next frame:
-    // the Tree holds its own selection and open folders.
-    const settle = (accepted: boolean, controlled: boolean) => {
-      if (!accepted) syncTree();
-      else if (controlled) {
-        cancelAnimationFrame(resync);
-        resync = requestAnimationFrame(syncTree);
-      }
-    };
-
     const isFolder = (path: string) => valuesOf(store.get().items).branches.includes(path);
     const isFile = (path: string) => valuesOf(store.get().items).leaves.includes(path);
     const setExpanded = (expanded: string[]) =>
       sameFolders(expanded, store.get().expanded) || change("expanded", expanded, { reason: "imperative" });
+    const setValue = (path: string | null) =>
+      path === store.get().value || change("value", path, { reason: "imperative" });
     const select = (path: string, event?: Event) =>
       !dispatch(
         context,
@@ -354,38 +364,52 @@ export const fileTreePrimitive: FileTreePrimitive = definePrimitive<
       getValue: () => store.get().value,
       getExpanded: () => store.get().expanded,
       getEntries: () => store.get().entries,
+      setValue: (path) => (path === null || isFolder(path) || isFile(path)) && setValue(path),
+      setExpanded: (paths) => paths.every(isFolder) && setExpanded(paths),
       expand: (path) =>
         isFolder(path) && setExpanded([...new Set([...store.get().expanded, ...parentFolders(path), path])]),
       collapse: (path) => isFolder(path) && setExpanded(store.get().expanded.filter((open) => open !== path)),
       get select() {
         if (!store.get().canSelect) return undefined;
         return (path: string) => {
-          if (!isFile(path)) return false;
-          if (store.get().value !== path && !change("value", path, { reason: "imperative" })) return false;
-          return select(path);
+          return isFile(path) && setValue(path) && select(path);
         };
       },
       read: (event) => {
         const expanded = controller.getExpanded();
         if (expanded === undefined) return;
+        const value = controller.getValue() as string | null;
         const key = event instanceof KeyboardEvent ? event.key : undefined;
+        const modified = event instanceof KeyboardEvent && (event.ctrlKey || event.metaKey || event.altKey);
         const pressed = event.type === "click" || key === "Enter" || key === " ";
         const state = store.get();
+        reading = true;
+        let accepted = true;
         if (!sameFolders(expanded, state.expanded)) {
           const reason =
             event.type === "beforematch" ? "find-in-page" : pressed ? "item-press" : "list-navigation";
-          settle(change("expanded", expanded, { reason, event }), context.options().expanded !== undefined);
+          accepted = change("expanded", expanded, { reason, event }) && accepted;
         }
-        const value = controller.getValue() as string | null;
-        if (value !== state.value)
-          settle(
-            change("value", value, { reason: "item-press", event }),
-            context.options().value !== undefined,
-          );
-        // UI SDK's Tree selects the row a press or Enter lands on, so the selection names the pressed file.
-        const onRow = event.target instanceof Element && event.target.closest('[data-slot="tree-item"]');
-        if (onRow && pressed && key !== " " && value !== null && state.canSelect && isFile(value))
-          select(value, event);
+        let selected = true;
+        if (value !== state.value) {
+          selected = change("value", value, { reason: "item-press", event });
+          accepted = selected && accepted;
+        }
+        reading = false;
+        // A change the owner cancels is written back, and so is one a controlling owner didn't take by the next
+        // frame: the Tree holds its own selection and open folders.
+        if (!accepted) syncTree();
+        else if (context.options().value !== undefined || context.options().expanded !== undefined) {
+          cancelAnimationFrame(resync);
+          resync = requestAnimationFrame(syncTree);
+        }
+        // UI SDK's Tree selects the row a press or Enter lands on, so a file is opened only once it's selected.
+        const row = event.target instanceof Element ? event.target.closest('[data-slot="tree-item"]') : null;
+        const path = row
+          ?.querySelector(':scope > [data-slot="tree-label"] > [data-file-tree-part="item"]')
+          ?.getAttribute("data-path");
+        const opened = pressed && key !== " " && !modified && selected && state.canSelect;
+        if (opened && path && path === value && isFile(path)) select(path, event);
       },
       syncTree,
       treeState: (state) => treeState(state.label, state.items),
@@ -433,6 +457,7 @@ export const fileTreePrimitive: FileTreePrimitive = definePrimitive<
         const row = rowAt(state, key);
         return {
           "data-file-tree-part": "item",
+          "data-path": key,
           "data-kind": row.folder ? "folder" : "file",
           "data-change": row.change,
         };

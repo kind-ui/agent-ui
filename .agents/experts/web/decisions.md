@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `7e7a593` (Wave 4 Task 5 Generated Image)
+Last reviewed: `HEAD_SHA` (Wave 4 Task 6 File Tree)
 
 ## Settled
 
@@ -54,6 +54,7 @@ Last reviewed: `7e7a593` (Wave 4 Task 5 Generated Image)
 
 ## Resolved
 
+- **`kind-file-tree` put back after a tick lost its controller and state, and WebKit blurred a row** (Wave 4 Task 6): `render` sets the Tree's `controller` each draw, root `state` maps `value` and `expanded` (new `setValue`/`setExpanded`), and `drawRows` removes rows that left before placing the rest. Pinned in `file-tree.spec.ts` (moved case); `@ui-sdk/web/tree` joins `optimizeDeps`.
 - **Generated Image's axe test crashed Firefox** (Wave 4 Task 5): a locator query right after axe and a DOM change crashes the page; the spec waits for the phase with `waitForFunction` first. Add this trigger to the upstream report beside the `ui-radio` one.
 - **`kind-document` replaced its Downloads on any `downloads` change, added one beside a written Download, and wiped written content text** (Wave 4 Task 4): Downloads it added are kept by `value` and moved with `moveBefore`, a written `kind-document-download` replaces them all, and content is filled only with no element or text in it; the `written` case and a focus-through-change test pin them.
 - **Reordering `kind-inline-citation`'s sources blurred a focused link** (Wave 4 Task 3): slides move with `moveBefore` where the browser has it.

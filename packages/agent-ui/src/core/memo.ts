@@ -9,3 +9,17 @@ export function memo<Args extends unknown[], Value>(
     return last.value;
   };
 }
+
+// Cached by object rather than with `memo`, so instances that render side by side don't evict each other's values.
+export const cached = <Key extends object, Value>(
+  cache: WeakMap<Key, Value>,
+  key: Key,
+  build: (key: Key) => Value,
+): Value => {
+  let value = cache.get(key);
+  if (value === undefined) {
+    value = build(key);
+    cache.set(key, value);
+  }
+  return value;
+};
