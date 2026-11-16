@@ -1,6 +1,6 @@
 # @kind-ui/agent-ui
 
-Agent-operable AI components built on [UI SDK](https://ui-sdk.dev/docs). Not yet published.
+Agent-operable AI components built on [UI SDK](https://ui-sdk.dev/docs).
 
 | Entry | Contents |
 | --- | --- |
