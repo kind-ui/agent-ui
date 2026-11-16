@@ -6,7 +6,7 @@ import type { AttributeProperties, UiChangeEvent, UiElement } from "@ui-sdk/web/
 import { defineInternalAlertDialog } from "./internal/alert-dialog.js";
 import { defineInternalTooltip } from "./internal/tooltip.js";
 
-const DEFAULT_PARTS = `<kind-checkpoint-label></kind-checkpoint-label><kind-checkpoint-description></kind-checkpoint-description><kind-checkpoint-line></kind-checkpoint-line><kind-checkpoint-restore><kind-internal-alert-dialog><ui-alert-dialog><kind-internal-tooltip><ui-tooltip><ui-tooltip-trigger><ui-alert-dialog-trigger><button data-checkpoint-trigger></button></ui-alert-dialog-trigger></ui-tooltip-trigger><ui-tooltip-content hidden>Restore checkpoint</ui-tooltip-content></ui-tooltip></kind-internal-tooltip><ui-alert-dialog-backdrop hidden></ui-alert-dialog-backdrop><ui-alert-dialog-content hidden><ui-alert-dialog-title></ui-alert-dialog-title><ui-alert-dialog-description></ui-alert-dialog-description><div data-checkpoint-answers><kind-checkpoint-error>Couldn't restore. Try again.</kind-checkpoint-error><kind-checkpoint-cancel><button>Cancel</button></kind-checkpoint-cancel><kind-checkpoint-confirm><button>Restore</button></kind-checkpoint-confirm></div></ui-alert-dialog-content></ui-alert-dialog></kind-internal-alert-dialog></kind-checkpoint-restore><kind-checkpoint-restored><span aria-hidden="true" data-status-mark data-status="complete"></span>Restored</kind-checkpoint-restored>`;
+const DEFAULT_PARTS = `<kind-checkpoint-label></kind-checkpoint-label><kind-checkpoint-description></kind-checkpoint-description><kind-checkpoint-line></kind-checkpoint-line><kind-checkpoint-restore><kind-internal-alert-dialog><ui-alert-dialog><kind-internal-tooltip><ui-tooltip type="label"><ui-tooltip-trigger><ui-alert-dialog-trigger><button data-checkpoint-trigger></button></ui-alert-dialog-trigger></ui-tooltip-trigger><ui-tooltip-content hidden>Restore checkpoint</ui-tooltip-content></ui-tooltip></kind-internal-tooltip><ui-alert-dialog-backdrop hidden></ui-alert-dialog-backdrop><ui-alert-dialog-content hidden><ui-alert-dialog-title></ui-alert-dialog-title><ui-alert-dialog-description></ui-alert-dialog-description><div data-checkpoint-answers><kind-checkpoint-error>Couldn't restore. Try again.</kind-checkpoint-error><kind-checkpoint-cancel><button>Cancel</button></kind-checkpoint-cancel><kind-checkpoint-confirm><button>Restore</button></kind-checkpoint-confirm></div></ui-alert-dialog-content></ui-alert-dialog></kind-internal-alert-dialog></kind-checkpoint-restore><kind-checkpoint-restored><span aria-hidden="true" data-status-mark data-status="complete"></span>Restored</kind-checkpoint-restored>`;
 
 // Parts this element wrote text into. A part someone wrote text into keeps it, as React's children do. Kept across
 // instances, because UI SDK rebuilds one when the element returns to the page.
@@ -42,6 +42,7 @@ export function defineCheckpoint(): void {
     root: {
       tag: "kind-checkpoint",
       kinds: { canRestore: "boolean" },
+      defaults: { agentConfirm: true },
       // Without the attribute, the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
       options: (el) => ((el as KindCheckpointElement).canRestore ? {} : { onRestore: undefined }),
       state: {

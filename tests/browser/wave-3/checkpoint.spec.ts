@@ -11,6 +11,8 @@ type Fixture = {
 
 const checkpoint = (page: Page) => page.locator("#checkpoint");
 const trigger = (page: Page) => checkpoint(page).getByRole("button", { name: "Restore checkpoint" });
+// Firefox crashes running axe after a role query on these triggers (web decisions.md), so axe tests use this.
+const triggerButton = (page: Page) => checkpoint(page).locator("[data-checkpoint-trigger]");
 const dialog = (page: Page) => page.getByRole("alertdialog", { name: "Restore this checkpoint?" });
 const confirm = (page: Page) => dialog(page).getByRole("button", { name: "Restore" });
 const cancel = (page: Page) => dialog(page).getByRole("button", { name: "Cancel" });
@@ -50,7 +52,7 @@ const open = async (page: Page, name = "all") => {
     }).observe(document, { childList: true, subtree: true });
   });
   await page.goto(`/?c=checkpoint&case=${name}`);
-  await expect(trigger(page)).toBeVisible();
+  await expect(triggerButton(page)).toBeVisible();
 };
 
 test("a group named by its label, with its description and Restore", async ({ page }) => {
@@ -105,7 +107,7 @@ test("a restore that rejects keeps the dialog open with the error, then works ag
 test("a double press on the dialog's Restore calls the host once", async ({ page }) => {
   await open(page);
   await trigger(page).click();
-  await confirm(page).evaluate((button) => {
+  await confirm(page).evaluate((button: HTMLElement) => {
     button.click();
     button.click();
   });
@@ -131,6 +133,26 @@ test("restored swaps Restore for Restored in place, and focus follows", async ({
   await expect(trigger(page)).toHaveCount(0);
   expect(await boxes()).toEqual(before);
   await expect.poll(() => announced(page)).toContain("Checkpoint restored");
+});
+
+test("restored while the dialog is open closes it and frees the page", async ({ page }) => {
+  await open(page);
+  await trigger(page).click();
+  await confirm(page).click();
+  await page.evaluate(() => (window as unknown as Fixture).kindCheckpoint.restore(true));
+  await expect(dialog(page)).toBeHidden();
+  await expect(page.locator("[inert]")).toHaveCount(0);
+  await expect(part(page, "restored")).toBeVisible();
+  await settle(page, 0, "resolve");
+  await page.evaluate(() => (window as unknown as Fixture).kindCheckpoint.restore(false));
+  await expect(trigger(page)).toBeVisible();
+  await expect(dialog(page)).toBeHidden();
+});
+
+test("an agent pressing the dialog's Restore needs a person", async ({ page }) => {
+  await open(page);
+  await trigger(page).click();
+  await expect(confirm(page)).toHaveAttribute("data-agent-confirm", /.+/);
 });
 
 test("an agent's restore needs a person, then opens the dialog and restores nothing (D7)", async ({
@@ -184,8 +206,8 @@ for (const colorScheme of ["light", "dark"] as const) {
     await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     const before = await new AxeBuilder({ page }).include("#root").analyze();
     expect(before.violations).toEqual([]);
-    await trigger(page).click();
-    await expect(dialog(page)).toBeVisible();
+    await triggerButton(page).click();
+    await expect(page.locator('[data-slot="alert-dialog-content"]')).toBeVisible();
     await settled(page);
     const { violations } = await new AxeBuilder({ page }).include("#root").analyze();
     expect(violations).toEqual([]);

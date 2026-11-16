@@ -58,7 +58,7 @@ Only the dialog's **Restore** calls `onRestore`, with `details.source` saying ho
 
 ### Restored
 
-Once the host has restored the checkpoint, pass `restored`. "Restored" takes the button's place at the same height, so nothing around it moves, and screen readers hear "Checkpoint restored". If the button had focus, focus moves to "Restored".
+Once the host has restored the checkpoint, pass `restored`. "Restored" takes the button's place at the same height, so nothing above or below it moves, and screen readers hear "Checkpoint restored". If the button had focus, focus moves to "Restored". Setting `restored` while the dialog is open closes it.
 
 ### Keyboard
 
@@ -78,7 +78,7 @@ The dialog rises and fades in, its backdrop and the tooltip fade, and "Restored"
 
 ### Agent
 
-An agent connected with `createAgent` finds the checkpoint by its label and reads whether its dialog is open and whether it's restored. Its `restore` opens the dialog, the same as a press, and is offered while **Restore checkpoint** shows and the dialog is closed. It never calls `onRestore`: only a person's press on the dialog's **Restore** does. While `agentConfirm` is on, `restore` also waits for a person to confirm, unless the host's `allow` lets it through.
+An agent connected with `createAgent` finds the checkpoint by its label and reads whether its dialog is open. Its `restore` opens the dialog, the same as a press, and is offered while **Restore checkpoint** shows and the dialog is closed. It never calls `onRestore`: only the dialog's **Restore** does, and an agent pressing that always needs a person to confirm, unless the host's `allow` lets it through. While `agentConfirm` is on, `restore` and every other action on the checkpoint need a person too.
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/checkpoint/checkpoint.ts" name="CheckpointAgentActions" type='Pick<CheckpointApi, "restore">' />
 

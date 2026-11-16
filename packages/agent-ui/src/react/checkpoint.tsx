@@ -18,7 +18,7 @@ const parts = createParts(checkpointPrimitive, {
   label: "span",
   description: "span",
   line: "span",
-  restore: "span",
+  restore: "div",
   restored: "span",
   error: "span",
   cancel: "button",
@@ -63,7 +63,7 @@ export type CheckpointRestoreProps = ComponentProps<typeof parts.Restore>;
 export function CheckpointRestore({
   children = ({ controller, dismissible, ...dialog }) => (
     <KindAlertDialog controller={controller} dismissible={dismissible}>
-      <KindTooltip>
+      <KindTooltip type="label">
         <KindTooltipTrigger render={<KindAlertDialogTrigger />} data-checkpoint-trigger="" />
         <KindTooltipContent>Restore checkpoint</KindTooltipContent>
       </KindTooltip>
@@ -80,14 +80,19 @@ export type CheckpointDialogProps = Omit<CheckpointDialogState, "controller" | "
 };
 
 /** The dialog's backdrop and content: its title, description and answers, unless you pass children. */
-export function CheckpointDialog({ title, description, initialFocus, children }: CheckpointDialogProps) {
+export function CheckpointDialog({
+  title,
+  description,
+  initialFocus,
+  children = DEFAULT_ANSWERS,
+}: CheckpointDialogProps) {
   return (
     <>
       <KindAlertDialogBackdrop />
       <KindAlertDialogContent initialFocus={initialFocus}>
         <KindAlertDialogTitle>{title}</KindAlertDialogTitle>
         <KindAlertDialogDescription>{description}</KindAlertDialogDescription>
-        {children ?? DEFAULT_ANSWERS}
+        {children}
       </KindAlertDialogContent>
     </>
   );

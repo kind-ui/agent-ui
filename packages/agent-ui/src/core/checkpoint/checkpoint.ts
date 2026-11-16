@@ -32,7 +32,10 @@ export type CheckpointOptions = {
    * pressed it.
    */
   onRestore?: (details: ActionDetails) => unknown;
-  /** Whether the host restored the checkpoint. Shows "Restored" in place of Restore. */
+  /**
+   * Whether the host restored the checkpoint. Shows "Restored" in place of Restore, and closes the dialog.
+   * @default false
+   */
   restored?: boolean;
   /** @default "Restore this checkpoint?" */
   confirmTitle?: string;
@@ -40,13 +43,16 @@ export type CheckpointOptions = {
   confirmDescription?: string;
   /** Whether the dialog is open. Passing it controls it: change it in `onOpenChange`. */
   open?: boolean;
-  /** Whether the dialog is open at first, when `open` isn't passed. */
+  /**
+   * Whether the dialog is open at first, when `open` isn't passed.
+   * @default false
+   */
   defaultOpen?: boolean;
   /** Called when the dialog opens or closes, with what caused it. */
   onOpenChange?: (open: boolean, details: ChangeDetails<AlertDialogOpenChangeReason>) => void;
   /**
-   * Whether an agent needs a person to approve `restore`. Either way, only a person's press in the dialog calls
-   * `onRestore`.
+   * Whether an agent needs a person to approve `restore` and every action on the checkpoint. Either way, an agent
+   * pressing the dialog's Restore needs a person.
    * @default true
    */
   agentConfirm?: boolean;
@@ -111,6 +117,8 @@ export type CheckpointApi = {
   cancel: (event?: Event) => void;
   /** Follows the dialog the Alert Dialog trigger opened. Called as the trigger's click bubbles to the restore slot. */
   follow: (event: Event) => void;
+  /** Opens the dialog when it's in the page and `open`. Called by the restore slot, which holds it. */
+  bindDialog: () => () => void;
   /** Hands the Alert Dialog its props. Called by the restore slot. */
   dialogState: (state: CheckpointState) => CheckpointDialogState;
   /** Moves focus to "Restored" when Restore leaves while focused. Called by the restore slot. */
@@ -194,14 +202,19 @@ export const checkpointPrimitive: CheckpointPrimitive = definePrimitive<
     ...presentation(options),
     ...(options.open === undefined ? {} : { open: options.open }),
   }),
-  controlled: ["open", "restored"],
+  controlled: ["open"],
   api: (context) => {
     const { store } = context;
     const change = createChange(context);
     const pending = createPendingAction(context, { state: "pending" });
     const controller = createAlertDialogController();
     let mounting = true;
+    let destroyed = false;
+    let dialogBound = false;
     let watching = false;
+    context.onDestroy(() => {
+      destroyed = true;
+    });
 
     // `open` resolves on the dialog's next close, whatever causes it, so every close reaches `open` state.
     const watch = () => {
@@ -209,17 +222,23 @@ export const checkpointPrimitive: CheckpointPrimitive = definePrimitive<
       store.set({ failed: false });
       void controller.open().then(({ reason, source }) => {
         watching = false;
-        if (reason === "unmount") return;
-        if (store.get().open) change("open", false, { reason, source });
+        if (destroyed) return;
+        if (store.get().open)
+          change("open", false, reason === "unmount" ? { reason: "imperative" } : { reason, source });
         sync();
       });
     };
-    // Brings the dialog to the `open` state, which the host owns when it passes `open`.
+    // Brings the dialog to the `open` state, which the host owns when it passes `open`. Restore leaving, as when
+    // the host sets `restored`, closes it: a web part that leaves stays in the page, hidden.
     const sync = () => {
       if (mounting) return;
-      const { open } = store.get();
-      if (open && !watching) watch();
-      else if (!open && controller.isOpen()) controller.close();
+      const state = store.get();
+      if (!showsRestore(state)) {
+        if (controller.isOpen()) controller.close();
+        if (state.open) change("open", false, { reason: "imperative" });
+      } else if (!dialogBound) return;
+      else if (state.open && !watching) watch();
+      else if (!state.open && controller.isOpen()) controller.close();
     };
     store.subscribe(sync);
 
@@ -242,7 +261,7 @@ export const checkpointPrimitive: CheckpointPrimitive = definePrimitive<
       get restore() {
         const state = store.get();
         return showsRestore(state) && !state.open
-          ? () => void change("open", true, { reason: "trigger-press" })
+          ? () => void change("open", true, { reason: "imperative" })
           : undefined;
       },
       isOpen: () => store.get().open,
@@ -265,10 +284,19 @@ export const checkpointPrimitive: CheckpointPrimitive = definePrimitive<
       cancel: (event) => {
         if (!store.get().pending) controller.close(event ? { reason: "close-press", event } : {});
       },
+      // The trigger has opened the dialog already, so an owner who refuses the change closes it again.
       follow: (event) => {
         if (watching || !controller.isOpen()) return;
-        watch();
-        if (!store.get().open) change("open", true, { reason: "trigger-press", event });
+        if (!store.get().open && !change("open", true, { reason: "trigger-press", event }))
+          controller.close();
+        else if (!watching) watch();
+      },
+      bindDialog: () => {
+        dialogBound = true;
+        sync();
+        return () => {
+          dialogBound = false;
+        };
       },
       dialogState: (state) => dialogState(!state.pending, state.confirmTitle, state.confirmDescription),
       recovery: createFocusRecovery({ fallback: () => context.element("restored") }),
@@ -312,7 +340,14 @@ export const checkpointPrimitive: CheckpointPrimitive = definePrimitive<
       present: showsRestore,
       state: (state, { api }) => api.dialogState(state),
       on: { click: (event, { api }) => api.follow(event) },
-      bind: (el, part) => part.api.recovery.bind(el, part),
+      bind: (el, part) => {
+        const unbindDialog = part.api.bindDialog();
+        const unbindRecovery = part.api.recovery.bind(el, part);
+        return () => {
+          unbindDialog();
+          unbindRecovery();
+        };
+      },
     }),
     // Takes Restore's place at its height. A Tab stop, so focus has somewhere to go when Restore leaves.
     restored: slot({
@@ -334,7 +369,12 @@ export const checkpointPrimitive: CheckpointPrimitive = definePrimitive<
       focus: "native",
       press: ({ api }, event) => api.confirm(event),
       state: (state) => ({ pending: state.pending }),
-      attrs: (state) => ({ ...pendingAttrs(state), "data-pending": state.pending ? "" : undefined }),
+      attrs: (state) => ({
+        ...pendingAttrs(state),
+        "data-pending": state.pending ? "" : undefined,
+        // Whatever `agentConfirm` says, an agent pressing it needs a person.
+        "data-agent-confirm": "Restores the checkpoint, discarding the changes after it",
+      }),
     }),
   }),
   agent: { actions: ["restore"] },

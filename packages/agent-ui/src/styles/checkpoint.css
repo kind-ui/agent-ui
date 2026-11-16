@@ -104,6 +104,8 @@
     flex: 1;
     min-width: 0;
     font-size: 0.75rem;
+    /* Two lines still fit the row, on a narrow screen. */
+    line-height: 1rem;
     color: var(--kind-color-danger);
   }
 
@@ -180,6 +182,9 @@
       &:is([data-starting-style], [data-ending-style]) {
         opacity: 0;
       }
+      &[data-ending-style] {
+        transition-duration: var(--kind-duration-fast);
+      }
     }
     & [data-slot="tooltip-content"] {
       transition:
@@ -203,7 +208,7 @@
         [data-slot="alert-dialog-backdrop"],
         [data-slot="tooltip-content"]
       ) {
-      transition: opacity var(--kind-duration-reduced) linear;
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
 
       &:is([data-starting-style], [data-ending-style]) {
         translate: none;
@@ -219,7 +224,7 @@
       [data-slot="alert-dialog-backdrop"],
       [data-slot="tooltip-content"]
     ) {
-    transition: opacity var(--kind-duration-reduced) linear;
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
 
     &:is([data-starting-style], [data-ending-style]) {
       translate: none;
