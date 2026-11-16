@@ -25,7 +25,6 @@ const plans = (motion?: PlanOptions["motion"]) => (root: HTMLElement) => {
   plan.canAccept = true;
   Object.assign(plan, { label: "Migration plan", status: "awaiting-input", items: initial });
   if (motion) plan.motion = motion;
-  // Each accept waits until the test settles it.
   const accepts: { resolve(): void; reject(): void }[] = [];
   plan.addEventListener("accept", (event) =>
     event.detail.waitUntil(new Promise<void>((resolve, reject) => accepts.push({ resolve, reject }))),

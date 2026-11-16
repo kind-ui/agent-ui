@@ -17,7 +17,6 @@ const initial: Item[] = [
   { id: "verify", status: "pending", title: "Verify the counts" },
 ];
 
-// Each accept waits until the test settles it.
 const accepts: { resolve(): void; reject(): void }[] = [];
 
 function Plans({ motion }: { motion?: PlanOptions["motion"] }) {

@@ -37,7 +37,7 @@ export type ItemListOptions<Item extends ListItem> = Omit<StepOptions, "status" 
   items?: Item[];
   /** Defaults to what the items add up to: `error` once one fails, `complete` once all are done, else `running` or `pending`. */
   status?: StepStatus;
-  /** The title, which also names the list in announcements. */
+  /** The title, which also names it in announcements. Defaults to "Task" or "Plan". */
   label?: string;
 };
 
@@ -233,7 +233,7 @@ export const itemList = <
             };
           },
         }),
-        // The item's status in words for assistive technology, which the mark shows.
+        // Named by its status, since every status needs text as well as a mark (spec §8).
         "item-icon": slot<ItemPartProps & BaseSlotProps>({
           role: "img",
           props: fromItem,
