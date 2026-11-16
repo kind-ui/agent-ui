@@ -9,6 +9,11 @@ const uiSdkVersion = pkg.dependencies["@ui-sdk/core"];
 const components = {
   step: { title: "Step", description: "A collapsible agent step with a status icon.", uses: [] },
   status: { title: "Status", description: "A run status badge with a mark and a label.", uses: [] },
+  reasoning: {
+    title: "Reasoning",
+    description: "The model's thinking as a step, with its thoughts streamed as markdown.",
+    uses: ["markdown"],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

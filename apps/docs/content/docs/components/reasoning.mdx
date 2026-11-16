@@ -1,0 +1,74 @@
+---
+title: Reasoning
+description: Show the model's thinking while it streams, then fold it into a short summary.
+---
+
+import ReasoningExample from "@/examples/reasoning/basic";
+
+Use reasoning for the thoughts a model writes before it answers. It reads "Thinking" while the model works, then "Thought for 4 s", and keeps the thoughts one press away.
+
+<Example caption="Press Thought for 4 s, or focus it and press Enter or Space, to read what the model thought.">
+  <ReasoningExample />
+
+  <include cwd lang="tsx">./examples/reasoning/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/reasoning
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/reasoning-web
+```
+
+## Composition
+
+```text
+Reasoning
+├── ReasoningTrigger
+│   ├── ReasoningIcon
+│   └── ReasoningTitle
+└── ReasoningContent
+```
+
+`Reasoning` renders these parts when you pass no children; any children you pass replace them. The trigger is a native button that shows or hides the content. `ReasoningTitle` shows the title, or its own children, and `ReasoningContent` renders `text` as [Markdown](/docs/components/markdown), or its own children.
+
+## Usage
+
+### Streaming Thoughts
+
+Pass the thoughts so far as `text`, and set `status` as the model works. While the status is `running`, the title shimmers, the content stays open and `text` renders as streaming Markdown: each chunk parses only the blocks it changed, and the trigger above never moves.
+
+```tsx
+<Reasoning status={isThinking ? "running" : "complete"} durationSeconds={seconds} text={reasoningText} />
+```
+
+### Summary
+
+When the status turns `complete`, the title becomes "Thought for N s", from `durationSeconds` rounded to the nearest second and never less than 1, or "Thought" without one. The content closes on its own, unless someone opened or closed it while the model thought. Pass `label` to replace the title with your own words.
+
+A reasoning that goes straight from `pending` to `complete`, like a cached answer, stays closed.
+
+### Announcements
+
+When the model finishes, screen readers hear the title, like "Thought for 4 s", once. A failure says "Thinking failed" and a cancelled run "Thinking stopped". Streamed text is quiet. On Web Components, set `duration-seconds` before `status`, so the announced summary has the duration.
+
+### Motion
+
+The content grows open and shut. Under `prefers-reduced-motion`, or with `motion="reduced"`, it fades over 120 ms instead and the title holds still, and with `motion="none"` it changes at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/reasoning/reasoning.ts" name="ReasoningOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds a reasoning by its title and reads its `open` and `status`. It can run these actions, and press the trigger like a person would:
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/step/base.ts" name="ReasoningAgentActions" type='Pick<StepApi, "expand" | "collapse">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-reasoning>`, each prop is a kebab-case attribute, so `durationSeconds` is `duration-seconds`, and `onOpenChange` fires `openchange`. The element fills in its parts when it has no children, writes its title into an empty `<kind-reasoning-title>`, and writes `text` into a `<kind-markdown>` in its content.
+</Caption>

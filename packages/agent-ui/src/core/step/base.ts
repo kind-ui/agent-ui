@@ -74,14 +74,14 @@ export type StepApi = {
   toggle: (event?: Event) => boolean;
 };
 
-export type StepBaseConfig = {
+export type StepBaseConfig<State extends StepState = StepState> = {
   /** `data-kind` when the host passes no `kind`. */
   kind?: string;
   /**
-   * Replaces `stepAnnouncement`, with the state after the change. Called on a status change, once the step has a
-   * title (`label` or the title part's text). Returning `undefined` keeps the step quiet.
+   * Replaces `stepAnnouncement`, with the state the new options make. Called on a status change, once the step has
+   * a title (`label` or the title part's text). Returning `undefined` keeps the step quiet.
    */
-  announcement?: (status: StepStatus, title: string, state: StepState) => string | undefined;
+  announcement?: (status: StepStatus, title: string, state: State) => string | undefined;
 };
 
 const OUTCOMES: Partial<Record<StepStatus, string>> = {
@@ -150,7 +150,7 @@ const autoOpened = (options: StepOptions): boolean =>
 export const stepBase = <State extends StepState = StepState, Api extends StepApi = StepApi>({
   kind,
   announcement = stepAnnouncement,
-}: StepBaseConfig = {}) => {
+}: StepBaseConfig<State> = {}) => {
   const presentation = (options: StepOptions) => ({
     status: options.status ?? "pending",
     kind: options.kind ?? kind,
@@ -210,7 +210,7 @@ export const stepBase = <State extends StepState = StepState, Api extends StepAp
         if (!open) context.store.set({ exiting: true });
       });
 
-      context.onOptions((options) => {
+      context.onOptions((options, synced) => {
         const status = options.status ?? "pending";
         if (status === prevStatus) return;
         const { open, userToggled } = context.store.get();
@@ -224,7 +224,8 @@ export const stepBase = <State extends StepState = StepState, Api extends StepAp
         prevStatus = status;
         if (next !== open) setOpen(next, { reason: "auto" });
         const title = options.label ?? context.element("title")?.textContent?.trim();
-        const text = title && announcement(status, title, context.store.get());
+        // The store takes `synced` after the listeners run, so state computed from the new options is read from it.
+        const text = title && announcement(status, title, { ...context.store.get(), ...synced } as State);
         if (text) announce(text, { priority: "polite" });
       });
 

@@ -1,0 +1,8 @@
+/* Reasoning (spec §7): the Step base's look, with the thoughts as quieter, smaller markdown. */
+@layer components {
+  [data-slot="kind-reasoning-content"] [data-slot="kind-markdown"] {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--kind-color-muted);
+  }
+}

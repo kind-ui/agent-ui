@@ -92,6 +92,13 @@ export {
   resolveMotion,
 } from "./motion/index.js";
 export {
+  type ReasoningOptions,
+  type ReasoningPrimitive,
+  type ReasoningState,
+  reasoningPrimitive,
+  reasoningTitle,
+} from "./reasoning/index.js";
+export {
   type StatusOptions,
   type StatusPrimitive,
   type StatusState,

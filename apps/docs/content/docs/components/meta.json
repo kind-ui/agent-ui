@@ -3,6 +3,7 @@
   "pages": [
     "step",
     "status",
+    "reasoning",
     "conversation",
     "message",
     "markdown",

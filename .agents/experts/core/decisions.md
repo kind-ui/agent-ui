@@ -18,7 +18,6 @@ Last reviewed: `0391584` (Wave 2 Task 2 Status)
 
 ## Known and open (don't report again, check whether fixed)
 
-- **Step announcements read the title part's text in `onOptions`,** which may still be the old text when a component computes its title from state (Reasoning's "Thought for N s"). Such a component builds its text from `state` in `announcement` instead; check in Task 3.
 - **`ComposerApi.setValue` with the draft's own text still fires `onValueChange`** with a new draft object and returns `true`; nothing changes on screen.
 - **Enter held or pressed twice on an uploader Cancel cancels the next row too:** focus recovery moves to the neighbor's Cancel between presses. Spec §7 needs to say whether that's the list-deletion pattern or needs a pause.
 - **The uploader's `mounted` set never forgets ids,** so an item removed and re-added under the same id gets no entrance.
@@ -34,6 +33,7 @@ Last reviewed: `0391584` (Wave 2 Task 2 Status)
 
 ## Resolved
 
+- **Step announcements read state from before the change (Wave 2 Task 3).** Fixed: `announcement` gets the store merged with the `synced` state, so Reasoning builds "Thought for N s" from the new duration and status.
 - **Find in page counts as a person (Wave 2 D3):** spec §5 now says a step search opens stays open when it completes, which is what `userToggled` already did.
 - **Step behavior was one primitive's, with no way to share it (Wave 2 Task 1):** `stepBase` in `core/step/base.ts` is spread by `stepPrimitive` and every Step-based component; StepList's roving focus and recovery are `createListFocus` in `core/list-focus.ts`.
 - **`affected-specs.mjs` missed imports with a query** (`long-answer.md?raw`) and ran every spec for files no fixture loads (Task 18).
