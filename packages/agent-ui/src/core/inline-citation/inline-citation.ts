@@ -145,24 +145,23 @@ const noEntry: SourceEntry = {
 const entryCache = new WeakMap<Source, SourceEntry>();
 const entriesCache = new WeakMap<Source[], Record<string, SourceEntry>>();
 const idsCache = new WeakMap<Source[], string[]>();
-const entryOf = (source: Source) => {
-  let entry = entryCache.get(source);
-  if (!entry) entryCache.set(source, (entry = sourceEntry(source)));
-  return entry;
-};
-const entries = (sources: Source[]) => {
-  let byId = entriesCache.get(sources);
-  if (!byId) {
-    byId = Object.fromEntries(sources.map((source) => [source.id, entryOf(source)]));
-    entriesCache.set(sources, byId);
+const cached = <Key extends object, Value>(
+  cache: WeakMap<Key, Value>,
+  key: Key,
+  build: (key: Key) => Value,
+) => {
+  let value = cache.get(key);
+  if (value === undefined) {
+    value = build(key);
+    cache.set(key, value);
   }
-  return byId;
+  return value;
 };
-const ids = (sources: Source[]) => {
-  let list = idsCache.get(sources);
-  if (!list) idsCache.set(sources, (list = sources.map((source) => source.id)));
-  return list;
-};
+const entries = (sources: Source[]) =>
+  cached(entriesCache, sources, () =>
+    Object.fromEntries(sources.map((source) => [source.id, cached(entryCache, source, sourceEntry)])),
+  );
+const ids = (sources: Source[]) => cached(idsCache, sources, () => sources.map((source) => source.id));
 // Own keys only, so an item `value` like "constructor" doesn't find `Object`'s.
 const entryAt = ({ entries }: InlineCitationState, key: string) =>
   Object.hasOwn(entries, key) ? (entries[key] as SourceEntry) : noEntry;
