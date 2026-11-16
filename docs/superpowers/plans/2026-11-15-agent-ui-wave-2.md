@@ -10,26 +10,19 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-14-agent-ui-design.md`: §2 "Building on UI SDK", §4.1, §5 Step base, §6 Motion and Agent actions, §7 Wave 2, §8. Also read `AGENTS.md` ("UI SDK API notes", Verification policy, the streaming UX checklist) and `.agents/experts/*/decisions.md`.
 
-## Decisions for the user
+## Decisions
 
-**Approved 2026-11-15:** the user approved the recommended option for D1–D5. Task 1 writes D1–D3 into the spec.
+Decided 2026-11-15. D1–D4 are written into the spec.
 
-- **D1. Exit animations for removed items (spec §6).** Today a removed attachment chip or uploader row disappears at once, and the items after it jump into place. The open question is how an item the host removed can animate out.
-  - **Recommended:** a component that renders items from host data keeps each removed item as a *leaving row* until its exit finishes.
-    - A leaving row stays in place with `inert` and `aria-hidden="true"`, plays the `"fade"` preset through the motion helper's `exit`, and is then dropped. The items after it move with `layout`.
-    - Leaving rows aren't in the component's `items`, the agent snapshot or roving focus, so the host's data stays the only truth.
-    - With reduced motion the row fades for 120 ms and nothing slides. With `motion="none"`, it leaves at once.
-    - This applies to Queue (Task 8) and, in Task 9, to Attachments and Uploader. Components whose children the host renders (Conversation rows, nested steps) can't hold a removed child, so they stay as they are, and their docs say so.
-  - **Alternative:** no exit animations; the docs say removed items leave at once. Task 9 is then dropped.
-- **D2. Removing a Queue item from the keyboard (spec §2 exception table).** Attachments already handle Delete and Backspace on a focused item (an exception row in spec §2), with a remove badge for the pointer that's hidden from assistive technology. The question is whether Queue does the same.
-  - **Recommended:** Queue does the same. The exception row becomes "Attachment and Queue item removal on Delete/Backspace". Each Queue row keeps one Tab stop for the whole list and has no extra focusable buttons.
-  - **Alternative:** each row gets a focusable Remove button, which adds one Tab stop per row.
-- **D3. Does find in page count as a person? (spec §5, core decisions).** Today a step that find in page opens no longer closes on its own when it completes.
-  - **Recommended:** yes. A person searched for the text, so the step stays open. Spec §5 gets one sentence saying so, and the code doesn't change.
-- **D4. `title` on Web Components (web decisions).** On `<kind-step>`, the `title` attribute is also HTML's tooltip attribute, so it may show a native tooltip over the whole step. Every Wave 2 Step-based element inherits that attribute.
-  - **Recommended:** Task 1 checks in a browser whether the tooltip shows. If it does, the Step base option `title` becomes `label` in both layers. This is a breaking change, allowed before 1.0, and the changeset says so.
-- **D5. Version order.** `.changeset/agent-ui-wave-1.md` hasn't been released, and the package is still at `0.0.0`. Changesets merges pending changesets, so the Wave 1 and Wave 2 changesets together would produce `0.1.0`, not `0.2.0`.
-  - **Recommended:** merge the 0.1.0 version PR before Task 11. If it hasn't merged by then, Task 11 still adds the Wave 2 changeset and reports that both waves will version together.
+- **D1. Exit animations for removed items (spec §6 "Removed items").** A component that renders items from host data keeps each removed item as a *leaving row* until its exit finishes.
+  - A leaving row stays in place with `inert` and `aria-hidden="true"`, plays the `"fade"` preset through the motion helper's `exit`, and is then dropped. The items after it move with `layout`.
+  - Leaving rows aren't in the component's `items`, the agent snapshot or roving focus, so the host's data stays the only truth.
+  - Under reduced motion the row fades for 120 ms and nothing slides. With `motion="none"`, it leaves at once.
+  - This applies to Queue (Task 8) and, in Task 9, to Attachments and Uploader. Components whose children the host renders (Conversation rows, nested steps) remove a child at once, and their docs say so.
+- **D2. Removing a Queue item from the keyboard (spec §2 row "Queue item removal on Delete/Backspace").** Delete and Backspace remove the focused Queue row, as they do for Attachments. The pointer remove badge is hidden from assistive technology, and the list keeps one Tab stop.
+- **D3. Find in page counts as a person (spec §5).** A step that find in page opens stays open when it completes. The code already does this.
+- **D4. `title` on Web Components (spec §5).** Task 1 checks in a browser whether `<kind-step title>` shows a native tooltip. If it does, the Step base option `title` becomes `label` in both layers. That's a breaking change, allowed before 1.0, and the changeset says so.
+- **D5. Version order (an ordering note, not a decision).** Changesets merges pending changesets, so the Wave 2 changeset must land after the 0.1.0 version PR (#24) merges. Otherwise both waves version together as 0.1.0.
 
 ## Global Constraints
 
@@ -130,7 +123,7 @@ Tasks 2–8 each finish with these steps, after their own failing tests pass. A 
 
 ### Task 1: Wave 2 groundwork
 
-Spec §5, §6 Motion; decisions D1–D4.
+Spec §5, §6 Motion ("Removed items"); decisions D1, D3 and D4.
 
 **UI SDK:** `createRovingFocus`, `createFocusRecovery` and `bindPanel` (`core.md` "Roving Focus", "Focus Recovery", "Panels and Presence"). The motion helper's `exit` and `layout`.
 
@@ -138,7 +131,7 @@ Spec §5, §6 Motion; decisions D1–D4.
 - Create: `packages/agent-ui/src/core/step/base.ts`, `src/core/list-focus.ts`, `src/core/leaving.ts`, `src/styles/status-mark.css`, `tests/browser/layer.ts`
 - Modify: `src/core/step/{step,step-list,index}.ts`, `src/core/index.ts`, `src/styles/{step,agent-ui}.css`, and every `src/web/*.ts` (`HTMLElementTagNameMap` entries for the Wave 1 tags)
 - Modify: `playwright.config.mjs`, and the `project.name.startsWith(…)` checks in `tests/browser/wave-1/*.spec.ts`
-- Modify: the spec (approved decisions D1–D3), `.agents/experts/{core,web,styles}/decisions.md` (move the items this task settles to Resolved)
+- Modify: `.agents/experts/{core,web,styles}/decisions.md` (move the items this task settles to Resolved)
 - Test: `packages/agent-ui/tests/core/{leaving,list-focus}.test.mjs`, `tests/browser/wave-1/step.spec.ts`
 
 **Interfaces:**
@@ -189,9 +182,9 @@ Add to `step.spec.ts`, both layers:
 
 - [ ] **Step 2: Run** `npm run test:unit && npx playwright test tests/browser/wave-1/step.spec.ts`. Expected: the new tests FAIL.
 - [ ] **Step 3: Implement** the interfaces above. `step.ts`, `step-list.ts` and their render files keep their public behavior. All of `wave-1/step.spec.ts` keeps passing unchanged, apart from the new assertions.
-- [ ] **Step 4: D4.** In Chromium, hover a `<kind-step title="Read the logs">`. If a native tooltip shows, rename the option `title` to `label` in `StepOptions`, both render layers, the fixtures, the Step docs page and the spec.
+- [ ] **Step 4: D4.** In Chromium, hover a `<kind-step title="Read the logs">`. If a native tooltip shows, rename the option `title` to `label` in `StepOptions`, both render layers, the fixtures and the Step docs page, and replace spec §5's conditional note with the result.
 - [ ] **Step 5: Run** `npm run lint && npm run typecheck && npm run test:unit && npx playwright test tests/browser/wave-1`. Expected: PASS.
-- [ ] **Step 6:** Write the approved D1–D3 into the spec (§6 Motion bullet, §2 exception row, §5 sentence). Commit `refactor(step): share the Step base, list focus and status mark for Wave 2`, then follow the routine's **Finish** and **Commit and PR** steps.
+- [ ] **Step 6:** Commit `refactor(step): share the Step base, list focus and status mark for Wave 2`, then follow the routine's **Finish** and **Commit and PR** steps.
 
 ---
 
@@ -559,7 +552,7 @@ Spec §7 Wave 2 "Queue"; decisions D1, D2.
 - **Exception (D2):** Delete and Backspace remove the focused row.
 
 **Files:**
-- Modify: `packages/agent-ui/src/types/records.ts` (+ `QueueItem`), `src/types/index.ts`, `scripts/ui-sdk-exceptions.json` (D2 row)
+- Modify: `packages/agent-ui/src/types/records.ts` (+ `QueueItem`), `src/types/index.ts`, and `scripts/ui-sdk-exceptions.json` if the guard flags the queue file (value: "Queue item removal on Delete/Backspace")
 - Create: `packages/agent-ui/src/core/queue/{queue,index}.ts`, `src/react/queue.tsx`, `src/web/queue.ts`, `src/styles/queue.css`
 - Test: `tests/browser/wave-2/queue.spec.ts`
 
@@ -614,7 +607,7 @@ Spec §7 Wave 2 "Queue"; decisions D1, D2.
 
 ### Task 9: Exits for Attachments and Uploader (D1)
 
-Skip this task if D1 is declined. Closes the styles items "Removed chips leave without an exit animation" and "Uploader rows leave without an exit animation", and the core item "The uploader's `mounted` set never forgets ids".
+Closes the styles items "Removed chips leave without an exit animation" and "Uploader rows leave without an exit animation", and the core item "The uploader's `mounted` set never forgets ids".
 
 **Files:**
 - Modify: `packages/agent-ui/src/core/{attachments,uploader}/*.ts`, `src/react/{attachments,uploader}.tsx`, `src/web/{attachments,uploader}.ts`
@@ -676,7 +669,7 @@ Spec §7 (a showcase page per wave), §9.1, §9.5; decision D5.
 - [ ] **Step 1: Write the failing test.** `docs.test.mjs`: the sidebar lists a Showcase section with `agent-activity`, and the page holds one `<Example>`.
 - [ ] **Step 2: Run** `node --test scripts/tests/docs.test.mjs`. Expected: FAIL.
 - [ ] **Step 3: Implement.** Write the page in the site's voice, following `write-docs`.
-- [ ] **Step 4: D5.** Check `.changeset/` and `packages/agent-ui/package.json`. If the Wave 1 changeset is still pending, say in the PR that both waves will version together as 0.1.0.
+- [ ] **Step 4: D5.** Land the Wave 2 changeset only after the 0.1.0 version PR (#24) has merged: `packages/agent-ui/package.json` must read `0.1.0`. If #24 is still open, stop and report.
 - [ ] **Step 5: Run** `npm run build:docs`, then `npm run check` through a subagent. Expected: PASS. `check:registry-consumers` installs all 21 visible React items and their 21 web twins.
 - [ ] **Step 6:** Take light and dark screenshots of the showcase. Run `unslop` and `expert-review`. Commit `docs: add the Wave 2 showcase and changeset`, push, and open the PR. Don't publish, version or deploy.
 
