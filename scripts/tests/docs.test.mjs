@@ -30,20 +30,26 @@ test("the sidebar lists every component page", () => {
   assert.deepEqual([...meta.pages].sort(), [...components].sort());
 });
 
-test("the sidebar has a Showcase section with one live example", () => {
+const showcases = { "agent-activity": "AgentActivityShowcase", "human-input": "HumanInputShowcase" };
+
+test("the sidebar has a Showcase section with one live example per page", () => {
   const root = JSON.parse(readFileSync(new URL("meta.json", content), "utf8"));
   const at = root.pages.indexOf("---Showcase---");
   assert.deepEqual(root.pages.slice(at, at + 2), ["---Showcase---", "...showcase"]);
   const meta = JSON.parse(readFileSync(new URL("showcase/meta.json", content), "utf8"));
-  assert.deepEqual(meta.pages, ["agent-activity"]);
-  const source = readFileSync(new URL("showcase/agent-activity.mdx", content), "utf8");
-  assert.match(source, /^---\ntitle: .+\ndescription: .+\n---\n/);
-  assert.ok(source.includes('import AgentActivityShowcase from "@/examples/showcase/agent-activity";'));
-  assert.equal(source.match(/<Example /g)?.length, 1);
-  assert.match(
-    source,
-    /<Example caption=".+">\n {2}<AgentActivityShowcase \/>\n\n {2}<include cwd lang="tsx">\.\/examples\/showcase\/agent-activity\.tsx<\/include>\n<\/Example>/,
-  );
+  assert.deepEqual(meta.pages, Object.keys(showcases));
+  for (const [name, component] of Object.entries(showcases)) {
+    const source = readFileSync(new URL(`showcase/${name}.mdx`, content), "utf8");
+    assert.match(source, /^---\ntitle: .+\ndescription: .+\n---\n/, name);
+    assert.ok(source.includes(`import ${component} from "@/examples/showcase/${name}";`), name);
+    assert.equal(source.match(/<Example /g)?.length, 1, name);
+    assert.ok(
+      source.includes(
+        `">\n  <${component} />\n\n  <include cwd lang="tsx">./examples/showcase/${name}.tsx</include>\n</Example>`,
+      ),
+      name,
+    );
+  }
 });
 
 test("no page mentions an internal registry item", () => {

@@ -1,0 +1,29 @@
+---
+title: Human Input
+description: Watch an agent ask, wait for approval and take feedback in one run, built from the human input components.
+---
+
+import HumanInputShowcase from "@/examples/showcase/human-input";
+
+This run puts the human input components together the way a host app would. The agent asks a [Question](/docs/components/question), waits on a [Confirmation](/docs/components/confirmation) inside a [Tool](/docs/components/tool), and answers with [Feedback](/docs/components/feedback) and [Suggestions](/docs/components/suggestion) after it. A [Checkpoint](/docs/components/checkpoint) marks where the turn started, a [Notice](/docs/components/notice) and a [Guardrail Notice](/docs/components/guardrail-notice) explain what the agent may do, and the composer holds a [Model Selector](/docs/components/model-selector), [Reasoning Effort](/docs/components/reasoning-effort) and a [Context Meter](/docs/components/context-meter).
+
+<Example caption="The run stops on the question until you answer it, then on the deploy until you approve it. The first Approve fails on purpose, so press it again. Rate the reply, pick a suggestion, or press Replay to start over.">
+  <HumanInputShowcase />
+
+  <include cwd lang="tsx">./examples/showcase/human-input.tsx</include>
+</Example>
+
+## What Happens
+
+- **Question:** the run waits until you pick where the fix goes and press **Submit**. The form then reads "Answered" with your answer.
+- **Approval:** the `deploy` tool shows "Run deploy?" with **Approve** and **Deny**. The first Approve leaves the request `submit-failed`, so the choices come back with "Decision not sent. Try again." The next one is recorded, and the tool keeps "Approved", not the buttons.
+- **Checkpoint:** **Restore** opens a dialog that asks first. Once it's restored, the checkpoint reads "Restored".
+- **Reply:** once the reply finishes, rate it with the thumbs. **Add a comment** then opens a box for a comment.
+- **Suggestions:** each one sends a follow-up. "Email the logs to the vendor" is blocked, and the Guardrail Notice says why; press **Why?** for the policy, or dismiss it to pick again.
+- **Composer:** pick a model and an effort level. The context meter fills as the run goes on; hover, focus or press it for the token counts.
+
+Each component gets its state from the host as plain data, here a timer stepping through a script, and calls the host back when a person decides. In an app, the same data comes from your model's stream, for example through the [AI SDK adapter](/docs/adapters/ai-sdk).
+
+<Caption>
+  Every component here runs in React and Web Components. The example is React.
+</Caption>
