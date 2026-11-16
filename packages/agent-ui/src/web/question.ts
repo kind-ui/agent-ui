@@ -21,7 +21,7 @@ const CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 // someone wrote stays, as React's children do. Kept across instances, because UI SDK rebuilds one when the element
 // returns to the page.
 const owned = new WeakSet<Element>();
-// The question each added item was drawn from, so a changed question is drawn again.
+// The question each item this element fills was drawn from, so a changed question is drawn again.
 const drawn = new WeakMap<Element, Question>();
 
 const fill = (part: Element | null | undefined, text: string) => {
@@ -88,15 +88,31 @@ function move(form: Movable, item: Element, before: Element | null): void {
   else form.insertBefore(item, before);
 }
 
+const sameOptions = (a: Question["options"] = [], b: Question["options"] = []) =>
+  a.length === b.length &&
+  a.every(
+    (option, index) =>
+      option.value === b[index]?.value &&
+      option.label === b[index]?.label &&
+      option.description === b[index]?.description,
+  );
+
 /**
- * Adds a question for each one the form lacks, in order before the actions, removes the ones it added for questions
- * that left, and draws an added question again when its data changes.
+ * Adds a question for each one the form lacks, in order before the actions, and removes the ones it added for
+ * questions that left or that a written item replaced. Fills the items it added, and written ones left empty, again
+ * when a question's kind or options change, so a new array with the same content keeps focus.
  */
 const drawQuestions = (form: Movable, questions: Question[]) => {
   const items = new Map<string | null, Element>();
   for (const child of form.querySelectorAll(":scope > kind-question-item")) {
-    if (owned.has(child) && items.has(child.getAttribute("value"))) child.remove();
-    else if (!items.has(child.getAttribute("value"))) items.set(child.getAttribute("value"), child);
+    const value = child.getAttribute("value");
+    const earlier = items.get(value);
+    if (!earlier) items.set(value, child);
+    else if (owned.has(child)) child.remove();
+    else if (owned.has(earlier)) {
+      earlier.remove();
+      items.set(value, child);
+    }
   }
   const ids = new Set<string | null>(questions.map((question) => question.id));
   for (const [id, child] of items) if (owned.has(child) && !ids.has(id)) child.remove();
@@ -108,9 +124,9 @@ const drawQuestions = (form: Movable, questions: Question[]) => {
       child.setAttribute("value", question.id);
       owned.add(child);
     }
-    if (owned.has(child) && drawn.get(child) !== question) {
+    if (drawn.has(child) || owned.has(child) || !child.firstChild) {
       const before = drawn.get(child);
-      if (before?.kind !== question.kind || before.options !== question.options)
+      if (before?.kind !== question.kind || !sameOptions(before.options, question.options))
         child.replaceChildren(...questionParts(form.ownerDocument, question));
       drawn.set(child, question);
     }
@@ -153,7 +169,8 @@ const ownForm = (el: HTMLElement): HTMLFormElement =>
  * `<kind-question label="Deploy questions">` fills in its form when it has no children. Set `questions`, `value` and
  * `submitted` as properties. The `can-submit` and `can-skip` attributes show Submit and Skip, which fire
  * `questionsubmit` and `skip` with the answers as `detail.value`: call `event.detail.waitUntil(promise)` to keep the
- * form locked until it settles. Write a `<kind-question-item value="…">` to render a question yourself.
+ * form locked until it settles. Write a `<kind-question-item value="…">` inside a `<form>` child to render a question
+ * yourself; one written empty gets the question's prompt and its choices or text box.
  */
 export function defineQuestion(): void {
   if (customElements.get("kind-question")) return;
@@ -190,7 +207,7 @@ export function defineQuestion(): void {
           drawQuestions(form, state.questions);
           for (const item of form.querySelectorAll(":scope > kind-question-item")) {
             const id = item.getAttribute("value") ?? "";
-            const question = state.questionsById[id];
+            const question = state.questions.find((each) => each.id === id);
             if (!question) continue;
             const prompt = item.querySelector("kind-question-prompt");
             if (prompt && (owned.has(prompt) || !prompt.firstChild)) {

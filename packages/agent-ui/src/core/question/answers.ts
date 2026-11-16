@@ -3,9 +3,15 @@ import type { Answers, Question } from "../../types/index.js";
 export const isAnswered = (answer: string | string[] | undefined) =>
   Array.isArray(answer) ? answer.length > 0 : (answer ?? "").trim() !== "";
 
+/** The answer to `id`. Ids are host data, so one like `constructor` must not read `Object`'s own. */
+export const answerOf = (answers: Answers, id: string): string | string[] | undefined =>
+  Object.hasOwn(answers, id) ? answers[id] : undefined;
+
 /** The ids of the required questions with no answer: no value, an empty list or blank text. */
 export const missingAnswers = (questions: readonly Question[], answers: Answers): string[] =>
-  questions.filter((question) => question.required && !isAnswered(answers[question.id])).map(({ id }) => id);
+  questions
+    .filter((question) => question.required && !isAnswered(answerOf(answers, question.id)))
+    .map(({ id }) => id);
 
 /**
  * The answers after choosing `value` for `question`: a single choice replaces the answer, a multiple choice toggles
@@ -15,7 +21,7 @@ export const applyAnswer = (question: Question, answers: Answers, value: string)
   if (question.kind === "text") return { ...answers, [question.id]: value };
   if (!question.options?.some((option) => option.value === value)) return answers;
   if (question.kind === "single") return { ...answers, [question.id]: value };
-  const current = answers[question.id];
+  const current = answerOf(answers, question.id);
   const chosen = Array.isArray(current) ? current : [];
   return {
     ...answers,
@@ -28,8 +34,8 @@ export const answerText = (question: Question, answer: string | string[] | undef
   if (!isAnswered(answer)) return undefined;
   if (question.kind === "text") return String(answer).trim();
   const chosen = Array.isArray(answer) ? answer : [answer];
-  return (question.options ?? [])
+  const labels = (question.options ?? [])
     .filter((option) => chosen.includes(option.value))
-    .map((option) => option.label)
-    .join(", ");
+    .map((option) => option.label);
+  return labels.length > 0 ? labels.join(", ") : undefined;
 };

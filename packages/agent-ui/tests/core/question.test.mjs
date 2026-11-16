@@ -162,3 +162,32 @@ test("a controlled value follows the host, and a person's change goes through on
 test("value and defaultValue are mutually exclusive", () => {
   assert.throws(() => questionPrimitive({ questions, value: {}, defaultValue: {} }), TypeError);
 });
+
+test("a question id like constructor reads only the answers' own keys", () => {
+  const odd = { id: "constructor", prompt: "Why?", kind: "text", required: true };
+  assert.deepEqual(missingAnswers([odd], {}), ["constructor"]);
+  const question = questionPrimitive({ questions: [odd], onSubmit: () => {} });
+  assert.equal(question.api.submit, undefined);
+  assert.equal(question.api.select("toString", "x"), false);
+  assert.equal(question.api.setText("constructor", "Because"), true);
+  assert.equal(typeof question.api.submit, "function");
+});
+
+test("new questions drop the answers to the ones that left", () => {
+  const { question, set } = setup();
+  question.api.select("env", "prod");
+  question.api.setText("notes", "Ship it");
+  set({ questions: [notes] });
+  assert.deepEqual(question.get().value, { notes: "Ship it" });
+});
+
+test("setValue is refused while the form is locked", () => {
+  const { question } = setup({ defaultValue: { env: "prod", notes: "Ship it" } });
+  question.api.press("submit");
+  assert.equal(question.api.setValue({ env: "staging" }), false);
+  assert.deepEqual(question.get().value, { env: "prod", notes: "Ship it" });
+});
+
+test("a recorded value that is no longer an option has no answer text", () => {
+  assert.equal(answerText(env, "dev"), undefined);
+});

@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Call = {
   action: string;
@@ -181,6 +182,21 @@ test("the recorded answers replace the form, and only the page below moves, by t
   await expect.poll(() => announced(page)).toEqual(["Answered"]);
 });
 
+test("a change the owner refuses goes back, and Submit sends what the owner holds", async ({ page }) => {
+  await page.goto("/?c=question&case=refused");
+  const radio = (name: RegExp) => form(page).getByRole("radio", { name });
+  await expect(radio(/Staging/)).toBeChecked();
+  await radio(/Production/).click();
+  await expect(radio(/Staging/)).toBeChecked();
+  await form(page).getByRole("checkbox", { name: "Unit tests" }).click();
+  await expect(form(page).getByRole("checkbox", { name: "Unit tests" })).not.toBeChecked();
+  await page.evaluate(() => (window as unknown as { kindRefuse(next: boolean): void }).kindRefuse(false));
+  await radio(/Production/).click();
+  await expect(radio(/Production/)).toBeChecked();
+  await submit(page).click();
+  expect((await calls(page))[0]?.answers).toEqual({ env: "prod" });
+});
+
 // UI SDK marks a whole component, so while `agentConfirm` is on every action of it needs a person.
 test("an agent answers and submits once a person allows it", async ({ page }) => {
   await open(page);
@@ -195,7 +211,10 @@ test("an agent answers and submits once a person allows it", async ({ page }) =>
   await expect(form(page).getByRole("radio", { name: /Production/ })).toBeChecked();
   await expectAgentActions(page, "Deploy questions", ["select", "setText", "submit", "skip"]);
   expect(await calls(page)).toEqual([]);
-  expect(await act(page, "submit")).toContain('"ok":true');
+  const submitted = act(page, "submit");
+  await expect.poll(() => calls(page)).toHaveLength(1);
+  await settle(page, 0, "resolve");
+  expect(await submitted).toContain('"ok":true');
   expect(await calls(page)).toEqual([{ action: "submit", answers: { env: "prod" }, source: "agent" }]);
 });
 
@@ -220,11 +239,43 @@ test("with reduced motion the summary only fades", async ({ page }) => {
     .toEqual(["opacity"]);
 });
 
+test("new questions with the same content keep the focused choice", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await open(page);
+  const unit = form(page).getByRole("checkbox", { name: "Unit tests" });
+  await unit.focus();
+  await page.evaluate(() => {
+    const question = document.querySelector("kind-question");
+    if (question) question.questions = JSON.parse(JSON.stringify(question.questions));
+  });
+  await expect(unit).toBeFocused();
+});
+
+test("a written item replaces the one the element added, and one written empty is filled in", async ({
+  page,
+}, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await open(page);
+  await page.evaluate(() => {
+    const form = document.querySelector("kind-question form");
+    const env = document.createElement("kind-question-item");
+    env.setAttribute("value", "env");
+    form?.prepend(env);
+  });
+  await expect(page.locator('kind-question-item[value="env"]')).toHaveCount(1);
+  await expect(form(page).getByRole("radio")).toHaveCount(2);
+  await expect(form(page).getByRole("group", { name: "Where should it deploy? Required" })).toBeVisible();
+});
+
 for (const colorScheme of ["light", "dark"] as const) {
   test(`axe reports no violations in ${colorScheme} mode`, async ({ page }) => {
     await page.emulateMedia({ colorScheme, reducedMotion: "reduce" });
     await open(page);
-    await answerRequired(page);
+    // A CSS locator, since Playwright's role query on a UI SDK radio before axe crashes Firefox.
+    await page.locator("#deploy label", { hasText: "Production" }).click();
+    await page.waitForFunction(() =>
+      document.getAnimations().every((animation) => animation.playState !== "running"),
+    );
     // The fixture page has no background of its own, which axe reads as white.
     await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     const { violations } = await new AxeBuilder({ page }).include("#root").analyze();

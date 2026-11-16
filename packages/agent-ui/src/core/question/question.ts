@@ -17,7 +17,7 @@ import { actionSource } from "../action-source.js";
 import { memo } from "../memo.js";
 import { enter, type MotionMode } from "../motion/index.js";
 import { createPendingAction } from "../pending.js";
-import { answerText, applyAnswer, isAnswered, missingAnswers } from "./answers.js";
+import { answerOf, answerText, applyAnswer, isAnswered, missingAnswers } from "./answers.js";
 
 /** `"input-change"`: a person chose an option or typed. `"imperative"`: an `api` call, like an agent's `select`. */
 export type QuestionValueChangeReason = "input-change" | "imperative";
@@ -143,7 +143,10 @@ export type QuestionApi = {
   readonly skip: (() => void) | undefined;
   /** The answers. */
   getValue: () => Answers;
-  /** Replaces the answers, as `onValueChange` reports with `"imperative"`. Returns `false` when the change was canceled. */
+  /**
+   * Replaces the answers, as `onValueChange` reports with `"imperative"`. Returns `false` when the change was
+   * canceled, or while the form is locked or answered.
+   */
   setValue: (answers: Answers) => boolean;
   /** The `questions`. */
   getQuestions: () => Question[];
@@ -209,6 +212,9 @@ const noAnswers: Answers = {};
 const byId = memo((questions: Question[]) =>
   Object.fromEntries(questions.map((question) => [question.id, question])),
 );
+// Ids are host data, so one like `toString` must not find `Object`'s own.
+const questionOf = (state: QuestionState, id: string): Question | undefined =>
+  Object.hasOwn(state.questionsById, id) ? state.questionsById[id] : undefined;
 const missingOf = memo(missingAnswers);
 const keyOf = (questions: readonly Question[]) => questions.map((question) => question.id).join("\n");
 
@@ -359,6 +365,7 @@ export const questionPrimitive: QuestionPrimitive = definePrimitive<
       const { submitted } = options;
       if (key === reported.key && submitted === reported.submitted) return;
       const answered = submitted !== undefined && reported.submitted === undefined;
+      if (key !== reported.key) forget(options);
       reported = { key, submitted };
       // Spec §4.1: the lock holds until the host records the answers or replaces the questions.
       pending.release();
@@ -366,10 +373,21 @@ export const questionPrimitive: QuestionPrimitive = definePrimitive<
       if (answered && !mounting) announce(summaryOutcome(submitted), { priority: "polite" });
     });
 
+    // New questions start a new round: answers and controllers for questions that left are dropped.
+    const forget = (options: QuestionOptions) => {
+      const ids = new Set((options.questions ?? noQuestions).map((question) => question.id));
+      for (const id of controls.keys()) if (!ids.has(id)) controls.delete(id);
+      if (options.value !== undefined) return;
+      const { value } = store.get();
+      const kept = Object.entries(value).filter(([id]) => ids.has(id));
+      if (kept.length < Object.keys(value).length)
+        change("value", Object.fromEntries(kept), { reason: "imperative" });
+    };
+
     const control = (question: Question): Control => {
       const existing = controls.get(question.id);
       if (existing?.kind === question.kind) return existing;
-      const answer = store.get().value[question.id];
+      const answer = answerOf(store.get().value, question.id);
       const created: Control =
         question.kind === "single"
           ? {
@@ -397,7 +415,7 @@ export const questionPrimitive: QuestionPrimitive = definePrimitive<
       for (const question of questions) {
         const current = controls.get(question.id);
         if (!current || current.kind !== question.kind) continue;
-        const answer = value[question.id];
+        const answer = answerOf(value, question.id);
         // A controller reads `undefined` until its group or text box attaches it.
         const shown = current.controller.getValue() as string | string[] | null | undefined;
         if (shown === undefined) continue;
@@ -414,6 +432,8 @@ export const questionPrimitive: QuestionPrimitive = definePrimitive<
       }
     };
     store.subscribe(syncAnswers);
+    let resync = 0;
+    context.onDestroy(() => cancelAnimationFrame(resync));
 
     const write = (
       questionId: string,
@@ -421,16 +441,17 @@ export const questionPrimitive: QuestionPrimitive = definePrimitive<
       details: { reason: QuestionValueChangeReason; event?: Event },
     ) => {
       const { value } = store.get();
-      if (sameAnswer(value[questionId], answer)) return true;
-      const next = { ...value };
-      if (answer === null) delete next[questionId];
-      else next[questionId] = answer;
+      if (sameAnswer(answerOf(value, questionId), answer)) return true;
+      const next =
+        answer === null
+          ? Object.fromEntries(Object.entries(value).filter(([id]) => id !== questionId))
+          : { ...value, [questionId]: answer };
       return change("value", next, details);
     };
 
     const editable = (questionId: string, kinds: Question["kind"][]) => {
       const state = store.get();
-      const question = state.questionsById[questionId];
+      const question = questionOf(state, questionId);
       return question && kinds.includes(question.kind) && isAnswering(state) && !isLocked(state)
         ? question
         : undefined;
@@ -473,7 +494,7 @@ export const questionPrimitive: QuestionPrimitive = definePrimitive<
       items: (hasAnswers(submitted) ? questions : noQuestions).map((question) => ({
         id: question.id,
         prompt: question.prompt,
-        answer: answerText(question, submitted?.[question.id]),
+        answer: answerText(question, submitted && answerOf(submitted, question.id)),
       })),
     }));
 
@@ -483,7 +504,7 @@ export const questionPrimitive: QuestionPrimitive = definePrimitive<
         if (!question) return false;
         const next = applyAnswer(question, store.get().value, value);
         if (next === store.get().value) return false;
-        return write(questionId, next[questionId] ?? null, { reason: "imperative" });
+        return write(questionId, answerOf(next, questionId) ?? null, { reason: "imperative" });
       },
       setText: (questionId, text) => {
         if (!editable(questionId, ["text"])) return false;
@@ -496,7 +517,10 @@ export const questionPrimitive: QuestionPrimitive = definePrimitive<
         return offered("skip") ? () => run("skip") : undefined;
       },
       getValue: () => store.get().value,
-      setValue: (answers) => change("value", answers, { reason: "imperative" }),
+      setValue: (answers) => {
+        const state = store.get();
+        return isAnswering(state) && !isLocked(state) && change("value", answers, { reason: "imperative" });
+      },
       getQuestions: () => store.get().questions,
       press: run,
       readAnswer: (questionId, event) => {
@@ -506,12 +530,17 @@ export const questionPrimitive: QuestionPrimitive = definePrimitive<
           current.kind === "text"
             ? (event.target as HTMLTextAreaElement).value
             : current.controller.getValue();
-        // A change the owner cancels is written back.
+        // A change the owner cancels is written back, and so is one a controlling owner didn't take by the next
+        // frame: the groups and text boxes hold their own value.
         if (!write(questionId, answer, { reason: "input-change", event })) syncAnswers();
+        else if (context.options().value !== undefined) {
+          cancelAnimationFrame(resync);
+          resync = requestAnimationFrame(syncAnswers);
+        }
       },
       syncAnswers,
       choicesState: (questionId, state) => {
-        const question = state.questionsById[questionId];
+        const question = questionOf(state, questionId);
         if (!question || question.kind === "text") return undefined;
         let build = choiceStates.get(questionId);
         if (!build) {
@@ -521,7 +550,7 @@ export const questionPrimitive: QuestionPrimitive = definePrimitive<
         return build(control(question), question.options ?? noOptions, isLocked(state));
       },
       textState: (questionId, state) => {
-        const question = state.questionsById[questionId];
+        const question = questionOf(state, questionId);
         const current = question && control(question);
         if (current?.kind !== "text") return undefined;
         let build = textStates.get(questionId);
@@ -575,11 +604,11 @@ export const questionPrimitive: QuestionPrimitive = definePrimitive<
       role: "group",
       props: { value: "string" },
       selects: ownQuestion,
-      present: (state, { key }) => isAnswering(state) && key in state.questionsById,
-      state: (state, { key }) => ({ kind: state.questionsById[key]?.kind ?? "text" }),
+      present: (state, { key }) => isAnswering(state) && questionOf(state, key) !== undefined,
+      state: (state, { key }) => ({ kind: questionOf(state, key)?.kind ?? "text" }),
       attrs: (state, { id, key }) => ({
         "aria-labelledby": promptId(id, key),
-        "data-kind": state.questionsById[key]?.kind,
+        "data-kind": questionOf(state, key)?.kind,
         "data-missing": missingOf(state.questions, state.value).includes(key) ? "" : undefined,
       }),
       bind: (el, part) => part.api.bindQuestion(el, part.key),
@@ -587,13 +616,13 @@ export const questionPrimitive: QuestionPrimitive = definePrimitive<
     prompt: slot<QuestionPartProps, { prompt: string; required: boolean }>({
       props: fromQuestion,
       selects: ownQuestion,
-      state: (state, { key }) => promptState(state.questionsById[key]),
+      state: (state, { key }) => promptState(questionOf(state, key)),
       attrs: (_state, { id, key }) => ({ id: promptId(id, key) }),
     }),
     choices: slot<QuestionPartProps, QuestionChoicesState | Record<never, never>>({
       props: fromQuestion,
       selects: ownQuestion,
-      present: (state, { key }) => state.questionsById[key]?.kind !== "text",
+      present: (state, { key }) => questionOf(state, key)?.kind !== "text",
       state: (state, { key, api }) => api.choicesState(key, state) ?? noState,
       // UI SDK's radios and checkboxes fire a native `change` that bubbles, as native ones do.
       on: { change: (event, { key, api }) => api.readAnswer(key, event) },
@@ -602,7 +631,7 @@ export const questionPrimitive: QuestionPrimitive = definePrimitive<
     text: slot<QuestionPartProps, QuestionTextState | Record<never, never>>({
       props: fromQuestion,
       selects: ownQuestion,
-      present: (state, { key }) => state.questionsById[key]?.kind === "text",
+      present: (state, { key }) => questionOf(state, key)?.kind === "text",
       state: (state, { key, api }) => api.textState(key, state) ?? noState,
       on: { input: (event, { key, api }) => api.readAnswer(key, event) },
       bind: (_el, { api }) => api.syncAnswers(),

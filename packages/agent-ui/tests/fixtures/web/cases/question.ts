@@ -39,4 +39,28 @@ const questions = (motion?: QuestionOptions["motion"]) => (root: HTMLElement) =>
   });
 };
 
-export const cases = { all: questions(), reduced: questions("reduced") };
+const refused = (root: HTMLElement) => {
+  defineQuestion();
+  const question = document.createElement("kind-question");
+  question.id = "deploy";
+  question.label = "Deploy questions";
+  question.canSubmit = true;
+  question.questions = deployQuestions;
+  question.defaultValue = { env: "staging" };
+  let refusing = true;
+  question.addEventListener("valuechange", (event) => {
+    if (refusing) event.preventDefault();
+  });
+  question.addEventListener("questionsubmit", (event) =>
+    event.detail.waitUntil(submit(event.detail.value, event.detail) as Promise<void>),
+  );
+  root.append(question);
+  Object.assign(window, {
+    kindHost: host,
+    kindRefuse: (next: boolean) => {
+      refusing = next;
+    },
+  });
+};
+
+export const cases = { all: questions(), reduced: questions("reduced"), refused };

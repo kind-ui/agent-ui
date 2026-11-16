@@ -38,7 +38,7 @@
   }
 
   /* Each option is a row the whole of which checks it, as UI SDK's choice cards are. */
-  [data-slot="kind-question-choices"] [data-question-option] {
+  :where([data-slot="kind-question-choices"]) [data-question-option] {
     display: flex;
     align-items: flex-start;
     gap: 10px;
@@ -79,7 +79,7 @@
   }
 
   /* While the answers are on their way, the choices read as they are and take no presses. */
-  [data-slot="kind-question"][aria-busy="true"] [data-question-option] {
+  :where([data-slot="kind-question"][aria-busy="true"]) [data-question-option] {
     cursor: default;
 
     &:hover:not(:has([data-checked])) {
@@ -87,7 +87,8 @@
     }
   }
 
-  [data-slot="kind-question-choices"] :is([data-slot="radio-indicator"], [data-slot="checkbox-indicator"]) {
+  :where([data-slot="kind-question-choices"])
+    :is([data-slot="radio-indicator"], [data-slot="checkbox-indicator"]) {
     transition:
       opacity var(--kind-duration-fast),
       scale var(--kind-duration-fast) var(--kind-ease);

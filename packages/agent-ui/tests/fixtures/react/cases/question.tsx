@@ -31,4 +31,30 @@ function Questions({ motion }: { motion?: QuestionOptions["motion"] }) {
   );
 }
 
-export const cases = { all: () => <Questions />, reduced: () => <Questions motion="reduced" /> };
+function Controlled() {
+  const [value, setValue] = useState<Answers>({ env: "staging" });
+  const [refusing, setRefusing] = useState(true);
+  useEffect(() => {
+    Object.assign(window, { kindHost: host, kindRefuse: setRefusing });
+  }, []);
+  return (
+    <div className="flex w-[28rem] flex-col gap-4 p-6">
+      <Question
+        id="deploy"
+        label="Deploy questions"
+        questions={deployQuestions}
+        value={value}
+        onValueChange={(next) => {
+          if (!refusing) setValue(next);
+        }}
+        onSubmit={submit}
+      />
+    </div>
+  );
+}
+
+export const cases = {
+  all: () => <Questions />,
+  reduced: () => <Questions motion="reduced" />,
+  refused: () => <Controlled />,
+};
