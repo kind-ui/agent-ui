@@ -13,4 +13,8 @@ test("rounds the duration, at least 1 s", () => {
   assert.equal(reasoningTitle("error", 5), "Thought for 5 s");
 });
 
-test("no duration", () => assert.equal(reasoningTitle("complete"), "Thought"));
+test("no duration, or one that isn't a number", () => {
+  assert.equal(reasoningTitle("complete"), "Thought");
+  assert.equal(reasoningTitle("complete", Number.NaN), "Thought");
+  assert.equal(reasoningTitle("complete", Number.POSITIVE_INFINITY), "Thought");
+});

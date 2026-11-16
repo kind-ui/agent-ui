@@ -217,3 +217,18 @@ for (const scale of [1, 2]) {
     await page.close();
   });
 }
+
+test("kind-status keeps its label current after it leaves the page and comes back", async ({
+  page,
+}, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web only");
+  await open(page);
+  await live(page).evaluate(async (el) => {
+    const parent = el.parentElement as HTMLElement;
+    el.remove();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    parent.append(el);
+  });
+  await set(page, "setStatus", "complete");
+  await expect(live(page)).toHaveText("Complete");
+});

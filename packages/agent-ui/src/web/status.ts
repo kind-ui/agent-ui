@@ -2,6 +2,10 @@ import { statusPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/web";
 import type { AttributeProperties, UiElement } from "@ui-sdk/web/events";
 
+// Labels this element filled in. A label someone wrote text into keeps it, as React's `StatusLabel` children do.
+// Kept across instances, because UI SDK rebuilds one when the element returns to the page.
+const owned = new WeakSet<Element>();
+
 /**
  * `<kind-status status="…">` fills in its mark and label when it has no children, and writes the label into an empty
  * `<kind-status-label>`.
@@ -14,8 +18,6 @@ export function defineStatus(): void {
       render: (el, instance) => {
         if (!el.firstElementChild)
           el.innerHTML = "<kind-status-icon></kind-status-icon><kind-status-label></kind-status-label>";
-        // A label someone wrote text into keeps it, as React's `StatusLabel` children do.
-        const owned = new WeakSet<Element>();
         const draw = () => {
           const label = el.querySelector("kind-status-label");
           if (!label || (!owned.has(label) && label.textContent)) return;

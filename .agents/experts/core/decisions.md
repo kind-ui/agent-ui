@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `0391584` (Wave 2 Task 2 Status)
+Last reviewed: `4f7d25c` (Wave 2 Task 3 Reasoning)
 
 ## Settled
 
+- **A Reasoning `label` is announced as is on completion,** like a Status label; failures and stops still say "Thinking failed" / "Thinking stopped". The JSDoc says to name the outcome in it.
 - **A Step's `announcement` runs only once the step has a title** (`label` or the title part's text): every Step-based component has a title, and the JSDoc says so.
 - **Markdown and Streaming Text have no accessible name:** they're content with no role, which ARIA doesn't let a name sit on, and they offer no actions (spec §6).
 - Everything in AGENTS.md "UI SDK API notes".

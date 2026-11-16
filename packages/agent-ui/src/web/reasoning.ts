@@ -5,6 +5,10 @@ import { defineMarkdown, type KindMarkdownElement } from "./markdown.js";
 
 const DEFAULT_PARTS = `<kind-reasoning-trigger><button><kind-reasoning-icon></kind-reasoning-icon><kind-reasoning-title></kind-reasoning-title></button></kind-reasoning-trigger><kind-reasoning-content><kind-markdown></kind-markdown></kind-reasoning-content>`;
 
+// Titles this element filled in. A title someone wrote text into keeps it, as React's `ReasoningTitle` children do.
+// Kept across instances, because UI SDK rebuilds one when the element returns to the page.
+const owned = new WeakSet<Element>();
+
 /**
  * `<kind-reasoning status="…" text="…">` fills in its trigger and content when it has no children. It writes its
  * title into an empty `<kind-reasoning-title>`, and its `text` into a `<kind-markdown>` inside its content.
@@ -24,8 +28,6 @@ export function defineReasoning(): void {
       api: ["isOpen", "setOpen", "expand", "collapse", "toggle"],
       render: (el, instance) => {
         if (!el.firstElementChild) el.innerHTML = DEFAULT_PARTS;
-        // A title someone wrote text into keeps it, as React's `ReasoningTitle` children do.
-        const owned = new WeakSet<Element>();
         const draw = () => {
           const { title, text, status } = instance.get();
           const titlePart = el.querySelector("kind-reasoning-title");
@@ -45,8 +47,13 @@ export function defineReasoning(): void {
         draw();
         const unsubscribe = instance.subscribe(draw);
         const arrivals = new MutationObserver((records) => {
-          if (records.some((record) => [...record.addedNodes].some((node) => node instanceof Element)))
-            draw();
+          // The blocks `kind-markdown` renders for each chunk aren't parts.
+          const arrived = records.some(
+            (record) =>
+              !(record.target instanceof Element && record.target.closest("kind-markdown")) &&
+              [...record.addedNodes].some((node) => node instanceof Element),
+          );
+          if (arrived) draw();
         });
         arrivals.observe(el, { childList: true, subtree: true });
         return () => {

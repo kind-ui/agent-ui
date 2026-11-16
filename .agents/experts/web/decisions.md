@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `0391584` (Wave 2 Task 2 Status)
+Last reviewed: `4f7d25c` (Wave 2 Task 3 Reasoning)
 
 ## Settled
 
@@ -16,6 +16,7 @@ Last reviewed: `0391584` (Wave 2 Task 2 Status)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **`<kind-reasoning text="…">` shows nothing before upgrade,** then inserts its trigger and content, which shifts layout; same class as `kind-streaming-text` below. Writing the parts as children avoids it; undocumented.
 - **Indicators and `kind-uploader` fill in their parts when they connect with no children,** so a definition loaded before hand-written markup is parsed could double them (unconfirmed; `ui-calendar` does the same).
 - **`<kind-streaming-text text="…">` and an empty `kind-uploader` show nothing before upgrade.** Writing the text as children avoids it; undocumented.
 - **`kind-step-list-item` misses a button that arrives late or is replaced:** its target is `querySelector("button")`, and UI SDK's retarget observer only watches direct children. Deferred: one element can fill only one primitive's slot, so whichever of list item and trigger wraps the other has a nested target; `@ui-sdk/web`'s own `ui-toolbar-button` (nested `wrappedControl`) has the same gap. Needs an upstream subtree retarget.
@@ -29,6 +30,7 @@ Last reviewed: `0391584` (Wave 2 Task 2 Status)
 
 ## Resolved
 
+- **`kind-status` and `kind-reasoning` stopped updating their label or title after leaving the page and coming back a tick later (Wave 2 Task 3):** UI SDK rebuilds the instance, and each kept the parts it filled in per instance. Fixed: one module-level set; `status.spec.ts` and `reasoning.spec.ts` cover it.
 - **`title` on `<kind-step>` was HTML's advisory attribute (Wave 2 D4).** Checked in Chromium: it stays on the element, so it's the tooltip over the whole step and the group's accessible description. Fixed: the option is `label` in both layers.
 - **No `HTMLElementTagNameMap` entries, and no types for `can-*` or `removeHandler` (Wave 2 Task 1).** Fixed: each web file exports `Kind<Name>Element` (events with reasons read from core, live state, `api`, `can-*` properties, host-set properties) and declares every tag it defines, `kind-internal-*` included; the web fixtures listen without casts, so a wrong event name fails the typecheck.
 - **WebKit `following a new message` read 16 layouts:** the opening scroll-to-end's late scroll event landed in the measured window; the test now waits two frames after opening (Task 18).

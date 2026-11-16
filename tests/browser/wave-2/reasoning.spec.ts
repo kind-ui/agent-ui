@@ -48,6 +48,7 @@ test("thinks while running, opens, then closes into a summary on complete", asyn
   await expect(page.getByRole("group", { name: "Thought for 3 s" })).toHaveAttribute("id", "done");
   await append(page, "live", "First, **check** the cache.");
   await expect(content(page, "live").locator("strong")).toHaveText("check");
+  await expect(content(page, "live").locator('[data-slot="kind-markdown"]')).toHaveCSS("font-size", "14px");
   await set(page, "live", { durationSeconds: 2.6, status: "complete" });
   await expect(trigger(page, "live")).toHaveText("Thought for 3 s");
   await expect(live).not.toHaveAttribute("data-open");
@@ -185,4 +186,19 @@ test("kind-reasoning exposes live open state and its api", async ({ page }, test
   expect(await done.evaluate((el: KindReasoning) => el.open)).toBe(false);
   expect(await done.evaluate((el: KindReasoning) => el.api.expand())).toBe(true);
   await expect(done).toHaveAttribute("data-open", "");
+});
+
+test("kind-reasoning keeps its title current after it leaves the page and comes back", async ({
+  page,
+}, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await open(page);
+  await reasoning(page, "live").evaluate(async (el) => {
+    const parent = el.parentElement as HTMLElement;
+    el.remove();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    parent.prepend(el);
+  });
+  await set(page, "live", { durationSeconds: 4, status: "complete" });
+  await expect(trigger(page, "live")).toHaveText("Thought for 4 s");
 });

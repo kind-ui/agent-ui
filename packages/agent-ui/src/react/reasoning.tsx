@@ -18,21 +18,7 @@ export type ReasoningProps = ComponentProps<typeof parts.Root>;
  * markdown. Any `children` replace the default trigger and content.
  */
 export function Reasoning({ children, ...props }: ReasoningProps) {
-  return (
-    <parts.Root {...props}>
-      {children !== undefined ? (
-        children
-      ) : (
-        <>
-          <ReasoningTrigger>
-            <ReasoningIcon />
-            <ReasoningTitle />
-          </ReasoningTrigger>
-          <ReasoningContent />
-        </>
-      )}
-    </parts.Root>
-  );
+  return <parts.Root {...props}>{children !== undefined ? children : DEFAULT_PARTS}</parts.Root>;
 }
 
 export const ReasoningTrigger = parts.Trigger;
@@ -54,3 +40,14 @@ export function ReasoningContent({
 }: ReasoningContentProps) {
   return <parts.Content {...props}>{children}</parts.Content>;
 }
+
+// Shared, so a streamed chunk doesn't render the default parts' wrappers again.
+const DEFAULT_PARTS = (
+  <>
+    <ReasoningTrigger>
+      <ReasoningIcon />
+      <ReasoningTitle />
+    </ReasoningTrigger>
+    <ReasoningContent />
+  </>
+);

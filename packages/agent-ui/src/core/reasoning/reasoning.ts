@@ -6,7 +6,10 @@ import { type StepApi, type StepOptions, type StepState, stepBase } from "../ste
 export type ReasoningOptions = Omit<StepOptions, "label" | "durationSeconds"> & {
   /** The model's thoughts so far, as markdown. Appending parses only the blocks that changed. */
   text?: string;
-  /** Replaces the title, "Thinking" or "Thought for N s", and names the step in announcements. */
+  /**
+   * Replaces the title, "Thinking" or "Thought for N s", and is announced on completion, so name the outcome in it.
+   * A failure or a stop still announces "Thinking failed" or "Thinking stopped".
+   */
   label?: string;
   /**
    * How long the model thought, shown as "Thought for N s" once done. Set it with or before `status`, so the
@@ -47,7 +50,7 @@ const THINKING: ReadonlySet<StepStatus> = new Set(["pending", "running", "awaiti
 /** "Thinking" until the status is done, then "Thought for N s", rounded and at least 1, or "Thought" without one. */
 export const reasoningTitle = (status: StepStatus, durationSeconds?: number): string => {
   if (THINKING.has(status)) return "Thinking";
-  return durationSeconds === undefined
+  return durationSeconds === undefined || !Number.isFinite(durationSeconds)
     ? "Thought"
     : `Thought for ${Math.max(1, Math.round(durationSeconds))} s`;
 };

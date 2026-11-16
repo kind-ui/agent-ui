@@ -3,9 +3,9 @@
   [data-slot="kind-markdown"] {
     display: block;
     min-width: 0;
-    font-size: 0.9375rem;
-    line-height: 1.7;
-    color: var(--kind-color-fg);
+    font-size: var(--kind-markdown-font-size, 0.9375rem);
+    line-height: var(--kind-markdown-line-height, 1.7);
+    color: var(--kind-markdown-color, var(--kind-color-fg));
     overflow-wrap: break-word;
 
     & > :first-child > :first-child {
