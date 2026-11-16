@@ -1,0 +1,78 @@
+---
+title: Sources
+description: List the sources a response used, behind a compact count that opens into links.
+---
+
+import SourcesExample from "@/examples/sources/basic";
+
+Use sources under a response that searched the web or read documents, so readers can check where an answer came from. It shows "Used N sources", and opens into a link for each source with its site's icon, title and host name.
+
+<Example caption="Press Used 3 sources, or focus it and press Enter or Space, to show the links. Press it again to hide them.">
+  <SourcesExample />
+
+  <include cwd lang="tsx">./examples/sources/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/sources
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/sources-web
+```
+
+## Composition
+
+```text
+Sources
+├── SourcesTrigger
+└── SourcesContent
+    └── SourcesList
+        └── SourcesItem
+            ├── SourcesLink
+            │   ├── SourcesIcon
+            │   ├── SourcesTitle
+            │   └── SourcesHost
+            └── SourcesSnippet
+```
+
+`SourcesTrigger` is a native button that shows the `label`, else "Used N sources", and shows or hides `SourcesContent`. `SourcesList` renders a `SourcesItem` for each source, keyed by its `id`. `SourcesLink` links to the source's `url` and opens it in a new tab. `SourcesIcon` shows the source's `favicon`, and the first letter of its host name until the image loads or without one. `SourcesHost` shows the host name without `www.`, and `SourcesSnippet` the `snippet`, up to two lines. To arrange the parts yourself, pass them as children of `Sources`.
+
+## Usage
+
+### Sources
+
+Pass `sources`, each with an `id` and a `title`, and optionally a `url`, `favicon` and `snippet`. Links accept `http`, `https`, `mailto` and relative URLs. A source with any other URL, like `javascript:`, shows as text with no link and no host name.
+
+```tsx
+<Sources
+  sources={[
+    { id: "limits", title: "Rate limits for the REST API", url: "https://docs.github.com/en/rest" },
+    { id: "notes", title: "Meeting notes" },
+  ]}
+/>
+```
+
+### Streaming Sources
+
+Add sources as the agent finds them, keeping each `id`. A source added after the list first renders fades up once, and the count in the trigger updates without moving anything around it. A source whose title or URL changes updates in place, without fading in again. At full motion the list slides open; under `prefers-reduced-motion`, or with `motion="reduced"`, it fades in over 120 ms, and with `motion="none"` it shows at once.
+
+### Opening
+
+The list starts closed. Pass `defaultOpen` to start with it shown, or `open` with `onOpenChange` to control it; `onOpenChange` gets `"trigger-press"`, `"find-in-page"` or `"imperative"`. The list stays in the page while it's closed, so the browser's find in page reaches it and opens it.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/sources/sources.ts" name="SourcesOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the sources by the trigger's text and reads `open`. `expand()` is offered while the list is hidden and `collapse()` while it shows. Like any component with a button, it also has UI SDK's generic `press`.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/sources/sources.ts" name="SourcesAgentActions" type='Pick<SourcesApi, "expand" | "collapse">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-sources>`, set `sources` as a property; the other props are kebab-case attributes, and `onOpenChange` is the `openchange` event. The element fills in its trigger, list and items, and keeps any `<kind-sources-item value="…">` you write inside its `<kind-sources-list>`.
+</Caption>

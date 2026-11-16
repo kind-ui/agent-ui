@@ -1,0 +1,142 @@
+/* Sources (spec §7): "Used N sources", which opens a list of links, each with its site's icon, title and host name.
+   The trigger and the panel's motion come from step.css, through `data-step-part`. */
+@layer components {
+  [data-sources-part="root"] {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--kind-color-fg);
+  }
+
+  /* As wide as its text, so the summary stays compact; the count doesn't change the row's height. */
+  [data-sources-part="trigger"] {
+    width: auto;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* No guide line: the list sits under the trigger at full width. */
+  [data-sources-part="content"][data-step-part] {
+    align-self: stretch;
+    margin-inline-start: 0;
+    padding-inline-start: 0;
+    border-inline-start: 0;
+    color: var(--kind-color-fg);
+
+    & > * {
+      padding-block: 4px 0;
+    }
+  }
+
+  [data-sources-part="list"] {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  [data-sources-part="item"] {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-radius: calc(var(--kind-radius) / 2);
+    padding: 6px;
+    transition: background-color var(--kind-duration-fast);
+
+    &:has([data-sources-part="link"][href]:hover) {
+      background-color: var(--kind-color-hover);
+    }
+  }
+
+  [data-sources-part="title"] {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  [data-sources-part="link"] {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 8px;
+    border-radius: calc(var(--kind-radius) / 3);
+    color: inherit;
+    text-decoration: none;
+
+    &[href]:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+    &[href]:hover [data-sources-part="title"] {
+      text-decoration: underline;
+      text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+      text-underline-offset: 2px;
+    }
+  }
+
+  [data-sources-part="icon"] {
+    display: inline-flex;
+    flex-shrink: 0;
+
+    & :where([data-slot="avatar"]) {
+      position: relative;
+      display: inline-flex;
+      width: 16px;
+      height: 16px;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: calc(var(--kind-radius) / 3);
+      background-color: color-mix(in oklab, var(--kind-color-muted) 16%, var(--kind-color-surface));
+      color: var(--kind-color-fg);
+      font-size: 0.625rem;
+      font-weight: 600;
+      line-height: 1;
+    }
+
+    & :where(img) {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  [data-sources-part="host"] {
+    flex-shrink: 0;
+    max-width: 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    color: var(--kind-color-muted);
+  }
+
+  /* Under the title, past the 16px icon and the 8px gap, two lines at most. */
+  [data-sources-part="snippet"] {
+    display: -webkit-box;
+    margin: 0;
+    padding-inline-start: 24px;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    font-size: 0.8125rem;
+    line-height: 1.125rem;
+    color: var(--kind-color-muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-sources-part="item"] {
+      transition-duration: var(--kind-duration-reduced);
+    }
+  }
+
+  @media (forced-colors: active) {
+    [data-sources-part="link"][href] [data-sources-part="title"] {
+      color: LinkText;
+    }
+  }
+}

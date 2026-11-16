@@ -99,6 +99,11 @@ const components = {
       "Says a guardrail blocked or filtered content, with the policy reason and an expandable detail.",
     uses: [],
   },
+  sources: {
+    title: "Sources",
+    description: "The sources a response used, as a compact count that opens a list of links.",
+    uses: [],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

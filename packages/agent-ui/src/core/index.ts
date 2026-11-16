@@ -238,6 +238,15 @@ export {
   type ReasoningEffortValueChangeReason,
   reasoningEffortPrimitive,
 } from "./reasoning-effort/index.js";
+export {
+  type SourceEntry,
+  type SourcesApi,
+  type SourcesOpenChangeReason,
+  type SourcesOptions,
+  type SourcesPrimitive,
+  type SourcesState,
+  sourcesPrimitive,
+} from "./sources/index.js";
 export { isLibraryFrame, parseStack } from "./stack.js";
 export {
   type StatusOptions,

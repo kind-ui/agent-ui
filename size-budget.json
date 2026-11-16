@@ -1,11 +1,12 @@
 {
   ".": 265,
-  "./core": 186000,
+  "./core": 188000,
   "./adapters/ai-sdk": 1345,
   "imports": {
     "stepBase": 5500,
     "statusPrimitive": 4000,
     "composerPrimitive": 44500,
-    "contextMeterPrimitive": 43500
+    "contextMeterPrimitive": 43500,
+    "sourcesPrimitive": 41000
   }
 }

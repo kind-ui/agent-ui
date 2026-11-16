@@ -1,2 +1,2 @@
-export type { MdNode } from "./ast.js";
+export { type MdNode, sanitizeUrl } from "./ast.js";
 export { createMarkdownEngine, type MarkdownBlock, type MarkdownEngine } from "./engine.js";

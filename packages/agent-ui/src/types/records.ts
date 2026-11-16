@@ -4,6 +4,8 @@ export interface Source {
   url?: string;
   snippet?: string;
   mediaType?: string;
+  /** An icon for the source, like its site's favicon. */
+  favicon?: string;
 }
 
 export interface TaskItem {

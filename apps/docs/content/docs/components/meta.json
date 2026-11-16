@@ -20,6 +20,7 @@
     "feedback",
     "notice",
     "guardrail-notice",
+    "sources",
     "conversation",
     "message",
     "markdown",
