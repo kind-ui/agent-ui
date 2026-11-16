@@ -16,6 +16,7 @@ import {
 } from "./components/ui/conversation.js";
 import { Document } from "./components/ui/document.js";
 import { Feedback } from "./components/ui/feedback.js";
+import { FileTree } from "./components/ui/file-tree.js";
 import { GeneratedImage } from "./components/ui/generated-image.js";
 import { GuardrailNotice } from "./components/ui/guardrail-notice.js";
 import { InlineCitation } from "./components/ui/inline-citation.js";
@@ -164,6 +165,7 @@ const items = {
   "generated-image": (
     <GeneratedImage alt="A lighthouse at dusk" status="generating" progress={40} width={768} height={512} />
   ),
+  "file-tree": <FileTree entries={[{ path: "src/index.ts", change: "modified", additions: 2 }]} />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
       <ConversationViewport>

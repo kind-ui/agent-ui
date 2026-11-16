@@ -9,6 +9,7 @@ import { defineContextMeter } from "./components/ui/web/context-meter.js";
 import { defineConversation } from "./components/ui/web/conversation.js";
 import { defineDocument } from "./components/ui/web/document.js";
 import { defineFeedback } from "./components/ui/web/feedback.js";
+import { defineFileTree } from "./components/ui/web/file-tree.js";
 import { defineGeneratedImage } from "./components/ui/web/generated-image.js";
 import { defineGuardrailNotice } from "./components/ui/web/guardrail-notice.js";
 import { defineInlineCitation } from "./components/ui/web/inline-citation.js";
@@ -61,6 +62,7 @@ for (const define of [
   defineInlineCitation,
   defineDocument,
   defineGeneratedImage,
+  defineFileTree,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -107,6 +109,7 @@ const items = {
   "inline-citation": `<p>Back off on a limit <kind-inline-citation></kind-inline-citation></p>`,
   document: `<kind-document label="README.md" content="Back off on a 429."></kind-document>`,
   "generated-image": `<kind-generated-image alt="A lighthouse at dusk" status="generating" progress="40" width="768" height="512"></kind-generated-image>`,
+  "file-tree": `<kind-file-tree></kind-file-tree>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>
@@ -190,6 +193,9 @@ Object.assign(main.querySelector("kind-task") as HTMLElement, {
 });
 Object.assign(main.querySelector("kind-sources") as HTMLElement, {
   sources: [{ id: "docs", title: "Rate limits", url: "https://docs.github.com/en/rest" }],
+});
+Object.assign(main.querySelector("kind-file-tree") as HTMLElement, {
+  entries: [{ path: "src/index.ts", change: "modified", additions: 2 }],
 });
 Object.assign(main.querySelector("kind-inline-citation") as HTMLElement, {
   sources: [{ id: "docs", title: "Rate limits", url: "https://docs.github.com/en/rest" }],
