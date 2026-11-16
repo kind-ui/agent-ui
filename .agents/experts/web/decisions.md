@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `5c45892` (Task 18 CI and release)
+Last reviewed: `481da58` (Wave 2 Task 1 groundwork)
 
 ## Settled
 
@@ -28,7 +28,7 @@ Last reviewed: `5c45892` (Task 18 CI and release)
 ## Resolved
 
 - **`title` on `<kind-step>` was HTML's advisory attribute (Wave 2 D4).** Checked in Chromium: it stays on the element, so it's the tooltip over the whole step and the group's accessible description. Fixed: the option is `label` in both layers.
-- **No `HTMLElementTagNameMap` entries, and no types for `can-*` or `removeHandler` (Wave 2 Task 1).** Fixed: each web file exports `Kind<Name>Element` (events, live state, `api`, `can-*` properties, host-set properties) and declares every tag it defines.
+- **No `HTMLElementTagNameMap` entries, and no types for `can-*` or `removeHandler` (Wave 2 Task 1).** Fixed: each web file exports `Kind<Name>Element` (events with reasons read from core, live state, `api`, `can-*` properties, host-set properties) and declares every tag it defines, `kind-internal-*` included; the web fixtures listen without casts, so a wrong event name fails the typecheck.
 - **WebKit `following a new message` read 16 layouts:** the opening scroll-to-end's late scroll event landed in the measured window; the test now waits two frames after opening (Task 18).
 - **Docs captions (Task 17):** the Conversation and Composer pages now say `rowKey`, `controller` and `defaultValue` are properties only.
 - **`kind-attachments` kept a public `onRemove` property, and the composer wrote `can-remove` into the user's markup.** Fixed: the composer hands its function in as `removeHandler`.

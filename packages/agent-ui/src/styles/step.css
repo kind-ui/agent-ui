@@ -1,6 +1,6 @@
 /* Step base (spec §5), shared by both render layers and every Step-based component through `data-step-part`. */
 @layer components {
-  [data-slot="kind-step-list"] {
+  [data-step-part="list"] {
     display: flex;
     flex-direction: column;
     gap: 2px;

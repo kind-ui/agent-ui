@@ -63,3 +63,9 @@ export function defineInternalMenu(): void {
     },
   );
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-internal-menu": HTMLElement;
+  }
+}

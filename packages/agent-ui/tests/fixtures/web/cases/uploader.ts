@@ -11,17 +11,9 @@ export const cases = {
       uploader.items = change(uploader.items ?? []);
     });
     Object.assign(window, { kindUploader: fixture });
-    uploader.addEventListener("files", (event) =>
-      onFiles((event as CustomEvent<{ value: File[] }>).detail.value),
-    );
-    uploader.addEventListener("uploadreject", (event) =>
-      onReject((event as CustomEvent<{ value: { file: File }[] }>).detail.value),
-    );
-    uploader.addEventListener("uploadcancel", (event) =>
-      onCancel((event as CustomEvent<{ value: string }>).detail.value),
-    );
-    uploader.addEventListener("uploadretry", (event) =>
-      onRetry((event as CustomEvent<{ value: string }>).detail.value),
-    );
+    uploader.addEventListener("files", (event) => onFiles(event.detail.value));
+    uploader.addEventListener("uploadreject", (event) => onReject(event.detail.value));
+    uploader.addEventListener("uploadcancel", (event) => onCancel(event.detail.value));
+    uploader.addEventListener("uploadretry", (event) => onRetry(event.detail.value));
   },
 };

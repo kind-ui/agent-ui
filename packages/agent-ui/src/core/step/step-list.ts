@@ -32,7 +32,7 @@ export const stepListPrimitive: StepListPrimitive = definePrimitive({
   state: (): StepListState => ({ focused: null }),
   api: (context): StepListApi => createListFocus<StepListState, ItemProps>(context, { slot: "item" }),
   slots: (slot) => ({
-    root: slot({ role: "group" }),
+    root: slot({ role: "group", attrs: () => ({ "data-step-part": "list" }) }),
     item: slot<ItemProps>({
       props: { value: "string" },
       focus: "roving",

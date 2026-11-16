@@ -99,6 +99,12 @@ test("full motion animates height; reduced motion animates no height or transfor
   expect(reduced.filter((p) => p === "height" || p === "transform")).toEqual([]);
 });
 
+const setSingleStatus = (page: Page, status: string) =>
+  page.evaluate(
+    (s) => (window as unknown as { kindStep: { setStatus(status: string): void } }).kindStep.setStatus(s),
+    status,
+  );
+
 test("reduced motion stops the chevron, spinner and shimmer", async ({ page }) => {
   const stillness = (name: string) =>
     trigger(page, name).evaluate((el) => {
@@ -116,9 +122,7 @@ test("reduced motion stops the chevron, spinner and shimmer", async ({ page }) =
   expect(await stillness("Draft the summary")).toEqual(["0s", "none", "none"]);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await open(page, "reduced");
-  await page.evaluate(() => {
-    for (const el of document.querySelectorAll("[data-status]")) el.setAttribute("data-status", "running");
-  });
+  await setSingleStatus(page, "running");
   expect(await stillness("Reduced")).toEqual(["0s", "none", "none"]);
 });
 
@@ -153,11 +157,6 @@ const markTransitions = async (page: Page, title: string, change: () => Promise<
       ),
   );
 };
-const setSingleStatus = (page: Page, status: string) =>
-  page.evaluate(
-    (s) => (window as unknown as { kindStep: { setStatus(status: string): void } }).kindStep.setStatus(s),
-    status,
-  );
 
 test("the status mark scales at full motion, only fades when reduced, and holds still with none", async ({
   page,

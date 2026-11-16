@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `5c45892` (Task 18 CI and release)
+Last reviewed: `481da58` (Wave 2 Task 1 groundwork)
 
 ## Settled
 
+- **A Step's `announcement` runs only once the step has a title** (`label` or the title part's text): every Step-based component has a title, and the JSDoc says so.
 - **Markdown and Streaming Text have no accessible name:** they're content with no role, which ARIA doesn't let a name sit on, and they offer no actions (spec §6).
 - Everything in AGENTS.md "UI SDK API notes".
 - **`affected-specs.mjs` runs every spec for a file it can't place,** and none for code no fixture page loads (the AI SDK adapter); nightly runs cover what a PR skips.
@@ -15,6 +16,7 @@ Last reviewed: `5c45892` (Task 18 CI and release)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Step announcements read the title part's text in `onOptions`,** which may still be the old text when a component computes its title from state (Reasoning's "Thought for N s"). Such a component builds its text from `state` in `announcement` instead; check in Task 3.
 - **`ComposerApi.setValue` with the draft's own text still fires `onValueChange`** with a new draft object and returns `true`; nothing changes on screen.
 - **Enter held or pressed twice on an uploader Cancel cancels the next row too:** focus recovery moves to the neighbor's Cancel between presses. Spec §7 needs to say whether that's the list-deletion pattern or needs a pause.
 - **The uploader's `mounted` set never forgets ids,** so an item removed and re-added under the same id gets no entrance.

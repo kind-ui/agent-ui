@@ -1,5 +1,6 @@
 import { createFocusRecovery, createRovingFocus, type PrimitiveContext } from "@ui-sdk/core";
 
+/** What `createListFocus` returns, kept on a list primitive's api for its item slot. */
 export type ListFocus<State extends { focused: string | null }, Props extends { value: string }> = {
   roving: ReturnType<typeof createRovingFocus<State, Props>>;
   recovery: ReturnType<typeof createFocusRecovery<Props>>;

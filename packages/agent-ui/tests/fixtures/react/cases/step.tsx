@@ -78,7 +78,7 @@ function Single({ motion, title }: { motion: "reduced" | "none"; title: string }
         <StepTitle>{title}</StepTitle>
       </StepTrigger>
       <StepContent>
-        <p>Fades only.</p>
+        <p>Step details.</p>
       </StepContent>
     </Step>
   );

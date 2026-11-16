@@ -1,8 +1,6 @@
-import type { AttachmentItem, ComposerDraft } from "@kind-ui/agent-ui/core";
-import type { UiActionDetail } from "@ui-sdk/web";
 import type { AgentAction } from "@ui-sdk/web/agent";
-import { defineAttachments } from "../../../../src/web/attachments.js";
-import { defineComposer } from "../../../../src/web/composer.js";
+import { defineAttachments, type KindAttachmentsElement } from "../../../../src/web/attachments.js";
+import { defineComposer, type KindComposerElement } from "../../../../src/web/composer.js";
 import { defineConversation } from "../../../../src/web/conversation.js";
 import { defineInternalToolbar } from "../../../../src/web/internal/toolbar.js";
 import { defineLoader } from "../../../../src/web/loader.js";
@@ -22,11 +20,9 @@ const host = agentHost();
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 
-type ChangeEvent<Value> = CustomEvent<{ value: Value; source: string }>;
-
-const recordChange = (component: string, event: Event) =>
+const recordChange = (component: string, event: CustomEvent<{ source: string }>) =>
   host.change(component, {
-    source: (event as ChangeEvent<unknown>).detail.source,
+    source: event.detail.source,
     cancel: () => event.preventDefault(),
   });
 
@@ -126,14 +122,14 @@ const markup = `
   </div>`;
 
 function wireMessages(root: HTMLElement) {
-  const [user, reply] = root.querySelectorAll("kind-message") as NodeListOf<HTMLElement>;
+  const [user, reply] = root.querySelectorAll("kind-message");
   const content = user?.querySelector("kind-message-content") as HTMLElement;
   const ask = (text: string) => {
     user?.setAttribute("text", text);
     content.textContent = text;
   };
   ask(question);
-  user?.addEventListener("edit", (event) => ask((event as CustomEvent<{ value: string }>).detail.value));
+  user?.addEventListener("edit", (event) => ask(event.detail.value));
 
   const markdown = reply?.querySelector("kind-markdown") as HTMLElement;
   const show = (index: number) => {
@@ -143,30 +139,25 @@ function wireMessages(root: HTMLElement) {
   };
   show(0);
   reply?.addEventListener("branchchange", (event) => {
-    if (recordChange("message", event)) show((event as ChangeEvent<number>).detail.value);
+    if (recordChange("message", event)) show(event.detail.value);
   });
   reply?.addEventListener("regenerate", () => host.calls.push("regenerate"));
 }
 
 function wireComposer(root: HTMLElement) {
-  const composer = root.querySelector("kind-composer") as HTMLElement;
+  const composer = root.querySelector("kind-composer") as KindComposerElement;
   Object.assign(composer, { mentions, commands });
-  composer.addEventListener("composersubmit", (event) => {
-    const { detail } = event as CustomEvent<UiActionDetail & { value: ComposerDraft }>;
-    detail.waitUntil(host.submit(detail.value));
-  });
+  composer.addEventListener("composersubmit", ({ detail }) => detail.waitUntil(host.submit(detail.value)));
   composer.addEventListener("stop", host.stop);
   composer.addEventListener("valuechange", (event) => recordChange("composer", event));
 }
 
 function wireAttachments(root: HTMLElement) {
-  const list = root.querySelector('kind-attachments[aria-label="Files"]') as HTMLElement & {
-    items: AttachmentItem[];
-  };
+  const list = root.querySelector('kind-attachments[aria-label="Files"]') as KindAttachmentsElement;
   list.items = files;
   list.addEventListener("remove", (event) => {
-    const id = (event as CustomEvent<{ value: string }>).detail.value;
-    list.items = list.items.filter((item) => item.id !== id);
+    const id = event.detail.value;
+    list.items = list.items?.filter((item) => item.id !== id);
   });
 }
 
@@ -176,12 +167,8 @@ function wireUploader(root: HTMLElement) {
   const { onCancel, onRetry } = host.uploads((change) => {
     uploader.items = change(uploader.items ?? []);
   });
-  uploader.addEventListener("uploadcancel", (event) =>
-    onCancel((event as CustomEvent<{ value: string }>).detail.value),
-  );
-  uploader.addEventListener("uploadretry", (event) =>
-    onRetry((event as CustomEvent<{ value: string }>).detail.value),
-  );
+  uploader.addEventListener("uploadcancel", (event) => onCancel(event.detail.value));
+  uploader.addEventListener("uploadretry", (event) => onRetry(event.detail.value));
 }
 
 export const cases = {

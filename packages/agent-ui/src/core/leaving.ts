@@ -26,8 +26,8 @@ export const mergeLeaving = <T extends { id: string }>(
   return merged;
 };
 
-/** The rows without `id`, once its exit has finished. */
+/** The rows without `id` once its exit has finished, unless the host brought it back meanwhile. */
 export const dropRow = <T extends { id: string }>(
   rows: readonly LeavingRow<T>[],
   id: string,
-): LeavingRow<T>[] => rows.filter((row) => row.item.id !== id);
+): LeavingRow<T>[] => rows.filter((row) => !(row.leaving && row.item.id === id));

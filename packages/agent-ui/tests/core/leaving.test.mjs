@@ -40,5 +40,10 @@ test("new items take their place in the host's order", () =>
     row("y"),
   ]));
 
+test("an exit that finishes after its item came back drops nothing", () => {
+  const back = mergeLeaving(mergeLeaving(rows(["a", "b"]), items(["a"])), items(["a", "b"]));
+  assert.deepEqual(dropRow(back, "b"), [row("a"), row("b")]);
+});
+
 test("dropRow removes only that row", () =>
   assert.deepEqual(dropRow([row("a"), row("b", true)], "b"), [row("a")]));

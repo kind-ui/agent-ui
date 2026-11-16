@@ -1,5 +1,4 @@
 import type { AttachmentItem } from "@kind-ui/agent-ui/core";
-import type { UiActionDetail } from "@ui-sdk/web";
 import { defineAttachments, type KindAttachmentsElement } from "../../../../src/web/attachments.js";
 import { defineComposer, type KindComposerElement } from "../../../../src/web/composer.js";
 import { commands, history, imageFile, mentions, recorder } from "../../shared/composer.js";
@@ -45,10 +44,7 @@ function full(root: HTMLElement, submitOn: "enter" | "mod-enter") {
   const { onSubmit, onStop } = recorder();
   Object.assign(composer, { mentions, commands, history, canStop: params.has("stop") });
   composer.addEventListener("stop", onStop);
-  composer.addEventListener("composersubmit", (event) => {
-    const { detail } = event as CustomEvent<UiActionDetail & { value: Parameters<typeof onSubmit>[0] }>;
-    detail.waitUntil(onSubmit(detail.value));
-  });
+  composer.addEventListener("composersubmit", ({ detail }) => detail.waitUntil(onSubmit(detail.value)));
   composer.addEventListener("valuechange", (event) => {
     if ((window as { refuseEdits?: boolean }).refuseEdits) event.preventDefault();
   });
@@ -84,7 +80,7 @@ export const cases = {
     ];
     Object.assign(list, { items, canRemove: true });
     list.addEventListener("remove", (event) => {
-      const id = (event as CustomEvent<{ value: string }>).detail.value;
+      const id = event.detail.value;
       items = items.filter((item) => item.id !== id);
       list.items = items;
     });

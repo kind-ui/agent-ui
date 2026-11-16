@@ -33,3 +33,9 @@ export function defineInternalAvatar(): void {
     },
   );
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-internal-avatar": HTMLElement;
+  }
+}

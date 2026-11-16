@@ -6,7 +6,12 @@ import {
   attachmentsPrimitive,
 } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/web";
-import type { AttributeProperties, UiChangeEvent, UiElement, UiPartElement } from "@ui-sdk/web/events";
+import type {
+  AttributeProperties,
+  UiDetailedChangeEvent,
+  UiElement,
+  UiPartElement,
+} from "@ui-sdk/web/events";
 
 function text(attribute: string, content: string): HTMLSpanElement {
   const span = document.createElement("span");
@@ -83,7 +88,9 @@ export function defineAttachments(): void {
   });
 }
 
-export type KindAttachmentsEvents = { remove: UiChangeEvent<string, "remove-press" | "imperative"> };
+export type KindAttachmentsEvents = {
+  remove: UiDetailedChangeEvent<string, Parameters<NonNullable<AttachmentsOptions["onRemove"]>>[1]>;
+};
 
 export interface KindAttachmentsElement
   extends UiElement<KindAttachmentsEvents>,

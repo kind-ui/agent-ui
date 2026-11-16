@@ -54,3 +54,9 @@ export function defineInternalTokenInput(): void {
     },
   );
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-internal-token-input": HTMLElement;
+  }
+}

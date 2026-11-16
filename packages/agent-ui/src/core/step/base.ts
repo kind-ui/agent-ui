@@ -64,19 +64,24 @@ type Cause = { reason?: StepOpenChangeReason; event?: Event | undefined };
 export type StepApi = {
   /** The current open state; the owner's `open` when controlled. */
   isOpen: () => boolean;
+  /** Opens or closes the step. Returns whether the change was accepted. */
   setOpen: (open: boolean, cause?: Cause) => boolean;
   /** Opens the step. Returns whether the change was accepted. */
   expand: () => boolean;
   /** Closes the step. Returns whether the change was accepted. */
   collapse: () => boolean;
+  /** Opens a closed step and closes an open one, as the trigger does. Returns whether the change was accepted. */
   toggle: (event?: Event) => boolean;
 };
 
 export type StepBaseConfig = {
   /** `data-kind` when the host passes no `kind`. */
   kind?: string;
-  /** Replaces `stepAnnouncement`. Returning `undefined` keeps the step quiet. */
-  announcement?: (status: StepStatus, title: string) => string | undefined;
+  /**
+   * Replaces `stepAnnouncement`, with the state after the change. Called on a status change, once the step has a
+   * title (`label` or the title part's text). Returning `undefined` keeps the step quiet.
+   */
+  announcement?: (status: StepStatus, title: string, state: StepState) => string | undefined;
 };
 
 const OUTCOMES: Partial<Record<StepStatus, string>> = {
@@ -94,12 +99,16 @@ export const stepAnnouncement = (status: StepStatus, title: string): string | un
 
 export type StepPanelOptions = {
   isOpen(): boolean;
+  /** Whether the panel is closing and still shown while its exit plays. */
   isExiting(): boolean;
   motion(): MotionMode;
   /** Find in page matched hidden text: open the panel. */
   reveal(event: Event): void;
+  /** The button that controls the panel, where focus goes when it closes with focus inside. */
   trigger(): HTMLElement | undefined;
+  /** Calls `listener` whenever the open, exiting or motion state may have changed. */
   subscribe(listener: () => void): () => void;
+  /** Called once the panel has finished closing: after its exit, or at once without one. */
   exited(): void;
 };
 
@@ -135,7 +144,8 @@ const autoOpened = (options: StepOptions): boolean =>
 
 /**
  * Everything but the name of Step and every Step-based component (spec §5): options, state, the api, the seven
- * slots and the agent actions, each spread into the component's own `definePrimitive`.
+ * slots and the agent actions, each spread into the component's own `definePrimitive`. A component with its own
+ * state overrides `state` and `sync`, spreading `base.state(options)` and `base.sync(options)` into them.
  */
 export const stepBase = <State extends StepState = StepState, Api extends StepApi = StepApi>({
   kind,
@@ -165,10 +175,12 @@ export const stepBase = <State extends StepState = StepState, Api extends StepAp
       userToggled: false,
       exiting: false,
     }),
-    sync: (options: StepOptions): Partial<StepState> => ({
-      ...presentation(options),
-      ...(options.open === undefined ? {} : { open: options.open }),
-    }),
+    // Typed on `State`, so a component's own `sync` can spread it.
+    sync: (options: StepOptions) =>
+      ({
+        ...presentation(options),
+        ...(options.open === undefined ? {} : { open: options.open }),
+      }) as Partial<State>,
     controlled: ["open", "status"] as ("open" | "status")[],
     api: (context: PrimitiveContext<StepOptions, StepState, string>): StepApi => {
       const change = createChange(context);
@@ -212,7 +224,7 @@ export const stepBase = <State extends StepState = StepState, Api extends StepAp
         prevStatus = status;
         if (next !== open) setOpen(next, { reason: "auto" });
         const title = options.label ?? context.element("title")?.textContent?.trim();
-        const text = title && announcement(status, title);
+        const text = title && announcement(status, title, context.store.get());
         if (text) announce(text, { priority: "polite" });
       });
 

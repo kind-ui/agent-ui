@@ -11,7 +11,6 @@ import {
 import { createParts, wrappedButton } from "@ui-sdk/web";
 import type {
   AttributeProperties,
-  UiChangeEvent,
   UiDetailedChangeEvent,
   UiElement,
   UiPartElement,
@@ -120,8 +119,8 @@ export type KindUploaderEvents = {
     Parameters<NonNullable<UploaderOptions["onReject"]>>[0],
     UploaderFilesDetails
   >;
-  uploadcancel: UiChangeEvent<string, "cancel-press" | "imperative">;
-  uploadretry: UiChangeEvent<string, "retry-press" | "imperative">;
+  uploadcancel: UiDetailedChangeEvent<string, Parameters<NonNullable<UploaderOptions["onCancel"]>>[1]>;
+  uploadretry: UiDetailedChangeEvent<string, Parameters<NonNullable<UploaderOptions["onRetry"]>>[1]>;
 };
 
 export interface KindUploaderElement

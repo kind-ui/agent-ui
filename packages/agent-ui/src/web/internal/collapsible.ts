@@ -37,3 +37,9 @@ export function defineInternalCollapsible(): void {
     },
   );
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-internal-collapsible": HTMLElement;
+  }
+}

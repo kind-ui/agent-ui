@@ -52,8 +52,8 @@ export function defineMessage(): void {
 
 export type KindMessageEvents = {
   branchchange: UiChangeEvent<number, MessageBranchChangeReason>;
-  messagecopy: UiChangeEvent<string, "copy-press" | "imperative">;
-  regenerate: UiChangeEvent<string, "regenerate-press" | "imperative">;
+  messagecopy: UiDetailedChangeEvent<string, Parameters<NonNullable<MessageOptions["onCopy"]>>[1]>;
+  regenerate: UiDetailedChangeEvent<string, Parameters<NonNullable<MessageOptions["onRegenerate"]>>[1]>;
   edit: UiDetailedChangeEvent<string, Parameters<NonNullable<MessageOptions["onEdit"]>>[1]>;
 };
 

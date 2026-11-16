@@ -40,7 +40,7 @@ const single = (root: HTMLElement, motion: string, title: string) => {
   root.innerHTML = `
     <kind-step motion="${motion}">
       <kind-step-trigger><button><kind-step-icon></kind-step-icon><kind-step-title>${title}</kind-step-title></button></kind-step-trigger>
-      <kind-step-content><p>Fades only.</p></kind-step-content>
+      <kind-step-content><p>Step details.</p></kind-step-content>
     </kind-step>`;
   Object.assign(window, {
     kindStep: {
