@@ -137,6 +137,8 @@ test("every part names its Step base part", async ({ page }) => {
 
 // Transitions the status mark (and its glyph and spinner) runs after `change`, two frames on.
 const markTransitions = async (page: Page, title: string, change: () => Promise<unknown>) => {
+  // A step holds its transitions through its first frames (`data-mounting`).
+  await expect(page.locator("[data-mounting]")).toHaveCount(0);
   const icon = trigger(page, title).locator("[data-status-mark]");
   await icon.evaluate((el) => {
     const seen: string[] = [];
