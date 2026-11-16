@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `57558d8` (Wave 2 Task 7 Subagent)
+Last reviewed: `b1676ea` (Wave 2 Task 8 Queue)
 
 ## Settled
 
@@ -36,6 +36,7 @@ Last reviewed: `57558d8` (Wave 2 Task 7 Subagent)
 
 ## Resolved
 
+- **Queue (Wave 2 Task 8):** `kind-queue` keeps its open sections when it leaves the page and comes back (`openSections` root state, restored through `defaultOpenSections`); sections written after it connects are filled in through a `MutationObserver`; `KindQueueElement` types its `api`.
 - **Subagent (Wave 2 Task 7):** `kind-subagent` no longer moves the host's children (React 19 threw on `insertBefore`/`removeChild`): the host writes steps inside `kind-subagent-content` and the element adds its parts around it; without a `result` the result part stays empty and hides.
 - **Task and Plan (Wave 2 Task 6):** the lists keep items someone wrote (and their text), and a written item replaces the one the element added, as Chain of Thought's do; parts and items written or removed after connecting redraw; a `kind-plan-progress` with text keeps it.
 - **Chain of Thought (Wave 2 Task 5):** `openSteps` is root state (`getOpenSteps` / `setOpenSteps`), so a moved element keeps its open steps; an item a host writes after its step replaces the one the element added; parts are looked up only in the element's own chain, so a chain nested in a step's content keeps its own; removing a written item redraws; the fixture listens for `openstepschange`.

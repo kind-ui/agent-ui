@@ -1,12 +1,17 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Call = { type: string; id: string; index?: number; reason: string; source: string };
 
 type Fixture = {
   kindCalls: Call[];
-  kindQueue: { remove(id: string): void };
+  kindQueue: {
+    remove(id: string): void;
+    add(item: { id: string; status: string; title: string }): void;
+    complete(id: string): void;
+  };
   kindAnnounced: string[];
   agent: { act(input: unknown): Promise<unknown> };
 };
@@ -17,6 +22,16 @@ const row = (page: Page, name: string) => queue(page).getByRole("listitem").filt
 const calls = (page: Page) => page.evaluate(() => (window as unknown as Fixture).kindCalls);
 const hostRemove = (page: Page, id: string) =>
   page.evaluate((i) => (window as unknown as Fixture).kindQueue.remove(i), id);
+const complete = (page: Page, id: string) =>
+  page.evaluate((i) => (window as unknown as Fixture).kindQueue.complete(i), id);
+const act = (page: Page, action: string, args: unknown[]) =>
+  page.evaluate(
+    ([a, r]) =>
+      (window as unknown as Fixture).agent
+        .act({ steps: [{ ref: "Queue", action: a, args: r }] })
+        .then(JSON.stringify, (error: Error) => error.message),
+    [action, args] as const,
+  );
 const titles = (page: Page) => pending(page).locator('[data-slot="kind-queue-item-title"]').allTextContents();
 
 // Records each row as it starts leaving: whether it's inert and hidden from assistive technology.
@@ -211,6 +226,35 @@ test('with motion="none" a removed item leaves at once', async ({ page }) => {
   expect(await leavingSeen(page)).toEqual([]);
 });
 
+test("an item that completes moves to Completed, and keeps focus there while it's open", async ({ page }) => {
+  await open(page);
+  await row(page, "Update the docs").focus();
+  await complete(page, "b");
+  await expect(row(page, "Run the tests")).toBeFocused();
+  await expect(page.getByRole("button", { name: "Completed" }).locator("[data-count]")).toHaveText("2");
+
+  await page.getByRole("button", { name: "Completed" }).click();
+  await row(page, "Run the tests").focus();
+  await complete(page, "c");
+  await expect(row(page, "Run the tests")).toBeFocused();
+  await expect(row(page, "Run the tests")).toHaveAttribute("data-status", "complete");
+  await expect(queue(page).locator('[data-slot="kind-queue-item"][tabindex="0"]')).toHaveCount(1);
+});
+
+test("only an item that arrives after the first frame plays its entrance", async ({ page }) => {
+  await open(page);
+  await page.evaluate(() =>
+    (window as unknown as Fixture).kindQueue.add({ id: "e", status: "pending", title: "Ship it" }),
+  );
+  await expect(row(page, "Ship it")).toBeVisible();
+  const animated = await pending(page)
+    .getByRole("listitem")
+    .evaluateAll((rows) =>
+      rows.map((el) => el.getAnimations().some((each) => !(each instanceof CSSTransition))),
+    );
+  expect(animated).toEqual([false, false, false, true]);
+});
+
 test("agents can reorder and remove items", async ({ page }) => {
   await open(page);
   await expectAgentActions(page, "Queue", ["remove", "reorder"]);
@@ -224,6 +268,43 @@ test("agents can reorder and remove items", async ({ page }) => {
     { type: "reorder", id: "c", index: 0, reason: "imperative", source: "agent" },
   ]);
   await expect.poll(() => titles(page)).toEqual(["Run the tests", "Write the migration", "Update the docs"]);
+  expect(await act(page, "reorder", ["a", -1])).toContain('"result":false');
+  expect(await calls(page)).toHaveLength(1);
+});
+
+test("kind-queue keeps its open sections when it leaves the page and comes back", async ({
+  page,
+}, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await open(page);
+  await page.getByRole("button", { name: "Completed" }).click();
+  await page.evaluate(async () => {
+    const element = document.getElementById("queue") as HTMLElement;
+    const parent = element.parentElement as HTMLElement;
+    element.remove();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    parent.append(element);
+  });
+  await expect(page.getByRole("button", { name: "Completed" })).toHaveAttribute("aria-expanded", "true");
+  await expect(row(page, "Read the schema")).toBeVisible();
+});
+
+test("kind-queue fills in sections written after it connects", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await open(page);
+  await page.evaluate(() => {
+    const element = document.createElement("kind-queue");
+    element.id = "late";
+    element.innerHTML = "<p>Loading</p>";
+    document.getElementById("root")?.append(element);
+    Object.assign(element, { items: [{ id: "x", status: "pending", title: "Late item" }] });
+    element.insertAdjacentHTML(
+      "beforeend",
+      '<kind-queue-section value="pending"><kind-queue-section-trigger><button><span data-title></span><span data-count></span></button></kind-queue-section-trigger><kind-queue-section-content><kind-queue-list></kind-queue-list></kind-queue-section-content></kind-queue-section>',
+    );
+  });
+  await expect(page.locator("#late").getByRole("listitem")).toHaveText(["Late item"]);
+  await expect(page.locator("#late [data-count]")).toHaveText("1");
 });
 
 for (const colorScheme of ["light", "dark"] as const) {

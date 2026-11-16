@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `57558d8` (Wave 2 Task 7 Subagent)
+Last reviewed: `b1676ea` (Wave 2 Task 8 Queue)
 
 ## Settled
 
@@ -17,6 +17,7 @@ Last reviewed: `57558d8` (Wave 2 Task 7 Subagent)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A dropped Queue row snaps from the pointer to its slot in one frame:** `createReorder` clears `--drag-x`/`--drag-y` before the drop commits, so the root's `layout` has no rect from before. Carrying it needs the row's rect before UI SDK's drag stops.
 - **Subagent's guide line and nested marks are half a pixel off at 1x,** likely Chrome drawing the 1.5px guide border at 1px (as the status mark ring noted); a result already complete on load fades in once on mount.
 - **Task and Plan selectors reach 3–4 attributes** (completed fill, held-still title, item status → title); consumer utilities and unlayered CSS still win by layer order. Wrap the context halves in `:where()` if a consumer writing in `@layer components` hits it.
 - **`plan.spec.ts` doesn't check the progress fill's motion;** checked by hand: `width` over 280 ms at full motion, none under reduced motion and `motion="reduced"`.
@@ -27,6 +28,7 @@ Last reviewed: `57558d8` (Wave 2 Task 7 Subagent)
 
 ## Resolved
 
+- **Queue (Wave 2 Task 8):** a picked-up row isn't clipped by its section's panel (`overflow: visible` while one is grabbed); the remove control's pointer target is 24px; context selectors sit in `:where()`, so each rule stays one attribute.
 - **Subagent (Wave 2 Task 7):** the result's fade honors `prefers-reduced-motion` (the media rule now outranks the base rule); an empty result hides; the trigger's corner is concentric with the frame; the avatar's rules are `:where()`-wrapped to one attribute.
 - **Plan (Wave 2 Task 6):** the progress bar and Accept use logical offsets, so they line up with the title in right-to-left text (tested); a pending Accept doesn't darken on hover; the progress label reserves `13ch`, so the track doesn't narrow when a count gains a digit.
 - **Chain of Thought (Wave 2 Task 5):** the step line's ends follow `0.5lh`, so it stays 2px clear of both marks at any font size; the held-still summary title is `:where()`-scoped to two attributes.

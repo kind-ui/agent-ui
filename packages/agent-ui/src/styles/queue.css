@@ -51,6 +51,10 @@
     & > * {
       padding-block: 2px;
     }
+    /* A picked-up row and its shadow can leave the panel, which can't be animating while one is. */
+    &:has([data-grabbed]) {
+      overflow: visible;
+    }
   }
 
   [data-slot="kind-queue-list"] {
@@ -115,7 +119,7 @@
     }
   }
 
-  [data-slot="kind-queue-item"][data-status="complete"] [data-slot="kind-queue-item-title"] {
+  :where([data-slot="kind-queue-item"][data-status="complete"]) [data-slot="kind-queue-item-title"] {
     color: var(--kind-color-muted);
     text-decoration: line-through;
     text-decoration-color: color-mix(in oklab, var(--kind-color-muted) 60%, transparent);
@@ -153,6 +157,12 @@
       background-color: currentColor;
       mask: var(--kind-queue-remove-icon) center / contain no-repeat;
     }
+    /* Grows the 20 px pointer target to 24 px. */
+    &::after {
+      content: "";
+      position: absolute;
+      inset: -2px;
+    }
     &:hover {
       color: var(--kind-color-fg);
       background-color: color-mix(in oklab, var(--kind-color-muted) 16%, transparent);
@@ -185,12 +195,12 @@
     }
   }
 
-  [data-slot="kind-queue"][data-motion="reduced"]
+  :where([data-slot="kind-queue"][data-motion="reduced"])
     :is([data-slot="kind-queue-item"], [data-slot="kind-queue-item-remove"]) {
     transition-duration: var(--kind-duration-reduced);
   }
 
-  [data-slot="kind-queue"][data-motion="none"]
+  :where([data-slot="kind-queue"][data-motion="none"])
     :is([data-slot="kind-queue-item"], [data-slot="kind-queue-item-remove"]) {
     transition: none;
   }

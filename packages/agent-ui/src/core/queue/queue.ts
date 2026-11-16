@@ -38,6 +38,11 @@ export type QueueOptions = {
    * `items`. Move it there: the queue shows your next `items`. While it's set, pending items can be reordered.
    */
   onReorder?: (id: string, details: ChangeDetails<QueueReorderReason> & { index: number }) => void;
+  /**
+   * The sections open at first.
+   * @default ["pending"]
+   */
+  defaultOpenSections?: QueueSection[];
   /** Called with an item's `id` when someone removes it. While it's set, items can be removed. */
   onRemove?: (id: string, details: ChangeDetails<"remove-press" | "imperative">) => void;
   /**
@@ -79,8 +84,10 @@ export type QueueSectionState = { title: string; count: number; open: boolean };
 
 export type QueueApi = ListFocus<QueueState, ItemProps> & {
   /**
-   * Moves a pending item to `index` in `items`, through `onReorder`. Returns whether it moved. Offered only while
-   * `onReorder` is set and two or more items are pending.
+   * Moves a pending item among the pending ones, so that as many pending items come before it as come before
+   * `index` in `items`, through `onReorder`, whose `details.index` is where that puts it in `items`. Returns whether
+   * it moved; an index outside `items` is refused. Offered only while `onReorder` is set and two or more items are
+   * pending.
    */
   readonly reorder: ((id: string, index: number) => boolean) | undefined;
   /**
@@ -92,6 +99,10 @@ export type QueueApi = ListFocus<QueueState, ItemProps> & {
   getItems: () => readonly QueueItem[];
   /** Pointer and keyboard moves of pending items. Called by the item slot. */
   reordering: Reorder;
+  /** The open sections. Queued starts open and Completed closed. */
+  getOpenSections: () => QueueSection[];
+  /** Opens exactly these sections. */
+  setOpenSections: (openSections: QueueSection[]) => void;
   /** Opens a closed section and closes an open one. */
   toggleSection: (section: QueueSection) => void;
   /** Makes a section's content a collapsible panel. Called by the section content slot. */
@@ -161,10 +172,14 @@ export const queueRows = (
 ) => {
   const own = rows.filter((row) => row.item.status === section);
   if (section !== "pending" || !moving) return own;
-  const live = new Map(own.map((row) => [row.item.id, row]));
+  const live = new Map(own.filter((row) => !row.leaving).map((row) => [row.item.id, row]));
+  // Until the draft is rebased on the host's new items, it can still name one that left.
+  const order = moving.order.filter((id) => live.has(id));
+  if (order.length !== live.size) return own;
   let next = 0;
-  return own.map((row) => (row.leaving ? row : (live.get(moving.order[next++] as string) ?? row)));
+  return own.map((row) => (row.leaving ? row : (live.get(order[next++] as string) as LeavingRow<QueueItem>)));
 };
+
 const rowsOf = { pending: memo(queueRows), complete: memo(queueRows) };
 
 /** Where `id` goes in `items` so that the pending items are in `order`. */
@@ -204,6 +219,7 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
     label: "string",
     onReorder: "callback",
     onRemove: "callback",
+    defaultOpenSections: "list",
     motion: "string",
   },
   state: (options: QueueOptions): QueueState => {
@@ -214,7 +230,7 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       rowsById: byId(rows),
       moving: null,
       focused: null,
-      openSections: ["pending"],
+      openSections: options.defaultOpenSections ?? ["pending"],
       exitingSections: [],
     };
   },
@@ -265,6 +281,7 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
     const sectionElements = new Set<HTMLElement>();
 
     const reorder = (id: string, index: number) => {
+      if (!Number.isInteger(index) || index < 0 || index >= store.get().items.length) return false;
       const before = store
         .get()
         .items.filter((item) => item.id !== id)
@@ -273,6 +290,14 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       const changed = reordering.move(id, before.filter((item) => item.status === "pending").length);
       moved = undefined;
       return changed;
+    };
+    const setOpenSections = (openSections: QueueSection[]) => {
+      const closed = store.get().openSections.filter((section) => !openSections.includes(section));
+      const exitingSections = [
+        ...store.get().exitingSections.filter((section) => !openSections.includes(section)),
+        ...closed,
+      ];
+      store.set({ openSections, exitingSections });
     };
     const remove = (id: string, event?: Event) =>
       store.get().items.some((item) => item.id === id) &&
@@ -295,16 +320,14 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       },
       getItems: () => store.get().items,
       reordering,
+      getOpenSections: () => store.get().openSections,
+      setOpenSections,
       toggleSection: (section) => {
-        const { openSections, exitingSections } = store.get();
-        const others = exitingSections.filter((each) => each !== section);
-        store.set(
+        const { openSections } = store.get();
+        setOpenSections(
           openSections.includes(section)
-            ? {
-                openSections: openSections.filter((each) => each !== section),
-                exitingSections: [...others, section],
-              }
-            : { openSections: [...openSections, section], exitingSections: others },
+            ? openSections.filter((each) => each !== section)
+            : [...openSections, section],
         );
       },
       bindSection: (el, section) =>
@@ -312,10 +335,7 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
           isOpen: () => store.get().openSections.includes(section),
           isExiting: () => store.get().exitingSections.includes(section),
           motion: () => store.get().motion,
-          reveal: () => {
-            const { openSections } = store.get();
-            if (!openSections.includes(section)) store.set({ openSections: [...openSections, section] });
-          },
+          reveal: () => setOpenSections([...store.get().openSections, section]),
           trigger: () => context.element("section-trigger", section),
           subscribe: store.subscribe,
           exited: () =>

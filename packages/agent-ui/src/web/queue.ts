@@ -1,4 +1,5 @@
 import {
+  type QueueApi,
   type QueueOptions,
   type QueueSection,
   type QueueState,
@@ -74,7 +75,13 @@ export function defineQueue(): void {
         const { canReorder, canRemove } = el as KindQueueElement;
         return { ...(!canReorder && { onReorder: undefined }), ...(!canRemove && { onRemove: undefined }) };
       },
-      api: ["getItems", "toggleSection"],
+      state: {
+        openSections: {
+          get: (api) => api.getOpenSections(),
+          set: (api, openSections) => api.setOpenSections(openSections as QueueSection[]),
+        },
+      },
+      api: ["getItems", "getOpenSections", "setOpenSections", "toggleSection"],
       render: (el, instance) => {
         if (!el.firstElementChild) el.innerHTML = DEFAULT_PARTS;
         const drawn = new WeakMap<Element, QueueItem>();
@@ -93,7 +100,17 @@ export function defineQueue(): void {
           write(el.querySelector("kind-queue-instructions"), queueInstructions(state));
         };
         draw();
-        return instance.subscribe(draw);
+        const unsubscribe = instance.subscribe(draw);
+        // Sections written after the element connects get their titles, counts and items.
+        const arrivals = new MutationObserver((records) => {
+          if (records.some((record) => [...record.addedNodes].some((node) => node instanceof Element)))
+            draw();
+        });
+        arrivals.observe(el, { childList: true, subtree: true });
+        return () => {
+          unsubscribe();
+          arrivals.disconnect();
+        };
       },
     },
     section: "kind-queue-section",
@@ -116,10 +133,12 @@ export type KindQueueEvents = {
 
 export interface KindQueueElement
   extends UiElement<KindQueueEvents>,
-    AttributeProperties<typeof queuePrimitive, "items"> {
+    AttributeProperties<typeof queuePrimitive, "api" | "items" | "openSections"> {
   canReorder: boolean;
   canRemove: boolean;
   items?: QueueOptions["items"];
+  openSections: QueueSection[];
+  api: Pick<QueueApi, "getItems" | "getOpenSections" | "setOpenSections" | "toggleSection">;
 }
 
 declare global {

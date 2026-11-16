@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `57558d8` (Wave 2 Task 7 Subagent)
+Last reviewed: `b1676ea` (Wave 2 Task 8 Queue)
 
 ## Settled
 
@@ -14,6 +14,7 @@ Last reviewed: `57558d8` (Wave 2 Task 7 Subagent)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A keyboard move in a React Queue blurs and refocuses the picked-up row on each step:** React moves the keyed `li` with `insertBefore`, and UI SDK's reorder focuses it again (web uses `moveBefore`). It follows UI SDK's documented React pattern, so it belongs upstream.
 - **A `Subagent` placed directly in a `StepList` adds its own Tab stop;** joining it needs `SubagentRoot` with `StepListItem render={<SubagentTrigger />}`. Undocumented, and `SubagentRoot` arrangements have no browser spec.
 - **Task and Plan: a host `items` update renders every item's parts (Wave 2 Task 6),** 514 renders for one status change among 100 plan items, as Chain of Thought's steps do. Same upstream report to UI SDK; per item update, not per token.
 - **Every tool's copy buttons and code blocks share labels** ("Copy input", "Input"), so agent refs by label are ambiguous across tools; the group around them is named by the tool. Same class as Markdown's "Code" / "Table".
@@ -35,6 +36,7 @@ Last reviewed: `57558d8` (Wave 2 Task 7 Subagent)
 
 ## Resolved
 
+- **Queue (Wave 2 Task 8):** the spec covers an item added after the first frame playing its entrance, and an item completing (focus, counts, one Tab stop).
 - **Subagent (Wave 2 Task 7):** a complete subagent without `result` no longer keeps an empty 6px result strip (`:empty` hides it); the fixture now covers `avatarSrc` and React 19 rendering a `kind-subagent`'s steps.
 - **Task and Plan (Wave 2 Task 6):** `TaskItemFiles` keys files by place, so a file listed twice renders; the entrance of an item appended after the first frame is tested; the Plan fixture's sibling plans keep their `items` arrays.
 - **Chain of Thought (Wave 2 Task 5):** `onOpenStepsChange` (auto and pressed) and find in page's revealed text are now tested.

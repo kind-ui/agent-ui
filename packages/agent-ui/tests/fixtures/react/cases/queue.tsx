@@ -20,6 +20,10 @@ function Queues({ editable = true, motion }: { editable?: boolean; motion?: Queu
       kindQueue: {
         remove: (id: string) => setItems((all) => all.filter((item) => item.id !== id)),
         add: (item: QueueItem) => setItems((all) => [...all, item]),
+        complete: (id: string) =>
+          setItems((all) =>
+            all.map((item) => (item.id === id ? { ...item, status: "complete" as const } : item)),
+          ),
       },
     });
   }, []);

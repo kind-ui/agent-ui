@@ -32,7 +32,8 @@ export const createListFocus = <State extends { focused: string | null }, Props 
       const index = order.indexOf(lost.key);
       const items = roving.items();
       const at = (key: string | undefined) => items.find((item) => item.key === key);
-      return (at(order[index + 1]) ?? at(order[index - 1]) ?? items.at(-1))?.el;
+      // An item that moved to a new element, like a Queue item that completed, keeps focus.
+      return (at(lost.key) ?? at(order[index + 1]) ?? at(order[index - 1]) ?? items.at(-1))?.el;
     },
   });
   return { roving, recovery };

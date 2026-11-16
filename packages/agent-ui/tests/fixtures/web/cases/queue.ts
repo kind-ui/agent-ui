@@ -49,6 +49,11 @@ const queues =
         add: (item: QueueItem) => {
           queue.items = [...items(), item];
         },
+        complete: (id: string) => {
+          queue.items = items().map((item) =>
+            item.id === id ? { ...item, status: "complete" as const } : item,
+          );
+        },
       },
     });
   };
