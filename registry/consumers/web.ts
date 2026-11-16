@@ -8,12 +8,14 @@ import { defineConfirmation } from "./components/ui/web/confirmation.js";
 import { defineContextMeter } from "./components/ui/web/context-meter.js";
 import { defineConversation } from "./components/ui/web/conversation.js";
 import { defineFeedback } from "./components/ui/web/feedback.js";
+import { defineGuardrailNotice } from "./components/ui/web/guardrail-notice.js";
 import { defineInternalToolbar } from "./components/ui/web/internal/toolbar.js";
 import { defineLoader } from "./components/ui/web/loader.js";
 import { defineMarkdown } from "./components/ui/web/markdown.js";
 import { defineMarkdownTable } from "./components/ui/web/markdown-table.js";
 import { defineMessage } from "./components/ui/web/message.js";
 import { defineModelSelector } from "./components/ui/web/model-selector.js";
+import { defineNotice } from "./components/ui/web/notice.js";
 import { definePlan } from "./components/ui/web/plan.js";
 import { defineQuestion } from "./components/ui/web/question.js";
 import { defineQueue } from "./components/ui/web/queue.js";
@@ -49,6 +51,8 @@ for (const define of [
   defineSuggestion,
   defineContextMeter,
   defineFeedback,
+  defineNotice,
+  defineGuardrailNotice,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -89,6 +93,8 @@ const items = {
   suggestion: `<kind-suggestion can-pick></kind-suggestion>`,
   "context-meter": `<kind-context-meter used="57600" total="128000" cost="0.42"></kind-context-meter>`,
   feedback: `<kind-feedback can-comment></kind-feedback>`,
+  notice: `<kind-notice variant="warning" label="Rate limited" can-dismiss><kind-notice-description>Responses are slower for the next few minutes.</kind-notice-description></kind-notice>`,
+  "guardrail-notice": `<kind-guardrail-notice blocking label="Model output withheld" reason="The response included personal data." detail="Policy."></kind-guardrail-notice>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>

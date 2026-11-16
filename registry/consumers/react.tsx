@@ -15,12 +15,14 @@ import {
   ConversationViewport,
 } from "./components/ui/conversation.js";
 import { Feedback } from "./components/ui/feedback.js";
+import { GuardrailNotice } from "./components/ui/guardrail-notice.js";
 import { KindToolbar, KindToolbarButton } from "./components/ui/internal/toolbar.js";
 import { Loader } from "./components/ui/loader.js";
 import { Markdown } from "./components/ui/markdown.js";
 import { MarkdownTable } from "./components/ui/markdown-table.js";
 import { Message, MessageContent, MessageCopy, MessageToolbar } from "./components/ui/message.js";
 import { ModelSelector } from "./components/ui/model-selector.js";
+import { Notice } from "./components/ui/notice.js";
 import { Plan } from "./components/ui/plan.js";
 import { Question } from "./components/ui/question.js";
 import { Queue } from "./components/ui/queue.js";
@@ -130,6 +132,19 @@ const items = {
   suggestion: <Suggestion suggestions={[{ id: "a", label: "Summarize this thread" }]} onPick={() => {}} />,
   "context-meter": <ContextMeter used={57_600} total={128_000} usage={{ input: 40_000 }} cost={0.42} />,
   feedback: <Feedback defaultRating="up" onComment={() => {}} />,
+  notice: (
+    <Notice variant="warning" label="Rate limited" onDismiss={() => {}}>
+      Responses are slower for the next few minutes.
+    </Notice>
+  ),
+  "guardrail-notice": (
+    <GuardrailNotice
+      blocking
+      label="Model output withheld"
+      reason="The response included personal data."
+      detail="Policy."
+    />
+  ),
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
       <ConversationViewport>
