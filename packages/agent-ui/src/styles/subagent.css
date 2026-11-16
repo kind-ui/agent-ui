@@ -48,8 +48,11 @@
     & > * {
       padding-block: 0;
     }
-    &:not(:empty) {
-      padding-block: 4px;
+    & > :first-child {
+      padding-block-start: 4px;
+    }
+    & > :last-child {
+      padding-block-end: 4px;
     }
   }
 
