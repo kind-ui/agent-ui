@@ -4,6 +4,7 @@ export type {
   MessageStatus,
   Part,
   PlanItem,
+  QueueItem,
   Role,
   Source,
   Step,

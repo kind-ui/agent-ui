@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Steps = { kindSteps: { setStatus(id: string, status: string): void; remove(id: string): void } };
 
@@ -98,6 +99,12 @@ test("full motion animates height; reduced motion animates no height or transfor
   expect(reduced.filter((p) => p === "height" || p === "transform")).toEqual([]);
 });
 
+const setSingleStatus = (page: Page, status: string) =>
+  page.evaluate(
+    (s) => (window as unknown as { kindStep: { setStatus(status: string): void } }).kindStep.setStatus(s),
+    status,
+  );
+
 test("reduced motion stops the chevron, spinner and shimmer", async ({ page }) => {
   const stillness = (name: string) =>
     trigger(page, name).evaluate((el) => {
@@ -115,10 +122,56 @@ test("reduced motion stops the chevron, spinner and shimmer", async ({ page }) =
   expect(await stillness("Draft the summary")).toEqual(["0s", "none", "none"]);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await open(page, "reduced");
-  await page.evaluate(() => {
-    for (const el of document.querySelectorAll("[data-status]")) el.setAttribute("data-status", "running");
-  });
+  await setSingleStatus(page, "running");
   expect(await stillness("Reduced")).toEqual(["0s", "none", "none"]);
+});
+
+test("every part names its Step base part", async ({ page }) => {
+  await open(page);
+  const search = step(page, "Search the web");
+  await expect(search).toHaveAttribute("data-step-part", "root");
+  for (const part of ["trigger", "icon", "title", "meta", "content", "children"])
+    await expect(search.locator(`[data-step-part="${part}"]`)).toHaveCount(1);
+  await expect(search.locator('[data-step-part="icon"]')).toHaveAttribute("data-status-mark", "");
+});
+
+// Transitions the status mark (and its glyph and spinner) runs after `change`, two frames on.
+const markTransitions = async (page: Page, title: string, change: () => Promise<unknown>) => {
+  const icon = trigger(page, title).locator("[data-status-mark]");
+  await icon.evaluate((el) => {
+    const seen: string[] = [];
+    (el as HTMLElement & { seen?: string[] }).seen = seen;
+    el.addEventListener("transitionrun", (event) => {
+      const { propertyName, pseudoElement } = event as TransitionEvent;
+      seen.push(`${pseudoElement}${propertyName}`);
+    });
+  });
+  await change();
+  await expect(icon).toHaveAttribute("data-status", "complete");
+  return icon.evaluate(
+    (el) =>
+      new Promise<string[]>((resolve) =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => resolve((el as HTMLElement & { seen?: string[] }).seen ?? [])),
+        ),
+      ),
+  );
+};
+
+test("the status mark scales at full motion, only fades when reduced, and holds still with none", async ({
+  page,
+}) => {
+  await open(page);
+  const full = await markTransitions(page, "Draft the summary", () => setStatus(page, "draft", "complete"));
+  expect(full).toContain("::aftertransform");
+
+  await open(page, "reduced");
+  const reduced = await markTransitions(page, "Reduced", () => setSingleStatus(page, "complete"));
+  expect(reduced).toContain("::afteropacity");
+  expect(reduced.filter((each) => each.endsWith("transform"))).toEqual([]);
+
+  await open(page, "none");
+  expect(await markTransitions(page, "Instant", () => setSingleStatus(page, "complete"))).toEqual([]);
 });
 
 test("has no axe violations", async ({ page }) => {
@@ -140,7 +193,7 @@ test("is a live UI SDK primitive agents can collapse", async ({ page }) => {
 });
 
 test("kind-step exposes live open state and its api", async ({ page }, testInfo) => {
-  test.skip(!testInfo.project.name.startsWith("wave-1-web"), "web elements only");
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
   await open(page);
   const el = step(page, "Plan the answer");
   type KindStep = HTMLElement & { open: boolean; api: { isOpen(): boolean; collapse(): boolean } };
@@ -155,7 +208,7 @@ test("kind-step exposes live open state and its api", async ({ page }, testInfo)
 });
 
 test("setting kind-step open keeps auto close", async ({ page }, testInfo) => {
-  test.skip(!testInfo.project.name.startsWith("wave-1-web"), "web elements only");
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
   await open(page);
   const el = step(page, "Draft the summary");
   await el.evaluate((s: HTMLElement & { open: boolean }) => {

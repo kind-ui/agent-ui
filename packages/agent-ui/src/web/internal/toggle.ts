@@ -35,3 +35,9 @@ export function defineInternalToggle(): void {
     },
   );
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-internal-toggle": HTMLElement;
+  }
+}

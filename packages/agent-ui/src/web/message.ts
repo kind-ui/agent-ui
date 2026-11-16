@@ -1,7 +1,16 @@
-import { messagePrimitive } from "@kind-ui/agent-ui/core";
+import {
+  type MessageApi,
+  type MessageBranchChangeReason,
+  type MessageOptions,
+  messagePrimitive,
+} from "@kind-ui/agent-ui/core";
 import { createParts, wrappedButton, wrappedChild } from "@ui-sdk/web";
-
-type MessageElement = HTMLElement & { canRegenerate: boolean; canEdit: boolean };
+import type {
+  AttributeProperties,
+  UiChangeEvent,
+  UiDetailedChangeEvent,
+  UiElement,
+} from "@ui-sdk/web/events";
 
 /**
  * The `can-regenerate` and `can-edit` attributes offer those actions. Callbacks are events: `regenerate`, `edit`,
@@ -18,7 +27,7 @@ export function defineMessage(): void {
       kinds: { canRegenerate: "boolean", canEdit: "boolean" },
       // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
       options: (el) => {
-        const { canRegenerate, canEdit } = el as MessageElement;
+        const { canRegenerate, canEdit } = el as KindMessageElement;
         return {
           ...(!canRegenerate && { onRegenerate: undefined }),
           ...(!canEdit && { onEdit: undefined }),
@@ -39,4 +48,36 @@ export function defineMessage(): void {
     "branch-label": "kind-message-branch-label",
     "branch-next": { tag: "kind-message-branch-next", target: wrappedButton, display: "contents" },
   });
+}
+
+export type KindMessageEvents = {
+  branchchange: UiChangeEvent<number, MessageBranchChangeReason>;
+  messagecopy: UiDetailedChangeEvent<string, Parameters<NonNullable<MessageOptions["onCopy"]>>[1]>;
+  regenerate: UiDetailedChangeEvent<string, Parameters<NonNullable<MessageOptions["onRegenerate"]>>[1]>;
+  edit: UiDetailedChangeEvent<string, Parameters<NonNullable<MessageOptions["onEdit"]>>[1]>;
+};
+
+export interface KindMessageElement
+  extends UiElement<KindMessageEvents>,
+    AttributeProperties<typeof messagePrimitive, "api"> {
+  canRegenerate: boolean;
+  canEdit: boolean;
+  api: Pick<MessageApi, "copy">;
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-message": KindMessageElement;
+    "kind-message-avatar": HTMLElement;
+    "kind-message-content": HTMLElement;
+    "kind-message-editor": HTMLElement;
+    "kind-message-toolbar": HTMLElement;
+    "kind-message-copy": HTMLElement;
+    "kind-message-regenerate": HTMLElement;
+    "kind-message-edit": HTMLElement;
+    "kind-message-branch": HTMLElement;
+    "kind-message-branch-previous": HTMLElement;
+    "kind-message-branch-label": HTMLElement;
+    "kind-message-branch-next": HTMLElement;
+  }
 }

@@ -1,0 +1,136 @@
+/* Status mark: one element whose ring, fill and glyph morph between states, shared by every component that shows a
+   status. Glyphs are SVG masks centered by their viewBox (paths from Lucide, see THIRD_PARTY_NOTICES.md). */
+@layer components {
+  [data-status-mark] {
+    --kind-status-mark-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+    --kind-status-mark-x: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E");
+    --kind-status-mark-minus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.5' stroke-linecap='round'%3E%3Cpath d='M5 12h14'/%3E%3C/svg%3E");
+
+    --kind-status-mark-ring: 1px;
+
+    position: relative;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    width: 16px;
+    height: 16px;
+    border-radius: 9999px;
+    border: var(--kind-status-mark-ring) dashed color-mix(in oklab, var(--kind-color-muted) 70%, transparent);
+    background-color: transparent;
+    transition:
+      border-color var(--kind-duration-base),
+      background-color var(--kind-duration-base);
+
+    /* Both cover the border box, so the arc sits on the track and glyphs center on 8px. The ring is a whole pixel
+       because Chrome rounds a 1.5px border down to 1px, which left a -1.5px arc half a pixel off its track. */
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      inset: calc(-1 * var(--kind-status-mark-ring));
+      border-radius: inherit;
+      opacity: 0;
+      transform: scale(0.4);
+      transition:
+        opacity var(--kind-duration-fast),
+        transform var(--kind-duration-base) var(--kind-ease);
+    }
+
+    &::after {
+      background-color: var(--kind-color-on-status);
+      mask: var(--kind-status-mark-check) center / 10px no-repeat;
+    }
+
+    &[data-status="running"] {
+      border-style: solid;
+      /* Opaque, so the track reads the same on a tinted badge as on the page. */
+      border-color: color-mix(in oklab, var(--kind-color-accent) 25%, var(--kind-color-surface));
+      &::before {
+        border: var(--kind-status-mark-ring) solid transparent;
+        border-top-color: var(--kind-color-accent);
+        opacity: 1;
+        transform: none;
+        animation: kind-spin 0.8s linear infinite;
+      }
+    }
+
+    &[data-status="awaiting-input"] {
+      border-style: solid;
+      border-color: var(--kind-color-warning);
+      /* Centered in the padding box, which stays centered however the border rounds. */
+      &::before {
+        inset: 0;
+        width: 6px;
+        height: 6px;
+        margin: auto;
+        background-color: var(--kind-color-warning);
+        opacity: 1;
+        transform: none;
+        animation: kind-pulse 1.6s ease-in-out infinite;
+      }
+    }
+
+    &[data-status="complete"] {
+      border-style: solid;
+      border-color: var(--kind-status-mark-complete, var(--kind-color-success));
+      background-color: var(--kind-status-mark-complete, var(--kind-color-success));
+      &::after {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    &[data-status="error"] {
+      border-style: solid;
+      border-color: var(--kind-color-danger);
+      background-color: var(--kind-color-danger);
+      &::after {
+        mask-image: var(--kind-status-mark-x);
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    &:is([data-status="cancelled"], [data-status="skipped"]) {
+      border-style: solid;
+      border-color: var(--kind-color-muted);
+      &::after {
+        mask-image: var(--kind-status-mark-minus);
+        background-color: var(--kind-color-muted);
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+
+  /* Reduced motion: the fill and glyph fade over 120 ms and nothing scales or spins (spec §6). */
+  @media (prefers-reduced-motion: reduce) {
+    [data-status-mark][data-status] {
+      transition-duration: var(--kind-duration-reduced);
+      &::before,
+      &::after {
+        transform: none;
+        transition: opacity var(--kind-duration-reduced);
+        animation: none;
+      }
+    }
+  }
+
+  [data-status-mark][data-motion="reduced"] {
+    transition-duration: var(--kind-duration-reduced);
+    &::before,
+    &::after {
+      transform: none;
+      transition: opacity var(--kind-duration-reduced);
+      animation: none;
+    }
+  }
+
+  [data-status-mark][data-motion="none"] {
+    transition: none;
+    &::before,
+    &::after {
+      transition: none;
+      animation: none;
+    }
+  }
+}

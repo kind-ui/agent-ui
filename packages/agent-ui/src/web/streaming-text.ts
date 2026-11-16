@@ -1,5 +1,6 @@
 import { type StreamingTextChunk, streamingTextPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/web";
+import type { AttributeProperties, UiElement, UiPartElement } from "@ui-sdk/web/events";
 
 /**
  * `<kind-streaming-text>` renders its `text` property (or attribute) as chunks, each appended one fading in.
@@ -47,4 +48,16 @@ export function defineStreamingText(): void {
     chunk: "kind-streaming-text-chunk",
     caret: "kind-streaming-text-caret",
   });
+}
+
+export interface KindStreamingTextElement
+  extends UiElement<Record<never, never>>,
+    AttributeProperties<typeof streamingTextPrimitive> {}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-streaming-text": KindStreamingTextElement;
+    "kind-streaming-text-chunk": UiPartElement<typeof streamingTextPrimitive, "chunk", "value">;
+    "kind-streaming-text-caret": HTMLElement;
+  }
 }

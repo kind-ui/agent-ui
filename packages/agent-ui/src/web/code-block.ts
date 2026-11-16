@@ -1,13 +1,16 @@
-import { type CodeBlockState, codeBlockPrimitive, type Token } from "@kind-ui/agent-ui/core";
+import {
+  type CodeBlockApi,
+  type CodeBlockOptions,
+  type CodeBlockState,
+  type CodeBlockWrapChangeReason,
+  codeBlockPrimitive,
+  type Token,
+} from "@kind-ui/agent-ui/core";
 import { createParts, wrappedButton, wrappedChild } from "@ui-sdk/web";
+import type { AttributeProperties, UiChangeEvent, UiElement } from "@ui-sdk/web/events";
 import { defineInternalScrollArea } from "./internal/scroll-area.js";
 
-const parts = `
-  <kind-code-block-header>
-    <kind-code-block-language></kind-code-block-language>
-    <kind-code-block-wrap><button></button></kind-code-block-wrap>
-    <kind-code-block-copy><button></button></kind-code-block-copy>
-  </kind-code-block-header>
+const scrollAreaParts = `
   <kind-internal-scroll-area>
     <ui-scroll-area>
       <ui-scroll-area-viewport>
@@ -17,6 +20,13 @@ const parts = `
       <ui-scroll-area-scrollbar orientation="vertical"><ui-scroll-area-thumb></ui-scroll-area-thumb></ui-scroll-area-scrollbar>
     </ui-scroll-area>
   </kind-internal-scroll-area>`;
+
+const parts = `
+  <kind-code-block-header>
+    <kind-code-block-language></kind-code-block-language>
+    <kind-code-block-wrap><button></button></kind-code-block-wrap>
+    <kind-code-block-copy><button></button></kind-code-block-copy>
+  </kind-code-block-header>${scrollAreaParts}`;
 
 const sameTokens = (a: Token[] | undefined, b: Token[]) =>
   a?.length === b.length &&
@@ -37,7 +47,7 @@ function tokenElement(token: Token): HTMLElement {
 
 /**
  * `<kind-code-block code="…" language="ts" aria-label="Code">` fills in its header and scroll area when it has
- * no children. Set `highlight` as a property.
+ * no children, or only its scroll area with the `headerless` attribute. Set `highlight` as a property.
  */
 export function defineCodeBlock(): void {
   if (customElements.get("kind-code-block")) return;
@@ -53,7 +63,7 @@ export function defineCodeBlock(): void {
       },
       api: ["copy", "isWrapped", "setWrap", "toggleWrap"],
       render: (el, instance) => {
-        if (!el.firstElementChild) el.innerHTML = parts;
+        if (!el.firstElementChild) el.innerHTML = el.hasAttribute("headerless") ? scrollAreaParts : parts;
         const label = el.querySelector("kind-code-block-language");
         const scrollArea = el.querySelector("ui-scroll-area");
         const code = el.querySelector("kind-code-block-code code");
@@ -82,4 +92,25 @@ export function defineCodeBlock(): void {
     copy: { tag: "kind-code-block-copy", target: wrappedButton, display: "contents" },
     code: { tag: "kind-code-block-code", target: wrappedChild("pre"), display: "contents" },
   });
+}
+
+export type KindCodeBlockEvents = { wrapchange: UiChangeEvent<boolean, CodeBlockWrapChangeReason> };
+
+export interface KindCodeBlockElement
+  extends UiElement<KindCodeBlockEvents>,
+    AttributeProperties<typeof codeBlockPrimitive, "api" | "highlight" | "wrap"> {
+  wrap: boolean;
+  highlight?: CodeBlockOptions["highlight"];
+  api: Pick<CodeBlockApi, "copy" | "isWrapped" | "setWrap" | "toggleWrap">;
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-code-block": KindCodeBlockElement;
+    "kind-code-block-header": HTMLElement;
+    "kind-code-block-language": HTMLElement;
+    "kind-code-block-wrap": HTMLElement;
+    "kind-code-block-copy": HTMLElement;
+    "kind-code-block-code": HTMLElement;
+  }
 }

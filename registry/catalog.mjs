@@ -8,6 +8,42 @@ const uiSdkVersion = pkg.dependencies["@ui-sdk/core"];
 
 const components = {
   step: { title: "Step", description: "A collapsible agent step with a status icon.", uses: [] },
+  status: { title: "Status", description: "A run status badge with a mark and a label.", uses: [] },
+  reasoning: {
+    title: "Reasoning",
+    description: "The model's thinking as a step, with its thoughts streamed as markdown.",
+    uses: ["markdown"],
+  },
+  tool: {
+    title: "Tool",
+    description: "A tool call as a step, from its streamed input to its output or error.",
+    uses: ["markdown", "code-block"],
+  },
+  "chain-of-thought": {
+    title: "Chain of Thought",
+    description: "A summary of the steps an agent took, which opens into each step's details.",
+    uses: [],
+  },
+  task: {
+    title: "Task",
+    description: "The steps an agent takes for a task, as it takes them, with how many are done.",
+    uses: [],
+  },
+  plan: {
+    title: "Plan",
+    description: "The steps an agent plans to take, with a progress bar and an Accept button.",
+    uses: [],
+  },
+  subagent: {
+    title: "Subagent",
+    description: "A subagent's run: its own steps, a Stop button and its result.",
+    uses: ["markdown"],
+  },
+  queue: {
+    title: "Queue",
+    description: "The agent's to-do list, queued and completed, that people can reorder and clear.",
+    uses: [],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

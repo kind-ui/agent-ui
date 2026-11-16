@@ -2,16 +2,22 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `5c45892` (Task 18 CI and release)
+Last reviewed: `fd660f7` (Wave 2 Task 10 agent conformance)
 
 ## Settled
 
+- **A streamed Reasoning chunk renders its step parts once each** (`text` lives in step state): a fixed cost per chunk that doesn't grow with the text, so `budgets.spec.ts` has no Reasoning case. The default parts are one shared element tree.
 - **Count budgets render counting** (`budgets.spec.ts`) follows DevTools: a render that bails out on equal state isn't counted, and a compare-`memo` wrapper (tag 14) is left out so its component counts once.
 - Everything in AGENTS.md "UI SDK API notes".
 - **StrictMode runs on Chromium only:** its double render doesn't depend on the engine, so the cross-browser projects are `wave-1-react` and `wave-1-web`.
+- **A `Status` root's `className` or `render` function gets `{}`:** the root has no part state; style it through `data-status`.
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Two calls of the same tool share their copy-button and code-block names** ("search_docs input"): names come from the title, and a `toolCallId` isn't a name a person can read. A host can tell them apart with `label`.
+- **A keyboard move in a React Queue blurs and refocuses the picked-up row on each step:** React moves the keyed `li` with `insertBefore`, and UI SDK's reorder focuses it again (web uses `moveBefore`). It follows UI SDK's documented React pattern, so it belongs upstream.
+- **A `Subagent` placed directly in a `StepList` adds its own Tab stop;** joining it needs `SubagentRoot` with `StepListItem render={<SubagentTrigger />}`. Undocumented, and `SubagentRoot` arrangements have no browser spec.
+- **Task and Plan: a host `items` update renders every item's parts (Wave 2 Task 6),** 514 renders for one status change among 100 plan items, as Chain of Thought's steps do. Same upstream report to UI SDK; per item update, not per token.
 - **React hosts must memo Conversation rows** for a streamed token to render one row; the fixture does. The Conversation docs page (Wave 1 docs) should say so.
 - **Streaming Text renders twice per `text` change,** like Markdown: `text` reaches state through `onOptions`, a layout effect. Before paint.
 - **Uploader progress bars have no accessible name in server markup** until hydration adds `aria-labelledby` (UI SDK Progress; report upstream).
@@ -26,9 +32,19 @@ Last reviewed: `5c45892` (Task 18 CI and release)
 - **Token chips render without `renderToken` on the server** and take their chip markup when the Token Input binds (UI SDK; report upstream).
 - **A consumer cancels a key with `onKeyDownCapture`, not `onKeyDown`:** the Token Input handles keys on its element before React's bubbling handlers (UI SDK; report upstream). Documented on `ComposerInput`.
 - **An attachment chip plays its entrance twice under StrictMode** (its bind runs twice); it ends in place, so only a click during it is affected.
+- **Chain of Thought: a host `steps` update renders every step's parts (Wave 2 Task 5),** 609 renders for one status change among 100 steps; `memo` on the items doesn't help, as the parts re-render from UI SDK's options change. A press reaches one step. Report to UI SDK; no budget, since it's per step, not per token.
 
 ## Resolved
 
+- **Tools' copy buttons and code blocks shared labels (Wave 2 Task 10).** Fixed: each is named after its tool ("Copy search_docs input", "search_docs input") in both layers, tested in `wave-2/agent.spec.ts`. Markdown's "Code" / "Table" and two calls of the same tool stay open below.
+
+- **Exits (Wave 2 Task 9):** `Attachments` takes a function of `{ rows }` as children, so styled chips keep their exit (chips rendered from `items` leave at once, and core drops their rows); the composer spec covers a chip added back and the host removing the focused chip.
+- **Queue (Wave 2 Task 8):** the spec covers an item added after the first frame playing its entrance, and an item completing (focus, counts, one Tab stop).
+- **Subagent (Wave 2 Task 7):** a complete subagent without `result` no longer keeps an empty 6px result strip (`:empty` hides it); the fixture now covers `avatarSrc` and React 19 rendering a `kind-subagent`'s steps.
+- **Task and Plan (Wave 2 Task 6):** `TaskItemFiles` keys files by place, so a file listed twice renders; the entrance of an item appended after the first frame is tested; the Plan fixture's sibling plans keep their `items` arrays.
+- **Chain of Thought (Wave 2 Task 5):** `onOpenStepsChange` (auto and pressed) and find in page's revealed text are now tested.
+- **Code Block re-rendered its scroll area on every streamed chunk (Wave 2 Task 4).** Fixed: the scroll content is one shared element tree; a streamed tool input renders 25 components, not 31.
+- **The Tool fixture's `set` (host `status`, `label`) and output copy had no spec (Wave 2 Task 4).** Fixed: `tool.spec.ts` covers them.
 - **Docs (Task 17):** the Markdown Table page's `Pick` alias collided with `MarkdownTableProps` and listed every DOM prop; it's `MarkdownTableChildren` now.
 - **The agent fixture's submissions never settled,** so each agent `submit` and `stop` waited UI SDK's 15 s for pending work. Fixed: the host settles them, holding only for Stop.
 - **No browser spec ran a fixture under StrictMode.** Fixed: the `wave-1-react-strict` project runs every spec with each case in `<StrictMode>`. It caught a highlight spec counting requests by index (StrictMode's discarded instance asks too).
@@ -36,6 +52,7 @@ Last reviewed: `5c45892` (Task 18 CI and release)
 - **A server-rendered image attachment pointed at a `blob:nodedata:` URL.** Fixed: object URLs are made when an item binds, so the server and hydration render the icon.
 - **The first attachment skipped its entrance in React.** Fixed: the composer's attachments part stays mounted while empty (`data-empty`).
 - **Two Kind wrappers composed through `render` stacked both base class lists.** Fixed: `withKindClass` renders a Kind `render` target as its bare UI SDK part, so the outer base applies once, for element and function `render` targets and nested targets alike.
+- **`<Status>{false}</Status>` and `<Status>{null}</Status>` differed (Wave 2 Task 2).** Fixed: any `children` replace the default parts.
 
 ## Revisit
 

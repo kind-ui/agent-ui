@@ -31,6 +31,8 @@ You upload the files and own `items`. `onFiles` gets the files someone chooses, 
 
 When an upload finishes or fails, screen readers hear "report.pdf uploaded" or "report.pdf failed", once.
 
+A row added later fades in. When you take an item out of `items`, its row stays in place and fades out, hidden from assistive technology and out of reach, then the rows after it slide up into its place; if its button had focus, focus moves to the next row's button first. Under `prefers-reduced-motion`, or with `motion="reduced"`, it fades over 120 ms and nothing slides, and with `motion="none"` it leaves at once.
+
 ### Limits
 
 Pass `accept` and `maxSize` to limit the files. The ones they rule out go to `onReject` instead of `onFiles`, each with its `reasons`.

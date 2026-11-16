@@ -1,0 +1,86 @@
+---
+title: Plan
+description: Show the steps an agent plans to take, how far it's got, and let people accept it.
+---
+
+import PlanExample from "@/examples/plan/basic";
+
+Use a plan when an agent lays out its steps before it starts, and to follow them as it works. It shows each step with its status, a progress bar of the steps done, and an Accept button while you offer one.
+
+<Example caption="Press Accept plan. The button goes away, and the plan and its second step start running.">
+  <PlanExample />
+
+  <include cwd lang="tsx">./examples/plan/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/plan
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/plan-web
+```
+
+## Composition
+
+```text
+Plan
+├── PlanTrigger
+│   ├── PlanIcon
+│   ├── PlanTitle
+│   └── PlanMeta
+├── PlanProgress
+├── PlanContent
+│   └── PlanList
+│       └── PlanItem
+│           ├── PlanItemIcon
+│           ├── PlanItemTitle
+│           └── PlanItemDescription
+└── PlanAccept
+```
+
+`Plan` renders the trigger, progress bar, content and Accept button when you pass no children; the default trigger leaves out `PlanMeta`, since the progress bar says the same. Its trigger is a native button that shows or hides the list. `PlanTitle` shows the `label`, or "Plan" without one, and `PlanMeta` how many steps are done, like "2 of 5". `PlanProgress` is a UI SDK Progress labeled "2 of 5 steps", and it stays in view while the plan is closed. `PlanList` renders an item for each of the `items` when you pass it no children, and each item shows its status mark, title and description. `PlanAccept` renders only while `onAccept` is set.
+
+## Usage
+
+### Items
+
+Pass the steps as `items`, each with an `id`, a `status` of `pending`, `running`, `complete` or `skipped`, a `title` and an optional `description`. Update an item's `status` as it runs, and keep its `id`: focus follows the id. Complete and skipped steps count as done, and a skipped step's title is struck through.
+
+Without a `status` of its own, the plan's status is what the items add up to: `complete` once all are done, `running` once one runs or is done, and `pending` before that. Pass `status="awaiting-input"` while the plan waits to be accepted.
+
+### Accepting
+
+Pass `onAccept` to show **Accept plan**. Return a promise to keep the button pending until it settles: a second press does nothing meanwhile, and a rejection makes it available again. Once the plan is accepted, leave `onAccept` out, and the button goes away. If it had focus, focus moves to the trigger.
+
+### Opening and Closing
+
+The plan opens and closes like a [Step](/docs/components/step): it opens while it runs or waits for input and closes when it completes, until someone opens or closes it. Pass `open` with `onOpenChange` to control it.
+
+### Keyboard
+
+The items are one Tab stop. The arrow keys move between them, and Home and End go to the first and last. When the focused item is removed, focus moves to its neighbor. Screen readers read each item's status, then its title, and the running one as the current step.
+
+### Streaming
+
+A new item fades in once as it arrives, at the end of the list. A status change morphs only the item's mark and fills the progress bar, so the rows never shift. A removed item leaves at once. Screen readers hear an item's title and its outcome when it completes, and the plan's when it needs input or completes, in one message.
+
+### Motion
+
+Marks morph between statuses, the progress bar slides, and the list grows open and shut. Under `prefers-reduced-motion`, or with `motion="reduced"`, the list and marks fade over 120 ms instead and nothing moves or spins, and with `motion="none"` everything changes at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/plan/plan.ts" name="PlanOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the plan by its title and reads its `open` and `status`. It can run these actions, and `accept` only while Accept shows. While `agentConfirm` is on, every one of them waits for a person to confirm, unless the host's `allow` lets it through.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/plan/plan.ts" name="PlanAgentActions" type='Pick<PlanApi, "expand" | "collapse" | "accept">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-plan>`, `items` is a property only, other props are kebab-case attributes, so `agentConfirm` is `agent-confirm`, and `onOpenChange` fires `openchange`. Accept needs the `can-accept` attribute and fires `accept`: call `event.detail.waitUntil(promise)` to keep it pending. The element fills in its parts when it has no children, and keeps a `<kind-plan-item>` in its list for each item.
+</Caption>

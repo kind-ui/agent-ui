@@ -1,5 +1,6 @@
 // The Web Components registry consumer's entry: every component, as `shadcn add` copies it, one section each.
 import { defineAttachments } from "./components/ui/web/attachments.js";
+import { defineChainOfThought } from "./components/ui/web/chain-of-thought.js";
 import { defineCodeBlock } from "./components/ui/web/code-block.js";
 import { defineComposer } from "./components/ui/web/composer.js";
 import { defineConversation } from "./components/ui/web/conversation.js";
@@ -8,15 +9,30 @@ import { defineLoader } from "./components/ui/web/loader.js";
 import { defineMarkdown } from "./components/ui/web/markdown.js";
 import { defineMarkdownTable } from "./components/ui/web/markdown-table.js";
 import { defineMessage } from "./components/ui/web/message.js";
+import { definePlan } from "./components/ui/web/plan.js";
+import { defineQueue } from "./components/ui/web/queue.js";
+import { defineReasoning } from "./components/ui/web/reasoning.js";
+import { defineStatus } from "./components/ui/web/status.js";
 import { defineStep } from "./components/ui/web/step.js";
 import { defineStreamingText } from "./components/ui/web/streaming-text.js";
+import { defineSubagent } from "./components/ui/web/subagent.js";
+import { defineTask } from "./components/ui/web/task.js";
 import { defineThinkingIndicator } from "./components/ui/web/thinking-indicator.js";
+import { defineTool } from "./components/ui/web/tool.js";
 import { defineTypingIndicator } from "./components/ui/web/typing-indicator.js";
 import { defineUploader } from "./components/ui/web/uploader.js";
 import "./index.css";
 
 for (const define of [
   defineStep,
+  defineStatus,
+  defineReasoning,
+  defineTool,
+  defineChainOfThought,
+  defineTask,
+  definePlan,
+  defineSubagent,
+  defineQueue,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -39,6 +55,16 @@ const items = {
       <kind-step-trigger><button><kind-step-icon></kind-step-icon><kind-step-title>Read the logs</kind-step-title></button></kind-step-trigger>
       <kind-step-content><p>Three timeouts.</p></kind-step-content>
     </kind-step>`,
+  status: `<kind-status status="running"></kind-status>`,
+  reasoning: `<kind-reasoning status="complete" duration-seconds="3" text="Checked **two** sources." default-open></kind-reasoning>`,
+  tool: `<kind-tool default-open></kind-tool>`,
+  "chain-of-thought": `<kind-chain-of-thought label="Researching flights" status="complete" default-open></kind-chain-of-thought>`,
+  task: `<kind-task label="Migrating the users table" default-open></kind-task>`,
+  plan: `<kind-plan label="Migration plan" default-open></kind-plan>`,
+  subagent: `<kind-subagent agent-name="Code reviewer" status="complete" result="No issues found." default-open>
+      <kind-subagent-content><p>Read two files.</p></kind-subagent-content>
+    </kind-subagent>`,
+  queue: `<kind-queue label="Queue"></kind-queue>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>
@@ -85,6 +111,24 @@ document.body.append(main);
 main
   .querySelector("kind-markdown")
   ?.setAttribute("source", "# Title\n\nSome **bold** text.\n\n```ts\nconst a = 1;\n```\n");
+Object.assign(main.querySelector("kind-tool") as HTMLElement, {
+  call: {
+    toolCallId: "t1",
+    name: "search_docs",
+    dynamic: false,
+    input: { state: "ready", value: { query: "steps" } },
+    output: { state: "available", value: 0 },
+  },
+});
+Object.assign(main.querySelector("kind-chain-of-thought") as HTMLElement, {
+  steps: [{ id: "search", status: "complete", title: "Search flights", durationSeconds: 3 }],
+});
+Object.assign(main.querySelector("kind-task") as HTMLElement, {
+  items: [{ id: "schema", status: "complete", title: "Read the schema", files: ["db/schema.sql"] }],
+});
+Object.assign(main.querySelector("kind-plan") as HTMLElement, {
+  items: [{ id: "audit", status: "complete", title: "Audit the current schema" }],
+});
 Object.assign(main.querySelector("kind-attachments") as HTMLElement, {
   items: [{ id: "notes", name: "notes.md", size: 812, mediaType: "text/markdown" }],
 });

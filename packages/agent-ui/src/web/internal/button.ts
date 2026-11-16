@@ -35,3 +35,9 @@ export function defineInternalButton(): void {
     },
   );
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-internal-button": HTMLElement;
+  }
+}

@@ -2,13 +2,19 @@ import { announce, type PrimitiveContext } from "@ui-sdk/core";
 
 const COPIED_MS = 2000;
 
-type CopyContext = Pick<PrimitiveContext<unknown, { copied: boolean }, string>, "store" | "onDestroy">;
+type CopyContext<Key extends string> = Pick<PrimitiveContext<unknown, object, string>, "onDestroy"> & {
+  store: { set(state: NoInfer<Record<Key, boolean>>): void };
+};
 
 /**
- * Writes text to the clipboard (spec §2 exception: UI SDK has no clipboard utility), sets `copied` for
+ * Writes text to the clipboard (spec §2 exception: UI SDK has no clipboard utility), sets `key` in state for
  * `COPIED_MS` and announces the outcome. Resolves with whether the write went through.
  */
-export function createCopy(context: CopyContext): (text: string) => Promise<boolean> {
+export function createCopy<Key extends string = "copied">(
+  context: CopyContext<Key>,
+  key = "copied" as Key,
+): (text: string) => Promise<boolean> {
+  const setCopied = (copied: boolean) => context.store.set({ [key]: copied } as Record<Key, boolean>);
   let timer: ReturnType<typeof setTimeout> | undefined;
   context.onDestroy(() => clearTimeout(timer));
   return async (text) => {
@@ -16,14 +22,14 @@ export function createCopy(context: CopyContext): (text: string) => Promise<bool
       await navigator.clipboard.writeText(text);
     } catch {
       clearTimeout(timer);
-      context.store.set({ copied: false });
+      setCopied(false);
       announce("Copy failed", { priority: "polite" });
       return false;
     }
     clearTimeout(timer);
-    context.store.set({ copied: true });
+    setCopied(true);
     announce("Copied", { priority: "polite" });
-    timer = setTimeout(() => context.store.set({ copied: false }), COPIED_MS);
+    timer = setTimeout(() => setCopied(false), COPIED_MS);
     return true;
   };
 }

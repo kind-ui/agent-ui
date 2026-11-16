@@ -129,15 +129,16 @@ test("layout animates from the measured position without resizing", async ({ pag
     const before = box.getBoundingClientRect();
     box.style.marginLeft = "40px";
     const done = window.kindMotion.layout(box, before).then(() => true);
+    const startsWhereItWas = box.getBoundingClientRect().left === before.left;
     await new Promise((r) => requestAnimationFrame(r));
     const moving = box.getBoundingClientRect().left < 40 + before.left;
     let narrowest = before.width;
     while (!(await Promise.race([done, new Promise((r) => requestAnimationFrame(() => r(false)))])))
       narrowest = Math.min(narrowest, box.getBoundingClientRect().width);
-    return { moving, narrowest, inline: box.getAttribute("style") };
+    return { startsWhereItWas, moving, narrowest, inline: box.getAttribute("style") };
   });
   expect(result.narrowest).toBeCloseTo(64, 3);
-  expect(result).toMatchObject({ moving: true, inline: "margin-left: 40px;" });
+  expect(result).toMatchObject({ startsWhereItWas: true, moving: true, inline: "margin-left: 40px;" });
 });
 
 test("expand ends at natural height; motion none is instant", async ({ page }) => {
@@ -203,6 +204,33 @@ test("a run that replaces an interrupted one leaves no stray inline style", asyn
     return box.getAttribute("style");
   });
   expect(inline).toBe("margin-left: 40px; opacity: 0;");
+});
+
+test("a fade after an interrupted fade-up settles the held transform as it plays", async ({ page }) => {
+  await open(page);
+  const transforms = await page.evaluate(async () => {
+    const box = document.getElementById("box") as HTMLElement;
+    const frame = () => new Promise((r) => requestAnimationFrame(r));
+    void window.kindMotion.enter(box, "fade-up");
+    await frame();
+    await frame();
+    void window.kindMotion.exit(box, "fade").catch(() => {});
+    await frame();
+    const entered = window.kindMotion.enter(box, "fade");
+    const seen: string[] = [];
+    let done = false;
+    void entered.then(() => {
+      done = true;
+    });
+    while (!done) {
+      seen.push(getComputedStyle(box).transform);
+      await frame();
+    }
+    return { first: seen[0], last: seen.at(-1), after: getComputedStyle(box).transform };
+  });
+  expect(transforms.first).not.toBe("none");
+  expect(transforms.last).toMatch(/^(none|matrix\(1, 0, 0, 1, 0, 0(\.\d+)?\))$/);
+  expect(transforms.after).toBe("none");
 });
 
 for (const boxSizing of ["border-box", "content-box"]) {

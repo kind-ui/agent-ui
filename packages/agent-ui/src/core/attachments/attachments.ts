@@ -4,10 +4,12 @@ import {
   createRovingFocus,
   definePrimitive,
   dispatch,
+  type Part,
   type SlotDefinition,
 } from "@ui-sdk/core";
 import { formatFileSize } from "@ui-sdk/core/file-input";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
+import { bindLeavingRow, createRowSlide, dropRow, type LeavingRow, leavingRows } from "../leaving.js";
 import { enter, type MotionMode } from "../motion/index.js";
 
 /** One attachment. `file` or `url` gives an image its preview; `error` shows in place of its size. */
@@ -45,6 +47,8 @@ export type AttachmentsOptions = {
 
 export type AttachmentsState = {
   items: readonly AttachmentItem[];
+  /** The chips to render: every item, plus each removed one while it fades out. */
+  rows: LeavingRow<AttachmentItem>[];
   /** The item holding the list's Tab stop. */
   focused: string | null;
   /** Whether `onRemove` is set. */
@@ -55,6 +59,9 @@ export type AttachmentsState = {
 };
 
 type ItemProps = { value: string };
+
+/** What the root hands its render function: the chips to render, each removed one included while it fades out. */
+export type AttachmentsRootState = { rows: LeavingRow<AttachmentItem>[] };
 
 export type AttachmentState = {
   item: AttachmentItem | undefined;
@@ -73,8 +80,10 @@ export type AttachmentsApi = {
   previewOf: (item: AttachmentItem) => string | undefined;
   /** Makes an image file's object URL in the browser, so the server and hydration render the icon. */
   bindPreview: (id: string) => void;
-  /** Plays an item's entrance when it's added, not when the list mounts with it. */
-  enterItem: (el: HTMLElement, id: string) => void;
+  /** Plays an item's entrance when it's added, joins it to focus, and plays its exit once it's removed. */
+  bindItem: (el: HTMLElement, part: Part<AttachmentsState, AttachmentsApi, ItemProps>) => () => void;
+  /** Moves the chips after a removed one into its place. */
+  bindRoot: (el: HTMLElement) => () => void;
 };
 
 type AttachmentsSlot<Props extends object, Public extends object = Record<never, never>> = SlotDefinition<
@@ -91,7 +100,7 @@ export type AttachmentsPrimitive = ReturnType<
     AttachmentsState,
     AttachmentsApi,
     {
-      root: AttachmentsSlot<BaseSlotProps>;
+      root: AttachmentsSlot<BaseSlotProps, AttachmentsRootState>;
       item: AttachmentsSlot<ItemProps & BaseSlotProps, AttachmentState>;
       remove: AttachmentsSlot<ItemProps & BaseSlotProps>;
     }
@@ -108,11 +117,14 @@ const presentation = (options: AttachmentsOptions) => ({
 
 const isImage = (item: AttachmentItem) => item.mediaType?.startsWith("image/") ?? false;
 
+const rowOf = (state: AttachmentsState, id: string) => state.rows.find((row) => row.item.id === id);
+
 export const attachmentsPrimitive: AttachmentsPrimitive = definePrimitive({
   name: "kind-attachments",
   options: { items: "value", onRemove: "callback", motion: "string" },
   state: (options: AttachmentsOptions): AttachmentsState => ({
     ...presentation(options),
+    rows: (options.items ?? NO_ITEMS).map((item) => ({ item, leaving: false })),
     focused: null,
     previews: {},
   }),
@@ -153,16 +165,30 @@ export const attachmentsPrimitive: AttachmentsPrimitive = definePrimitive({
       }
       return gone.map(([id]) => id);
     };
-    context.onOptions((options) => {
-      const gone = revokeGone(options.items ?? NO_ITEMS);
-      if (gone.length === 0) return;
+    // Ids whose chip has entered, forgotten once it's dropped, so an item added again enters again.
+    const mounted = new Set(store.get().items.map((item) => item.id));
+    const elements = new Map<string, HTMLElement>();
+    const slide = createRowSlide(elements, () => store.get().motion);
+
+    // A leaving chip keeps its preview until it's dropped. One with no element to play its exit is dropped at once.
+    const setRows = (next: LeavingRow<AttachmentItem>[]) => {
+      const rows = next.filter((row) => !row.leaving || elements.has(row.item.id));
+      slide.measure(store.get().rows, rows);
+      for (const id of mounted) if (!rows.some((row) => row.item.id === id)) mounted.delete(id);
+      const gone = revokeGone(rows.map((row) => row.item));
+      if (gone.length === 0) return store.set({ rows });
       const previews = { ...store.get().previews };
       for (const id of gone) delete previews[id];
-      store.set({ previews });
+      store.set({ rows, previews });
+    };
+    let lastItems = store.get().items;
+    context.onOptions((options) => {
+      const items = options.items ?? NO_ITEMS;
+      if (items === lastItems) return;
+      lastItems = items;
+      setRows(leavingRows(store.get().rows, items, options.motion));
     });
     context.onDestroy(() => void revokeGone(NO_ITEMS));
-
-    const mounted = new Set(store.get().items.map((item) => item.id));
 
     const remove = (id: string, event?: Event) =>
       void dispatch(
@@ -187,30 +213,63 @@ export const attachmentsPrimitive: AttachmentsPrimitive = definePrimitive({
         made.set(id, { file: item.file, url });
         store.set({ previews: { ...store.get().previews, [id]: url } });
       },
-      enterItem: (el, id) => {
-        if (mounted.has(id)) return;
-        mounted.add(id);
-        void enter(el, "fade-up", { motion: store.get().motion });
+      bindItem: (el, part) => {
+        const id = part.props.value;
+        const motion = () => ({ motion: store.get().motion });
+        elements.set(id, el);
+        if (!mounted.has(id)) {
+          mounted.add(id);
+          void enter(el, "fade-up", motion());
+        }
+        const unbind = bindLeavingRow(el, {
+          store,
+          isLeaving: () => rowOf(store.get(), id)?.leaving ?? false,
+          motion,
+          join: () => {
+            const unbindFocus = roving.bind(el, part);
+            const unbindRecovery = recovery.bind(el, part);
+            return () => {
+              unbindFocus();
+              unbindRecovery();
+            };
+          },
+          drop: () => setRows(dropRow(store.get().rows, id)),
+        });
+        return () => {
+          unbind();
+          if (elements.get(id) !== el) return;
+          elements.delete(id);
+          if (rowOf(store.get(), id)?.leaving) setRows(store.get().rows);
+        };
       },
+      bindRoot: (el) => slide.bind(el),
     };
   },
   slots: (slot) => ({
-    root: slot({ role: "list", attrs: (state) => ({ "data-motion": state.motion }) }),
+    root: slot<BaseSlotProps, AttachmentsRootState>({
+      role: "list",
+      attrs: (state) => ({ "data-motion": state.motion }),
+      state: (state) => ({ rows: state.rows }),
+      bind: (el, { api }) => api.bindRoot(el),
+    }),
     item: slot<ItemProps, AttachmentState>({
       role: "listitem",
       props: { value: "string" },
       focus: "roving",
       attrs: (state, part) => {
-        const item = state.items.find((entry) => entry.id === part.props.value);
+        const row = rowOf(state, part.props.value);
+        const item = row?.item;
         return {
           tabindex: part.api.roving.tabIndex(state, part),
+          "aria-hidden": row?.leaving ? "true" : undefined,
+          "data-leaving": row?.leaving ? "" : undefined,
           "data-error": item?.error,
           "data-image": item && isImage(item) ? "" : undefined,
           "aria-keyshortcuts": state.canRemove ? "Delete" : undefined,
         };
       },
       state: (state, { props, api }) => {
-        const item = state.items.find((entry) => entry.id === props.value);
+        const item = rowOf(state, props.value)?.item;
         return {
           item,
           preview: item && api.previewOf(item),
@@ -230,13 +289,7 @@ export const attachmentsPrimitive: AttachmentsPrimitive = definePrimitive({
       },
       bind: (el, part) => {
         part.api.bindPreview(part.props.value);
-        part.api.enterItem(el, part.props.value);
-        const unbindFocus = part.api.roving.bind(el, part);
-        const unbindRecovery = part.api.recovery.bind(el, part);
-        return () => {
-          unbindFocus();
-          unbindRecovery();
-        };
+        return part.api.bindItem(el, part);
       },
     }),
     // Pointer only, like Token Input's remove part: keyboard users press Delete on the item.

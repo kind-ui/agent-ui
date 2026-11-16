@@ -1,0 +1,13 @@
+/* Reasoning (spec §7): the Step base's look, with the thoughts as quieter, smaller markdown. */
+@layer components {
+  [data-slot="kind-reasoning-content"] {
+    --kind-markdown-font-size: 0.875rem;
+    --kind-markdown-line-height: 1.6;
+    --kind-markdown-color: var(--kind-color-muted);
+  }
+
+  /* A finished thought is a summary, not a result, so its check is muted. */
+  [data-slot="kind-reasoning-icon"] {
+    --kind-status-mark-complete: var(--kind-color-muted);
+  }
+}

@@ -1,5 +1,6 @@
 import { typingIndicatorPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/web";
+import type { AttributeProperties, UiElement } from "@ui-sdk/web/events";
 
 const parts = `<kind-typing-indicator-label></kind-typing-indicator-label><kind-typing-indicator-dots><kind-typing-indicator-dot></kind-typing-indicator-dot><kind-typing-indicator-dot></kind-typing-indicator-dot><kind-typing-indicator-dot></kind-typing-indicator-dot></kind-typing-indicator-dots>`;
 
@@ -24,4 +25,17 @@ export function defineTypingIndicator(): void {
     dots: "kind-typing-indicator-dots",
     dot: "kind-typing-indicator-dot",
   });
+}
+
+export interface KindTypingIndicatorElement
+  extends UiElement<Record<never, never>>,
+    AttributeProperties<typeof typingIndicatorPrimitive> {}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-typing-indicator": KindTypingIndicatorElement;
+    "kind-typing-indicator-label": HTMLElement;
+    "kind-typing-indicator-dots": HTMLElement;
+    "kind-typing-indicator-dot": HTMLElement;
+  }
 }

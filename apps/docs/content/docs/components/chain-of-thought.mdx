@@ -1,0 +1,97 @@
+---
+title: Chain of Thought
+description: Sum up the steps an agent took, and open any one for its details.
+---
+
+import ChainOfThoughtExample from "@/examples/chain-of-thought/basic";
+
+Use a chain of thought to group the steps behind one answer, like searching, comparing and checking. Its header is a short summary, and it opens into a list of steps, each with its own status and details.
+
+<Example caption="Press Compare fares, or move to it with the arrow keys and press Enter or Space, to show its details.">
+  <ChainOfThoughtExample />
+
+  <include cwd lang="tsx">./examples/chain-of-thought/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/chain-of-thought
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/chain-of-thought-web
+```
+
+## Composition
+
+```text
+ChainOfThought
+├── ChainOfThoughtTrigger
+│   ├── ChainOfThoughtIcon
+│   ├── ChainOfThoughtTitle
+│   └── ChainOfThoughtMeta
+└── ChainOfThoughtContent
+    └── ChainOfThoughtList
+        └── ChainOfThoughtItem
+            ├── ChainOfThoughtItemTrigger
+            │   ├── ChainOfThoughtItemIcon
+            │   ├── ChainOfThoughtItemTitle
+            │   └── ChainOfThoughtItemMeta
+            └── ChainOfThoughtItemContent
+```
+
+`ChainOfThought` renders the trigger and content when you pass no children. Its trigger is a native button that shows or hides the list. `ChainOfThoughtTitle` shows the `label`, or "3 steps" without one, and `ChainOfThoughtMeta` the `durationSeconds`, like "12 s". `ChainOfThoughtList` renders an item for each step when you pass it no children. Each item's trigger shows the step's icon, title and duration unless you give it children, and `ChainOfThoughtItemContent` holds the step's details.
+
+## Usage
+
+### Steps
+
+Pass the steps as `steps`, each with an `id`, a `status`, a `title` and an optional `durationSeconds`. Update a step's `status` as it runs, and keep its `id`: the open state and focus follow the id. Set the chain's own `status` as a [Step](/docs/components/step)'s, from the run as a whole.
+
+To give a step details, render its item yourself with a `value` that matches the step's `id`, and put them in `ChainOfThoughtItemContent`:
+
+```tsx
+<ChainOfThoughtList>
+  {steps.map((step) => (
+    <ChainOfThoughtItem key={step.id} value={step.id}>
+      <ChainOfThoughtItemTrigger />
+      <ChainOfThoughtItemContent>{details[step.id]}</ChainOfThoughtItemContent>
+    </ChainOfThoughtItem>
+  ))}
+</ChainOfThoughtList>
+```
+
+The steps are data in one component, not nested `Step`s, so one owner knows every step's open state and `expandStep` can open any of them.
+
+### Opening and Closing
+
+The chain opens and closes like a Step. Each step does too: it opens while it runs or waits for input, closes when it completes, and stays open when it fails. Once someone opens or closes a step, it stays as they left it. Pass `autoOpen="never"` to leave every step closed until someone opens it.
+
+`openSteps` lists the open steps' ids. Pass it with `onOpenStepsChange` to control them, or `defaultOpenSteps` to choose the first ones. A step's content stays in the page while it's closed, so the browser's find in page still reaches it, and a step it opens stays open.
+
+### Keyboard
+
+The step triggers are one Tab stop. The arrow keys move between them, Home and End go to the first and last, and Enter or Space opens or closes a step. When the focused step is removed, focus moves to its neighbor.
+
+### Streaming
+
+A new step fades in once as it arrives, at the end of the list, so nothing above it moves. A removed step leaves at once. Screen readers hear each step's title and its outcome, like "Compare fares complete", when it needs input, completes, fails or is cancelled, and nothing while it runs. Steps that end in the same update, and the chain itself, are read in one message.
+
+### Motion
+
+Steps grow open and shut. Under `prefers-reduced-motion`, or with `motion="reduced"`, they fade over 120 ms instead and nothing moves, and with `motion="none"` they change at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/chain-of-thought/chain-of-thought.ts" name="ChainOfThoughtOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the chain by its title and reads its `open`, `status` and `openSteps`, and each step's `id` and title. It can run these actions, and press a trigger like a person would. `expandStep` takes a step's `id` or title, refuses one that isn't a step, and a step it opens stays open when it completes.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/chain-of-thought/chain-of-thought.ts" name="ChainOfThoughtAgentActions" type='Pick<ChainOfThoughtApi, "expand" | "collapse" | "expandStep">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-chain-of-thought>`, `steps` is a property only, other props are kebab-case attributes, so `openSteps` is `open-steps`, and `onOpenChange` and `onOpenStepsChange` fire `openchange` and `openstepschange`. The element fills in its parts when it has no children, adds a `<kind-chain-of-thought-item>` for each step its list lacks and removes the ones it added, and gives every item without a trigger one with the step's icon, title and duration. Write an item with a `<kind-chain-of-thought-item-content>` to give a step details.
+</Caption>

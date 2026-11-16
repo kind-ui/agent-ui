@@ -46,3 +46,9 @@ export function defineInternalToolbar(): void {
     },
   );
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-internal-toolbar": HTMLElement;
+  }
+}

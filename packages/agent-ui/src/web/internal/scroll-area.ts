@@ -57,3 +57,9 @@ export function defineInternalScrollArea(): void {
     },
   );
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-internal-scroll-area": HTMLElement;
+  }
+}

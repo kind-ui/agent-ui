@@ -31,3 +31,9 @@ export function defineInternalProgress(): void {
     },
   );
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-internal-progress": HTMLElement;
+  }
+}

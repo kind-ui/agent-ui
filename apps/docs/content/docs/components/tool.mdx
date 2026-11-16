@@ -1,0 +1,88 @@
+---
+title: Tool
+description: Show a tool call from its streamed input to its output or error.
+---
+
+import ToolExample from "@/examples/tool/basic";
+
+Use a tool for each tool call the model makes. Its header shows the tool's name and status, and its content holds the input, then the output or the error.
+
+<Example caption="Press search_docs, or focus it and press Enter or Space, to see what the search returned.">
+  <ToolExample />
+
+  <include cwd lang="tsx">./examples/tool/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/tool
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/tool-web
+```
+
+## Composition
+
+```text
+Tool
+├── ToolTrigger
+│   ├── ToolIcon
+│   ├── ToolTitle
+│   └── ToolApproval
+└── ToolContent
+    ├── ToolInput
+    │   └── ToolInputCopy
+    ├── ToolOutput
+    │   └── ToolOutputCopy
+    └── ToolError
+```
+
+`Tool` renders these parts when you pass no children; any children you pass replace them. The trigger is a native button that shows or hides the content. `ToolTitle` shows the tool's name, `ToolApproval` where its approval stands, `ToolInput` and `ToolOutput` the values as a [Code Block](/docs/components/code-block) or [Markdown](/docs/components/markdown), and `ToolError` the error. Each takes its own children instead.
+
+## Usage
+
+### Tool Calls
+
+Pass the call as `call` and update it as the host does. With the [AI SDK](/docs/adapters/ai-sdk), `fromUIMessagePart` maps each tool part to a step whose `call` and `error` you pass on. Key each tool by its `toolCallId`: updating one call never closes another tool or clears its copied state.
+
+```tsx
+<Tool key={step.id} call={step.call} error={step.error} />
+```
+
+The status comes from the call. An error outcome is `error`, a denied or cancelled one is `cancelled`, an approval that's waiting is `awaiting-input`, final output is `complete`, and anything else is `running`. Pass `status` to set it yourself.
+
+### Input and Output
+
+The input shows as JSON, labeled **Partial** while it streams. Output appears once the call has some: text renders as Markdown, and any other value as JSON, so `0`, `false`, `""` and `null` show as themselves. Output that may still change is labeled **Preliminary**. JSON longer than its block scrolls inside it, and nothing above a value moves while it streams.
+
+Each has a copy button, shown once there's a value, that copies it as shown, checks for 2 seconds and announces "Copied". The buttons and code blocks are named after the tool, like "Copy search_docs input" and "search_docs input", so people and agents can tell two tools apart. Pass `highlight` to color both, as Code Block's does.
+
+### Approvals and Errors
+
+While the call has an approval, the header says where it stands: "Waiting for approval", "Sending decision", "Decision not sent", "Approved", "Denied", or "Approved automatically" and "Denied automatically". It's status only: Tool renders no approve or deny buttons.
+
+When the status is `error`, the content shows `error.message`, or "The tool failed." without one.
+
+### Opening and Closing
+
+A tool opens while it runs or waits for approval, closes into its header when it completes, and stays open when it fails. Once someone opens or closes it, it stays as they left it. Screen readers hear the tool's name and its outcome, like "search_docs complete", when it needs input, completes, fails or is cancelled, and "search_docs denied" when its approval is denied.
+
+### Motion
+
+The content grows open and shut. Under `prefers-reduced-motion`, or with `motion="reduced"`, it fades over 120 ms instead and the title holds still, and with `motion="none"` it changes at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/tool/tool.ts" name="ToolOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds a tool by its name and reads its `open` and `status`. It can run these actions, and press the trigger like a person would. `copyInput` and `copyOutput` are listed only while there's a value to copy.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/tool/tool.ts" name="ToolAgentActions" type='Pick<ToolApi, "expand" | "collapse" | "copyInput" | "copyOutput">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-tool>`, `call`, `error` and `highlight` are properties only, other props are kebab-case attributes, and `onOpenChange` fires `openchange`. The element fills in its parts when it has no children, and an empty `<kind-tool-input>` or `<kind-tool-output>` with its heading, copy button and code block, writes its title, approval and error into those parts while they're empty, and writes the input and output into the `<kind-code-block>` and `<kind-markdown>` inside them.
+</Caption>

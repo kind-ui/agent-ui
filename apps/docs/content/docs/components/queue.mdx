@@ -1,0 +1,82 @@
+---
+title: Queue
+description: Show the agent's to-do list, split into what's queued and what's done.
+---
+
+import QueueExample from "@/examples/queue/basic";
+
+Use a queue to show the work an agent has lined up and what it has already finished, and to let people change the order or take items out before the agent gets to them. Each section shows how many items it holds.
+
+<Example caption="Press Tab to reach the queued items. Press Space to pick one up, the arrow keys to move it, and Space to drop it. Press Delete to remove one, or drag an item with the pointer.">
+  <QueueExample />
+
+  <include cwd lang="tsx">./examples/queue/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/queue
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/queue-web
+```
+
+## Composition
+
+```text
+Queue
+├── QueueSection
+│   ├── QueueSectionTrigger
+│   └── QueueSectionContent
+│       └── QueueList
+│           └── QueueItem
+│               ├── QueueItemIcon
+│               ├── QueueItemTitle
+│               ├── QueueItemDescription
+│               └── QueueItemRemove
+└── QueueInstructions
+```
+
+`Queue` renders a Queued section and a Completed section when you pass no children, then the instructions. Each `QueueSection` takes a `value` of `pending` or `complete`, and hides while it has no items. Its trigger is a native button that shows or hides the section, with the section's title and count. `QueueList` renders an item for each of the section's items when you pass it no children, and each item shows its status mark, title, description and remove button unless you give it children. `QueueInstructions` holds the keys that move and remove items: it's hidden from sight, and screen readers read it with each item.
+
+## Usage
+
+### Items
+
+Pass the items as `items`, each with an `id`, a `title`, an optional `description` and a `status` of `pending` or `complete`. Pending items show under **Queued**, which starts open, and complete ones under **Completed**, which starts closed. Pass `defaultOpenSections`, like `["pending", "complete"]`, to start with others open. When the agent finishes an item, set its `status` to `complete` and keep its `id`, and it moves to Completed.
+
+### Reordering
+
+Pass `onReorder` to let people move queued items. It gets the item's `id`, and `details.index`, where the item goes in `items`. Move it there: the queue shows the order you pass back, and keeps showing the move until your next `items` arrive. Completed items stay where they are.
+
+People drag an item with the pointer, or focus it and press Space or Enter to pick it up, the arrow keys to move it, Home and End to send it to either end, and Space or Enter to drop it. Escape puts it back. Screen readers hear each step, like "Dropped Write the changelog entry at position 1 of 3."
+
+If the item being moved leaves `items`, the move is cancelled, `onReorder` isn't called, and focus moves to its neighbor.
+
+### Removing
+
+Pass `onRemove` to let people remove items. It gets the item's `id`, and you take the item out of `items`. Each item shows a remove button on hover, and Delete or Backspace removes the focused item. Focus then moves to the next item, or the previous one at the end.
+
+### Keyboard
+
+The items are one Tab stop. The arrow keys move between them, across both sections while Completed is open, and Home and End go to the first and last. Items in a closed section can't take focus.
+
+### Motion
+
+A new item fades in once as it arrives. A removed item stays in place and fades out, hidden from assistive technology and out of reach, then the items after it slide up into its place. While an item moves, the others slide aside. Under `prefers-reduced-motion`, or with `motion="reduced"`, a removed item fades over 120 ms and nothing slides, and with `motion="none"` it leaves at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/queue/queue.ts" name="QueueOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the queue by its `label` and reads its `items`, and can name an item by its title. It can run `reorder` while `onReorder` is set and two or more items are queued, and `remove` while `onRemove` is set. Both go through your callbacks, with `details.source` set to `agent`.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/queue/queue.ts" name="QueueAgentActions" type='Pick<QueueApi, "reorder" | "remove">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-queue>`, `items` and `openSections` are properties only, and `label` and `motion` are attributes. Reordering needs the `can-reorder` attribute and fires `reorder`, and removing needs `can-remove` and fires `remove`, each with the item's `id` in `event.detail.value`; `reorder` also has `event.detail.index`. The element fills in its sections and items itself.
+</Caption>

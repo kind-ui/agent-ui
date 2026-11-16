@@ -66,17 +66,26 @@ function Steps() {
   );
 }
 
-export const cases = {
-  list: () => <Steps />,
-  reduced: () => (
-    <Step motion="reduced">
+function Single({ motion, title }: { motion: "reduced" | "none"; title: string }) {
+  const [status, setStatus] = useState<StepStatus>("pending");
+  useEffect(() => {
+    Object.assign(window, { kindStep: { setStatus } });
+  }, []);
+  return (
+    <Step motion={motion} status={status}>
       <StepTrigger>
         <StepIcon />
-        <StepTitle>Reduced</StepTitle>
+        <StepTitle>{title}</StepTitle>
       </StepTrigger>
       <StepContent>
-        <p>Fades only.</p>
+        <p>Step details.</p>
       </StepContent>
     </Step>
-  ),
+  );
+}
+
+export const cases = {
+  list: () => <Steps />,
+  reduced: () => <Single motion="reduced" title="Reduced" />,
+  none: () => <Single motion="none" title="Instant" />,
 };

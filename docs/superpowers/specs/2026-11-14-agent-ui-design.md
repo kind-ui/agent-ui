@@ -74,6 +74,7 @@ Components are built on UI SDK, not around it.
 | Streaming markdown engine (§6) | Content parsing, not interaction. |
 | Motion helper presets (§6) | Animation values. Presence still uses UI SDK `animateIn` / `animateOut`. |
 | Attachment removal on Delete/Backspace | Application action on a focused item. Focus movement stays with `createRovingFocus`, and the keys are declared on the slot. |
+| Queue item removal on Delete/Backspace | The same action on a focused Queue row, which keeps the list to one Tab stop. Its pointer remove control is hidden from assistive technology, like Attachments'. Focus movement stays with `createRovingFocus`, and the keys are declared on the slot. |
 | Composer and Uploader File Input events on Web Components | `@ui-sdk/web` reports File Input's changes only as `valuechange` and `reject` events on its own element, which don't bubble. The composer (through its form) and the uploader (through its root) hear them as they capture, and hand them to the callbacks React passes as props. |
 | Conversation new-message counter | Counts messages added while not following. Following itself uses `createStickToBottom`. |
 | Streaming Text append diff and Composer draft settlement | Pure data rules. |
@@ -374,9 +375,11 @@ All agent steps share one primitive: every step component builds on a common Ste
 - `createFocusRecovery` keeps focus valid when a step is removed.
 - `announce` (polite) fires only on transitions to `awaiting-input`, `complete`, `error`, and `cancelled`. Streaming updates are never announced.
 
-**Options:** `status`, `open` / `defaultOpen` / `onOpenChange`, `autoOpen: "running" | "never"` (default `"running"`), `motion` (§6).
+**Options:** `status`, `label`, `open` / `defaultOpen` / `onOpenChange`, `autoOpen: "running" | "never"` (default `"running"`), `motion` (§6).
 
-**Auto open and close:** With `autoOpen: "running"`, a step opens when it enters `running` or `awaiting-input` and closes when it reaches `complete`. It stays open on `error`. Once a person or agent toggles a step, auto behavior stops for that step.
+**Auto open and close:** With `autoOpen: "running"`, a step opens when it enters `running` or `awaiting-input` and closes when it reaches `complete`. It stays open on `error`. Once a person or agent toggles a step, auto behavior stops for that step. Find in page counts as a person: a step it opens stays open when it completes.
+
+**Web Components `title`:** the option that names a step in announcements is `label` in both render layers, not `title`. On `<kind-step>`, `title` is HTML's advisory attribute: it stays on the element, so it is the tooltip over the whole step, and Chromium reads it as the step's accessible description (checked in Wave 2 Task 1).
 
 **Attributes:** `data-status`, `data-open`, `data-kind`, and `--kind-step-duration` (seconds, when known).
 
@@ -397,6 +400,11 @@ Built on Step: Reasoning, Chain of Thought, Tool, Task, Plan, Subagent, Action, 
 - Every animation has a reduced version: no translation, scale, or height animation; at most a 120 ms opacity fade. `"none"` applies the final state instantly.
 - Loading indicators (Loader, Thinking Indicator, Typing Indicator) use a smooth staggered fade that flows across their dots, never synchronized blinking. Reduced motion shows the label and dots at steady opacity.
 - Streaming updates never remount active inputs or move the reader's scroll position.
+- **Removed items:** a component that renders items from host data (Queue, Attachments, Uploader) keeps a removed item as a leaving row until its exit finishes.
+  - The row stays in place, `inert` and `aria-hidden`, and plays the `"fade"` preset through `exit`. The rows after it then move into place with `layout`.
+  - Leaving rows aren't in the component's items, the agent snapshot or roving focus.
+  - Under reduced motion the row fades for 120 ms and nothing slides; under `"none"` it leaves at once.
+  - Components whose children the host renders (Conversation rows, nested steps) remove a child at once.
 
 ### Streaming Markdown renderer
 

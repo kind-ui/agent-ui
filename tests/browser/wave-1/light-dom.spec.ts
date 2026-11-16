@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 test("composer renders in light DOM with Tailwind utilities applied", async ({ page }) => {
   await page.goto("/?c=composer&case=shell");
@@ -21,7 +22,7 @@ test("composer is a live UI SDK primitive", async ({ page }) => {
 });
 
 test("kind-composer exposes a live value and its api", async ({ page }, testInfo) => {
-  test.skip(!testInfo.project.name.startsWith("wave-1-web"), "web elements only");
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
   await page.goto("/?c=composer&case=shell");
   const textbox = page.getByRole("textbox", { name: "Prompt" });
   await expect(textbox).toBeVisible();

@@ -1,4 +1,5 @@
-import type { AttachmentItem, UploadItem } from "@kind-ui/agent-ui/core";
+import type { PlanItem, QueueItem, TaskItem, ToolCall } from "@kind-ui/agent-ui";
+import type { AttachmentItem, ChainOfThoughtStep, UploadItem } from "@kind-ui/agent-ui/core";
 import { uploadHost } from "./uploader.js";
 
 export const steps = [
@@ -21,12 +22,51 @@ export const files: AttachmentItem[] = [
   { id: "trace", name: "trace.log", size: 4096, mediaType: "text/plain" },
 ];
 
+export const thoughts = "The upstream times out under load, so **retrying** with backoff should help.";
+
+export const toolCalls: ToolCall[] = ["search_docs", "read_file"].map((name) => ({
+  toolCallId: name,
+  name,
+  dynamic: false,
+  input: { state: "ready", value: { query: name === "search_docs" ? "retry policy" : "client.ts" } },
+  output: { state: "available", value: { matches: name === "search_docs" ? 3 : 1 } },
+}));
+
+export const chainSteps: ChainOfThoughtStep[] = [
+  { id: "plan", status: "complete", title: "Plan the search", durationSeconds: 2 },
+  { id: "search", status: "complete", title: "Search the docs", durationSeconds: 3 },
+];
+
+export const taskItems: TaskItem[] = [
+  { id: "read", status: "complete", title: "Read the client" },
+  { id: "patch", status: "running", title: "Add the backoff" },
+  { id: "test", status: "pending", title: "Run the tests" },
+];
+
+export const planItems: PlanItem[] = [
+  { id: "audit", status: "pending", title: "Audit the retries" },
+  { id: "cap", status: "pending", title: "Cap the attempts" },
+];
+
+export const queueItems: QueueItem[] = [
+  { id: "a", status: "pending", title: "Write the migration" },
+  { id: "b", status: "pending", title: "Update the docs" },
+  { id: "c", status: "pending", title: "Run the tests" },
+];
+
+export const moveItem = (items: readonly QueueItem[], id: string, index: number): QueueItem[] => {
+  const rest = items.filter((item) => item.id !== id);
+  rest.splice(index, 0, items.find((item) => item.id === id) as QueueItem);
+  return rest;
+};
+
 export function agentHost() {
   let release = () => {};
   const host = {
     permit: true,
     refuse: false,
     hold: false,
+    confirm: (_on: boolean) => {},
     changes: [] as string[],
     calls: [] as string[],
     change: (component: string, details: { source: string; cancel: () => void }): boolean => {
@@ -42,7 +82,7 @@ export function agentHost() {
       host.calls.push("stop");
       release();
     },
-    uploads: (update: (change: (items: UploadItem[]) => UploadItem[]) => void) => {
+    uploads: (update: (change: (items: readonly UploadItem[]) => UploadItem[]) => void) => {
       const { onCancel, onRetry } = uploadHost(update);
       return {
         onCancel: (id: string) => {

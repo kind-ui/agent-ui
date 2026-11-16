@@ -11,6 +11,8 @@ Agent-operable AI components built on [UI SDK](https://ui-sdk.dev/docs). Not yet
 
 Styled React and Web Components are distributed through the registry, not this package.
 
+Components: Step and Step List, Status, Reasoning, Tool, Chain of Thought, Task, Plan, Subagent, Queue, Conversation, Message, Markdown, Code Block, Markdown Table, Composer, Attachments, Uploader, Loader, Thinking Indicator, Typing Indicator and Streaming Text.
+
 ## Registry
 
 Add the `@kind-ui` namespace to your `components.json`:

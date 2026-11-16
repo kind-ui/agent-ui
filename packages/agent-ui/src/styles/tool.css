@@ -1,0 +1,112 @@
+/* Tool (spec §7): the Step base's look, with the tool's name as code and its input and output as code blocks. */
+@layer components {
+  [data-slot="kind-tool-title"] {
+    font-family: var(--kind-font-mono);
+    font-size: 0.8125rem;
+  }
+
+  /* Beside the title, so a header reads the same height through every approval state. */
+  [data-slot="kind-tool-approval"] {
+    flex-shrink: 0;
+    max-width: 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+
+    &:is([data-approval="requested"], [data-approval="submit-failed"]) {
+      color: var(--kind-color-fg);
+      font-weight: 500;
+    }
+  }
+
+  [data-slot="kind-tool-content"] {
+    --kind-code-block-max-height: 16rem;
+  }
+
+  /* Custom elements on Web Components are inline until styled. */
+  :is([data-slot="kind-tool-input"], [data-slot="kind-tool-output"], [data-slot="kind-tool-error"]) {
+    display: block;
+  }
+
+  [data-tool-heading] {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 1.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  /* Always in the markup, shown by state, so its arrival moves nothing beside it. */
+  [data-tool-badge] {
+    display: none;
+    padding-inline: 0.375rem;
+    border: 1px solid var(--kind-color-border);
+    border-radius: 9999px;
+    font-weight: 400;
+    line-height: 1rem;
+  }
+  [data-slot="kind-tool-input"][data-state="streaming"] > [data-tool-heading] > [data-tool-badge],
+  [data-slot="kind-tool-output"][data-state="preliminary"] > [data-tool-heading] > [data-tool-badge] {
+    display: inline-block;
+  }
+
+  :is([data-slot="kind-tool-input-copy"], [data-slot="kind-tool-output-copy"]) {
+    display: inline-grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-inline-start: auto;
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--kind-radius) / 2);
+    background-color: transparent;
+    color: var(--kind-color-muted);
+    transition:
+      color var(--kind-duration-fast),
+      background-color var(--kind-duration-fast);
+
+    &::before {
+      content: "";
+      width: 0.875rem;
+      height: 0.875rem;
+      background-color: currentColor;
+      mask: var(--kind-icon-copy) center / contain no-repeat;
+    }
+    &:hover {
+      color: var(--kind-color-fg);
+      background-color: var(--kind-color-hover);
+    }
+    &:focus-visible {
+      color: var(--kind-color-fg);
+      outline: 1.5px solid var(--kind-color-ring);
+      outline-offset: -1.5px;
+    }
+    &[data-copied] {
+      color: var(--kind-color-success);
+    }
+    &[data-copied]::before {
+      mask-image: var(--kind-icon-check);
+    }
+  }
+
+  [data-slot="kind-tool-output"][data-kind="markdown"] {
+    --kind-markdown-font-size: 0.875rem;
+    --kind-markdown-color: var(--kind-color-fg);
+  }
+
+  [data-slot="kind-tool-error"] {
+    margin-block: 4px;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid color-mix(in oklab, var(--kind-color-danger) 40%, var(--kind-color-border));
+    border-inline-start-width: 3px;
+    border-inline-start-color: var(--kind-color-danger);
+    border-radius: calc(var(--kind-radius) * 2 / 3);
+    background-color: color-mix(in oklab, var(--kind-color-danger) 8%, var(--kind-color-surface));
+    color: var(--kind-color-fg);
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    overflow-wrap: anywhere;
+  }
+}

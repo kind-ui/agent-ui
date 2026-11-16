@@ -1,5 +1,6 @@
 import { thinkingIndicatorPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/web";
+import type { AttributeProperties, UiElement } from "@ui-sdk/web/events";
 
 const parts = `<kind-thinking-indicator-label></kind-thinking-indicator-label><kind-thinking-indicator-dots><kind-thinking-indicator-dot></kind-thinking-indicator-dot><kind-thinking-indicator-dot></kind-thinking-indicator-dot><kind-thinking-indicator-dot></kind-thinking-indicator-dot></kind-thinking-indicator-dots>`;
 
@@ -24,4 +25,17 @@ export function defineThinkingIndicator(): void {
     dots: "kind-thinking-indicator-dots",
     dot: "kind-thinking-indicator-dot",
   });
+}
+
+export interface KindThinkingIndicatorElement
+  extends UiElement<Record<never, never>>,
+    AttributeProperties<typeof thinkingIndicatorPrimitive> {}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-thinking-indicator": KindThinkingIndicatorElement;
+    "kind-thinking-indicator-label": HTMLElement;
+    "kind-thinking-indicator-dots": HTMLElement;
+    "kind-thinking-indicator-dot": HTMLElement;
+  }
 }

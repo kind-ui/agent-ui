@@ -58,3 +58,9 @@ export function defineInternalTriggerMenu(): void {
     },
   );
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-internal-trigger-menu": HTMLElement;
+  }
+}

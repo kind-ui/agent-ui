@@ -75,3 +75,9 @@ export function defineInternalFileInput(): void {
     },
   );
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-internal-file-input": HTMLElement;
+  }
+}

@@ -1,7 +1,14 @@
-import type { UiActionDetail } from "@ui-sdk/web";
-import { defineAttachments } from "../../../../src/web/attachments.js";
-import { defineComposer } from "../../../../src/web/composer.js";
-import { commands, history, imageFile, mentions, recorder } from "../../shared/composer.js";
+import type { AttachmentItem } from "@kind-ui/agent-ui/core";
+import { defineAttachments, type KindAttachmentsElement } from "../../../../src/web/attachments.js";
+import { defineComposer, type KindComposerElement } from "../../../../src/web/composer.js";
+import {
+  attachmentItems,
+  attachmentsHost,
+  commands,
+  history,
+  mentions,
+  recorder,
+} from "../../shared/composer.js";
 
 const unsettled = new Promise<void>(() => {});
 const params = new URLSearchParams(location.search);
@@ -40,14 +47,11 @@ const markup = (attributes: string) => `
 function full(root: HTMLElement, submitOn: "enter" | "mod-enter") {
   defineComposer();
   root.innerHTML = markup(`accept="image/*,.txt,.md" max-size="3072" submit-on="${submitOn}"`);
-  const composer = root.querySelector("kind-composer") as HTMLElement & Record<string, unknown>;
+  const composer = root.querySelector("kind-composer") as KindComposerElement;
   const { onSubmit, onStop } = recorder();
   Object.assign(composer, { mentions, commands, history, canStop: params.has("stop") });
   composer.addEventListener("stop", onStop);
-  composer.addEventListener("composersubmit", (event) => {
-    const { detail } = event as CustomEvent<UiActionDetail & { value: Parameters<typeof onSubmit>[0] }>;
-    detail.waitUntil(onSubmit(detail.value));
-  });
+  composer.addEventListener("composersubmit", ({ detail }) => detail.waitUntil(onSubmit(detail.value)));
   composer.addEventListener("valuechange", (event) => {
     if ((window as { refuseEdits?: boolean }).refuseEdits) event.preventDefault();
   });
@@ -67,7 +71,7 @@ export const cases = {
       '<form aria-label="Message" class="border-[rgb(1,2,3)] data-[pending]:opacity-50">',
     );
     root.querySelector("kind-composer")?.addEventListener("composersubmit", (event) => {
-      (event as CustomEvent<UiActionDetail>).detail.waitUntil(unsettled);
+      event.detail.waitUntil(unsettled);
     });
   },
   full: (root: HTMLElement) => full(root, "enter"),
@@ -75,17 +79,16 @@ export const cases = {
   attachments: (root: HTMLElement) => {
     defineAttachments();
     root.innerHTML = `<div class="p-6"><kind-attachments aria-label="Files"></kind-attachments></div>`;
-    const list = root.querySelector("kind-attachments") as HTMLElement & Record<string, unknown>;
-    let items = [
-      { id: "a", name: "diagram.png", size: 2048, mediaType: "image/png", file: imageFile() },
-      { id: "b", name: "notes.md", size: 812, mediaType: "text/markdown" },
-      { id: "c", name: "archive.zip", size: 9_000_000, mediaType: "application/zip", error: "type" },
-    ];
-    Object.assign(list, { items, canRemove: true });
+    const list = root.querySelector("kind-attachments") as KindAttachmentsElement;
+    if (params.has("motion")) list.setAttribute("motion", params.get("motion") as string);
+    Object.assign(list, { items: attachmentItems(), canRemove: true });
+    const update = (change: (items: AttachmentItem[]) => AttachmentItem[]) => {
+      list.items = change([...(list.items ?? [])]);
+    };
+    attachmentsHost(update);
     list.addEventListener("remove", (event) => {
-      const id = (event as CustomEvent<{ value: string }>).detail.value;
-      items = items.filter((item) => item.id !== id);
-      list.items = items;
+      const id = event.detail.value;
+      update((items) => items.filter((item) => item.id !== id));
     });
   },
 };

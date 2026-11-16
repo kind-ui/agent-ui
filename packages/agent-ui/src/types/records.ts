@@ -20,6 +20,13 @@ export interface PlanItem {
   status: "pending" | "running" | "complete" | "skipped";
 }
 
+export interface QueueItem {
+  id: string;
+  title: string;
+  description?: string;
+  status: "pending" | "complete";
+}
+
 export interface TestCase {
   id: string;
   name: string;

@@ -5,10 +5,22 @@ export {
   type AttachmentsApi,
   type AttachmentsOptions,
   type AttachmentsPrimitive,
+  type AttachmentsRootState,
   type AttachmentsState,
   attachmentDetail,
   attachmentsPrimitive,
 } from "./attachments/index.js";
+export {
+  type ChainOfThoughtApi,
+  type ChainOfThoughtOptions,
+  type ChainOfThoughtPrimitive,
+  type ChainOfThoughtState,
+  type ChainOfThoughtStep,
+  chainOfThoughtPrimitive,
+  type NextOpenStepsInput,
+  nextOpenSteps,
+  stepDuration,
+} from "./chain-of-thought/index.js";
 export {
   type CodeBlockApi,
   type CodeBlockOptions,
@@ -50,6 +62,16 @@ export {
   nextFollowState,
 } from "./conversation/index.js";
 export type { IndicatorOptions, IndicatorPrimitive, IndicatorState } from "./indicator.js";
+export {
+  type ItemListApi,
+  type ItemListOptions,
+  type ItemListState,
+  type ItemProgress,
+  itemProgress,
+  itemsStatus,
+} from "./item-list.js";
+export { dropRow, type LeavingRow, mergeLeaving } from "./leaving.js";
+export { createListFocus, type ListFocus } from "./list-focus.js";
 export { loaderPrimitive } from "./loader/index.js";
 export {
   createMarkdownEngine,
@@ -90,18 +112,56 @@ export {
   resolveMotion,
 } from "./motion/index.js";
 export {
+  type PlanApi,
+  type PlanOptions,
+  type PlanPrimitive,
+  type PlanState,
+  planPrimitive,
+} from "./plan/index.js";
+export {
+  type QueueApi,
+  type QueueOptions,
+  type QueuePrimitive,
+  type QueueReorderReason,
+  type QueueSection,
+  type QueueSectionState,
+  type QueueState,
+  queueInstructions,
+  queuePrimitive,
+  queueRows,
+  queueSection,
+} from "./queue/index.js";
+export {
+  type ReasoningOptions,
+  type ReasoningPrimitive,
+  type ReasoningState,
+  reasoningPrimitive,
+  reasoningTitle,
+} from "./reasoning/index.js";
+export {
+  type StatusOptions,
+  type StatusPrimitive,
+  type StatusState,
+  statusPrimitive,
+} from "./status/index.js";
+export {
+  bindStepPanel,
   type NextOpenInput,
   nextOpen,
   type StepApi,
   type StepAutoOpen,
+  type StepBaseConfig,
   type StepListApi,
   type StepListOptions,
   type StepListPrimitive,
   type StepListState,
   type StepOpenChangeReason,
   type StepOptions,
+  type StepPanelOptions,
   type StepPrimitive,
   type StepState,
+  stepAnnouncement,
+  stepBase,
   stepListPrimitive,
   stepPrimitive,
 } from "./step/index.js";
@@ -115,11 +175,39 @@ export {
   streamingTextDiff,
   streamingTextPrimitive,
 } from "./streaming-text/index.js";
+export {
+  avatarInitials,
+  type SubagentApi,
+  type SubagentOptions,
+  type SubagentPrimitive,
+  type SubagentState,
+  subagentPrimitive,
+  subagentStatus,
+} from "./subagent/index.js";
+export {
+  type TaskApi,
+  type TaskOptions,
+  type TaskPrimitive,
+  type TaskState,
+  taskPrimitive,
+} from "./task/index.js";
 export { thinkingIndicatorPrimitive } from "./thinking-indicator/index.js";
+export {
+  approvalLabel,
+  type ToolApi,
+  type ToolOptions,
+  type ToolPrimitive,
+  type ToolState,
+  toolCode,
+  toolPrimitive,
+  toolStatus,
+  toolValue,
+} from "./tool/index.js";
 export { typingIndicatorPrimitive } from "./typing-indicator/index.js";
 export {
   type UploaderApi,
   type UploaderFilesDetails,
+  type UploaderListState,
   type UploaderOptions,
   type UploaderPrimitive,
   type UploaderRootState,

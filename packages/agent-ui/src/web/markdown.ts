@@ -1,11 +1,13 @@
 import {
   type Highlight,
   type MarkdownBlock,
+  type MarkdownOptions,
   type MarkdownState,
   type MdNode,
   markdownViewPrimitive,
 } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/web";
+import type { AttributeProperties, UiElement } from "@ui-sdk/web/events";
 import { defineCodeBlock } from "./code-block.js";
 import { defineMarkdownTable } from "./markdown-table.js";
 
@@ -180,4 +182,17 @@ export function defineMarkdown(): void {
       },
     },
   });
+}
+
+export interface KindMarkdownElement
+  extends UiElement<Record<never, never>>,
+    AttributeProperties<typeof markdownViewPrimitive, "engine" | "highlight"> {
+  highlight?: MarkdownOptions["highlight"];
+  engine?: MarkdownOptions["engine"];
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-markdown": KindMarkdownElement;
+  }
 }

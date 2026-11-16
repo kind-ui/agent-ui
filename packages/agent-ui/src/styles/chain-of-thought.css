@@ -1,0 +1,41 @@
+/* Chain of Thought (spec §7): the Step base's look for the summary and each step, with the steps joined into a line. */
+@layer components {
+  [data-slot="kind-chain-of-thought-list"] {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* The line joining the steps' marks replaces the guide lines of the summary and of each step's content. */
+  :is([data-slot="kind-chain-of-thought-content"], [data-slot="kind-chain-of-thought-item-content"]) {
+    border-inline-start-color: transparent;
+  }
+
+  [data-slot="kind-chain-of-thought-content"] > [data-slot="kind-chain-of-thought-list"] {
+    padding-block: 2px;
+  }
+
+  [data-slot="kind-chain-of-thought-item"] {
+    position: relative;
+
+    /* Runs from this step's mark, past its open content, to the next step's mark, 2px clear of each: the marks
+       center on the trigger's 4px padding plus half its line, and the list's gap is 2px. */
+    &:not(:last-child)::before {
+      content: "";
+      position: absolute;
+      inset-inline-start: 13.25px;
+      top: calc(4px + 0.5lh + 8px + 2px);
+      bottom: calc(-1 * (2px + 4px + 0.5lh - 8px - 2px));
+      width: 1.5px;
+      background-color: var(--kind-color-border);
+    }
+  }
+
+  /* Open, the running step shows the activity, so the summary above it holds still. */
+  [data-slot="kind-chain-of-thought"][data-open]
+    [data-slot="kind-chain-of-thought-title"][data-status="running"] {
+    color: var(--kind-color-fg);
+    background: none;
+    animation: none;
+  }
+}

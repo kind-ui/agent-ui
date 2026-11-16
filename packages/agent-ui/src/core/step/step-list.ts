@@ -1,5 +1,6 @@
-import { createFocusRecovery, createRovingFocus, definePrimitive, type SlotDefinition } from "@ui-sdk/core";
+import { definePrimitive, type SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
+import { createListFocus, type ListFocus } from "../list-focus.js";
 
 export type StepListOptions = Record<never, never>;
 
@@ -7,10 +8,7 @@ export type StepListState = { focused: string | null };
 
 type ItemProps = { value: string };
 
-export type StepListApi = {
-  roving: ReturnType<typeof createRovingFocus<StepListState, ItemProps>>;
-  recovery: ReturnType<typeof createFocusRecovery<ItemProps>>;
-};
+export type StepListApi = ListFocus<StepListState, ItemProps>;
 
 type StepListSlot<Props extends object> = SlotDefinition<
   StepListState,
@@ -32,31 +30,9 @@ export type StepListPrimitive = ReturnType<
 export const stepListPrimitive: StepListPrimitive = definePrimitive({
   name: "kind-step-list",
   state: (): StepListState => ({ focused: null }),
-  api: (context): StepListApi => {
-    // Recovery runs after the removed item has left `roving.items()`, so keep the order from before.
-    let current: string[] = [];
-    let previous: string[] = [];
-    const roving = createRovingFocus<StepListState, ItemProps>(context, {
-      slot: "item",
-      key: "focused",
-      onItemsChange: () => {
-        previous = current;
-        current = roving.items().map((item) => item.key);
-      },
-    });
-    const recovery = createFocusRecovery<ItemProps>({
-      fallback: (lost) => {
-        const order = current.includes(lost.key) ? current : previous;
-        const index = order.indexOf(lost.key);
-        const items = roving.items();
-        const at = (key: string | undefined) => items.find((item) => item.key === key);
-        return (at(order[index + 1]) ?? at(order[index - 1]) ?? items.at(-1))?.el;
-      },
-    });
-    return { roving, recovery };
-  },
+  api: (context): StepListApi => createListFocus<StepListState, ItemProps>(context, { slot: "item" }),
   slots: (slot) => ({
-    root: slot({ role: "group" }),
+    root: slot({ role: "group", attrs: () => ({ "data-step-part": "list" }) }),
     item: slot<ItemProps>({
       props: { value: "string" },
       focus: "roving",

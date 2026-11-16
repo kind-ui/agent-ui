@@ -15,6 +15,7 @@ import {
 } from "@ui-sdk/core/file-input";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { type FileIntake, forwardFileInputEvents } from "../file-input-events.js";
+import { bindLeavingRow, createRowSlide, dropRow, type LeavingRow, leavingRows } from "../leaving.js";
 import { memo } from "../memo.js";
 import { enter, type MotionMode } from "../motion/index.js";
 
@@ -65,6 +66,8 @@ export type UploaderOptions = {
 
 export type UploaderState = {
   items: readonly UploadItem[];
+  /** The rows to render: every item, plus each removed one while it fades out. */
+  rows: LeavingRow<UploadItem>[];
   canCancel: boolean;
   canRetry: boolean;
   accept: string | undefined;
@@ -76,6 +79,9 @@ export type UploaderState = {
 export type UploaderRootState = {
   fileInput: Pick<FileInputOptions, "accept" | "maxSize" | "multiple" | "onValueChange" | "onReject">;
 };
+
+/** What the list hands its render function: the rows to render, each removed one included while it fades out. */
+export type UploaderListState = { rows: LeavingRow<UploadItem>[] };
 
 export type UploadItemState = {
   item: UploadItem | undefined;
@@ -92,10 +98,12 @@ export type UploaderApi = {
   readonly cancel: ((id: string, event?: Event) => void) | undefined;
   /** Retries a failed item by its `id`, through `onRetry`. Offered while one has failed. */
   readonly retry: ((id: string, event?: Event) => void) | undefined;
-  /** Plays an item's entrance when it's added, not when the uploader mounts with it. */
-  enterItem: (el: HTMLElement, id: string) => void;
+  /** Plays an item's entrance when it's added, and its exit once it's removed. */
+  bindItem: (el: HTMLElement, id: string) => () => void;
   /** Hears File Input's events on web, and marks the end of the first frame. */
   bindRoot: (el: HTMLElement) => () => void;
+  /** Moves the rows after a removed one into its place. */
+  bindList: (el: HTMLElement) => () => void;
   /** Tracks an action button, so focus moves to a neighbor's when a cancelled item's button leaves. */
   bindAction: (el: HTMLElement, part: Part<UploaderState, UploaderApi, ItemProps>) => () => void;
   partState: { root: (state: UploaderState) => UploaderRootState };
@@ -116,7 +124,7 @@ export type UploaderPrimitive = ReturnType<
     UploaderApi,
     {
       root: UploaderSlot<BaseSlotProps, UploaderRootState>;
-      list: UploaderSlot<BaseSlotProps>;
+      list: UploaderSlot<BaseSlotProps, UploaderListState>;
       item: UploaderSlot<ItemProps & BaseSlotProps, UploadItemState>;
       action: UploaderSlot<ItemProps & BaseSlotProps>;
     }
@@ -146,7 +154,7 @@ export function uploadDetail(item: UploadItem): string {
 
 const ANNOUNCED: Partial<Record<UploadStatus, string>> = { done: "uploaded", error: "failed" };
 
-const presentation = (options: UploaderOptions): UploaderState => ({
+const presentation = (options: UploaderOptions) => ({
   items: options.items ?? NO_ITEMS,
   canCancel: options.onCancel !== undefined,
   canRetry: options.onRetry !== undefined,
@@ -156,10 +164,11 @@ const presentation = (options: UploaderOptions): UploaderState => ({
 });
 
 const itemOf = (state: UploaderState, id: string) => state.items.find((item) => item.id === id);
+const rowOf = (state: UploaderState, id: string) => state.rows.find((row) => row.item.id === id);
 
-/** Cancel while queued or uploading, Retry once failed, when the host offers it. */
+/** Cancel while queued or uploading, Retry once failed, when the host offers it. A leaving row keeps its button. */
 function actionOf(state: UploaderState, id: string): UploadAction | undefined {
-  const item = itemOf(state, id);
+  const item = rowOf(state, id)?.item;
   if (item && isActive(item) && state.canCancel) return "cancel";
   if (item?.status === "error" && state.canRetry) return "retry";
   return undefined;
@@ -177,7 +186,10 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
     maxSize: "number",
     motion: "string",
   },
-  state: presentation,
+  state: (options: UploaderOptions): UploaderState => ({
+    ...presentation(options),
+    rows: (options.items ?? NO_ITEMS).map((item) => ({ item, leaving: false })),
+  }),
   sync: presentation,
   controlled: ["items"],
   api: (context): UploaderApi => {
@@ -189,8 +201,11 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
     let previousOrder = order;
     // An item asked to cancel or retry takes no second request until the host changes its status.
     const requested = new Set<string>();
+    let lastItems = store.get().items;
     context.onOptions((options) => {
       const items = options.items ?? NO_ITEMS;
+      if (items === lastItems) return;
+      lastItems = items;
       const next = new Map(items.map((item) => [item.id, item.status]));
       for (const item of items) {
         const outcome = ANNOUNCED[item.status];
@@ -203,6 +218,7 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
       statuses = next;
       previousOrder = order;
       order = [...next.keys()];
+      setRows(leavingRows(store.get().rows, items, options.motion));
     });
 
     const intake: FileIntake = {
@@ -248,9 +264,19 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
       }),
     );
 
+    // Ids whose row has entered, forgotten once it's dropped, so an item added again enters again.
     const mounted = new Set(store.get().items.map((item) => item.id));
     // Web hosts can only set `items` once the element exists, so rows in the first frame count as mounted.
     let mounting = true;
+    const elements = new Map<string, HTMLElement>();
+    const slide = createRowSlide(elements, () => store.get().motion);
+    // A leaving row with no element to play its exit is dropped at once.
+    function setRows(next: LeavingRow<UploadItem>[]) {
+      const rows = next.filter((row) => !row.leaving || elements.has(row.item.id));
+      slide.measure(store.get().rows, rows);
+      for (const id of mounted) if (!rows.some((row) => row.item.id === id)) mounted.delete(id);
+      store.set({ rows });
+    }
 
     const actions = new Map<string, HTMLElement>();
     const recovery = createFocusRecovery<ItemProps>({
@@ -259,7 +285,9 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
         const index = ids.indexOf(lost.props.value);
         const after = ids.slice(index + 1);
         const before = ids.slice(0, Math.max(index, 0)).reverse();
-        const neighbor = [...after, ...before].find((id) => actions.get(id)?.isConnected);
+        const neighbor = [...after, ...before].find(
+          (id) => actions.get(id)?.isConnected && !rowOf(store.get(), id)?.leaving,
+        );
         return neighbor === undefined ? undefined : actions.get(neighbor);
       },
     });
@@ -273,10 +301,26 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
         const { canRetry, items } = store.get();
         return canRetry && items.some((item) => item.status === "error") ? retry : undefined;
       },
-      enterItem: (el, id) => {
-        if (mounted.has(id)) return;
-        mounted.add(id);
-        if (!mounting) void enter(el, "fade-up", { motion: store.get().motion });
+      bindItem: (el, id) => {
+        const motion = () => ({ motion: store.get().motion });
+        elements.set(id, el);
+        if (!mounted.has(id)) {
+          mounted.add(id);
+          if (!mounting) void enter(el, "fade-up", motion());
+        }
+        const unbind = bindLeavingRow(el, {
+          store,
+          isLeaving: () => rowOf(store.get(), id)?.leaving ?? false,
+          motion,
+          join: () => () => {},
+          drop: () => setRows(dropRow(store.get().rows, id)),
+        });
+        return () => {
+          unbind();
+          if (elements.get(id) !== el) return;
+          elements.delete(id);
+          if (rowOf(store.get(), id)?.leaving) setRows(store.get().rows);
+        };
       },
       bindRoot: (el) => {
         const frame = requestAnimationFrame(() => {
@@ -288,12 +332,27 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
           unforward();
         };
       },
+      bindList: (el) => slide.bind(el),
       bindAction: (el, part) => {
-        actions.set(part.props.value, el);
-        const unbind = recovery.bind(el, part);
+        const id = part.props.value;
+        actions.set(id, el);
+        // A leaving row keeps its button, so the button hands focus to a neighbor's as its row starts leaving.
+        let unbind: (() => void) | undefined;
+        const follow = () => {
+          const leaving = rowOf(store.get(), id)?.leaving ?? false;
+          if (leaving && unbind) {
+            unbind();
+            unbind = undefined;
+          } else if (!leaving && !unbind) {
+            unbind = recovery.bind(el, part);
+          }
+        };
+        follow();
+        const unsubscribe = store.subscribe(follow);
         return () => {
-          if (actions.get(part.props.value) === el) actions.delete(part.props.value);
-          unbind();
+          unsubscribe();
+          unbind?.();
+          if (actions.get(id) === el) actions.delete(id);
         };
       },
       partState: { root: (state) => root(state.accept, state.maxSize) },
@@ -307,19 +366,28 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
       bind: (el, { api }) => api.bindRoot(el),
     }),
     // Stays mounted while empty, so the first upload plays its entrance like the rest.
-    list: slot({
+    list: slot<BaseSlotProps, UploaderListState>({
       role: "list",
-      attrs: (state) => ({ "data-empty": state.items.length === 0 ? "" : undefined }),
+      attrs: (state) => ({ "data-empty": state.rows.length === 0 ? "" : undefined }),
+      state: (state) => ({ rows: state.rows }),
+      bind: (el, { api }) => api.bindList(el),
     }),
     item: slot<ItemProps, UploadItemState>({
       role: "listitem",
       props: { value: "string" },
-      attrs: (state, { props }) => ({ "data-status": itemOf(state, props.value)?.status }),
+      attrs: (state, { props }) => {
+        const row = rowOf(state, props.value);
+        return {
+          "aria-hidden": row?.leaving ? "true" : undefined,
+          "data-status": row?.item.status,
+          "data-leaving": row?.leaving ? "" : undefined,
+        };
+      },
       state: (state, { props }) => {
-        const item = itemOf(state, props.value);
+        const item = rowOf(state, props.value)?.item;
         return { item, detail: item ? uploadDetail(item) : "" };
       },
-      bind: (el, { api, props }) => api.enterItem(el, props.value),
+      bind: (el, { api, props }) => api.bindItem(el, props.value),
     }),
     action: slot<ItemProps>({
       role: "button",
@@ -334,7 +402,7 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
       },
       attrs: (state, { props }) => {
         const action = actionOf(state, props.value);
-        const name = itemOf(state, props.value)?.name ?? "upload";
+        const name = rowOf(state, props.value)?.item.name ?? "upload";
         return {
           type: "button",
           "aria-label": action === "retry" ? `Retry ${name}` : `Cancel ${name}`,
