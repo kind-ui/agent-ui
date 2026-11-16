@@ -18,10 +18,12 @@ import { Loader } from "./components/ui/loader.js";
 import { Markdown } from "./components/ui/markdown.js";
 import { MarkdownTable } from "./components/ui/markdown-table.js";
 import { Message, MessageContent, MessageCopy, MessageToolbar } from "./components/ui/message.js";
+import { ModelSelector } from "./components/ui/model-selector.js";
 import { Plan } from "./components/ui/plan.js";
 import { Question } from "./components/ui/question.js";
 import { Queue } from "./components/ui/queue.js";
 import { Reasoning } from "./components/ui/reasoning.js";
+import { ReasoningEffort } from "./components/ui/reasoning-effort.js";
 import { Status } from "./components/ui/status.js";
 import { Step, StepContent, StepIcon, StepTitle, StepTrigger } from "./components/ui/step.js";
 import { StreamingText } from "./components/ui/streaming-text.js";
@@ -115,6 +117,13 @@ const items = {
     />
   ),
   checkpoint: <Checkpoint description="Before editing auth.ts" onRestore={() => {}} />,
+  "model-selector": (
+    <ModelSelector
+      models={[{ id: "sonnet-4", name: "Sonnet 4", group: "Anthropic" }]}
+      defaultValue="sonnet-4"
+    />
+  ),
+  "reasoning-effort": <ReasoningEffort defaultValue="medium" />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
       <ConversationViewport>

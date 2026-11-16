@@ -11,10 +11,12 @@ import { defineLoader } from "./components/ui/web/loader.js";
 import { defineMarkdown } from "./components/ui/web/markdown.js";
 import { defineMarkdownTable } from "./components/ui/web/markdown-table.js";
 import { defineMessage } from "./components/ui/web/message.js";
+import { defineModelSelector } from "./components/ui/web/model-selector.js";
 import { definePlan } from "./components/ui/web/plan.js";
 import { defineQuestion } from "./components/ui/web/question.js";
 import { defineQueue } from "./components/ui/web/queue.js";
 import { defineReasoning } from "./components/ui/web/reasoning.js";
+import { defineReasoningEffort } from "./components/ui/web/reasoning-effort.js";
 import { defineStatus } from "./components/ui/web/status.js";
 import { defineStep } from "./components/ui/web/step.js";
 import { defineStreamingText } from "./components/ui/web/streaming-text.js";
@@ -39,6 +41,8 @@ for (const define of [
   defineConfirmation,
   defineQuestion,
   defineCheckpoint,
+  defineModelSelector,
+  defineReasoningEffort,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -74,6 +78,8 @@ const items = {
   confirmation: `<kind-confirmation label="Run search_docs?" can-approve can-deny reason></kind-confirmation>`,
   question: `<kind-question label="Deploy questions" can-submit></kind-question>`,
   checkpoint: `<kind-checkpoint description="Before editing auth.ts" can-restore></kind-checkpoint>`,
+  "model-selector": `<kind-model-selector></kind-model-selector>`,
+  "reasoning-effort": `<kind-reasoning-effort></kind-reasoning-effort>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>
