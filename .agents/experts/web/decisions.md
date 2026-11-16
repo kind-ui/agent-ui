@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `0134874` (Wave 3 Task 9 Feedback)
+Last reviewed: `b54a7cd` (Wave 3 Task 10 Notice and Guardrail Notice)
 
 ## Settled
 
@@ -18,6 +18,7 @@ Last reviewed: `0134874` (Wave 3 Task 9 Feedback)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A `kind-notice` written with only its description grows by 40 px when it's defined** (Wave 3 Task 10), as it adds its mark and title; same class as the empty Task, Plan and Checkpoint entries.
 - **An empty `kind-context-meter` moves what's beside it when it's defined** (Wave 3 Task 8), as the empty Task, Plan and Checkpoint do; no shadow-root case in its fixture either (checked by hand).
 - **`ui-carousel-content` is `aria-live="polite"` (UI SDK),** so a suggestion added while the row is in view may be read aloud; not checked with a screen reader.
 - **An empty `kind-model-selector` or `kind-reasoning-effort` adds its parts on upgrade,** shifting layout once, as Task and Plan do.
@@ -44,6 +45,7 @@ Last reviewed: `0134874` (Wave 3 Task 9 Feedback)
 
 ## Resolved
 
+- **Notice and Guardrail Notice (Wave 3 Task 10):** Dismiss stays the last child when a host adds text or buttons after the element connects (moved with `moveBefore` where the browser has it), so Tab reaches them first; a notice removed and put back neither rises in nor is announced again.
 - **Feedback (Wave 3 Task 9):** a `kind-feedback` removed and put back a tick later couldn't send the comment its textarea kept (the comment text slot binds `bindText`, tested); the docs say `rating` and `defaultRating` are properties only.
 - **Context Meter (Wave 3 Task 8):** a content part written by hand left focus moving into the details (`render` now sets `initial-focus="none"` on one without it, tested with a `written` case); the title is an `h2`, as React's and UI SDK's PopoverTitle are.
 - **Suggestion (Wave 3 Task 7):** `el.api.getSuggestions()` works (the root lists it in `api`); a chip in a `<form>` doesn't submit it (`form` fixture case, both layers).

@@ -12,7 +12,8 @@
     column-gap: 10px;
     row-gap: 2px;
     box-sizing: border-box;
-    padding: 10px 10px 10px 12px;
+    padding-block: 10px;
+    padding-inline: 12px 10px;
     border: 1px solid color-mix(in oklab, var(--kind-notice-tone) 28%, var(--kind-color-border));
     border-radius: calc(var(--kind-radius) * 2 / 3);
     background-color: color-mix(in oklab, var(--kind-notice-tone) 6%, var(--kind-color-surface));
@@ -111,6 +112,10 @@
     [data-notice-part="dismiss"] {
       transition-duration: var(--kind-duration-reduced);
     }
+  }
+
+  [data-notice-part="dismiss"]:where([data-motion="reduced"] *) {
+    transition-duration: var(--kind-duration-reduced);
   }
 
   [data-notice-part="dismiss"]:where([data-motion="none"] *) {

@@ -9,6 +9,16 @@ const DISMISS = "<kind-notice-dismiss><button></button></kind-notice-dismiss>";
 // Kept across instances, because UI SDK rebuilds one when the element returns to the page.
 const owned = new WeakSet<Element>();
 
+type Movable = Element & { moveBefore?: (node: Node, child: Node | null) => void };
+
+// Dismiss stays last, so Tab reaches the text's buttons before it, however late the host adds them. `moveBefore`
+// keeps it focused where the browser has it; `append` blurs it.
+const keepLast = (el: Movable, dismiss: Element | null) => {
+  if (!dismiss || el.lastElementChild === dismiss) return;
+  if (el.moveBefore) el.moveBefore(dismiss, null);
+  else el.append(dismiss);
+};
+
 /**
  * `<kind-notice variant="…" label="…">` takes its text inside a `<kind-notice-description>` and its buttons inside
  * a `<kind-notice-actions>`, and adds its mark and title before them and Dismiss after them, unless it has a mark
@@ -24,9 +34,11 @@ export function defineNotice(): void {
       // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
       options: (el) => ((el as KindNoticeElement).canDismiss ? {} : { onDismiss: undefined }),
       render: (el, instance) => {
+        let dismiss: Element | null = null;
         if (!el.querySelector(":scope > kind-notice-icon")) {
           el.insertAdjacentHTML("afterbegin", HEAD);
           el.insertAdjacentHTML("beforeend", DISMISS);
+          dismiss = el.lastElementChild;
         }
         const draw = () => {
           const title = el.querySelector(":scope > kind-notice-title");
@@ -36,7 +48,13 @@ export function defineNotice(): void {
           if (title.textContent !== label) title.textContent = label;
         };
         draw();
-        return instance.subscribe(draw);
+        const unsubscribe = instance.subscribe(draw);
+        const arrivals = new MutationObserver(() => keepLast(el, dismiss));
+        arrivals.observe(el, { childList: true });
+        return () => {
+          unsubscribe();
+          arrivals.disconnect();
+        };
       },
     },
     icon: "kind-notice-icon",

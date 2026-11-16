@@ -17,16 +17,18 @@ const parts = createParts(guardrailNoticePrimitive, {
 });
 
 export type GuardrailNoticeProps = Omit<ComponentProps<typeof parts.Root>, "children"> & {
+  /** More text under the reason. */
+  children?: ReactNode;
   /** Buttons that act on the notice, like "Rephrase". */
   actions?: ReactNode;
 };
 
 /**
  * A notice that a guardrail blocked or filtered content: its mark and title, the `reason`, "Why?" with the
- * `detail` while there is one, then `actions` and Dismiss while `onDismiss` is set. To arrange the parts yourself,
+ * `detail` while there is one, any `children`, then `actions` and Dismiss while `onDismiss` is set. To arrange the parts yourself,
  * use `GuardrailNoticeRoot`.
  */
-export function GuardrailNotice({ actions, ...props }: GuardrailNoticeProps) {
+export function GuardrailNotice({ children, actions, ...props }: GuardrailNoticeProps) {
   return (
     <parts.Root {...props}>
       <GuardrailNoticeIcon />
@@ -34,6 +36,7 @@ export function GuardrailNotice({ actions, ...props }: GuardrailNoticeProps) {
       <GuardrailNoticeReason />
       <GuardrailNoticeDetailTrigger />
       <GuardrailNoticeDetail />
+      {children === undefined ? null : <GuardrailNoticeDescription>{children}</GuardrailNoticeDescription>}
       <GuardrailNoticeActions>{actions}</GuardrailNoticeActions>
       <GuardrailNoticeDismiss />
     </parts.Root>

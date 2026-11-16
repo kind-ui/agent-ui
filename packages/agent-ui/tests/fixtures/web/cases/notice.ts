@@ -44,6 +44,7 @@ const page =
     Object.assign(window, {
       kindHost: Object.assign(host, {
         add: () => below.before(create(added)),
+        remove: () => elements.get("error")?.remove(),
         escalate: () => {
           const info = elements.get("info");
           if (info) info.variant = "error";

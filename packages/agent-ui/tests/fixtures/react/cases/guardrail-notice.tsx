@@ -5,7 +5,7 @@ import { guardrails, noticeHost } from "../../shared/notice.js";
 
 const { host, dismissed } = noticeHost();
 
-function Page({ motion }: { motion?: MotionMode }) {
+function Page({ motion, refuse }: { motion?: MotionMode; refuse?: boolean }) {
   const [shown, setShown] = useState({ blocking: true, filtered: true, late: false });
   useEffect(() => {
     Object.assign(window, {
@@ -28,6 +28,10 @@ function Page({ motion }: { motion?: MotionMode }) {
           blocking
           motion={motion}
           onDismiss={dismiss("blocking")}
+          {...(refuse && {
+            open: false,
+            onOpenChange: (_open, details) => host.openings.push(details.reason),
+          })}
         />
       ) : null}
       {shown.filtered ? (
@@ -48,4 +52,8 @@ function Page({ motion }: { motion?: MotionMode }) {
   );
 }
 
-export const cases = { all: () => <Page />, reduced: () => <Page motion="reduced" /> };
+export const cases = {
+  all: () => <Page />,
+  reduced: () => <Page motion="reduced" />,
+  refused: () => <Page refuse />,
+};

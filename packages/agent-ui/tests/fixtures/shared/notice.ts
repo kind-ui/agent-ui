@@ -60,9 +60,9 @@ export const guardrails = {
   },
 };
 
-/** Records each dismiss, and rejects it while `reject` is set. */
+/** Records each dismiss, rejecting it while `reject` is set, and each refused opening. */
 export function noticeHost() {
-  const host = { dismisses: [] as string[], reject: false };
+  const host = { dismisses: [] as string[], openings: [] as string[], reject: false };
   const dismissed = (id: string) => {
     host.dismisses.push(id);
     return host.reject ? Promise.reject(new Error("kept")) : undefined;

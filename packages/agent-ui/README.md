@@ -47,7 +47,7 @@ Import `@kind-ui/agent-ui/styles.css` after `tailwindcss` in your stylesheet. It
 | `--kind-color-fg`, `--kind-color-muted` | Text and secondary text |
 | `--kind-color-surface`, `--kind-color-hover`, `--kind-color-border`, `--kind-color-ring`, `--kind-color-shadow` | Backgrounds, subtle fills, borders, focus rings, shadows |
 | `--kind-color-accent`, `--kind-color-on-accent` | Running and primary states, and text on them |
-| `--kind-color-success`, `--kind-color-warning`, `--kind-color-danger`, `--kind-color-on-status` | Statuses, and marks on them |
+| `--kind-color-success`, `--kind-color-warning`, `--kind-color-danger`, `--kind-color-on-status`, `--kind-color-on-warning` | Statuses, and marks on them (`on-warning` on the warning fill) |
 | `--kind-radius` | Base corner radius; others scale from it |
 | `--kind-font-mono` | Code |
 

@@ -112,6 +112,8 @@
       &::after {
         mask-image: var(--kind-status-mark-alert);
         mask-size: 16px;
+        /* White on amber is under 3:1 in light. */
+        background-color: var(--kind-color-on-warning);
         opacity: 1;
         transform: none;
       }
@@ -169,6 +171,10 @@
       background-color: Canvas;
       &::after {
         background-color: CanvasText;
+      }
+      /* The track recedes, so the arc still reads as running. */
+      &[data-status="running"] {
+        border-color: GrayText;
       }
       &[data-status="running"]::before {
         border-top-color: CanvasText;

@@ -1,12 +1,14 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Fixture = {
   kindHost: {
     dismisses: string[];
     reject: boolean;
     add(): void;
+    remove(): void;
     escalate(): void;
     edit(): void;
   };
@@ -19,7 +21,7 @@ const dismissButton = (page: Page, name: string) =>
   notice(page, name).getByRole("button", { name: "Dismiss" });
 const dismisses = (page: Page) => page.evaluate(() => (window as unknown as Fixture).kindHost.dismisses);
 const announced = (page: Page) => page.evaluate(() => (window as unknown as Fixture).kindAnnounced);
-const host = (page: Page, method: "add" | "escalate" | "edit") =>
+const host = (page: Page, method: "add" | "remove" | "escalate" | "edit") =>
   page.evaluate((name) => (window as unknown as Fixture).kindHost[name](), method);
 const settled = (page: Page) =>
   page.waitForFunction(() =>
@@ -109,6 +111,57 @@ test("Dismiss on the last notice moves focus on to the next control after it", a
   await dismissButton(page, "Couldn't reach the model").click();
   await expect(page.locator("#below")).toBeFocused();
   await expect.poll(() => dismisses(page)).toEqual(["error"]);
+});
+
+test("Dismiss skips a link without href, which takes no focus", async ({ page }) => {
+  await open(page);
+  await page
+    .locator("#notice-warning")
+    .evaluate((el) => el.after(Object.assign(document.createElement("a"), { textContent: "Anchor" })));
+  await dismissButton(page, "Rate limited").press("Enter");
+  await expect(page.getByRole("button", { name: "Retry" })).toBeFocused();
+});
+
+test("a notice the host removes during its exit doesn't call onDismiss", async ({ page }) => {
+  await open(page);
+  await dismissButton(page, "Couldn't reach the model").click();
+  await host(page, "remove");
+  await settled(page);
+  await afterFrames(page);
+  expect(await dismisses(page)).toEqual([]);
+});
+
+test("Dismiss stays after buttons added to a connected notice", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "the element adds Dismiss itself");
+  await open(page);
+  await page.locator("#notice-warning").evaluate((el) => {
+    const actions = document.createElement("kind-notice-actions");
+    actions.append(Object.assign(document.createElement("button"), { textContent: "Details" }));
+    el.append(actions);
+  });
+  await expect
+    .poll(() =>
+      page
+        .locator("#notice-warning")
+        .evaluate((el) => [...el.children].map((child) => child.localName).at(-1)),
+    )
+    .toBe("kind-notice-dismiss");
+});
+
+test("a notice put back on the page neither comes in nor is announced again", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "React puts back a new element, which is a new notice");
+  await open(page);
+  await afterFrames(page);
+  await page.locator("#notice-warning").evaluate(async (el) => {
+    const parent = el.parentElement as HTMLElement;
+    const next = el.nextSibling;
+    el.remove();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    parent.insertBefore(el, next);
+  });
+  await afterFrames(page);
+  expect(await animated(page, "Rate limited")).toEqual([]);
+  expect(await announced(page)).toEqual([]);
 });
 
 test("Dismiss moves focus to focusFallback when given", async ({ page }) => {

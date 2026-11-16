@@ -7,12 +7,25 @@ import {
   type SlotDefinition,
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
-import { type NoticeApi, type NoticeOptions, type NoticeState, noticeBase } from "../notice/base.js";
+import {
+  type NoticeApi,
+  type NoticeOptions,
+  type NoticeState,
+  type NoticeVariant,
+  noticeBase,
+} from "../notice/base.js";
 import { bindStepPanel } from "../step/base.js";
 
 export type GuardrailNoticeOpenChangeReason = "trigger-press" | "find-in-page" | "imperative";
 
-export type GuardrailNoticeOptions = NoticeOptions & {
+export type GuardrailNoticeOptions = Omit<NoticeOptions, "variant" | "label"> & {
+  /**
+   * How the notice reads: its icon and colors.
+   * @default "warning"
+   */
+  variant?: NoticeVariant;
+  /** The notice's title, which names it. Defaults to "Response blocked" while `blocking`, else "Response filtered". */
+  label?: string;
   /** The policy reason, in a sentence. */
   reason?: string;
   /** More about the policy, shown under "Why?". Without it, there's no "Why?". */

@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `0134874` (Wave 3 Task 9 Feedback)
+Last reviewed: `b54a7cd` (Wave 3 Task 10 Notice and Guardrail Notice)
 
 ## Settled
 
@@ -18,7 +18,7 @@ Last reviewed: `0134874` (Wave 3 Task 9 Feedback)
 
 ## Known and open (don't report again, check whether fixed)
 
-- **Mask-drawn icons vanish in forced colors** in most stylesheets (14 use `mask`); Feedback's thumbs have a `forced-colors` rule (`ButtonText`, `forced-color-adjust: none`), the others don't yet.
+- **Mask-drawn icons vanish in forced colors** in the stylesheets without a `forced-colors` rule; Feedback's thumbs, the status mark and Notice's Dismiss have one.
 - **Feedback's thanks is wider than "Add a comment",** so the row grows sideways by its text when it appears; height holds. Feedback ends a message's actions, so nothing usually sits after it.
 - **The Context Meter's high-level glyph in light mode** is `--kind-color-warning` on white, about 2.5:1, under 3:1 for graphics; the percentage beside it carries the value.
 - **Suggestion: Tab to a chip half out of view doesn't scroll it in** (UI SDK Carousel counts it in view), so its end and focus ring sit under the end fade.
@@ -38,6 +38,7 @@ Last reviewed: `0134874` (Wave 3 Task 9 Feedback)
 
 ## Resolved
 
+- **Notice and the status mark (Wave 3 Task 10):** in forced colors the running mark's track is `GrayText`, so its arc still shows; the light warning glyph uses `--kind-color-on-warning` (white on amber was 2.57:1); a closed Guardrail detail takes back its row gap; the notice's padding is logical; Why? and Dismiss follow the reduced and `none` motion modes.
 - **Feedback (Wave 3 Task 9):** the thumbs show in forced colors; the pressed icon rule wraps its context in `:where()`, so a consumer's icon class wins.
 - **Context Meter (Wave 3 Task 8):** the details closed in 150 ms under reduced motion (the exit duration is set again in the reduced rules, tested); the percentage reserves `4ch + 1em`, so "100 %" in `de-DE` doesn't widen the trigger (tested); level, motion and `[hidden]` rules sit behind `:where()`; the trigger's transitions use `--kind-ease-out`.
 - **Suggestion (Wave 3 Task 7):** Previous and Next stay shown while one holds focus; a page Next scrolled to starts past the start fade (the viewport's start inset holds it); context selectors sit in `:where()`, so a class in `@layer components` restyles a two-line chip.

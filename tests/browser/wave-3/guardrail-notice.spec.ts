@@ -1,9 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Fixture = {
-  kindHost: { dismisses: string[]; add(): void };
+  kindHost: { dismisses: string[]; openings: string[]; add(): void };
   kindAnnounced: string[];
 };
 
@@ -76,6 +77,21 @@ test("find in page opens the detail", async ({ page }) => {
   await detail(page).evaluate((el) => el.dispatchEvent(new Event("beforematch", { bubbles: true })));
   await expect(why(page)).toHaveAttribute("aria-expanded", "true");
   await expect(detail(page)).toBeVisible();
+});
+
+test("an owner that keeps the detail closed is told of each opening, and it stays closed", async ({
+  page,
+}, testInfo) => {
+  test.skip(layerOf(testInfo) !== "react", "controlled `open` is a React prop");
+  await open(page, "refused");
+  await why(page).click();
+  await detail(page).evaluate((el) => el.dispatchEvent(new Event("beforematch", { bubbles: true })));
+  expect(await page.evaluate(() => (window as unknown as Fixture).kindHost.openings)).toEqual([
+    "trigger-press",
+    "find-in-page",
+  ]);
+  await expect(why(page)).toHaveAttribute("aria-expanded", "false");
+  await expect(detail(page)).toHaveAttribute("hidden", "until-found");
 });
 
 test("full motion animates the detail's height; reduced motion only fades it", async ({ page }) => {

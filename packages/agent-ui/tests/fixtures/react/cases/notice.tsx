@@ -11,6 +11,7 @@ function Page({ motion, fallback }: { motion?: MotionMode; fallback?: boolean })
     Object.assign(window, {
       kindHost: Object.assign(host, {
         add: () => setItems((current) => [...current, added]),
+        remove: () => setItems((current) => current.filter((item) => item.id !== "error")),
         escalate: () =>
           setItems((current) =>
             current.map((item) => (item.id === "info" ? { ...item, variant: "error" } : item)),

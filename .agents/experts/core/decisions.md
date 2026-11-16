@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `0134874` (Wave 3 Task 9 Feedback)
+Last reviewed: `b54a7cd` (Wave 3 Task 10 Notice and Guardrail Notice)
 
 ## Settled
 
+- **A dismissed notice the host never removes stays faded and inert** (Wave 3 Task 10, D10): the host removes it in `onDismiss`; only a rejection brings it back.
 - **A Feedback comment that failed keeps its error and text until the next send** (Wave 3 Task 9), through a close and a rating change: the error belongs to the text it failed to send, which the box still holds.
 - **Suggestion's `pick` has no lock** (Wave 3 Task 7): `onPick` is a `callback`, as the plan says, so a double press calls it twice. A host whose pick sends a prompt drops a repeat itself, as it would for a double-clicked send.
 - **Model Selector marks matches only in the name** (Wave 3 Task 6): a model the query found through its group or description shows no mark. Spec §7 asks for match highlighting on the options, which are named by the model; marking descriptions would add a second highlighted line per row.
@@ -29,6 +30,9 @@ Last reviewed: `0134874` (Wave 3 Task 9 Feedback)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A blocking Guardrail Notice added after load may be read twice** (Wave 3 Task 10): it's `role="alert"` and announces its title assertively, both as the plan asks. Not checked with a screen reader.
+- **Notice's `nearestTabStop` misses shadow roots and scrollable regions** (Wave 3 Task 10): it reads `tabIndex` over the light DOM, since UI SDK's `nextTabbable` isn't exported; ask upstream to export it.
+- **A notice that mounts in a background tab before its first paint isn't announced** (Wave 3 Task 10): first contentful paint waits for the tab to show.
 - **Enter on Context Meter details that keyboard focus opened closes them** (Wave 3 Task 8): UI SDK's press opening keeps a popup open on a press only when the pointer opened it, and that rule isn't exported; ask upstream for a focus-opened popup to stay open too. Pinned in `context-meter.spec.ts`.
 - **A Context Meter `currency` that isn't an ISO 4217 code throws** from `Intl.NumberFormat` when the details render (the JSDoc asks for one); a bad `locale` is ignored through `toLocale`.
 - **Chain of Thought's `setStepOpen` checks `id in stepsById`,** so an inherited name like `"constructor"` gets past it; Suggestion and Question read by own key (`Object.hasOwn`).
@@ -56,6 +60,7 @@ Last reviewed: `0134874` (Wave 3 Task 9 Feedback)
 
 ## Resolved
 
+- **Notice (Wave 3 Task 10):** Dismiss's fallback skips a link without `href` (Chrome reports `tabIndex` 0 for it); `onDismiss` isn't called once the host removed the notice during its exit; Guardrail Notice's options document its own `variant` (`"warning"`) and title defaults; a notice in server markup an app hydrates after `load`, or one a web host puts back, neither rises in nor is announced (roots on the page before core ran, or already shown, are remembered).
 - **Feedback (Wave 3 Task 9):** the comment text slot now binds `bindText`, so a web element put back in the page sends the text its box kept; the box can't start open without **Add a comment**, and closes only when that button leaves, not on every update; `submitComment` with blank text, or while a send is pending, leaves the box's text alone; an invalid `rating` reads as none; focus recovery picks the pressed thumb, else the first.
 - **Context Meter (Wave 3 Task 8):** numbers format in `locale`, else the page's language read in `bind`, else English, so server markup and the Meter beside it agree; the level follows the rounded percentage shown; a non-finite `used` or `total` reads as 0; a small cost keeps two significant digits (`roundingPriority`, with `ES2023.Intl` in the base `lib`); controlled and cancelled opens and the rows memo are unit-tested.
 - **Suggestion (Wave 3 Task 7):** `pick` and the chips read suggestions by own key, so `pick("constructor")` is refused (`suggestion.test.mjs`); an id that leaves `suggestions` is forgotten, so it plays its entrance when added again; a removed chip's focus moves to its neighbor (`createFocusRecovery`); the chips are `type="button"`; the render-state types have JSDoc.

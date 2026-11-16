@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `0134874` (Wave 3 Task 9 Feedback)
+Last reviewed: `b54a7cd` (Wave 3 Task 10 Notice and Guardrail Notice)
 
 ## Settled
 
@@ -41,6 +41,7 @@ Last reviewed: `0134874` (Wave 3 Task 9 Feedback)
 
 ## Resolved
 
+- **Guardrail Notice (Wave 3 Task 10):** hydrating server-rendered notices after `load` no longer plays their entrance or announces them; a refusing `open` owner is tested (`refused` case); `GuardrailNotice` takes `children` into its description, as the web element does.
 - **Feedback (Wave 3 Task 9):** the agent spec settles `onComment` instead of waiting out the bridge's timeout; a refusing host has a fixture case and a spec in both layers; the thumbs part is `FeedbackThumbs`, so it doesn't clash with the `FeedbackRating` type.
 - **Context Meter text hydrated in the server's locale (Wave 3 Task 8).** Fixed: it formats in English until the root binds and reads the page's language, as UI SDK Meter does.
 - **Suggestion (Wave 3 Task 7):** a chip inside a form no longer submits it (`type="button"` from core); `SuggestionControls` is exported, so a layout you compose hides Previous and Next too; the server markup shows neither controls nor fades until Carousel has measured, so a row that fits doesn't grow 64px on hydration.

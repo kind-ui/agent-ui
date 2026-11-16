@@ -84,6 +84,8 @@ const nearestTabStop = (el: HTMLElement): HTMLElement | undefined => {
   const stops = [...el.ownerDocument.body.querySelectorAll<HTMLElement>("*")].filter(
     (candidate) =>
       candidate.tabIndex >= 0 &&
+      // Chrome reports 0 for a link without `href`, which takes no focus.
+      !candidate.matches(":is(a, area):not([href])") &&
       !el.contains(candidate) &&
       !candidate.matches(":disabled") &&
       !candidate.closest("[inert]") &&
@@ -93,6 +95,12 @@ const nearestTabStop = (el: HTMLElement): HTMLElement | undefined => {
     Boolean(el.compareDocumentPosition(candidate) & Node.DOCUMENT_POSITION_FOLLOWING);
   return stops.find(isAfter) ?? stops.filter((candidate) => !isAfter(candidate)).at(-1);
 };
+
+// Roots on the page before this module ran (server markup an app hydrates later) or already shown once, as when a
+// web element returns to the page: none of them is news.
+const seen = new WeakSet<Element>(
+  typeof document === "undefined" ? [] : document.querySelectorAll('[data-notice-part="root"]'),
+);
 
 /**
  * Whether the page is still loading: it hasn't finished, or hasn't painted any content yet, as when an app renders
@@ -169,24 +177,30 @@ export const noticeBase = <
         bindRoot: (el, part) => {
           prepareAnnouncements(el.ownerDocument);
           // A notice on the page as it loads is read with the page; one added later comes in and is announced.
-          const added = !pageLoading(el.ownerDocument);
+          const added = !seen.has(el) && !pageLoading(el.ownerDocument);
           if (added) void enter(el, "fade-up", { motion: store.get().motion });
           // A frame later, since web hosts can only set the label once the element exists.
           const frame = requestAnimationFrame(() => {
             shown = true;
+            seen.add(el);
             if (added) announceLabel(context.options());
           });
+          let bound = true;
           const unbind = bindLeavingRow(el, {
             store,
             isLeaving: () => store.get().dismissing,
             motion: () => ({ motion: store.get().motion }),
             join: () => recovery.bind(el, part),
-            drop: () =>
+            // The host may have removed the notice during its exit.
+            drop: () => {
+              if (!bound) return;
               void new Promise((resolve) => resolve(context.options().onDismiss?.())).catch(() =>
                 store.set({ dismissing: false }),
-              ),
+              );
+            },
           });
           return () => {
+            bound = false;
             cancelAnimationFrame(frame);
             unbind();
           };

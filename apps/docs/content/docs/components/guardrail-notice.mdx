@@ -32,11 +32,12 @@ GuardrailNotice
 ├── GuardrailNoticeReason
 ├── GuardrailNoticeDetailTrigger
 ├── GuardrailNoticeDetail
+├── GuardrailNoticeDescription
 ├── GuardrailNoticeActions
 └── GuardrailNoticeDismiss
 ```
 
-`GuardrailNotice` renders these parts. `GuardrailNoticeTitle` shows the `label`, else "Response blocked" or "Response filtered", and `GuardrailNoticeReason` the `reason`. `GuardrailNoticeDetailTrigger` is the **Why?** button that shows and hides `GuardrailNoticeDetail`, both rendered only with a `detail`. The icon, actions and Dismiss work as in Notice. To arrange the parts yourself, render them inside `GuardrailNoticeRoot`.
+`GuardrailNotice` renders these parts. `GuardrailNoticeTitle` shows the `label`, else "Response blocked" or "Response filtered", and `GuardrailNoticeReason` the `reason`. `GuardrailNoticeDetailTrigger` is the **Why?** button that shows and hides `GuardrailNoticeDetail`, both rendered only with a `detail`. `GuardrailNoticeDescription` holds any `children`, for more text under the reason. The icon, actions and Dismiss work as in Notice. To arrange the parts yourself, render them inside `GuardrailNoticeRoot`.
 
 ## Usage
 

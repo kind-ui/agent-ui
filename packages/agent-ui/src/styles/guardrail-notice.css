@@ -46,6 +46,8 @@
 
   /* Sized through `--kind-step-content-height`, which `bindStepPanel` writes, as a Step's content is. */
   [data-notice-part="detail"] {
+    /* Takes back the row gap, which a closed detail would otherwise add under "Why?". */
+    margin-block-start: -2px;
     height: var(--kind-step-content-height);
     overflow: hidden;
     color: var(--kind-color-muted);
@@ -55,7 +57,7 @@
       opacity: 0;
     }
     & > * {
-      padding-top: 4px;
+      padding-top: 6px;
     }
   }
 
@@ -77,7 +79,8 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    [data-notice-part="detail"] {
+    [data-notice-part="detail"],
+    [data-notice-part="detail-trigger"] {
       transition-duration: var(--kind-duration-reduced);
     }
     [data-notice-part="detail-trigger"]::after {
@@ -85,11 +88,15 @@
     }
   }
 
-  [data-notice-part="detail-trigger"][data-motion="reduced"]::after {
-    transition: none;
+  [data-notice-part="detail-trigger"][data-motion="reduced"] {
+    transition-duration: var(--kind-duration-reduced);
+    &::after {
+      transition: none;
+    }
   }
 
   [data-notice-part="detail"][data-motion="none"],
+  [data-notice-part="detail-trigger"][data-motion="none"],
   [data-notice-part="detail-trigger"][data-motion="none"]::after {
     transition: none;
   }
