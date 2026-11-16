@@ -116,6 +116,16 @@ export {
 } from "./guardrail-notice/index.js";
 export type { IndicatorOptions, IndicatorPrimitive, IndicatorState } from "./indicator.js";
 export {
+  type InlineCitationApi,
+  type InlineCitationCarouselState,
+  type InlineCitationOpenChangeReason,
+  type InlineCitationOptions,
+  type InlineCitationPrimitive,
+  type InlineCitationRootState,
+  type InlineCitationState,
+  inlineCitationPrimitive,
+} from "./inline-citation/index.js";
+export {
   type ItemListApi,
   type ItemListOptions,
   type ItemListState,

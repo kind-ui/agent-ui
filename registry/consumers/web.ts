@@ -9,6 +9,7 @@ import { defineContextMeter } from "./components/ui/web/context-meter.js";
 import { defineConversation } from "./components/ui/web/conversation.js";
 import { defineFeedback } from "./components/ui/web/feedback.js";
 import { defineGuardrailNotice } from "./components/ui/web/guardrail-notice.js";
+import { defineInlineCitation } from "./components/ui/web/inline-citation.js";
 import { defineInternalToolbar } from "./components/ui/web/internal/toolbar.js";
 import { defineLoader } from "./components/ui/web/loader.js";
 import { defineMarkdown } from "./components/ui/web/markdown.js";
@@ -55,6 +56,7 @@ for (const define of [
   defineNotice,
   defineGuardrailNotice,
   defineSources,
+  defineInlineCitation,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -98,6 +100,7 @@ const items = {
   notice: `<kind-notice variant="warning" label="Rate limited" can-dismiss><kind-notice-description>Responses are slower for the next few minutes.</kind-notice-description></kind-notice>`,
   "guardrail-notice": `<kind-guardrail-notice blocking label="Model output withheld" reason="The response included personal data." detail="Policy."></kind-guardrail-notice>`,
   sources: `<kind-sources></kind-sources>`,
+  "inline-citation": `<p>Back off on a limit <kind-inline-citation></kind-inline-citation></p>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>
@@ -180,6 +183,9 @@ Object.assign(main.querySelector("kind-task") as HTMLElement, {
   items: [{ id: "schema", status: "complete", title: "Read the schema", files: ["db/schema.sql"] }],
 });
 Object.assign(main.querySelector("kind-sources") as HTMLElement, {
+  sources: [{ id: "docs", title: "Rate limits", url: "https://docs.github.com/en/rest" }],
+});
+Object.assign(main.querySelector("kind-inline-citation") as HTMLElement, {
   sources: [{ id: "docs", title: "Rate limits", url: "https://docs.github.com/en/rest" }],
 });
 Object.assign(main.querySelector("kind-plan") as HTMLElement, {

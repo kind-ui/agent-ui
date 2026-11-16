@@ -1,5 +1,5 @@
+export type { SourceEntry } from "./entry.js";
 export {
-  type SourceEntry,
   type SourcesApi,
   type SourcesOpenChangeReason,
   type SourcesOptions,

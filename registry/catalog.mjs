@@ -104,6 +104,12 @@ const components = {
     description: "The sources a response used, as a compact count that opens a list of links.",
     uses: [],
   },
+  "inline-citation": {
+    title: "Inline Citation",
+    description:
+      "A marker in running text whose card shows the sources it points to, paging through several.",
+    uses: [],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",
