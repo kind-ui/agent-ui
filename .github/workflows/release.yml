@@ -174,6 +174,10 @@ jobs:
           INTEGRITY: ${{ needs.verify.outputs.integrity }}
           VERSION: ${{ needs.plan.outputs.version }}
           DIST_TAG: ${{ needs.plan.outputs.dist-tag }}
+          # npm tries OIDC trusted publishing first and falls back to this token. A trusted publisher
+          # can only be set up once the package exists, so the first publish needs the token; once the
+          # secret is deleted, publishing uses OIDC alone.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           integrity="sha512-$(openssl dgst -sha512 -binary "$TARBALL" | base64 -w0)"
           [ "$integrity" = "$INTEGRITY" ] || { echo "::error::$TARBALL changed after verify."; exit 1; }

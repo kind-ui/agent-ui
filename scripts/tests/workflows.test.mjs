@@ -39,6 +39,8 @@ test("publish job is guarded and uses npm-release", () => {
     runs(release.jobs.publish),
     /npm publish "\$TARBALL" --ignore-scripts --access public --tag "\$DIST_TAG"/,
   );
+  const publishStep = release.jobs.publish.steps.find((step) => step.run?.includes("npm publish"));
+  assert.equal(publishStep.env.NODE_AUTH_TOKEN, "${{ secrets.NPM_TOKEN }}");
   assert.match(runs(release.jobs.plan), /private === true/);
 });
 
