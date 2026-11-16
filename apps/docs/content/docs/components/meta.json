@@ -22,6 +22,7 @@
     "guardrail-notice",
     "sources",
     "inline-citation",
+    "document",
     "conversation",
     "message",
     "markdown",

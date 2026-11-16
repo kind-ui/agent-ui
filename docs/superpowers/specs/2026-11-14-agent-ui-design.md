@@ -92,7 +92,7 @@ AI components need general controls. These are UI SDK components or `@ui-sdk/cor
 | Button | Button | almost all |
 | Collapsible | Collapsible, `bindPanel`, `bindFindable` | Step and every Step-based component, Sources, Queue |
 | Popover, Tooltip | Popover (`createPopup`; Context Meter and Inline Citation add hover and focus opening), Tooltip | Feedback, Checkpoint, Context Meter, Inline Citation |
-| Menu | Menu | Message, Document |
+| Menu | Menu | Message |
 | Alert Dialog, Dialog | Alert Dialog, Dialog | Checkpoint, Generated Image |
 | Scroll Area | Scroll Area, `createStickToBottom` | Conversation, Terminal, Code Block, Markdown Table, Document |
 | Token Input, Trigger Menu | Token Input, Trigger Menu | Composer |
@@ -514,7 +514,7 @@ Behavior requirements:
 | --- | --- | --- | --- |
 | **Sources** | Collapsible | `expand`, `collapse` | sources |
 | **Inline Citation** | Popover (opens on hover, focus, and press), Carousel | `open`, `close`, `next`, `previous` | inline-citation |
-| **Document** | Toolbar, Menu, Scroll Area, Collapsible | `copy`, `download`, `expand`, `collapse` | document |
+| **Document** | Toolbar, Scroll Area | `copy`, `download`, `expand`, `collapse` | document |
 | **Generated Image** | Dialog, Button | `open`, `close`, `download` | generated-image |
 | **File Tree** | Tree, `treeFromPaths`, `createTypeahead` | `expand(path)`, `collapse(path)`, `select(path)` | (new) |
 | **Terminal** | Step, Scroll Area, `createStickToBottom`, `createVirtualizer`, `ansi-sequence-parser` | `expand`, `collapse`, `copy` | (new) |
@@ -526,7 +526,7 @@ Behavior requirements:
 Behavior requirements:
 
 - **Inline Citation:** the primitive owns its card through `createPopup` with Context Meter's preset (a Popover that also opens on hover and focus, after a hover card's delays), since a citation whose source has no `url` has no link to be a Hover Card's trigger. It opens on hover, focus, and press; `open`/`onOpenChange` reach a web host, and the agent's `open` and `close` act directly.
-- **Document:** `format` is `"markdown"` (the Markdown view), `"code"` (Code Block with `language`) or `"text"` (a wrapped `<pre>`); no HTML, PDF or image previews. `download` appears only when the host supplies `onDownload` (web: `can-download`); the component never fetches or builds a file.
+- **Document:** `format` is `"markdown"` (the Markdown view), `"code"` (Code Block with `language`) or `"text"` (a wrapped `<pre>`); no HTML, PDF or image previews. `download` appears only when the host supplies `onDownload` (web: `can-download`), as one toolbar button per format in `downloads`; the component never fetches or builds a file. The preview stays in the page, clipped to `--kind-document-max-height` in a Scroll Area, and expands to its full height.
 - **Generated Image:** the host's `status` is `generating` (with optional `progress`, 0 to 100, and `preview`, a partial image's URL), `ready` or `error`; once `ready`, the component adds explicit `loading` and `loaded` states from the image's `load` and `error`. The frame keeps the size `width` and `height` give it (as `aspect-ratio`) in every state, so nothing moves when the image arrives. A preview shows blurred under a shimmer; reduced motion drops the shimmer and the blur's transition. The zoom Dialog restores focus on close. `download` appears only when the host supplies `onDownload` (web: `can-download`).
 - **File Tree:** change badges (`added`, `modified`, `deleted`) come from data; `select` calls `onSelect`.
 - **Terminal:** `ansi-sequence-parser` turns ANSI SGR codes into styled spans (never HTML), streaming across chunks: the 16 named colors as `--kind-ansi-*` tokens, 256-color and truecolor, bold, dim, italic, underline, strikethrough, inverse and reset. Every other escape (cursor moves, erase, OSC titles and links) is dropped, never shown or run. A lone `\r` rewrites its line from the start, so a progress bar shows its last state; `\r\n` is a newline. Output follows the end like Conversation. Shows the exit code when present.

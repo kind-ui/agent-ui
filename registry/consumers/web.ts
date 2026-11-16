@@ -7,6 +7,7 @@ import { defineComposer } from "./components/ui/web/composer.js";
 import { defineConfirmation } from "./components/ui/web/confirmation.js";
 import { defineContextMeter } from "./components/ui/web/context-meter.js";
 import { defineConversation } from "./components/ui/web/conversation.js";
+import { defineDocument } from "./components/ui/web/document.js";
 import { defineFeedback } from "./components/ui/web/feedback.js";
 import { defineGuardrailNotice } from "./components/ui/web/guardrail-notice.js";
 import { defineInlineCitation } from "./components/ui/web/inline-citation.js";
@@ -57,6 +58,7 @@ for (const define of [
   defineGuardrailNotice,
   defineSources,
   defineInlineCitation,
+  defineDocument,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -101,6 +103,7 @@ const items = {
   "guardrail-notice": `<kind-guardrail-notice blocking label="Model output withheld" reason="The response included personal data." detail="Policy."></kind-guardrail-notice>`,
   sources: `<kind-sources></kind-sources>`,
   "inline-citation": `<p>Back off on a limit <kind-inline-citation></kind-inline-citation></p>`,
+  document: `<kind-document label="README.md" content="Back off on a 429."></kind-document>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>

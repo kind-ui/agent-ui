@@ -110,6 +110,12 @@ const components = {
       "A marker in running text whose card shows the sources it points to, paging through several.",
     uses: [],
   },
+  document: {
+    title: "Document",
+    description:
+      "A document card with its title, kind and size, copy and download, and a preview that expands.",
+    uses: ["markdown", "code-block", "internal-toolbar", "internal-scroll-area"],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

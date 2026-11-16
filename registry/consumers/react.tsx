@@ -14,6 +14,7 @@ import {
   ConversationRow,
   ConversationViewport,
 } from "./components/ui/conversation.js";
+import { Document } from "./components/ui/document.js";
 import { Feedback } from "./components/ui/feedback.js";
 import { GuardrailNotice } from "./components/ui/guardrail-notice.js";
 import { InlineCitation } from "./components/ui/inline-citation.js";
@@ -158,6 +159,7 @@ const items = {
       />
     </p>
   ),
+  document: <Document label="README.md" content={"# Rate limits\n\nBack off on a 429."} />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
       <ConversationViewport>
