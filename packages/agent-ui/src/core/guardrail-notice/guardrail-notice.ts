@@ -158,8 +158,13 @@ export const guardrailNoticePrimitive: GuardrailNoticePrimitive = definePrimitiv
     const setOpen = (open: boolean, reason: GuardrailNoticeOpenChangeReason = "imperative", event?: Event) =>
       change("open", open, event ? { reason, event } : { reason });
     const hasDetail = () => store.get().detail !== "";
+    const notice = base.api(context);
     return {
-      ...base.api(context),
+      ...notice,
+      // A spread reads the getter once, and `dismiss` is offered only while it can run.
+      get dismiss() {
+        return notice.dismiss;
+      },
       isOpen: () => store.get().open,
       setOpen: (open) => setOpen(open),
       get expand() {

@@ -208,7 +208,7 @@ export const chainOfThoughtPrimitive: ChainOfThoughtPrimitive = definePrimitive<
       );
     const setStepOpen = (id: string, open: boolean, cause: Cause = {}) => {
       const { openSteps, stepsById } = store.get();
-      if (!(id in stepsById) || openSteps.includes(id) === open) return false;
+      if (!Object.hasOwn(stepsById, id) || openSteps.includes(id) === open) return false;
       const changed = setOpenSteps(
         open ? [...openSteps, id] : openSteps.filter((each) => each !== id),
         cause,

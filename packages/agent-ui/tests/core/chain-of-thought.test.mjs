@@ -75,8 +75,10 @@ test("auto open starts from the owner's openSteps of the same update", () => {
 
 test("only a step in the chain opens", () => {
   const chain = chainOfThoughtPrimitive({ steps: [s("a", "complete")] });
-  assert.equal(chain.api.setStepOpen("missing", true), false);
-  assert.equal(chain.api.expandStep("missing"), false);
+  for (const id of ["missing", "constructor", "toString"]) {
+    assert.equal(chain.api.setStepOpen(id, true), false);
+    assert.equal(chain.api.expandStep(id), false);
+  }
   assert.equal(chain.api.expandStep("a"), true);
   assert.equal(chain.api.expandStep("a"), false);
   assert.deepEqual(chain.api.getOpenSteps(), ["a"]);
