@@ -152,8 +152,8 @@ test("the trigger opens the image full size, and Escape returns focus to it", as
 
 test("the grain thins as progress rises and the field drifts at full motion only", async ({ page }) => {
   const frame = () => part(page, "lifecycle", "frame");
-  const grain = () => frame().evaluate((el) => Number(getComputedStyle(el, "::before").opacity));
-  const drift = () => frame().evaluate((el) => getComputedStyle(el).animationName);
+  const grain = () => frame().evaluate((el) => Number(getComputedStyle(el, "::after").opacity));
+  const drift = () => frame().evaluate((el) => getComputedStyle(el, "::before").animationName);
   await open(page);
   await expect(part(page, "lifecycle", "progress")).toHaveText("Creating image40%");
   const early = await grain();

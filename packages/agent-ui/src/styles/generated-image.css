@@ -1,53 +1,34 @@
 /* Generated Image (spec §7): a frame of the image's shape where grain over a drifting field, then over a preview that
    sharpens with progress, denoises into the image, and a dialog that shows it full size. */
-@property --kind-generated-image-drift {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-
-@property --kind-generated-image-glow {
-  syntax: "<percentage>";
-  inherits: false;
-  initial-value: 55%;
-}
-
 @property --kind-generated-image-dissolve {
   syntax: "<number>";
   inherits: false;
   initial-value: 0;
 }
 
+/* The field turns slowly; its layer only transforms, so it never repaints. */
 @keyframes kind-generated-image-drift {
   to {
-    --kind-generated-image-drift: 360deg;
+    rotate: 1turn;
   }
 }
 
-@keyframes kind-generated-image-glow {
+@keyframes kind-generated-image-breathe {
   from {
-    --kind-generated-image-glow: 35%;
+    opacity: 0.65;
   }
 }
 
-/* Film grain: the noise tile jumps between offsets, so it flickers without moving. */
+/* Film grain: the noise layer jumps between offsets within one tile, so it flickers without moving. */
 @keyframes kind-generated-image-grain {
   25% {
-    background-position: 40px 90px;
+    translate: -40px -90px;
   }
   50% {
-    background-position: 110px 30px;
+    translate: -110px -30px;
   }
   75% {
-    background-position: 70px 140px;
-  }
-}
-
-/* The sheen crosses in the first third of each cycle and waits off the frame for the rest. */
-@keyframes kind-generated-image-sheen {
-  30%,
-  100% {
-    background-position: 100% 0;
+    translate: -70px -140px;
   }
 }
 
@@ -69,8 +50,8 @@
     line-height: 1.25rem;
   }
 
-  /* `aspect-ratio` and the width come from the image's `width` and `height`, so every phase takes the same box. While
-     the image is on its way, the frame is a field of the accent that drifts and breathes. */
+  /* `aspect-ratio` and the width come from the image's `width` and `height`, so every phase takes the same box. The
+     outline is an inner border over whatever the frame shows, so a light image keeps its edge against the page. */
   [data-slot="kind-generated-image-frame"] {
     position: relative;
     display: block;
@@ -78,38 +59,49 @@
     max-inline-size: min(100%, var(--kind-generated-image-width));
     overflow: hidden;
     border-radius: var(--kind-radius);
+    outline: 1px solid color-mix(in oklab, var(--kind-color-fg) 10%, transparent);
+    outline-offset: -1px;
     background-color: color-mix(in oklab, var(--kind-color-accent) 6%, var(--kind-color-surface));
 
-    &:where([data-phase="generating"], [data-phase="loading"]) {
-      background-image:
-        radial-gradient(
-          circle at calc(30% + 18% * cos(var(--kind-generated-image-drift)))
-            calc(35% + 14% * sin(var(--kind-generated-image-drift))),
-          color-mix(in oklab, var(--kind-color-accent) var(--kind-generated-image-glow), transparent),
-          transparent 60%
-        ),
-        radial-gradient(
-          circle at calc(72% - 16% * sin(var(--kind-generated-image-drift)))
-            calc(65% + 16% * cos(var(--kind-generated-image-drift))),
-          color-mix(in oklab, var(--kind-color-accent) 30%, var(--kind-color-fg) 12%),
-          transparent 60%
-        ),
-        radial-gradient(
-          circle at calc(55% + 20% * sin(var(--kind-generated-image-drift)))
-            calc(20% - 10% * cos(var(--kind-generated-image-drift))),
-          color-mix(in oklab, var(--kind-color-surface) 70%, transparent),
-          transparent 50%
-        );
-      animation:
-        kind-generated-image-drift 18s linear infinite,
-        kind-generated-image-glow 4s ease-in-out infinite alternate;
-    }
-
-    /* Grain over the field or the preview: heavy at first, thinning as `progress` rises, and gone as the image lands. */
+    /* While the image is on its way: soft fields of the accent, painted once on an oversized layer that turns and
+       breathes. */
     &::before {
       content: "";
       position: absolute;
-      inset: 0;
+      inset: -50%;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(
+          circle at 40% 42%,
+          color-mix(in oklab, var(--kind-color-accent) 55%, transparent),
+          transparent 30%
+        ),
+        radial-gradient(
+          circle at 62% 60%,
+          color-mix(in oklab, var(--kind-color-accent) 35%, transparent),
+          transparent 32%
+        ),
+        radial-gradient(
+          circle at 56% 36%,
+          color-mix(in oklab, var(--kind-color-surface) 70%, transparent),
+          transparent 22%
+        );
+      opacity: 0;
+      transition: opacity var(--kind-generated-image-reveal) var(--kind-ease);
+    }
+    &:where([data-phase="generating"], [data-phase="loading"])::before {
+      opacity: 1;
+      animation:
+        kind-generated-image-drift 18s linear infinite,
+        kind-generated-image-breathe 4s ease-in-out infinite alternate;
+    }
+
+    /* Grain over the field or the preview: heavy at first, thinning as `progress` rises, and gone as the image lands. */
+    &::after {
+      content: "";
+      position: absolute;
+      inset: -160px;
       z-index: 3;
       pointer-events: none;
       background: var(--kind-generated-image-grain) 0 0 / 160px;
@@ -118,31 +110,9 @@
       animation: kind-generated-image-grain 0.5s steps(1) infinite;
       transition: opacity var(--kind-generated-image-reveal) var(--kind-ease);
     }
-    &:where([data-phase="loaded"], [data-phase="error"])::before {
+    &:where([data-phase="loaded"], [data-phase="error"])::after {
       opacity: 0;
       animation: none;
-    }
-
-    /* A sheen now and then while the image is on its way, and an inner border, so a light image keeps its edge. */
-    &::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      z-index: 3;
-      pointer-events: none;
-      border-radius: inherit;
-      box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--kind-color-fg) 10%, transparent);
-    }
-    &:where([data-phase="generating"], [data-phase="loading"])::after {
-      background:
-        linear-gradient(
-          105deg,
-          transparent 40%,
-          color-mix(in oklab, var(--kind-color-surface) 30%, transparent) 50%,
-          transparent 60%
-        )
-        0 0 / 250% 100% no-repeat;
-      animation: kind-generated-image-sheen 5s var(--kind-ease) infinite;
     }
   }
 
@@ -155,14 +125,15 @@
     object-fit: cover;
   }
 
-  /* Blurred and muted at first, sharpening toward 4px and full color as `progress` rises. Scaled up a little, so the
-     blur doesn't fade the edges to the frame's color. */
+  /* Blurred and muted at first, sharpening toward 4px and full color as `progress` rises. It keeps the image's box,
+     so its composition doesn't jump when the image lands; its edges soften into the field like a vignette. */
   [data-slot="kind-generated-image-preview"] {
     z-index: 1;
     filter: blur(calc(24px - 20px * var(--kind-generated-image-resolve, 0)))
       saturate(calc(0.6 + 0.4 * var(--kind-generated-image-resolve, 0)));
     scale: 1.04;
     transition:
+      opacity var(--kind-generated-image-reveal) var(--kind-ease),
       filter var(--kind-generated-image-reveal) var(--kind-ease),
       scale var(--kind-generated-image-reveal) var(--kind-ease);
   }
@@ -216,7 +187,7 @@
     max-inline-size: calc(100% - 20px);
     padding: 2px 8px;
     border-radius: 999px;
-    background-color: color-mix(in oklab, var(--kind-color-surface) 72%, transparent);
+    background-color: color-mix(in oklab, var(--kind-color-surface) 90%, transparent);
     backdrop-filter: blur(8px);
     box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--kind-color-fg) 8%, transparent);
     color: var(--kind-color-fg);
@@ -234,8 +205,10 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    /* As wide as "· 100%", so a new digit never moves the chip's edge. */
     & [data-slot="progress-value"] {
       flex: none;
+      min-inline-size: 7ch;
       color: var(--kind-color-muted);
       font-variant-numeric: tabular-nums;
 
@@ -451,8 +424,7 @@
     white-space: nowrap;
   }
 
-  /* Motion: the field drifts and breathes, the grain flickers and a sheen passes now and then, the preview sharpens
-     with progress, and the image dissolves in; the dialog rises in over a fading backdrop. Reduced motion holds the
+  /* Motion: the field turns and breathes, the grain flickers, the preview sharpens with progress, and the image dissolves in; the dialog rises in over a fading backdrop. Reduced motion holds the
      field and grain still, steps the preview's blur, and only fades the image and dialog, in 120 ms; `none` doesn't
      animate. */
   :where([data-slot="kind-generated-image"]) {
@@ -485,7 +457,6 @@
 
   @media (prefers-reduced-motion: reduce) {
     :where([data-slot="kind-generated-image"][data-motion="auto"]) {
-      & [data-slot="kind-generated-image-frame"],
       & [data-slot="kind-generated-image-frame"]::before,
       & [data-slot="kind-generated-image-frame"]::after {
         animation: none;
@@ -527,7 +498,6 @@
   }
 
   :where([data-slot="kind-generated-image"][data-motion="reduced"]) {
-    & [data-slot="kind-generated-image-frame"],
     & [data-slot="kind-generated-image-frame"]::before,
     & [data-slot="kind-generated-image-frame"]::after {
       animation: none;
@@ -568,7 +538,6 @@
   }
 
   :where([data-slot="kind-generated-image"][data-motion="none"]) {
-    & [data-slot="kind-generated-image-frame"],
     & [data-slot="kind-generated-image-frame"]::before,
     & [data-slot="kind-generated-image-frame"]::after {
       animation: none;

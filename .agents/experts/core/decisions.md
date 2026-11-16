@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `7e7a593` (Wave 4 Task 5 Generated Image)
+Last reviewed: `c8af2be` (Wave 4 Task 5 Generated Image redesign)
 
 ## Settled
 
@@ -68,6 +68,7 @@ Last reviewed: `7e7a593` (Wave 4 Task 5 Generated Image)
 
 ## Resolved
 
+- **Generated Image's `progress` JSDoc said nothing of its absence** (Wave 4 Task 5 redesign): it now says the preview and grain stay where they start and the corner reads "Creating image".
 - **Generated Image's announcements, `defaultOpen` and input checks** (Wave 4 Task 5): a retry that failed again stayed quiet (announcements now fire on each phase change of an image the instance saw generating); `defaultOpen` opened an empty view (it now waits for the first `loaded`); an unknown `status` reads as `"ready"`; a non-finite `progress`, `width` or `height` falls back; `load`/`error` decide the outcome, `naturalWidth` only in `bind`; `onDownload`'s JSDoc says what a rejection does (`tests/core/generated-image.test.mjs`).
 - **Document's download lock, size and JSDoc** (Wave 4 Task 4): the lock is `pending`, the key the agent bridge reads and waits on (it was `downloading`); `documentSize` switches to MB from 999,950 bytes, not "1,000 kB", and counts a lone surrogate as 3 bytes, as `TextEncoder` does; state and types have JSDoc; `document.test.mjs` pins the one-at-a-time download, the refused id, the first-id default and a controlled `open`.
 - **Inline Citation's arrow keys left "N of M" and `next`/`previous` on the old page** (Wave 4 Task 3): a part's `on` handler skips a cancelled event and the Carousel cancels the keydown it pages on, so the page is read on keyup. `syncPage` ignores the controller's `undefined` before a Carousel attaches, and paging returns a boolean. Entries and ids are cached by object in `WeakMap`s, so citations in one paragraph don't evict each other's (`tests/core/inline-citation.test.mjs`).
