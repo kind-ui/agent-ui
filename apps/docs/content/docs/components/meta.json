@@ -6,6 +6,8 @@
     "reasoning",
     "tool",
     "chain-of-thought",
+    "task",
+    "plan",
     "conversation",
     "message",
     "markdown",

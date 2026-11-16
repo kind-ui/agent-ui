@@ -1,0 +1,106 @@
+/* Task and Plan items (spec §7): rows with a status mark, joined into a line, whose height holds as statuses change. */
+@layer components {
+  /* The line joining the items' marks replaces the content's guide line. */
+  :is([data-slot="kind-task-content"], [data-slot="kind-plan-content"]) {
+    border-inline-start-color: transparent;
+  }
+
+  :is([data-slot="kind-task-content"], [data-slot="kind-plan-content"]) > [data-step-part="list"] {
+    margin: 0;
+    padding: 2px 0;
+    list-style: none;
+  }
+
+  [data-step-part="item"] {
+    position: relative;
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    column-gap: 8px;
+    align-items: start;
+    border-radius: calc(var(--kind-radius) / 2);
+    padding: 4px 6px;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--kind-color-fg);
+    transition: background-color var(--kind-duration-fast);
+
+    &:focus-visible {
+      background-color: var(--kind-color-hover);
+      outline: 1.5px solid color-mix(in oklab, var(--kind-color-ring) 50%, transparent);
+      outline-offset: -1.5px;
+    }
+
+    /* Centered on the first line. */
+    & > [data-step-part="icon"] {
+      margin-block: calc(0.5lh - 8px);
+    }
+
+    & > [data-step-part="title"] {
+      overflow: visible;
+      white-space: normal;
+      font-weight: 400;
+      transition: color var(--kind-duration-fast);
+    }
+
+    &:is([data-status="pending"], [data-status="skipped"]) > [data-step-part="title"] {
+      color: var(--kind-color-muted);
+    }
+
+    &[data-status="skipped"] > [data-step-part="title"] {
+      text-decoration: line-through;
+    }
+
+    /* Runs from this item's mark to the next item's, 2px clear of each: the marks center on the item's 4px padding
+       plus half its line, and the list's gap is 2px. */
+    &:not(:last-child)::before {
+      content: "";
+      position: absolute;
+      inset-inline-start: 13.25px;
+      top: calc(4px + 0.5lh + 8px + 2px);
+      bottom: calc(-1 * (2px + 4px + 0.5lh - 8px - 2px));
+      width: 1.5px;
+      background-color: var(--kind-color-border);
+    }
+  }
+
+  [data-step-part="files"],
+  [data-step-part="description"] {
+    grid-column: 2;
+  }
+
+  [data-step-part="files"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding-block: 2px;
+
+    & > code {
+      border: 1px solid var(--kind-color-border);
+      border-radius: calc(var(--kind-radius) / 3);
+      padding: 0 5px;
+      font-family: var(--kind-font-mono);
+      font-size: 0.75rem;
+      line-height: 1.125rem;
+      color: var(--kind-color-muted);
+    }
+  }
+
+  [data-step-part="description"] {
+    font-size: 0.8125rem;
+    line-height: 1.125rem;
+    color: var(--kind-color-muted);
+  }
+
+  /* Open, the running item shows the activity, so the title above it holds still. */
+  :is([data-slot="kind-task"], [data-slot="kind-plan"])[data-open]
+    :is([data-slot="kind-task-title"], [data-slot="kind-plan-title"])[data-status="running"] {
+    color: var(--kind-color-fg);
+    background: none;
+    animation: none;
+  }
+
+  /* Web keeps parts that aren't present in the page, with `hidden`. */
+  :is([data-step-part="files"], [data-step-part="description"])[hidden] {
+    display: none;
+  }
+}

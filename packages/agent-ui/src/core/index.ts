@@ -61,6 +61,15 @@ export {
   nextFollowState,
 } from "./conversation/index.js";
 export type { IndicatorOptions, IndicatorPrimitive, IndicatorState } from "./indicator.js";
+export {
+  type ItemListApi,
+  type ItemListOptions,
+  type ItemListState,
+  type ItemProgress,
+  itemProgress,
+  itemsStatus,
+  type ListItem,
+} from "./item-list.js";
 export { dropRow, type LeavingRow, mergeLeaving } from "./leaving.js";
 export { createListFocus, type ListFocus } from "./list-focus.js";
 export { loaderPrimitive } from "./loader/index.js";
@@ -102,6 +111,13 @@ export {
   reducedKeyframes,
   resolveMotion,
 } from "./motion/index.js";
+export {
+  type PlanApi,
+  type PlanOptions,
+  type PlanPrimitive,
+  type PlanState,
+  planPrimitive,
+} from "./plan/index.js";
 export {
   type ReasoningOptions,
   type ReasoningPrimitive,
@@ -146,6 +162,13 @@ export {
   streamingTextDiff,
   streamingTextPrimitive,
 } from "./streaming-text/index.js";
+export {
+  type TaskApi,
+  type TaskOptions,
+  type TaskPrimitive,
+  type TaskState,
+  taskPrimitive,
+} from "./task/index.js";
 export { thinkingIndicatorPrimitive } from "./thinking-indicator/index.js";
 export {
   approvalLabel,

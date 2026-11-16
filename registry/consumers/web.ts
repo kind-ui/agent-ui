@@ -9,10 +9,12 @@ import { defineLoader } from "./components/ui/web/loader.js";
 import { defineMarkdown } from "./components/ui/web/markdown.js";
 import { defineMarkdownTable } from "./components/ui/web/markdown-table.js";
 import { defineMessage } from "./components/ui/web/message.js";
+import { definePlan } from "./components/ui/web/plan.js";
 import { defineReasoning } from "./components/ui/web/reasoning.js";
 import { defineStatus } from "./components/ui/web/status.js";
 import { defineStep } from "./components/ui/web/step.js";
 import { defineStreamingText } from "./components/ui/web/streaming-text.js";
+import { defineTask } from "./components/ui/web/task.js";
 import { defineThinkingIndicator } from "./components/ui/web/thinking-indicator.js";
 import { defineTool } from "./components/ui/web/tool.js";
 import { defineTypingIndicator } from "./components/ui/web/typing-indicator.js";
@@ -25,6 +27,8 @@ for (const define of [
   defineReasoning,
   defineTool,
   defineChainOfThought,
+  defineTask,
+  definePlan,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -51,6 +55,8 @@ const items = {
   reasoning: `<kind-reasoning status="complete" duration-seconds="3" text="Checked **two** sources." default-open></kind-reasoning>`,
   tool: `<kind-tool default-open></kind-tool>`,
   "chain-of-thought": `<kind-chain-of-thought label="Researching flights" status="complete" default-open></kind-chain-of-thought>`,
+  task: `<kind-task label="Migrating the users table" default-open></kind-task>`,
+  plan: `<kind-plan label="Migration plan" default-open></kind-plan>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>
@@ -108,6 +114,12 @@ Object.assign(main.querySelector("kind-tool") as HTMLElement, {
 });
 Object.assign(main.querySelector("kind-chain-of-thought") as HTMLElement, {
   steps: [{ id: "search", status: "complete", title: "Search flights", durationSeconds: 3 }],
+});
+Object.assign(main.querySelector("kind-task") as HTMLElement, {
+  items: [{ id: "schema", status: "complete", title: "Read the schema", files: ["db/schema.sql"] }],
+});
+Object.assign(main.querySelector("kind-plan") as HTMLElement, {
+  items: [{ id: "audit", status: "complete", title: "Audit the current schema" }],
 });
 Object.assign(main.querySelector("kind-attachments") as HTMLElement, {
   items: [{ id: "notes", name: "notes.md", size: 812, mediaType: "text/markdown" }],

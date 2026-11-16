@@ -24,6 +24,16 @@ const components = {
     description: "A summary of the steps an agent took, which opens into each step's details.",
     uses: [],
   },
+  task: {
+    title: "Task",
+    description: "The steps an agent takes for a task, as it takes them, with how many are done.",
+    uses: [],
+  },
+  plan: {
+    title: "Plan",
+    description: "The steps an agent plans to take, with a progress bar and an Accept button.",
+    uses: [],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

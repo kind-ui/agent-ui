@@ -16,10 +16,12 @@ import { Loader } from "./components/ui/loader.js";
 import { Markdown } from "./components/ui/markdown.js";
 import { MarkdownTable } from "./components/ui/markdown-table.js";
 import { Message, MessageContent, MessageCopy, MessageToolbar } from "./components/ui/message.js";
+import { Plan } from "./components/ui/plan.js";
 import { Reasoning } from "./components/ui/reasoning.js";
 import { Status } from "./components/ui/status.js";
 import { Step, StepContent, StepIcon, StepTitle, StepTrigger } from "./components/ui/step.js";
 import { StreamingText } from "./components/ui/streaming-text.js";
+import { Task } from "./components/ui/task.js";
 import { ThinkingIndicator } from "./components/ui/thinking-indicator.js";
 import { Tool } from "./components/ui/tool.js";
 import { TypingIndicator } from "./components/ui/typing-indicator.js";
@@ -57,6 +59,20 @@ const items = {
       label="Researching flights"
       status="complete"
       steps={[{ id: "search", status: "complete", title: "Search flights", durationSeconds: 3 }]}
+      defaultOpen
+    />
+  ),
+  task: (
+    <Task
+      label="Migrating the users table"
+      items={[{ id: "schema", status: "complete", title: "Read the schema", files: ["db/schema.sql"] }]}
+      defaultOpen
+    />
+  ),
+  plan: (
+    <Plan
+      label="Migration plan"
+      items={[{ id: "audit", status: "complete", title: "Audit the current schema" }]}
       defaultOpen
     />
   ),

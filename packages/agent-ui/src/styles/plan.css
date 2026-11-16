@@ -1,0 +1,88 @@
+/* Plan (spec §7): a UI SDK Progress under the title, and an Accept button at the end. */
+@layer components {
+  /* Aligned with the title: the trigger's 6px padding, the 16px mark and the 8px gap. */
+  [data-step-part="progress"] {
+    padding: 0 6px 4px 30px;
+
+    & [data-slot="progress"] {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    & [data-slot="progress-label"] {
+      order: 1;
+      flex-shrink: 0;
+      font-size: 0.75rem;
+      line-height: 1rem;
+      font-variant-numeric: tabular-nums;
+      color: var(--kind-color-muted);
+    }
+
+    & [data-slot="progress-track"] {
+      flex: 1;
+      height: 4px;
+      overflow: hidden;
+      border-radius: 999px;
+      background-color: var(--kind-color-border);
+    }
+
+    /* UI SDK Progress writes the fill's width inline; a `scale` fill would squash its rounded ends. */
+    & [data-slot="progress-indicator"] {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background-color: var(--kind-color-accent);
+      transition:
+        width var(--kind-duration-panel) var(--kind-ease),
+        background-color var(--kind-duration-base);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-step-part="progress"] [data-slot="progress-indicator"] {
+      transition: none;
+    }
+  }
+
+  [data-step-part="progress"]:is([data-motion="reduced"], [data-motion="none"])
+    [data-slot="progress-indicator"] {
+    transition: none;
+  }
+
+  [data-step-part="root"][data-status="complete"]
+    > [data-step-part="progress"]
+    [data-slot="progress-indicator"] {
+    background-color: var(--kind-color-success);
+  }
+
+  [data-step-part="accept"] {
+    align-self: flex-start;
+    margin: 4px 0 2px 30px;
+    border-radius: calc(var(--kind-radius) / 2);
+    padding: 4px 10px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    background-color: var(--kind-color-accent);
+    color: var(--kind-color-on-accent);
+    transition:
+      background-color var(--kind-duration-fast),
+      opacity var(--kind-duration-fast);
+
+    &:hover {
+      background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-fg));
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+    &[aria-disabled="true"] {
+      opacity: 0.6;
+      cursor: default;
+    }
+    &[hidden] {
+      display: none;
+    }
+  }
+}
