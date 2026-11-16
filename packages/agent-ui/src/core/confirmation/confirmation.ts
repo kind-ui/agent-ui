@@ -1,15 +1,14 @@
 import {
   type ActionDetails,
   announce,
-  type ChangeSource,
   createFocusRecovery,
   definePrimitive,
-  dispatch,
   type SlotDefinition,
 } from "@ui-sdk/core";
 import { createInputController, type InputController } from "@ui-sdk/core/input";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { Approval, StepStatus } from "../../types/index.js";
+import { actionSource } from "../action-source.js";
 import { approvalKey, approvalLabel, isActionable } from "../approval.js";
 import { memo } from "../memo.js";
 import { cancel, enter, exit, type MotionMode } from "../motion/index.js";
@@ -194,20 +193,6 @@ const choiceAttrs = (state: ConfirmationState, choice: "approve" | "deny") => ({
   "data-pending": state.pressed === choice ? "" : undefined,
 });
 
-// `dispatch` is UI SDK's public way to learn who caused a call, an agent's act included, but it drops the
-// callback's return value, which the pending lock needs, so it reports to a callback of its own.
-const sourceOf = (event: Event | undefined): ChangeSource => {
-  let source: ChangeSource = "programmatic";
-  const report = (_value: unknown, details: ActionDetails) => {
-    source = details.source;
-  };
-  dispatch({ options: () => ({ onDecide: report }) }, "onDecide", undefined, {
-    reason: "decision-press",
-    ...(event && { event }),
-  });
-  return source;
-};
-
 export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
   ConfirmationOptions,
   ConfirmationState,
@@ -283,7 +268,7 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
         generation: approval.generation,
         ...(reason && { reason }),
       };
-      const details = { source: sourceOf(event) };
+      const details = { source: actionSource(event, "decision-press") };
       const asked = reported;
       // Before the call, so a host that reports back inside it clears the mark.
       store.set({ pressed: choice });

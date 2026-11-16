@@ -131,6 +131,21 @@ export {
   planPrimitive,
 } from "./plan/index.js";
 export {
+  answerText,
+  applyAnswer,
+  missingAnswers,
+  type QuestionApi,
+  type QuestionCallback,
+  type QuestionChoicesState,
+  type QuestionOptions,
+  type QuestionPrimitive,
+  type QuestionState,
+  type QuestionSummaryItem,
+  type QuestionTextState,
+  type QuestionValueChangeReason,
+  questionPrimitive,
+} from "./question/index.js";
+export {
   type QueueApi,
   type QueueOptions,
   type QueuePrimitive,

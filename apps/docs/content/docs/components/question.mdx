@@ -1,0 +1,106 @@
+---
+title: Question
+description: Ask a person one question or several, by choice or in their own words, and keep their answers in view.
+---
+
+import QuestionExample from "@/examples/question/basic";
+
+Use a question when the agent needs facts only a person has before it goes on, like where to deploy or which checks to run. Every question is a fieldset in one form with one **Submit**, and once the host records the answers, they take the form's place.
+
+<Example caption="Choose where to deploy, pick any checks and add a note, then press Submit. The form gives way to your answers.">
+  <QuestionExample />
+
+  <include cwd lang="tsx">./examples/question/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/question
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/question-web
+```
+
+## Composition
+
+```text
+Question
+├── QuestionItem
+│   ├── QuestionPrompt
+│   ├── QuestionChoices
+│   └── QuestionText
+├── QuestionActions
+│   ├── QuestionSubmit
+│   ├── QuestionSkip
+│   ├── QuestionStatus
+│   │   └── QuestionStatusIcon
+│   └── QuestionError
+└── QuestionSummary
+    └── QuestionSummaryIcon
+```
+
+`Question` renders these parts when you pass no children: a form named by its `label`, with a `QuestionItem` for each of the `questions`. Each item is a group named by its `QuestionPrompt`, holding UI SDK's radio group for a single choice, its checkbox group for a multiple choice, or a text box. `QuestionSubmit` and `QuestionSkip` are native buttons, and `QuestionStatus` or `QuestionError` sits beside them. `QuestionSummary` replaces the form once the answers are recorded.
+
+## Usage
+
+### Questions
+
+Pass `questions`, each with an `id`, a `prompt` and a `kind` of `single`, `multiple` or `text`. Choice questions take `options` with a `value`, a `label` and an optional `description`; a text question takes a `placeholder`. Mark a question `required` and its prompt reads "Required".
+
+```tsx
+<Question
+  label="Deploy questions"
+  questions={[
+    {
+      id: "env",
+      prompt: "Where should it deploy?",
+      kind: "single",
+      required: true,
+      options: [
+        { value: "staging", label: "Staging" },
+        { value: "prod", label: "Production" },
+      ],
+    },
+    { id: "notes", prompt: "Anything else?", kind: "text" },
+  ]}
+  onSubmit={(answers) => send(answers)}
+/>
+```
+
+Answers are keyed by question id: an option's value for a single choice, a list of values for a multiple one, and the text for a text question. Pass `value` and `onValueChange` to own them, or `defaultValue` to start with some.
+
+### Keyboard
+
+Each choice group is one Tab stop: the arrow keys move between radios and check them, and Space checks a checkbox. Enter on a choice submits the form, as it does in any form. In a text box, Enter adds a line and never submits.
+
+### Submitting
+
+Pass `onSubmit` to show **Submit**. It's disabled until every required question has an answer: a choice, or text that isn't blank. A press locks the form at once, so a second press, even on **Skip**, calls nothing, and "Sending answers" shows beside the buttons. Return a promise to hold the lock until it settles. A rejection unlocks the form, keeps every answer, and shows "Answers not sent. Try again."; screen readers hear "Answers not sent".
+
+Pass `onSkip` to show **Skip**, which calls it with the answers so far.
+
+### Recorded Answers
+
+Once the host has the answers, pass them back as `submitted`. The summary takes the form's place: "Answered" with each question and its answer, or "Skipped" when `submitted` holds none. Until `submitted` is set, a form whose call resolved stays locked. Screen readers hear "Answered" or "Skipped", and if **Submit** had focus, focus moves to the summary.
+
+A new set of questions unlocks the form, and a late result for the old ones changes nothing.
+
+### Motion
+
+Questions added after the form appears fade up, the summary fades in, and the radio and checkbox marks scale in. Under `prefers-reduced-motion`, or with `motion="reduced"`, these only fade, over 120 ms, and with `motion="none"` they change at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/question/question.ts" name="QuestionOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the question by its label and reads its answers. It can `select` an option or `setText` for a question it names by id or prompt, and an unknown question is refused. It can `submit` once every required question has an answer, and `skip` while **Skip** shows. While `agentConfirm` is on, every action waits for a person to confirm, unless the host's `allow` lets it through.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/question/question.ts" name="QuestionAgentActions" type='Pick<QuestionApi, "select" | "setText" | "submit" | "skip">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-question>`, `questions`, `value`, `defaultValue` and `submitted` are properties, and other props are kebab-case attributes, so `submitLabel` is `submit-label`. Submit and Skip need the `can-submit` and `can-skip` attributes and fire `questionsubmit` and `skip` with the answers as `detail.value`: call `event.detail.waitUntil(promise)` to keep the form locked. The element fills in its form when it has no children.
+</Caption>

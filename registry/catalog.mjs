@@ -49,6 +49,12 @@ const components = {
     description: "Approve or deny an agent's request, with an optional reason, then the recorded outcome.",
     uses: ["internal-textarea"],
   },
+  question: {
+    title: "Question",
+    description:
+      "Single choice, multiple choice and free text questions in one form, then the recorded answers.",
+    uses: ["internal-radio", "internal-checkbox", "internal-textarea"],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",
@@ -98,10 +104,12 @@ const components = {
 const internals = [
   "avatar",
   "button",
+  "checkbox",
   "collapsible",
   "file-input",
   "menu",
   "progress",
+  "radio",
   "scroll-area",
   "textarea",
   "toggle",

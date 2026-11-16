@@ -18,6 +18,7 @@ import { Markdown } from "./components/ui/markdown.js";
 import { MarkdownTable } from "./components/ui/markdown-table.js";
 import { Message, MessageContent, MessageCopy, MessageToolbar } from "./components/ui/message.js";
 import { Plan } from "./components/ui/plan.js";
+import { Question } from "./components/ui/question.js";
 import { Queue } from "./components/ui/queue.js";
 import { Reasoning } from "./components/ui/reasoning.js";
 import { Status } from "./components/ui/status.js";
@@ -92,6 +93,24 @@ const items = {
       onApprove={() => {}}
       onDeny={() => {}}
       reason
+    />
+  ),
+  question: (
+    <Question
+      label="Deploy questions"
+      questions={[
+        {
+          id: "env",
+          prompt: "Where should it deploy?",
+          kind: "single",
+          required: true,
+          options: [
+            { value: "staging", label: "Staging" },
+            { value: "prod", label: "Production" },
+          ],
+        },
+      ]}
+      onSubmit={() => {}}
     />
   ),
   conversation: (

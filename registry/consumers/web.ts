@@ -11,6 +11,7 @@ import { defineMarkdown } from "./components/ui/web/markdown.js";
 import { defineMarkdownTable } from "./components/ui/web/markdown-table.js";
 import { defineMessage } from "./components/ui/web/message.js";
 import { definePlan } from "./components/ui/web/plan.js";
+import { defineQuestion } from "./components/ui/web/question.js";
 import { defineQueue } from "./components/ui/web/queue.js";
 import { defineReasoning } from "./components/ui/web/reasoning.js";
 import { defineStatus } from "./components/ui/web/status.js";
@@ -35,6 +36,7 @@ for (const define of [
   defineSubagent,
   defineQueue,
   defineConfirmation,
+  defineQuestion,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -68,6 +70,7 @@ const items = {
     </kind-subagent>`,
   queue: `<kind-queue label="Queue"></kind-queue>`,
   confirmation: `<kind-confirmation label="Run search_docs?" can-approve can-deny reason></kind-confirmation>`,
+  question: `<kind-question label="Deploy questions" can-submit></kind-question>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>
@@ -125,6 +128,20 @@ Object.assign(main.querySelector("kind-tool") as HTMLElement, {
 });
 Object.assign(main.querySelector("kind-confirmation") as HTMLElement, {
   approval: { approvalId: "a1", generation: 1, state: "requested" },
+});
+Object.assign(main.querySelector("kind-question") as HTMLElement, {
+  questions: [
+    {
+      id: "env",
+      prompt: "Where should it deploy?",
+      kind: "single",
+      required: true,
+      options: [
+        { value: "staging", label: "Staging" },
+        { value: "prod", label: "Production" },
+      ],
+    },
+  ],
 });
 Object.assign(main.querySelector("kind-chain-of-thought") as HTMLElement, {
   steps: [{ id: "search", status: "complete", title: "Search flights", durationSeconds: 3 }],
