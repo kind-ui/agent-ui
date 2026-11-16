@@ -43,9 +43,10 @@ test("the sidebar has a Showcase section with one live example per page", () => 
     assert.match(source, /^---\ntitle: .+\ndescription: .+\n---\n/, name);
     assert.ok(source.includes(`import ${component} from "@/examples/showcase/${name}";`), name);
     assert.equal(source.match(/<Example /g)?.length, 1, name);
-    assert.ok(
-      source.includes(
-        `">\n  <${component} />\n\n  <include cwd lang="tsx">./examples/showcase/${name}.tsx</include>\n</Example>`,
+    assert.match(
+      source,
+      new RegExp(
+        `<Example caption=".+">\\n {2}<${component} />\\n\\n {2}<include cwd lang="tsx">\\./examples/showcase/${name}\\.tsx</include>\\n</Example>`,
       ),
       name,
     );
