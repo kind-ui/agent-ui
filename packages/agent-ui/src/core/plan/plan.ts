@@ -10,6 +10,7 @@ import {
   itemList,
   ownItem,
 } from "../item-list.js";
+import { createPendingAction } from "../pending.js";
 
 export type PlanOptions = ItemListOptions<PlanItem> & {
   /**
@@ -86,19 +87,10 @@ export const planPrimitive: PlanPrimitive = definePrimitive<PlanOptions, PlanSta
   sync: (options) => ({ ...list.sync(options), ...presentation(options) }),
   api: (context) => {
     const { store } = context;
-    let destroyed = false;
-    context.onDestroy(() => {
-      destroyed = true;
-    });
+    const pendingAccept = createPendingAction(context, { state: "pending" });
     const accept = () => {
       const { onAccept } = context.options();
-      if (!onAccept || store.get().pending) return;
-      store.set({ pending: true });
-      const settle = () => {
-        if (!destroyed) store.set({ pending: false });
-      };
-      // A host that throws gets Accept back, as one that rejects does.
-      new Promise((resolve) => resolve(onAccept())).then(settle, settle);
+      if (onAccept) pendingAccept.run(onAccept);
     };
     return {
       ...list.api(context),

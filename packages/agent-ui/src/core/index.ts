@@ -1,3 +1,4 @@
+export { approvalKey, approvalLabel, isActionable } from "./approval.js";
 export {
   ATTACHMENT_ERRORS,
   type AttachmentItem,
@@ -111,6 +112,7 @@ export {
   reducedKeyframes,
   resolveMotion,
 } from "./motion/index.js";
+export { createPendingAction, type PendingAction, type PendingActionOptions } from "./pending.js";
 export {
   type PlanApi,
   type PlanOptions,
@@ -193,7 +195,6 @@ export {
 } from "./task/index.js";
 export { thinkingIndicatorPrimitive } from "./thinking-indicator/index.js";
 export {
-  approvalLabel,
   type ToolApi,
   type ToolOptions,
   type ToolPrimitive,

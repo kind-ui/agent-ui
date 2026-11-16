@@ -58,6 +58,20 @@ An agent connected with `createAgent` reads the list's `items`. While `onRemove`
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/attachments/attachments.ts" name="AttachmentsAgentActions" type='Pick<AttachmentsApi, "remove">' />
 
+Removing doesn't wait for a person to confirm, since a removed file can be attached again. To ask the person first, return their answer from your `allow`, which also answers every action that does need a person:
+
+```ts
+import { createAgent } from "@ui-sdk/react/agent";
+
+const agent = createAgent({
+  allow: ({ component, action, confirm }) => {
+    if (confirm) return window.confirm(confirm);
+    if (component === "kind-attachments") return window.confirm(`Let the agent ${action} an attachment?`);
+    return true;
+  },
+});
+```
+
 <Caption>
   Runs in React and Web Components. On `<kind-attachments>`, `items` is a property and `motion` an attribute. Removal needs the `can-remove` attribute, and each removal fires `remove` with the item's `id`.
 </Caption>

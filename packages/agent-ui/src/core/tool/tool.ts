@@ -1,10 +1,11 @@
 import { definePrimitive, type SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { type Approval, hasOutput, type StepStatus, type ToolCall } from "../../types/index.js";
+import { approvalLabel } from "../approval.js";
 import { createCopy } from "../clipboard.js";
 import type { Highlight } from "../code-block/index.js";
 import { type StepApi, type StepOptions, type StepState, stepAnnouncement, stepBase } from "../step/base.js";
-import { approvalLabel, toolCode, toolStatus, toolValue } from "./format.js";
+import { toolCode, toolStatus, toolValue } from "./format.js";
 
 export type ToolOptions = Omit<StepOptions, "status" | "label"> & {
   /** The call to show, from the host. Update it as its input streams, its approval moves and its output arrives. */
