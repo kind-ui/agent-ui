@@ -88,7 +88,11 @@ export interface FileTreeEntry {
   /** Relative and `/`-separated, like `src/index.ts`. A path ending in `/` is an empty folder. */
   path: string;
   /** How the change being shown touched the file, shown as a badge. */
-  change?: "added" | "modified" | "deleted";
+  change?: "added" | "modified" | "deleted" | "renamed";
+  /** Lines the change added, shown as `+N`. */
+  additions?: number;
+  /** Lines the change removed, shown as `−N`. */
+  deletions?: number;
 }
 
 /** One line of a stack trace. `raw` is the line as written; the rest is what could be read from it. */

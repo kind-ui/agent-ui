@@ -1,6 +1,7 @@
 export type {
   Answers,
   Approval,
+  FileTreeEntry,
   Message,
   MessageStatus,
   ModelOption,

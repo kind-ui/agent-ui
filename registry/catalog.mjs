@@ -122,6 +122,11 @@ const components = {
       "An image the agent is making, from progress and a blurred preview to the image, which opens full size.",
     uses: [],
   },
+  "file-tree": {
+    title: "File Tree",
+    description: "Changed files as a folder tree, each with its change and the lines it added and removed.",
+    uses: ["internal-tree"],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",
@@ -187,6 +192,7 @@ const internals = [
   "token-input",
   "toolbar",
   "tooltip",
+  "tree",
   "trigger-menu",
 ];
 

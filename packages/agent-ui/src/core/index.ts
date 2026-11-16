@@ -119,6 +119,19 @@ export {
   feedbackPrimitive,
 } from "./feedback/index.js";
 export {
+  type FileTreeApi,
+  type FileTreeChange,
+  type FileTreeExpandedChangeReason,
+  type FileTreeOptions,
+  type FileTreePrimitive,
+  type FileTreeRow,
+  type FileTreeSelectReason,
+  type FileTreeState,
+  type FileTreeTreeState,
+  type FileTreeValueChangeReason,
+  fileTreePrimitive,
+} from "./file-tree/index.js";
+export {
   type GeneratedImageApi,
   type GeneratedImageDownloadDetails,
   type GeneratedImageOptions,

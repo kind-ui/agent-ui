@@ -38,7 +38,6 @@ Last reviewed: `7e7a593` (Wave 4 Task 5 Generated Image)
 - **`ansi-sequence-parser` applies a sequence's resets before its sets** (Wave 4 Task 1), so `ESC[33;0m` stays yellow where a terminal resets; splitting SGR into one parameter per sequence would fix it.
 - **SGR 8 (concealed) shows as normal text** (Wave 4 Task 1): D2's list leaves it out; a Terminal showing secrets would need it.
 - **`createAnsiLines` scans the whole output with `startsWith` and copies the line array per update, and an unterminated OSC holds every later chunk back and rescans it** (Wave 4 Task 1): Task 7's render budgets should measure it.
-- **`pathItems` gives a folder and a file the same value for `src` and `src/a.ts`** (Wave 4 Task 1): a host error File Tree should refuse or merge.
 - **A blocking Guardrail Notice added after load may be read twice** (Wave 3 Task 10): it's `role="alert"` and announces its title assertively, both as the plan asks. Not checked with a screen reader.
 - **Notice's `nearestTabStop` misses shadow roots and scrollable regions** (Wave 3 Task 10): it reads `tabIndex` over the light DOM, since UI SDK's `nextTabbable` isn't exported; ask upstream to export it.
 - **A notice that mounts in a background tab before its first paint isn't announced** (Wave 3 Task 10): first contentful paint waits for the tab to show.
@@ -68,6 +67,7 @@ Last reviewed: `7e7a593` (Wave 4 Task 5 Generated Image)
 
 ## Resolved
 
+- **`pathItems` gave a folder and a file the same value for `src` and `src/a.ts`** (Wave 4 Task 1): fixed in Task 6; a file whose path is also a folder of another entry is left out, so the folder holds the other entries (`tree.test.mjs`).
 - **Generated Image's announcements, `defaultOpen` and input checks** (Wave 4 Task 5): a retry that failed again stayed quiet (announcements now fire on each phase change of an image the instance saw generating); `defaultOpen` opened an empty view (it now waits for the first `loaded`); an unknown `status` reads as `"ready"`; a non-finite `progress`, `width` or `height` falls back; `load`/`error` decide the outcome, `naturalWidth` only in `bind`; `onDownload`'s JSDoc says what a rejection does (`tests/core/generated-image.test.mjs`).
 - **Document's download lock, size and JSDoc** (Wave 4 Task 4): the lock is `pending`, the key the agent bridge reads and waits on (it was `downloading`); `documentSize` switches to MB from 999,950 bytes, not "1,000 kB", and counts a lone surrogate as 3 bytes, as `TextEncoder` does; state and types have JSDoc; `document.test.mjs` pins the one-at-a-time download, the refused id, the first-id default and a controlled `open`.
 - **Inline Citation's arrow keys left "N of M" and `next`/`previous` on the old page** (Wave 4 Task 3): a part's `on` handler skips a cancelled event and the Carousel cancels the keydown it pages on, so the page is read on keyup. `syncPage` ignores the controller's `undefined` before a Carousel attaches, and paging returns a boolean. Entries and ids are cached by object in `WeakMap`s, so citations in one paragraph don't evict each other's (`tests/core/inline-citation.test.mjs`).

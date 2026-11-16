@@ -1,0 +1,184 @@
+/* File Tree (spec §7): changed files as a folder tree, each file with its change badge and line counts, each folder
+   with a dot for the most significant change inside it. Rows are UI SDK Tree rows, styled by the internal Tree. */
+@layer components {
+  [data-file-tree-part="root"] {
+    /* Lucide "file", "folder" and "folder-open", see THIRD_PARTY_NOTICES.md. */
+    --kind-file-tree-file-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z'/%3E%3Cpath d='M14 2v5a1 1 0 0 0 1 1h5'/%3E%3C/svg%3E");
+    --kind-file-tree-folder-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z'/%3E%3C/svg%3E");
+    --kind-file-tree-folder-open-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E");
+
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--kind-color-fg);
+  }
+
+  /* A press on the arrow lands on its row, which opens a folder too: UI SDK's indicator cancels its own click, which
+     the root then couldn't hear. A file's indicator is an empty spacer. */
+  [data-file-tree-part="root"] [data-slot="tree-indicator"] {
+    pointer-events: none;
+
+    & svg {
+      transition: rotate var(--kind-duration-base) var(--kind-ease);
+    }
+  }
+
+  [data-file-tree-part="item"] {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+    gap: 6px;
+
+    /* The file or folder glyph; an open folder shows open. */
+    &::before {
+      content: "";
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      background-color: var(--kind-color-muted);
+      mask: var(--kind-file-tree-file-icon) center / contain no-repeat;
+    }
+    &[data-kind="folder"]::before {
+      mask-image: var(--kind-file-tree-folder-icon);
+    }
+    &[data-kind="folder"]:where([data-expanded] > *)::before {
+      mask-image: var(--kind-file-tree-folder-open-icon);
+    }
+
+    /* A folder's dot, in the color of the most significant change inside it. */
+    &[data-kind="folder"][data-change]::after {
+      content: "";
+      flex-shrink: 0;
+      width: 6px;
+      height: 6px;
+      /* Centered on the badges' column. */
+      margin-inline: 6px;
+      border-radius: 9999px;
+      background-color: var(--kind-file-tree-change);
+    }
+  }
+
+  :is([data-file-tree-part="item"], [data-file-tree-part="badge"]) {
+    &[data-change="added"] {
+      --kind-file-tree-change: var(--kind-color-success);
+    }
+    &[data-change="modified"] {
+      --kind-file-tree-change: var(--kind-color-warning);
+    }
+    &[data-change="deleted"] {
+      --kind-file-tree-change: var(--kind-color-danger);
+    }
+    &[data-change="renamed"] {
+      --kind-file-tree-change: var(--kind-color-accent);
+    }
+  }
+
+  [data-file-tree-name] {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &:where([data-kind="file"][data-change="deleted"] > *) {
+      color: var(--kind-color-muted);
+      text-decoration: line-through;
+      text-decoration-color: color-mix(in oklab, currentColor 50%, transparent);
+    }
+  }
+
+  /* The counts and the badge letter are generated content, so a row's visible text is its name, which its accessible
+     name starts with; the parts' labels give the words. Status colors mix toward the text color, so small text keeps
+     its contrast in light and dark. */
+  [data-file-tree-part="counts"] {
+    display: inline-flex;
+    flex-shrink: 0;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+
+    &[data-additions]::before {
+      content: attr(data-additions);
+      color: color-mix(in oklab, var(--kind-color-success) 55%, var(--kind-color-fg));
+    }
+    &[data-deletions]::after {
+      content: attr(data-deletions);
+      color: color-mix(in oklab, var(--kind-color-danger) 60%, var(--kind-color-fg));
+    }
+  }
+
+  [data-file-tree-part="badge"] {
+    display: inline-flex;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    align-items: center;
+    justify-content: center;
+    border-radius: calc(var(--kind-radius) / 3);
+    background-color: color-mix(in oklab, var(--kind-file-tree-change) 14%, transparent);
+    color: color-mix(in oklab, var(--kind-file-tree-change) 55%, var(--kind-color-fg));
+    font-family: var(--kind-font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1;
+
+    &::before {
+      content: attr(data-letter);
+    }
+  }
+
+  /* Folders open and close by height at full motion, fade under reduced motion, and switch at once with "none". */
+  [data-file-tree-part="root"] [data-slot="tree-group"] {
+    height: var(--tree-group-height);
+    overflow: hidden;
+    transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    [data-file-tree-part="root"][data-motion="auto"] [data-slot="tree-group"] {
+      transition:
+        height var(--kind-duration-panel) var(--kind-ease),
+        opacity var(--kind-duration-base) var(--kind-ease-out);
+
+      &:is([data-starting-style], [data-ending-style]) {
+        height: 0;
+      }
+    }
+  }
+
+  [data-file-tree-part="root"][data-motion="reduced"] [data-slot="tree-group"] {
+    transition-duration: var(--kind-duration-reduced);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-file-tree-part="root"] [data-slot="tree-group"] {
+      transition-duration: var(--kind-duration-reduced);
+    }
+    [data-file-tree-part="root"] [data-slot="tree-indicator"] svg {
+      transition: none;
+    }
+  }
+
+  [data-file-tree-part="root"]:is([data-motion="reduced"], [data-motion="none"])
+    [data-slot="tree-indicator"]
+    svg,
+  [data-file-tree-part="root"][data-motion="none"] [data-slot="tree-group"] {
+    transition: none;
+  }
+
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    [data-file-tree-part="item"]::before,
+    [data-file-tree-part="item"][data-kind="folder"][data-change]::after {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+    }
+    [data-file-tree-part="badge"] {
+      border: 1px solid CanvasText;
+    }
+  }
+}
