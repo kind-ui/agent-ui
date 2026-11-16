@@ -1,0 +1,256 @@
+/* Checkpoint (spec §7): a quiet divider in the conversation, with Restore at its end and a dialog that asks first. */
+@layer components {
+  [data-slot="kind-checkpoint"] {
+    /* Lucide "rotate-ccw", see THIRD_PARTY_NOTICES.md. */
+    --kind-checkpoint-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8'/%3E%3Cpath d='M3 3v5h5'/%3E%3C/svg%3E");
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Restore and "Restored" share this height, so swapping them moves nothing. */
+    min-height: 1.5rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--kind-color-muted);
+  }
+
+  [data-slot="kind-checkpoint-label"] {
+    flex-shrink: 0;
+    font-weight: 500;
+    color: var(--kind-color-fg);
+  }
+
+  [data-slot="kind-checkpoint-description"] {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  [data-slot="kind-checkpoint-line"] {
+    flex: 1;
+    min-width: 1.5rem;
+    height: 1px;
+    background-color: var(--kind-color-border);
+  }
+
+  [data-slot="kind-checkpoint-restore"] {
+    display: contents;
+  }
+
+  :where([data-slot="kind-checkpoint"]) [data-checkpoint-trigger] {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--kind-radius) / 2);
+    background-color: transparent;
+    color: var(--kind-color-muted);
+    transition:
+      background-color var(--kind-duration-fast),
+      color var(--kind-duration-fast);
+
+    &::before {
+      content: "";
+      width: 14px;
+      height: 14px;
+      background-color: currentColor;
+      mask: var(--kind-checkpoint-icon) center / contain no-repeat;
+    }
+    &:hover,
+    &[data-open] {
+      background-color: var(--kind-color-hover);
+      color: var(--kind-color-fg);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  [data-slot="kind-checkpoint-restored"] {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 6px;
+    height: 1.5rem;
+    border-radius: calc(var(--kind-radius) / 2);
+
+    & [data-status-mark] {
+      width: 14px;
+      height: 14px;
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  /* The dialog's answers: the error, then Cancel and Restore, in one row of one height. */
+  :where([data-slot="kind-checkpoint"]) [data-checkpoint-answers] {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    min-height: 2rem;
+    margin-top: 12px;
+  }
+
+  [data-slot="kind-checkpoint-error"] {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.75rem;
+    /* Two lines still fit the row, on a narrow screen. */
+    line-height: 1rem;
+    color: var(--kind-color-danger);
+  }
+
+  :is([data-slot="kind-checkpoint-cancel"], [data-slot="kind-checkpoint-confirm"]) {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    height: 2rem;
+    padding-inline: 14px;
+    border: 1px solid transparent;
+    border-radius: calc(var(--kind-radius) / 2);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    transition:
+      background-color var(--kind-duration-fast),
+      opacity var(--kind-duration-fast);
+
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+    &[aria-disabled="true"] {
+      cursor: default;
+    }
+    &[aria-disabled="true"]:not([data-pending]) {
+      opacity: 0.5;
+    }
+    &[data-pending] {
+      cursor: progress;
+    }
+  }
+
+  [data-slot="kind-checkpoint-cancel"] {
+    border-color: var(--kind-color-border);
+    background-color: var(--kind-color-surface);
+    color: var(--kind-color-fg);
+
+    &:hover:not([aria-disabled="true"]) {
+      background-color: var(--kind-color-hover);
+    }
+  }
+
+  /* Restoring discards work, so the answer that agrees reads as a warning. */
+  [data-slot="kind-checkpoint-confirm"] {
+    background-color: var(--kind-color-danger);
+    color: var(--kind-color-on-status);
+
+    &:hover:not([aria-disabled="true"]) {
+      background-color: color-mix(in oklab, var(--kind-color-danger) 88%, var(--kind-color-fg));
+    }
+  }
+
+  /* Motion: the dialog rises and fades in, and the backdrop and tooltip fade. Reduced motion only fades, in 120 ms;
+     `none` doesn't animate. */
+  :where([data-slot="kind-checkpoint"]) {
+    & [data-slot="alert-dialog-content"] {
+      transition:
+        opacity var(--kind-duration-base) var(--kind-ease),
+        translate var(--kind-duration-base) var(--kind-ease),
+        scale var(--kind-duration-base) var(--kind-ease);
+
+      &:is([data-starting-style], [data-ending-style]) {
+        opacity: 0;
+        translate: 0 8px;
+        scale: 0.98;
+      }
+      &[data-ending-style] {
+        transition-duration: var(--kind-duration-fast);
+      }
+    }
+    & [data-slot="alert-dialog-backdrop"] {
+      transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+
+      &:is([data-starting-style], [data-ending-style]) {
+        opacity: 0;
+      }
+      &[data-ending-style] {
+        transition-duration: var(--kind-duration-fast);
+      }
+    }
+    & [data-slot="tooltip-content"] {
+      transition:
+        opacity var(--kind-duration-fast) var(--kind-ease-out),
+        scale var(--kind-duration-fast) var(--kind-ease-out);
+
+      &:is([data-starting-style], [data-ending-style]) {
+        opacity: 0;
+        scale: 0.96;
+      }
+      &[data-instant] {
+        transition: none;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-slot="kind-checkpoint"][data-motion="auto"])
+      :is(
+        [data-slot="alert-dialog-content"],
+        [data-slot="alert-dialog-backdrop"],
+        [data-slot="tooltip-content"]
+      ) {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+      &:is([data-starting-style], [data-ending-style]) {
+        translate: none;
+        scale: none;
+        transition-duration: var(--kind-duration-reduced);
+      }
+    }
+  }
+
+  :where([data-slot="kind-checkpoint"][data-motion="reduced"])
+    :is(
+      [data-slot="alert-dialog-content"],
+      [data-slot="alert-dialog-backdrop"],
+      [data-slot="tooltip-content"]
+    ) {
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      translate: none;
+      scale: none;
+      transition-duration: var(--kind-duration-reduced);
+    }
+  }
+
+  :where([data-slot="kind-checkpoint"][data-motion="none"])
+    :is(
+      [data-slot="alert-dialog-content"],
+      [data-slot="alert-dialog-backdrop"],
+      [data-slot="tooltip-content"],
+      [data-checkpoint-trigger],
+      [data-slot="kind-checkpoint-cancel"],
+      [data-slot="kind-checkpoint-confirm"]
+    ) {
+    transition: none;
+  }
+
+  :is(
+    [data-slot="kind-checkpoint-description"],
+    [data-slot="kind-checkpoint-restore"],
+    [data-slot="kind-checkpoint-restored"],
+    [data-slot="kind-checkpoint-error"]
+  )[hidden] {
+    display: none;
+  }
+}

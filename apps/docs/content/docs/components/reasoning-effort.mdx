@@ -1,0 +1,76 @@
+---
+title: Reasoning Effort
+description: Let people choose how hard the model thinks before it answers.
+---
+
+import ReasoningEffortExample from "@/examples/reasoning-effort/basic";
+
+Use reasoning effort beside a [Model Selector](/docs/components/model-selector) when the model can trade speed for more thinking. It's a row of levels, Low, Medium and High by default, with a mark that slides to the chosen one.
+
+<Example caption="Press High, or focus the levels and press the arrow keys. The mark slides to the level you choose.">
+  <ReasoningEffortExample />
+
+  <include cwd lang="tsx">./examples/reasoning-effort/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/reasoning-effort
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/reasoning-effort-web
+```
+
+## Composition
+
+```text
+ReasoningEffort
+├── ReasoningEffortIndicator
+└── ReasoningEffortItem
+```
+
+`ReasoningEffort` is a group named by its `label` that holds UI SDK's Segmented Control, a radio group with one Tab stop. `ReasoningEffortIndicator` is the mark behind the chosen level, and each `ReasoningEffortItem` is a level.
+
+## Usage
+
+### Levels
+
+Pass `levels` to name your own, each with the `value` the host receives and the `label` a person reads, from least to most effort.
+
+```tsx
+<ReasoningEffort
+  levels={[
+    { value: "minimal", label: "Minimal" },
+    { value: "low", label: "Low" },
+    { value: "high", label: "High" },
+  ]}
+  defaultValue="low"
+  onValueChange={(effort) => setEffort(effort)}
+/>
+```
+
+Pass `value` and `onValueChange` to control the chosen level, or `defaultValue` to start with one. `onValueChange` gets the level's `value`, with the reason `input-change` when a person chose it, or `imperative` from `setValue`. Pass `disabled` while the model can't change its effort.
+
+### Keyboard
+
+Tab moves to the chosen level. The arrow keys move to the next or previous level and choose it, and Space chooses the focused one.
+
+### Motion
+
+The mark slides to the chosen level. Under `prefers-reduced-motion`, or with `motion="reduced"`, it doesn't move: the chosen level fills in over 120 ms. With `motion="none"`, it changes at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/reasoning-effort/reasoning-effort.ts" name="ReasoningEffortOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the control by its label and reads the chosen level. Its `setValue` takes a level's `value` or its label, the same as a person choosing it, and refuses a level that isn't listed. It needs no person to confirm.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/reasoning-effort/reasoning-effort.ts" name="ReasoningEffortAgentActions" type='Pick<ReasoningEffortApi, "setValue">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-reasoning-effort>`, set `levels` and `value` as properties, and listen for `effortchange`, with the level's `value` as `event.detail.value`. The element fills in its levels when it has no children.
+</Caption>

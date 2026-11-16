@@ -1,0 +1,138 @@
+/* Confirmation (spec §7): an optional reason box, then the choices, which the outcome replaces at the same height. */
+@layer components {
+  [data-slot="kind-confirmation"] {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--kind-color-fg);
+  }
+
+  /* Custom elements on Web Components are inline until styled. */
+  [data-slot="kind-confirmation-reason"] {
+    display: block;
+  }
+
+  /* One height for the choices and the outcome, so a decision swaps them in place. */
+  :is([data-slot="kind-confirmation-choices"], [data-slot="kind-confirmation-outcome"]) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 2rem;
+  }
+
+  :is([data-slot="kind-confirmation-approve"], [data-slot="kind-confirmation-deny"]) {
+    display: inline-flex;
+    align-items: center;
+    height: 1.75rem;
+    padding-inline: 12px;
+    border: 1px solid transparent;
+    border-radius: calc(var(--kind-radius) / 2);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    transition:
+      background-color var(--kind-duration-fast),
+      border-color var(--kind-duration-fast),
+      opacity var(--kind-duration-fast);
+
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+    /* The pressed choice stays solid while its decision is sent; the other dims. */
+    &[aria-disabled="true"] {
+      cursor: default;
+    }
+    &[aria-disabled="true"]:not([data-pending]) {
+      opacity: 0.5;
+    }
+    &[data-pending] {
+      cursor: progress;
+    }
+  }
+
+  [data-slot="kind-confirmation-approve"] {
+    background-color: var(--kind-color-accent);
+    color: var(--kind-color-on-accent);
+
+    &:hover:not([aria-disabled="true"]) {
+      background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-fg));
+    }
+  }
+
+  [data-slot="kind-confirmation-deny"] {
+    border-color: var(--kind-color-border);
+    background-color: var(--kind-color-surface);
+    color: var(--kind-color-fg);
+
+    &:hover:not([aria-disabled="true"]) {
+      background-color: var(--kind-color-hover);
+    }
+  }
+
+  [data-slot="kind-confirmation-error"] {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    color: var(--kind-color-danger);
+  }
+
+  [data-slot="kind-confirmation-outcome"] {
+    border-radius: calc(var(--kind-radius) / 2);
+
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+    &[data-state="submitting"] {
+      color: var(--kind-color-muted);
+    }
+
+    & [data-confirmation-label] {
+      flex-shrink: 0;
+      font-weight: 500;
+    }
+    & [data-confirmation-reason] {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--kind-color-muted);
+    }
+    & [data-confirmation-reason]:empty {
+      display: none;
+    }
+  }
+
+  /* Reduced motion: a short fade. `none`: no transition at all. */
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-slot="kind-confirmation"][data-motion="auto"])
+      :is([data-slot="kind-confirmation-approve"], [data-slot="kind-confirmation-deny"]) {
+      transition-duration: var(--kind-duration-reduced);
+    }
+  }
+
+  :where([data-slot="kind-confirmation"][data-motion="reduced"])
+    :is([data-slot="kind-confirmation-approve"], [data-slot="kind-confirmation-deny"]) {
+    transition-duration: var(--kind-duration-reduced);
+  }
+
+  :where([data-slot="kind-confirmation"][data-motion="none"])
+    :is([data-slot="kind-confirmation-approve"], [data-slot="kind-confirmation-deny"]) {
+    transition: none;
+  }
+
+  :is(
+    [data-slot="kind-confirmation-reason"],
+    [data-slot="kind-confirmation-choices"],
+    [data-slot="kind-confirmation-approve"],
+    [data-slot="kind-confirmation-deny"],
+    [data-slot="kind-confirmation-error"],
+    [data-slot="kind-confirmation-outcome"]
+  )[hidden] {
+    display: none;
+  }
+}

@@ -118,6 +118,22 @@ export type StepPanelOptions = {
  * A step's collapsible content: findable while closed, and sized through `--kind-step-content-height`, which
  * `step.css` animates. It opens without animating when it mounts open, under `motion="none"`, or for find in page.
  */
+/**
+ * Holds transitions on `el` and inside it (`data-mounting`, read by `step.css`) through its first two frames. Web
+ * parts get their attributes as each connects, and a style read meanwhile (UI SDK's panel and Scroll Area measure as
+ * they bind) sees the later ones bare, so their colors would fade in from the browser's. Called by root and row binds.
+ */
+export const holdTransitions = (el: Element): (() => void) => {
+  el.setAttribute("data-mounting", "");
+  let frame = requestAnimationFrame(() => {
+    frame = requestAnimationFrame(() => el.removeAttribute("data-mounting"));
+  });
+  return () => {
+    cancelAnimationFrame(frame);
+    el.removeAttribute("data-mounting");
+  };
+};
+
 export const bindStepPanel = (el: HTMLElement, options: StepPanelOptions): (() => void) => {
   let opening: "mount" | "instant" | "animate" = options.isOpen() ? "mount" : "animate";
   return bindPanel(el, {
@@ -262,6 +278,7 @@ export const stepBase = <
               state.durationSeconds === undefined ? undefined : `${state.durationSeconds}s`,
           }),
         }),
+        bind: holdTransitions,
       }),
       trigger: slot({
         role: "button",

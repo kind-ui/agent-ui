@@ -4,6 +4,7 @@ import { toolPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/react/primitive";
 import type { ComponentProps } from "react";
 import { CodeBlock } from "./code-block.js";
+import { Confirmation } from "./confirmation.js";
 import { Markdown } from "./markdown.js";
 
 const parts = createParts(toolPrimitive, {
@@ -23,8 +24,8 @@ const parts = createParts(toolPrimitive, {
 export type ToolProps = ComponentProps<typeof parts.Root>;
 
 /**
- * A tool call as a step: its name and status, then its input, output or error. Any `children` replace the default
- * trigger and content.
+ * A tool call as a step: its name and status, then its input, output or error, and its approval. Any `children`
+ * replace the default parts.
  */
 export function Tool({ children, ...props }: ToolProps) {
   return <parts.Root {...props}>{children !== undefined ? children : DEFAULT_PARTS}</parts.Root>;
@@ -45,8 +46,14 @@ export function ToolTitle({ children = ({ title }) => title, ...props }: ToolTit
 
 export type ToolApprovalProps = ComponentProps<typeof parts.Approval>;
 
-/** Where the call's approval stands, like "Waiting for approval", while it has one. */
-export function ToolApproval({ children = ({ label }) => label, ...props }: ToolApprovalProps) {
+/**
+ * A Confirmation for the call's approval while it has one: Approve and Deny while `onApprove` and `onDeny` are
+ * set and the request is open, then what was decided. Pass children to render it yourself.
+ */
+export function ToolApproval({
+  children = (confirmation) => <Confirmation {...confirmation} />,
+  ...props
+}: ToolApprovalProps) {
   return <parts.Approval {...props}>{children}</parts.Approval>;
 }
 
@@ -123,12 +130,12 @@ const DEFAULT_PARTS = (
     <ToolTrigger>
       <ToolIcon />
       <ToolTitle />
-      <ToolApproval />
     </ToolTrigger>
     <ToolContent>
       <ToolInput />
       <ToolOutput />
       <ToolError />
     </ToolContent>
+    <ToolApproval />
   </>
 );

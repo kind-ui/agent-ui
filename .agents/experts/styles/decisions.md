@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
+Last reviewed: `bb45d49` (Wave 3 Task 11 agent conformance)
 
 ## Settled
 
+- **The Context Meter ring sweeps by transitioning `--meter-value`** (Wave 3 Task 8), which repaints its `conic-gradient` on the main thread: a 16 px element for 280 ms, never on mount, and off under reduced motion.
 - **Reasoning restyles nested parts through variables** (`--kind-markdown-*`, `--kind-status-mark-complete`) set with one attribute selector, so a class on the content or icon part wins. Code blocks and tables in the thoughts keep their own colors.
 - **The Streaming Text caret bar sits 0.15 em past the text:** laid over the last glyph it cuts the letter; past it, a scroll container sized to `max-content` gains about 0.3 em of overflow. Width and line height never change.
 - **The uploader progress fill transitions `width`:** UI SDK Progress writes the fill's width inline, and the bar is a 4 px leaf in an `overflow: hidden` track. A `scale` fill would squash its rounded ends.
@@ -17,6 +18,17 @@ Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **On web, a step's content that starts closed can fade its parts' colors in the first time it opens** (Wave 3 Task 11): `hidden="until-found"` skips style updates, so parts styled bare by a bind's style read before their attributes landed keep that style until the reveal, after `data-mounting` is gone. Rows and roots hold through their first frames; ending the hold at a part's first styled frame needs UI SDK binds not to read style while parts connect (upstream).
+- **Mask-drawn icons vanish in forced colors** in the stylesheets without a `forced-colors` rule; Feedback's thumbs, the status mark and Notice's Dismiss have one.
+- **Feedback's thanks is wider than "Add a comment",** so the row grows sideways by its text when it appears; height holds. Feedback ends a message's actions, so nothing usually sits after it.
+- **The Context Meter's high-level glyph in light mode** is `--kind-color-warning` on white, about 2.5:1, under 3:1 for graphics; the percentage beside it carries the value.
+- **Suggestion: Tab to a chip half out of view doesn't scroll it in** (UI SDK Carousel counts it in view), so its end and focus ring sit under the end fade.
+- **Suggestion: `motion="none"` doesn't stop Carousel's paging scroll,** which follows only `prefers-reduced-motion`; UI SDK's Carousel takes no motion option. The docs say so.
+- **Checkpoint: "Restored" is wider than the Restore icon,** so the line (or a long description) gets about 47px shorter in one frame when it swaps in. Nothing moves vertically.
+- **Checkpoint's restore icon doesn't mirror in right-to-left text;** undecided whether a counter-clockwise arrow should.
+- **Re-checking a checkbox while its indicator fades out restarts the fade-in** for about 2 frames: UI SDK puts `data-starting-style` back on the same element (report upstream).
+- **Question's indicator fades with the default `ease` while it scales with `--kind-ease`,** as `status-mark.css` does.
+- **A long denial reason in Confirmation's outcome is cut with an ellipsis** and can't be read in full on screen; it stays in the DOM.
 - **A chip that wraps the composer's attachments onto a new row moves the editor by a row (56px) in one frame;** only empty ↔ filled is animated. Animate the area's height from its previous height when the chip count changes while it's open.
 - **A dropped Queue row snaps from the pointer to its slot in one frame:** `createReorder` clears `--drag-x`/`--drag-y` before the drop commits, so the root's `layout` has no rect from before. Carrying it needs the row's rect before UI SDK's drag stops.
 - **Subagent's guide line and nested marks are half a pixel off at 1x,** likely Chrome drawing the 1.5px guide border at 1px (as the status mark ring noted); a result already complete on load fades in once on mount.
@@ -27,6 +39,13 @@ Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
 
 ## Resolved
 
+- **Notice and the status mark (Wave 3 Task 10):** in forced colors the running mark's track is `GrayText`, so its arc still shows; the light warning glyph uses `--kind-color-on-warning` (white on amber was 2.57:1); a closed Guardrail detail takes back its row gap; the notice's padding is logical; Why? and Dismiss follow the reduced and `none` motion modes.
+- **Feedback (Wave 3 Task 9):** the thumbs show in forced colors; the pressed icon rule wraps its context in `:where()`, so a consumer's icon class wins.
+- **Context Meter (Wave 3 Task 8):** the details closed in 150 ms under reduced motion (the exit duration is set again in the reduced rules, tested); the percentage reserves `4ch + 1em`, so "100 %" in `de-DE` doesn't widen the trigger (tested); level, motion and `[hidden]` rules sit behind `:where()`; the trigger's transitions use `--kind-ease-out`.
+- **Suggestion (Wave 3 Task 7):** Previous and Next stay shown while one holds focus; a page Next scrolled to starts past the start fade (the viewport's start inset holds it); context selectors sit in `:where()`, so a class in `@layer components` restyles a two-line chip.
+- **Model Selector and Reasoning Effort (Wave 3 Task 6):** the effort mark slides with `translate` and `width`, not `left`/`top`; the reduced fill runs color, background and border in 120 ms together; the list's exit runs every property at `--kind-duration-fast`; the search field is `h-full`, inside the field's border.
+- **Checkpoint (Wave 3 Task 5):** a wrapped error made the dialog 8px taller on narrow screens (the error's line height is 1rem, so two lines fit the row); the backdrop closed 50ms after the dialog (both use the fast duration); reduced-motion fades were `linear` (now `--kind-ease-out`, as the JS helper's).
+- **The internal Textarea was 14px beside 13px Confirmation and Question text (Wave 3 Task 4).** Fixed: it inherits its font size and line height. Question's option rows wrap their context in `:where()`, so they stay one attribute deep.
 - **The composer's attachments area opened and closed in one frame (Wave 3 Task 2).** Fixed: the area plays the motion helper's `expand` in the frame after its first chip arrives (so the chip has rendered and measures) and its `expand` exit when the last is removed, and stays shown until the collapse and the chip's exit both end. The dropzone grid has no row gap; the area's spacing is inside it, so a collapsed area takes no room. Reduced motion fades it with no height change; `motion="none"` opens and closes at once. The helper's springs start at rest (`velocity: 0`), so a chip attached mid-collapse reverses it without overshooting, and the area's top padding holds a chip's remove badge inside the box the expand clips. `composer.spec.ts` follows `kind-composer-input` each painted frame in both layers.
 - **Removed chips and uploader rows left without an exit, and the items after them jumped (Wave 2 Task 9).** Fixed with Queue's leaving rows (spec §6 "Removed items"): the row stays `inert` and `aria-hidden` while it fades, then the items after it slide into place; a leaving row keeps its preview and Cancel/Retry button, so it doesn't reflow as it fades; the composer keeps its attachments area while the last chip leaves. `layout` now writes its inverted position at once, and the slide starts on the list's first DOM change, so the rows don't sit a frame at their new place before sliding (also Queue's). Reduced motion is a 120 ms fade with no slide; `motion="none"` leaves at once (tested on both layers). An `enter` after an interrupted `fade-up` settles the held `transform` as it plays instead of snapping at the end (`motion.spec.ts`).
 - **Queue (Wave 2 Task 8):** a picked-up row isn't clipped by its section's panel (`overflow: visible` while one is grabbed); the remove control's pointer target is 24px; context selectors sit in `:where()`, so each rule stays one attribute.

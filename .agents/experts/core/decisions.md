@@ -2,10 +2,18 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
+Last reviewed: `803ea14` (Wave 3 Task 12 showcase and changeset)
 
 ## Settled
 
+- **The Step root writes `data-mounting` in its `bind`, not through `attrs`** (Wave 3 Task 11): it lasts two frames per element and isn't state, so a store flag would render every React part again to clear it; `wave-3/agent.spec.ts` checks no Step part runs a transition on load. **`imports` in `size-budget.json` is required:** the file is ours, and a missing key fails the check.
+- **A dismissed notice the host never removes stays faded and inert** (Wave 3 Task 10, D10): the host removes it in `onDismiss`; only a rejection brings it back.
+- **A Feedback comment that failed keeps its error and text until the next send** (Wave 3 Task 9), through a close and a rating change: the error belongs to the text it failed to send, which the box still holds.
+- **Suggestion's `pick` has no lock** (Wave 3 Task 7): `onPick` is a `callback`, as the plan says, so a double press calls it twice. A host whose pick sends a prompt drops a repeat itself, as it would for a double-clicked send.
+- **Model Selector marks matches only in the name** (Wave 3 Task 6): a model the query found through its group or description shows no mark. Spec §7 asks for match highlighting on the options, which are named by the model; marking descriptions would add a second highlighted line per row.
+- **Checkpoint `defaultOpen` logs UI SDK's dev warning that `agent.actions` lists `restore`** (Wave 3 Task 5): `restore` is a getter that returns `undefined` while the dialog is open, as the other Wave 3 actions do.
+- **Checkpoint's `restored` isn't in `controlled`** (Wave 3 Task 5): on web a boolean attribute turned off reads `undefined`, which made UI SDK warn that it stopped controlling it. An agent sees Restore gone and "Restored" instead.
+- **A denial in a Tool is announced twice, "Denied" then "<name> denied" (Wave 3 Task 3):** spec §4.1 keeps the recorded response and the resulting execution state apart; Confirmation announces the first and Tool its outcome, and a host sets them in separate updates.
 - **`kind-queue`'s web `api` lists no `reorder` or `remove`:** both are getters that return `undefined` while unavailable, and a web root's `api` list copies methods once (AGENTS.md, Task 10 "Actions offered while available"). Hosts call them through the agent bridge or the core api.
 - **UI SDK's dev warning that `agent.actions` lists `cancel` (or `accept`) while the api lacks it** is expected: those actions are getters that return `undefined` while unavailable (spec §6), and the warning is once per mount (AGENTS.md).
 - **A Tool's error part follows its status, not `outcome` (Wave 2 Task 4):** a host `status="error"` shows its message too, and a host status over an errored call hides it. The JSDoc and AGENTS.md say so.
@@ -23,12 +31,20 @@ Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A blocking Guardrail Notice added after load may be read twice** (Wave 3 Task 10): it's `role="alert"` and announces its title assertively, both as the plan asks. Not checked with a screen reader.
+- **Notice's `nearestTabStop` misses shadow roots and scrollable regions** (Wave 3 Task 10): it reads `tabIndex` over the light DOM, since UI SDK's `nextTabbable` isn't exported; ask upstream to export it.
+- **A notice that mounts in a background tab before its first paint isn't announced** (Wave 3 Task 10): first contentful paint waits for the tab to show.
+- **Enter on Context Meter details that keyboard focus opened closes them** (Wave 3 Task 8): UI SDK's press opening keeps a popup open on a press only when the pointer opened it, and that rule isn't exported; ask upstream for a focus-opened popup to stay open too. Pinned in `context-meter.spec.ts`.
+- **A Context Meter `currency` that isn't an ISO 4217 code throws** from `Intl.NumberFormat` when the details render (the JSDoc asks for one); a bad `locale` is ignored through `toLocale`.
+- **A Checkpoint owner who refuses a close sees it close and reopen** (Escape, then `onOpenChange` cancels): UI SDK reports the close only after it happens, through `controller.open()`'s promise, since web hears neither `openchange` nor a Close part's `action`.
+- **No test proves Question's `ownQuestion` `selects`** (UI SDK asks each primitive with `selects` to prove it); traced by hand, and Chain of Thought, Task and Plan have none either.
+- **A failed Skip announces "Answers not sent"** (Question), which reads oddly after a skip; wording only.
+- **Confirmation: a microtask between `pending` clearing and `sent` setting** could let an `act` scheduled in a promise callback slip a second decision through. Not reproduced; a press can't land there.
 - **A double press on a Queue item's remove control calls `onRemove` twice** when the host removes the item asynchronously; there's no per-item lock like the uploader's.
 - **Queue's `known` set never forgets ids,** so an item removed and re-added under the same id after its exit gets no entrance (same as Task and Plan).
 - **A plan swapped while Accept is pending keeps the lock** until the old promise settles (Wave 2 Task 6). Clearing it on a new `onAccept` can't key on identity, since React passes a new inline function each render; same open spec §4.1 question as the composer's pending lock.
 - **Task and Plan's `known` set never forgets ids,** so an item removed and re-added under the same id gets no entrance (same as the uploader's `mounted`).
 - **Tool re-serializes its input on every options update** (`toolCode` per streamed chunk). Unmeasured on large inputs; memoize by value if it shows up.
-- **"Decision not sent" isn't announced:** `requested` → `submitting` → `submit-failed` stays `awaiting-input`, so the status doesn't change. Confirmation (Wave 3) owns the decision and its error.
 - **`ComposerApi.setValue` with the draft's own text still fires `onValueChange`** with a new draft object and returns `true`; nothing changes on screen.
 - **Enter held or pressed twice on an uploader Cancel cancels the next row too:** focus recovery moves to the neighbor's Cancel between presses. Spec §7 needs to say whether that's the list-deletion pattern or needs a pause.
 - **Queue's `known` set never forgets ids,** so a Queue item removed and added again under the same id gets no entrance (the uploader and attachments now forget an id when its row is dropped).
@@ -44,6 +60,15 @@ Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
 
 ## Resolved
 
+- **Wave 3 agent conformance (Task 11):** Guardrail Notice spread the notice base's api, which read its `dismiss` getter once, so `dismiss` stayed offered after `onDismiss` went away (web `can-dismiss` removed) or while the notice was leaving; it now delegates the getter (`wave-3/agent.spec.ts`). Chain of Thought's `setStepOpen` reads steps by own key (`Object.hasOwn`), as Suggestion and Question do.
+- **Notice (Wave 3 Task 10):** Dismiss's fallback skips a link without `href` (Chrome reports `tabIndex` 0 for it); `onDismiss` isn't called once the host removed the notice during its exit; Guardrail Notice's options document its own `variant` (`"warning"`) and title defaults; a notice in server markup an app hydrates after `load`, or one a web host puts back, neither rises in nor is announced (roots on the page before core ran, or already shown, are remembered).
+- **Feedback (Wave 3 Task 9):** the comment text slot now binds `bindText`, so a web element put back in the page sends the text its box kept; the box can't start open without **Add a comment**, and closes only when that button leaves, not on every update; `submitComment` with blank text, or while a send is pending, leaves the box's text alone; an invalid `rating` reads as none; focus recovery picks the pressed thumb, else the first.
+- **Context Meter (Wave 3 Task 8):** numbers format in `locale`, else the page's language read in `bind`, else English, so server markup and the Meter beside it agree; the level follows the rounded percentage shown; a non-finite `used` or `total` reads as 0; a small cost keeps two significant digits (`roundingPriority`, with `ES2023.Intl` in the base `lib`); controlled and cancelled opens and the rows memo are unit-tested.
+- **Suggestion (Wave 3 Task 7):** `pick` and the chips read suggestions by own key, so `pick("constructor")` is refused (`suggestion.test.mjs`); an id that leaves `suggestions` is forgotten, so it plays its entrance when added again; a removed chip's focus moves to its neighbor (`createFocusRecovery`); the chips are `type="button"`; the render-state types have JSDoc.
+- **Model Selector and Reasoning Effort (Wave 3 Task 6):** `agent.items` carry `disabled`, so the bridge refuses a disabled model instead of reporting a silent `false`; the open button's name is an `openLabel` option rather than an English plural of `label`; the Combobox and Segmented Control state types have JSDoc; the radio group is named by `label`.
+- **Checkpoint (Wave 3 Task 5):** `open` stuck `true` and the web page left `inert` when `restored` was set with the dialog open (the dialog now closes when Restore leaves, and an `"unmount"` close reports `open: false`); a refused press-open left the dialog showing (`follow` changes `open` first and closes it again); a failed restore then a new press closed and reopened the dialog; a detached controller threw on `defaultOpen` without `onRestore` (the dialog opens only while the `restore` part is bound); an agent's `press` on the dialog's Restore wasn't always gated (the confirm part always renders `data-agent-confirm`); web ignored `agentConfirm = false` (`defaults`).
+- **Question ids like `constructor` crashed, new questions kept the last round's answers, `setValue` ignored the lock, and an answer no option matches read as blank (Wave 3 Task 4).** Fixed: answers and questions are read by own key (`answerOf`, `questionOf`), new question ids drop the answers and controllers of the questions that left (uncontrolled), `setValue` returns `false` while locked or answered, and `answerText` returns `undefined` (unit tests in `question.test.mjs`).
+- **"Decision not sent" wasn't announced (Wave 3 Task 3).** Fixed: Confirmation announces it on entering `submit-failed`, and the recorded outcome on `responded` or `auto`; Tool embeds it and announces nothing more (tested in `confirmation.spec.ts` and `tool.spec.ts`, both layers).
 - **Removing the last chip from a composer left focus on `<body>` (Wave 3 Task 2).** Fixed: Attachments takes a `focusFallback` option for when no chip is left to take focus, and the composer passes its editor (tested in `composer.spec.ts`, both layers).
 - **Wave 2 agent conformance (Task 10):** the generic `initials` export is now `avatarInitials`; a Queue item's remove badge removes it on click (the item's reorder used to capture the pointer and take the click; tested).
 

@@ -17,7 +17,7 @@ const components = {
   tool: {
     title: "Tool",
     description: "A tool call as a step, from its streamed input to its output or error.",
-    uses: ["markdown", "code-block"],
+    uses: ["markdown", "code-block", "confirmation"],
   },
   "chain-of-thought": {
     title: "Chain of Thought",
@@ -42,6 +42,61 @@ const components = {
   queue: {
     title: "Queue",
     description: "The agent's to-do list, queued and completed, that people can reorder and clear.",
+    uses: [],
+  },
+  confirmation: {
+    title: "Confirmation",
+    description: "Approve or deny an agent's request, with an optional reason, then the recorded outcome.",
+    uses: ["internal-textarea"],
+  },
+  question: {
+    title: "Question",
+    description:
+      "Single choice, multiple choice and free text questions in one form, then the recorded answers.",
+    uses: ["internal-radio", "internal-checkbox", "internal-textarea"],
+  },
+  checkpoint: {
+    title: "Checkpoint",
+    description: "A marker in the conversation that restores to that point, after a dialog asks first.",
+    uses: ["internal-alert-dialog", "internal-tooltip"],
+  },
+  "model-selector": {
+    title: "Model Selector",
+    description: "A searchable list of models grouped by provider, with the matching letters marked.",
+    uses: ["internal-combobox"],
+  },
+  "reasoning-effort": {
+    title: "Reasoning Effort",
+    description: "How hard the model thinks, as a row of levels with a mark that slides to the chosen one.",
+    uses: ["internal-segmented-control"],
+  },
+  suggestion: {
+    title: "Suggestion",
+    description:
+      "A row of prompts a person can send in one press, which scrolls sideways when they don't fit.",
+    uses: ["internal-carousel"],
+  },
+  "context-meter": {
+    title: "Context Meter",
+    description:
+      "How full the context window is, as a ring and a percentage, with token counts and cost in a popover.",
+    uses: [],
+  },
+  feedback: {
+    title: "Feedback",
+    description: "Thumbs up and down for a response, with an optional comment written in a popover.",
+    uses: ["internal-textarea"],
+  },
+  notice: {
+    title: "Notice",
+    description:
+      "A calm callout for info, success, a warning or an error, with optional actions and Dismiss.",
+    uses: [],
+  },
+  "guardrail-notice": {
+    title: "Guardrail Notice",
+    description:
+      "Says a guardrail blocked or filtered content, with the policy reason and an expandable detail.",
     uses: [],
   },
   conversation: {
@@ -91,16 +146,24 @@ const components = {
 };
 
 const internals = [
+  "alert-dialog",
   "avatar",
   "button",
+  "carousel",
+  "checkbox",
   "collapsible",
+  "combobox",
   "file-input",
   "menu",
   "progress",
+  "radio",
   "scroll-area",
+  "segmented-control",
+  "textarea",
   "toggle",
   "token-input",
   "toolbar",
+  "tooltip",
   "trigger-menu",
 ];
 

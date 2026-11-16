@@ -163,4 +163,14 @@
   [data-step-part="content"][data-motion="none"] {
     transition: none;
   }
+
+  /* Until a step or a row has drawn once, its parts take their colors at once rather than fading in from the
+     browser's defaults. */
+  [data-mounting],
+  [data-mounting] *,
+  [data-mounting] *::before,
+  [data-mounting] *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: outranks every transition inside, the step's own, UI SDK's and a consumer's. */
+    transition: none !important;
+  }
 }

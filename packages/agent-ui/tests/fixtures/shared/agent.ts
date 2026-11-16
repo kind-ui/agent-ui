@@ -32,6 +32,14 @@ export const toolCalls: ToolCall[] = ["search_docs", "read_file"].map((name) => 
   output: { state: "available", value: { matches: name === "search_docs" ? 3 : 1 } },
 }));
 
+export const approvalCall: ToolCall = {
+  toolCallId: "delete_file",
+  name: "delete_file",
+  dynamic: false,
+  input: { state: "ready", value: { path: "notes.md" } },
+  approval: { approvalId: "delete", generation: 1, state: "requested" },
+};
+
 export const chainSteps: ChainOfThoughtStep[] = [
   { id: "plan", status: "complete", title: "Plan the search", durationSeconds: 2 },
   { id: "search", status: "complete", title: "Search the docs", durationSeconds: 3 },
@@ -69,11 +77,20 @@ export function agentHost() {
     confirm: (_on: boolean) => {},
     changes: [] as string[],
     calls: [] as string[],
+    sources: [] as string[],
     change: (component: string, details: { source: string; cancel: () => void }): boolean => {
       host.changes.push(`${component}:${details.source}`);
       if (host.refuse) details.cancel();
       return !host.refuse;
     },
+    decide:
+      (name: string) =>
+      (...args: unknown[]): Promise<void> => {
+        const details = args.at(-1) as { source?: string } | undefined;
+        host.calls.push(name);
+        if (details?.source) host.sources.push(`${name}:${details.source}`);
+        return Promise.resolve();
+      },
     submit: (draft: { text: string }) => {
       host.calls.push(`submit:${draft.text}`);
       return host.hold ? new Promise<void>((resolve) => (release = resolve)) : Promise.resolve();

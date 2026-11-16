@@ -1,19 +1,29 @@
 import type { AgentAction } from "@ui-sdk/web/agent";
 import { defineAttachments, type KindAttachmentsElement } from "../../../../src/web/attachments.js";
 import { defineChainOfThought } from "../../../../src/web/chain-of-thought.js";
+import { defineCheckpoint } from "../../../../src/web/checkpoint.js";
 import { defineComposer, type KindComposerElement } from "../../../../src/web/composer.js";
+import { defineConfirmation } from "../../../../src/web/confirmation.js";
+import { defineContextMeter } from "../../../../src/web/context-meter.js";
 import { defineConversation } from "../../../../src/web/conversation.js";
+import { defineFeedback } from "../../../../src/web/feedback.js";
+import { defineGuardrailNotice } from "../../../../src/web/guardrail-notice.js";
 import { defineInternalToolbar } from "../../../../src/web/internal/toolbar.js";
 import { defineLoader } from "../../../../src/web/loader.js";
 import { defineMarkdown } from "../../../../src/web/markdown.js";
 import { defineMessage } from "../../../../src/web/message.js";
+import { defineModelSelector } from "../../../../src/web/model-selector.js";
+import { defineNotice } from "../../../../src/web/notice.js";
 import { definePlan } from "../../../../src/web/plan.js";
+import { defineQuestion } from "../../../../src/web/question.js";
 import { defineQueue } from "../../../../src/web/queue.js";
 import { defineReasoning } from "../../../../src/web/reasoning.js";
+import { defineReasoningEffort } from "../../../../src/web/reasoning-effort.js";
 import { defineStatus } from "../../../../src/web/status.js";
 import { defineStep, defineStepList } from "../../../../src/web/step.js";
 import { defineStreamingText } from "../../../../src/web/streaming-text.js";
 import { defineSubagent } from "../../../../src/web/subagent.js";
+import { defineSuggestion } from "../../../../src/web/suggestion.js";
 import { defineTask } from "../../../../src/web/task.js";
 import { defineThinkingIndicator } from "../../../../src/web/thinking-indicator.js";
 import { defineTool } from "../../../../src/web/tool.js";
@@ -21,6 +31,7 @@ import { defineTypingIndicator } from "../../../../src/web/typing-indicator.js";
 import { defineUploader, type KindUploaderElement } from "../../../../src/web/uploader.js";
 import {
   agentHost,
+  approvalCall,
   chainSteps,
   files,
   filler,
@@ -35,12 +46,22 @@ import {
   toolCalls,
 } from "../../shared/agent.js";
 import { commands, mentions } from "../../shared/composer.js";
+import { context } from "../../shared/context-meter.js";
 import { answer } from "../../shared/markdown.js";
+import { levels, models } from "../../shared/model-selector.js";
+import { guardrails, type NoticeData, notices } from "../../shared/notice.js";
+import { deployQuestions } from "../../shared/question.js";
+import { suggestions } from "../../shared/suggestion.js";
 import { uploads } from "../../shared/uploader.js";
 
 const host = agentHost();
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
+
+const confirmable: { agentConfirm: boolean }[] = [];
+host.confirm = (on) => {
+  for (const element of confirmable) element.agentConfirm = on;
+};
 
 const recordChange = (component: string, event: CustomEvent<{ source: string }>) =>
   host.change(component, {
@@ -231,10 +252,7 @@ function wireActivity(root: HTMLElement) {
   plan.addEventListener("accept", () => host.calls.push("accept"));
   const subagent = element("kind-subagent", "subagent");
   subagent.addEventListener("subagentcancel", () => host.calls.push("cancel"));
-  host.confirm = (on) => {
-    plan.agentConfirm = on;
-    subagent.agentConfirm = on;
-  };
+  confirmable.push(plan, subagent);
   const queue = element("kind-queue", "queue");
   queue.items = queueItems;
   queue.addEventListener("reorder", (event) => {
@@ -245,6 +263,116 @@ function wireActivity(root: HTMLElement) {
     const id = event.detail.value;
     host.calls.push(`remove:${id}`);
     queue.items = queue.items?.filter((item) => item.id !== id);
+  });
+}
+
+const rateLimited = notices.find((notice) => notice.id === "warning") as NoticeData;
+
+const humanInput = `
+  <div class="flex w-[40rem] flex-col gap-8 p-6">
+    <section data-case="tool-approval"><kind-tool id="delete_file" can-approve can-deny></kind-tool></section>
+    <section data-case="confirmation">
+      <kind-confirmation id="confirmation" label="Run the migration?" can-approve can-deny></kind-confirmation>
+    </section>
+    <section data-case="question">
+      <kind-question id="question" label="Deploy questions" can-submit can-skip></kind-question>
+    </section>
+    <section data-case="checkpoint">
+      <kind-checkpoint id="checkpoint" description="Before editing auth.ts" can-restore></kind-checkpoint>
+    </section>
+    <section data-case="model-selector" class="flex items-center gap-2">
+      <kind-context-meter id="context"></kind-context-meter>
+    </section>
+    <section data-case="suggestion"><kind-suggestion id="suggestion" can-pick></kind-suggestion></section>
+    <section data-case="feedback"><kind-feedback id="feedback" can-comment></kind-feedback></section>
+    <section id="notice" data-case="notice">
+      <kind-notice variant="${rateLimited.variant}" label="${rateLimited.label}" can-dismiss>
+        <kind-notice-description>${rateLimited.text}</kind-notice-description>
+      </kind-notice>
+    </section>
+    <section id="guardrail" data-case="guardrail-notice">
+      <kind-guardrail-notice blocking can-dismiss></kind-guardrail-notice>
+    </section>
+  </div>`;
+
+const decide =
+  (name: string) =>
+  (event: CustomEvent<{ value?: unknown; waitUntil?(promise: Promise<unknown>): void }>) => {
+    const settled = host.decide(name)(event.detail);
+    event.detail.waitUntil?.(settled);
+  };
+
+function wireHumanInput(wave: Element) {
+  const element = <Tag extends keyof HTMLElementTagNameMap>(tag: Tag) =>
+    wave.querySelector(`:scope > section > ${tag}`) as HTMLElementTagNameMap[Tag];
+  const tool = element("kind-tool");
+  tool.call = approvalCall;
+  tool.addEventListener("approve", decide("approve"));
+  tool.addEventListener("deny", decide("deny"));
+  const confirmation = element("kind-confirmation");
+  confirmation.approval = { approvalId: "migrate", generation: 1, state: "requested" };
+  confirmation.addEventListener("approve", decide("approve"));
+  confirmation.addEventListener("deny", decide("deny"));
+  const question = element("kind-question");
+  question.questions = deployQuestions;
+  question.addEventListener("valuechange", (event) => recordChange("question", event));
+  question.addEventListener("questionsubmit", (event) =>
+    event.detail.waitUntil(
+      host
+        .decide("submit")(event.detail)
+        .then(() => {
+          question.submitted = event.detail.value;
+        }),
+    ),
+  );
+  question.addEventListener("skip", (event) =>
+    event.detail.waitUntil(
+      host
+        .decide("skip")(event.detail)
+        .then(() => {
+          question.submitted = {};
+        }),
+    ),
+  );
+  const checkpoint = element("kind-checkpoint");
+  checkpoint.addEventListener("openchange", (event) => recordChange("checkpoint", event));
+  checkpoint.addEventListener("restore", (event) =>
+    event.detail.waitUntil(host.decide("restore")(event.detail.value)),
+  );
+  confirmable.push(question, checkpoint);
+  const model = Object.assign(document.createElement("kind-model-selector"), {
+    id: "model",
+    models,
+    defaultValue: "gpt-5",
+  });
+  model.addEventListener("modelchange", (event) => recordChange("model", event));
+  const effort = Object.assign(document.createElement("kind-reasoning-effort"), {
+    id: "effort",
+    levels,
+    defaultValue: "medium",
+  });
+  effort.addEventListener("effortchange", (event) => recordChange("effort", event));
+  const meter = element("kind-context-meter");
+  meter.before(model, effort);
+  Object.assign(meter, context);
+  meter.addEventListener("openchange", (event) => recordChange("context", event));
+  const suggestion = element("kind-suggestion");
+  suggestion.suggestions = suggestions;
+  suggestion.addEventListener("pick", decide("pick"));
+  const feedback = element("kind-feedback");
+  feedback.addEventListener("ratingchange", (event) => recordChange("feedback", event));
+  feedback.addEventListener("comment", decide("comment"));
+  const notice = element("kind-notice");
+  notice.addEventListener("dismiss", () => {
+    host.calls.push("dismiss");
+    notice.remove();
+  });
+  const guardrail = element("kind-guardrail-notice");
+  Object.assign(guardrail, guardrails.blocking);
+  guardrail.addEventListener("openchange", (event) => recordChange("guardrail", event));
+  guardrail.addEventListener("dismiss", () => {
+    host.calls.push("dismiss");
+    guardrail.remove();
   });
 }
 
@@ -271,19 +399,36 @@ function foundation(root: HTMLElement) {
   wireUploader(root);
 }
 
+function waveTwo(root: HTMLElement) {
+  foundation(root);
+  defineStatus();
+  defineReasoning();
+  defineTool();
+  defineChainOfThought();
+  defineTask();
+  definePlan();
+  defineSubagent();
+  defineQueue();
+  root.insertAdjacentHTML("beforeend", activity);
+  wireActivity(root);
+}
+
 export const cases = {
   all: foundation,
-  "wave-2": (root: HTMLElement) => {
-    foundation(root);
-    defineStatus();
-    defineReasoning();
-    defineTool();
-    defineChainOfThought();
-    defineTask();
-    definePlan();
-    defineSubagent();
-    defineQueue();
-    root.insertAdjacentHTML("beforeend", activity);
-    wireActivity(root);
+  "wave-2": waveTwo,
+  "wave-3": (root: HTMLElement) => {
+    waveTwo(root);
+    defineConfirmation();
+    defineQuestion();
+    defineCheckpoint();
+    defineModelSelector();
+    defineReasoningEffort();
+    defineContextMeter();
+    defineSuggestion();
+    defineFeedback();
+    defineNotice();
+    defineGuardrailNotice();
+    root.insertAdjacentHTML("beforeend", humanInput);
+    wireHumanInput(root.lastElementChild as Element);
   },
 };

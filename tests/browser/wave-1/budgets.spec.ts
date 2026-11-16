@@ -180,6 +180,8 @@ for (const size of SIZES) {
   test(`streamed input in one of ${size} tools`, async ({ page }) => {
     await page.goto(`/?c=tool&case=many-${size}`);
     await expect(page.locator("#tool-0")).toHaveAttribute("data-open", "");
+    // A step drops `data-mounting` in its second frame; stream once it's at rest.
+    await expect(page.locator("[data-mounting]")).toHaveCount(0);
     const counts = await most(
       page,
       20,

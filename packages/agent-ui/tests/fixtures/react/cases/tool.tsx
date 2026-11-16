@@ -2,8 +2,13 @@ import type { ToolCall } from "@kind-ui/agent-ui";
 import type { ToolOptions } from "@kind-ui/agent-ui/core";
 import { memo, useEffect, useState } from "react";
 import { Tool } from "../../../../src/react/tool.js";
+import { confirmationHost } from "../../shared/confirmation.js";
 
-type Row = Pick<ToolOptions, "status" | "error" | "motion" | "label"> & { call: ToolCall };
+const { host, approve, deny } = confirmationHost();
+
+type Row = Pick<ToolOptions, "status" | "error" | "motion" | "label" | "onApprove" | "onDeny"> & {
+  call: ToolCall;
+};
 
 const call = (name: string, fields: Partial<ToolCall> = {}): ToolCall => ({
   toolCallId: name,
@@ -19,6 +24,8 @@ const initial: Record<string, Row> = {
   run: { call: call("run_tests") },
   approve: {
     call: call("delete_file", { approval: { approvalId: "a1", generation: 1, state: "requested" } }),
+    onApprove: approve,
+    onDeny: deny,
   },
   done: { call: call("summarize", { output: { state: "available", value: "Found **3** results." } }) },
   failed: {
@@ -40,6 +47,7 @@ function Tools({ rows: first }: { rows: Record<string, Row> }) {
     const update = (id: string, next: (row: Row) => Row) =>
       setRows((all) => ({ ...all, [id]: next(all[id] as Row) }));
     Object.assign(window, {
+      kindHost: host,
       kindTool: {
         set: (id: string, next: Partial<Row>) => update(id, (row) => ({ ...row, ...next })),
         setCall: (id: string, next: Partial<ToolCall>) =>

@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
+Last reviewed: `bb45d49` (Wave 3 Task 11 agent conformance)
 
 ## Settled
 
@@ -14,6 +14,10 @@ Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A Context Meter root `className` or `render` function gets `{}`,** as Status's root does (Wave 3 Task 8): style by `data-level`. The docs should say this covers every root.
+- **Renaming the chosen model leaves its old name in Model Selector's field** (Wave 3 Task 6): UI SDK's Combobox keeps the label it showed when `itemToLabel` or the item's label changes, even a bare `<Combobox>`; report upstream. The group beside it updates.
+- **Question's radio and checkbox groups have no name of their own:** the item's group, named by its prompt, names them, as UI SDK Field's "Groups in a Field Set" says; Radio's own docs point the group at the legend too. Not checked with a screen reader.
+- **A custom `QuestionItem` without `QuestionPrompt` has a dangling `aria-labelledby`,** as Step's group does without `StepTitle`.
 - **Two calls of the same tool share their copy-button and code-block names** ("search_docs input"): names come from the title, and a `toolCallId` isn't a name a person can read. A host can tell them apart with `label`.
 - **A keyboard move in a React Queue blurs and refocuses the picked-up row on each step:** React moves the keyed `li` with `insertBefore`, and UI SDK's reorder focuses it again (web uses `moveBefore`). It follows UI SDK's documented React pattern, so it belongs upstream.
 - **A `Subagent` placed directly in a `StepList` adds its own Tab stop;** joining it needs `SubagentRoot` with `StepListItem render={<SubagentTrigger />}`. Undocumented, and `SubagentRoot` arrangements have no browser spec.
@@ -37,6 +41,13 @@ Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
 
 ## Resolved
 
+- **Guardrail Notice (Wave 3 Task 10):** hydrating server-rendered notices after `load` no longer plays their entrance or announces them; a refusing `open` owner is tested (`refused` case); `GuardrailNotice` takes `children` into its description, as the web element does.
+- **Feedback (Wave 3 Task 9):** the agent spec settles `onComment` instead of waiting out the bridge's timeout; a refusing host has a fixture case and a spec in both layers; the thumbs part is `FeedbackThumbs`, so it doesn't clash with the `FeedbackRating` type.
+- **Context Meter text hydrated in the server's locale (Wave 3 Task 8).** Fixed: it formats in English until the root binds and reads the page's language, as UI SDK Meter does.
+- **Suggestion (Wave 3 Task 7):** a chip inside a form no longer submits it (`type="button"` from core); `SuggestionControls` is exported, so a layout you compose hides Previous and Next too; the server markup shows neither controls nor fades until Carousel has measured, so a row that fits doesn't grow 64px on hydration.
+- **Model Selector and Reasoning Effort (Wave 3 Task 6):** `ModelSelectorItem` and `ModelSelectorGroup` pass `className`, `ref` and other props through; `<ReasoningEffort>{null}</ReasoningEffort>` renders nothing, as other components' children do; a refusing host has a fixture case and a spec in both layers.
+- **Checkpoint (Wave 3 Task 5):** server markup named Restore by nothing until hydration (the tooltip is `type="label"`); `CheckpointDialog` dropped its answers for `{null}` children (a destructuring default); the dialog sat in a `span` (the `restore` part is a `div`).
+- **A controlled Question didn't follow its owner (Wave 3 Task 4).** Fixed: the groups and text boxes hold their own value, so a change a controlling owner doesn't take is written back through the controllers the next frame (a cancelled one at once). The agent test no longer waits 15 s for an unsettled submit (`question.spec.ts`, both layers).
 - **Next.js App Router consumers had to wrap every render file in their own client module (Wave 3 Task 2).** Fixed: every `src/react/**/*.tsx` starts with `"use client";` (`registry.test.mjs` checks it; the registry copies it byte for byte), and the docs examples without state or handlers are now server components, so `npm run build:docs` builds an App Router consumer of them.
 - **Every docs page logged React error #418 (Wave 3 Task 2).** The static export wrote `docs/step.html`, so a plain static host served the page at `/docs/step.html`; the client's pathname then matched no page, and Fumadocs' client-rendered footer (previous and next page) and sidebar rendered different text than the server had. Fixed with `trailingSlash: true` (`docs/step/index.html`, served at `/docs/step/`). `check:docs` opens built pages on a plain file server and fails on any console error.
 - **Tools' copy buttons and code blocks shared labels (Wave 2 Task 10).** Fixed: each is named after its tool ("Copy search_docs input", "search_docs input") in both layers, tested in `wave-2/agent.spec.ts`. Markdown's "Code" / "Table" and two calls of the same tool stay open below.

@@ -1,9 +1,11 @@
 import { definePrimitive, type SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { type Approval, hasOutput, type StepStatus, type ToolCall } from "../../types/index.js";
-import { approvalLabel } from "../approval.js";
+import { approvalLabel, isActionable } from "../approval.js";
 import { createCopy } from "../clipboard.js";
 import type { Highlight } from "../code-block/index.js";
+import type { ConfirmationCallback, ConfirmationOptions } from "../confirmation/index.js";
+import { memo } from "../memo.js";
 import { type StepApi, type StepOptions, type StepState, stepAnnouncement, stepBase } from "../step/base.js";
 import { toolCode, toolStatus, toolValue } from "./format.js";
 
@@ -21,15 +23,34 @@ export type ToolOptions = Omit<StepOptions, "status" | "label"> & {
   error?: { message: string };
   /** Colors the input and output code, as Code Block's `highlight` does. */
   highlight?: Highlight;
+  /** Called when the call's approval is approved, with its `approvalId` and `generation`. Shows Approve while set. */
+  onApprove?: ConfirmationCallback;
+  /** Called when the call's approval is denied, with its `approvalId`, `generation` and reason. Shows Deny while set. */
+  onDeny?: ConfirmationCallback;
+  /**
+   * Shows a box for the reason Deny sends, as Confirmation's `reason` does.
+   * @default false
+   */
+  approvalReason?: boolean;
 };
+
+/** The Confirmation the approval part renders. */
+export type ToolApprovalState = Pick<
+  ConfirmationOptions,
+  "approval" | "label" | "onApprove" | "onDeny" | "reason" | "focusFallback" | "motion"
+>;
 
 export type ToolState = StepState & {
   /** The `label`, else the tool's name. */
   title: string;
-  /** The call's approval state, written as `data-approval`. */
-  approval: Approval["state"] | undefined;
-  /** Where the approval stands, in words, from `approvalLabel`. */
-  approvalLabel: string | undefined;
+  /** The call's approval, decided through the Confirmation in the approval part. */
+  approval: Approval | undefined;
+  /** Whether `onApprove` is set. */
+  canApprove: boolean;
+  /** Whether `onDeny` is set. */
+  canDeny: boolean;
+  /** The `approvalReason` option. */
+  approvalReason: boolean;
   /** The input code block's name, like "search_docs input", or "Input" without a title. */
   inputLabel: string;
   /** The output code block's name, like "search_docs output", or "Output" without a title. */
@@ -61,6 +82,8 @@ export type ToolApi = StepApi & {
   readonly copyInput: (() => Promise<boolean>) | undefined;
   /** Copies the output as shown, and resolves with whether the clipboard write went through. Only while there is output. */
   readonly copyOutput: (() => Promise<boolean>) | undefined;
+  /** Hands the approval part its Confirmation's props. Called by the approval slot. */
+  approvalState: (state: ToolState) => ToolApprovalState;
 };
 
 type ToolSlot<Public extends object = Record<never, never>> = SlotDefinition<
@@ -75,7 +98,7 @@ type ToolSlots = {
   trigger: ToolSlot;
   icon: ToolSlot;
   title: ToolSlot<{ title: string }>;
-  approval: ToolSlot<{ label: string }>;
+  approval: ToolSlot<ToolApprovalState>;
   content: ToolSlot;
   input: ToolSlot<{ label: string; code: string; streaming: boolean; highlight: Highlight | undefined }>;
   "input-copy": ToolSlot;
@@ -103,7 +126,7 @@ const base = stepBase<ToolState, ToolApi, ToolOptions>({
   status: (options) => (options.call ? toolStatus(options.call) : "pending"),
 });
 
-const presentation = ({ call, label, error, highlight }: ToolOptions) => {
+const presentation = ({ call, label, error, highlight, onApprove, onDeny, approvalReason }: ToolOptions) => {
   const output = call && hasOutput(call) ? toolValue(call.output.value) : undefined;
   const title = label ?? call?.name ?? "";
   return {
@@ -111,8 +134,10 @@ const presentation = ({ call, label, error, highlight }: ToolOptions) => {
     // Named by the tool, so agents and screen readers can tell one tool's input from another's.
     inputLabel: title ? `${title} input` : "Input",
     outputLabel: title ? `${title} output` : "Output",
-    approval: call?.approval?.state,
-    approvalLabel: approvalLabel(call?.approval),
+    approval: call?.approval,
+    canApprove: onApprove !== undefined,
+    canDeny: onDeny !== undefined,
+    approvalReason: approvalReason ?? false,
     input: call?.input.value === undefined ? "" : toolCode(call.input.value),
     inputStreaming: call?.input.state === "streaming",
     output: output?.kind,
@@ -133,7 +158,15 @@ const copyAttrs = (name: string, copied: boolean) => ({
 export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolState, ToolApi, ToolSlots>({
   name: "kind-tool",
   ...base,
-  options: { ...base.options, call: "value", error: "value", highlight: "value" },
+  options: {
+    ...base.options,
+    call: "value",
+    error: "value",
+    highlight: "value",
+    onApprove: "action",
+    onDeny: "action",
+    approvalReason: "boolean",
+  },
   state: (options) => ({
     ...base.state(options),
     ...presentation(options),
@@ -145,6 +178,28 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
     const { store } = context;
     const copyInput = createCopy(context, "inputCopied");
     const copyOutput = createCopy(context, "outputCopied");
+    const approve: ConfirmationCallback = (decision, details) =>
+      context.options().onApprove?.(decision, details);
+    const deny: ConfirmationCallback = (decision, details) => context.options().onDeny?.(decision, details);
+    const focusTrigger = () => context.element("trigger");
+    const approvalState = memo(
+      (
+        approval: Approval | undefined,
+        title: string,
+        canApprove: boolean,
+        canDeny: boolean,
+        reason: boolean,
+        motion: ToolState["motion"],
+      ): ToolApprovalState => ({
+        ...(approval && { approval }),
+        label: title ? `Run ${title}?` : "Run this tool?",
+        reason,
+        focusFallback: focusTrigger,
+        motion,
+        ...(canApprove && { onApprove: approve }),
+        ...(canDeny && { onDeny: deny }),
+      }),
+    );
     return {
       ...base.api(context),
       get copyInput() {
@@ -155,6 +210,15 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
         const { output, outputText } = store.get();
         return output === undefined ? undefined : () => copyOutput(outputText);
       },
+      approvalState: (state) =>
+        approvalState(
+          state.approval,
+          state.title,
+          state.canApprove,
+          state.canDeny,
+          state.approvalReason,
+          state.motion,
+        ),
     };
   },
   slots: (slot) => {
@@ -164,10 +228,11 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
       trigger,
       icon,
       title: slot<BaseSlotProps, { title: string }>({ ...title, state: (state) => ({ title: state.title }) }),
-      approval: slot<BaseSlotProps, { label: string }>({
-        present: (state) => state.approvalLabel !== undefined,
-        state: (state) => ({ label: state.approvalLabel ?? "" }),
-        attrs: (state) => ({ "data-approval": state.approval }),
+      // Outside the content, so a request shows while the tool is closed, and its outcome stays once decided.
+      approval: slot<BaseSlotProps, ToolApprovalState>({
+        present: (state) => isActionable(state.approval) || approvalLabel(state.approval) !== undefined,
+        state: (state, { api }) => api.approvalState(state),
+        attrs: (state) => ({ "data-approval": state.approval?.state }),
       }),
       content,
       input: slot<

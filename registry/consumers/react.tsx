@@ -2,8 +2,11 @@
 import { createRoot } from "react-dom/client";
 import { Attachments } from "./components/ui/attachments.js";
 import { ChainOfThought } from "./components/ui/chain-of-thought.js";
+import { Checkpoint } from "./components/ui/checkpoint.js";
 import { CodeBlock } from "./components/ui/code-block.js";
 import { Composer, ComposerInput, ComposerStop, ComposerSubmit } from "./components/ui/composer.js";
+import { Confirmation } from "./components/ui/confirmation.js";
+import { ContextMeter } from "./components/ui/context-meter.js";
 import {
   Conversation,
   ConversationContent,
@@ -11,18 +14,25 @@ import {
   ConversationRow,
   ConversationViewport,
 } from "./components/ui/conversation.js";
+import { Feedback } from "./components/ui/feedback.js";
+import { GuardrailNotice } from "./components/ui/guardrail-notice.js";
 import { KindToolbar, KindToolbarButton } from "./components/ui/internal/toolbar.js";
 import { Loader } from "./components/ui/loader.js";
 import { Markdown } from "./components/ui/markdown.js";
 import { MarkdownTable } from "./components/ui/markdown-table.js";
 import { Message, MessageContent, MessageCopy, MessageToolbar } from "./components/ui/message.js";
+import { ModelSelector } from "./components/ui/model-selector.js";
+import { Notice } from "./components/ui/notice.js";
 import { Plan } from "./components/ui/plan.js";
+import { Question } from "./components/ui/question.js";
 import { Queue } from "./components/ui/queue.js";
 import { Reasoning } from "./components/ui/reasoning.js";
+import { ReasoningEffort } from "./components/ui/reasoning-effort.js";
 import { Status } from "./components/ui/status.js";
 import { Step, StepContent, StepIcon, StepTitle, StepTrigger } from "./components/ui/step.js";
 import { StreamingText } from "./components/ui/streaming-text.js";
 import { Subagent } from "./components/ui/subagent.js";
+import { Suggestion } from "./components/ui/suggestion.js";
 import { Task } from "./components/ui/task.js";
 import { ThinkingIndicator } from "./components/ui/thinking-indicator.js";
 import { Tool } from "./components/ui/tool.js";
@@ -84,6 +94,57 @@ const items = {
     </Subagent>
   ),
   queue: <Queue label="Queue" items={[{ id: "tests", status: "pending", title: "Write the tests" }]} />,
+  confirmation: (
+    <Confirmation
+      label="Run search_docs?"
+      approval={{ approvalId: "a1", generation: 1, state: "requested" }}
+      onApprove={() => {}}
+      onDeny={() => {}}
+      reason
+    />
+  ),
+  question: (
+    <Question
+      label="Deploy questions"
+      questions={[
+        {
+          id: "env",
+          prompt: "Where should it deploy?",
+          kind: "single",
+          required: true,
+          options: [
+            { value: "staging", label: "Staging" },
+            { value: "prod", label: "Production" },
+          ],
+        },
+      ]}
+      onSubmit={() => {}}
+    />
+  ),
+  checkpoint: <Checkpoint description="Before editing auth.ts" onRestore={() => {}} />,
+  "model-selector": (
+    <ModelSelector
+      models={[{ id: "sonnet-4", name: "Sonnet 4", group: "Anthropic" }]}
+      defaultValue="sonnet-4"
+    />
+  ),
+  "reasoning-effort": <ReasoningEffort defaultValue="medium" />,
+  suggestion: <Suggestion suggestions={[{ id: "a", label: "Summarize this thread" }]} onPick={() => {}} />,
+  "context-meter": <ContextMeter used={57_600} total={128_000} usage={{ input: 40_000 }} cost={0.42} />,
+  feedback: <Feedback defaultRating="up" onComment={() => {}} />,
+  notice: (
+    <Notice variant="warning" label="Rate limited" onDismiss={() => {}}>
+      Responses are slower for the next few minutes.
+    </Notice>
+  ),
+  "guardrail-notice": (
+    <GuardrailNotice
+      blocking
+      label="Model output withheld"
+      reason="The response included personal data."
+      detail="Policy."
+    />
+  ),
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
       <ConversationViewport>

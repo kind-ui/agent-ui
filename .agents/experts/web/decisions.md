@@ -2,10 +2,12 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
+Last reviewed: `bb45d49` (Wave 3 Task 11 agent conformance)
 
 ## Settled
 
+- **Fixtures carry no comments** (Wave 3 Task 11): the agent page builds `kind-model-selector` and `kind-reasoning-effort` with `createElement` because `defaultValue` is a property read when the element connects (AGENTS.md, Wave 3 agent conformance), not because markup was overlooked.
+- **`kind-suggestion` fills in only its own row** (Wave 3 Task 7): a row a page writes is the internal Carousel's markup with its `kind-suggestion-item`s, as a written `kind-reasoning-effort` holds its own Segmented Control; the element's JSDoc says so. There are no `kind-suggestion-viewport`/`-previous`/`-next` tags.
 - **`kind-task` and `kind-plan` look up their parts with `querySelector`,** not Chain of Thought's `own()`: no part of theirs holds arbitrary content, so no nested task or plan sits inside one.
 - **`notified` in `budgets.spec.ts` counts shown parts only** (hidden parts sync without `getAttribute`), at most the jump and empty parts, constant across list sizes. The `remount` fixture keeps the last unmounted tree until the next mount; leaks are measured while mounted.
 - **Theme defaults land on `:root, :host`** (Tailwind's `@theme` output), so inside a shadow root that loads the stylesheet a page's `:root` override doesn't reach; the README tells consumers to set `:host` there too. It also makes the stylesheet work when loaded only in a shadow root.
@@ -17,12 +19,22 @@ Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A `kind-notice` written with only its description grows by 40 px when it's defined** (Wave 3 Task 10), as it adds its mark and title; same class as the empty Task, Plan and Checkpoint entries.
+- **An empty `kind-context-meter` moves what's beside it when it's defined** (Wave 3 Task 8), as the empty Task, Plan and Checkpoint do; no shadow-root case in its fixture either (checked by hand).
+- **`ui-carousel-content` is `aria-live="polite"` (UI SDK),** so a suggestion added while the row is in view may be read aloud; not checked with a screen reader.
+- **An empty `kind-model-selector` or `kind-reasoning-effort` adds its parts on upgrade,** shifting layout once, as Task and Plan do.
+- **`kind-checkpoint` fills in its parts when it upgrades empty,** the same layout-shift class as the empty `kind-task`/`kind-plan` entry.
+- **Firefox crashes running axe after Playwright's role query on a UI SDK `ui-radio`/`ui-checkbox`** (bare UI SDK markup reproduces it; report upstream). `question.spec.ts`'s axe tests click through a CSS locator.
+- **A `<kind-question-item>` written directly in `<kind-question>`, outside a `<form>`, isn't supported;** the JSDoc says to write items inside a `<form>` child, since moving the host's nodes breaks React 19.
+- **Focus recovery inside a shadow root lands on `<body>`** (Confirmation's choices leaving, any `createFocusRecovery`): UI SDK's `focus-recovery.js` reads `document.activeElement`, not the root node's. Report upstream.
 - **`kind-subagent` adds its trigger above server-rendered steps on upgrade,** shifting them down once, the same class as the empty `<kind-task>`/`<kind-plan>` entry.
 - **An empty `<kind-task>` or `<kind-plan>` inserts its parts on upgrade** (same class as `kind-chain-of-thought` and `kind-reasoning`), which can shift layout before the element is defined.
-- **Web Task and Plan play color transitions on first render** (progress fill, Accept, item titles) as `data-*` attributes land after the first style pass; Chain of Thought's marks and the Tool copy buttons do the same. Trace which upgrade step causes it. In Firefox those transitions never finish under hidden content, so `wave-2/agent.spec.ts`'s `settled` skips animations whose target isn't visible.
+- **Step roots and Task, Plan and Chain of Thought rows hold transitions through their first frames (`data-mounting`, Wave 3 Task 11); other roots don't:** Confirmation, Question, Notice and the other Wave 3 roots can still fade their colors in on web when a part before them reads style as it binds; no axe run has caught one. Same `holdTransitions` call if one does; UI SDK binds reading style while parts connect belongs upstream.
+- **`kind-checkpoint`'s `restore` event carries its `ActionDetails` in `detail.value`,** where `approve`, `deny`, `questionsubmit`, `skip` and `comment` spread them into `detail` (`@ui-sdk/web`'s event proxy puts a single argument in `value`). Flattening it changes a public event shape; decide with the next web API pass.
+- **WebKit can leave a transition on the running status mark's `::before` pending forever** after Question's status part shows, hides and shows again within a few ms of a press, so a wait on `getAnimations()` never ends. Seen only when a host never passes `submitted`; not isolated.
 - **`kind-tool` draws twice for one `call` change** (the store subscription and one more notification). Harmless, since every write is guarded.
 - **`<kind-reasoning text="…">` shows nothing before upgrade,** then inserts its trigger and content, which shifts layout; same class as `kind-streaming-text` below. Writing the parts as children avoids it; undocumented.
-- **Indicators and `kind-uploader` fill in their parts when they connect with no children,** so a definition loaded before hand-written markup is parsed could double them (unconfirmed; `ui-calendar` does the same).
+- **Elements that fill in their parts when they connect with no children** (indicators, `kind-uploader`, `kind-feedback`, …) can double them when a definition loads before hand-written markup is parsed: simulated for `kind-feedback` (two Toggle groups), not seen in a real streamed parse; `ui-calendar` does the same.
 - **`<kind-streaming-text text="…">` and an empty `kind-uploader` show nothing before upgrade.** Writing the text as children avoids it; undocumented.
 - **`kind-step-list-item` misses a button that arrives late or is replaced:** its target is `querySelector("button")`, and UI SDK's retarget observer only watches direct children. Deferred: one element can fill only one primitive's slot, so whichever of list item and trigger wraps the other has a nested target; `@ui-sdk/web`'s own `ui-toolbar-button` (nested `wrappedControl`) has the same gap. Needs an upstream subtree retarget.
 - **Removing a `kind-step` and putting it back forgets a person's toggle:** `createParts` rebuilds the instance from the `state` getters only, so `userToggled` is lost and auto close resumes. Needs a `@ui-sdk/web` hook to carry non-public state across instances. The same drops a pending Plan Accept or Subagent Stop (`pending` isn't carried), so a press after the move calls the host a second time.
@@ -36,6 +48,14 @@ Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
 
 ## Resolved
 
+- **Step-based elements played color transitions on first render (Task, Plan, Chain of Thought, Tool).** Cause: `@ui-sdk/web` gives each part its attributes as it connects, and a part that reads style as it binds (UI SDK `bindPanel`'s `getAnimations()` on a content bound open, Scroll Area's measure in a code block) styles the parts after it, on the page too, bare. Fixed: the step root holds `data-mounting` until its second frame, and `step.css` turns transitions off under it; state changes still animate.
+- **Notice and Guardrail Notice (Wave 3 Task 10):** Dismiss stays the last child when a host adds text or buttons after the element connects (moved with `moveBefore` where the browser has it), so Tab reaches them first; a notice removed and put back neither rises in nor is announced again.
+- **Feedback (Wave 3 Task 9):** a `kind-feedback` removed and put back a tick later couldn't send the comment its textarea kept (the comment text slot binds `bindText`, tested); the docs say `rating` and `defaultRating` are properties only.
+- **Context Meter (Wave 3 Task 8):** a content part written by hand left focus moving into the details (`render` now sets `initial-focus="none"` on one without it, tested with a `written` case); the title is an `h2`, as React's and UI SDK's PopoverTitle are.
+- **Suggestion (Wave 3 Task 7):** `el.api.getSuggestions()` works (the root lists it in `api`); a chip in a `<form>` doesn't submit it (`form` fixture case, both layers).
+- **Model Selector and Reasoning Effort (Wave 3 Task 6):** the web events are `modelchange` and `effortchange`, since the inner Combobox and Segmented Control fire a composed `valuechange` a capture listener hears first; equal `levels` keep a focused level focused (levels are moved only when out of place); a written field keeps its own labels; the list opens 6px below the field with `align="start"` as in React; `value` is typed to take a string.
+- **Checkpoint (Wave 3 Task 5):** setting `restored` with the dialog open left the page `inert` (a hidden web part keeps its dialog), and Firefox crashed running axe after a role query on the trigger (axe tests reach it with a CSS locator; add the Tooltip/Alert Dialog trigger to the upstream report).
+- **`kind-question` rebuilt its choices for a new array with the same content, and written items didn't win (Wave 3 Task 4).** Fixed: options are compared by content, a written item replaces the added one wherever it sits, and one written empty is filled in (`question.spec.ts`, web).
 - **Tool code-block names (Wave 2 Task 10):** `kind-tool` names only the code blocks it wrote, so a host's own code block keeps its `aria-label` (tested).
 
 - **A focused chip or uploader row blurred when an earlier one was dropped (Wave 2 Task 9).** Fixed: `draw` removes dropped rows before placing the rest, so no row after them moves; the focus specs check again once the row is gone, and pass in Chromium, Firefox and WebKit.

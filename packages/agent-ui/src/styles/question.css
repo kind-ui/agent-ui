@@ -1,0 +1,283 @@
+/* Question (spec §7): one form with a fieldset per question and one row of actions, which the recorded answers
+   replace. */
+@layer components {
+  [data-slot="kind-question"] {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--kind-color-fg);
+  }
+
+  [data-slot="kind-question-item"] {
+    display: block;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  [data-slot="kind-question-prompt"] {
+    display: block;
+    margin-bottom: 8px;
+    padding: 0;
+    font-weight: 500;
+
+    & [data-question-required] {
+      margin-inline-start: 4px;
+      font-size: 0.6875rem;
+      font-weight: 400;
+      color: var(--kind-color-muted);
+    }
+  }
+
+  :is([data-slot="kind-question-choices"], [data-slot="kind-question-text"]) {
+    display: block;
+  }
+
+  /* Each option is a row the whole of which checks it, as UI SDK's choice cards are. */
+  :where([data-slot="kind-question-choices"]) [data-question-option] {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--kind-color-border);
+    border-radius: calc(var(--kind-radius) * 2 / 3);
+    background-color: var(--kind-color-surface);
+    cursor: pointer;
+    transition:
+      background-color var(--kind-duration-fast),
+      border-color var(--kind-duration-fast);
+
+    &:hover {
+      background-color: var(--kind-color-hover);
+    }
+    &:has([data-checked]) {
+      border-color: var(--kind-color-accent);
+      background-color: color-mix(in oklab, var(--kind-color-accent) 6%, var(--kind-color-surface));
+    }
+    /* Centers the 16px control on the first 20px line. */
+    & :is([data-slot="radio"], [data-slot="checkbox"]) {
+      margin-top: 2px;
+      transition:
+        background-color var(--kind-duration-fast),
+        border-color var(--kind-duration-fast);
+    }
+  }
+
+  [data-question-option-text] {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  [data-question-option-description] {
+    font-size: 0.75rem;
+    color: var(--kind-color-muted);
+  }
+
+  /* While the answers are on their way, the choices read as they are and take no presses. */
+  :where([data-slot="kind-question"][aria-busy="true"]) [data-question-option] {
+    cursor: default;
+
+    &:hover:not(:has([data-checked])) {
+      background-color: var(--kind-color-surface);
+    }
+  }
+
+  :where([data-slot="kind-question-choices"])
+    :is([data-slot="radio-indicator"], [data-slot="checkbox-indicator"]) {
+    transition:
+      opacity var(--kind-duration-fast),
+      scale var(--kind-duration-fast) var(--kind-ease);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+      scale: 0.5;
+    }
+  }
+
+  /* The actions row, where the status or the error take the place beside the buttons, so neither moves anything. */
+  [data-slot="kind-question-actions"] {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 2rem;
+  }
+
+  :is([data-slot="kind-question-submit"], [data-slot="kind-question-skip"]) {
+    display: inline-flex;
+    align-items: center;
+    height: 1.75rem;
+    padding-inline: 12px;
+    border: 1px solid transparent;
+    border-radius: calc(var(--kind-radius) / 2);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    transition:
+      background-color var(--kind-duration-fast),
+      border-color var(--kind-duration-fast),
+      opacity var(--kind-duration-fast);
+
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+    /* The pressed button stays solid while its call is pending; a disabled one dims. */
+    &[aria-disabled="true"] {
+      cursor: default;
+    }
+    &[aria-disabled="true"]:not([data-pending]) {
+      opacity: 0.5;
+    }
+    &[data-pending] {
+      cursor: progress;
+    }
+  }
+
+  [data-slot="kind-question-submit"] {
+    background-color: var(--kind-color-accent);
+    color: var(--kind-color-on-accent);
+
+    &:hover:not([aria-disabled="true"]) {
+      background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-fg));
+    }
+  }
+
+  [data-slot="kind-question-skip"] {
+    border-color: var(--kind-color-border);
+    background-color: var(--kind-color-surface);
+    color: var(--kind-color-fg);
+
+    &:hover:not([aria-disabled="true"]) {
+      background-color: var(--kind-color-hover);
+    }
+  }
+
+  [data-slot="kind-question-status"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-inline-start: 4px;
+    color: var(--kind-color-muted);
+  }
+
+  [data-slot="kind-question-error"] {
+    min-width: 0;
+    margin-inline-start: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    color: var(--kind-color-danger);
+  }
+
+  [data-slot="kind-question-summary"] {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-radius: calc(var(--kind-radius) / 2);
+
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+
+    & [data-question-outcome] {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 2rem;
+      font-weight: 500;
+    }
+
+    & dl {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 0;
+      padding-inline-start: 24px;
+    }
+    & dl:empty {
+      display: none;
+    }
+    & dt {
+      font-size: 0.75rem;
+      color: var(--kind-color-muted);
+    }
+    & dd {
+      margin: 0;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+    & dd[data-empty] {
+      color: var(--kind-color-muted);
+    }
+  }
+
+  /* Reduced motion: a short fade, and the indicators don't scale. `none`: no transition at all. */
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot="kind-question"][data-motion="auto"] {
+      &
+        :is(
+          [data-question-option],
+          [data-slot="radio"],
+          [data-slot="checkbox"],
+          [data-slot="kind-question-submit"],
+          [data-slot="kind-question-skip"]
+        ) {
+        transition-duration: var(--kind-duration-reduced);
+      }
+      & :is([data-slot="radio-indicator"], [data-slot="checkbox-indicator"]) {
+        transition: opacity var(--kind-duration-reduced);
+        scale: none;
+      }
+    }
+  }
+
+  [data-slot="kind-question"][data-motion="reduced"] {
+    &
+      :is(
+        [data-question-option],
+        [data-slot="radio"],
+        [data-slot="checkbox"],
+        [data-slot="kind-question-submit"],
+        [data-slot="kind-question-skip"]
+      ) {
+      transition-duration: var(--kind-duration-reduced);
+    }
+    & :is([data-slot="radio-indicator"], [data-slot="checkbox-indicator"]) {
+      transition: opacity var(--kind-duration-reduced);
+      scale: none;
+    }
+  }
+
+  [data-slot="kind-question"][data-motion="none"]
+    :is(
+      [data-question-option],
+      [data-slot="radio"],
+      [data-slot="checkbox"],
+      [data-slot="radio-indicator"],
+      [data-slot="checkbox-indicator"],
+      [data-slot="kind-question-submit"],
+      [data-slot="kind-question-skip"]
+    ) {
+    transition: none;
+  }
+
+  :is(
+    [data-slot="kind-question-item"],
+    [data-slot="kind-question-choices"],
+    [data-slot="kind-question-text"],
+    [data-slot="kind-question-actions"],
+    [data-slot="kind-question-submit"],
+    [data-slot="kind-question-skip"],
+    [data-slot="kind-question-status"],
+    [data-slot="kind-question-error"],
+    [data-slot="kind-question-summary"]
+  )[hidden] {
+    display: none;
+  }
+}

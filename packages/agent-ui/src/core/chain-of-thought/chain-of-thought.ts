@@ -18,6 +18,7 @@ import { memo } from "../memo.js";
 import { enter } from "../motion/index.js";
 import {
   bindStepPanel,
+  holdTransitions,
   type StepApi,
   type StepOpenChangeReason,
   type StepOptions,
@@ -208,7 +209,7 @@ export const chainOfThoughtPrimitive: ChainOfThoughtPrimitive = definePrimitive<
       );
     const setStepOpen = (id: string, open: boolean, cause: Cause = {}) => {
       const { openSteps, stepsById } = store.get();
-      if (!(id in stepsById) || openSteps.includes(id) === open) return false;
+      if (!Object.hasOwn(stepsById, id) || openSteps.includes(id) === open) return false;
       const changed = setOpenSteps(
         open ? [...openSteps, id] : openSteps.filter((each) => each !== id),
         cause,
@@ -321,7 +322,17 @@ export const chainOfThoughtPrimitive: ChainOfThoughtPrimitive = definePrimitive<
   slots: (slot) => {
     const { root, trigger, icon, title, meta, content } = base.slots(slot);
     return {
-      root: slot({ ...root, bind: (_el, { api }) => api.bindRoot() }),
+      root: slot({
+        ...root,
+        bind: (el, part) => {
+          const release = root.bind?.(el, part);
+          const unbind = part.api.bindRoot();
+          return () => {
+            release?.();
+            unbind();
+          };
+        },
+      }),
       trigger,
       icon,
       title: slot<BaseSlotProps, { title: string }>({ ...title, state: (state) => ({ title: state.title }) }),
@@ -355,7 +366,10 @@ export const chainOfThoughtPrimitive: ChainOfThoughtPrimitive = definePrimitive<
             }),
           };
         },
-        bind: (el, { api, key }) => api.bindStep(el, key),
+        bind: (el, { api, key }) => {
+          api.bindStep(el, key);
+          return holdTransitions(el);
+        },
       }),
       "item-trigger": slot<ItemPartProps & BaseSlotProps, { open: boolean }>({
         role: "button",

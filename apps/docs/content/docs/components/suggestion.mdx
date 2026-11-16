@@ -1,0 +1,92 @@
+---
+title: Suggestion
+description: Offer prompts a person can send in one press.
+---
+
+import SuggestionExample from "@/examples/suggestion/basic";
+
+Use suggestions under an answer or an empty composer, to offer the next things a person might ask. Each one is a short chip, and the row scrolls sideways when they don't all fit.
+
+<Example caption="Press a suggestion to send it. Press Next to bring the later ones into view, or swipe the row.">
+  <SuggestionExample />
+
+  <include cwd lang="tsx">./examples/suggestion/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/suggestion
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/suggestion-web
+```
+
+## Composition
+
+```text
+Suggestion
+├── SuggestionViewport
+│   └── SuggestionItem
+└── SuggestionControls
+    ├── SuggestionPrevious
+    └── SuggestionNext
+```
+
+`Suggestion` is a group named by its `label` that holds UI SDK's Carousel. `SuggestionViewport` is the row that scrolls, each `SuggestionItem` is a button showing a suggestion's `label` and `description`, and `SuggestionPrevious` and `SuggestionNext` scroll the row. `SuggestionControls` holds them and hides them while every suggestion fits.
+
+## Usage
+
+### Picking
+
+Pass `suggestions`, each with an `id`, a `label` and an optional `description`, and `onPick`, which gets the `id` of the one chosen. Sending it is up to you: put the text in the composer, or send it straight away.
+
+```tsx
+<Suggestion
+  suggestions={[{ id: "summarize", label: "Summarize this thread" }]}
+  onPick={(id) => send(prompts[id])}
+/>
+```
+
+`onPick` gets the reason `item-press` when a person pressed it, or `imperative` from `pick`. Without `onPick`, the suggestions show but can't be chosen.
+
+### Overflow
+
+The suggestions sit in one row. When they don't all fit, **Previous** and **Next** appear after it and the edge with more past it fades; while they fit, the buttons take no room. Only suggestions at least half in view can be reached with Tab, so press **Next**, swipe or scroll to reach the rest.
+
+### Keyboard
+
+Tab moves through the suggestions in view, then **Previous** and **Next**. Enter or Space picks the focused one.
+
+### Motion
+
+A suggestion added after the row first shows fades up once; one you update or that was there from the start doesn't. A removed one leaves at once, and if it had focus, focus moves to the next suggestion. Under `prefers-reduced-motion`, or with `motion="reduced"`, new ones only fade and a press doesn't shrink the chip. With `motion="none"`, neither animates. Scrolling to another page follows `prefers-reduced-motion` only.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/suggestion/suggestion.ts" name="SuggestionOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the row by its label and reads every suggestion, wherever the row has scrolled. Its `pick` takes a suggestion's `id` or its label, the same as a person pressing it, and refuses one that isn't listed. It's offered only while `onPick` is set.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/suggestion/suggestion.ts" name="SuggestionAgentActions" type='Pick<SuggestionApi, "pick">' />
+
+`pick` doesn't wait for a person to confirm. When a pick sends a prompt, you can ask the person first by returning their answer from your `allow`, which also answers every action that does need a person:
+
+```ts
+import { createAgent } from "@ui-sdk/react/agent";
+
+const agent = createAgent({
+  allow: ({ component, confirm }) => {
+    if (confirm) return window.confirm(confirm);
+    if (component === "kind-suggestion") return window.confirm("Let the agent send a suggested prompt?");
+    return true;
+  },
+});
+```
+
+<Caption>
+  Runs in React and Web Components. On `<kind-suggestion>`, set `suggestions` as a property, and `label` and `motion` as attributes. Picking needs the `can-pick` attribute and fires `pick`, with the suggestion's `id` as `event.detail.value`. The element fills in its row when it has no children.
+</Caption>

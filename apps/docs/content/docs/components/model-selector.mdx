@@ -1,0 +1,85 @@
+---
+title: Model Selector
+description: Let people pick the model that answers, from a searchable list grouped by provider.
+---
+
+import ModelSelectorExample from "@/examples/model-selector/basic";
+
+Use a model selector in a prompt's toolbar when people can choose which model answers. The field shows the chosen model and its provider in one compact row, and typing in it filters the list, best match first, with the matching letters marked. Place [Reasoning Effort](/docs/components/reasoning-effort) beside it when the model can think harder.
+
+<Example caption="Type son4 in the Model field to find Sonnet 4, then press Enter. Opus 4 is disabled, so it can't be chosen.">
+  <ModelSelectorExample />
+
+  <include cwd lang="tsx">./examples/model-selector/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/model-selector
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/model-selector-web
+```
+
+## Composition
+
+```text
+ModelSelector
+├── ModelSelectorTrigger
+│   └── ModelSelectorInput
+└── ModelSelectorContent
+    ├── ModelSelectorEmpty
+    └── ModelSelectorGroup
+        └── ModelSelectorItem
+```
+
+`ModelSelector` is a group named by its `label` that holds UI SDK's Combobox. `ModelSelectorTrigger` is the field: the search field, the chosen model's group and a button that opens the list. `ModelSelectorInput` is the search field, which shows the chosen model's name while the list is closed. `ModelSelectorContent` is the list, with a `ModelSelectorGroup` for each provider, a `ModelSelectorItem` for each model and `ModelSelectorEmpty` while nothing matches.
+
+## Usage
+
+### Models
+
+Pass `models`, each with an `id` and a `name`, and optionally a `group`, a `description` and `disabled`. The list shows the groups in the order they first appear, and each model with its description under its name. A disabled model stays in the list, dimmed, and can't be chosen by pointer, keyboard or `setValue`.
+
+```tsx
+<ModelSelector
+  models={[
+    { id: "gpt-5", name: "GPT-5", group: "OpenAI" },
+    { id: "sonnet-4", name: "Sonnet 4", group: "Anthropic", description: "Balanced for everyday work" },
+  ]}
+  defaultValue="sonnet-4"
+  onValueChange={(id) => setModel(id)}
+/>
+```
+
+Pass `value` and `onValueChange` to control the chosen model, or `defaultValue` to start with one. `onValueChange` gets the model's `id`, with the reason `input-change` when a person chose it, or `imperative` from `setValue`.
+
+### Searching
+
+Typing in the field filters the list as you type. A model matches when its name, group or description holds the letters in order, so "son4" finds Sonnet 4. Within each group, the best match comes first, and a group with no match is hidden. The letters that matched the name are marked. When nothing matches, the list says "No models found.".
+
+The field keeps its width whatever the model's name, so choosing a longer one moves nothing beside it; a long name is cut short with an ellipsis. Set `--kind-model-selector-width` to change the width.
+
+### Keyboard
+
+The field is one Tab stop. Typing or Down Arrow opens the list. While you type, the best match is highlighted, so Enter chooses it; the arrow keys move the highlight, skipping disabled models. Escape closes the list and puts the chosen model's name back, with focus still in the field.
+
+### Motion
+
+The list rises and fades in below the field. Under `prefers-reduced-motion`, or with `motion="reduced"`, it only fades, over 120 ms, and with `motion="none"` it opens at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/model-selector/model-selector.ts" name="ModelSelectorOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the model selector by its label and reads the chosen model's `id`. Its `setValue` takes a model's `id` or its name, the same as a person choosing it, and refuses a model that isn't listed. A disabled model returns `false` and changes nothing. It needs no person to confirm.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/model-selector/model-selector.ts" name="ModelSelectorAgentActions" type='Pick<ModelSelectorApi, "setValue">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-model-selector>`, set `models` and `value` as properties, and listen for `modelchange`, with the model's `id` as `event.detail.value`. The element fills in its field and list when it has no children.
+</Caption>

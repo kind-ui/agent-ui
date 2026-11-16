@@ -1,0 +1,90 @@
+---
+title: Confirmation
+description: Ask a person to approve or deny what the agent wants to do, and keep what they decided in view.
+---
+
+import ConfirmationExample from "@/examples/confirmation/basic";
+
+Use a confirmation when the agent needs a person's go-ahead before it acts, like deleting a file or sending an email. It offers the choices the host supplies, then shows the recorded outcome in their place.
+
+<Example caption="Type a reason and press Deny, or press Approve. The choices give way to the outcome, at the same height.">
+  <ConfirmationExample />
+
+  <include cwd lang="tsx">./examples/confirmation/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/confirmation
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/confirmation-web
+```
+
+## Composition
+
+```text
+Confirmation
+├── ConfirmationReason
+├── ConfirmationChoices
+│   ├── ConfirmationApprove
+│   ├── ConfirmationDeny
+│   └── ConfirmationError
+└── ConfirmationOutcome
+    └── ConfirmationOutcomeIcon
+```
+
+`Confirmation` renders these parts when you pass no children. It's a group named by its `label`. `ConfirmationReason` is a text box for the reason Deny sends, `ConfirmationApprove` and `ConfirmationDeny` are native buttons, and `ConfirmationError` says "Decision not sent. Try again." beside them. `ConfirmationOutcome` takes the choices' place once they're gone, with a status mark and where the request stands.
+
+## Usage
+
+### Requests
+
+Pass the host's request as `approval`: an `approvalId`, a `generation` and a `state` of `requested`, `submitting`, `submit-failed`, `responded` or `auto`, with the `decision` once there is one. Pass `onApprove` to show **Approve** and `onDeny` to show **Deny**; only the choices you pass render. Each is called with the `approvalId` and `generation` it decides, and `details.source` says who decided, like `"mouse"` or `"agent"`.
+
+```tsx
+<Confirmation
+  label="Run search_docs?"
+  approval={approval}
+  onApprove={(decision) => respond({ ...decision, approved: true })}
+  onDeny={(decision) => respond({ ...decision, approved: false })}
+/>
+```
+
+An `auto` request shows its outcome, like "Approved automatically", and no choices.
+
+### Sending a Decision
+
+A press disables both choices at once, so a second press, even on the other choice, calls nothing. Return a promise to keep them disabled until it settles; they stay disabled after that until the host reports on the request, whether it's `submitting`, `submit-failed` or `responded`. A rejection, or `submit-failed`, makes them available again, and `submit-failed` shows "Decision not sent. Try again." beside them.
+
+When the host replaces the request with a new `generation`, the choices are available again, and a late result for the old one changes nothing.
+
+### Reasons
+
+Pass `reason` to show a box above the choices from the start. Deny sends its text as `decision.reason`, trimmed, and leaves it out when it's empty. It keeps its text through a new `generation` of the same request, and empties for a new `approvalId`. Once the decision is recorded, the box collapses and the outcome shows the reason after "Denied".
+
+### Outcome
+
+While the host sends a decision, the outcome reads "Sending decision". Once it's recorded, it reads "Approved", "Denied", "Approved automatically" or "Denied automatically". It has the same height as the choices, so nothing above or below moves. If a choice had focus when it went away, focus moves to the outcome, or to the element `focusFallback` returns.
+
+Screen readers hear "Decision not sent" when a decision fails, and the outcome when it's recorded.
+
+### Motion
+
+The choices and the outcome fade in when they swap, and the reason box collapses. Under `prefers-reduced-motion`, or with `motion="reduced"`, they fade over 120 ms and the box doesn't change height, and with `motion="none"` they swap at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/confirmation/confirmation.ts" name="ConfirmationOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the confirmation by its label and reads its `approvalState`. It can approve or deny while those choices show, and `deny` takes a reason, which fills the reason box. Every decision waits for a person to confirm, unless the host's `allow` lets it through; this can't be turned off.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/confirmation/confirmation.ts" name="ConfirmationAgentActions" type='Pick<ConfirmationApi, "approve" | "deny">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-confirmation>`, `approval` and `focusFallback` are properties only, and other props are kebab-case attributes, so `approveLabel` is `approve-label`. Approve and Deny need the `can-approve` and `can-deny` attributes and fire `approve` and `deny` with the decision as `detail.value`: call `event.detail.waitUntil(promise)` to keep the choices disabled. The element fills in its parts when it has no children.
+</Caption>

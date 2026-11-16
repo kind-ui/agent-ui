@@ -258,7 +258,12 @@ async function check() {
       errors.push(...checkInstall(layer, dir, items));
       const searchFile = join(dir, "search.json");
       const searchOutput = openSync(searchFile, "w");
-      await run("npx", ["--yes", SHADCN, "search", NAMESPACE, "--limit", "100", "--json"], dir, searchOutput);
+      await run(
+        "npx",
+        ["--yes", SHADCN, "search", NAMESPACE, "--limit", String(catalog.items.length), "--json"],
+        dir,
+        searchOutput,
+      );
       closeSync(searchOutput);
       const listed = JSON.parse(readFileSync(searchFile, "utf8")).items.map((item) => item.name);
       for (const name of items)

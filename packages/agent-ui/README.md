@@ -11,7 +11,7 @@ Agent-operable AI components built on [UI SDK](https://ui-sdk.dev/docs).
 
 Styled React and Web Components are distributed through the registry, not this package.
 
-Components: Step and Step List, Status, Reasoning, Tool, Chain of Thought, Task, Plan, Subagent, Queue, Conversation, Message, Markdown, Code Block, Markdown Table, Composer, Attachments, Uploader, Loader, Thinking Indicator, Typing Indicator and Streaming Text.
+Components: Step and Step List, Status, Reasoning, Tool, Chain of Thought, Task, Plan, Subagent, Queue, Confirmation, Question, Checkpoint, Model Selector, Reasoning Effort, Suggestion, Context Meter, Feedback, Notice, Guardrail Notice, Conversation, Message, Markdown, Code Block, Markdown Table, Composer, Attachments, Uploader, Loader, Thinking Indicator, Typing Indicator and Streaming Text.
 
 ## Registry
 
@@ -47,7 +47,7 @@ Import `@kind-ui/agent-ui/styles.css` after `tailwindcss` in your stylesheet. It
 | `--kind-color-fg`, `--kind-color-muted` | Text and secondary text |
 | `--kind-color-surface`, `--kind-color-hover`, `--kind-color-border`, `--kind-color-ring`, `--kind-color-shadow` | Backgrounds, subtle fills, borders, focus rings, shadows |
 | `--kind-color-accent`, `--kind-color-on-accent` | Running and primary states, and text on them |
-| `--kind-color-success`, `--kind-color-warning`, `--kind-color-danger`, `--kind-color-on-status` | Statuses, and marks on them |
+| `--kind-color-success`, `--kind-color-warning`, `--kind-color-danger`, `--kind-color-on-status`, `--kind-color-on-warning` | Statuses, and marks on them (`on-warning` on the warning fill) |
 | `--kind-radius` | Base corner radius; others scale from it |
 | `--kind-font-mono` | Code |
 

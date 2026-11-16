@@ -4,7 +4,14 @@ import type { StepStatus } from "../types/index.js";
 import { createListFocus, type ListFocus } from "./list-focus.js";
 import { memo } from "./memo.js";
 import { enter } from "./motion/index.js";
-import { type StepApi, type StepOptions, type StepState, stepAnnouncement, stepBase } from "./step/base.js";
+import {
+  holdTransitions,
+  type StepApi,
+  type StepOptions,
+  type StepState,
+  stepAnnouncement,
+  stepBase,
+} from "./step/base.js";
 
 /** An entry of a Task's or Plan's `items`. */
 export type ListItem = { id: string; title: string; status: string };
@@ -186,7 +193,17 @@ export const itemList = <
     slots: (slot: SlotFactory<State, Api>) => {
       const { root, trigger, icon, title, meta, content } = base.slots(slot);
       return {
-        root: slot({ ...root, bind: (_el, { api }) => api.bindRoot() }),
+        root: slot({
+          ...root,
+          bind: (el, part) => {
+            const release = root.bind?.(el, part);
+            const unbind = part.api.bindRoot();
+            return () => {
+              release?.();
+              unbind();
+            };
+          },
+        }),
         trigger,
         icon,
         title: slot<BaseSlotProps, { title: string }>({
@@ -225,9 +242,11 @@ export const itemList = <
           },
           bind: (el, part) => {
             part.api.bindItem(el, part.key);
+            const release = holdTransitions(el);
             const unbindFocus = part.api.roving.bind(el, part);
             const unbindRecovery = part.api.recovery.bind(el, part);
             return () => {
+              release();
               unbindFocus();
               unbindRecovery();
             };

@@ -1,0 +1,124 @@
+/* Notice and Guardrail Notice (spec §7), shared by both render layers through `data-notice-part`. The mark comes
+   from status-mark.css. */
+@layer components {
+  [data-notice-part="root"] {
+    --kind-notice-tone: var(--kind-color-accent);
+    /* Lucide "x", see THIRD_PARTY_NOTICES.md. */
+    --kind-notice-dismiss: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E");
+
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+    column-gap: 10px;
+    row-gap: 2px;
+    box-sizing: border-box;
+    padding-block: 10px;
+    padding-inline: 12px 10px;
+    border: 1px solid color-mix(in oklab, var(--kind-notice-tone) 28%, var(--kind-color-border));
+    border-radius: calc(var(--kind-radius) * 2 / 3);
+    background-color: color-mix(in oklab, var(--kind-notice-tone) 6%, var(--kind-color-surface));
+    color: var(--kind-color-fg);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+
+    &[data-variant="success"] {
+      --kind-notice-tone: var(--kind-color-success);
+    }
+    &[data-variant="warning"] {
+      --kind-notice-tone: var(--kind-color-warning);
+    }
+    &[data-variant="error"] {
+      --kind-notice-tone: var(--kind-color-danger);
+    }
+  }
+
+  /* The mark and Dismiss sit beside the first line; every other part stacks in the middle column. */
+  [data-notice-part="icon"] {
+    grid-row: 1;
+    grid-column: 1;
+    margin-block: 2px;
+  }
+
+  [data-notice-part="title"],
+  [data-notice-part="description"],
+  [data-notice-part="actions"] {
+    grid-column: 2;
+  }
+
+  [data-notice-part="title"] {
+    font-weight: 600;
+  }
+
+  [data-notice-part="description"] {
+    color: var(--kind-color-muted);
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  [data-notice-part="actions"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  [data-notice-part="dismiss"] {
+    grid-row: 1;
+    grid-column: 3;
+    display: inline-grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-block: -2px;
+    border-radius: calc(var(--kind-radius) / 2);
+    color: var(--kind-color-muted);
+    transition:
+      color var(--kind-duration-fast),
+      background-color var(--kind-duration-fast);
+
+    &::before {
+      content: "";
+      width: 14px;
+      height: 14px;
+      background-color: currentColor;
+      mask: var(--kind-notice-dismiss) center / contain no-repeat;
+    }
+    &:hover {
+      color: var(--kind-color-fg);
+      background-color: color-mix(in oklab, var(--kind-notice-tone) 12%, transparent);
+    }
+    &:focus-visible {
+      color: var(--kind-color-fg);
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 1px;
+    }
+  }
+
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    [data-notice-part="dismiss"]::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-notice-part="dismiss"] {
+      transition-duration: var(--kind-duration-reduced);
+    }
+  }
+
+  [data-notice-part="dismiss"]:where([data-motion="reduced"] *) {
+    transition-duration: var(--kind-duration-reduced);
+  }
+
+  [data-notice-part="dismiss"]:where([data-motion="none"] *) {
+    transition: none;
+  }
+}
