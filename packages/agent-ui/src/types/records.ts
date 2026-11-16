@@ -80,3 +80,43 @@ export interface TokenUsage {
   reasoning?: number;
   cached?: number;
 }
+
+/** A file or folder in a file tree. A path ending in `/` is an empty folder. */
+export interface FileTreeEntry {
+  path: string;
+  change?: "added" | "modified" | "deleted";
+}
+
+/** One line of a stack trace. `raw` is the line as written; the rest is what could be read from it. */
+export interface StackFrame {
+  raw: string;
+  fn?: string;
+  file?: string;
+  line?: number;
+  column?: number;
+  /** Whether the frame is in a library rather than the app. */
+  library?: boolean;
+}
+
+/** A word of a transcript segment, timed in seconds. */
+export interface TranscriptWord {
+  text: string;
+  start: number;
+  end: number;
+}
+
+/** A speaker's turn in a transcript, timed in seconds. */
+export interface TranscriptSegment {
+  id: string;
+  speaker: string;
+  start: number;
+  end: number;
+  text: string;
+  words?: TranscriptWord[];
+}
+
+export interface SelectionActionItem {
+  id: string;
+  label: string;
+  description?: string;
+}

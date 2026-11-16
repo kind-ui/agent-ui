@@ -1,3 +1,4 @@
+export { type AnsiLine, type AnsiLines, type AnsiSpan, createAnsiLines } from "./ansi.js";
 export { approvalKey, approvalLabel, isActionable } from "./approval.js";
 export {
   ATTACHMENT_ERRORS,
@@ -237,6 +238,7 @@ export {
   type ReasoningEffortValueChangeReason,
   reasoningEffortPrimitive,
 } from "./reasoning-effort/index.js";
+export { isLibraryFrame, parseStack } from "./stack.js";
 export {
   type StatusOptions,
   type StatusPrimitive,
@@ -312,6 +314,7 @@ export {
   toolStatus,
   toolValue,
 } from "./tool/index.js";
+export { pathItems, treeValues } from "./tree.js";
 export { typingIndicatorPrimitive } from "./typing-indicator/index.js";
 export {
   type UploaderApi,

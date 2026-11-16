@@ -91,14 +91,14 @@ AI components need general controls. These are UI SDK components or `@ui-sdk/cor
 | --- | --- | --- |
 | Button | Button | almost all |
 | Collapsible | Collapsible, `bindPanel`, `bindFindable` | Step and every Step-based component, Sources, Queue |
-| Popover, Tooltip, Hover Card | Popover, Tooltip, Hover Card | Feedback, Checkpoint, Context Meter, Inline Citation |
+| Popover, Tooltip | Popover (`createPopup`; Context Meter and Inline Citation add hover and focus opening), Tooltip | Feedback, Checkpoint, Context Meter, Inline Citation |
 | Menu | Menu | Message, Document |
 | Alert Dialog, Dialog | Alert Dialog, Dialog | Checkpoint, Generated Image |
 | Scroll Area | Scroll Area, `createStickToBottom` | Conversation, Terminal, Code Block, Markdown Table, Document |
 | Token Input, Trigger Menu | Token Input, Trigger Menu | Composer |
 | File Input | File Input | Composer, Uploader |
 | Combobox, Segmented Control | Combobox, Segmented Control | Model Selector, Reasoning Effort, Test Results |
-| Toolbar, Toggle | Toolbar, Toggle | Message, Code Block, Feedback, Selection, Document |
+| Toolbar, Toggle | Toolbar, Toggle, and for Selection `position` and `bindLayer` | Message, Code Block, Feedback, Selection, Document |
 | Carousel | Carousel | Suggestion, Inline Citation |
 | Tree | Tree, `treeFromPaths` | File Tree, Test Results |
 | Avatar | Avatar | Message, Subagent |
@@ -204,7 +204,7 @@ Every new check script joins `npm run check`.
 | Specifier | Contents | Runtime deps |
 | --- | --- | --- |
 | `@kind-ui/agent-ui` | Neutral types and type guards | none |
-| `@kind-ui/agent-ui/core` | Every public primitive definition (`stepPrimitive`, `composerPrimitive`, …), their option and state types, the markdown engine, the motion helper | `@ui-sdk/core`, `motion`, the markdown libraries (§6) |
+| `@kind-ui/agent-ui/core` | Every public primitive definition (`stepPrimitive`, `composerPrimitive`, …), their option and state types, the markdown engine, the motion helper, the ANSI and stack trace helpers | `@ui-sdk/core`, `motion`, the markdown libraries (§6), `ansi-sequence-parser`, `stacktrace-parser` |
 | `@kind-ui/agent-ui/adapters/ai-sdk` | `fromUIMessages`, `fromUIMessagePart`, `toApprovalResponse`, `fromChatStatus` | none (`ai` types only) |
 | `@kind-ui/agent-ui/styles.css` | Tailwind v4 source registration and theme tokens | none |
 
@@ -214,6 +214,7 @@ Dependency policy:
 - `@ui-sdk/react` and `@ui-sdk/web` are not dependencies of the npm package. Registry items declare them at the same exact version as `@ui-sdk/core`.
 - `motion` is a dependency pinned exactly. Only its framework-agnostic API (`animate`, spring options) is used.
 - The markdown libraries are dependencies pinned exactly (reason: §6): `mdast-util-from-markdown`, `mdast-util-gfm`, `micromark-extension-gfm`, `mdast-util-definitions`, `micromark-util-sanitize-uri`, `marked` (block lexer only), and `remend`.
+- `ansi-sequence-parser` (Terminal's SGR styles, §7) and `stacktrace-parser` (Stack Trace's `stack` text, §7) are dependencies pinned exactly, each behind one core module (`core/ansi.ts`, `core/stack.ts`).
 - `ai` is an optional peer dependency used only for adapter types. A consumer without `ai` must install, typecheck, and run every entry, including the adapter's other exports.
 - No React peer dependency on the npm package.
 
@@ -512,26 +513,27 @@ Behavior requirements:
 | Component | Composes | Agent actions | Replaces |
 | --- | --- | --- | --- |
 | **Sources** | Collapsible | `expand`, `collapse` | sources |
-| **Inline Citation** | Hover Card, Carousel | `open`, `close`, `next`, `previous` | inline-citation |
+| **Inline Citation** | Popover (opens on hover, focus, and press), Carousel | `open`, `close`, `next`, `previous` | inline-citation |
 | **Document** | Toolbar, Menu, Scroll Area, Collapsible | `copy`, `download`, `expand`, `collapse` | document |
 | **Generated Image** | Dialog, Button | `open`, `close`, `download` | generated-image |
 | **File Tree** | Tree, `treeFromPaths`, `createTypeahead` | `expand(path)`, `collapse(path)`, `select(path)` | (new) |
-| **Terminal** | Step, Scroll Area, `createStickToBottom`, `createVirtualizer` | `expand`, `collapse`, `copy` | (new) |
-| **Stack Trace** | Step, `createRovingFocus` | `copy`, `toggleLibraryFrames`, `openFrame(index)` | (new) |
+| **Terminal** | Step, Scroll Area, `createStickToBottom`, `createVirtualizer`, `ansi-sequence-parser` | `expand`, `collapse`, `copy` | (new) |
+| **Stack Trace** | Step, `createRovingFocus`, `stacktrace-parser` | `copy`, `toggleLibraryFrames`, `openFrame(index)` | (new) |
 | **Test Results** | Step, Tree, Segmented Control | `setFilter(status)`, `expand(id)`, `collapse(id)` | (new) |
-| **Transcript** | `createRovingFocus`, `fuzzyScore`, `matchSegments` | `search(text)`, `seek(segmentId)` | transcript |
+| **Transcript** | `createRovingFocus`, `createVirtualizer`, `fuzzyScore`, `matchSegments` | `search(text)`, `seek(segmentId)` | transcript |
 | **Selection** + **Action** | Selection: Toolbar, `position`, `bindLayer`. Action: Step | Selection: `run(actionId)`, `dismiss`. Action: `expand`, `collapse` | selection, action |
 
 Behavior requirements:
 
-- **Document:** `download` appears only when the host supplies `onDownload`.
-- **Generated Image:** explicit `loading`, `loaded`, and `error` states; the zoom Dialog restores focus on close.
+- **Inline Citation:** the primitive owns its card through `createPopup` with Context Meter's preset (a Popover that also opens on hover and focus, after a hover card's delays), since a citation whose source has no `url` has no link to be a Hover Card's trigger. It opens on hover, focus, and press; `open`/`onOpenChange` reach a web host, and the agent's `open` and `close` act directly.
+- **Document:** `format` is `"markdown"` (the Markdown view), `"code"` (Code Block with `language`) or `"text"` (a wrapped `<pre>`); no HTML, PDF or image previews. `download` appears only when the host supplies `onDownload` (web: `can-download`); the component never fetches or builds a file.
+- **Generated Image:** the host's `status` is `generating` (with optional `progress`, 0 to 100, and `preview`, a partial image's URL), `ready` or `error`; once `ready`, the component adds explicit `loading` and `loaded` states from the image's `load` and `error`. The frame keeps the size `width` and `height` give it (as `aspect-ratio`) in every state, so nothing moves when the image arrives. A preview shows blurred under a shimmer; reduced motion drops the shimmer and the blur's transition. The zoom Dialog restores focus on close. `download` appears only when the host supplies `onDownload` (web: `can-download`).
 - **File Tree:** change badges (`added`, `modified`, `deleted`) come from data; `select` calls `onSelect`.
-- **Terminal:** an in-house parser turns ANSI SGR color codes into styled spans (never HTML). Output follows the end like Conversation. Shows the exit code when present.
-- **Stack Trace:** library frames are collapsed by default; `openFrame` appears only when the host supplies `onOpenFrame`.
+- **Terminal:** `ansi-sequence-parser` turns ANSI SGR codes into styled spans (never HTML), streaming across chunks: the 16 named colors as `--kind-ansi-*` tokens, 256-color and truecolor, bold, dim, italic, underline, strikethrough, inverse and reset. Every other escape (cursor moves, erase, OSC titles and links) is dropped, never shown or run. A lone `\r` rewrites its line from the start, so a progress bar shows its last state; `\r\n` is a newline. Output follows the end like Conversation. Shows the exit code when present.
+- **Stack Trace:** takes `frames` as data, from any language, or `stack` text, which `stacktrace-parser` reads (V8, SpiderMonkey and JavaScriptCore formats); a line it can't read stays as a raw frame. A frame is a library frame when the host says so, else when its file is under `node_modules/` or starts with `node:` or `internal/`. Library frames are collapsed by default; `openFrame` appears only when the host supplies `onOpenFrame`.
 - **Test Results:** pass, fail, and skip counts; failures embed Stack Trace.
-- **Transcript:** speaker-attributed, time-coded segments with word highlighting driven by host-supplied `currentTime`; `seek` calls `onSeek`.
-- **Selection:** a floating toolbar anchored to the current text selection inside its root; Escape and outside press dismiss it.
+- **Transcript:** speaker-attributed, time-coded segments with word highlighting driven by host-supplied `currentTime`; `seek` calls `onSeek`. The segment at `currentTime` has `aria-current` and its word `data-current`; while `follow` is on (the default) and focus isn't inside the transcript, a new current segment is scrolled into view through `createVirtualizer`'s `scrollToIndex`. `search(text)` shows only the segments whose text or speaker matches (`fuzzyScore` above zero, in time order) and marks the matches with `matchSegments`; clearing it shows every segment again and keeps focus on the segment it was on.
+- **Selection:** a floating toolbar anchored to the current text selection inside its root; Escape and outside press dismiss it. It's an internal Toolbar placed with `position` against the selection's range and registered with `bindLayer` (non-modal), not `createPopup`, which needs a trigger element. The root reads the selection on its own `pointerup` and `keyup`, so no document listener is needed. A selection that reaches outside the root shows no toolbar. The toolbar never takes focus when it appears; it sits in the DOM right after the root's content, so Tab from a keyboard selection reaches it.
 
 Component count: 13 + 8 + 10 + 10 = 41 rows, with Selection and Action counted as one family.
 

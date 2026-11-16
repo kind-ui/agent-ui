@@ -17,10 +17,10 @@ import {
   type SlotDefinition,
   toLocale,
 } from "@ui-sdk/core";
-import { hoverCardPreset } from "@ui-sdk/core/hover-card";
-import { type PopoverOpenChangeReason, popoverPreset } from "@ui-sdk/core/popover";
+import type { PopoverOpenChangeReason } from "@ui-sdk/core/popover";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { TokenUsage } from "../../types/index.js";
+import { hoverPopupPreset, withHover } from "../hover-popup.js";
 import { memo } from "../memo.js";
 import type { MotionMode } from "../motion/index.js";
 import { type ContextRow, contextRatio, contextRows, contextValueText } from "./format.js";
@@ -156,19 +156,6 @@ export type ContextMeterPrimitive = ReturnType<
   typeof definePrimitive<ContextMeterOptions, ContextMeterState, ContextMeterApi, ContextMeterSlots>
 >;
 
-// Spec D3: a Popover that also opens when the pointer or keyboard focus rests on its trigger, after a hover card's
-// delays.
-const preset: PopupPreset = {
-  ...popoverPreset,
-  focus: hoverCardPreset.focus,
-  delay: hoverCardPreset.delay,
-  closeDelay: hoverCardPreset.closeDelay,
-};
-
-// `createPopup` opens on hover only when the options say so. A prototype rather than a spread, because on Web
-// Components `@ui-sdk/web` fills in the callbacks on read.
-const HOVER = { openOnHover: { value: true } };
-
 const count = (value: number | undefined) => (value !== undefined && Number.isFinite(value) ? value : 0);
 
 const presentation = (
@@ -221,8 +208,8 @@ export const contextMeterPrimitive: ContextMeterPrimitive = definePrimitive<
   controlled: ["open"],
   api: (context) => {
     const popup = createPopup(
-      { ...context, options: (): ContextMeterOptions => Object.create(context.options(), HOVER) },
-      { preset },
+      { ...context, options: () => withHover(context.options()) },
+      { preset: hoverPopupPreset },
     );
     const { store } = context;
     // Server markup is English, as UI SDK Meter's is, so it never disagrees with the client's.
