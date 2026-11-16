@@ -1,0 +1,9 @@
+node_modules
+dist
+artifacts
+test-results
+.superpowers
+*.tsbuildinfo
+
+# Copied in by prepack
+packages/agent-ui/THIRD_PARTY_NOTICES.md

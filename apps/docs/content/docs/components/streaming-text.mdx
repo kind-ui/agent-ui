@@ -1,0 +1,54 @@
+---
+title: Streaming Text
+description: Show plain text as it streams in, each new piece fading in.
+---
+
+import StreamingTextExample from "@/examples/streaming-text/basic";
+
+Use streaming text for a reply that arrives a few words at a time and needs no formatting. For Markdown, use [Markdown](/docs/components/markdown).
+
+<Example caption="Words fade in as the reply streams, with a caret after them until it ends.">
+  <StreamingTextExample />
+
+  <include cwd lang="tsx">./examples/streaming-text/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/streaming-text
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/streaming-text-web
+```
+
+## Usage
+
+### Text
+
+Pass the whole `text` so far on every update, not just the new part. When it extends the last text, only the added part fades in, and nothing before it moves. Any other text, like a shorter or regenerated reply, replaces it at once without fading. Pieces that have finished fading join into one, so the element stays small however long the text grows.
+
+### Caret
+
+Set `caret` while the text streams to show a blinking caret after it, and turn it off when the reply ends. The caret adds no width or line height, and screen readers skip it.
+
+### Motion
+
+New text fades in only at full motion. Under `prefers-reduced-motion`, or with `motion="reduced"` or `"none"`, it appears at once and the caret stops blinking.
+
+### Announcements
+
+Streaming text is content, not a status: it has no role and announces nothing. If people need to hear progress, announce it from the container.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/streaming-text/streaming-text.ts" name="StreamingTextOptions" />
+
+### Agent
+
+An agent connected with `createAgent` sees streaming text by its kind, with no name, since it has no role. It has no actions of its own.
+
+<Caption>
+  Runs in React and Web Components. On `<kind-streaming-text>`, `text` is a property or attribute, `caret` is a boolean attribute and `motion` an attribute of the same name.
+</Caption>

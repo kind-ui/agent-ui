@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "skills": {
+    "documentation-writer": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/documentation-writer/SKILL.md",
+      "computedHash": "b2de0a266264b7a994d9bf1b771d3b35ab3780d16ccd658ffceb2936d3df1db6"
+    },
+    "ui-sdk": {
+      "source": "./node_modules/@ui-sdk/core/skills",
+      "sourceType": "local",
+      "computedHash": "fd6d1a85ce608430e8b77b005e6263eaa7cda9e92c5c5ef0c669132906103bd2"
+    }
+  }
+}

@@ -1,0 +1,79 @@
+# @kind-ui/agent-ui
+
+Agent-operable AI components built on [UI SDK](https://ui-sdk.dev/docs). Not yet published.
+
+| Entry | Contents |
+| --- | --- |
+| `@kind-ui/agent-ui` | Neutral types and type guards |
+| `@kind-ui/agent-ui/core` | Public primitive definitions, the markdown engine, the motion helper |
+| `@kind-ui/agent-ui/adapters/ai-sdk` | AI SDK `UIMessage` mapping (`ai` is an optional peer) |
+| `@kind-ui/agent-ui/styles.css` | Tailwind v4 source registration and theme tokens |
+
+Styled React and Web Components are distributed through the registry, not this package.
+
+## Registry
+
+Add the `@kind-ui` namespace to your `components.json`:
+
+```json
+{
+  "registries": {
+    "@kind-ui": "https://kindui.dev/r/{name}.json"
+  }
+}
+```
+
+Then install a component with `npx shadcn@latest add @kind-ui/<name>`: `<component>` for React (for example `@kind-ui/composer`) and `<component>-web` for Web Components (`@kind-ui/composer-web`). The CLI copies the component into your `ui` directory, installs this package and UI SDK at the pinned versions, imports `styles.css` into your stylesheet, and writes an `AGENTS.md` for coding agents beside the components. Tailwind finds the copied files on its own; if they live outside the app that builds them, add an `@source` for them to your stylesheet.
+
+## Styles
+
+Import `@kind-ui/agent-ui/styles.css` after `tailwindcss` in your stylesheet. It registers the components' styles and declares the theme tokens under `@theme default`, so your own `@theme` or `:root` values win:
+
+```css
+@import "tailwindcss";
+@import "@kind-ui/agent-ui/styles.css";
+
+:root {
+  color-scheme: light dark;
+  --kind-color-accent: var(--color-violet-600);
+  --kind-radius: 0.5rem;
+}
+```
+
+| Token | Use |
+| --- | --- |
+| `--kind-color-fg`, `--kind-color-muted` | Text and secondary text |
+| `--kind-color-surface`, `--kind-color-hover`, `--kind-color-border`, `--kind-color-ring`, `--kind-color-shadow` | Backgrounds, subtle fills, borders, focus rings, shadows |
+| `--kind-color-accent`, `--kind-color-on-accent` | Running and primary states, and text on them |
+| `--kind-color-success`, `--kind-color-warning`, `--kind-color-danger`, `--kind-color-on-status` | Statuses, and marks on them |
+| `--kind-radius` | Base corner radius; others scale from it |
+| `--kind-font-mono` | Code |
+
+Colors are `light-dark()` pairs, so dark mode follows `color-scheme`: `light dark` follows the system, and a class-based dark theme sets `color-scheme: dark` on its root. A Code Block `highlight` function can return `light-dark()` token colors to switch with them.
+
+Tailwind writes the defaults on `:root, :host`, so inside a shadow root that loads this stylesheet, set your values on `:host` too.
+
+## AI SDK adapter
+
+`@kind-ui/agent-ui/adapters/ai-sdk` maps AI SDK `UIMessage`s to the neutral types. It imports `ai` with `import type` only and never calls the SDK, so its emitted JavaScript has no `ai` import. A consumer without `ai` can still import `toApprovalResponse` and `fromChatStatus`. Its declarations type-check without `ai` too, even with `skipLibCheck` off: there, the `ai` types it references are `any`.
+
+| Export | Maps |
+| --- | --- |
+| `fromUIMessages(messages, status?)` | `UIMessage[]` to `Message[]`. `status` applies to the last message, and earlier messages are `"complete"`. |
+| `fromUIMessagePart(part, { messageId, index })` | One part. Returns `null` only for `step-start`. |
+| `fromChatStatus(status)` | `submitted`, `streaming`, `ready` → `complete`, `error` |
+| `toApprovalResponse(approval, decision)` | The argument for `addToolApprovalResponse`: `{ id: approval.approvalId, approved, reason? }` |
+
+### Tested AI SDK version
+
+Tested against `ai@7.0.173`. The spec §4.3 tool states were observed in `ai@7.0.136`. All seven states (`input-streaming` through `output-denied`) are unchanged in `7.0.173`. Differences and adapter decisions:
+
+- **New part types:** `custom`, `reasoning-file`, and the experimental `steering-message` have no neutral counterpart. Like any unknown type, each maps to `{ type: "data", name: <part type>, data: <part> }`.
+- **Unknown tool states** map to `data` too, so the adapter never guesses a step status.
+- **`dynamic-tool` with `dynamic: false`** is a static tool the SDK normalized after its schema went missing. It maps with `dynamic: false`.
+- **`approval.isAutomatic`** maps to `approval.state = "auto"`. Otherwise an approval with `approved` set is `"responded"`, and one without is `"requested"`.
+- **Approvals on `output-available` and `output-error`** (the SDK keeps `approved: true` there) map as `"responded"` with their decision.
+- **`preliminary: true`** on `output-available` maps to `output.state = "preliminary"`.
+- **`output-error` input:** `input` is preserved. When it is absent, the deprecated `rawInput` is used.
+- **Approval generation:** the SDK has none, so mapped approvals are `generation: 0`. Hosts that replace requests own the generation.
+- **Not mapped:** opaque approval fields (`descriptor`, `signature`, `requestReason`, `inputSchemaInput`), tool `title` and `toolMetadata`, text `citations`, and `providerMetadata`. The neutral `Approval` has no field for opaque metadata. None of these fields grant authority.

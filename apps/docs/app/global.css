@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+@import "../../../packages/agent-ui/src/styles/agent-ui.css";
+
+@source "../examples";
+
+/* The `--kind-color-*` tokens are `light-dark()` pairs, so they follow the theme's `color-scheme`. */
+html {
+  color-scheme: light;
+  scrollbar-gutter: stable;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+/* The stable gutter already holds the scrollbar's place, so the scroll lock's `!important` margin is undone. */
+html > body[data-scroll-locked] {
+  /* biome-ignore lint/complexity/noImportantStyles: only `!important` beats the scroll lock's `!important` rule */
+  margin-right: 0px !important;
+  /* biome-ignore lint/complexity/noImportantStyles: as above */
+  --removed-body-scroll-bar-size: 0px !important;
+}

@@ -1,0 +1,54 @@
+---
+title: Uploader
+description: Take files from people and show each upload's progress, with Cancel and Retry.
+---
+
+import UploaderExample from "@/examples/uploader/basic";
+
+Use an uploader when people send files that take a while to upload. It has a drop zone with a browse button, and a row for each upload with its progress bar.
+
+<Example caption="Drop a file or press browse to add it. Press Cancel on the report to stop it, or Retry on the failed file.">
+  <UploaderExample />
+
+  <include cwd lang="tsx">./examples/uploader/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/uploader
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/uploader-web
+```
+
+## Usage
+
+### Uploads
+
+You upload the files and own `items`. `onFiles` gets the files someone chooses, drops or pastes; add an item for each, then update its `progress` (0 to 100) and `status` as it uploads: `queued`, `uploading`, `done`, `error` or `cancelled`. Each row's progress bar is named by the file, and the line under it shows what the upload is doing and the file's size. A failed row shows the item's `error`, or "Upload failed".
+
+When an upload finishes or fails, screen readers hear "report.pdf uploaded" or "report.pdf failed", once.
+
+### Limits
+
+Pass `accept` and `maxSize` to limit the files. The ones they rule out go to `onReject` instead of `onFiles`, each with its `reasons`.
+
+### Cancel and Retry
+
+Pass `onCancel` to show Cancel on queued and uploading rows, and `onRetry` to show Retry on failed ones. Each gets the item's `id`. A row takes no second press until you change its `status`, so a double click can't retry and then cancel. When a cancelled row's button leaves, focus moves to the next row's button, or the one before at the end.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/uploader/uploader.ts" name="UploaderOptions" />
+
+### Agent
+
+An agent connected with `createAgent` reads the uploader's `items`. It can run these actions while an item can take them:
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/uploader/uploader.ts" name="UploaderAgentActions" type='Pick<UploaderApi, "cancel" | "retry">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-uploader>`, `items` is a property and the other props are kebab-case attributes, so `maxSize` is `max-size`. Accepted files fire `files`, and turned-down ones `uploadreject`. Cancel and Retry need the `can-cancel` and `can-retry` attributes, and fire `uploadcancel` and `uploadretry` with the item's `id`.
+</Caption>

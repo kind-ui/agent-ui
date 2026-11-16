@@ -1,0 +1,67 @@
+---
+title: Code Block
+description: Show code with its language, a wrap toggle and a copy button.
+---
+
+import CodeBlockExample from "@/examples/code-block/basic";
+
+Use a code block for a file, a command or a snippet the agent wrote. Markdown renders fenced code in one, and you can use it on its own. Name it with `aria-label`, like the file name.
+
+<Example caption="Press the wrap button to wrap long lines, or the copy button to copy the code. Tab reaches both, and Enter or Space presses them.">
+  <CodeBlockExample />
+
+  <include cwd lang="tsx">./examples/code-block/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/code-block
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/code-block-web
+```
+
+## Usage
+
+### Wrapping and Line Numbers
+
+Long lines scroll sideways until someone presses the wrap button, which reports its state with `aria-pressed`. Pass `defaultWrap` to start wrapped, or `wrap` with `onWrapChange` to control it. Pass `lineNumbers` to number each line.
+
+### Copying
+
+The copy button copies the code and turns into a check for two seconds. It tells screen readers "Copied", or "Copy failed" when the browser refuses the clipboard write.
+
+### Highlighting
+
+No highlighter ships with it. Pass `highlight`, a function that resolves the code as a list of tokens whose contents, joined, are the code. Each token can have a `color`, any CSS color, and a `fontStyle` of `italic` or `bold`:
+
+```tsx
+import type { Highlight } from "@kind-ui/agent-ui/core";
+
+const purple = "light-dark(#7c3aed, #c4b5fd)";
+
+const highlight: Highlight = async (code) =>
+  code.split(/(\bawait\b)/).map((content) => (content === "await" ? { content, color: purple } : { content }));
+```
+
+Plain text shows until the tokens arrive. A `light-dark()` color follows the page's color scheme. The block asks for one result at a time, and doesn't ask again for code that failed until the code or the language changes.
+
+### Streaming
+
+Set `streaming` while the code is still arriving, and the view follows its end. Highlighting keeps up: the start that's already colored stays colored, and the new lines show plain until the next result.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/code-block/code-block.ts" name="CodeBlockOptions" />
+
+### Agent
+
+An agent connected with `createAgent` reads whether the code block wraps. It can run these actions, and press its buttons like a person would:
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/code-block/code-block.ts" name="CodeBlockAgentActions" type='Pick<CodeBlockApi, "copy" | "toggleWrap">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-code-block>`, each prop is a kebab-case attribute, so `lineNumbers` is `line-numbers`, and `onWrapChange` fires `wrapchange`. Set `highlight` as a property.
+</Caption>

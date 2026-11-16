@@ -1,0 +1,46 @@
+---
+title: Thinking Indicator
+description: Show that the agent is thinking before it answers.
+---
+
+import ThinkingIndicatorExample from "@/examples/thinking-indicator/basic";
+
+Use a thinking indicator between sending a message and the first word of the reply. Its label shimmers, and three small dots flow after it.
+
+<Example caption="The label shimmers and the dots flow while the agent thinks. With reduced motion on, both hold still.">
+  <ThinkingIndicatorExample />
+
+  <include cwd lang="tsx">./examples/thinking-indicator/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/thinking-indicator
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/thinking-indicator-web
+```
+
+## Usage
+
+### Label
+
+Pass `label` to say what the agent is doing, like "Searching the docs". It shows before the dots and names the indicator, "Thinking" by default. The indicator is a polite status, so screen readers read a new label when it changes. The dots are hidden from them.
+
+### Motion
+
+The label shimmers and the dots flow one after another. Under `prefers-reduced-motion`, or with `motion="reduced"` or `"none"`, both hold still. The indicator takes no focus and has no keys.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/indicator.ts" name="IndicatorOptions" />
+
+### Agent
+
+An agent connected with `createAgent` sees the thinking indicator as a status named by its label. It has no actions of its own.
+
+<Caption>
+  Runs in React and Web Components. On `<kind-thinking-indicator>`, `label` and `motion` are attributes of the same name, and the element fills in its label and dots when it has no children.
+</Caption>

@@ -1,0 +1,18 @@
+{
+  "title": "Components",
+  "pages": [
+    "step",
+    "conversation",
+    "message",
+    "markdown",
+    "code-block",
+    "markdown-table",
+    "composer",
+    "attachments",
+    "uploader",
+    "loader",
+    "thinking-indicator",
+    "typing-indicator",
+    "streaming-text"
+  ]
+}

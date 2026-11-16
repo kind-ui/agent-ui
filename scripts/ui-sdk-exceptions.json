@@ -1,0 +1,4 @@
+{
+  "src/core/file-input-events.ts": "Composer and Uploader File Input events on Web Components",
+  "src/core/motion/index.ts": "Motion helper presets (§6)"
+}

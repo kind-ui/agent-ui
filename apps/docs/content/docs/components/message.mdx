@@ -1,0 +1,96 @@
+---
+title: Message
+description: Show one turn of a chat, with copy, regenerate, edit and a switcher between responses.
+---
+
+import MessageExample from "@/examples/message/basic";
+
+Use a message for each turn in a conversation, from the person or the assistant. Its toolbar holds the actions you handle, and shows once the message is done streaming.
+
+<Example caption="Press Edit on the question to change it, then press Enter to save or Escape to cancel. Press Regenerate on the reply to add a response, and the arrows to switch between them.">
+  <MessageExample />
+
+  <include cwd lang="tsx">./examples/message/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/message
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/message-web
+```
+
+## Composition
+
+```text
+Message
+├── MessageAvatar
+├── MessageContent
+├── MessageEditor
+└── MessageToolbar
+    ├── MessageBranch
+    │   ├── MessageBranchPrevious
+    │   ├── MessageBranchLabel
+    │   └── MessageBranchNext
+    └── KindToolbar
+        ├── MessageCopy
+        ├── MessageRegenerate
+        └── MessageEdit
+```
+
+The content holds the message, rendered however you like, for example with Markdown. The editor is a text area that takes the content's place while a user message is edited. `MessageCopy`, `MessageRegenerate` and `MessageEdit` each wrap a `KindToolbarButton` and give it its icon and action. The toolbar they sit in is one Tab stop, and the arrow keys move between its buttons. `MessageBranch` switches between responses, with a label like "2 of 3".
+
+## Usage
+
+### Role and Status
+
+Set `messageRole` to `user` or `assistant`. A user message sits at the end of the line in a bubble. Set `status` as a response arrives: the toolbar stays hidden while it's `submitted` or `streaming`, and fades in when the message settles.
+
+### Copy
+
+Pass the message's `text`, which copy writes to the clipboard. The icon turns into a check for two seconds, and the message tells screen readers "Copied" politely, or "Copy failed". To copy something else, like Markdown converted to HTML, cancel `onCopy` and write it yourself.
+
+### Regenerate and Edit
+
+Each action shows only when you handle it. Pass `onRegenerate` to show regenerate. Pass `onEdit` to show edit on a user message: pressing it swaps the content for the editor, filled with `text`. Enter or moving focus away saves, and Escape cancels. `onEdit` gets the new text, and isn't called when the text didn't change.
+
+### Responses
+
+When a message has more than one response, pass `branchCount` and `branchIndex`, from 0. The previous and next buttons call `onBranchChange` with the index they ask for, and the message shows it once you pass that `branchIndex` back:
+
+```tsx
+<Message
+  text={replies[index]}
+  branchIndex={index}
+  branchCount={replies.length}
+  onBranchChange={(next) => setIndex(next)}
+>
+  <MessageContent>{replies[index]}</MessageContent>
+  <MessageToolbar>
+    <MessageBranch>
+      <MessageBranchPrevious />
+      <MessageBranchLabel />
+      <MessageBranchNext />
+    </MessageBranch>
+  </MessageToolbar>
+</Message>
+```
+
+The switcher shows only when `branchCount` is more than 1.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/message/message.ts" name="MessageOptions" />
+
+### Agent
+
+An agent connected with `createAgent` reads each message's `status`, `branchIndex` and `branchCount`. It can run these actions, and press the buttons like a person would. Each one is offered only while the message shows it:
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/message/message.ts" name="MessageAgentActions" type='Pick<MessageApi, "copy" | "regenerate" | "edit" | "setBranch">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-message>`, each prop is a kebab-case attribute, so `messageRole` is `message-role`, and each callback is a lowercase event, so `onBranchChange` fires `branchchange`. `onCopy` fires `messagecopy`, since `copy` is a native event. Add the `can-regenerate` and `can-edit` attributes to offer those actions, which then fire `regenerate` and `edit`.
+</Caption>

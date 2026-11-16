@@ -1,0 +1,36 @@
+name: Scheduled CI issue
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  report:
+    name: Report
+    if: github.repository == 'kind-ui/agent-ui' && github.event.workflow_run.event == 'schedule' && github.event.workflow_run.conclusion != 'cancelled'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+      RUN_URL: ${{ github.event.workflow_run.html_url }}
+      LABEL: scheduled-ci
+    steps:
+      # Keeps one open issue while scheduled runs fail, and closes it when one passes.
+      - run: |
+          issue=$(gh issue list --label "$LABEL" --state open --limit 1 --json number --jq '.[0].number')
+          if [ "$CONCLUSION" = success ]; then
+            [ -z "$issue" ] || gh issue close "$issue" --comment "Scheduled CI passed: $RUN_URL"
+          elif [ -n "$issue" ]; then
+            gh issue comment "$issue" --body "Scheduled CI failed again: $RUN_URL"
+          else
+            gh label create "$LABEL" --color B60205 --description "A scheduled CI run is failing" --force
+            gh issue create --label "$LABEL" --title "Scheduled CI is failing" \
+              --body "The scheduled CI run ended with \`$CONCLUSION\`: $RUN_URL"
+          fi
