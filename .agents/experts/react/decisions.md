@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `4f7d25c` (Wave 2 Task 3 Reasoning)
+Last reviewed: `d60061c` (Wave 2 Task 4 Tool)
 
 ## Settled
 
@@ -14,6 +14,7 @@ Last reviewed: `4f7d25c` (Wave 2 Task 3 Reasoning)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Every tool's copy buttons and code blocks share labels** ("Copy input", "Input"), so agent refs by label are ambiguous across tools; the group around them is named by the tool. Same class as Markdown's "Code" / "Table".
 - **React hosts must memo Conversation rows** for a streamed token to render one row; the fixture does. The Conversation docs page (Wave 1 docs) should say so.
 - **Streaming Text renders twice per `text` change,** like Markdown: `text` reaches state through `onOptions`, a layout effect. Before paint.
 - **Uploader progress bars have no accessible name in server markup** until hydration adds `aria-labelledby` (UI SDK Progress; report upstream).
@@ -31,6 +32,8 @@ Last reviewed: `4f7d25c` (Wave 2 Task 3 Reasoning)
 
 ## Resolved
 
+- **Code Block re-rendered its scroll area on every streamed chunk (Wave 2 Task 4).** Fixed: the scroll content is one shared element tree; a streamed tool input renders 25 components, not 31.
+- **The Tool fixture's `set` (host `status`, `label`) and output copy had no spec (Wave 2 Task 4).** Fixed: `tool.spec.ts` covers them.
 - **Docs (Task 17):** the Markdown Table page's `Pick` alias collided with `MarkdownTableProps` and listed every DOM prop; it's `MarkdownTableChildren` now.
 - **The agent fixture's submissions never settled,** so each agent `submit` and `stop` waited UI SDK's 15 s for pending work. Fixed: the host settles them, holding only for Stop.
 - **No browser spec ran a fixture under StrictMode.** Fixed: the `wave-1-react-strict` project runs every spec with each case in `<StrictMode>`. It caught a highlight spec counting requests by index (StrictMode's discarded instance asks too).

@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `4f7d25c` (Wave 2 Task 3 Reasoning)
+Last reviewed: `d60061c` (Wave 2 Task 4 Tool)
 
 ## Settled
 
+- **A Tool's error part follows its status, not `outcome` (Wave 2 Task 4):** a host `status="error"` shows its message too, and a host status over an errored call hides it. The JSDoc and AGENTS.md say so.
 - **A Reasoning `label` is announced as is on completion,** like a Status label; failures and stops still say "Thinking failed" / "Thinking stopped". The JSDoc says to name the outcome in it.
 - **A Step's `announcement` runs only once the step has a title** (`label` or the title part's text): every Step-based component has a title, and the JSDoc says so.
 - **Markdown and Streaming Text have no accessible name:** they're content with no role, which ARIA doesn't let a name sit on, and they offer no actions (spec §6).
@@ -19,6 +20,8 @@ Last reviewed: `4f7d25c` (Wave 2 Task 3 Reasoning)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Tool re-serializes its input on every options update** (`toolCode` per streamed chunk). Unmeasured on large inputs; memoize by value if it shows up.
+- **"Decision not sent" isn't announced:** `requested` → `submitting` → `submit-failed` stays `awaiting-input`, so the status doesn't change. Confirmation (Wave 3) owns the decision and its error.
 - **`ComposerApi.setValue` with the draft's own text still fires `onValueChange`** with a new draft object and returns `true`; nothing changes on screen.
 - **Enter held or pressed twice on an uploader Cancel cancels the next row too:** focus recovery moves to the neighbor's Cancel between presses. Spec §7 needs to say whether that's the list-deletion pattern or needs a pause.
 - **The uploader's `mounted` set never forgets ids,** so an item removed and re-added under the same id gets no entrance.
@@ -34,6 +37,8 @@ Last reviewed: `4f7d25c` (Wave 2 Task 3 Reasoning)
 
 ## Resolved
 
+- **A denied tool call was announced as "cancelled" (Wave 2 Task 4).** Fixed: Tool's `announcement` says "<name> denied" when `outcome` is `denied` (spec §4.1).
+- **Tool offered `copyInput` with no input (Wave 2 Task 4).** Fixed: it's a getter, `undefined` while the input is empty, and the input copy button is present only with input.
 - **Step announcements read state from before the change (Wave 2 Task 3).** Fixed: `announcement` gets the store merged with the `synced` state, so Reasoning builds "Thought for N s" from the new duration and status.
 - **Find in page counts as a person (Wave 2 D3):** spec §5 now says a step search opens stays open when it completes, which is what `userToggled` already did.
 - **Step behavior was one primitive's, with no way to share it (Wave 2 Task 1):** `stepBase` in `core/step/base.ts` is spread by `stepPrimitive` and every Step-based component; StepList's roving focus and recovery are `createListFocus` in `core/list-focus.ts`.

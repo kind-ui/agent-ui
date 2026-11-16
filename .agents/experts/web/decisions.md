@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `4f7d25c` (Wave 2 Task 3 Reasoning)
+Last reviewed: `d60061c` (Wave 2 Task 4 Tool)
 
 ## Settled
 
@@ -16,6 +16,7 @@ Last reviewed: `4f7d25c` (Wave 2 Task 3 Reasoning)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **`kind-tool` draws twice for one `call` change** (the store subscription and one more notification). Harmless, since every write is guarded.
 - **`<kind-reasoning text="…">` shows nothing before upgrade,** then inserts its trigger and content, which shifts layout; same class as `kind-streaming-text` below. Writing the parts as children avoids it; undocumented.
 - **Indicators and `kind-uploader` fill in their parts when they connect with no children,** so a definition loaded before hand-written markup is parsed could double them (unconfirmed; `ui-calendar` does the same).
 - **`<kind-streaming-text text="…">` and an empty `kind-uploader` show nothing before upgrade.** Writing the text as children avoids it; undocumented.
@@ -30,6 +31,9 @@ Last reviewed: `4f7d25c` (Wave 2 Task 3 Reasoning)
 
 ## Resolved
 
+- **A hand-written `kind-tool` with empty input and output parts showed nothing (Wave 2 Task 4).** Fixed: the root fills an empty `kind-tool-input` or `kind-tool-output` with its heading, copy button and code block.
+- **Leaving out a code block's header needed internal markup in a JS string (Wave 2 Task 4).** Fixed: `<kind-code-block headerless>`, read when it fills in its parts, like React's `header={false}`.
+- **`kind-tool` rewrote `hidden` on its output blocks every update (Wave 2 Task 4).** Fixed: guarded like its other writes.
 - **`kind-status` and `kind-reasoning` stopped updating their label or title after leaving the page and coming back a tick later (Wave 2 Task 3):** UI SDK rebuilds the instance, and each kept the parts it filled in per instance. Fixed: one module-level set; `status.spec.ts` and `reasoning.spec.ts` cover it.
 - **`title` on `<kind-step>` was HTML's advisory attribute (Wave 2 D4).** Checked in Chromium: it stays on the element, so it's the tooltip over the whole step and the group's accessible description. Fixed: the option is `label` in both layers.
 - **No `HTMLElementTagNameMap` entries, and no types for `can-*` or `removeHandler` (Wave 2 Task 1).** Fixed: each web file exports `Kind<Name>Element` (events with reasons read from core, live state, `api`, `can-*` properties, host-set properties) and declares every tag it defines, `kind-internal-*` included; the web fixtures listen without casts, so a wrong event name fails the typecheck.

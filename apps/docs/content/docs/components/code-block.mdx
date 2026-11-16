@@ -33,6 +33,10 @@ Long lines scroll sideways until someone presses the wrap button, which reports 
 
 The copy button copies the code and turns into a check for two seconds. It tells screen readers "Copied", or "Copy failed" when the browser refuses the clipboard write.
 
+### Without the Header
+
+Pass `header={false}` to leave out the language, the wrap button and the copy button, when the code sits under your own controls. On `<kind-code-block>`, add the `headerless` attribute instead.
+
 ### Highlighting
 
 No highlighter ships with it. Pass `highlight`, a function that resolves the code as a list of tokens whose contents, joined, are the code. Each token can have a `color`, any CSS color, and a `fontStyle` of `italic` or `bold`:

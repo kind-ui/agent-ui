@@ -57,7 +57,7 @@ The status comes from the call. An error outcome is `error`, a denied or cancell
 
 The input shows as JSON, labeled **Partial** while it streams. Output appears once the call has some: text renders as Markdown, and any other value as JSON, so `0`, `false`, `""` and `null` show as themselves. Output that may still change is labeled **Preliminary**. JSON longer than its block scrolls inside it, and nothing above a value moves while it streams.
 
-Each has a copy button that copies the value as shown, checks for 2 seconds and announces "Copied". Pass `highlight` to color both, as Code Block's does.
+Each has a copy button, shown once there's a value, that copies it as shown, checks for 2 seconds and announces "Copied". Pass `highlight` to color both, as Code Block's does.
 
 ### Approvals and Errors
 
@@ -67,7 +67,7 @@ When the status is `error`, the content shows `error.message`, or "The tool fail
 
 ### Opening and Closing
 
-A tool opens while it runs or waits for approval, closes into its header when it completes, and stays open when it fails. Once someone opens or closes it, it stays as they left it. Screen readers hear the tool's name and its outcome, like "search_docs complete", when it needs input, completes, fails or is cancelled.
+A tool opens while it runs or waits for approval, closes into its header when it completes, and stays open when it fails. Once someone opens or closes it, it stays as they left it. Screen readers hear the tool's name and its outcome, like "search_docs complete", when it needs input, completes, fails or is cancelled, and "search_docs denied" when its approval is denied.
 
 ### Motion
 
@@ -79,10 +79,10 @@ The content grows open and shut. Under `prefers-reduced-motion`, or with `motion
 
 ### Agent
 
-An agent connected with `createAgent` finds a tool by its name and reads its `open` and `status`. It can run these actions, and press the trigger like a person would. `copyOutput` is listed only while there's output.
+An agent connected with `createAgent` finds a tool by its name and reads its `open` and `status`. It can run these actions, and press the trigger like a person would. `copyInput` and `copyOutput` are listed only while there's a value to copy.
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/tool/tool.ts" name="ToolAgentActions" type='Pick<ToolApi, "expand" | "collapse" | "copyInput" | "copyOutput">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-tool>`, `call`, `error` and `highlight` are properties only, other props are kebab-case attributes, and `onOpenChange` fires `openchange`. The element fills in its parts when it has no children, writes its title, approval and error into those parts while they're empty, and writes the input and output into the `<kind-code-block>` and `<kind-markdown>` inside them.
+  Runs in React and Web Components. On `<kind-tool>`, `call`, `error` and `highlight` are properties only, other props are kebab-case attributes, and `onOpenChange` fires `openchange`. The element fills in its parts when it has no children, and an empty `<kind-tool-input>` or `<kind-tool-output>` with its heading, copy button and code block, writes its title, approval and error into those parts while they're empty, and writes the input and output into the `<kind-code-block>` and `<kind-markdown>` inside them.
 </Caption>

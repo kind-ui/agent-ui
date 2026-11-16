@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `4f7d25c` (Wave 2 Task 3 Reasoning)
+Last reviewed: `d60061c` (Wave 2 Task 4 Tool)
 
 ## Settled
 

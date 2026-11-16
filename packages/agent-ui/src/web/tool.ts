@@ -7,10 +7,12 @@ import {
 } from "@kind-ui/agent-ui/core";
 import { createParts, wrappedButton } from "@ui-sdk/web";
 import type { AttributeProperties, UiChangeEvent, UiElement } from "@ui-sdk/web/events";
-import { CODE_BLOCK_SCROLL_AREA, defineCodeBlock, type KindCodeBlockElement } from "./code-block.js";
+import { defineCodeBlock, type KindCodeBlockElement } from "./code-block.js";
 import { defineMarkdown, type KindMarkdownElement } from "./markdown.js";
 
-const DEFAULT_PARTS = `<kind-tool-trigger><button><kind-tool-icon></kind-tool-icon><kind-tool-title></kind-tool-title><kind-tool-approval></kind-tool-approval></button></kind-tool-trigger><kind-tool-content><kind-tool-input><div data-tool-heading>Input<span data-tool-badge>Partial</span><kind-tool-input-copy><button></button></kind-tool-input-copy></div><kind-code-block aria-label="Input" language="json">${CODE_BLOCK_SCROLL_AREA}</kind-code-block></kind-tool-input><kind-tool-output><div data-tool-heading>Output<span data-tool-badge>Preliminary</span><kind-tool-output-copy><button></button></kind-tool-output-copy></div><kind-code-block aria-label="Output" language="json">${CODE_BLOCK_SCROLL_AREA}</kind-code-block><kind-markdown></kind-markdown></kind-tool-output><kind-tool-error></kind-tool-error></kind-tool-content>`;
+const DEFAULT_PARTS = `<kind-tool-trigger><button><kind-tool-icon></kind-tool-icon><kind-tool-title></kind-tool-title><kind-tool-approval></kind-tool-approval></button></kind-tool-trigger><kind-tool-content><kind-tool-input></kind-tool-input><kind-tool-output></kind-tool-output><kind-tool-error></kind-tool-error></kind-tool-content>`;
+const INPUT_PARTS = `<div data-tool-heading>Input<span data-tool-badge>Partial</span><kind-tool-input-copy><button></button></kind-tool-input-copy></div><kind-code-block headerless aria-label="Input" language="json"></kind-code-block>`;
+const OUTPUT_PARTS = `<div data-tool-heading>Output<span data-tool-badge>Preliminary</span><kind-tool-output-copy><button></button></kind-tool-output-copy></div><kind-code-block headerless aria-label="Output" language="json"></kind-code-block><kind-markdown></kind-markdown>`;
 
 // Parts this element wrote text into. A part someone wrote text into keeps it, as React's children do. Kept across
 // instances, because UI SDK rebuilds one when the element returns to the page.
@@ -22,6 +24,11 @@ const fill = (part: Element | null, text: string) => {
   if (part.textContent !== text) part.textContent = text;
 };
 
+const fillParts = (part: Element | null, html: string) => {
+  if (part && !part.firstElementChild) part.innerHTML = html;
+  return part;
+};
+
 const write = <Target extends object, Key extends keyof Target>(
   target: Target,
   key: Key,
@@ -31,9 +38,9 @@ const write = <Target extends object, Key extends keyof Target>(
 };
 
 /**
- * `<kind-tool>` fills in its trigger and content when it has no children. Set `call` as a property. It writes its
- * title, approval and error into those parts while they're empty, and its input and output into the code blocks and
- * Markdown view inside its input and output.
+ * `<kind-tool>` fills in its trigger and content when it has no children, and an empty `<kind-tool-input>` or
+ * `<kind-tool-output>` with its heading, copy button and code block. Set `call` as a property. It writes its title,
+ * approval and error into those parts while they're empty, and its values into the code blocks and Markdown view.
  */
 export function defineTool(): void {
   if (customElements.get("kind-tool")) return;
@@ -48,7 +55,7 @@ export function defineTool(): void {
           set: (api, open) => api.setOpen(!!open),
         },
       },
-      api: ["isOpen", "setOpen", "expand", "collapse", "toggle", "copyInput"],
+      api: ["isOpen", "setOpen", "expand", "collapse", "toggle"],
       render: (el, instance) => {
         if (!el.firstElementChild) el.innerHTML = DEFAULT_PARTS;
         const draw = () => {
@@ -57,30 +64,26 @@ export function defineTool(): void {
           fill(el.querySelector("kind-tool-title"), state.title);
           fill(el.querySelector("kind-tool-approval"), state.approvalLabel ?? "");
           fill(el.querySelector("kind-tool-error"), state.errorMessage);
-          const input = el.querySelector<KindCodeBlockElement>(
-            ":scope > kind-tool-content > kind-tool-input > kind-code-block",
-          );
-          if (input) {
-            write(input, "code", state.input);
-            write(input, "streaming", state.inputStreaming);
-            write(input, "highlight", highlight);
+          const input = fillParts(el.querySelector("kind-tool-input"), INPUT_PARTS);
+          const inputCode = input?.querySelector<KindCodeBlockElement>(":scope > kind-code-block");
+          if (inputCode) {
+            write(inputCode, "code", state.input);
+            write(inputCode, "streaming", state.inputStreaming);
+            write(inputCode, "highlight", highlight);
           }
-          const code = el.querySelector<KindCodeBlockElement>(
-            ":scope > kind-tool-content > kind-tool-output > kind-code-block",
-          );
+          const output = fillParts(el.querySelector("kind-tool-output"), OUTPUT_PARTS);
+          const code = output?.querySelector<KindCodeBlockElement>(":scope > kind-code-block");
           if (code) {
-            code.hidden = state.output !== "code";
+            write(code, "hidden", state.output !== "code");
             if (state.output === "code") {
               write(code, "code", state.outputText);
               write(code, "streaming", state.outputPreliminary);
               write(code, "highlight", highlight);
             }
           }
-          const markdown = el.querySelector<KindMarkdownElement>(
-            ":scope > kind-tool-content > kind-tool-output > kind-markdown",
-          );
+          const markdown = output?.querySelector<KindMarkdownElement>(":scope > kind-markdown");
           if (markdown) {
-            markdown.hidden = state.output !== "markdown";
+            write(markdown, "hidden", state.output !== "markdown");
             if (state.output === "markdown") {
               write(markdown, "source", state.outputText);
               write(markdown, "streaming", state.outputPreliminary);
@@ -129,7 +132,7 @@ export interface KindToolElement
   call?: ToolOptions["call"];
   error?: ToolOptions["error"];
   highlight?: ToolOptions["highlight"];
-  api: Pick<ToolApi, "isOpen" | "setOpen" | "expand" | "collapse" | "toggle" | "copyInput">;
+  api: Pick<ToolApi, "isOpen" | "setOpen" | "expand" | "collapse" | "toggle">;
 }
 
 declare global {

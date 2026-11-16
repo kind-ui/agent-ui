@@ -3,7 +3,7 @@ import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { type Approval, hasOutput, type StepStatus, type ToolCall } from "../../types/index.js";
 import { createCopy } from "../clipboard.js";
 import type { Highlight } from "../code-block/index.js";
-import { type StepApi, type StepOptions, type StepState, stepBase } from "../step/base.js";
+import { type StepApi, type StepOptions, type StepState, stepAnnouncement, stepBase } from "../step/base.js";
 import { approvalLabel, toolCode, toolStatus, toolValue } from "./format.js";
 
 export type ToolOptions = Omit<StepOptions, "status" | "label"> & {
@@ -22,26 +22,35 @@ export type ToolOptions = Omit<StepOptions, "status" | "label"> & {
 export type ToolState = StepState & {
   /** The `label`, else the tool's name. */
   title: string;
+  /** The call's approval state, written as `data-approval`. */
   approval: Approval["state"] | undefined;
   /** Where the approval stands, in words, from `approvalLabel`. */
   approvalLabel: string | undefined;
   /** The input as indented JSON, empty before any arrives. */
   input: string;
+  /** Whether the input is still arriving, labeled "Partial". */
   inputStreaming: boolean;
   /** How the output shows, or `undefined` while there is none. */
   output: "markdown" | "code" | undefined;
   /** The output as markdown or code, `0`, `false`, `""` and `null` included. */
   outputText: string;
+  /** Whether the output may still change, labeled "Preliminary". */
   outputPreliminary: boolean;
+  /** The call's outcome, so a denial is announced apart from a cancellation. */
+  outcome: ToolCall["outcome"];
+  /** The `error` message, else "The tool failed." */
   errorMessage: string;
+  /** The `highlight` option. */
   highlight: Highlight | undefined;
+  /** True for 2 s after the input is copied. */
   inputCopied: boolean;
+  /** True for 2 s after the output is copied. */
   outputCopied: boolean;
 };
 
 export type ToolApi = StepApi & {
-  /** Copies the input as shown, and resolves with whether the clipboard write went through. */
-  copyInput: () => Promise<boolean>;
+  /** Copies the input as shown, and resolves with whether the clipboard write went through. Only while there is input. */
+  readonly copyInput: (() => Promise<boolean>) | undefined;
   /** Copies the output as shown, and resolves with whether the clipboard write went through. Only while there is output. */
   readonly copyOutput: (() => Promise<boolean>) | undefined;
 };
@@ -77,6 +86,11 @@ export type ToolPrimitive = ReturnType<typeof definePrimitive<ToolOptions, ToolS
 
 const base = stepBase<ToolState, ToolApi, ToolOptions>({
   kind: "tool",
+  // Spec §4.1: a denial and a cancellation are separate outcomes, though both show as `cancelled`.
+  announcement: (status, title, state) =>
+    state.outcome === "denied" && status === "cancelled"
+      ? `${title} denied`
+      : stepAnnouncement(status, title),
   status: (options) => (options.call ? toolStatus(options.call) : "pending"),
 });
 
@@ -91,6 +105,7 @@ const presentation = ({ call, label, error, highlight }: ToolOptions) => {
     output: output?.kind,
     outputText: output ? (output.kind === "markdown" ? output.text : output.code) : "",
     outputPreliminary: call?.output?.state === "preliminary",
+    outcome: call?.outcome,
     errorMessage: error?.message ?? "The tool failed.",
     highlight,
   };
@@ -119,7 +134,10 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
     const copyOutput = createCopy(context, "outputCopied");
     return {
       ...base.api(context),
-      copyInput: () => copyInput(store.get().input),
+      get copyInput() {
+        const { input } = store.get();
+        return input === "" ? undefined : () => copyInput(input);
+      },
       get copyOutput() {
         const { output, outputText } = store.get();
         return output === undefined ? undefined : () => copyOutput(outputText);
@@ -148,9 +166,10 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
         attrs: (state) => ({ "data-state": state.inputStreaming ? "streaming" : "ready" }),
       }),
       "input-copy": slot({
+        present: (state) => state.input !== "",
         role: "button",
         focus: "native",
-        press: ({ api }) => void api.copyInput(),
+        press: ({ api }) => void api.copyInput?.(),
         attrs: (state) => copyAttrs("Copy input", state.inputCopied),
       }),
       output: slot<

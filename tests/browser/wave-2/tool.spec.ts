@@ -16,6 +16,8 @@ const tool = (page: Page, id: string) => page.locator(`#${id}`);
 const trigger = (page: Page, id: string) => tool(page, id).locator('[data-slot="kind-tool-trigger"]');
 const part = (page: Page, id: string, name: string) =>
   tool(page, id).locator(`[data-slot="kind-tool-${name}"]`);
+const set = (page: Page, id: string, next: Record<string, unknown>) =>
+  page.evaluate(([i, n]) => (window as unknown as Fixture).kindTool.set(i, n), [id, next] as const);
 const setCall = (page: Page, id: string, next: Record<string, unknown>) =>
   page.evaluate(([i, n]) => (window as unknown as Fixture).kindTool.setCall(i, n), [id, next] as const);
 const announced = (page: Page) => page.evaluate(() => (window as unknown as Fixture).kindAnnounced);
@@ -84,11 +86,15 @@ test("updating one call leaves the others open and copied", async ({ page, conte
   await expect(part(page, "search", "input-copy")).toHaveAttribute("data-copied", "");
 });
 
-test("copy writes the input as shown", async ({ page, context, browserName }) => {
+test("copy writes the input and output as shown", async ({ page, context, browserName }) => {
   await allowClipboard(context, browserName);
   await open(page);
   await part(page, "read", "input-copy").click();
   await expect.poll(() => readClipboard(page, browserName)).toBe('{\n  "path": "README.md"\n}');
+  await setCall(page, "read", { output: { state: "preliminary", value: false } });
+  await part(page, "read", "output-copy").click();
+  await expect.poll(() => readClipboard(page, browserName)).toBe("false");
+  await expect(part(page, "read", "output-copy")).toHaveAttribute("data-copied", "");
 });
 
 test("the header keeps its height from running through approval to complete", async ({ page }) => {
@@ -131,6 +137,33 @@ test("an error shows its message and is announced once", async ({ page }) => {
   await expect.poll(() => announced(page)).toEqual(["search_docs failed"]);
 });
 
+test("a denial is announced apart from a cancellation", async ({ page }) => {
+  await open(page);
+  await setCall(page, "approve", {
+    approval: { approvalId: "a1", generation: 1, state: "responded", decision: { approved: false } },
+    outcome: "denied",
+  });
+  await expect(tool(page, "approve")).toHaveAttribute("data-status", "cancelled");
+  await expect(part(page, "approve", "approval")).toHaveText("Denied");
+  await expect.poll(() => announced(page)).toEqual(["delete_file denied"]);
+  await setCall(page, "run", { outcome: "cancelled" });
+  await expect.poll(() => announced(page)).toEqual(["delete_file denied", "run_tests cancelled"]);
+});
+
+test("a host status and label replace the call's", async ({ page }) => {
+  await open(page);
+  await set(page, "run", { status: "error", label: "Run the tests" });
+  await expect(trigger(page, "run")).toContainText("Run the tests");
+  await expect(part(page, "run", "error")).toHaveText("The tool failed.");
+});
+
+test("with no input yet, there's nothing to copy", async ({ page }) => {
+  await open(page);
+  await setCall(page, "search", { input: { state: "streaming", value: undefined } });
+  await expect(part(page, "search", "input-copy")).toBeHidden();
+  await expectAgentActions(page, "search_docs", ["collapse", "expand", "press"]);
+});
+
 test("an approval request shows as status, needing input", async ({ page }) => {
   await open(page);
   await expect(tool(page, "approve")).toHaveAttribute("data-status", "awaiting-input");
@@ -170,4 +203,30 @@ test("kind-tool exposes live open state and its api", async ({ page }, testInfo)
   expect(await search.evaluate((el: KindTool) => el.open)).toBe(true);
   expect(await search.evaluate((el: KindTool) => el.api.collapse())).toBe(true);
   await expect(search).not.toHaveAttribute("data-open");
+});
+
+test("kind-tool fills in input and output parts written empty", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await open(page);
+  await page.evaluate(() => {
+    const element = document.createElement("kind-tool");
+    element.id = "written";
+    element.innerHTML = `<kind-tool-trigger><button><kind-tool-icon></kind-tool-icon><kind-tool-title>Search</kind-tool-title></button></kind-tool-trigger><kind-tool-content><kind-tool-input></kind-tool-input><kind-tool-output></kind-tool-output></kind-tool-content>`;
+    document.querySelector("#root > div")?.append(element);
+    Object.assign(element, {
+      call: {
+        toolCallId: "w1",
+        name: "search_docs",
+        dynamic: false,
+        input: { state: "ready", value: { query: "steps" } },
+        output: { state: "preliminary", value: 0 },
+      },
+    });
+  });
+  await expect(trigger(page, "written")).toHaveText("Search");
+  await expect(part(page, "written", "input").locator("code")).toHaveText('{  "query": "steps"}');
+  await expect(part(page, "written", "output").locator("code")).toHaveText("0");
+  await expect(part(page, "written", "output").locator('[data-slot="kind-code-block-header"]')).toHaveCount(
+    0,
+  );
 });

@@ -10,8 +10,7 @@ import { createParts, wrappedButton, wrappedChild } from "@ui-sdk/web";
 import type { AttributeProperties, UiChangeEvent, UiElement } from "@ui-sdk/web/events";
 import { defineInternalScrollArea } from "./internal/scroll-area.js";
 
-/** A code block's scroll area: write it alone into `kind-code-block` for a block without its header. */
-export const CODE_BLOCK_SCROLL_AREA = `
+const scrollAreaParts = `
   <kind-internal-scroll-area>
     <ui-scroll-area>
       <ui-scroll-area-viewport>
@@ -27,7 +26,7 @@ const parts = `
     <kind-code-block-language></kind-code-block-language>
     <kind-code-block-wrap><button></button></kind-code-block-wrap>
     <kind-code-block-copy><button></button></kind-code-block-copy>
-  </kind-code-block-header>${CODE_BLOCK_SCROLL_AREA}`;
+  </kind-code-block-header>${scrollAreaParts}`;
 
 const sameTokens = (a: Token[] | undefined, b: Token[]) =>
   a?.length === b.length &&
@@ -48,7 +47,7 @@ function tokenElement(token: Token): HTMLElement {
 
 /**
  * `<kind-code-block code="…" language="ts" aria-label="Code">` fills in its header and scroll area when it has
- * no children; write `CODE_BLOCK_SCROLL_AREA` into it to leave the header out. Set `highlight` as a property.
+ * no children, or only its scroll area with the `headerless` attribute. Set `highlight` as a property.
  */
 export function defineCodeBlock(): void {
   if (customElements.get("kind-code-block")) return;
@@ -64,7 +63,7 @@ export function defineCodeBlock(): void {
       },
       api: ["copy", "isWrapped", "setWrap", "toggleWrap"],
       render: (el, instance) => {
-        if (!el.firstElementChild) el.innerHTML = parts;
+        if (!el.firstElementChild) el.innerHTML = el.hasAttribute("headerless") ? scrollAreaParts : parts;
         const label = el.querySelector("kind-code-block-language");
         const scrollArea = el.querySelector("ui-scroll-area");
         const code = el.querySelector("kind-code-block-code code");
