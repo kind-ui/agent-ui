@@ -4,6 +4,7 @@ import { Attachments } from "./components/ui/attachments.js";
 import { ChainOfThought } from "./components/ui/chain-of-thought.js";
 import { CodeBlock } from "./components/ui/code-block.js";
 import { Composer, ComposerInput, ComposerStop, ComposerSubmit } from "./components/ui/composer.js";
+import { Confirmation } from "./components/ui/confirmation.js";
 import {
   Conversation,
   ConversationContent,
@@ -84,6 +85,15 @@ const items = {
     </Subagent>
   ),
   queue: <Queue label="Queue" items={[{ id: "tests", status: "pending", title: "Write the tests" }]} />,
+  confirmation: (
+    <Confirmation
+      label="Run search_docs?"
+      approval={{ approvalId: "a1", generation: 1, state: "requested" }}
+      onApprove={() => {}}
+      onDeny={() => {}}
+      reason
+    />
+  ),
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
       <ConversationViewport>

@@ -3,6 +3,7 @@ import { defineAttachments } from "./components/ui/web/attachments.js";
 import { defineChainOfThought } from "./components/ui/web/chain-of-thought.js";
 import { defineCodeBlock } from "./components/ui/web/code-block.js";
 import { defineComposer } from "./components/ui/web/composer.js";
+import { defineConfirmation } from "./components/ui/web/confirmation.js";
 import { defineConversation } from "./components/ui/web/conversation.js";
 import { defineInternalToolbar } from "./components/ui/web/internal/toolbar.js";
 import { defineLoader } from "./components/ui/web/loader.js";
@@ -33,6 +34,7 @@ for (const define of [
   definePlan,
   defineSubagent,
   defineQueue,
+  defineConfirmation,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -65,6 +67,7 @@ const items = {
       <kind-subagent-content><p>Read two files.</p></kind-subagent-content>
     </kind-subagent>`,
   queue: `<kind-queue label="Queue"></kind-queue>`,
+  confirmation: `<kind-confirmation label="Run search_docs?" can-approve can-deny reason></kind-confirmation>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>
@@ -119,6 +122,9 @@ Object.assign(main.querySelector("kind-tool") as HTMLElement, {
     input: { state: "ready", value: { query: "steps" } },
     output: { state: "available", value: 0 },
   },
+});
+Object.assign(main.querySelector("kind-confirmation") as HTMLElement, {
+  approval: { approvalId: "a1", generation: 1, state: "requested" },
 });
 Object.assign(main.querySelector("kind-chain-of-thought") as HTMLElement, {
   steps: [{ id: "search", status: "complete", title: "Search flights", durationSeconds: 3 }],
