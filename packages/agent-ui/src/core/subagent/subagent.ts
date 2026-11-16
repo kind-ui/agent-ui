@@ -82,7 +82,7 @@ const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
  * The first character of each of the first two words of `name` that start with a letter or digit, in upper case,
  * or "?" when there are none. A character whose upper case is longer, like "ß", stays as it is.
  */
-export const initials = (name: string): string =>
+export const avatarInitials = (name: string): string =>
   (name.match(/[\p{L}\p{N}]\S*/gu) ?? [])
     .slice(0, 2)
     .map((word) => {
@@ -187,7 +187,7 @@ export const subagentPrimitive: SubagentPrimitive = definePrimitive<
       avatar: slot<BaseSlotProps, { name: string; initials: string; src: string | undefined }>({
         state: (state) => ({
           name: state.agentName,
-          initials: initials(state.agentName),
+          initials: avatarInitials(state.agentName),
           src: state.avatarSrc,
         }),
         // The title beside it names the subagent.

@@ -1,17 +1,17 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { initials, subagentStatus } from "@kind-ui/agent-ui/core";
+import { avatarInitials, subagentStatus } from "@kind-ui/agent-ui/core";
 
-test("initials", () => {
-  assert.equal(initials("Code reviewer"), "CR");
-  assert.equal(initials("ada"), "A");
-  assert.equal(initials("  "), "?");
-  assert.equal(initials(" test   writer bot "), "TW");
-  assert.equal(initials("ünïcode 𝒳ray"), "Ü𝒳");
-  assert.equal(initials("ßtraße bot"), "ßB");
-  assert.equal(initials("e\u0301lodie dupont"), "E\u0301D");
-  assert.equal(initials("👩‍💻 coder"), "C");
-  assert.equal(initials("(beta) reviewer"), "BR");
+test("avatarInitials", () => {
+  assert.equal(avatarInitials("Code reviewer"), "CR");
+  assert.equal(avatarInitials("ada"), "A");
+  assert.equal(avatarInitials("  "), "?");
+  assert.equal(avatarInitials(" test   writer bot "), "TW");
+  assert.equal(avatarInitials("ünïcode 𝒳ray"), "Ü𝒳");
+  assert.equal(avatarInitials("ßtraße bot"), "ßB");
+  assert.equal(avatarInitials("e\u0301lodie dupont"), "E\u0301D");
+  assert.equal(avatarInitials("👩‍💻 coder"), "C");
+  assert.equal(avatarInitials("(beta) reviewer"), "BR");
 });
 
 test("the status in words, with the duration once complete", () => {

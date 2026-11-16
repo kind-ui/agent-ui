@@ -50,16 +50,19 @@ export function ToolApproval({ children = ({ label }) => label, ...props }: Tool
 
 export type ToolInputProps = ComponentProps<typeof parts.Input>;
 
-/** The input as code, labeled "Partial" while it streams, with its copy button, unless you pass children. */
+/**
+ * The input as code, labeled "Partial" while it streams, with its copy button, unless you pass children. The code
+ * block is named by the tool, like "search_docs input".
+ */
 export function ToolInput({
-  children = ({ code, streaming, highlight }) => (
+  children = ({ label, code, streaming, highlight }) => (
     <>
       <div data-tool-heading="">
         Input<span data-tool-badge="">Partial</span>
         <ToolInputCopy />
       </div>
       <CodeBlock
-        aria-label="Input"
+        aria-label={label}
         header={false}
         code={code}
         language="json"
@@ -80,7 +83,7 @@ export type ToolOutputProps = ComponentProps<typeof parts.Output>;
  * with its copy button, unless you pass children.
  */
 export function ToolOutput({
-  children = ({ kind, text, preliminary, highlight }) => (
+  children = ({ label, kind, text, preliminary, highlight }) => (
     <>
       <div data-tool-heading="">
         Output<span data-tool-badge="">Preliminary</span>
@@ -90,7 +93,7 @@ export function ToolOutput({
         <Markdown source={text} streaming={preliminary} highlight={highlight} />
       ) : (
         <CodeBlock
-          aria-label="Output"
+          aria-label={label}
           header={false}
           code={text}
           language="json"

@@ -1,5 +1,5 @@
 export {
-  initials,
+  avatarInitials,
   type SubagentApi,
   type SubagentOptions,
   type SubagentPrimitive,

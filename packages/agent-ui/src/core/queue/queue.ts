@@ -547,6 +547,8 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       props: fromItem,
       present: (state) => state.canRemove,
       press: ({ api, key }, event) => api.remove?.(key, event),
+      // A handled pointerdown doesn't start a reorder, which would capture the pointer and take the click.
+      on: { pointerdown: (event) => event.preventDefault() },
       attrs: () => ({ "aria-hidden": "true" }),
     }),
     instructions: slot<BaseSlotProps, { text: string }>({

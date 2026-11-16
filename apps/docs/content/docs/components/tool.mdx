@@ -57,7 +57,7 @@ The status comes from the call. An error outcome is `error`, a denied or cancell
 
 The input shows as JSON, labeled **Partial** while it streams. Output appears once the call has some: text renders as Markdown, and any other value as JSON, so `0`, `false`, `""` and `null` show as themselves. Output that may still change is labeled **Preliminary**. JSON longer than its block scrolls inside it, and nothing above a value moves while it streams.
 
-Each has a copy button, shown once there's a value, that copies it as shown, checks for 2 seconds and announces "Copied". Pass `highlight` to color both, as Code Block's does.
+Each has a copy button, shown once there's a value, that copies it as shown, checks for 2 seconds and announces "Copied". The buttons and code blocks are named after the tool, like "Copy search_docs input" and "search_docs input", so people and agents can tell two tools apart. Pass `highlight` to color both, as Code Block's does.
 
 ### Approvals and Errors
 

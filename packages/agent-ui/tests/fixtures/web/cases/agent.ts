@@ -1,17 +1,39 @@
 import type { AgentAction } from "@ui-sdk/web/agent";
 import { defineAttachments, type KindAttachmentsElement } from "../../../../src/web/attachments.js";
+import { defineChainOfThought } from "../../../../src/web/chain-of-thought.js";
 import { defineComposer, type KindComposerElement } from "../../../../src/web/composer.js";
 import { defineConversation } from "../../../../src/web/conversation.js";
 import { defineInternalToolbar } from "../../../../src/web/internal/toolbar.js";
 import { defineLoader } from "../../../../src/web/loader.js";
 import { defineMarkdown } from "../../../../src/web/markdown.js";
 import { defineMessage } from "../../../../src/web/message.js";
+import { definePlan } from "../../../../src/web/plan.js";
+import { defineQueue } from "../../../../src/web/queue.js";
+import { defineReasoning } from "../../../../src/web/reasoning.js";
+import { defineStatus } from "../../../../src/web/status.js";
 import { defineStep, defineStepList } from "../../../../src/web/step.js";
 import { defineStreamingText } from "../../../../src/web/streaming-text.js";
+import { defineSubagent } from "../../../../src/web/subagent.js";
+import { defineTask } from "../../../../src/web/task.js";
 import { defineThinkingIndicator } from "../../../../src/web/thinking-indicator.js";
+import { defineTool } from "../../../../src/web/tool.js";
 import { defineTypingIndicator } from "../../../../src/web/typing-indicator.js";
 import { defineUploader, type KindUploaderElement } from "../../../../src/web/uploader.js";
-import { agentHost, files, filler, question, replies, steps } from "../../shared/agent.js";
+import {
+  agentHost,
+  chainSteps,
+  files,
+  filler,
+  moveItem,
+  planItems,
+  question,
+  queueItems,
+  replies,
+  steps,
+  taskItems,
+  thoughts,
+  toolCalls,
+} from "../../shared/agent.js";
 import { commands, mentions } from "../../shared/composer.js";
 import { answer } from "../../shared/markdown.js";
 import { uploads } from "../../shared/uploader.js";
@@ -171,27 +193,97 @@ function wireUploader(root: HTMLElement) {
   uploader.addEventListener("uploadretry", (event) => onRetry(event.detail.value));
 }
 
+const activity = `
+  <div class="flex w-[40rem] flex-col gap-8 p-6">
+    <section data-case="status"><kind-status id="status" status="running" label="Deploying"></kind-status></section>
+    <section data-case="reasoning">
+      <kind-reasoning id="reasoning" duration-seconds="3" status="complete"></kind-reasoning>
+    </section>
+    <section data-case="tool" class="flex flex-col gap-2">
+      ${toolCalls.map((call) => `<kind-tool id="${call.toolCallId}"></kind-tool>`).join("")}
+    </section>
+    <section data-case="chain-of-thought">
+      <kind-chain-of-thought id="chain" label="Researching retries" status="complete"></kind-chain-of-thought>
+    </section>
+    <section data-case="task"><kind-task id="task" label="Patching the client"></kind-task></section>
+    <section data-case="plan">
+      <kind-plan id="plan" label="Retry plan" status="awaiting-input" can-accept></kind-plan>
+    </section>
+    <section data-case="subagent">
+      <kind-subagent id="subagent" agent-name="Code reviewer" status="running" can-cancel></kind-subagent>
+    </section>
+    <section data-case="queue"><kind-queue id="queue" label="Queue" can-reorder can-remove></kind-queue></section>
+  </div>`;
+
+function wireActivity(root: HTMLElement) {
+  const element = <Tag extends keyof HTMLElementTagNameMap>(tag: Tag, id: string) =>
+    root.querySelector(`${tag}#${id}`) as HTMLElementTagNameMap[Tag];
+  const reasoning = element("kind-reasoning", "reasoning");
+  reasoning.setAttribute("text", thoughts);
+  reasoning.addEventListener("openchange", (event) => recordChange("reasoning", event));
+  for (const call of toolCalls) element("kind-tool", call.toolCallId).call = call;
+  const chain = element("kind-chain-of-thought", "chain");
+  chain.steps = chainSteps;
+  chain.addEventListener("openstepschange", (event) => recordChange("chain", event));
+  element("kind-task", "task").items = taskItems;
+  const plan = element("kind-plan", "plan");
+  plan.items = planItems;
+  plan.addEventListener("accept", () => host.calls.push("accept"));
+  const subagent = element("kind-subagent", "subagent");
+  subagent.addEventListener("subagentcancel", () => host.calls.push("cancel"));
+  host.confirm = (on) => {
+    plan.agentConfirm = on;
+    subagent.agentConfirm = on;
+  };
+  const queue = element("kind-queue", "queue");
+  queue.items = queueItems;
+  queue.addEventListener("reorder", (event) => {
+    const { value, index } = event.detail;
+    if (recordChange("queue", event)) queue.items = moveItem(queue.items ?? [], value, index);
+  });
+  queue.addEventListener("remove", (event) => {
+    const id = event.detail.value;
+    host.calls.push(`remove:${id}`);
+    queue.items = queue.items?.filter((item) => item.id !== id);
+  });
+}
+
+function foundation(root: HTMLElement) {
+  defineStep();
+  defineStepList();
+  defineConversation();
+  defineMessage();
+  defineMarkdown();
+  defineInternalToolbar();
+  defineComposer();
+  defineAttachments();
+  defineUploader();
+  defineLoader();
+  defineThinkingIndicator();
+  defineTypingIndicator();
+  defineStreamingText();
+  root.innerHTML = markup;
+  for (const step of root.querySelectorAll("kind-step"))
+    step.addEventListener("openchange", (event) => recordChange("step", event));
+  wireMessages(root);
+  wireComposer(root);
+  wireAttachments(root);
+  wireUploader(root);
+}
+
 export const cases = {
-  all: (root: HTMLElement) => {
-    defineStep();
-    defineStepList();
-    defineConversation();
-    defineMessage();
-    defineMarkdown();
-    defineInternalToolbar();
-    defineComposer();
-    defineAttachments();
-    defineUploader();
-    defineLoader();
-    defineThinkingIndicator();
-    defineTypingIndicator();
-    defineStreamingText();
-    root.innerHTML = markup;
-    for (const step of root.querySelectorAll("kind-step"))
-      step.addEventListener("openchange", (event) => recordChange("step", event));
-    wireMessages(root);
-    wireComposer(root);
-    wireAttachments(root);
-    wireUploader(root);
+  all: foundation,
+  "wave-2": (root: HTMLElement) => {
+    foundation(root);
+    defineStatus();
+    defineReasoning();
+    defineTool();
+    defineChainOfThought();
+    defineTask();
+    definePlan();
+    defineSubagent();
+    defineQueue();
+    root.insertAdjacentHTML("beforeend", activity);
+    wireActivity(root);
   },
 };

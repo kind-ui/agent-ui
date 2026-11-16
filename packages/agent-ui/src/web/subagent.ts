@@ -1,6 +1,6 @@
 import "@ui-sdk/web/avatar";
 import {
-  initials,
+  avatarInitials,
   type StepApi,
   type StepOpenChangeReason,
   type SubagentState,
@@ -46,7 +46,7 @@ const drawAvatar = (part: Element | null, name: string, src: string | undefined)
     }
     if (image.getAttribute("src") !== src) image.setAttribute("src", src);
   } else image?.remove();
-  fill(avatar.querySelector("ui-avatar-fallback"), initials(name));
+  fill(avatar.querySelector("ui-avatar-fallback"), avatarInitials(name));
 };
 
 /**

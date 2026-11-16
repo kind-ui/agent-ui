@@ -1,7 +1,9 @@
+import type { QueueItem } from "@kind-ui/agent-ui";
 import type { AttachmentItem, UploadItem } from "@kind-ui/agent-ui/core";
 import type { AgentAction } from "@ui-sdk/react/agent";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Attachments } from "../../../../src/react/attachments.js";
+import { ChainOfThought } from "../../../../src/react/chain-of-thought.js";
 import {
   Composer,
   ComposerAttach,
@@ -34,6 +36,10 @@ import {
   MessageRegenerate,
   MessageToolbar,
 } from "../../../../src/react/message.js";
+import { Plan } from "../../../../src/react/plan.js";
+import { Queue } from "../../../../src/react/queue.js";
+import { Reasoning } from "../../../../src/react/reasoning.js";
+import { Status } from "../../../../src/react/status.js";
 import {
   Step,
   StepContent,
@@ -44,10 +50,27 @@ import {
   StepTrigger,
 } from "../../../../src/react/step.js";
 import { StreamingText } from "../../../../src/react/streaming-text.js";
+import { Subagent } from "../../../../src/react/subagent.js";
+import { Task } from "../../../../src/react/task.js";
 import { ThinkingIndicator } from "../../../../src/react/thinking-indicator.js";
+import { Tool } from "../../../../src/react/tool.js";
 import { TypingIndicator } from "../../../../src/react/typing-indicator.js";
 import { Uploader } from "../../../../src/react/uploader.js";
-import { agentHost, files, filler, question, replies, steps } from "../../shared/agent.js";
+import {
+  agentHost,
+  chainSteps,
+  files,
+  filler,
+  moveItem,
+  planItems,
+  question,
+  queueItems,
+  replies,
+  steps,
+  taskItems,
+  thoughts,
+  toolCalls,
+} from "../../shared/agent.js";
 import { commands, mentions } from "../../shared/composer.js";
 import { answer } from "../../shared/markdown.js";
 import { uploads } from "../../shared/uploader.js";
@@ -173,8 +196,86 @@ function Uploads() {
   return <Uploader aria-label="Uploads" items={items} {...callbacks} />;
 }
 
-export const cases = {
-  all: () => (
+function Activity() {
+  const [confirm, setConfirm] = useState(true);
+  const [queue, setQueue] = useState<readonly QueueItem[]>(queueItems);
+  useEffect(() => {
+    host.confirm = setConfirm;
+  }, []);
+  return (
+    <div className="flex w-[40rem] flex-col gap-8 p-6">
+      <section data-case="status">
+        <Status id="status" status="running" label="Deploying" />
+      </section>
+      <section data-case="reasoning">
+        <Reasoning
+          id="reasoning"
+          status="complete"
+          durationSeconds={3}
+          text={thoughts}
+          onOpenChange={(_open, details) => host.change("reasoning", details)}
+        />
+      </section>
+      <section data-case="tool" className="flex flex-col gap-2">
+        {toolCalls.map((call) => (
+          <Tool key={call.toolCallId} id={call.toolCallId} call={call} />
+        ))}
+      </section>
+      <section data-case="chain-of-thought">
+        <ChainOfThought
+          id="chain"
+          label="Researching retries"
+          status="complete"
+          steps={chainSteps}
+          onOpenStepsChange={(_steps, details) => host.change("chain", details)}
+        />
+      </section>
+      <section data-case="task">
+        <Task id="task" label="Patching the client" items={taskItems} />
+      </section>
+      <section data-case="plan">
+        <Plan
+          id="plan"
+          label="Retry plan"
+          status="awaiting-input"
+          items={planItems}
+          agentConfirm={confirm}
+          onAccept={() => {
+            host.calls.push("accept");
+          }}
+        />
+      </section>
+      <section data-case="subagent">
+        <Subagent
+          id="subagent"
+          agentName="Code reviewer"
+          status="running"
+          agentConfirm={confirm}
+          onCancel={() => {
+            host.calls.push("cancel");
+          }}
+        />
+      </section>
+      <section data-case="queue">
+        <Queue
+          id="queue"
+          label="Queue"
+          items={queue}
+          onReorder={(id, details) => {
+            if (host.change("queue", details)) setQueue((items) => moveItem(items, id, details.index));
+          }}
+          onRemove={(id) => {
+            host.calls.push(`remove:${id}`);
+            setQueue((items) => items.filter((item) => item.id !== id));
+          }}
+        />
+      </section>
+    </div>
+  );
+}
+
+function Foundation() {
+  return (
     <div className="flex w-[40rem] flex-col gap-8 p-6">
       <section data-case="step">
         <Steps />
@@ -215,5 +316,15 @@ export const cases = {
         </p>
       </section>
     </div>
+  );
+}
+
+export const cases = {
+  all: () => <Foundation />,
+  "wave-2": () => (
+    <>
+      <Foundation />
+      <Activity />
+    </>
   ),
 };

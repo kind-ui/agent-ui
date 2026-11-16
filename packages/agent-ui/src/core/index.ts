@@ -176,7 +176,7 @@ export {
   streamingTextPrimitive,
 } from "./streaming-text/index.js";
 export {
-  initials,
+  avatarInitials,
   type SubagentApi,
   type SubagentOptions,
   type SubagentPrimitive,

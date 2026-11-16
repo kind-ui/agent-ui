@@ -11,11 +11,11 @@ import { defineCodeBlock, type KindCodeBlockElement } from "./code-block.js";
 import { defineMarkdown, type KindMarkdownElement } from "./markdown.js";
 
 const DEFAULT_PARTS = `<kind-tool-trigger><button><kind-tool-icon></kind-tool-icon><kind-tool-title></kind-tool-title><kind-tool-approval></kind-tool-approval></button></kind-tool-trigger><kind-tool-content><kind-tool-input></kind-tool-input><kind-tool-output></kind-tool-output><kind-tool-error></kind-tool-error></kind-tool-content>`;
-const INPUT_PARTS = `<div data-tool-heading>Input<span data-tool-badge>Partial</span><kind-tool-input-copy><button></button></kind-tool-input-copy></div><kind-code-block headerless aria-label="Input" language="json"></kind-code-block>`;
-const OUTPUT_PARTS = `<div data-tool-heading>Output<span data-tool-badge>Preliminary</span><kind-tool-output-copy><button></button></kind-tool-output-copy></div><kind-code-block headerless aria-label="Output" language="json"></kind-code-block><kind-markdown></kind-markdown>`;
+const INPUT_PARTS = `<div data-tool-heading>Input<span data-tool-badge>Partial</span><kind-tool-input-copy><button></button></kind-tool-input-copy></div><kind-code-block headerless language="json"></kind-code-block>`;
+const OUTPUT_PARTS = `<div data-tool-heading>Output<span data-tool-badge>Preliminary</span><kind-tool-output-copy><button></button></kind-tool-output-copy></div><kind-code-block headerless language="json"></kind-code-block><kind-markdown></kind-markdown>`;
 
-// Parts this element wrote text into. A part someone wrote text into keeps it, as React's children do. Kept across
-// instances, because UI SDK rebuilds one when the element returns to the page.
+// Parts this element wrote text or parts into. A part someone wrote text or parts into keeps them, as React's
+// children do. Kept across instances, because UI SDK rebuilds one when the element returns to the page.
 const owned = new WeakSet<Element>();
 
 const fill = (part: Element | null, text: string) => {
@@ -25,8 +25,16 @@ const fill = (part: Element | null, text: string) => {
 };
 
 const fillParts = (part: Element | null, html: string) => {
-  if (part && !part.firstElementChild) part.innerHTML = html;
+  if (part && !part.firstElementChild) {
+    part.innerHTML = html;
+    owned.add(part);
+  }
   return part;
+};
+
+// Names a code block this element wrote, after the tool, as React's default parts do.
+const label = (part: Element | null, code: KindCodeBlockElement | null | undefined, text: string) => {
+  if (part && code && owned.has(part)) write(code, "ariaLabel", text);
 };
 
 const write = <Target extends object, Key extends keyof Target>(
@@ -66,6 +74,7 @@ export function defineTool(): void {
           fill(el.querySelector("kind-tool-error"), state.errorMessage);
           const input = fillParts(el.querySelector("kind-tool-input"), INPUT_PARTS);
           const inputCode = input?.querySelector<KindCodeBlockElement>(":scope > kind-code-block");
+          label(input, inputCode, state.inputLabel);
           if (inputCode) {
             write(inputCode, "code", state.input);
             write(inputCode, "streaming", state.inputStreaming);
@@ -73,6 +82,7 @@ export function defineTool(): void {
           }
           const output = fillParts(el.querySelector("kind-tool-output"), OUTPUT_PARTS);
           const code = output?.querySelector<KindCodeBlockElement>(":scope > kind-code-block");
+          label(output, code, state.outputLabel);
           if (code) {
             write(code, "hidden", state.output !== "code");
             if (state.output === "code") {

@@ -26,6 +26,10 @@ export type ToolState = StepState & {
   approval: Approval["state"] | undefined;
   /** Where the approval stands, in words, from `approvalLabel`. */
   approvalLabel: string | undefined;
+  /** The input code block's name, like "search_docs input". */
+  inputLabel: string;
+  /** The output code block's name, like "search_docs output". */
+  outputLabel: string;
   /** The input as indented JSON, empty before any arrives. */
   input: string;
   /** Whether the input is still arriving, labeled "Partial". */
@@ -69,9 +73,10 @@ type ToolSlots = {
   title: ToolSlot<{ title: string }>;
   approval: ToolSlot<{ label: string }>;
   content: ToolSlot;
-  input: ToolSlot<{ code: string; streaming: boolean; highlight: Highlight | undefined }>;
+  input: ToolSlot<{ label: string; code: string; streaming: boolean; highlight: Highlight | undefined }>;
   "input-copy": ToolSlot;
   output: ToolSlot<{
+    label: string;
     kind: "markdown" | "code";
     text: string;
     preliminary: boolean;
@@ -96,8 +101,12 @@ const base = stepBase<ToolState, ToolApi, ToolOptions>({
 
 const presentation = ({ call, label, error, highlight }: ToolOptions) => {
   const output = call && hasOutput(call) ? toolValue(call.output.value) : undefined;
+  const title = label ?? call?.name ?? "";
   return {
-    title: label ?? call?.name ?? "",
+    title,
+    // Named by the tool, so agents and screen readers can tell one tool's input from another's.
+    inputLabel: title ? `${title} input` : "Input",
+    outputLabel: title ? `${title} output` : "Output",
     approval: call?.approval?.state,
     approvalLabel: approvalLabel(call?.approval),
     input: call?.input.value === undefined ? "" : toolCode(call.input.value),
@@ -111,9 +120,9 @@ const presentation = ({ call, label, error, highlight }: ToolOptions) => {
   };
 };
 
-const copyAttrs = (label: string, copied: boolean) => ({
+const copyAttrs = (title: string, part: "input" | "output", copied: boolean) => ({
   type: "button",
-  "aria-label": label,
+  "aria-label": title ? `Copy ${title} ${part}` : `Copy ${part}`,
   "data-copied": copied ? "" : undefined,
 });
 
@@ -157,8 +166,12 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
         attrs: (state) => ({ "data-approval": state.approval }),
       }),
       content,
-      input: slot<BaseSlotProps, { code: string; streaming: boolean; highlight: Highlight | undefined }>({
+      input: slot<
+        BaseSlotProps,
+        { label: string; code: string; streaming: boolean; highlight: Highlight | undefined }
+      >({
         state: (state) => ({
+          label: state.inputLabel,
           code: state.input,
           streaming: state.inputStreaming,
           highlight: state.highlight,
@@ -170,14 +183,21 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
         role: "button",
         focus: "native",
         press: ({ api }) => void api.copyInput?.(),
-        attrs: (state) => copyAttrs("Copy input", state.inputCopied),
+        attrs: (state) => copyAttrs(state.title, "input", state.inputCopied),
       }),
       output: slot<
         BaseSlotProps,
-        { kind: "markdown" | "code"; text: string; preliminary: boolean; highlight: Highlight | undefined }
+        {
+          label: string;
+          kind: "markdown" | "code";
+          text: string;
+          preliminary: boolean;
+          highlight: Highlight | undefined;
+        }
       >({
         present: (state) => state.output !== undefined,
         state: (state) => ({
+          label: state.outputLabel,
           kind: state.output ?? "code",
           text: state.outputText,
           preliminary: state.outputPreliminary,
@@ -192,7 +212,7 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
         role: "button",
         focus: "native",
         press: ({ api }) => void api.copyOutput?.(),
-        attrs: (state) => copyAttrs("Copy output", state.outputCopied),
+        attrs: (state) => copyAttrs(state.title, "output", state.outputCopied),
       }),
       error: slot<BaseSlotProps, { message: string }>({
         present: (state) => state.status === "error",

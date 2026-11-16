@@ -17,7 +17,6 @@ Last reviewed: `c3bf470` (Wave 2 Task 9 exits)
 - **A keyboard move in a React Queue blurs and refocuses the picked-up row on each step:** React moves the keyed `li` with `insertBefore`, and UI SDK's reorder focuses it again (web uses `moveBefore`). It follows UI SDK's documented React pattern, so it belongs upstream.
 - **A `Subagent` placed directly in a `StepList` adds its own Tab stop;** joining it needs `SubagentRoot` with `StepListItem render={<SubagentTrigger />}`. Undocumented, and `SubagentRoot` arrangements have no browser spec.
 - **Task and Plan: a host `items` update renders every item's parts (Wave 2 Task 6),** 514 renders for one status change among 100 plan items, as Chain of Thought's steps do. Same upstream report to UI SDK; per item update, not per token.
-- **Every tool's copy buttons and code blocks share labels** ("Copy input", "Input"), so agent refs by label are ambiguous across tools; the group around them is named by the tool. Same class as Markdown's "Code" / "Table".
 - **React hosts must memo Conversation rows** for a streamed token to render one row; the fixture does. The Conversation docs page (Wave 1 docs) should say so.
 - **Streaming Text renders twice per `text` change,** like Markdown: `text` reaches state through `onOptions`, a layout effect. Before paint.
 - **Uploader progress bars have no accessible name in server markup** until hydration adds `aria-labelledby` (UI SDK Progress; report upstream).
@@ -35,6 +34,8 @@ Last reviewed: `c3bf470` (Wave 2 Task 9 exits)
 - **Chain of Thought: a host `steps` update renders every step's parts (Wave 2 Task 5),** 609 renders for one status change among 100 steps; `memo` on the items doesn't help, as the parts re-render from UI SDK's options change. A press reaches one step. Report to UI SDK; no budget, since it's per step, not per token.
 
 ## Resolved
+
+- **Tools' copy buttons and code blocks shared labels (Wave 2 Task 10).** Fixed: each is named after its tool ("Copy search_docs input", "search_docs input") in both layers, tested in `wave-2/agent.spec.ts`. Markdown's "Code" / "Table" stay open below.
 
 - **Exits (Wave 2 Task 9):** `Attachments` takes a function of `{ rows }` as children, so styled chips keep their exit (chips rendered from `items` leave at once, and core drops their rows); the composer spec covers a chip added back and the host removing the focused chip.
 - **Queue (Wave 2 Task 8):** the spec covers an item added after the first frame playing its entrance, and an item completing (focus, counts, one Tab stop).

@@ -22,10 +22,10 @@ Last reviewed: `c3bf470` (Wave 2 Task 9 exits)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Queue `reorder` and `remove`, Uploader `cancel` and Attachments `remove` don't need a person:** spec §6 lists the consequential actions that render `data-agent-confirm`, and these aren't on it. Adding them is a spec change.
 - **Removing the last chip from a composer leaves focus on `<body>`:** the attachments' focus recovery has no neighbor, and the composer gives it no fallback (the editor). Same before Wave 2 Task 9.
 - **A double press on a Queue item's remove control calls `onRemove` twice** when the host removes the item asynchronously; there's no per-item lock like the uploader's.
 - **Queue's `known` set never forgets ids,** so an item removed and re-added under the same id after its exit gets no entrance (same as Task and Plan).
-- **`initials` is a generic export name** on the core entry, like `Token` and `Highlight`; consider `avatarInitials` before 0.1, since Message will show avatars too.
 - **A plan swapped while Accept is pending keeps the lock** until the old promise settles (Wave 2 Task 6). Clearing it on a new `onAccept` can't key on identity, since React passes a new inline function each render; same open spec §4.1 question as the composer's pending lock.
 - **Task and Plan's `known` set never forgets ids,** so an item removed and re-added under the same id gets no entrance (same as the uploader's `mounted`).
 - **Tool re-serializes its input on every options update** (`toolCode` per streamed chunk). Unmeasured on large inputs; memoize by value if it shows up.
@@ -44,6 +44,8 @@ Last reviewed: `c3bf470` (Wave 2 Task 9 exits)
 - **`setValue` with a draft trusts its `tokens`;** they're rebuilt from `text` only on the next edit.
 
 ## Resolved
+
+- **Wave 2 agent conformance (Task 10):** the generic `initials` export is now `avatarInitials`; a Queue item's remove badge removes it on click (the item's reorder used to capture the pointer and take the click; tested).
 
 - **Exits (Wave 2 Task 9):** a leaving row with no element to play its exit (Attachments children rendered from `items`, a headless instance) is dropped at once, so it never leaks its object URL, entrance memory or the uploader list's `data-empty`; `AttachmentsRootState` and `UploaderListState` have JSDoc; the uploader's slide watches its list, not the whole root.
 - **The uploader's `mounted` set never forgot ids (Wave 2 Task 9).** Fixed: the uploader and attachments forget an id once its row is dropped (or at once with `motion="none"`), so an item removed and added again under the same id plays its entrance (tested).

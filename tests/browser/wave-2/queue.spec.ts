@@ -125,6 +125,13 @@ test("dragging an item moves it", async ({ page }) => {
   await expect.poll(() => titles(page)).toEqual(["Update the docs", "Write the migration", "Run the tests"]);
 });
 
+test("clicking an item's remove badge removes it, without picking the item up", async ({ page }) => {
+  await open(page);
+  await row(page, "Update the docs").locator('[data-slot="kind-queue-item-remove"]').click();
+  expect(await calls(page)).toEqual([{ type: "remove", id: "b", reason: "remove-press", source: "mouse" }]);
+  await expect.poll(() => titles(page)).toEqual(["Write the migration", "Run the tests"]);
+});
+
 test("Delete removes the focused item, which leaves inert before it's gone, and focus moves on", async ({
   page,
 }) => {
