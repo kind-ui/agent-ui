@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
 import { parse } from "yaml";
 import { findCollisions } from "../check-registry-namespace.mjs";
@@ -37,6 +40,27 @@ test("publish job is guarded and uses npm-release", () => {
     /npm publish "\$TARBALL" --ignore-scripts --access public --tag "\$DIST_TAG"/,
   );
   assert.match(runs(release.jobs.plan), /private === true/);
+});
+
+test("plan skips the push that adds the package", (t) => {
+  const dir = mkdtempSync(join(tmpdir(), "release-plan-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const git = (...args) =>
+    execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: dir });
+  git("init", "-q");
+  git("commit", "-q", "--allow-empty", "-m", "before");
+  mkdirSync(join(dir, "packages/agent-ui"), { recursive: true });
+  writeFileSync(join(dir, "packages/agent-ui/package.json"), '{"version":"0.0.0","private":true}');
+  git("add", ".");
+  git("commit", "-q", "-m", "add package");
+  const output = join(dir, "output");
+  writeFileSync(output, "");
+  execFileSync("bash", ["-e", "-c", release.jobs.plan.steps.find((step) => step.id === "plan").run], {
+    cwd: dir,
+    env: { ...process.env, GITHUB_EVENT_NAME: "push", GITHUB_OUTPUT: output },
+    stdio: "pipe",
+  });
+  assert.equal(readFileSync(output, "utf8"), "release=false\n");
 });
 
 test("all actions are pinned by SHA", () => {

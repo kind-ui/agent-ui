@@ -45,7 +45,11 @@ jobs:
           manifest=packages/agent-ui/package.json
           version=$(node -p "require('./$manifest').version")
           if [ "$GITHUB_EVENT_NAME" = push ]; then
-            previous=$(git show "HEAD^:$manifest" | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version")
+            # The push that adds the package has no previous manifest, so no previous version.
+            previous=
+            if git cat-file -e "HEAD^:$manifest" 2>/dev/null; then
+              previous=$(git show "HEAD^:$manifest" | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version")
+            fi
             if [ "$previous" = "$version" ]; then
               echo "::notice::$manifest changed without a version change; nothing to release."
               echo "release=false" >> "$GITHUB_OUTPUT"
