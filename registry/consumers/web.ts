@@ -14,6 +14,7 @@ import { defineReasoning } from "./components/ui/web/reasoning.js";
 import { defineStatus } from "./components/ui/web/status.js";
 import { defineStep } from "./components/ui/web/step.js";
 import { defineStreamingText } from "./components/ui/web/streaming-text.js";
+import { defineSubagent } from "./components/ui/web/subagent.js";
 import { defineTask } from "./components/ui/web/task.js";
 import { defineThinkingIndicator } from "./components/ui/web/thinking-indicator.js";
 import { defineTool } from "./components/ui/web/tool.js";
@@ -29,6 +30,7 @@ for (const define of [
   defineChainOfThought,
   defineTask,
   definePlan,
+  defineSubagent,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -57,6 +59,9 @@ const items = {
   "chain-of-thought": `<kind-chain-of-thought label="Researching flights" status="complete" default-open></kind-chain-of-thought>`,
   task: `<kind-task label="Migrating the users table" default-open></kind-task>`,
   plan: `<kind-plan label="Migration plan" default-open></kind-plan>`,
+  subagent: `<kind-subagent agent-name="Code reviewer" status="complete" result="No issues found." default-open>
+      <kind-subagent-content><p>Read two files.</p></kind-subagent-content>
+    </kind-subagent>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>

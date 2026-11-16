@@ -21,6 +21,7 @@ import { Reasoning } from "./components/ui/reasoning.js";
 import { Status } from "./components/ui/status.js";
 import { Step, StepContent, StepIcon, StepTitle, StepTrigger } from "./components/ui/step.js";
 import { StreamingText } from "./components/ui/streaming-text.js";
+import { Subagent } from "./components/ui/subagent.js";
 import { Task } from "./components/ui/task.js";
 import { ThinkingIndicator } from "./components/ui/thinking-indicator.js";
 import { Tool } from "./components/ui/tool.js";
@@ -75,6 +76,11 @@ const items = {
       items={[{ id: "audit", status: "complete", title: "Audit the current schema" }]}
       defaultOpen
     />
+  ),
+  subagent: (
+    <Subagent agentName="Code reviewer" status="complete" result="No issues found." defaultOpen>
+      <p>Read two files.</p>
+    </Subagent>
   ),
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
