@@ -10,25 +10,25 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-14-agent-ui-design.md`: §2 "Building on UI SDK" and "Internal general components", §4.1 approval and composer contracts, §4.2 `Approval`, §6 Motion and Agent actions, §7 Wave 3, §8. Also read `AGENTS.md` ("UI SDK API notes", Verification policy, the streaming UX checklist) and `.agents/experts/*/decisions.md`.
 
-## Decisions for the user
+## Decisions
 
-Open until the user answers. Each has a recommendation; Task 1 writes the answers into the spec and the experts' `decisions.md`, and later tasks follow them.
+Decided 2026-11-16, as recommended. D3, D4 and D6–D10 are written into spec §2, §6 and §7, and D1 and D5 into §6. Task 1 moves D1 to Settled in core `decisions.md`.
 
 - **D1. Agent confirmation for Queue `reorder`/`remove`, Uploader `cancel` and Attachments `remove`.** Spec §6 doesn't list them, and core `decisions.md` holds it open.
-  - **Recommendation: don't add them.** UI SDK's bridge reads `data-agent-confirm` per component, not per action (AGENTS.md, Composer "Agent confirm"), so marking Queue would also gate `reorder`, and marking Uploader would gate `retry`. Each action is reversible or low-stakes for the draft it touches. The Queue, Uploader and Attachments docs pages gain one `allow` example showing how a host requires a person for any of them. Task 1 moves the item to Settled.
-- **D2. Fix four cross-cutting open items in Wave 3 groundwork.** **Recommendation: yes, all four, as Task 2**, so Wave 3 builds on them and the showcase doesn't inherit them:
+  - **Decided: don't add them.** UI SDK's bridge reads `data-agent-confirm` per component, not per action (AGENTS.md, Composer "Agent confirm"), so marking Queue would also gate `reorder`, and marking Uploader would gate `retry`. Each action is reversible or low-stakes for the draft it touches. The Queue, Uploader and Attachments docs pages gain one `allow` example showing how a host requires a person for any of them. Task 1 moves the item to Settled.
+- **D2. Fix four cross-cutting open items in Wave 3 groundwork.** **Decided: yes, all four, as Task 2**, so Wave 3 builds on them and the showcase doesn't inherit them:
   - **`"use client"`:** every `src/react/**/*.tsx` render file starts with `"use client";`, so a Next.js App Router consumer imports registry items without wrapping them. Vite ignores it and the registry copies it byte-for-byte.
   - **React error #418 on every docs page:** find the mismatching markup with a development build of the static export and fix its cause in the render file or docs layout. No `suppressHydrationWarning`.
   - **Composer attachments area jumps 48px:** play `expand` on the area when its first chip arrives and hide it after the last chip's exit and the collapse end (styles `decisions.md`).
   - **Last chip removed leaves focus on `<body>`:** the composer gives the attachments' focus recovery the editor as its fallback.
-- **D3. Context Meter details open on press, through Popover, not Hover Card.** UI SDK Hover Card's trigger must be a link, and its docs say touch and screen reader users may never open it. **Recommendation: Popover with its "Open on Hover" option**, so the details open on hover, focus and press. Spec §2's internal table and §7 change Hover Card to Popover for this component.
-- **D4. Name "Context" `ContextMeter`.** `Context`, `ContextTrigger` and `kind-context` read as React Context and clash with every primitive's `context` parameter. **Recommendation: `ContextMeter`, `kind-context-meter`, registry items `context-meter` and `context-meter-web`.** Spec §7's row is renamed.
-- **D5. Wave 3 actions spec §6 doesn't list for confirmation** (`suggestion.pick`, `feedback.rate`, `feedback.submitComment`, `notice.dismiss`, `modelSelector.setValue`, `reasoningEffort.setValue`). **Recommendation: none render `data-agent-confirm`.** A host whose `onPick` sends a prompt gates it with `allow`, as D1; the Suggestion page shows how.
-- **D6. Question with several questions.** "One question or a sequence" (spec §7) doesn't say how a sequence shows. **Recommendation: one form, every question as its own fieldset, one Submit.** Nothing required hides on a later page, `select(questionId, …)` reaches any question, and the form's height only grows as the host adds questions. Paging can come later as an option.
-- **D7. Checkpoint `restore` from an agent.** **Recommendation: `checkpoint.restore` opens the Alert Dialog, the same code path as a press** (spec §6), and only the dialog's Restore button calls `onRestore`. With `data-agent-confirm` on the root, an agent needs a person twice: once for the action, once in the dialog.
-- **D8. Confirmation's deny reason.** **Recommendation: a `reason` option (default off) shows a Textarea above the choices from the start, and Deny sends its text.** No second step, and nothing appears or moves when Deny is pressed. `deny(reason?)` from an agent fills it.
-- **D9. Feedback comment.** **Recommendation: a "Add a comment" button appears once a rating is set and the host supplies `onComment`; it opens a Popover with a Textarea and Send.** Rating never opens a popup by itself, so focus moves only when a person asks.
-- **D10. Dismissing a Notice.** **Recommendation:** Dismiss plays the `"fade"` exit through the motion helper, then calls `onDismiss`; the host removes the notice. Before the exit, focus moves to the element a `focusFallback` option returns, else to the next focusable element after the notice (Task 10 checks `core.md` "Focus Recovery" for UI SDK's way to find it and records it in the API notes). A host that removes a notice without Dismiss removes it at once, as with any host-rendered child (spec §6).
+- **D3. Context Meter details open on press, through Popover, not Hover Card.** UI SDK Hover Card's trigger must be a link, and its docs say touch and screen reader users may never open it. **Decided: Popover with its "Open on Hover" option**, so the details open on hover, focus and press. Spec §2's internal table and §7 say so.
+- **D4. Name "Context" `ContextMeter`.** `Context`, `ContextTrigger` and `kind-context` read as React Context and clash with every primitive's `context` parameter. **Decided: `ContextMeter`, `kind-context-meter`, registry items `context-meter` and `context-meter-web`.** Spec §2 and §7 use the new name.
+- **D5. Wave 3 actions spec §6 doesn't list for confirmation** (`suggestion.pick`, `feedback.rate`, `feedback.submitComment`, `notice.dismiss`, `modelSelector.setValue`, `reasoningEffort.setValue`). **Decided: none render `data-agent-confirm`.** A host whose `onPick` sends a prompt gates it with `allow`, as D1; the Suggestion page shows how.
+- **D6. Question with several questions.** "One question or a sequence" (spec §7) doesn't say how a sequence shows. **Decided: one form, every question as its own fieldset, one Submit.** Nothing required hides on a later page, `select(questionId, …)` reaches any question, and the form's height only grows as the host adds questions. Paging can come later as an option.
+- **D7. Checkpoint `restore` from an agent.** **Decided: `checkpoint.restore` opens the Alert Dialog, the same code path as a press** (spec §6), and only the dialog's Restore button calls `onRestore`. With `data-agent-confirm` on the root, an agent needs a person twice: once for the action, once in the dialog.
+- **D8. Confirmation's deny reason.** **Decided: a `reason` option (default off) shows a Textarea above the choices from the start, and Deny sends its text.** No second step, and nothing appears or moves when Deny is pressed. `deny(reason?)` from an agent fills it.
+- **D9. Feedback comment.** **Decided: an "Add a comment" button appears once a rating is set and the host supplies `onComment`; it opens a Popover with a Textarea and Send.** Rating never opens a popup by itself, so focus moves only when a person asks.
+- **D10. Dismissing a Notice.** **Decided:** Dismiss plays the `"fade"` exit through the motion helper, then calls `onDismiss`; the host removes the notice. Before the exit, focus moves to the element a `focusFallback` option returns, else to the next focusable element after the notice (Task 10 checks `core.md` "Focus Recovery" for UI SDK's way to find it and records it in the API notes). A host that removes a notice without Dismiss removes it at once, as with any host-rendered child (spec §6).
 - **D11. Version order (a note, not a decision).** The Wave 3 changeset lands after the 0.2.0 version PR (#40) merges, or both waves version together.
 
 ## Global Constraints
@@ -97,7 +97,7 @@ Tasks 3–10 each finish with these steps after their own tests pass. A task lis
 
 ### Task 1: Wave 3 groundwork
 
-Spec §4.1 approval contract, §6 Agent actions; decisions D1, D3–D6.
+Spec §4.1 approval contract, §6 Agent actions; decision D1.
 
 **UI SDK:** `createFocusRecovery`, `announce`. No component yet.
 
@@ -105,7 +105,7 @@ Spec §4.1 approval contract, §6 Agent actions; decisions D1, D3–D6.
 - Create: `packages/agent-ui/src/core/{pending,approval}.ts`
 - Modify: `src/types/{records,index}.ts`, `src/core/{plan/plan,subagent/subagent,tool/format,tool/tool,index}.ts`
 - Modify: `playwright.config.mjs` (projects `wave-3-react`, `wave-3-web`, `wave-3-react-strict` and their cross-browser twins), `scripts/affected-specs.mjs` if it names waves
-- Modify: the spec (§2 internal table, §6, §7 Wave 3 rows for D3, D4, D6 and D7), `.agents/experts/core/decisions.md` (D1 to Settled), the Queue, Uploader and Attachments docs pages (D1's `allow` example)
+- Modify: `.agents/experts/core/decisions.md` (D1 to Settled), the Queue, Uploader and Attachments docs pages (D1's `allow` example)
 - Test: `packages/agent-ui/tests/core/{pending,approval}.test.mjs`, existing `tests/browser/wave-2/{plan,subagent}.spec.ts`
 
 **Interfaces:**
@@ -154,13 +154,13 @@ test("actionable approvals", () => {
 - [ ] **Step 2: Run** `npm run test:unit`. Expected: the new tests FAIL.
 - [ ] **Step 3: Implement** the interfaces, then move Plan and Subagent onto `createPendingAction`.
 - [ ] **Step 4: Run** `npm run lint && npm run typecheck && npm run test:unit && npx playwright test tests/browser/wave-2/plan.spec.ts tests/browser/wave-2/subagent.spec.ts`. Expected: PASS, with Wave 2's double-press and rejection tests unchanged.
-- [ ] **Step 5:** Write the user's answers to D1–D10 into the spec and `decisions.md`. Commit `refactor: share the pending action and approval helpers for Wave 3`, then follow the routine's **Finish** and **Commit and PR** steps.
+- [ ] **Step 5:** Move D1 to Settled in core `decisions.md` and add the `allow` example to the three pages. Commit `refactor: share the pending action and approval helpers for Wave 3`, then follow the routine's **Finish** and **Commit and PR** steps.
 
 ---
 
 ### Task 2: Wave 1 and 2 follow-ups (D2)
 
-Skip any item the user declines in D2. Closes the four open items it names.
+Closes the four open items D2 names.
 
 **Files:**
 - Modify: every `packages/agent-ui/src/react/**/*.tsx` (first line `"use client";`), `scripts/tests/registry.test.mjs`
