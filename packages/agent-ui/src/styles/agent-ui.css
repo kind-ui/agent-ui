@@ -6,6 +6,8 @@
 @import "./confirmation.css";
 @import "./context-meter.css";
 @import "./feedback.css";
+@import "./notice.css";
+@import "./guardrail-notice.css";
 @import "./question.css";
 @import "./checkpoint.css";
 @import "./model-selector.css";

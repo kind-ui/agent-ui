@@ -1,0 +1,78 @@
+---
+title: Guardrail Notice
+description: Say that a guardrail blocked or filtered content, why, and what the policy says.
+---
+
+import GuardrailNoticeExample from "@/examples/guardrail-notice/basic";
+
+Use a guardrail notice where a response would have been when a safety or content policy stopped it, or beside results it filtered. It's a [notice](/docs/components/notice) with the policy reason and an optional detail behind **Why?**.
+
+<Example caption="Press Why? to read the policy, and press it again to hide it. Press Dismiss to remove the blocked notice.">
+  <GuardrailNoticeExample />
+
+  <include cwd lang="tsx">./examples/guardrail-notice/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/guardrail-notice
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/guardrail-notice-web
+```
+
+## Composition
+
+```text
+GuardrailNotice
+├── GuardrailNoticeIcon
+├── GuardrailNoticeTitle
+├── GuardrailNoticeReason
+├── GuardrailNoticeDetailTrigger
+├── GuardrailNoticeDetail
+├── GuardrailNoticeActions
+└── GuardrailNoticeDismiss
+```
+
+`GuardrailNotice` renders these parts. `GuardrailNoticeTitle` shows the `label`, else "Response blocked" or "Response filtered", and `GuardrailNoticeReason` the `reason`. `GuardrailNoticeDetailTrigger` is the **Why?** button that shows and hides `GuardrailNoticeDetail`, both rendered only with a `detail`. The icon, actions and Dismiss work as in Notice. To arrange the parts yourself, render them inside `GuardrailNoticeRoot`.
+
+## Usage
+
+### Blocking
+
+Pass `blocking` when the guardrail stopped the response. The notice is then an alert, and its announcement interrupts what a screen reader is saying. Without it the notice is a note that waits its turn, for content that was only filtered. The variant defaults to `"warning"`; pass `variant="info"` for a quieter filter notice.
+
+### Detail
+
+Pass `detail` to add **Why?**. Pressing it, or Enter or Space on it, shows the detail, and find in page shows it too when it matches hidden text. Pass `defaultOpen` to start with it shown, or `open` with `onOpenChange` to control it; `onOpenChange` gets `"trigger-press"`, `"find-in-page"` or `"imperative"`.
+
+```tsx
+<GuardrailNotice
+  blocking
+  label="Model output withheld"
+  reason="The response included personal data."
+  detail="Your organization's policy blocks responses that contain email addresses or phone numbers."
+/>
+```
+
+At full motion the detail slides open; under `prefers-reduced-motion`, or with `motion="reduced"`, it fades in over 120 ms, and with `motion="none"` it shows at once.
+
+### Dismiss and Announcements
+
+**Dismiss**, `focusFallback` and the announcements work as in [Notice](/docs/components/notice): a guardrail notice added after the page loads announces its title once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/guardrail-notice/guardrail-notice.ts" name="GuardrailNoticeOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the notice by its title and reads `open`. `expand()` and `collapse()` show and hide the detail, offered while there is one, and `dismiss()` does what **Dismiss** does, offered while `onDismiss` is set. Like any component with a button, it also has UI SDK's generic `press`.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/guardrail-notice/guardrail-notice.ts" name="GuardrailNoticeAgentActions" type='Pick<GuardrailNoticeApi, "dismiss" | "expand" | "collapse">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-guardrail-notice>`, props are kebab-case attributes, and `open` and `focusFallback` are properties; `onOpenChange` is the `openchange` event. The element fills in its parts, and Dismiss follows any `<kind-guardrail-notice-actions>` you write inside it. The `can-dismiss` attribute shows Dismiss, which fires `dismiss` once the notice has faded.
+</Caption>

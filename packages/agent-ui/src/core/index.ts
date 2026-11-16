@@ -105,6 +105,14 @@ export {
   type FeedbackThumbsState,
   feedbackPrimitive,
 } from "./feedback/index.js";
+export {
+  type GuardrailNoticeApi,
+  type GuardrailNoticeOpenChangeReason,
+  type GuardrailNoticeOptions,
+  type GuardrailNoticePrimitive,
+  type GuardrailNoticeState,
+  guardrailNoticePrimitive,
+} from "./guardrail-notice/index.js";
 export type { IndicatorOptions, IndicatorPrimitive, IndicatorState } from "./indicator.js";
 export {
   type ItemListApi,
@@ -168,6 +176,14 @@ export {
   reducedKeyframes,
   resolveMotion,
 } from "./motion/index.js";
+export {
+  type NoticeApi,
+  type NoticeOptions,
+  type NoticePrimitive,
+  type NoticeState,
+  type NoticeVariant,
+  noticePrimitive,
+} from "./notice/index.js";
 export { createPendingAction, type PendingAction, type PendingActionOptions } from "./pending.js";
 export {
   type PlanApi,

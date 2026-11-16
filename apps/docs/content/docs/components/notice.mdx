@@ -1,0 +1,87 @@
+---
+title: Notice
+description: Tell a person something about the conversation in a calm callout, with optional actions and Dismiss.
+---
+
+import NoticeExample from "@/examples/notice/basic";
+
+Use a notice for something worth reading that isn't a message, like a rate limit, a lost connection or a finished setup. Its mark and colors say whether it's information, a success, a warning or an error.
+
+<Example caption="Press Dismiss on Rate limited: focus moves on to Retry, the notice fades out, then it's removed.">
+  <NoticeExample />
+
+  <include cwd lang="tsx">./examples/notice/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/notice
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/notice-web
+```
+
+## Composition
+
+```text
+Notice
+├── NoticeIcon
+├── NoticeTitle
+├── NoticeDescription
+├── NoticeActions
+└── NoticeDismiss
+```
+
+`Notice` renders these parts: a note named by its `label`. `NoticeIcon` is the status mark, named **Info**, **Success**, **Warning** or **Error**, so the variant has words as well as a color. `NoticeTitle` shows the `label`, `NoticeDescription` holds the notice's `children`, `NoticeActions` holds its `actions`, and `NoticeDismiss` is the **Dismiss** button. To arrange the parts yourself, render them inside `NoticeRoot`.
+
+## Usage
+
+### Variants
+
+Pass `variant` as `"info"` (the default), `"success"`, `"warning"` or `"error"`. Each has its own mark and tint, which stay readable in light and dark, and the mark keeps its glyph in forced colors. Put buttons that act on the notice, like **Retry**, in `actions`.
+
+```tsx
+<Notice variant="error" label="Couldn't reach the model" actions={<button type="button">Retry</button>}>
+  Check your connection and try again.
+</Notice>
+```
+
+### Dismiss
+
+Pass `onDismiss` to show **Dismiss**. Pressing it moves focus out of the notice first, to the element `focusFallback` returns, else to the next element Tab reaches after the notice (the last one before it when nothing follows). Then the notice fades out, and `onDismiss` is called: remove the notice then. Return a promise to keep it until the promise settles; a rejection brings the notice back.
+
+```tsx
+const [shown, setShown] = useState(true);
+
+{shown ? (
+  <Notice variant="warning" label="Rate limited" onDismiss={() => setShown(false)}>
+    Responses are slower for the next few minutes.
+  </Notice>
+) : null}
+```
+
+A notice you remove without **Dismiss** leaves at once, like any other content you stop rendering.
+
+### Announcements
+
+A notice that's on the page as it loads is read with the page and isn't announced. One you add later rises in and its `label` is announced, once, as is a change of `variant`. Editing its text isn't announced.
+
+### Motion
+
+A notice added later rises and fades in, and **Dismiss** fades it out. Under `prefers-reduced-motion`, or with `motion="reduced"`, it only fades, and with `motion="none"` nothing animates.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/notice/base.ts" name="NoticeOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the notice by its label. `dismiss()` does what **Dismiss** does, offered while `onDismiss` is set and the notice isn't already leaving. It doesn't ask a person first.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/notice/base.ts" name="NoticeAgentActions" type='Pick<NoticeApi, "dismiss">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-notice>`, props are kebab-case attributes and `focusFallback` is a property. Write the text inside a `<kind-notice-description>` and buttons inside a `<kind-notice-actions>`; the element adds its mark, title and Dismiss. The `can-dismiss` attribute shows Dismiss, which fires `dismiss` once the notice has faded: remove it then, or call `event.detail.waitUntil(promise)`.
+</Caption>

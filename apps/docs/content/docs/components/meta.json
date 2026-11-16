@@ -18,6 +18,8 @@
     "suggestion",
     "context-meter",
     "feedback",
+    "notice",
+    "guardrail-notice",
     "conversation",
     "message",
     "markdown",

@@ -87,6 +87,18 @@ const components = {
     description: "Thumbs up and down for a response, with an optional comment written in a popover.",
     uses: ["internal-textarea"],
   },
+  notice: {
+    title: "Notice",
+    description:
+      "A calm callout for info, success, a warning or an error, with optional actions and Dismiss.",
+    uses: [],
+  },
+  "guardrail-notice": {
+    title: "Guardrail Notice",
+    description:
+      "Says a guardrail blocked or filtered content, with the policy reason and an expandable detail.",
+    uses: [],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

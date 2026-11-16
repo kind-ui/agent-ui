@@ -1,0 +1,96 @@
+/* Guardrail Notice (spec §7): the parts Notice lacks. The rest comes from notice.css. */
+@layer components {
+  [data-notice-part="reason"],
+  [data-notice-part="detail-trigger"],
+  [data-notice-part="detail"] {
+    grid-column: 2;
+  }
+
+  [data-notice-part="reason"] {
+    color: var(--kind-color-muted);
+  }
+
+  [data-notice-part="detail-trigger"] {
+    display: inline-flex;
+    justify-self: start;
+    align-items: center;
+    gap: 4px;
+    margin-inline-start: -4px;
+    padding: 0 4px;
+    border-radius: calc(var(--kind-radius) / 3);
+    color: var(--kind-color-fg);
+    font-weight: 500;
+    transition: background-color var(--kind-duration-fast);
+
+    &::after {
+      content: "";
+      width: 5px;
+      height: 5px;
+      margin-inline: 2px;
+      border-right: 1.5px solid currentColor;
+      border-bottom: 1.5px solid currentColor;
+      transform: translateY(-1px) rotate(45deg);
+      transition: transform var(--kind-duration-base) var(--kind-ease);
+    }
+    &[data-open]::after {
+      transform: translateY(1px) rotate(-135deg);
+    }
+    &:hover {
+      background-color: color-mix(in oklab, var(--kind-notice-tone) 12%, transparent);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 1px;
+    }
+  }
+
+  /* Sized through `--kind-step-content-height`, which `bindStepPanel` writes, as a Step's content is. */
+  [data-notice-part="detail"] {
+    height: var(--kind-step-content-height);
+    overflow: hidden;
+    color: var(--kind-color-muted);
+    transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+    }
+    & > * {
+      padding-top: 4px;
+    }
+  }
+
+  /* Full motion only: reduced motion keeps the 120 ms fade, "none" keeps nothing (spec §6). */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-notice-part="detail"][data-motion="auto"] {
+      transition:
+        height var(--kind-duration-panel) var(--kind-ease),
+        opacity var(--kind-duration-base) var(--kind-ease-out);
+
+      &:is([data-starting-style], [data-ending-style]) {
+        height: 0;
+      }
+    }
+  }
+
+  [data-notice-part="detail"][data-motion="reduced"] {
+    transition-duration: var(--kind-duration-reduced);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-notice-part="detail"] {
+      transition-duration: var(--kind-duration-reduced);
+    }
+    [data-notice-part="detail-trigger"]::after {
+      transition: none;
+    }
+  }
+
+  [data-notice-part="detail-trigger"][data-motion="reduced"]::after {
+    transition: none;
+  }
+
+  [data-notice-part="detail"][data-motion="none"],
+  [data-notice-part="detail-trigger"][data-motion="none"]::after {
+    transition: none;
+  }
+}
