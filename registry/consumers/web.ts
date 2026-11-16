@@ -1,5 +1,6 @@
 // The Web Components registry consumer's entry: every component, as `shadcn add` copies it, one section each.
 import { defineAttachments } from "./components/ui/web/attachments.js";
+import { defineChainOfThought } from "./components/ui/web/chain-of-thought.js";
 import { defineCodeBlock } from "./components/ui/web/code-block.js";
 import { defineComposer } from "./components/ui/web/composer.js";
 import { defineConversation } from "./components/ui/web/conversation.js";
@@ -23,6 +24,7 @@ for (const define of [
   defineStatus,
   defineReasoning,
   defineTool,
+  defineChainOfThought,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -48,6 +50,7 @@ const items = {
   status: `<kind-status status="running"></kind-status>`,
   reasoning: `<kind-reasoning status="complete" duration-seconds="3" text="Checked **two** sources." default-open></kind-reasoning>`,
   tool: `<kind-tool default-open></kind-tool>`,
+  "chain-of-thought": `<kind-chain-of-thought label="Researching flights" status="complete" default-open></kind-chain-of-thought>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>
@@ -102,6 +105,9 @@ Object.assign(main.querySelector("kind-tool") as HTMLElement, {
     input: { state: "ready", value: { query: "steps" } },
     output: { state: "available", value: 0 },
   },
+});
+Object.assign(main.querySelector("kind-chain-of-thought") as HTMLElement, {
+  steps: [{ id: "search", status: "complete", title: "Search flights", durationSeconds: 3 }],
 });
 Object.assign(main.querySelector("kind-attachments") as HTMLElement, {
   items: [{ id: "notes", name: "notes.md", size: 812, mediaType: "text/markdown" }],

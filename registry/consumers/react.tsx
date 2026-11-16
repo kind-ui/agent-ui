@@ -1,6 +1,7 @@
 // The React registry consumer's entry: every component, as `shadcn add` copies it, one section each.
 import { createRoot } from "react-dom/client";
 import { Attachments } from "./components/ui/attachments.js";
+import { ChainOfThought } from "./components/ui/chain-of-thought.js";
 import { CodeBlock } from "./components/ui/code-block.js";
 import { Composer, ComposerInput, ComposerStop, ComposerSubmit } from "./components/ui/composer.js";
 import {
@@ -48,6 +49,14 @@ const items = {
         input: { state: "ready", value: { query: "steps" } },
         output: { state: "available", value: 0 },
       }}
+      defaultOpen
+    />
+  ),
+  "chain-of-thought": (
+    <ChainOfThought
+      label="Researching flights"
+      status="complete"
+      steps={[{ id: "search", status: "complete", title: "Search flights", durationSeconds: 3 }]}
       defaultOpen
     />
   ),
