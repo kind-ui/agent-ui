@@ -127,6 +127,12 @@ const components = {
     description: "Changed files as a folder tree, each with its change and the lines it added and removed.",
     uses: ["internal-tree"],
   },
+  terminal: {
+    title: "Terminal",
+    description:
+      "A command and its output in ANSI colors, following the end as it streams, with its exit code and duration.",
+    uses: [],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

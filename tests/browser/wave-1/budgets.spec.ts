@@ -8,6 +8,8 @@ const BUDGETS = {
   conversationFollow: { layoutReads: 12 },
   markdownStream: { parses: 1, writes: 4, renders: 6, notified: 3 },
   toolStream: { writes: 14, renders: 25, notified: 17 },
+  terminalChunk: { writes: 6, renders: 7, notified: 4, layoutReads: 17 },
+  terminalLine: { writes: 8, renders: 9, notified: 5, layoutReads: 20 },
   remount: { nodes: 0, listeners: 0 },
 };
 const SIZES = [10, 500];
@@ -18,6 +20,7 @@ type Fixture = {
   kindConversation: { append(n?: number): void; stream(chunk: string): void };
   kindMarkdown: { records: { parses: number }[]; append(chunk: string): void };
   kindRemount(): void;
+  kindTerminal: { append(id: string, text: string): void };
 };
 type Fiber = {
   tag: number;
@@ -190,6 +193,34 @@ for (const size of SIZES) {
     expect(counts.writes).toBeLessThanOrEqual(BUDGETS.toolStream.writes);
     expect(counts.renders).toBeLessThanOrEqual(BUDGETS.toolStream.renders);
     expect(counts.notified).toBeLessThanOrEqual(BUDGETS.toolStream.notified);
+  });
+}
+
+// A chunk that lengthens the last line, and one that starts a new line, cost the same at 10 lines as at 1,000: only
+// the line parts the chunk changed render, and the lines in view are drawn, not the output.
+for (const lines of [10, 1000]) {
+  const openTerminal = async (page: Page) => {
+    await page.goto(`/?c=terminal&case=stream-${lines}`);
+    await expect(page.locator('[data-slot="kind-terminal-viewport"]')).toHaveAttribute("data-following", "");
+    await expect(page.locator("[data-mounting]")).toHaveCount(0);
+  };
+
+  test(`a chunk on the last of ${lines} terminal lines`, async ({ page }) => {
+    await openTerminal(page);
+    const counts = await most(page, 20, 'kindTerminal.append("stream", " \\x1b[32mok\\x1b[0m")');
+    expect(counts.writes).toBeLessThanOrEqual(BUDGETS.terminalChunk.writes);
+    expect(counts.renders).toBeLessThanOrEqual(BUDGETS.terminalChunk.renders);
+    expect(counts.notified).toBeLessThanOrEqual(BUDGETS.terminalChunk.notified);
+    expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS.terminalChunk.layoutReads);
+  });
+
+  test(`a new line after ${lines} terminal lines`, async ({ page }) => {
+    await openTerminal(page);
+    const counts = await most(page, 20, 'kindTerminal.append("stream", "\\nnext line")');
+    expect(counts.writes).toBeLessThanOrEqual(BUDGETS.terminalLine.writes);
+    expect(counts.renders).toBeLessThanOrEqual(BUDGETS.terminalLine.renders);
+    expect(counts.notified).toBeLessThanOrEqual(BUDGETS.terminalLine.notified);
+    expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS.terminalLine.layoutReads);
   });
 }
 

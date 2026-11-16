@@ -1,0 +1,86 @@
+---
+title: Terminal
+description: Show a command the agent ran and its output, in color, as it streams.
+---
+
+import TerminalExample from "@/examples/terminal/basic";
+
+Use a terminal when the agent runs a shell command, so readers can follow its output while it runs and check its exit code once it's done. It's a step: a header with the command, its exit code and how long it took, over a screen with the prompt and the output.
+
+<Example caption="Press npm test, or focus it and press Enter or Space, to hide and show the output. Focus the output and use the arrow keys to scroll it.">
+  <TerminalExample />
+
+  <include cwd lang="tsx">./examples/terminal/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/terminal
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/terminal-web
+```
+
+## Composition
+
+```text
+Terminal
+├── TerminalTrigger
+│   ├── TerminalIcon
+│   ├── TerminalTitle
+│   ├── TerminalExit
+│   └── TerminalMeta
+└── TerminalContent
+    ├── TerminalCommand
+    ├── TerminalCopy
+    ├── TerminalViewport
+    │   └── TerminalOutput
+    │       └── TerminalLine
+    └── TerminalJump
+```
+
+`TerminalTrigger` opens and closes the run, with its status mark in `TerminalIcon`, the command in `TerminalTitle`, "Exit N" in `TerminalExit` and the duration in `TerminalMeta`. `TerminalContent` is the screen: `TerminalCommand` shows the command after a `$` prompt, `TerminalCopy` copies the output, and `TerminalViewport` scrolls `TerminalOutput`, which renders a `TerminalLine` for each line in view. `TerminalJump` shows while you've scrolled away from the end.
+
+## Usage
+
+### Output
+
+Pass `command` and `output`, the whole output so far with its ANSI escapes, and pass the whole output again on each update. When it continues the last one, only the new text is parsed, so a long run streams as fast as a short one. Text styles (the 16 colors, 256-color and truecolor, bold, dim, italic, underline, strikethrough and inverse) show as styled text, never HTML. Every other escape, like a cursor move or a window title, is dropped. A lone `\r` starts its line again, so a progress bar shows its last state.
+
+The 16 colors come from `--kind-ansi-*` tokens, like `--kind-ansi-red` and `--kind-ansi-bright-blue`, tuned to read on the screen in light and dark. Set them in your theme to use your own palette.
+
+### Status and Exit Code
+
+Without `status`, a run is `running` until you pass `exitCode`, then `complete` for 0 and `error` for anything else. A running step opens and shows a cursor after its last line; once it completes, it closes to its header, and a failed run stays open. A person who opens or closes it keeps it that way. Pass `durationSeconds` to show how long it took. The outcome is announced once: "npm test complete", or "npm test failed, exit code 1". Lines aren't announced.
+
+```tsx
+<Terminal command="npm run build" output={output} exitCode={done ? code : undefined} />
+```
+
+### Following the End
+
+While new output arrives, the view stays at the end. Scroll up and it stays where you are while lines keep arriving, and **Jump to latest** appears; press it to go back to the end and follow again. Only the lines in view are rendered, so thousands of lines scroll as smoothly as ten. The screen grows with the output up to `--kind-terminal-max-height` (20rem), then scrolls.
+
+### Copying
+
+**Copy output** copies the output without its escapes and shows a check for 2 seconds. Pass `onCopy` to hear about it; cancel its `details` to copy something else yourself.
+
+### Keyboard and Motion
+
+Tab reaches the header, **Copy output** and the output, which scrolls with the arrow keys, Page Up and Page Down. The screen opens and closes with the step's height animation; under `prefers-reduced-motion`, or with `motion="reduced"`, it fades over 120 ms and the cursor stops blinking, and with `motion="none"` nothing moves.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/terminal/terminal.ts" name="TerminalOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the run by its title, the command unless you pass `label`, and reads `open`, `status` and `following`. It can `expand` and `collapse` the run and `copy` its output, which calls `onCopy` too.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/terminal/terminal.ts" name="TerminalAgentActions" type='Pick<TerminalApi, "expand" | "collapse" | "copy">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-terminal>`, set `output` as a property; the other props are kebab-case attributes. `onOpenChange` is the `openchange` event and `onCopy` is `terminalcopy`.
+</Caption>

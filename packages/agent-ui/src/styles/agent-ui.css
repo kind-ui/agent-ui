@@ -13,6 +13,7 @@
 @import "./document.css";
 @import "./generated-image.css";
 @import "./file-tree.css";
+@import "./terminal.css";
 @import "./question.css";
 @import "./checkpoint.css";
 @import "./model-selector.css";
@@ -87,6 +88,28 @@
       opacity: 0.35;
     }
   }
+}
+
+/* Terminal ANSI colors (spec §7), readable on the terminal's fill in both schemes: light darkens them, dark lightens
+   them, and black and white become grays that read on either. `static`, because only script uses them, as inline
+   styles Tailwind can't see. */
+@theme default static {
+  --kind-ansi-black: light-dark(oklch(0.3 0.006 286), oklch(0.68 0.01 286));
+  --kind-ansi-red: light-dark(oklch(0.5 0.19 27), oklch(0.72 0.17 25));
+  --kind-ansi-green: light-dark(oklch(0.5 0.13 150), oklch(0.76 0.15 150));
+  --kind-ansi-yellow: light-dark(oklch(0.5 0.11 80), oklch(0.83 0.14 90));
+  --kind-ansi-blue: light-dark(oklch(0.5 0.17 262), oklch(0.72 0.14 255));
+  --kind-ansi-magenta: light-dark(oklch(0.5 0.2 330), oklch(0.74 0.16 330));
+  --kind-ansi-cyan: light-dark(oklch(0.5 0.09 210), oklch(0.78 0.11 210));
+  --kind-ansi-white: light-dark(oklch(0.5 0.01 286), oklch(0.9 0.005 286));
+  --kind-ansi-bright-black: light-dark(oklch(0.48 0.014 286), oklch(0.74 0.012 286));
+  --kind-ansi-bright-red: light-dark(oklch(0.48 0.21 27), oklch(0.78 0.15 25));
+  --kind-ansi-bright-green: light-dark(oklch(0.48 0.15 150), oklch(0.83 0.16 150));
+  --kind-ansi-bright-yellow: light-dark(oklch(0.48 0.12 80), oklch(0.9 0.15 95));
+  --kind-ansi-bright-blue: light-dark(oklch(0.48 0.19 262), oklch(0.78 0.12 255));
+  --kind-ansi-bright-magenta: light-dark(oklch(0.48 0.22 330), oklch(0.8 0.14 330));
+  --kind-ansi-bright-cyan: light-dark(oklch(0.48 0.1 210), oklch(0.85 0.1 210));
+  --kind-ansi-bright-white: light-dark(oklch(0.38 0.01 286), oklch(0.98 0 0));
 }
 
 /* The render layers, for apps that render them from the package source. */

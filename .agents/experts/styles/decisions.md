@@ -6,6 +6,8 @@ Last reviewed: `ee4fcca` (Wave 4 Task 6 File Tree)
 
 ## Settled
 
+- **The `--kind-ansi-*` colors are `@theme default static`** (Wave 4 Task 7): only Terminal's script reads them, as inline `color: var(--kind-ansi-red)`, which Tailwind can't see, so it never emitted them from the main block. Light darkens the 16 colors to read on `--kind-color-hover`, dark lightens them; black and white map to grays that read in both. Axe checks them in both schemes.
+
 - **A File Tree file the host removes leaves at once** (Wave 4 Task 6): spec §6 "Removed items" names Queue, Attachments and Uploader; a file tree reflects the change set, as Sources does.
 - **The Context Meter ring sweeps by transitioning `--meter-value`** (Wave 3 Task 8), which repaints its `conic-gradient` on the main thread: a 16 px element for 280 ms, never on mount, and off under reduced motion.
 - **Reasoning restyles nested parts through variables** (`--kind-markdown-*`, `--kind-status-mark-complete`) set with one attribute selector, so a class on the content or icon part wins. Code blocks and tables in the thoughts keep their own colors.

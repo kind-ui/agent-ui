@@ -27,6 +27,12 @@ test("an OSC 8 link keeps only its text", () => {
   assert.deepEqual(out.map(plain), ["docs ok"]);
 });
 
+test("an OSC left open ends at the next line break", () => {
+  const lines = createAnsiLines();
+  assert.deepEqual(lines.update("ok\n\x1b]0;tit").map(plain), ["ok", ""]);
+  assert.deepEqual(lines.update("ok\n\x1b]0;title\nnext").map(plain), ["ok", "", "next"]);
+});
+
 test("\\r\\n split across chunks is one newline", () => {
   const lines = createAnsiLines();
   lines.update("a\r");

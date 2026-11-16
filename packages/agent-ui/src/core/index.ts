@@ -357,6 +357,14 @@ export {
   type TaskState,
   taskPrimitive,
 } from "./task/index.js";
+export {
+  type TerminalApi,
+  type TerminalCopyReason,
+  type TerminalOptions,
+  type TerminalPrimitive,
+  type TerminalState,
+  terminalPrimitive,
+} from "./terminal/index.js";
 export { thinkingIndicatorPrimitive } from "./thinking-indicator/index.js";
 export {
   type ToolApi,

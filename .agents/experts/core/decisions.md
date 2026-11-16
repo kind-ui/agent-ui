@@ -39,7 +39,6 @@ Last reviewed: `ee4fcca` (Wave 4 Task 6 File Tree)
 - **`treeFromPaths` drops a leading `/` below the top level** (Wave 4 Task 1): `/a/b.ts` becomes a `""` folder holding `a/b.ts`. `pathItems` documents relative paths; report upstream.
 - **`ansi-sequence-parser` applies a sequence's resets before its sets** (Wave 4 Task 1), so `ESC[33;0m` stays yellow where a terminal resets; splitting SGR into one parameter per sequence would fix it.
 - **SGR 8 (concealed) shows as normal text** (Wave 4 Task 1): D2's list leaves it out; a Terminal showing secrets would need it.
-- **`createAnsiLines` scans the whole output with `startsWith` and copies the line array per update, and an unterminated OSC holds every later chunk back and rescans it** (Wave 4 Task 1): Task 7's render budgets should measure it.
 - **A blocking Guardrail Notice added after load may be read twice** (Wave 3 Task 10): it's `role="alert"` and announces its title assertively, both as the plan asks. Not checked with a screen reader.
 - **Notice's `nearestTabStop` misses shadow roots and scrollable regions** (Wave 3 Task 10): it reads `tabIndex` over the light DOM, since UI SDK's `nextTabbable` isn't exported; ask upstream to export it.
 - **A notice that mounts in a background tab before its first paint isn't announced** (Wave 3 Task 10): first contentful paint waits for the tab to show.
@@ -68,6 +67,8 @@ Last reviewed: `ee4fcca` (Wave 4 Task 6 File Tree)
 - **`setValue` with a draft trusts its `tokens`;** they're rebuilt from `text` only on the next edit.
 
 ## Resolved
+
+- **`createAnsiLines`' logged costs (Wave 4 Task 1), measured by Terminal's budgets (Task 7):** an unterminated OSC now ends at the next line break instead of holding back every later chunk. The `startsWith` scan and the line array copy stay: both are linear memory work per update, not parsing or rendering, and the 10 and 1,000 line budgets show identical render and DOM counts.
 
 - **File Tree's `onSelect`, cache and folder selection** (Wave 4 Task 6): `read` reads the Tree before reporting and holds `syncTree` meanwhile (a press on a folder lost its selection), opens a file only when the selection the owner took is the event's row with no modifier, caches tree data and rows by object (`cached` in `memo.ts`), so two trees don't rebuild each other's, and `sameFolders` compares sets. Pinned in `file-tree.spec.ts` (refused, folder and Ctrl+Enter cases).
 - **`pathItems` gave a folder and a file the same value for `src` and `src/a.ts`** (Wave 4 Task 1): fixed in Task 6; a file whose path is also a folder of another entry is left out, so the folder holds the other entries (`tree.test.mjs`).
@@ -114,5 +115,7 @@ Last reviewed: `ee4fcca` (Wave 4 Task 6 File Tree)
 - **An unknown Status `status` showed a badge with no text (Wave 2 Task 2).** Fixed: it shows as pending.
 
 ## Revisit
+
+- **Terminal lines past the viewport aren't found by find in page** (Wave 4 Task 7): `createVirtualizer`'s `findable` rebuilds every stand-in when the count changes, O(lines) per new line. Ask upstream for incremental stand-ins.
 
 Nothing yet.
