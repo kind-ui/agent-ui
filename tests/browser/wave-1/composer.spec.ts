@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { layerOf } from "../layer.js";
+import { travel, watchExit } from "../leaving.js";
 
 type Draft = { text: string; attachments: { name: string; error?: string }[] };
 type Fixture = {
@@ -238,6 +239,52 @@ test("Attachments is a live UI SDK primitive with a remove action", async ({ pag
   await expect(list.getByRole("listitem")).toHaveCount(3);
   await expect(list.locator("img")).toHaveCount(1);
   await expectAgentActions(page, "Files", ["remove"]);
+});
+
+const chips = {
+  root: '[data-slot="kind-attachments"]',
+  row: '[data-slot="kind-attachments-item"]',
+  name: "[data-name]",
+  host: "kindAttachments",
+};
+const openChips = async (page: Page, motion?: string) => {
+  await page.goto(`/?c=composer&case=attachments${motion ? `&motion=${motion}` : ""}`);
+  await expect(page.locator(chips.row)).toHaveCount(3);
+  await settled(page);
+};
+
+test("a removed chip leaves inert, then the chips after it slide into its place without a jump", async ({
+  page,
+}) => {
+  await openChips(page);
+  const { leaving, exit, paths } = await watchExit(page, { ...chips, id: "a" });
+  expect(leaving).toEqual([{ inert: true, hidden: "true" }]);
+  expect(exit).toContain("opacity");
+  await expect(page.locator(chips.row)).toHaveCount(2);
+  for (const name of ["notes.md", "archive.zip"]) {
+    const { total, largestStep } = travel(paths[name] ?? []);
+    expect(total).toBeGreaterThan(20);
+    expect(largestStep).toBeLessThan(total / 2);
+  }
+  const { x } = (await page.locator(chips.row).first().boundingBox()) ?? { x: Number.NaN };
+  expect(paths["notes.md"]?.at(-1)?.x).toBeCloseTo(x, 0);
+});
+
+test("under reduced motion a removed chip only fades, and nothing after it slides", async ({ page }) => {
+  await openChips(page, "reduced");
+  const { leaving, exit, slid } = await watchExit(page, { ...chips, id: "a" });
+  expect({ leaving, exit, slid }).toEqual({
+    leaving: [{ inert: true, hidden: "true" }],
+    exit: ["opacity"],
+    slid: [],
+  });
+});
+
+test('with motion="none" a removed chip leaves at once', async ({ page }) => {
+  await openChips(page, "none");
+  const { leaving, slid } = await watchExit(page, { ...chips, id: "a" });
+  expect({ leaving, slid }).toEqual({ leaving: [], slid: [] });
+  await expect(page.locator(chips.row)).toHaveCount(2);
 });
 
 test("an edit the owner cancels puts the editor back to the draft", async ({ page }) => {

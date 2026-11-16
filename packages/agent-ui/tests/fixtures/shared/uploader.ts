@@ -14,7 +14,7 @@ export const uploads: UploadItem[] = [
   },
 ];
 
-/** Host callbacks, plus the `fixture` (what the host was asked to do, and a `setStatus`) a test reads as `window.kindUploader`. */
+/** Host callbacks, plus the `fixture` (what the host was asked to do, and its item changes) a test reads as `window.kindUploader`. */
 export function uploadHost(update: (change: (items: readonly UploadItem[]) => UploadItem[]) => void) {
   const calls = {
     files: [] as string[],
@@ -26,8 +26,11 @@ export function uploadHost(update: (change: (items: readonly UploadItem[]) => Up
     update((items) =>
       items.map((item) => (item.id === id ? { ...item, status, progress: progress ?? item.progress } : item)),
     );
+  const remove = (id: string) => update((items) => items.filter((item) => item.id !== id));
+  const add = (id: string) =>
+    update((items) => [...items, uploads.find((item) => item.id === id) as UploadItem]);
   return {
-    fixture: { calls, setStatus },
+    fixture: { calls, setStatus, remove, add },
     onFiles: (files: File[]) => {
       calls.files.push(...files.map((file) => file.name));
       update((items) => [

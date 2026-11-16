@@ -40,7 +40,8 @@ function fill(el: Element, item: AttachmentItem, preview: string | undefined): v
 
 /**
  * `<kind-attachments aria-label="Files">` renders a `kind-attachments-item` for each entry of its `items`
- * property. The `can-remove` attribute lets items be removed, each firing `remove` with the item's id.
+ * property, and keeps a removed one while it fades out. The `can-remove` attribute lets items be removed, each firing
+ * `remove` with the item's id.
  */
 export function defineAttachments(): void {
   if (customElements.get("kind-attachments")) return;
@@ -60,9 +61,9 @@ export function defineAttachments(): void {
         const api = instance.api as AttachmentsApi;
         const drawn = new WeakMap<Element, { item: AttachmentItem; preview: string | undefined }>();
         const draw = () => {
-          const { items } = instance.get();
+          const { rows } = instance.get();
           const existing = new Map([...el.children].map((child) => [child.getAttribute("value"), child]));
-          items.forEach((item, index) => {
+          rows.forEach(({ item }, index) => {
             let child = existing.get(item.id);
             existing.delete(item.id);
             if (!child) {

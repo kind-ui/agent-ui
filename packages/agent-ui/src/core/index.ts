@@ -5,6 +5,7 @@ export {
   type AttachmentsApi,
   type AttachmentsOptions,
   type AttachmentsPrimitive,
+  type AttachmentsRootState,
   type AttachmentsState,
   attachmentDetail,
   attachmentsPrimitive,
@@ -206,6 +207,7 @@ export { typingIndicatorPrimitive } from "./typing-indicator/index.js";
 export {
   type UploaderApi,
   type UploaderFilesDetails,
+  type UploaderListState,
   type UploaderOptions,
   type UploaderPrimitive,
   type UploaderRootState,

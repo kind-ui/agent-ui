@@ -57,9 +57,9 @@ function fill(el: Element, item: UploadItem): void {
 
 /**
  * `<kind-uploader aria-label="Uploads">` fills in a File Input drop zone and its list when it has no children, and
- * renders a `kind-uploader-item` for each entry of its `items` property. The `can-cancel` and `can-retry` attributes
- * show those buttons, which fire `uploadcancel` and `uploadretry` with the item's id. Accepted files fire `files`
- * and turned-down ones `uploadreject`, each with `event.detail.value`.
+ * renders a `kind-uploader-item` for each entry of its `items` property, keeping a removed one while it fades out.
+ * The `can-cancel` and `can-retry` attributes show those buttons, which fire `uploadcancel` and `uploadretry` with
+ * the item's id. Accepted files fire `files` and turned-down ones `uploadreject`, each with `event.detail.value`.
  */
 export function defineUploader(): void {
   if (customElements.get("kind-uploader")) return;
@@ -80,7 +80,7 @@ export function defineUploader(): void {
         const list = el.querySelector("kind-uploader-list");
         const drawn = new WeakMap<Element, UploadItem>();
         const draw = () => {
-          const { items, accept, maxSize } = instance.get() as UploaderState;
+          const { rows, accept, maxSize } = instance.get() as UploaderState;
           if (fileInput) {
             if (!fileInput.multiple) fileInput.multiple = true;
             if (fileInput.accept !== accept) fileInput.accept = accept;
@@ -88,7 +88,7 @@ export function defineUploader(): void {
           }
           if (!list) return;
           const existing = new Map([...list.children].map((child) => [child.getAttribute("value"), child]));
-          items.forEach((item, index) => {
+          rows.forEach(({ item }, index) => {
             let child = existing.get(item.id);
             existing.delete(item.id);
             if (!child) {

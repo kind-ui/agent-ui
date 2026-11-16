@@ -1,3 +1,4 @@
+import type { MotionMode } from "@kind-ui/agent-ui/core";
 import { useEffect, useState } from "react";
 import { Attachments } from "../../../../src/react/attachments.js";
 import {
@@ -9,7 +10,14 @@ import {
   ComposerSubmit,
   ComposerTriggerMenu,
 } from "../../../../src/react/composer.js";
-import { commands, history, imageFile, mentions, recorder } from "../../shared/composer.js";
+import {
+  attachmentItems,
+  attachmentsHost,
+  commands,
+  history,
+  mentions,
+  recorder,
+} from "../../shared/composer.js";
 
 const unsettled = new Promise<void>(() => {});
 const params = new URLSearchParams(location.search);
@@ -57,17 +65,15 @@ function Full({ submitOn }: { submitOn?: "enter" | "mod-enter" }) {
 }
 
 function AttachmentsCase() {
-  const [items, setItems] = useState(() => [
-    { id: "a", name: "diagram.png", size: 2048, mediaType: "image/png", file: imageFile() },
-    { id: "b", name: "notes.md", size: 812, mediaType: "text/markdown" },
-    { id: "c", name: "archive.zip", size: 9_000_000, mediaType: "application/zip", error: "type" as const },
-  ]);
+  const [items, setItems] = useState(attachmentItems);
+  useEffect(() => attachmentsHost(setItems), []);
   return (
     <div className="p-6">
       <Attachments
         aria-label="Files"
         items={items}
         onRemove={(id) => setItems((current) => current.filter((item) => item.id !== id))}
+        {...(params.has("motion") ? { motion: params.get("motion") as MotionMode } : {})}
       />
     </div>
   );

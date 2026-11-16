@@ -31,7 +31,7 @@ Last reviewed: `b1676ea` (Wave 2 Task 8 Queue)
 - **"Decision not sent" isn't announced:** `requested` → `submitting` → `submit-failed` stays `awaiting-input`, so the status doesn't change. Confirmation (Wave 3) owns the decision and its error.
 - **`ComposerApi.setValue` with the draft's own text still fires `onValueChange`** with a new draft object and returns `true`; nothing changes on screen.
 - **Enter held or pressed twice on an uploader Cancel cancels the next row too:** focus recovery moves to the neighbor's Cancel between presses. Spec §7 needs to say whether that's the list-deletion pattern or needs a pause.
-- **The uploader's `mounted` set never forgets ids,** so an item removed and re-added under the same id gets no entrance.
+- **Queue's `known` set never forgets ids,** so a Queue item removed and added again under the same id gets no entrance (the uploader and attachments now forget an id when its row is dropped).
 - **An indicator's new `label` is read out,** as its status content changes; documented on the option. Spec §6 should say whether a label change counts as a terminal transition.
 - **Guard comment stripping is regex-based:** a `//` inside a string hides the rest of the line from the forbidden-pattern checks. Use the TypeScript scanner.
 - **Guard rule 1 misses `definePrimitive<…Record<…>>(`** with nested generics.
@@ -44,6 +44,7 @@ Last reviewed: `b1676ea` (Wave 2 Task 8 Queue)
 
 ## Resolved
 
+- **The uploader's `mounted` set never forgot ids (Wave 2 Task 9).** Fixed: the uploader and attachments forget an id once its row is dropped (or at once with `motion="none"`), so an item removed and added again under the same id plays its entrance (tested).
 - **Queue (Wave 2 Task 8):** focus follows a focused item that completes into an open Completed section (`createListFocus` tries the lost item's key first, which also covers any list whose item gets a new element); `reorder` refuses an index outside `items`; its JSDoc says the index places the item among the pending ones and `details.index` is where that lands in `items`.
 - **Subagent (Wave 2 Task 7):** an unknown web `status` shows the pending words in the meta; `initials` takes each word's first grapheme, skips words that start with punctuation or an emoji, and keeps "ß"; a cancel is announced as "<name> stopped", matching Stop; `agentName`'s TSDoc says what shows without it.
 - **Task and Plan (Wave 2 Task 6):** an `onAccept` that throws gives Accept back, as a rejection does; a web task or plan given its items after connecting doesn't announce the status they add up to in the first frame; `ListItem` is no longer exported from the core entry.

@@ -1,10 +1,12 @@
-import type { UploadItem } from "@kind-ui/agent-ui/core";
+import type { MotionMode, UploadItem } from "@kind-ui/agent-ui/core";
 import { useEffect, useState } from "react";
 import { Uploader } from "../../../../src/react/uploader.js";
 import { defineUploader } from "../../../../src/web/uploader.js";
 import { uploadHost, uploads } from "../../shared/uploader.js";
 
 defineUploader();
+
+const motion = new URLSearchParams(location.search).get("motion") as MotionMode | null;
 
 function Mixed() {
   const [items, setItems] = useState<UploadItem[]>(uploads);
@@ -14,7 +16,13 @@ function Mixed() {
   }, [fixture]);
   return (
     <div className="mx-auto max-w-lg p-6">
-      <Uploader aria-label="Uploads" items={items} maxSize={5_000_000} {...host} />
+      <Uploader
+        aria-label="Uploads"
+        items={items}
+        maxSize={5_000_000}
+        {...(motion ? { motion } : {})}
+        {...host}
+      />
     </div>
   );
 }

@@ -129,15 +129,16 @@ test("layout animates from the measured position without resizing", async ({ pag
     const before = box.getBoundingClientRect();
     box.style.marginLeft = "40px";
     const done = window.kindMotion.layout(box, before).then(() => true);
+    const startsWhereItWas = box.getBoundingClientRect().left === before.left;
     await new Promise((r) => requestAnimationFrame(r));
     const moving = box.getBoundingClientRect().left < 40 + before.left;
     let narrowest = before.width;
     while (!(await Promise.race([done, new Promise((r) => requestAnimationFrame(() => r(false)))])))
       narrowest = Math.min(narrowest, box.getBoundingClientRect().width);
-    return { moving, narrowest, inline: box.getAttribute("style") };
+    return { startsWhereItWas, moving, narrowest, inline: box.getAttribute("style") };
   });
   expect(result.narrowest).toBeCloseTo(64, 3);
-  expect(result).toMatchObject({ moving: true, inline: "margin-left: 40px;" });
+  expect(result).toMatchObject({ startsWhereItWas: true, moving: true, inline: "margin-left: 40px;" });
 });
 
 test("expand ends at natural height; motion none is instant", async ({ page }) => {

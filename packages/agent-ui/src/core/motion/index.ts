@@ -262,13 +262,13 @@ export function layout(el: HTMLElement, measureBefore: DOMRect, options?: Motion
   const sy = after.height > 0 ? measureBefore.height / after.height : 1;
   if (dx === 0 && dy === 0 && sx === 1 && sy === 1) return Promise.resolve();
   el.style.transformOrigin = "top left";
-  const controls = animate(1, 0, {
-    ...SPRING,
-    onUpdate: (left) => {
-      el.style.translate = `${dx * left}px ${dy * left}px`;
-      el.style.scale = `${1 + (sx - 1) * left} ${1 + (sy - 1) * left}`;
-    },
-  });
+  const invert = (left: number) => {
+    el.style.translate = `${dx * left}px ${dy * left}px`;
+    el.style.scale = `${1 + (sx - 1) * left} ${1 + (sy - 1) * left}`;
+  };
+  // motion's first update comes a frame later, so the element starts where it was in the frame it moved.
+  invert(1);
+  const controls = animate(1, 0, { ...SPRING, onUpdate: invert });
   return track(el, controls, [...LAYOUT], layouts).then((finished) => {
     if (finished) clearStyles(el, LAYOUT);
   });

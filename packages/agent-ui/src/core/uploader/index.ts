@@ -1,6 +1,7 @@
 export {
   type UploaderApi,
   type UploaderFilesDetails,
+  type UploaderListState,
   type UploaderOptions,
   type UploaderPrimitive,
   type UploaderRootState,

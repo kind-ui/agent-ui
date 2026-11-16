@@ -1,4 +1,4 @@
-import type { ComposerDraft, ComposerTriggerItem } from "@kind-ui/agent-ui/core";
+import type { AttachmentItem, ComposerDraft, ComposerTriggerItem } from "@kind-ui/agent-ui/core";
 
 export const mentions: ComposerTriggerItem[] = [
   { value: "ada", label: "Ada Lovelace", description: "Research" },
@@ -41,3 +41,20 @@ export const imageFile = () =>
     "diagram.png",
     { type: "image/png" },
   );
+
+export const attachmentItems = (): AttachmentItem[] => [
+  { id: "a", name: "diagram.png", size: 2048, mediaType: "image/png", file: imageFile() },
+  { id: "b", name: "notes.md", size: 812, mediaType: "text/markdown" },
+  { id: "c", name: "archive.zip", size: 9_000_000, mediaType: "application/zip", error: "type" },
+];
+
+export function attachmentsHost(update: (change: (items: AttachmentItem[]) => AttachmentItem[]) => void) {
+  const all = attachmentItems();
+  Object.assign(window, {
+    kindAttachments: {
+      remove: (id: string) => update((items) => items.filter((item) => item.id !== id)),
+      add: (id: string) =>
+        update((items) => [...items, all.find((item) => item.id === id) as AttachmentItem]),
+    },
+  });
+}

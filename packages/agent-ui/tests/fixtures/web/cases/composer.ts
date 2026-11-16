@@ -1,7 +1,14 @@
 import type { AttachmentItem } from "@kind-ui/agent-ui/core";
 import { defineAttachments, type KindAttachmentsElement } from "../../../../src/web/attachments.js";
 import { defineComposer, type KindComposerElement } from "../../../../src/web/composer.js";
-import { commands, history, imageFile, mentions, recorder } from "../../shared/composer.js";
+import {
+  attachmentItems,
+  attachmentsHost,
+  commands,
+  history,
+  mentions,
+  recorder,
+} from "../../shared/composer.js";
 
 const unsettled = new Promise<void>(() => {});
 const params = new URLSearchParams(location.search);
@@ -73,16 +80,15 @@ export const cases = {
     defineAttachments();
     root.innerHTML = `<div class="p-6"><kind-attachments aria-label="Files"></kind-attachments></div>`;
     const list = root.querySelector("kind-attachments") as KindAttachmentsElement;
-    let items: AttachmentItem[] = [
-      { id: "a", name: "diagram.png", size: 2048, mediaType: "image/png", file: imageFile() },
-      { id: "b", name: "notes.md", size: 812, mediaType: "text/markdown" },
-      { id: "c", name: "archive.zip", size: 9_000_000, mediaType: "application/zip", error: "type" },
-    ];
-    Object.assign(list, { items, canRemove: true });
+    if (params.has("motion")) list.setAttribute("motion", params.get("motion") as string);
+    Object.assign(list, { items: attachmentItems(), canRemove: true });
+    const update = (change: (items: AttachmentItem[]) => AttachmentItem[]) => {
+      list.items = change([...(list.items ?? [])]);
+    };
+    attachmentsHost(update);
     list.addEventListener("remove", (event) => {
       const id = event.detail.value;
-      items = items.filter((item) => item.id !== id);
-      list.items = items;
+      update((items) => items.filter((item) => item.id !== id));
     });
   },
 };

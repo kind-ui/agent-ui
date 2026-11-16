@@ -11,10 +11,10 @@ import {
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { QueueItem } from "../../types/index.js";
-import { dropRow, type LeavingRow, mergeLeaving } from "../leaving.js";
+import { bindLeavingRow, dropRow, type LeavingRow, leavingRows } from "../leaving.js";
 import { createListFocus, type ListFocus } from "../list-focus.js";
 import { memo } from "../memo.js";
-import { enter, exit, layout, type MotionMode, resolvedMotion } from "../motion/index.js";
+import { enter, layout, type MotionMode, resolvedMotion } from "../motion/index.js";
 import { bindStepPanel } from "../step/base.js";
 
 /** The section an item shows in: Queued while `pending`, Completed once `complete`. */
@@ -269,8 +269,7 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       const items = options.items ?? NO_ITEMS;
       if (items === lastItems) return;
       lastItems = items;
-      const merged = mergeLeaving(store.get().rows, items);
-      const rows = resolvedMotion(options.motion) === "none" ? merged.filter((row) => !row.leaving) : merged;
+      const rows = leavingRows(store.get().rows, items, options.motion);
       store.set({ rows, rowsById: byId(rows) });
     });
 
@@ -352,46 +351,28 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
           known.add(key);
           if (!mounting) void enter(el, "fade-up", motion());
         }
-        let joined: (() => void)[] = [];
-        const join = () => {
-          const pending = store.get().rowsById[key]?.item.status === "pending";
-          joined = [
-            listFocus.roving.bind(el, part),
-            listFocus.recovery.bind(el, part),
-            ...(pending ? [reordering.bind(el, part)] : []),
-          ];
-        };
-        const leave = () => {
-          for (const unbind of joined) unbind();
-          joined = [];
-        };
-        let leaving = false;
-        const follow = () => {
-          const now = store.get().rowsById[key]?.leaving ?? false;
-          if (now === leaving) return;
-          leaving = now;
-          if (!leaving) {
-            join();
-            void enter(el, "fade", motion());
-            return;
-          }
-          // Leaving focus while the row still holds it moves focus to a neighbor before the exit makes it inert.
-          leave();
-          exit(el, "fade", motion()).then(
-            () => {
-              const rows = dropRow(store.get().rows, key);
-              store.set({ rows, rowsById: byId(rows) });
-            },
-            // The item came back during its exit.
-            () => {},
-          );
-        };
-        join();
-        follow();
-        const unsubscribe = store.subscribe(follow);
+        const unbind = bindLeavingRow(el, {
+          store,
+          isLeaving: () => store.get().rowsById[key]?.leaving ?? false,
+          motion,
+          join: () => {
+            const pending = store.get().rowsById[key]?.item.status === "pending";
+            const joined = [
+              listFocus.roving.bind(el, part),
+              listFocus.recovery.bind(el, part),
+              ...(pending ? [reordering.bind(el, part)] : []),
+            ];
+            return () => {
+              for (const unjoin of joined) unjoin();
+            };
+          },
+          drop: () => {
+            const rows = dropRow(store.get().rows, key);
+            store.set({ rows, rowsById: byId(rows) });
+          },
+        });
         return () => {
-          unsubscribe();
-          leave();
+          unbind();
           if (rowElements.get(key) === el) rowElements.delete(key);
         };
       },

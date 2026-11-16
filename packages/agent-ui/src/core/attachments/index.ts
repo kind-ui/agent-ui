@@ -5,6 +5,7 @@ export {
   type AttachmentsApi,
   type AttachmentsOptions,
   type AttachmentsPrimitive,
+  type AttachmentsRootState,
   type AttachmentsState,
   attachmentDetail,
   attachmentsPrimitive,

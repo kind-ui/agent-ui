@@ -85,7 +85,8 @@
     grid-area: attachments;
   }
 
-  [data-slot="kind-composer-attachments"][data-empty] {
+  /* Shown while the last chip fades out. */
+  [data-slot="kind-composer-attachments"][data-empty]:where(:not(:has([data-leaving]))) {
     display: none;
   }
 
