@@ -1,0 +1,87 @@
+---
+title: Checkpoint
+description: Mark a point in the conversation that a person can go back to, after a dialog asks first.
+---
+
+import CheckpointExample from "@/examples/checkpoint/basic";
+
+Use a checkpoint where the agent saved its work, like before it edits a file, so a person can undo everything after it. It's a quiet line in the conversation with **Restore checkpoint** at its end, and nothing is restored until the person agrees in the dialog.
+
+<Example caption="Press Restore checkpoint, then Restore. The dialog waits for the restore, then the checkpoint reads Restored.">
+  <CheckpointExample />
+
+  <include cwd lang="tsx">./examples/checkpoint/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/checkpoint
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/checkpoint-web
+```
+
+## Composition
+
+```text
+Checkpoint
+├── CheckpointLabel
+├── CheckpointDescription
+├── CheckpointLine
+├── CheckpointRestore
+│   └── CheckpointDialog
+│       ├── CheckpointError
+│       ├── CheckpointCancel
+│       └── CheckpointConfirm
+└── CheckpointRestored
+```
+
+`Checkpoint` renders these parts when you pass no children: a group named by its `label` and described by its `description`, then a line to the end of the row. `CheckpointRestore` holds UI SDK's Alert Dialog: its trigger is an icon button named by a tooltip, and `CheckpointDialog` is its backdrop and content, with the title, the description and the answers. `CheckpointCancel` and `CheckpointConfirm` are native buttons. `CheckpointRestored` takes Restore's place once the checkpoint is restored.
+
+## Usage
+
+### Restoring
+
+Pass `onRestore` to show **Restore checkpoint**. Pressing it opens the dialog, which asks "Restore this checkpoint?" and says "Changes after it will be discarded."; set `confirmTitle` and `confirmDescription` to say more about your checkpoint.
+
+```tsx
+<Checkpoint
+  label="Checkpoint 3"
+  description="Before editing auth.ts"
+  onRestore={() => restoreFiles("checkpoint-3")}
+/>
+```
+
+Only the dialog's **Restore** calls `onRestore`, with `details.source` saying how it was pressed. Return a promise to keep the dialog open until it settles: both answers are disabled meanwhile, a second press calls nothing, and Escape waits. When it resolves, the dialog closes and focus returns to **Restore checkpoint**. A rejection keeps the dialog open with "Couldn't restore. Try again." beside the answers, and screen readers hear "Checkpoint not restored".
+
+### Restored
+
+Once the host has restored the checkpoint, pass `restored`. "Restored" takes the button's place at the same height, so nothing around it moves, and screen readers hear "Checkpoint restored". If the button had focus, focus moves to "Restored".
+
+### Keyboard
+
+**Restore checkpoint** is one Tab stop; Enter or Space opens the dialog with focus on **Cancel**, the answer that changes nothing. Tab stays inside the dialog, and Escape closes it and returns focus to the button. A press outside never closes it.
+
+### The Dialog's State
+
+Pass `open` and `onOpenChange` to control the dialog, or `defaultOpen` to start with it open. `onOpenChange` gets UI SDK's reason, like `trigger-press`, `escape-key`, `close-press` or `action` after a restore.
+
+### Motion
+
+The dialog rises and fades in, its backdrop and the tooltip fade, and "Restored" fades in. Under `prefers-reduced-motion`, or with `motion="reduced"`, these only fade, over 120 ms, and with `motion="none"` they change at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/checkpoint/checkpoint.ts" name="CheckpointOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the checkpoint by its label and reads whether its dialog is open and whether it's restored. Its `restore` opens the dialog, the same as a press, and is offered while **Restore checkpoint** shows and the dialog is closed. It never calls `onRestore`: only a person's press on the dialog's **Restore** does. While `agentConfirm` is on, `restore` also waits for a person to confirm, unless the host's `allow` lets it through.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/checkpoint/checkpoint.ts" name="CheckpointAgentActions" type='Pick<CheckpointApi, "restore">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-checkpoint>`, props are kebab-case attributes, so `confirmTitle` is `confirm-title`, and `open` is a property too. Restore needs the `can-restore` attribute, and the dialog's Restore fires `restore`: call `event.detail.waitUntil(promise)` to keep the dialog open. The element fills in its parts when it has no children.
+</Caption>

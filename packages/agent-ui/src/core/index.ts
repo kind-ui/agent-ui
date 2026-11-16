@@ -23,6 +23,14 @@ export {
   stepDuration,
 } from "./chain-of-thought/index.js";
 export {
+  type CheckpointApi,
+  type CheckpointDialogState,
+  type CheckpointOptions,
+  type CheckpointPrimitive,
+  type CheckpointState,
+  checkpointPrimitive,
+} from "./checkpoint/index.js";
+export {
   type CodeBlockApi,
   type CodeBlockOptions,
   type CodeBlockPrimitive,

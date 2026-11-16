@@ -2,6 +2,7 @@
 import { createRoot } from "react-dom/client";
 import { Attachments } from "./components/ui/attachments.js";
 import { ChainOfThought } from "./components/ui/chain-of-thought.js";
+import { Checkpoint } from "./components/ui/checkpoint.js";
 import { CodeBlock } from "./components/ui/code-block.js";
 import { Composer, ComposerInput, ComposerStop, ComposerSubmit } from "./components/ui/composer.js";
 import { Confirmation } from "./components/ui/confirmation.js";
@@ -113,6 +114,7 @@ const items = {
       onSubmit={() => {}}
     />
   ),
+  checkpoint: <Checkpoint description="Before editing auth.ts" onRestore={() => {}} />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
       <ConversationViewport>

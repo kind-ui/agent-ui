@@ -1,6 +1,7 @@
 // The Web Components registry consumer's entry: every component, as `shadcn add` copies it, one section each.
 import { defineAttachments } from "./components/ui/web/attachments.js";
 import { defineChainOfThought } from "./components/ui/web/chain-of-thought.js";
+import { defineCheckpoint } from "./components/ui/web/checkpoint.js";
 import { defineCodeBlock } from "./components/ui/web/code-block.js";
 import { defineComposer } from "./components/ui/web/composer.js";
 import { defineConfirmation } from "./components/ui/web/confirmation.js";
@@ -37,6 +38,7 @@ for (const define of [
   defineQueue,
   defineConfirmation,
   defineQuestion,
+  defineCheckpoint,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -71,6 +73,7 @@ const items = {
   queue: `<kind-queue label="Queue"></kind-queue>`,
   confirmation: `<kind-confirmation label="Run search_docs?" can-approve can-deny reason></kind-confirmation>`,
   question: `<kind-question label="Deploy questions" can-submit></kind-question>`,
+  checkpoint: `<kind-checkpoint description="Before editing auth.ts" can-restore></kind-checkpoint>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>

@@ -12,6 +12,7 @@
     "queue",
     "confirmation",
     "question",
+    "checkpoint",
     "conversation",
     "message",
     "markdown",

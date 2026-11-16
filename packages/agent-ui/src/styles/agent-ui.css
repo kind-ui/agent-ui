@@ -4,6 +4,7 @@
 @import "./reasoning.css";
 @import "./confirmation.css";
 @import "./question.css";
+@import "./checkpoint.css";
 @import "./tool.css";
 @import "./chain-of-thought.css";
 @import "./item-list.css";

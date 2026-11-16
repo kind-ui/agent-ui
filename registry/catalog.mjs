@@ -55,6 +55,11 @@ const components = {
       "Single choice, multiple choice and free text questions in one form, then the recorded answers.",
     uses: ["internal-radio", "internal-checkbox", "internal-textarea"],
   },
+  checkpoint: {
+    title: "Checkpoint",
+    description: "A marker in the conversation that restores to that point, after a dialog asks first.",
+    uses: ["internal-alert-dialog", "internal-tooltip"],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",
@@ -102,6 +107,7 @@ const components = {
 };
 
 const internals = [
+  "alert-dialog",
   "avatar",
   "button",
   "checkbox",
@@ -115,6 +121,7 @@ const internals = [
   "toggle",
   "token-input",
   "toolbar",
+  "tooltip",
   "trigger-menu",
 ];
 
