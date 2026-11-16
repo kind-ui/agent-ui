@@ -12,7 +12,7 @@
 
 ## Decisions for the user
 
-Tasks marked with a decision follow the recommended option unless the user picks another. Task 1 writes each approved decision into the spec.
+**Approved 2026-11-15:** the user approved the recommended option for D1–D5. Task 1 writes D1–D3 into the spec.
 
 - **D1. Exit animations for removed items (spec §6).** Today a removed attachment chip or uploader row disappears at once, and the items after it jump into place. The open question is how an item the host removed can animate out.
   - **Recommended:** a component that renders items from host data keeps each removed item as a *leaving row* until its exit finishes.
