@@ -118,6 +118,19 @@ export {
   planPrimitive,
 } from "./plan/index.js";
 export {
+  type QueueApi,
+  type QueueOptions,
+  type QueuePrimitive,
+  type QueueReorderReason,
+  type QueueSection,
+  type QueueSectionState,
+  type QueueState,
+  queueInstructions,
+  queuePrimitive,
+  queueRows,
+  queueSection,
+} from "./queue/index.js";
+export {
   type ReasoningOptions,
   type ReasoningPrimitive,
   type ReasoningState,

@@ -39,6 +39,11 @@ const components = {
     description: "A subagent's run: its own steps, a Stop button and its result.",
     uses: ["markdown"],
   },
+  queue: {
+    title: "Queue",
+    description: "The agent's to-do list, queued and completed, that people can reorder and clear.",
+    uses: [],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

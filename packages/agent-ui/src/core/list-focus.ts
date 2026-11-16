@@ -12,7 +12,7 @@ export type ListFocus<State extends { focused: string | null }, Props extends ob
  */
 export const createListFocus = <State extends { focused: string | null }, Props extends object>(
   context: Pick<PrimitiveContext<unknown, State, string>, "store" | "onDestroy">,
-  { slot }: { slot: string },
+  { slot, focusable }: { slot: string; focusable?: (item: { key: string }) => boolean },
 ): ListFocus<State, Props> => {
   // Recovery runs after the removed item has left `roving.items()`, so keep the order from before.
   let current: string[] = [];
@@ -20,6 +20,7 @@ export const createListFocus = <State extends { focused: string | null }, Props 
   const roving = createRovingFocus<State, Props>(context, {
     slot,
     key: "focused",
+    ...(focusable && { focusable }),
     onItemsChange: () => {
       previous = current;
       current = roving.items().map((item) => item.key);

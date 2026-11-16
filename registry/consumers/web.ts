@@ -10,6 +10,7 @@ import { defineMarkdown } from "./components/ui/web/markdown.js";
 import { defineMarkdownTable } from "./components/ui/web/markdown-table.js";
 import { defineMessage } from "./components/ui/web/message.js";
 import { definePlan } from "./components/ui/web/plan.js";
+import { defineQueue } from "./components/ui/web/queue.js";
 import { defineReasoning } from "./components/ui/web/reasoning.js";
 import { defineStatus } from "./components/ui/web/status.js";
 import { defineStep } from "./components/ui/web/step.js";
@@ -31,6 +32,7 @@ for (const define of [
   defineTask,
   definePlan,
   defineSubagent,
+  defineQueue,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -62,6 +64,7 @@ const items = {
   subagent: `<kind-subagent agent-name="Code reviewer" status="complete" result="No issues found." default-open>
       <kind-subagent-content><p>Read two files.</p></kind-subagent-content>
     </kind-subagent>`,
+  queue: `<kind-queue label="Queue"></kind-queue>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>

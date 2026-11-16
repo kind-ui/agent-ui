@@ -1,0 +1,197 @@
+/* Queue (spec §7): Queued and Completed sections of rows, each with a status mark, that move, fade out and close
+   their gaps without moving anything else. */
+@layer components {
+  [data-slot="kind-queue"] {
+    --kind-queue-remove-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E");
+
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--kind-color-fg);
+  }
+
+  [data-slot="kind-queue-section"],
+  [data-slot="kind-queue-section-content"] {
+    display: block;
+  }
+
+  [data-slot="kind-queue-section"][data-empty] {
+    display: none;
+  }
+
+  /* Lines the title up with the rows' marks. */
+  [data-slot="kind-queue-section-trigger"] {
+    padding-inline: 8px 6px;
+    & > [data-title] {
+      flex: 1;
+      min-width: 0;
+      font-weight: 500;
+    }
+    & > [data-count] {
+      min-width: 20px;
+      border-radius: 9999px;
+      padding: 0 6px;
+      background-color: var(--kind-color-hover);
+      font-size: 0.75rem;
+      line-height: 1.125rem;
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+      color: var(--kind-color-muted);
+    }
+  }
+
+  /* No guide line: the rows' own marks line up under the section title. */
+  [data-slot="kind-queue-section-content"][data-step-part] {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: var(--kind-color-fg);
+    & > * {
+      padding-block: 2px;
+    }
+  }
+
+  [data-slot="kind-queue-list"] {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    list-style: none;
+    padding-inline: 0;
+  }
+
+  [data-slot="kind-queue-item"] {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    border-radius: calc(var(--kind-radius) / 2);
+    padding: 6px 8px;
+    background-color: var(--kind-color-surface);
+    transition:
+      background-color var(--kind-duration-fast),
+      box-shadow var(--kind-duration-fast);
+
+    &:hover {
+      background-color: var(--kind-color-hover);
+    }
+    &:focus-visible {
+      background-color: var(--kind-color-hover);
+      outline: 1.5px solid color-mix(in oklab, var(--kind-color-ring) 50%, transparent);
+      outline-offset: -1.5px;
+    }
+    &[data-sortable] {
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+    }
+    /* Picked up: lifted above the rows it passes, and under the pointer while dragged. */
+    &[data-grabbed] {
+      z-index: 1;
+      background-color: var(--kind-color-surface);
+      box-shadow:
+        0 0 0 1px var(--kind-color-border),
+        0 4px 12px color-mix(in oklab, var(--kind-color-shadow) 12%, transparent);
+    }
+    &[data-dragging] {
+      cursor: grabbing;
+      transform: translate(var(--drag-x, 0), var(--drag-y, 0));
+    }
+    &[data-leaving] {
+      pointer-events: none;
+    }
+
+    /* Centered on the first line. */
+    & > [data-slot="kind-queue-item-icon"] {
+      margin-block: calc(0.5lh - 8px);
+    }
+    & > [data-text] {
+      display: flex;
+      flex: 1;
+      min-width: 0;
+      flex-direction: column;
+    }
+  }
+
+  [data-slot="kind-queue-item"][data-status="complete"] [data-slot="kind-queue-item-title"] {
+    color: var(--kind-color-muted);
+    text-decoration: line-through;
+    text-decoration-color: color-mix(in oklab, var(--kind-color-muted) 60%, transparent);
+  }
+
+  [data-slot="kind-queue-item-description"] {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--kind-color-muted);
+    &:empty {
+      display: none;
+    }
+  }
+
+  /* Pointer only, so it shows on hover or while the row has focus, and holds its place while hidden. */
+  [data-slot="kind-queue-item-remove"] {
+    position: relative;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin-block: calc(0.5lh - 10px);
+    border-radius: calc(var(--kind-radius) / 3);
+    color: var(--kind-color-muted);
+    cursor: pointer;
+    opacity: 0;
+    transition:
+      opacity var(--kind-duration-fast),
+      color var(--kind-duration-fast),
+      background-color var(--kind-duration-fast);
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 4px;
+      background-color: currentColor;
+      mask: var(--kind-queue-remove-icon) center / contain no-repeat;
+    }
+    &:hover {
+      color: var(--kind-color-fg);
+      background-color: color-mix(in oklab, var(--kind-color-muted) 16%, transparent);
+    }
+  }
+
+  [data-slot="kind-queue-item"]:is(:hover, :focus-visible) > [data-slot="kind-queue-item-remove"] {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    [data-slot="kind-queue-item-remove"] {
+      opacity: 1;
+    }
+  }
+
+  [data-slot="kind-queue-instructions"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot="kind-queue-item"],
+    [data-slot="kind-queue-item-remove"] {
+      transition-duration: var(--kind-duration-reduced);
+    }
+  }
+
+  [data-slot="kind-queue"][data-motion="reduced"]
+    :is([data-slot="kind-queue-item"], [data-slot="kind-queue-item-remove"]) {
+    transition-duration: var(--kind-duration-reduced);
+  }
+
+  [data-slot="kind-queue"][data-motion="none"]
+    :is([data-slot="kind-queue-item"], [data-slot="kind-queue-item-remove"]) {
+    transition: none;
+  }
+}

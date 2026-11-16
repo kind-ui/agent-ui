@@ -17,6 +17,7 @@ import { Markdown } from "./components/ui/markdown.js";
 import { MarkdownTable } from "./components/ui/markdown-table.js";
 import { Message, MessageContent, MessageCopy, MessageToolbar } from "./components/ui/message.js";
 import { Plan } from "./components/ui/plan.js";
+import { Queue } from "./components/ui/queue.js";
 import { Reasoning } from "./components/ui/reasoning.js";
 import { Status } from "./components/ui/status.js";
 import { Step, StepContent, StepIcon, StepTitle, StepTrigger } from "./components/ui/step.js";
@@ -82,6 +83,7 @@ const items = {
       <p>Read two files.</p>
     </Subagent>
   ),
+  queue: <Queue label="Queue" items={[{ id: "tests", status: "pending", title: "Write the tests" }]} />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
       <ConversationViewport>
