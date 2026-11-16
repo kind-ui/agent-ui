@@ -18,6 +18,7 @@ import { memo } from "../memo.js";
 import { enter } from "../motion/index.js";
 import {
   bindStepPanel,
+  holdTransitions,
   type StepApi,
   type StepOpenChangeReason,
   type StepOptions,
@@ -365,7 +366,10 @@ export const chainOfThoughtPrimitive: ChainOfThoughtPrimitive = definePrimitive<
             }),
           };
         },
-        bind: (el, { api, key }) => api.bindStep(el, key),
+        bind: (el, { api, key }) => {
+          api.bindStep(el, key);
+          return holdTransitions(el);
+        },
       }),
       "item-trigger": slot<ItemPartProps & BaseSlotProps, { open: boolean }>({
         role: "button",

@@ -4,7 +4,10 @@ import { expectAgentActions } from "../agent-snapshot.js";
 import { layerOf } from "../layer.js";
 
 type Fixture = {
-  kindItems: { setStatus(id: string, status: string): void };
+  kindItems: {
+    setStatus(id: string, status: string): void;
+    append(item: { id: string; status: string; title: string }): void;
+  };
   kindAccepts: { resolve(): void; reject(): void }[];
   agent: { act(input: unknown): Promise<unknown> };
 };
@@ -138,4 +141,23 @@ test("kind-plan keeps what someone wrote in its progress part", async ({ page },
     Object.assign(el, { items: [{ id: "a", status: "complete", title: "Alpha" }] });
   });
   await expect(page.locator("#custom kind-plan-progress")).toHaveText("Custom progress");
+});
+
+test("a row added later takes its colors at once", async ({ page }) => {
+  await open(page);
+  await expect(page.locator("[data-mounting]")).toHaveCount(0);
+  const runs = await page.evaluate(async () => {
+    const colors: string[] = [];
+    const record = ({ target, propertyName }: TransitionEvent) => {
+      if (propertyName.includes("color"))
+        colors.push(`${(target as Element).getAttribute("data-slot")} ${propertyName}`);
+    };
+    document.addEventListener("transitionrun", record, true);
+    (window as unknown as Fixture).kindItems.append({ id: "late", status: "complete", title: "Ship it" });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    document.removeEventListener("transitionrun", record, true);
+    return colors;
+  });
+  await expect(item(page, "Ship it")).toBeVisible();
+  expect(runs).toEqual([]);
 });

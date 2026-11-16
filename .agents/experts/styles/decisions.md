@@ -18,6 +18,7 @@ Last reviewed: `b54a7cd` (Wave 3 Task 10 Notice and Guardrail Notice)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **On web, a step's content that starts closed can fade its parts' colors in the first time it opens** (Wave 3 Task 11): `hidden="until-found"` skips style updates, so parts styled bare by a bind's style read before their attributes landed keep that style until the reveal, after `data-mounting` is gone. Rows and roots hold through their first frames; ending the hold at a part's first styled frame needs UI SDK binds not to read style while parts connect (upstream).
 - **Mask-drawn icons vanish in forced colors** in the stylesheets without a `forced-colors` rule; Feedback's thumbs, the status mark and Notice's Dismiss have one.
 - **Feedback's thanks is wider than "Add a comment",** so the row grows sideways by its text when it appears; height holds. Feedback ends a message's actions, so nothing usually sits after it.
 - **The Context Meter's high-level glyph in light mode** is `--kind-color-warning` on white, about 2.5:1, under 3:1 for graphics; the percentage beside it carries the value.
