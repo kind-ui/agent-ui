@@ -6,6 +6,7 @@ import { Checkpoint } from "./components/ui/checkpoint.js";
 import { CodeBlock } from "./components/ui/code-block.js";
 import { Composer, ComposerInput, ComposerStop, ComposerSubmit } from "./components/ui/composer.js";
 import { Confirmation } from "./components/ui/confirmation.js";
+import { ContextMeter } from "./components/ui/context-meter.js";
 import {
   Conversation,
   ConversationContent,
@@ -126,6 +127,7 @@ const items = {
   ),
   "reasoning-effort": <ReasoningEffort defaultValue="medium" />,
   suggestion: <Suggestion suggestions={[{ id: "a", label: "Summarize this thread" }]} onPick={() => {}} />,
+  "context-meter": <ContextMeter used={57_600} total={128_000} usage={{ input: 40_000 }} cost={0.42} />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
       <ConversationViewport>
