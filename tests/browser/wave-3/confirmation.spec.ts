@@ -5,7 +5,7 @@ import { expectAgentActions } from "../agent-snapshot.js";
 type Decision = { choice: string; decision: unknown; source: string; resolve(): void; reject(): void };
 type Fixture = {
   kindHost: { decisions: Decision[]; permit: boolean };
-  kindApproval: { set(approval: unknown): void };
+  kindApproval: { set(approval: unknown, id?: string): void };
   kindAnnounced: string[];
   agent: { act(input: unknown): Promise<unknown> };
 };
@@ -92,18 +92,21 @@ test("Approve then Deny within one task calls the host once", async ({ page }) =
   ]);
 });
 
-test("a replaced generation ignores the old result and is enabled with no error", async ({ page }) => {
-  await open(page);
-  await approve(page).click();
-  await setApproval(page, request("requested", 2));
-  await settle(page, 0, "reject");
-  await settle(page, 0, "resolve");
-  await expect(approve(page)).not.toHaveAttribute("aria-disabled");
-  await expect(deny(page)).not.toHaveAttribute("aria-disabled");
-  await expect(part(page, "error")).toHaveCount(0);
-  await deny(page).click();
-  expect((await decisions(page))[1]?.decision).toEqual({ approvalId: "a1", generation: 2 });
-});
+for (const late of ["reject", "resolve"] as const) {
+  test(`a replaced generation is enabled with no error after the old one's late ${late}`, async ({
+    page,
+  }) => {
+    await open(page);
+    await approve(page).click();
+    await setApproval(page, request("requested", 2));
+    await settle(page, 0, late);
+    await expect(approve(page)).not.toHaveAttribute("aria-disabled");
+    await expect(deny(page)).not.toHaveAttribute("aria-disabled");
+    await expect(part(page, "error")).toHaveCount(0);
+    await deny(page).click();
+    expect((await decisions(page))[1]?.decision).toEqual({ approvalId: "a1", generation: 2 });
+  });
+}
 
 test("submit-failed enables both choices and announces once", async ({ page }) => {
   await open(page);
@@ -172,6 +175,29 @@ test("Deny sends what the person typed", async ({ page }) => {
     generation: 1,
     reason: "Wrong file",
   });
+});
+
+test("the reason box collapses once the decision is recorded, and the outcome keeps the reason", async ({
+  page,
+}) => {
+  await open(page);
+  await confirmation(page, "reason").getByRole("textbox").fill("Wrong file");
+  await deny(page, "reason").click();
+  await page.evaluate(() => (window as unknown as Fixture).kindHost.decisions[0]?.resolve());
+  await page.evaluate(() =>
+    (window as unknown as Fixture).kindApproval.set(
+      {
+        approvalId: "a1",
+        generation: 1,
+        state: "responded",
+        decision: { approved: false, reason: "Wrong file" },
+      },
+      "reason",
+    ),
+  );
+  await expect(part(page, "outcome", "reason")).toContainText("Denied");
+  await expect(part(page, "outcome", "reason")).toContainText("Wrong file");
+  await expect(confirmation(page, "reason").getByRole("textbox")).toHaveCount(0);
 });
 
 test("with reduced motion the swap only fades", async ({ page }) => {

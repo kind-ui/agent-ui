@@ -43,6 +43,7 @@ test("a decision locks both choices at once, and a second one calls nothing", ()
   assert.equal(state().pressed, "approve");
   assert.equal(confirmation.api.approve, undefined);
   assert.equal(confirmation.api.deny, undefined);
+  confirmation.api.press("deny");
   assert.equal(calls.length, 1);
   assert.deepEqual(calls[0].decision, { approvalId: "a", generation: 1 });
 });
@@ -81,18 +82,43 @@ test("a sent decision stays locked until the host reports on it", async () => {
   assert.equal(confirmation.api.approve, undefined);
 });
 
-test("a replaced generation drops the lock, and the old result is stale", async () => {
-  const { confirmation, calls, replies, set, state } = setup();
+for (const late of ["resolve", "reject"]) {
+  test(`a replaced generation drops the lock, and a late ${late} of the old one changes nothing`, async () => {
+    const { confirmation, calls, replies, set, state } = setup();
+    confirmation.api.approve();
+    set(request("requested", 2));
+    assert.equal(state().pending, false);
+    confirmation.api.deny("Too broad");
+    assert.deepEqual(calls[1].decision, { approvalId: "a", generation: 2, reason: "Too broad" });
+    replies[0][late](new Error("late"));
+    await tick();
+    assert.equal(state().pending, true);
+    assert.equal(state().sent, false);
+    assert.equal(state().pressed, "deny");
+  });
+}
+
+test("a host that reports back inside the callback leaves no choice marked", () => {
+  const options = { approval: request("requested"), onApprove: () => {}, onDeny: () => {} };
+  const confirmation = confirmationPrimitive({
+    ...options,
+    onApprove: () => {
+      confirmation.setOptions({ ...options, approval: request("submit-failed") });
+      return new Promise(() => {});
+    },
+  });
   confirmation.api.approve();
-  set(request("requested", 2));
-  assert.equal(state().pending, false);
+  assert.equal(confirmation.get().pressed, undefined);
+  assert.equal(typeof confirmation.api.approve, "function");
+});
+
+test("a new request empties the reason, and a new generation keeps it", () => {
+  const { confirmation, set, state } = setup();
   confirmation.api.deny("Too broad");
-  assert.deepEqual(calls[1].decision, { approvalId: "a", generation: 2, reason: "Too broad" });
-  replies[0].reject(new Error("late"));
-  replies[0].resolve();
-  await tick();
-  assert.equal(state().pending, true);
-  assert.equal(state().pressed, "deny");
+  set(request("requested", 2));
+  assert.equal(state().reasonText, "Too broad");
+  set({ ...request("requested"), approvalId: "b" });
+  assert.equal(state().reasonText, "");
 });
 
 test("auto approvals render as status with no choices", () => {
@@ -103,4 +129,9 @@ test("auto approvals render as status with no choices", () => {
   });
   assert.equal(confirmation.api.approve, undefined);
   assert.equal(confirmation.get().outcome, "Approved automatically");
+});
+
+test("an automatic approval without a decision has no outcome to show", () => {
+  const confirmation = confirmationPrimitive({ approval: request("auto") });
+  assert.equal(confirmation.get().outcome, undefined);
 });

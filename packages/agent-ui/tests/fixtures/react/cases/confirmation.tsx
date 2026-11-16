@@ -10,9 +10,15 @@ const { host, approve, deny } = confirmationHost();
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 
 function Confirmations({ motion }: { motion?: ConfirmationOptions["motion"] }) {
-  const [approval, setApproval] = useState(request("requested"));
+  const [approvals, setApprovals] = useState({ confirm: request("requested"), reason: request("requested") });
   useEffect(() => {
-    Object.assign(window, { kindHost: host, kindApproval: { set: (next: Approval) => setApproval(next) } });
+    Object.assign(window, {
+      kindHost: host,
+      kindApproval: {
+        set: (next: Approval, id: "confirm" | "reason" = "confirm") =>
+          setApprovals((all) => ({ ...all, [id]: next })),
+      },
+    });
   }, []);
   return (
     <div className="flex w-[28rem] flex-col gap-4 p-6">
@@ -20,7 +26,7 @@ function Confirmations({ motion }: { motion?: ConfirmationOptions["motion"] }) {
       <Confirmation
         id="confirm"
         label="Run search_docs?"
-        approval={approval}
+        approval={approvals.confirm}
         onApprove={approve}
         onDeny={deny}
         motion={motion}
@@ -29,7 +35,7 @@ function Confirmations({ motion }: { motion?: ConfirmationOptions["motion"] }) {
       <Confirmation
         id="reason"
         label="Delete notes.md?"
-        approval={request("requested")}
+        approval={approvals.reason}
         onApprove={approve}
         onDeny={deny}
         reason

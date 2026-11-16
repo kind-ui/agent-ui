@@ -63,7 +63,7 @@ When the host replaces the request with a new `generation`, the choices are avai
 
 ### Reasons
 
-Pass `reason` to show a box above the choices from the start. Deny sends its text as `decision.reason`, trimmed, and leaves it out when it's empty. Once the request is recorded, the outcome shows the reason after "Denied".
+Pass `reason` to show a box above the choices from the start. Deny sends its text as `decision.reason`, trimmed, and leaves it out when it's empty. It keeps its text through a new `generation` of the same request, and empties for a new `approvalId`. Once the decision is recorded, the box collapses and the outcome shows the reason after "Denied".
 
 ### Outcome
 
@@ -73,7 +73,7 @@ Screen readers hear "Decision not sent" when a decision fails, and the outcome w
 
 ### Motion
 
-The choices and the outcome fade in when they swap. Under `prefers-reduced-motion`, or with `motion="reduced"`, it's a 120 ms fade, and with `motion="none"` they swap at once.
+The choices and the outcome fade in when they swap, and the reason box collapses. Under `prefers-reduced-motion`, or with `motion="reduced"`, they fade over 120 ms and the box doesn't change height, and with `motion="none"` they swap at once.
 
 ## API Reference
 

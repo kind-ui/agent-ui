@@ -38,11 +38,12 @@ const confirmations = (motion?: ConfirmationOptions["motion"]) => (root: HTMLEle
   const below = Object.assign(document.createElement("p"), { id: "below", textContent: "Below" });
   const main = confirmation("confirm", "Run search_docs?", request("requested"));
   if (motion) main.motion = motion;
+  const withReason = confirmation("reason", "Delete notes.md?", request("requested"), { reason: true });
   page.append(
     above,
     main,
     below,
-    confirmation("reason", "Delete notes.md?", request("requested"), { reason: true }),
+    withReason,
     confirmation("approve-only", "Open the link?", request("requested"), { canDeny: false }),
     confirmation("auto", "Read README.md?", request("auto", 1, { approved: true })),
   );
@@ -50,8 +51,8 @@ const confirmations = (motion?: ConfirmationOptions["motion"]) => (root: HTMLEle
   Object.assign(window, {
     kindHost: host,
     kindApproval: {
-      set: (next: Approval) => {
-        main.approval = next;
+      set: (next: Approval, id = "confirm") => {
+        (id === "reason" ? withReason : main).approval = next;
       },
     },
   });

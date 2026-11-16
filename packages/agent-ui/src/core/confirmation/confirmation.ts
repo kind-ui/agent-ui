@@ -12,7 +12,7 @@ import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { Approval, StepStatus } from "../../types/index.js";
 import { approvalKey, approvalLabel, isActionable } from "../approval.js";
 import { memo } from "../memo.js";
-import { enter, type MotionMode } from "../motion/index.js";
+import { cancel, enter, exit, type MotionMode } from "../motion/index.js";
 import { createPendingAction } from "../pending.js";
 
 /** What a decision answers: the request generation it was made for, and Deny's reason. */
@@ -41,7 +41,11 @@ export type ConfirmationOptions = {
   onApprove?: ConfirmationCallback;
   /** Called when the request is denied. Shows Deny while set. */
   onDeny?: ConfirmationCallback;
-  /** Shows a box above the choices for the reason Deny sends. Only while `onDeny` is set. */
+  /**
+   * Shows a box above the choices for the reason Deny sends, while `onDeny` is set. It keeps its text through a new
+   * `generation` of the same request, and empties for a new `approvalId`.
+   * @default false
+   */
   reason?: boolean;
   /** @default "Approve" */
   approveLabel?: string;
@@ -85,8 +89,13 @@ export type ConfirmationState = {
   reason: boolean;
   /** The reason box's text. */
   reasonText: string;
+  /** Whether the reason box is collapsing after a decision was recorded. */
+  reasonClosing: boolean;
+  /** The `approveLabel`, else "Approve". */
   approveLabel: string;
+  /** The `denyLabel`, else "Deny". */
   denyLabel: string;
+  /** The `motion` option. */
   motion: MotionMode;
 };
 
@@ -115,6 +124,8 @@ export type ConfirmationApi = {
   enterSwap: (el: HTMLElement) => void;
   /** Starts counting swaps after the first frame. Called by the root slot. */
   bindRoot: () => () => void;
+  /** Takes the text the box already holds, and collapses it once a decision is recorded. Called by the reason slot. */
+  bindReason: (el: HTMLElement) => () => void;
 };
 
 type Slot<Public extends object = Record<never, never>> = SlotDefinition<
@@ -165,6 +176,9 @@ const showsChoices = (state: ConfirmationState) =>
   (state.canApprove || state.canDeny) && (state.actionable || isLocked(state));
 
 const isResolved = (state: Approval["state"] | undefined) => state === "responded" || state === "auto";
+
+const showsReason = (state: ConfirmationState) =>
+  state.reason && state.canDeny && state.approvalState !== undefined && !isResolved(state.approvalState);
 
 const OUTCOME_STATUS: Record<Approval["state"], StepStatus> = {
   requested: "awaiting-input",
@@ -218,6 +232,7 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
     sent: false,
     pressed: undefined,
     reasonText: "",
+    reasonClosing: false,
   }),
   sync: presentation,
   controlled: ["approvalState"],
@@ -226,20 +241,36 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
     const pending = createPendingAction(context, { state: "pending", key: () => store.get().key });
     const controller = createInputController();
     let mounting = true;
-    let reported = { key: store.get().key, state: store.get().approvalState };
+    let reported = {
+      key: store.get().key,
+      id: context.options().approval?.approvalId ?? "",
+      state: store.get().approvalState,
+    };
 
     // Spec §4.1: the lock holds until the host reports on the request or replaces it; `submitting` keeps it.
     context.onOptions(({ approval }) => {
       const key = approval ? approvalKey(approval) : "";
+      const id = approval?.approvalId ?? "";
       const state = approval?.state;
       if (key === reported.key && state === reported.state) return;
       const replaced = key !== reported.key;
-      reported = { key, state };
+      if (id !== reported.id && store.get().reasonText) {
+        store.set({ reasonText: "" });
+        controller.setValue("");
+      }
+      reported = { key, id, state };
       if (replaced || state === "submit-failed" || isResolved(state)) pending.release();
-      store.set({ sent: false, ...(!store.get().pending && { pressed: undefined }) });
+      // The store takes the new options after this listener, so it still says whether the box was shown.
+      const closing = !mounting && isResolved(state) && showsReason(store.get());
+      store.set({
+        sent: false,
+        ...(!store.get().pending && { pressed: undefined }),
+        ...(closing && { reasonClosing: true }),
+      });
+      const outcome = approvalLabel(approval);
       if (mounting) return;
       if (state === "submit-failed") announce("Decision not sent", { priority: "polite" });
-      else if (isResolved(state)) announce(approvalLabel(approval) ?? "", { priority: "polite" });
+      else if (isResolved(state) && outcome) announce(outcome, { priority: "polite" });
     });
 
     const decide = (choice: "approve" | "deny", event?: Event, reason?: string) => {
@@ -254,14 +285,15 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
       };
       const details = { source: sourceOf(event) };
       const asked = reported;
-      const result = pending.run(() => callback(decision, details));
-      if (!result) return;
+      // Before the call, so a host that reports back inside it clears the mark.
       store.set({ pressed: choice });
-      void result.then((outcome) => {
-        if (outcome === "stale") return;
-        if (outcome === "done" && reported === asked) store.set({ sent: true });
-        else store.set({ pressed: undefined });
-      });
+      void pending
+        .run(() => callback(decision, details))
+        ?.then((outcome) => {
+          if (outcome === "stale") return;
+          if (outcome === "done" && reported === asked) store.set({ sent: true });
+          else store.set({ pressed: undefined });
+        });
     };
     const offered = (name: "canApprove" | "canDeny") => {
       const state = store.get();
@@ -297,6 +329,24 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
         });
         return () => cancelAnimationFrame(frame);
       },
+      bindReason: (el) => {
+        // A web element put back in the page gets a new instance, while its textarea keeps the text.
+        const text = el.querySelector("textarea")?.value;
+        if (text && text !== store.get().reasonText) store.set({ reasonText: text });
+        const collapse = () => {
+          if (!store.get().reasonClosing) return;
+          exit(el, "expand", { motion: store.get().motion }).then(
+            () => store.set({ reasonClosing: false }),
+            () => {},
+          );
+        };
+        const unsubscribe = store.subscribe(collapse);
+        return () => {
+          unsubscribe();
+          cancel(el);
+          if (store.get().reasonClosing) store.set({ reasonClosing: false });
+        };
+      },
     };
   },
   slots: (slot) => ({
@@ -312,17 +362,14 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
       }),
       bind: (_el, { api }) => api.bindRoot(),
     }),
-    // Stays through `submitting`, so the decision moves nothing; it leaves with the choices once one is recorded.
+    // Stays through `submitting`, so the decision moves nothing, and collapses once one is recorded.
     reason: slot<BaseSlotProps, ConfirmationReasonState>({
-      present: (state) =>
-        state.reason &&
-        state.canDeny &&
-        state.approvalState !== undefined &&
-        !isResolved(state.approvalState),
+      present: (state) => showsReason(state) || state.reasonClosing,
       state: (state, { api }) => api.reasonState(state),
       on: {
         input: (event, { store }) => store.set({ reasonText: (event.target as HTMLTextAreaElement).value }),
       },
+      bind: (el, { api }) => api.bindReason(el),
     }),
     choices: slot({
       present: showsChoices,
@@ -353,7 +400,7 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
     // Takes the choices' place at their height. A Tab stop, so focus has somewhere to go when the choices leave.
     outcome: slot<BaseSlotProps, { label: string; reason: string | undefined }>({
       focus: "tab-stop",
-      present: (state) => state.approvalState !== undefined && !showsChoices(state),
+      present: (state) => state.outcome !== undefined && !showsChoices(state),
       state: (state) => ({ label: state.outcome ?? "", reason: state.outcomeReason }),
       attrs: (state) => ({ tabindex: "0", "data-state": state.approvalState }),
       bind: (el, { api }) => api.enterSwap(el),

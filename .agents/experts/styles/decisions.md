@@ -17,6 +17,7 @@ Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A long denial reason in Confirmation's outcome is cut with an ellipsis** and can't be read in full on screen; it stays in the DOM. The textarea is 14px beside the confirmation's 13px.
 - **A chip that wraps the composer's attachments onto a new row moves the editor by a row (56px) in one frame;** only empty ↔ filled is animated. Animate the area's height from its previous height when the chip count changes while it's open.
 - **A dropped Queue row snaps from the pointer to its slot in one frame:** `createReorder` clears `--drag-x`/`--drag-y` before the drop commits, so the root's `layout` has no rect from before. Carrying it needs the row's rect before UI SDK's drag stops.
 - **Subagent's guide line and nested marks are half a pixel off at 1x,** likely Chrome drawing the 1.5px guide border at 1px (as the status mark ring noted); a result already complete on load fades in once on mount.

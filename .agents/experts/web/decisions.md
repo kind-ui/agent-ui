@@ -17,6 +17,7 @@ Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Focus recovery inside a shadow root lands on `<body>`** (Confirmation's choices leaving, any `createFocusRecovery`): UI SDK's `focus-recovery.js` reads `document.activeElement`, not the root node's. Report upstream.
 - **`kind-subagent` adds its trigger above server-rendered steps on upgrade,** shifting them down once, the same class as the empty `<kind-task>`/`<kind-plan>` entry.
 - **An empty `<kind-task>` or `<kind-plan>` inserts its parts on upgrade** (same class as `kind-chain-of-thought` and `kind-reasoning`), which can shift layout before the element is defined.
 - **Web Task and Plan play color transitions on first render** (progress fill, Accept, item titles) as `data-*` attributes land after the first style pass; Chain of Thought's marks and the Tool copy buttons do the same. Trace which upgrade step causes it. In Firefox those transitions never finish under hidden content, so `wave-2/agent.spec.ts`'s `settled` skips animations whose target isn't visible.

@@ -107,6 +107,24 @@
     }
   }
 
+  /* Reduced motion: a short fade. `none`: no transition at all. */
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-slot="kind-confirmation"][data-motion="auto"])
+      :is([data-slot="kind-confirmation-approve"], [data-slot="kind-confirmation-deny"]) {
+      transition-duration: var(--kind-duration-reduced);
+    }
+  }
+
+  :where([data-slot="kind-confirmation"][data-motion="reduced"])
+    :is([data-slot="kind-confirmation-approve"], [data-slot="kind-confirmation-deny"]) {
+    transition-duration: var(--kind-duration-reduced);
+  }
+
+  :where([data-slot="kind-confirmation"][data-motion="none"])
+    :is([data-slot="kind-confirmation-approve"], [data-slot="kind-confirmation-deny"]) {
+    transition: none;
+  }
+
   :is(
     [data-slot="kind-confirmation-reason"],
     [data-slot="kind-confirmation-choices"],

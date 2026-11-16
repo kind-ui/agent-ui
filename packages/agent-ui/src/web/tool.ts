@@ -11,7 +11,7 @@ import { defineCodeBlock, type KindCodeBlockElement } from "./code-block.js";
 import { defineConfirmation, type KindConfirmationEvents } from "./confirmation.js";
 import { defineMarkdown, type KindMarkdownElement } from "./markdown.js";
 
-const DEFAULT_PARTS = `<kind-tool-trigger><button><kind-tool-icon></kind-tool-icon><kind-tool-title></kind-tool-title></button></kind-tool-trigger><kind-tool-content><kind-tool-input></kind-tool-input><kind-tool-output></kind-tool-output><kind-tool-error></kind-tool-error></kind-tool-content><kind-tool-approval><kind-confirmation></kind-confirmation></kind-tool-approval>`;
+const DEFAULT_PARTS = `<kind-tool-trigger><button><kind-tool-icon></kind-tool-icon><kind-tool-title></kind-tool-title></button></kind-tool-trigger><kind-tool-content><kind-tool-input></kind-tool-input><kind-tool-output></kind-tool-output><kind-tool-error></kind-tool-error></kind-tool-content><kind-tool-approval></kind-tool-approval>`;
 const INPUT_PARTS = `<div data-tool-heading>Input<span data-tool-badge>Partial</span><kind-tool-input-copy><button></button></kind-tool-input-copy></div><kind-code-block headerless language="json"></kind-code-block>`;
 const OUTPUT_PARTS = `<div data-tool-heading>Output<span data-tool-badge>Preliminary</span><kind-tool-output-copy><button></button></kind-tool-output-copy></div><kind-code-block headerless language="json"></kind-code-block><kind-markdown></kind-markdown>`;
 
@@ -51,7 +51,7 @@ const write = <Target extends object, Key extends keyof Target>(
  * `<kind-tool>` fills in its trigger and content when it has no children, and an empty `<kind-tool-input>` or
  * `<kind-tool-output>` with its heading, copy button and code block. Set `call` as a property. It writes its title
  * and error into those parts while they're empty, and its values into the code blocks and Markdown view. While `call`
- * has an approval, its `kind-confirmation` offers Approve with the `can-approve` attribute and Deny with `can-deny`,
+ * has an approval, an empty `<kind-tool-approval>` gets a `kind-confirmation`, which offers Approve with the `can-approve` attribute and Deny with `can-deny`,
  * which fire `approve` and `deny` on the tool, as Confirmation's do.
  */
 export function defineTool(): void {
@@ -83,7 +83,10 @@ export function defineTool(): void {
           const { highlight } = state;
           fill(el.querySelector("kind-tool-title"), state.title);
           const { onApprove, onDeny, ...confirmation } = api.approvalState(state);
-          const approval = el.querySelector("kind-tool-approval > kind-confirmation");
+          const approval = fillParts(
+            el.querySelector("kind-tool-approval"),
+            "<kind-confirmation></kind-confirmation>",
+          )?.querySelector(":scope > kind-confirmation");
           if (approval)
             for (const [key, value] of Object.entries({
               ...confirmation,

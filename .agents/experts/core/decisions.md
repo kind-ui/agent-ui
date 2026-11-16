@@ -6,6 +6,7 @@ Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
 
 ## Settled
 
+- **A denial in a Tool is announced twice, "Denied" then "<name> denied" (Wave 3 Task 3):** spec §4.1 keeps the recorded response and the resulting execution state apart; Confirmation announces the first and Tool its outcome, and a host sets them in separate updates.
 - **`kind-queue`'s web `api` lists no `reorder` or `remove`:** both are getters that return `undefined` while unavailable, and a web root's `api` list copies methods once (AGENTS.md, Task 10 "Actions offered while available"). Hosts call them through the agent bridge or the core api.
 - **UI SDK's dev warning that `agent.actions` lists `cancel` (or `accept`) while the api lacks it** is expected: those actions are getters that return `undefined` while unavailable (spec §6), and the warning is once per mount (AGENTS.md).
 - **A Tool's error part follows its status, not `outcome` (Wave 2 Task 4):** a host `status="error"` shows its message too, and a host status over an errored call hides it. The JSDoc and AGENTS.md say so.
@@ -23,6 +24,7 @@ Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Confirmation: a microtask between `pending` clearing and `sent` setting** could let an `act` scheduled in a promise callback slip a second decision through. Not reproduced; a press can't land there.
 - **A double press on a Queue item's remove control calls `onRemove` twice** when the host removes the item asynchronously; there's no per-item lock like the uploader's.
 - **Queue's `known` set never forgets ids,** so an item removed and re-added under the same id after its exit gets no entrance (same as Task and Plan).
 - **A plan swapped while Accept is pending keeps the lock** until the old promise settles (Wave 2 Task 6). Clearing it on a new `onAccept` can't key on identity, since React passes a new inline function each render; same open spec §4.1 question as the composer's pending lock.

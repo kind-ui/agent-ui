@@ -1,6 +1,7 @@
 import { definePrimitive, type SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { type Approval, hasOutput, type StepStatus, type ToolCall } from "../../types/index.js";
+import { approvalLabel, isActionable } from "../approval.js";
 import { createCopy } from "../clipboard.js";
 import type { Highlight } from "../code-block/index.js";
 import type { ConfirmationCallback, ConfirmationOptions } from "../confirmation/index.js";
@@ -26,7 +27,10 @@ export type ToolOptions = Omit<StepOptions, "status" | "label"> & {
   onApprove?: ConfirmationCallback;
   /** Called when the call's approval is denied, with its `approvalId`, `generation` and reason. Shows Deny while set. */
   onDeny?: ConfirmationCallback;
-  /** Shows a box for the reason Deny sends, as Confirmation's `reason` does. */
+  /**
+   * Shows a box for the reason Deny sends, as Confirmation's `reason` does.
+   * @default false
+   */
   approvalReason?: boolean;
 };
 
@@ -226,7 +230,7 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
       title: slot<BaseSlotProps, { title: string }>({ ...title, state: (state) => ({ title: state.title }) }),
       // Outside the content, so a request shows while the tool is closed, and its outcome stays once decided.
       approval: slot<BaseSlotProps, ToolApprovalState>({
-        present: (state) => state.approval !== undefined,
+        present: (state) => isActionable(state.approval) || approvalLabel(state.approval) !== undefined,
         state: (state, { api }) => api.approvalState(state),
         attrs: (state) => ({ "data-approval": state.approval?.state }),
       }),
