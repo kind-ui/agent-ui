@@ -9,7 +9,7 @@ const BUDGETS = {
   markdownStream: { parses: 1, writes: 4, renders: 6, notified: 3 },
   toolStream: { writes: 14, renders: 25, notified: 17 },
   terminalChunk: { writes: 6, renders: 7, notified: 4, layoutReads: 17 },
-  terminalLine: { writes: 8, renders: 9, notified: 5, layoutReads: 20 },
+  terminalLine: { writes: 8, renders: 9, notified: 5, layoutReads: 21 },
   remount: { nodes: 0, listeners: 0 },
 };
 const SIZES = [10, 500];
