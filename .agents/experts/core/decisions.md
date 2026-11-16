@@ -6,6 +6,7 @@ Last reviewed: `b54a7cd` (Wave 3 Task 10 Notice and Guardrail Notice)
 
 ## Settled
 
+- **The Step root writes `data-mounting` in its `bind`, not through `attrs`** (Wave 3 Task 11): it lasts two frames per element and isn't state, so a store flag would render every React part again to clear it; `wave-3/agent.spec.ts` checks no Step part runs a transition on load. **`imports` in `size-budget.json` is required:** the file is ours, and a missing key fails the check.
 - **A dismissed notice the host never removes stays faded and inert** (Wave 3 Task 10, D10): the host removes it in `onDismiss`; only a rejection brings it back.
 - **A Feedback comment that failed keeps its error and text until the next send** (Wave 3 Task 9), through a close and a rating change: the error belongs to the text it failed to send, which the box still holds.
 - **Suggestion's `pick` has no lock** (Wave 3 Task 7): `onPick` is a `callback`, as the plan says, so a double press calls it twice. A host whose pick sends a prompt drops a repeat itself, as it would for a double-clicked send.

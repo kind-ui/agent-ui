@@ -299,3 +299,27 @@ test("can-* attributes offer their actions", async ({ page }, testInfo) => {
     await expect.poll(actions, `${selector} with ${attribute}`).toContain(action);
   }
 });
+
+test("Step-based parts take their colors at once as the page loads", async ({ page }) => {
+  await page.addInitScript(() => {
+    const runs: string[] = [];
+    Object.assign(window, { kindTransitions: runs });
+    document.addEventListener(
+      "transitionrun",
+      ({ target, propertyName }) => {
+        if (
+          target instanceof Element &&
+          target.closest('[data-step-part="root"]') &&
+          target.checkVisibility()
+        )
+          runs.push(`${target.getAttribute("data-slot")} ${propertyName}`);
+      },
+      true,
+    );
+  });
+  await open(page);
+  expect(
+    await page.evaluate(() => (window as unknown as { kindTransitions: string[] }).kindTransitions),
+  ).toEqual([]);
+  await expect(page.locator("[data-mounting]")).toHaveCount(0);
+});

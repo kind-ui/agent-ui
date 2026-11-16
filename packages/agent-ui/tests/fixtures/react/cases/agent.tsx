@@ -212,14 +212,6 @@ function Uploads() {
   return <Uploader aria-label="Uploads" items={items} {...callbacks} />;
 }
 
-function useAgentConfirm() {
-  const [confirm, setConfirm] = useState(true);
-  useEffect(() => {
-    host.confirm = setConfirm;
-  }, []);
-  return confirm;
-}
-
 function Activity({ confirm }: { confirm: boolean }) {
   const [queue, setQueue] = useState<readonly QueueItem[]>(queueItems);
   return (
@@ -436,13 +428,24 @@ function HumanInput({ confirm }: { confirm: boolean }) {
   );
 }
 
+function Confirmable({ wave }: { wave: 2 | 3 }) {
+  const [confirm, setConfirm] = useState(true);
+  useEffect(() => {
+    host.confirm = setConfirm;
+  }, []);
+  return (
+    <>
+      <Activity confirm={confirm} />
+      {wave === 3 ? <HumanInput confirm={confirm} /> : null}
+    </>
+  );
+}
+
 function Page({ wave }: { wave: 2 | 3 }) {
-  const confirm = useAgentConfirm();
   return (
     <>
       <Foundation />
-      <Activity confirm={confirm} />
-      {wave === 3 ? <HumanInput confirm={confirm} /> : null}
+      <Confirmable wave={wave} />
     </>
   );
 }
