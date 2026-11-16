@@ -32,12 +32,18 @@ test("the sidebar lists every component page", () => {
 
 test("the sidebar has a Showcase section with one live example", () => {
   const root = JSON.parse(readFileSync(new URL("meta.json", content), "utf8"));
-  assert.ok(root.pages.includes("---Showcase---") && root.pages.includes("...showcase"));
+  const at = root.pages.indexOf("---Showcase---");
+  assert.deepEqual(root.pages.slice(at, at + 2), ["---Showcase---", "...showcase"]);
   const meta = JSON.parse(readFileSync(new URL("showcase/meta.json", content), "utf8"));
   assert.deepEqual(meta.pages, ["agent-activity"]);
   const source = readFileSync(new URL("showcase/agent-activity.mdx", content), "utf8");
+  assert.match(source, /^---\ntitle: .+\ndescription: .+\n---\n/);
+  assert.ok(source.includes('import AgentActivityShowcase from "@/examples/showcase/agent-activity";'));
   assert.equal(source.match(/<Example /g)?.length, 1);
-  assert.ok(source.includes('<include cwd lang="tsx">./examples/showcase/agent-activity.tsx</include>'));
+  assert.match(
+    source,
+    /<Example caption=".+">\n {2}<AgentActivityShowcase \/>\n\n {2}<include cwd lang="tsx">\.\/examples\/showcase\/agent-activity\.tsx<\/include>\n<\/Example>/,
+  );
 });
 
 test("no page mentions an internal registry item", () => {
