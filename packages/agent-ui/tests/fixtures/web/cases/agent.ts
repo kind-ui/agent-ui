@@ -58,7 +58,6 @@ const host = agentHost();
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 
-/** Elements whose `agentConfirm` follows `host.confirm`. */
 const confirmable: { agentConfirm: boolean }[] = [];
 host.confirm = (on) => {
   for (const element of confirmable) element.agentConfirm = on;
@@ -296,7 +295,6 @@ const humanInput = `
     </section>
   </div>`;
 
-/** Hands an action event's detail to `host.decide`, and waits on its promise. */
 const decide =
   (name: string) =>
   (event: CustomEvent<{ value?: unknown; waitUntil?(promise: Promise<unknown>): void }>) => {
@@ -324,7 +322,6 @@ function wireHumanInput(wave: Element) {
   checkpoint.addEventListener("openchange", (event) => recordChange("checkpoint", event));
   checkpoint.addEventListener("restore", decide("restore"));
   confirmable.push(question, checkpoint);
-  // A default value is read when the element connects.
   const model = Object.assign(document.createElement("kind-model-selector"), {
     id: "model",
     models,
@@ -348,16 +345,16 @@ function wireHumanInput(wave: Element) {
   feedback.addEventListener("ratingchange", (event) => recordChange("feedback", event));
   feedback.addEventListener("comment", decide("comment"));
   const notice = element("kind-notice");
-  notice.addEventListener("dismiss", (event) => {
+  notice.addEventListener("dismiss", () => {
     host.calls.push("dismiss");
-    event.detail.waitUntil(Promise.resolve().then(() => notice.remove()));
+    notice.remove();
   });
   const guardrail = element("kind-guardrail-notice");
   Object.assign(guardrail, guardrails.blocking);
   guardrail.addEventListener("openchange", (event) => recordChange("guardrail", event));
-  guardrail.addEventListener("dismiss", (event) => {
+  guardrail.addEventListener("dismiss", () => {
     host.calls.push("dismiss");
-    event.detail.waitUntil(Promise.resolve().then(() => guardrail.remove()));
+    guardrail.remove();
   });
 }
 

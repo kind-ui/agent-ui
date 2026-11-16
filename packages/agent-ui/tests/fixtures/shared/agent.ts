@@ -77,14 +77,12 @@ export function agentHost() {
     confirm: (_on: boolean) => {},
     changes: [] as string[],
     calls: [] as string[],
-    /** Who called each action callback, as `<name>:<source>`. */
     sources: [] as string[],
     change: (component: string, details: { source: string; cancel: () => void }): boolean => {
       host.changes.push(`${component}:${details.source}`);
       if (host.refuse) details.cancel();
       return !host.refuse;
     },
-    /** An action callback, which records its call and, from its details (the last argument), its source. */
     decide:
       (name: string) =>
       (...args: unknown[]): Promise<void> => {
