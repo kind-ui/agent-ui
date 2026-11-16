@@ -136,6 +136,17 @@ export {
   streamingTextPrimitive,
 } from "./streaming-text/index.js";
 export { thinkingIndicatorPrimitive } from "./thinking-indicator/index.js";
+export {
+  approvalLabel,
+  type ToolApi,
+  type ToolOptions,
+  type ToolPrimitive,
+  type ToolState,
+  toolCode,
+  toolPrimitive,
+  toolStatus,
+  toolValue,
+} from "./tool/index.js";
 export { typingIndicatorPrimitive } from "./typing-indicator/index.js";
 export {
   type UploaderApi,

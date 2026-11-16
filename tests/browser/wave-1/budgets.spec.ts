@@ -7,6 +7,7 @@ const BUDGETS = {
   conversationStream: { writes: 1, renders: 9, notified: 0 },
   conversationFollow: { layoutReads: 12 },
   markdownStream: { parses: 1, writes: 4, renders: 6, notified: 3 },
+  toolStream: { writes: 18, renders: 31, notified: 17 },
   remount: { nodes: 0, listeners: 0 },
 };
 const SIZES = [10, 500];
@@ -174,6 +175,19 @@ for (const size of SIZES) {
     expect(counts.writes).toBeLessThanOrEqual(BUDGETS.markdownStream.writes);
     expect(counts.renders).toBeLessThanOrEqual(BUDGETS.markdownStream.renders);
     expect(counts.notified).toBeLessThanOrEqual(BUDGETS.markdownStream.notified);
+  });
+
+  test(`streamed input in one of ${size} tools`, async ({ page }) => {
+    await page.goto(`/?c=tool&case=many-${size}`);
+    await expect(page.locator("#tool-0")).toHaveAttribute("data-open", "");
+    const counts = await most(
+      page,
+      20,
+      `kindTool.setCall("tool-0", { input: { state: "streaming", value: { query: "q".repeat(window.kindChunk = (window.kindChunk ?? 0) + 1) } } })`,
+    );
+    expect(counts.writes).toBeLessThanOrEqual(BUDGETS.toolStream.writes);
+    expect(counts.renders).toBeLessThanOrEqual(BUDGETS.toolStream.renders);
+    expect(counts.notified).toBeLessThanOrEqual(BUDGETS.toolStream.notified);
   });
 }
 

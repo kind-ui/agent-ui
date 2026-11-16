@@ -21,17 +21,25 @@ const parts = createParts(codeBlockPrimitive, {
 const tokenStyle = (token: Token) =>
   token.color ? ({ "--kind-code-block-token": token.color } as CSSProperties) : undefined;
 
-export type CodeBlockProps = Omit<ComponentProps<typeof parts.Root>, "children">;
+export type CodeBlockProps = Omit<ComponentProps<typeof parts.Root>, "children"> & {
+  /**
+   * Shows the language, the wrap toggle and the copy button.
+   * @default true
+   */
+  header?: boolean;
+};
 
 /** A code block with its language, a wrap toggle and a copy button. Name it with `aria-label`. */
-export function CodeBlock(props: CodeBlockProps) {
+export function CodeBlock({ header = true, ...props }: CodeBlockProps) {
   return (
     <parts.Root {...props}>
-      <parts.Header>
-        <parts.Language>{({ language }) => language}</parts.Language>
-        <parts.Wrap />
-        <parts.Copy />
-      </parts.Header>
+      {header && (
+        <parts.Header>
+          <parts.Language>{({ language }) => language}</parts.Language>
+          <parts.Wrap />
+          <parts.Copy />
+        </parts.Header>
+      )}
       <KindScrollArea stickToEnd={props.streaming ?? false}>
         <KindScrollAreaViewport>
           <KindScrollAreaContent>

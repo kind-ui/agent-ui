@@ -4,6 +4,7 @@
     "step",
     "status",
     "reasoning",
+    "tool",
     "conversation",
     "message",
     "markdown",

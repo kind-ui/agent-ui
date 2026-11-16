@@ -74,9 +74,11 @@ export type StepApi = {
   toggle: (event?: Event) => boolean;
 };
 
-export type StepBaseConfig<State extends StepState = StepState> = {
+export type StepBaseConfig<State extends StepState = StepState, Options extends StepOptions = StepOptions> = {
   /** `data-kind` when the host passes no `kind`. */
   kind?: string;
+  /** The status when the host passes no `status`, like one read from the component's own data. Else `"pending"`. */
+  status?: (options: Options) => StepStatus;
   /**
    * Replaces `stepAnnouncement`, with the state the new options make. Called on a status change, once the step has
    * a title (`label` or the title part's text). Returning `undefined` keeps the step quiet.
@@ -139,20 +141,23 @@ export const bindStepPanel = (el: HTMLElement, options: StepPanelOptions): (() =
   });
 };
 
-const autoOpened = (options: StepOptions): boolean =>
-  options.autoOpen !== "never" && (options.status === "running" || options.status === "awaiting-input");
-
 /**
  * Everything but the name of Step and every Step-based component (spec §5): options, state, the api, the seven
  * slots and the agent actions, each spread into the component's own `definePrimitive`. A component with its own
  * state overrides `state` and `sync`, spreading `base.state(options)` and `base.sync(options)` into them.
  */
-export const stepBase = <State extends StepState = StepState, Api extends StepApi = StepApi>({
+export const stepBase = <
+  State extends StepState = StepState,
+  Api extends StepApi = StepApi,
+  Options extends StepOptions = StepOptions,
+>({
   kind,
   announcement = stepAnnouncement,
-}: StepBaseConfig<State> = {}) => {
-  const presentation = (options: StepOptions) => ({
-    status: options.status ?? "pending",
+  status: defaultStatus = () => "pending",
+}: StepBaseConfig<State, Options> = {}) => {
+  const statusOf = (options: Options) => options.status ?? defaultStatus(options);
+  const presentation = (options: Options) => ({
+    status: statusOf(options),
     kind: options.kind ?? kind,
     durationSeconds: options.durationSeconds,
     motion: options.motion ?? "auto",
@@ -169,21 +174,27 @@ export const stepBase = <State extends StepState = StepState, Api extends StepAp
       durationSeconds: "number",
       motion: "string",
     } as const,
-    state: (options: StepOptions): StepState => ({
-      ...presentation(options),
-      open: options.open ?? options.defaultOpen ?? autoOpened(options),
-      userToggled: false,
-      exiting: false,
-    }),
+    state: (options: Options): StepState => {
+      const status = statusOf(options);
+      const autoOpened =
+        options.autoOpen !== "never" && (status === "running" || status === "awaiting-input");
+      return {
+        ...presentation(options),
+        open: options.open ?? options.defaultOpen ?? autoOpened,
+        userToggled: false,
+        exiting: false,
+      };
+    },
     // Typed on `State`, so a component's own `sync` can spread it.
-    sync: (options: StepOptions) =>
+    sync: (options: Options) =>
       ({
         ...presentation(options),
         ...(options.open === undefined ? {} : { open: options.open }),
       }) as Partial<State>,
     controlled: ["open", "status"] as ("open" | "status")[],
-    api: (context: PrimitiveContext<StepOptions, StepState, string>): StepApi => {
-      const change = createChange(context);
+    api: (context: PrimitiveContext<Options, StepState, string>): StepApi => {
+      // `createChange` reads open change reasons from the options type, which a generic `Options` hides.
+      const change = createChange(context as PrimitiveContext<StepOptions, StepState, string>);
       let prevStatus = context.store.get().status;
       let wasOpen = context.store.get().open;
 
@@ -211,7 +222,7 @@ export const stepBase = <State extends StepState = StepState, Api extends StepAp
       });
 
       context.onOptions((options, synced) => {
-        const status = options.status ?? "pending";
+        const status = statusOf(options);
         if (status === prevStatus) return;
         const { open, userToggled } = context.store.get();
         const next = nextOpen({

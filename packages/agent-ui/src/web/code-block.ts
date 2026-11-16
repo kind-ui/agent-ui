@@ -10,12 +10,8 @@ import { createParts, wrappedButton, wrappedChild } from "@ui-sdk/web";
 import type { AttributeProperties, UiChangeEvent, UiElement } from "@ui-sdk/web/events";
 import { defineInternalScrollArea } from "./internal/scroll-area.js";
 
-const parts = `
-  <kind-code-block-header>
-    <kind-code-block-language></kind-code-block-language>
-    <kind-code-block-wrap><button></button></kind-code-block-wrap>
-    <kind-code-block-copy><button></button></kind-code-block-copy>
-  </kind-code-block-header>
+/** A code block's scroll area: write it alone into `kind-code-block` for a block without its header. */
+export const CODE_BLOCK_SCROLL_AREA = `
   <kind-internal-scroll-area>
     <ui-scroll-area>
       <ui-scroll-area-viewport>
@@ -25,6 +21,13 @@ const parts = `
       <ui-scroll-area-scrollbar orientation="vertical"><ui-scroll-area-thumb></ui-scroll-area-thumb></ui-scroll-area-scrollbar>
     </ui-scroll-area>
   </kind-internal-scroll-area>`;
+
+const parts = `
+  <kind-code-block-header>
+    <kind-code-block-language></kind-code-block-language>
+    <kind-code-block-wrap><button></button></kind-code-block-wrap>
+    <kind-code-block-copy><button></button></kind-code-block-copy>
+  </kind-code-block-header>${CODE_BLOCK_SCROLL_AREA}`;
 
 const sameTokens = (a: Token[] | undefined, b: Token[]) =>
   a?.length === b.length &&
@@ -45,7 +48,7 @@ function tokenElement(token: Token): HTMLElement {
 
 /**
  * `<kind-code-block code="…" language="ts" aria-label="Code">` fills in its header and scroll area when it has
- * no children. Set `highlight` as a property.
+ * no children; write `CODE_BLOCK_SCROLL_AREA` into it to leave the header out. Set `highlight` as a property.
  */
 export function defineCodeBlock(): void {
   if (customElements.get("kind-code-block")) return;

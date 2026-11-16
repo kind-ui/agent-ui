@@ -20,6 +20,7 @@ import { Status } from "./components/ui/status.js";
 import { Step, StepContent, StepIcon, StepTitle, StepTrigger } from "./components/ui/step.js";
 import { StreamingText } from "./components/ui/streaming-text.js";
 import { ThinkingIndicator } from "./components/ui/thinking-indicator.js";
+import { Tool } from "./components/ui/tool.js";
 import { TypingIndicator } from "./components/ui/typing-indicator.js";
 import { Uploader } from "./components/ui/uploader.js";
 import "./index.css";
@@ -38,6 +39,18 @@ const items = {
   ),
   status: <Status status="running" />,
   reasoning: <Reasoning status="complete" durationSeconds={3} text="Checked **two** sources." defaultOpen />,
+  tool: (
+    <Tool
+      call={{
+        toolCallId: "t1",
+        name: "search_docs",
+        dynamic: false,
+        input: { state: "ready", value: { query: "steps" } },
+        output: { state: "available", value: 0 },
+      }}
+      defaultOpen
+    />
+  ),
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
       <ConversationViewport>

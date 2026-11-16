@@ -14,6 +14,11 @@ const components = {
     description: "The model's thinking as a step, with its thoughts streamed as markdown.",
     uses: ["markdown"],
   },
+  tool: {
+    title: "Tool",
+    description: "A tool call as a step, from its streamed input to its output or error.",
+    uses: ["markdown", "code-block"],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

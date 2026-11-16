@@ -13,6 +13,7 @@ import { defineStatus } from "./components/ui/web/status.js";
 import { defineStep } from "./components/ui/web/step.js";
 import { defineStreamingText } from "./components/ui/web/streaming-text.js";
 import { defineThinkingIndicator } from "./components/ui/web/thinking-indicator.js";
+import { defineTool } from "./components/ui/web/tool.js";
 import { defineTypingIndicator } from "./components/ui/web/typing-indicator.js";
 import { defineUploader } from "./components/ui/web/uploader.js";
 import "./index.css";
@@ -21,6 +22,7 @@ for (const define of [
   defineStep,
   defineStatus,
   defineReasoning,
+  defineTool,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -45,6 +47,7 @@ const items = {
     </kind-step>`,
   status: `<kind-status status="running"></kind-status>`,
   reasoning: `<kind-reasoning status="complete" duration-seconds="3" text="Checked **two** sources." default-open></kind-reasoning>`,
+  tool: `<kind-tool default-open></kind-tool>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>
@@ -91,6 +94,15 @@ document.body.append(main);
 main
   .querySelector("kind-markdown")
   ?.setAttribute("source", "# Title\n\nSome **bold** text.\n\n```ts\nconst a = 1;\n```\n");
+Object.assign(main.querySelector("kind-tool") as HTMLElement, {
+  call: {
+    toolCallId: "t1",
+    name: "search_docs",
+    dynamic: false,
+    input: { state: "ready", value: { query: "steps" } },
+    output: { state: "available", value: 0 },
+  },
+});
 Object.assign(main.querySelector("kind-attachments") as HTMLElement, {
   items: [{ id: "notes", name: "notes.md", size: 812, mediaType: "text/markdown" }],
 });
