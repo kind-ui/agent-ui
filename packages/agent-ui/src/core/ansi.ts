@@ -7,21 +7,24 @@ import {
 
 /** A run of terminal text in one style. Colors are CSS values. */
 export type AnsiSpan = {
-  text: string;
-  fg?: string;
-  bg?: string;
-  bold?: true;
-  dim?: true;
-  italic?: true;
-  underline?: true;
-  strike?: true;
+  readonly text: string;
+  readonly fg?: string;
+  readonly bg?: string;
+  readonly bold?: true;
+  readonly dim?: true;
+  readonly italic?: true;
+  readonly underline?: true;
+  readonly strike?: true;
 };
 
 /** One line of terminal output, without its line break. */
-export type AnsiLine = { spans: AnsiSpan[] };
+export type AnsiLine = { readonly spans: readonly AnsiSpan[] };
 
 export type AnsiLines = {
-  /** The lines of the output so far. Every line but the last keeps its object while the output only grows. */
+  /**
+   * The lines of the output so far. While the output only grows, every line but the last keeps its object, and an
+   * update that changes nothing shown returns the same array.
+   */
   update(output: string): readonly AnsiLine[];
   /** The output without escapes, as the lines show it, for copying. */
   text(): string;
@@ -53,15 +56,17 @@ const ESCAPE =
   /\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\)|[ -/]*[0-~])?|[\x00-\x08\x0b\x0c\x0e-\x1a\x1c-\x1f\x7f]/g;
 // biome-ignore lint/suspicious/noControlCharactersInRegex: matching terminal escapes is the point.
 const SGR = /^\x1b\[[\d;]*m$/;
-// An escape cut off by the end of a chunk, or a `\r` whose `\n` may come next.
+// An escape cut off by the end of a chunk.
 // biome-ignore lint/suspicious/noControlCharactersInRegex: matching terminal escapes is the point.
-const UNFINISHED = /(?:\x1b(?:\[[0-?]*[ -/]*|\][^\x07\x1b]*\x1b?|[ -/]*)|\r)$/;
+const UNFINISHED = /\x1b(?:\[[0-?]*[ -/]*|\][^\x07\x1b]*\x1b?|[ -/]*)$/;
+// The parser skips an empty parameter, which terminals read as 0 (`ESC[m`, `ESC[;32m`).
+const EMPTY_PARAMETER = /(?<=[[;])(?=[;m])/g;
 const BREAK = /(\r\n|\r|\n)/;
 
 const color = (value: Color | null) => (value ? palette.value(value) : undefined);
 
 const toSpan = (token: ParseToken, text: string): AnsiSpan => {
-  const span: AnsiSpan = { text };
+  const span: { -readonly [Key in keyof AnsiSpan]: AnsiSpan[Key] } = { text };
   const { decorations } = token;
   let fg = color(token.foreground);
   let bg = color(token.background);
@@ -98,6 +103,9 @@ export const createAnsiLines = (): AnsiLines => {
   let unfinished = "";
   let lines: AnsiLine[] = [];
   let current: AnsiSpan[] = [];
+  // A `\r` moves back to the line's start: the line is replaced only once text follows, so `\r` then `\n`, or a
+  // chunk ending after `\r`, keeps it.
+  let returned = false;
 
   const add = (span: AnsiSpan) => {
     const last = current.at(-1);
@@ -113,17 +121,20 @@ export const createAnsiLines = (): AnsiLines => {
     unfinished = tail ? tail[0] : "";
     const sgrOnly = text
       .slice(0, tail?.index)
-      .replace(ESCAPE, (sequence) =>
-        sequence === "\x1b[m" ? "\x1b[0m" : SGR.test(sequence) ? sequence : "",
-      );
+      .replace(ESCAPE, (sequence) => (SGR.test(sequence) ? sequence.replace(EMPTY_PARAMETER, "0") : ""));
     for (const token of parser.parse(sgrOnly)) {
       for (const piece of token.value.split(BREAK)) {
         if (piece === "\r") {
-          current = [];
+          returned = true;
         } else if (piece === "\n" || piece === "\r\n") {
           lines.push({ spans: current });
           current = [];
+          returned = false;
         } else if (piece) {
+          if (returned) {
+            current = [];
+            returned = false;
+          }
           add(toSpan(token, piece));
         }
       }
@@ -141,10 +152,16 @@ export const createAnsiLines = (): AnsiLines => {
         unfinished = "";
         lines = [];
         current = [];
+        returned = false;
         append(next);
       }
       output = next;
-      result = [...lines, { spans: [...current] }];
+      const last = result.at(-1)?.spans ?? [];
+      const unchanged =
+        lines.length === result.length - 1 &&
+        current.length === last.length &&
+        current.every((span, index) => span === last[index]);
+      if (!unchanged) result = [...lines, { spans: [...current] }];
       return result;
     },
     text: () => result.map((line) => line.spans.map((span) => span.text).join("")).join("\n"),

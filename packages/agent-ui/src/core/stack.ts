@@ -2,6 +2,9 @@ import { parse } from "stacktrace-parser";
 import type { StackFrame } from "../types/index.js";
 
 const UNKNOWN_FUNCTION = "<unknown>";
+// V8's `at …` or the `fn@file` of SpiderMonkey and JavaScriptCore. Checked until the first frame, so a message that
+// ends in a URL with a line number isn't read as one.
+const FRAME = /^\s*at\s|@/;
 
 /**
  * Stack frames from a stack trace's text in V8, SpiderMonkey or JavaScriptCore's format, over `stacktrace-parser`.
@@ -10,9 +13,9 @@ const UNKNOWN_FUNCTION = "<unknown>";
  */
 export const parseStack = (text: string): StackFrame[] => {
   const frames: StackFrame[] = [];
-  for (const raw of text.split("\n")) {
+  for (const raw of text.split(/\r?\n/)) {
     if (!raw.trim()) continue;
-    const [parsed] = parse(raw);
+    const [parsed] = frames.length > 0 || FRAME.test(raw) ? parse(raw) : [];
     if (!parsed) {
       if (frames.length > 0) frames.push({ raw });
       continue;
@@ -31,6 +34,6 @@ export const parseStack = (text: string): StackFrame[] => {
 export const isLibraryFrame = (frame: StackFrame): boolean =>
   frame.library ??
   (frame.file !== undefined &&
-    (frame.file.includes("node_modules/") ||
+    (/node_modules[\\/]/.test(frame.file) ||
       frame.file.startsWith("node:") ||
       frame.file.startsWith("internal/")));

@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `803ea14` (Wave 3 Task 12 showcase and changeset)
+Last reviewed: `2550e7c` (Wave 4 Task 1 groundwork)
 
 ## Settled
 
@@ -31,6 +31,11 @@ Last reviewed: `803ea14` (Wave 3 Task 12 showcase and changeset)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **`treeFromPaths` drops a leading `/` below the top level** (Wave 4 Task 1): `/a/b.ts` becomes a `""` folder holding `a/b.ts`. `pathItems` documents relative paths; report upstream.
+- **`ansi-sequence-parser` applies a sequence's resets before its sets** (Wave 4 Task 1), so `ESC[33;0m` stays yellow where a terminal resets; splitting SGR into one parameter per sequence would fix it.
+- **SGR 8 (concealed) shows as normal text** (Wave 4 Task 1): D2's list leaves it out; a Terminal showing secrets would need it.
+- **`createAnsiLines` scans the whole output with `startsWith` and copies the line array per update, and an unterminated OSC holds every later chunk back and rescans it** (Wave 4 Task 1): Task 7's render budgets should measure it.
+- **`pathItems` gives a folder and a file the same value for `src` and `src/a.ts`** (Wave 4 Task 1): a host error File Tree should refuse or merge.
 - **A blocking Guardrail Notice added after load may be read twice** (Wave 3 Task 10): it's `role="alert"` and announces its title assertively, both as the plan asks. Not checked with a screen reader.
 - **Notice's `nearestTabStop` misses shadow roots and scrollable regions** (Wave 3 Task 10): it reads `tabIndex` over the light DOM, since UI SDK's `nextTabbable` isn't exported; ask upstream to export it.
 - **A notice that mounts in a background tab before its first paint isn't announced** (Wave 3 Task 10): first contentful paint waits for the tab to show.

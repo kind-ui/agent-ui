@@ -81,9 +81,11 @@ export interface TokenUsage {
   cached?: number;
 }
 
-/** A file or folder in a file tree. A path ending in `/` is an empty folder. */
+/** A file or folder in a file tree. */
 export interface FileTreeEntry {
+  /** Relative and `/`-separated, like `src/index.ts`. A path ending in `/` is an empty folder. */
   path: string;
+  /** How the change being shown touched the file, shown as a badge. */
   change?: "added" | "modified" | "deleted";
 }
 
@@ -92,7 +94,9 @@ export interface StackFrame {
   raw: string;
   fn?: string;
   file?: string;
+  /** Counted from 1. */
   line?: number;
+  /** Counted from 1. */
   column?: number;
   /** Whether the frame is in a library rather than the app. */
   library?: boolean;
@@ -115,6 +119,7 @@ export interface TranscriptSegment {
   words?: TranscriptWord[];
 }
 
+/** An action the selection toolbar offers for the selected text. */
 export interface SelectionActionItem {
   id: string;
   label: string;

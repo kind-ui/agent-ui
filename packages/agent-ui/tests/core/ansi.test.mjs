@@ -68,3 +68,25 @@ test("text in one style across chunks stays one span", () => {
   lines.update("\x1b[32mab");
   assert.deepEqual(lines.update("\x1b[32mabcd")[0].spans, [{ text: "abcd", fg: "var(--kind-ansi-green)" }]);
 });
+
+test("\\r then a style then \\n keeps the line, and \\r ending a chunk doesn't blank it", () => {
+  assert.deepEqual(createAnsiLines().update("done\r\x1b[0m\nnext").map(plain), ["done", "next"]);
+  const lines = createAnsiLines();
+  assert.deepEqual(lines.update("10%\r\x1b[32m").map(plain), ["10%"]);
+  assert.deepEqual(lines.update("10%\r\x1b[32m99%").map(plain), ["99%"]);
+});
+
+test("an empty SGR parameter reads as 0", () => {
+  const [line] = createAnsiLines().update("\x1b[1;31ma\x1b[;32mb\x1b[mc");
+  assert.deepEqual(line.spans, [
+    { text: "a", fg: "var(--kind-ansi-red)", bold: true },
+    { text: "b", fg: "var(--kind-ansi-green)" },
+    { text: "c" },
+  ]);
+});
+
+test("an update that changes nothing shown keeps the lines", () => {
+  const lines = createAnsiLines();
+  const first = lines.update("x\nyy");
+  assert.equal(lines.update("x\nyy\x1b[3"), first);
+});

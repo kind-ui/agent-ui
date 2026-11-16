@@ -27,3 +27,12 @@ test("isLibraryFrame takes the host's word first", () => {
   assert.equal(isLibraryFrame({ raw: "", file: "node_modules/x.js", library: false }), false);
   assert.equal(isLibraryFrame({ raw: "", file: "/app/a.js", library: true }), true);
 });
+
+test("parseStack skips a message ending in a URL, and reads \\r\\n and Windows paths", () => {
+  const frames = parseStack(
+    "Error: failed to load https://x.test/a.js:1:2\r\n    at f (C:\\app\\node_modules\\lib\\i.js:1:1)\r\n",
+  );
+  assert.equal(frames.length, 1);
+  assert.equal(frames[0].raw, "    at f (C:\\app\\node_modules\\lib\\i.js:1:1)");
+  assert.equal(isLibraryFrame(frames[0]), true);
+});
