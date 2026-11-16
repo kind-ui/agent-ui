@@ -42,10 +42,10 @@ export type SourceEntry = {
   title: string;
   /** The `url` when it's safe to link to (`http`, `https`, `mailto` or relative), else `undefined`. */
   url: string | undefined;
-  /** The URL's host name without `www.`, or empty. */
+  /** The URL's host name without `www.`, or empty. An international domain shows as punycode, which can't pass for another. */
   host: string;
   snippet: string;
-  /** The `favicon` when it's a safe URL, else `undefined`. */
+  /** The `favicon`. An image source runs no script, so it isn't checked as a link is. */
   favicon: string | undefined;
   /** The first letter of the host name, else of the title, which the icon shows until a `favicon` loads. */
   initial: string;
@@ -54,7 +54,7 @@ export type SourceEntry = {
 export type SourcesState = {
   /** The `sources` option. */
   sources: Source[];
-  /** Each source as the list shows it, by id, so a source's update reaches only its own parts. */
+  /** Each source as the list shows it, by id. A source that didn't change keeps its entry. */
   entries: Record<string, SourceEntry>;
   /** The `label`, else "Used N sources". */
   label: string;
@@ -114,13 +114,14 @@ export type SourcesPrimitive = ReturnType<
 const hostName = (url: string | undefined): string => {
   if (!url) return "";
   try {
-    return new URL(url).hostname.replace(/^www\./, "");
+    // A relative URL throws, and has no host; a protocol-relative one has one.
+    return new URL(url.startsWith("//") ? `https:${url}` : url).hostname.replace(/^www\./, "");
   } catch {
     return "";
   }
 };
 
-/** A source as the list shows it: its URLs only when safe, and the host name and initial read from them. */
+/** A source as the list shows it: its link only when safe, and the host name and initial read from it. */
 const sourceEntry = (source: Source): SourceEntry => {
   const url = (source.url && sanitizeUrl(source.url)) || undefined;
   const host = hostName(url);
@@ -129,7 +130,7 @@ const sourceEntry = (source: Source): SourceEntry => {
     url,
     host,
     snippet: source.snippet ?? "",
-    favicon: (source.favicon && sanitizeUrl(source.favicon)) || undefined,
+    favicon: source.favicon || undefined,
     initial: [...(host || source.title.trim())][0]?.toUpperCase() ?? "?",
   };
 };
@@ -143,17 +144,26 @@ const noEntry: SourceEntry = {
   favicon: undefined,
   initial: "",
 };
+// Own keys only, so an item `value` like "constructor" doesn't find `Object`'s.
+const entryAt = ({ entries }: SourcesState, key: string) =>
+  Object.hasOwn(entries, key) ? (entries[key] as SourceEntry) : noEntry;
 const fromItem = { value: { kind: "string", from: "item" } } as const;
-// By source object, so a host that keeps its earlier sources renders only the parts of the ones it changed.
-const shown = new WeakMap<Source, SourceEntry>();
-const entryOf = (source: Source) => {
-  const entry = shown.get(source) ?? sourceEntry(source);
-  shown.set(source, entry);
-  return entry;
-};
-const entries = memo((sources: Source[]) =>
-  Object.fromEntries(sources.map((source) => [source.id, entryOf(source)])),
-);
+const sameSource = (a: Source, b: Source) =>
+  a.title === b.title && a.url === b.url && a.snippet === b.snippet && a.favicon === b.favicon;
+// An unchanged source keeps its entry, even as a new object, so only a changed source's parts render again.
+let previous = new Map<string, { source: Source; entry: SourceEntry }>();
+const entries = memo((sources: Source[]) => {
+  const next = new Map<string, { source: Source; entry: SourceEntry }>();
+  const byId: Record<string, SourceEntry> = {};
+  for (const source of sources) {
+    const kept = previous.get(source.id);
+    const entry = kept && sameSource(kept.source, source) ? kept.entry : sourceEntry(source);
+    next.set(source.id, { source, entry });
+    byId[source.id] = entry;
+  }
+  previous = next;
+  return byId;
+});
 
 /** An item's parts hear only about their own source. */
 const own = selects<SourcesState, SourcesApi, ItemPartProps>({
@@ -280,7 +290,8 @@ export const sourcesPrimitive: SourcesPrimitive = definePrimitive<
           isExiting: () => store.get().exiting,
           motion: () => store.get().motion,
           reveal: api.reveal,
-          trigger: () => el.ownerDocument.getElementById(`${id}-trigger`) ?? undefined,
+          trigger: () =>
+            (el.getRootNode() as Document | ShadowRoot).getElementById(`${id}-trigger`) ?? undefined,
           subscribe: store.subscribe,
           exited: () => store.set({ exiting: false }),
         }),
@@ -305,7 +316,7 @@ export const sourcesPrimitive: SourcesPrimitive = definePrimitive<
       props: fromItem,
       selects: own,
       attrs: (state, { key }) => {
-        const { url } = state.entries[key] ?? noEntry;
+        const { url } = entryAt(state, key);
         return {
           href: url,
           target: url && "_blank",
@@ -318,7 +329,7 @@ export const sourcesPrimitive: SourcesPrimitive = definePrimitive<
       props: fromItem,
       selects: own,
       state: (state, { key }) => {
-        const { favicon, initial } = state.entries[key] ?? noEntry;
+        const { favicon, initial } = entryAt(state, key);
         return { favicon, initial };
       },
       attrs: () => ({ "aria-hidden": "true", "data-sources-part": "icon" }),
@@ -326,21 +337,21 @@ export const sourcesPrimitive: SourcesPrimitive = definePrimitive<
     title: slot<ItemPartProps & BaseSlotProps, { title: string }>({
       props: fromItem,
       selects: own,
-      state: (state, { key }) => ({ title: (state.entries[key] ?? noEntry).title }),
+      state: (state, { key }) => ({ title: entryAt(state, key).title }),
       attrs: () => ({ "data-sources-part": "title" }),
     }),
     host: slot<ItemPartProps & BaseSlotProps, { host: string }>({
       props: fromItem,
       selects: own,
-      present: (state, { key }) => (state.entries[key] ?? noEntry).host !== "",
-      state: (state, { key }) => ({ host: (state.entries[key] ?? noEntry).host }),
+      present: (state, { key }) => entryAt(state, key).host !== "",
+      state: (state, { key }) => ({ host: entryAt(state, key).host }),
       attrs: () => ({ "data-sources-part": "host" }),
     }),
     snippet: slot<ItemPartProps & BaseSlotProps, { snippet: string }>({
       props: fromItem,
       selects: own,
-      present: (state, { key }) => (state.entries[key] ?? noEntry).snippet !== "",
-      state: (state, { key }) => ({ snippet: (state.entries[key] ?? noEntry).snippet }),
+      present: (state, { key }) => entryAt(state, key).snippet !== "",
+      state: (state, { key }) => ({ snippet: entryAt(state, key).snippet }),
       attrs: () => ({ "data-sources-part": "snippet" }),
     }),
   }),

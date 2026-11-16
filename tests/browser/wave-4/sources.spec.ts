@@ -1,8 +1,9 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
-type Fixture = { kindHost: { add(): void; rename(): void }; kindAnimated: Element[] };
+type Fixture = { kindHost: { add(): void; rename(): void; openings?: string[] }; kindAnimated: Element[] };
 
 const region = (page: Page) => page.getByRole("region", { name: /^Used \d sources$/ });
 const trigger = (page: Page) => region(page).getByRole("button", { name: /^Used \d sources$/ });
@@ -12,7 +13,7 @@ const settled = (page: Page) =>
   page.waitForFunction(() =>
     document.getAnimations().every((animation) => animation.playState !== "running"),
   );
-const host = (page: Page, change: keyof Fixture["kindHost"]) =>
+const host = (page: Page, change: "add" | "rename") =>
   page.evaluate((name) => (window as unknown as Fixture).kindHost[name](), change);
 const animated = (page: Page) =>
   page.evaluate(() =>
@@ -33,7 +34,7 @@ const open = async (page: Page, name = "all") => {
     };
   });
   await page.goto(`/?c=sources&case=${name}`);
-  await expect(region(page)).toBeVisible();
+  await expect(page.locator('#sources [data-sources-part="trigger"]')).toBeVisible();
 };
 
 // Transitions started while the list opens, collected until bindStepPanel settles the height to `auto`.
@@ -73,14 +74,35 @@ test("find in page opens the list", async ({ page }) => {
   await expect(content(page)).toBeVisible();
 });
 
-test("a source with an unsafe URL is text, not a link", async ({ page }) => {
+test("a source with an unsafe URL is text with no host or icon image; a safe favicon shows", async ({
+  page,
+}) => {
   await open(page);
   await trigger(page).click();
   const unsafe = items(page).filter({ hasText: "Pasted notes" });
   await expect(unsafe).toBeVisible();
   await expect(unsafe.getByRole("link")).toHaveCount(0);
   await expect(page.locator('#sources [href^="javascript:"]')).toHaveCount(0);
+  await expect(unsafe.locator('[data-sources-part="host"]')).toHaveCount(0);
+  await expect(unsafe.locator('[data-sources-part="icon"]')).toHaveText("P");
   await expect(region(page).getByRole("link")).toHaveCount(2);
+  const backoff = items(page).filter({ hasText: "Exponential backoff" });
+  await expect(backoff.locator('[data-sources-part="icon"] img')).toHaveAttribute("src", /^data:image\/svg/);
+  await expect(backoff.locator('[data-sources-part="snippet"]')).toHaveCount(0);
+});
+
+test("an owner that keeps the list closed is told of each opening, and it stays closed", async ({
+  page,
+}, testInfo) => {
+  test.skip(layerOf(testInfo) !== "react", "controlled `open` is a React prop");
+  await open(page, "refused");
+  await trigger(page).click();
+  await content(page).evaluate((el) => el.dispatchEvent(new Event("beforematch", { bubbles: true })));
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as Fixture).kindHost.openings))
+    .toEqual(["trigger-press", "find-in-page"]);
+  await expect(trigger(page)).toHaveAttribute("aria-expanded", "false");
+  await expect(content(page)).toHaveAttribute("hidden", "until-found");
 });
 
 test("a new source fades up once and the count updates in place; an updated one doesn't replay", async ({
@@ -126,7 +148,8 @@ for (const colorScheme of ["light", "dark"] as const) {
     await page.emulateMedia({ colorScheme });
     await open(page);
     await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
-    await trigger(page).click();
+    // CSS, not a role query: Firefox crashes when axe runs after one.
+    await page.locator('#sources [data-sources-part="trigger"]').click();
     await settled(page);
     const { violations } = await new AxeBuilder({ page }).include("#root").analyze();
     expect(violations).toEqual([]);

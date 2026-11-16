@@ -18,7 +18,7 @@
   }
 
   /* No guide line: the list sits under the trigger at full width. */
-  [data-sources-part="content"][data-step-part] {
+  [data-sources-part="content"] {
     align-self: stretch;
     margin-inline-start: 0;
     padding-inline-start: 0;
@@ -44,7 +44,7 @@
     padding: 6px;
     transition: background-color var(--kind-duration-fast);
 
-    &:has([data-sources-part="link"][href]:hover) {
+    &:where(:has([data-sources-part="link"][href]:hover)) {
       background-color: var(--kind-color-hover);
     }
   }
@@ -55,6 +55,12 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     font-weight: 500;
+
+    &:where([data-sources-part="link"][href]:hover *) {
+      text-decoration: underline;
+      text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+      text-underline-offset: 2px;
+    }
   }
 
   [data-sources-part="link"] {
@@ -69,11 +75,6 @@
     &[href]:focus-visible {
       outline: 2px solid var(--kind-color-ring);
       outline-offset: 2px;
-    }
-    &[href]:hover [data-sources-part="title"] {
-      text-decoration: underline;
-      text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
-      text-underline-offset: 2px;
     }
   }
 
@@ -104,9 +105,10 @@
     }
   }
 
+  /* Shrinks before the title, which names the link, down to a readable floor. */
   [data-sources-part="host"] {
-    flex-shrink: 0;
-    max-width: 50%;
+    flex-shrink: 4;
+    min-width: min(12ch, 30%);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -128,14 +130,8 @@
     color: var(--kind-color-muted);
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    [data-sources-part="item"] {
-      transition-duration: var(--kind-duration-reduced);
-    }
-  }
-
   @media (forced-colors: active) {
-    [data-sources-part="link"][href] [data-sources-part="title"] {
+    [data-sources-part="title"]:where([data-sources-part="link"][href] *) {
       color: LinkText;
     }
   }

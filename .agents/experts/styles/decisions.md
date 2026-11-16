@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `bb45d49` (Wave 3 Task 11 agent conformance)
+Last reviewed: `04a31c9` (Wave 4 Task 2 Sources)
 
 ## Settled
 
@@ -39,6 +39,7 @@ Last reviewed: `bb45d49` (Wave 3 Task 11 agent conformance)
 
 ## Resolved
 
+- **Sources (Wave 4 Task 2):** selectors are one attribute with context in `:where()`, so a consumer class restyles the panel, row hover and title hover; a long host name shrinks before the title; the item's hover fade no longer half-follows reduced motion (matches the Step trigger).
 - **Notice and the status mark (Wave 3 Task 10):** in forced colors the running mark's track is `GrayText`, so its arc still shows; the light warning glyph uses `--kind-color-on-warning` (white on amber was 2.57:1); a closed Guardrail detail takes back its row gap; the notice's padding is logical; Why? and Dismiss follow the reduced and `none` motion modes.
 - **Feedback (Wave 3 Task 9):** the thumbs show in forced colors; the pressed icon rule wraps its context in `:where()`, so a consumer's icon class wins.
 - **Context Meter (Wave 3 Task 8):** the details closed in 150 ms under reduced motion (the exit duration is set again in the reduced rules, tested); the percentage reserves `4ch + 1em`, so "100 %" in `de-DE` doesn't widen the trigger (tested); level, motion and `[hidden]` rules sit behind `:where()`; the trigger's transitions use `--kind-ease-out`.

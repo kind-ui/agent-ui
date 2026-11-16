@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `2550e7c` (Wave 4 Task 1 groundwork)
+Last reviewed: `04a31c9` (Wave 4 Task 2 Sources)
 
 ## Settled
 
@@ -14,6 +14,7 @@ Last reviewed: `2550e7c` (Wave 4 Task 1 groundwork)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Sources re-renders every item's parts on any `sources` change** (Wave 4 Task 2), once per update, not per token: the same UI SDK options-change behavior as Chain of Thought, Task and Plan items despite `selects`.
 - **A Context Meter root `className` or `render` function gets `{}`,** as Status's root does (Wave 3 Task 8): style by `data-level`. The docs should say this covers every root.
 - **Renaming the chosen model leaves its old name in Model Selector's field** (Wave 3 Task 6): UI SDK's Combobox keeps the label it showed when `itemToLabel` or the item's label changes, even a bare `<Combobox>`; report upstream. The group beside it updates.
 - **Question's radio and checkbox groups have no name of their own:** the item's group, named by its prompt, names them, as UI SDK Field's "Groups in a Field Set" says; Radio's own docs point the group at the legend too. Not checked with a screen reader.
@@ -41,6 +42,7 @@ Last reviewed: `2550e7c` (Wave 4 Task 1 groundwork)
 
 ## Resolved
 
+- **Sources (Wave 4 Task 2):** a refusing-owner case (`refused`) and favicon, host and snippet assertions joined `wave-4/sources.spec.ts`.
 - **Guardrail Notice (Wave 3 Task 10):** hydrating server-rendered notices after `load` no longer plays their entrance or announces them; a refusing `open` owner is tested (`refused` case); `GuardrailNotice` takes `children` into its description, as the web element does.
 - **Feedback (Wave 3 Task 9):** the agent spec settles `onComment` instead of waiting out the bridge's timeout; a refusing host has a fixture case and a spec in both layers; the thumbs part is `FeedbackThumbs`, so it doesn't clash with the `FeedbackRating` type.
 - **Context Meter text hydrated in the server's locale (Wave 3 Task 8).** Fixed: it formats in English until the root binds and reads the page's language, as UI SDK Meter does.

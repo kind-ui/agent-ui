@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `f121ef05955c7871ed404b9460d8529b7a299146` (Wave 1 review fixes)
+Last reviewed: `04a31c9` (Wave 4 Task 2 Sources)
 
 ## Settled
 
@@ -17,6 +17,7 @@ Last reviewed: `f121ef05955c7871ed404b9460d8529b7a299146` (Wave 1 review fixes)
 
 ## Resolved
 
+- **`sanitizeUrl` is exported from `core/markdown` for Sources (Wave 4 Task 2)**; its comment now says it returns null and leaves the fallback to the caller. Not on the public `./core` surface.
 - **Definition syntax inside code made the document one block.** Fixed: the lexer's `tokens.links` decides, which skips code.
 - **A late footnote replaced final blocks.** Fixed: footnotes no longer keep the document one block (spec §6 updated). A `Tokenizer` override stops marked taking `[^x]: word` as a link definition, so a streamed definition never collapses the document, and an indented continuation joins its definition.
 

@@ -11,6 +11,8 @@ export const sources: Source[] = [
     id: "retry",
     title: "Exponential backoff and jitter",
     url: "https://www.example.com/blog/backoff",
+    favicon:
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%2316a34a'/%3E%3C/svg%3E",
   },
   { id: "unsafe", title: "Pasted notes", url: "javascript:alert(1)" },
 ];

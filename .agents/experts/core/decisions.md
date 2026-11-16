@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `2550e7c` (Wave 4 Task 1 groundwork)
+Last reviewed: `04a31c9` (Wave 4 Task 2 Sources)
 
 ## Settled
 
@@ -65,6 +65,7 @@ Last reviewed: `2550e7c` (Wave 4 Task 1 groundwork)
 
 ## Resolved
 
+- **Sources (Wave 4 Task 2):** entries are kept by id while a source's fields are equal (a per-object cache went stale when a host edited a source in place), item parts read entries by own key (`Object.hasOwn`; a null prototype broke `@ui-sdk/web`), a protocol-relative `url` gets its host, and the content finds its trigger through `getRootNode()`, so a close inside a shadow root returns focus. An international host shows as punycode, by design (documented on `SourceEntry.host`).
 - **Wave 3 agent conformance (Task 11):** Guardrail Notice spread the notice base's api, which read its `dismiss` getter once, so `dismiss` stayed offered after `onDismiss` went away (web `can-dismiss` removed) or while the notice was leaving; it now delegates the getter (`wave-3/agent.spec.ts`). Chain of Thought's `setStepOpen` reads steps by own key (`Object.hasOwn`), as Suggestion and Question do.
 - **Notice (Wave 3 Task 10):** Dismiss's fallback skips a link without `href` (Chrome reports `tabIndex` 0 for it); `onDismiss` isn't called once the host removed the notice during its exit; Guardrail Notice's options document its own `variant` (`"warning"`) and title defaults; a notice in server markup an app hydrates after `load`, or one a web host puts back, neither rises in nor is announced (roots on the page before core ran, or already shown, are remembered).
 - **Feedback (Wave 3 Task 9):** the comment text slot now binds `bindText`, so a web element put back in the page sends the text its box kept; the box can't start open without **Add a comment**, and closes only when that button leaves, not on every update; `submitComment` with blank text, or while a send is pending, leaves the box's text alone; an invalid `rating` reads as none; focus recovery picks the pressed thumb, else the first.

@@ -18,7 +18,7 @@ export type MdNode =
 
 const safeProtocol = /^(https?|mailto)$/i;
 
-// micromark's own check: relative URLs pass, any other scheme must be allowed. Unsafe URLs render as their label.
+// micromark's own check: relative URLs pass, any other scheme must be allowed. Returns null for an unsafe URL.
 export function sanitizeUrl(url: string): string | null {
   return sanitizeUri(url, safeProtocol) === "" ? null : url;
 }
