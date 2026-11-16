@@ -22,6 +22,7 @@ Last reviewed: `0391584` (Wave 2 Task 2 Status)
 
 ## Resolved
 
+- **The needs-input dot sat half a pixel low-right, and the running arc missed its track (Wave 2 Task 3).** Chrome draws the 1.5px ring at 1px, so `inset: 3.5px` and `inset: -1.5px` landed off by half a pixel. Fixed: a 1px ring, a 6px dot centered with `margin: auto`, and an opaque track; `status.spec.ts` measures both at 1x and 2x.
 - **The status mark scaled its glyph under reduced motion, and only Step could draw it (Wave 2 Task 1).** Fixed: `status-mark.css` draws any `[data-status-mark]`, fades the fill and glyph over `--kind-duration-reduced` with no scale under reduced motion, and transitions nothing under `motion="none"`.
 - **The Step title shimmer lacked `-webkit-background-clip`.** Fixed, as the Thinking label has it.
 - **Highlighter colors didn't follow dark mode.** Fixed by the `light-dark()` theme: hosts pass `light-dark()` token colors (tested in `markdown.spec.ts`).

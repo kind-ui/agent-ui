@@ -12,18 +12,19 @@
     width: 16px;
     height: 16px;
     border-radius: 9999px;
-    border: 1.5px dashed color-mix(in oklab, var(--kind-color-muted) 70%, transparent);
+    border: 1px dashed color-mix(in oklab, var(--kind-color-muted) 70%, transparent);
     background-color: transparent;
     transition:
       border-color var(--kind-duration-base),
       background-color var(--kind-duration-base);
 
-    /* Both cover the border box, so the arc sits on the track and glyphs center on 8px. */
+    /* Both cover the border box, so the arc sits on the track and glyphs center on 8px. The ring is a whole pixel
+       because Chrome rounds a 1.5px border down to 1px, which left a -1.5px arc half a pixel off its track. */
     &::before,
     &::after {
       content: "";
       position: absolute;
-      inset: -1.5px;
+      inset: -1px;
       border-radius: inherit;
       opacity: 0;
       transform: scale(0.4);
@@ -39,9 +40,10 @@
 
     &[data-status="running"] {
       border-style: solid;
-      border-color: color-mix(in oklab, var(--kind-color-accent) 25%, transparent);
+      /* Opaque, so the track reads the same on a tinted badge as on the page. */
+      border-color: color-mix(in oklab, var(--kind-color-accent) 25%, var(--kind-color-surface));
       &::before {
-        border: 1.5px solid transparent;
+        border: 1px solid transparent;
         border-top-color: var(--kind-color-accent);
         opacity: 1;
         transform: none;
@@ -52,8 +54,12 @@
     &[data-status="awaiting-input"] {
       border-style: solid;
       border-color: var(--kind-color-warning);
+      /* Centered in the padding box, which stays centered however the border rounds. */
       &::before {
-        inset: 3.5px;
+        inset: 0;
+        width: 6px;
+        height: 6px;
+        margin: auto;
         background-color: var(--kind-color-warning);
         opacity: 1;
         transform: none;

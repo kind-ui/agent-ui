@@ -164,3 +164,56 @@ test("the agent snapshot lists each status by kind, with its state and no action
   for (const { actions } of entries) expect(actions).toEqual([]);
   expect(entries).toContainEqual({ actions: [], status: "running" });
 });
+
+// The center of the dot's pixels, inside the ring, from the mark's center, in CSS pixels.
+const dotOffset = async (page: Page, scale: number) => {
+  const mark = page
+    .locator('[data-slot="kind-status"][data-status="awaiting-input"] [data-status-mark]')
+    .first();
+  const png = (await mark.screenshot({ animations: "disabled" })).toString("base64");
+  return page.evaluate(
+    async ([data, ratio]) => {
+      const image = await createImageBitmap(await (await fetch(`data:image/png;base64,${data}`)).blob());
+      const context = new OffscreenCanvas(image.width, image.height).getContext(
+        "2d",
+      ) as OffscreenCanvasRenderingContext2D;
+      context.drawImage(image, 0, 0);
+      const { data: pixels, width, height } = context.getImageData(0, 0, image.width, image.height);
+      const [cx, cy] = [width / 2, height / 2];
+      let [sum, sx, sy] = [0, 0, 0];
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          // Inside the ring only, weighted by how warm the pixel is.
+          if (Math.hypot(x + 0.5 - cx, y + 0.5 - cy) > 5 * ratio) continue;
+          const i = (y * width + x) * 4;
+          const weight = Math.max(0, (pixels[i] as number) - (pixels[i + 2] as number));
+          sum += weight;
+          sx += weight * (x + 0.5);
+          sy += weight * (y + 0.5);
+        }
+      }
+      return [(sx / sum - cx) / ratio, (sy / sum - cy) / ratio];
+    },
+    [png, scale] as const,
+  );
+};
+
+for (const scale of [1, 2]) {
+  test(`at ${scale}x the needs-input dot is centered and the running arc sits on its track`, async ({
+    browser,
+  }, testInfo) => {
+    const page = await browser.newPage({ deviceScaleFactor: scale, baseURL: testInfo.project.use.baseURL });
+    await open(page);
+    for (const offset of await dotOffset(page, scale)) expect(Math.abs(offset)).toBeLessThan(0.25);
+    const [ring, arc, inset] = await page
+      .locator('[data-slot="kind-status"][data-status="running"] [data-status-mark]')
+      .first()
+      .evaluate((mark) => {
+        const before = getComputedStyle(mark, "::before");
+        return [getComputedStyle(mark).borderTopWidth, before.borderTopWidth, before.top];
+      });
+    expect(arc).toBe(ring);
+    expect(inset).toBe(`-${ring}`);
+    await page.close();
+  });
+}
