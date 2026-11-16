@@ -5,7 +5,15 @@ import { feedbackHost } from "../../shared/feedback.js";
 const { host, record, comment } = feedbackHost();
 
 const page =
-  ({ motion, controlled = false }: { motion?: MotionMode; controlled?: boolean } = {}) =>
+  ({
+    motion,
+    controlled = false,
+    refuse = false,
+  }: {
+    motion?: MotionMode;
+    controlled?: boolean;
+    refuse?: boolean;
+  } = {}) =>
   (root: HTMLElement) => {
     defineFeedback();
     const wrapper = document.createElement("div");
@@ -20,7 +28,8 @@ const page =
     if (controlled) feedback.rating = null;
     feedback.addEventListener("ratingchange", (event) => {
       record(event.detail.value, event.detail);
-      if (controlled) feedback.rating = event.detail.value;
+      if (refuse) event.preventDefault();
+      else if (controlled) feedback.rating = event.detail.value;
     });
     feedback.addEventListener("comment", (event) => {
       event.detail.waitUntil(Promise.resolve(comment(event.detail.value, event.detail)));
@@ -46,5 +55,6 @@ const page =
 export const cases = {
   all: page(),
   controlled: page({ controlled: true }),
+  refuse: page({ refuse: true }),
   reduced: page({ motion: "reduced" }),
 };

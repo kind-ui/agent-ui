@@ -13,7 +13,7 @@
     color: var(--kind-color-muted);
   }
 
-  [data-slot="kind-feedback-rating"] {
+  [data-slot="kind-feedback-thumbs"] {
     display: contents;
   }
 
@@ -56,14 +56,22 @@
     background-color: currentColor;
     mask: var(--kind-feedback-thumb) center / contain no-repeat;
   }
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    :where([data-slot="kind-feedback"]) [data-feedback-icon] {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+  }
   :where([data-slot="kind-feedback"]) [data-feedback-icon="down"] {
     rotate: 180deg;
   }
-  :where([data-slot="kind-feedback"]) [data-pressed] [data-feedback-icon] {
+  :where([data-slot="kind-feedback"] [data-pressed]) [data-feedback-icon] {
     mask-image: var(--kind-feedback-thumb-pressed);
   }
 
-  /* "Add a comment" and the thanks share one place at the thumbs' height, so swapping them moves nothing. */
+  /* "Add a comment" and the thanks share one place at the thumbs' height, so swapping them moves nothing above or
+     below; the row grows by the thanks' wider text. */
   :is([data-slot="kind-feedback-comment"], [data-slot="kind-feedback-thanks"]) {
     display: inline-flex;
     align-items: center;

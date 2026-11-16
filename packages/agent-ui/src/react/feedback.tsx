@@ -8,7 +8,7 @@ import { KindTextarea } from "./internal/textarea.js";
 
 const parts = createParts(feedbackPrimitive, {
   root: "div",
-  rating: "div",
+  thumbs: "div",
   comment: "button",
   thanks: "span",
   content: "div",
@@ -30,21 +30,21 @@ export function Feedback({ children = DEFAULT_PARTS, ...props }: FeedbackProps) 
   return <parts.Root {...props}>{children}</parts.Root>;
 }
 
-export type FeedbackRatingProps = Omit<ComponentProps<typeof parts.Rating>, "children"> & {
+export type FeedbackThumbsProps = Omit<ComponentProps<typeof parts.Thumbs>, "children"> & {
   children?: ReactNode;
 };
 
 /** UI SDK's Toggle group, holding the thumbs unless you pass children. One Tab stop, with arrow keys between. */
-export function FeedbackRating({ children = DEFAULT_THUMBS, ...props }: FeedbackRatingProps) {
+export function FeedbackThumbs({ children = DEFAULT_THUMBS, ...props }: FeedbackThumbsProps) {
   return (
-    <parts.Rating {...props}>
+    <parts.Thumbs {...props}>
       {(group) => (
         // Hidden from agents, which use the Feedback's own `rate`.
         <ToggleGroup {...group} data-agent-hidden="">
           {children}
         </ToggleGroup>
       )}
-    </parts.Rating>
+    </parts.Thumbs>
   );
 }
 
@@ -169,7 +169,7 @@ const DEFAULT_CONTENT = (
 
 const DEFAULT_PARTS = (
   <>
-    <FeedbackRating />
+    <FeedbackThumbs />
     <FeedbackComment />
     <FeedbackThanks />
     <FeedbackContent />

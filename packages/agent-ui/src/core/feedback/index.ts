@@ -6,7 +6,7 @@ export {
   type FeedbackPrimitive,
   type FeedbackRating,
   type FeedbackRatingChangeReason,
-  type FeedbackRatingState,
   type FeedbackState,
+  type FeedbackThumbsState,
   feedbackPrimitive,
 } from "./feedback.js";

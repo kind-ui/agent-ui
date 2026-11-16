@@ -27,7 +27,7 @@ npx shadcn@latest add @kind-ui/feedback-web
 
 ```text
 Feedback
-├── FeedbackRating
+├── FeedbackThumbs
 │   ├── FeedbackUp
 │   └── FeedbackDown
 ├── FeedbackComment
@@ -40,7 +40,7 @@ Feedback
     └── FeedbackCommentSend
 ```
 
-`Feedback` renders these parts when you pass no children: a group named by its `label`. `FeedbackRating` holds UI SDK's Toggle group, and `FeedbackUp` and `FeedbackDown` are its toggles, named **Good response** and **Bad response**. `FeedbackComment` is the **Add a comment** button and `FeedbackThanks` the text that replaces it. `FeedbackContent` is the popover: `FeedbackTitle` names it, `FeedbackCommentText` is UI SDK's Textarea, and `FeedbackCommentSend` sends the text, with `FeedbackCommentStatus` or `FeedbackCommentError` beside it.
+`Feedback` renders these parts when you pass no children: a group named by its `label`. `FeedbackThumbs` holds UI SDK's Toggle group, and `FeedbackUp` and `FeedbackDown` are its toggles, named **Good response** and **Bad response**. `FeedbackComment` is the **Add a comment** button and `FeedbackThanks` the text that replaces it. `FeedbackContent` is the popover: `FeedbackTitle` names it, `FeedbackCommentText` is UI SDK's Textarea, and `FeedbackCommentSend` sends the text, with `FeedbackCommentStatus` or `FeedbackCommentError` beside it.
 
 ## Usage
 
@@ -93,5 +93,5 @@ An agent connected with `createAgent` finds the feedback by its label and reads 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/feedback/feedback.ts" name="FeedbackAgentActions" type='Pick<FeedbackApi, "rate" | "submitComment">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-feedback>`, props are kebab-case attributes and `rating` and `open` are properties too; `onRatingChange` is the `ratingchange` event and `onOpenChange` the `openchange` event. The `can-comment` attribute offers a comment, and Send fires `comment` with the text as `detail.value`: call `event.detail.waitUntil(promise)` to hold the box open. The element fills in its parts when it has no children.
+  Runs in React and Web Components. On `<kind-feedback>`, props are kebab-case attributes, `rating` and `defaultRating` are properties only, and `open` is a property too; `onRatingChange` is the `ratingchange` event and `onOpenChange` the `openchange` event. The `can-comment` attribute offers a comment, and Send fires `comment` with the text as `detail.value`: call `event.detail.waitUntil(promise)` to hold the box open. The element fills in its parts when it has no children.
 </Caption>

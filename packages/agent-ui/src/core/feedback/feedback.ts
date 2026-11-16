@@ -98,8 +98,8 @@ export type FeedbackState = PopupState & {
   motion: MotionMode;
 };
 
-/** What the rating part hands UI SDK's Toggle group: pass every key to it. */
-export type FeedbackRatingState = {
+/** What the thumbs part hands UI SDK's Toggle group: pass every key to it. */
+export type FeedbackThumbsState = {
   /** The primitive's own, which it reads and writes the rating through. */
   controller: ToggleGroupController;
   /** The rating when the Toggle group mounted. */
@@ -127,17 +127,18 @@ export type FeedbackApi = Popup & {
   rate: (rating: FeedbackRating) => boolean;
   /**
    * Sends `text`, which also fills the comment box, else the box's text, through `onComment`. Offered only while
-   * "Add a comment" shows and no comment is being sent. Returns whether there was text to send.
+   * "Add a comment" shows and no comment is being sent. Returns whether it sent anything: blank text, or a call while
+   * one is pending, sends nothing and leaves the box as it was.
    */
   readonly submitComment: ((text?: string) => boolean) | undefined;
   /** Sends the box's text, as Send does. Called by the send slot. */
   send: (event?: Event) => void;
-  /** Reports the rating a person pressed. Called as a Toggle's click bubbles to the rating part. */
+  /** Reports the rating a person pressed. Called as a Toggle's click bubbles to the thumbs part. */
   read: (event: Event) => void;
   /** Writes the rating into the Toggle group once it has attached the controller. */
   syncRating: () => void;
-  /** Hands the Toggle group its props. Called by the rating slot. */
-  ratingState: () => FeedbackRatingState;
+  /** Hands the Toggle group its props. Called by the thumbs slot. */
+  thumbsState: () => FeedbackThumbsState;
   /** Hands the comment box its props. Called by the comment text slot. */
   commentTextState: (state: FeedbackState) => FeedbackCommentTextState;
   /** Takes the text a web textarea kept when the element returns to the page. Called by the comment text slot. */
@@ -157,7 +158,7 @@ type Slot<
 
 type FeedbackSlots = {
   root: Slot;
-  rating: Slot<BaseSlotProps, FeedbackRatingState>;
+  thumbs: Slot<BaseSlotProps, FeedbackThumbsState>;
   comment: Slot<PopupTriggerProps & BaseSlotProps, PopupTriggerState>;
   thanks: Slot;
   content: Slot<PopupContentProps & BaseSlotProps, PopupContentState>;
@@ -176,6 +177,8 @@ export type FeedbackPrimitive = ReturnType<
 
 const isRating = (value: unknown): value is FeedbackRating =>
   value === "up" || value === "down" || value === null;
+
+const toRating = (value: unknown): FeedbackRating => (isRating(value) ? value : null);
 
 // Reads `options` rather than spreading it: on Web Components, `@ui-sdk/web` fills in the callbacks on read.
 const presentation = (options: FeedbackOptions) => ({
@@ -207,17 +210,21 @@ export const feedbackPrimitive: FeedbackPrimitive = definePrimitive<
     onOpenChange: "callback",
     motion: "string",
   },
-  state: (options) => ({
-    ...popupState(options),
-    ...presentation(options),
-    rating: options.rating ?? options.defaultRating ?? null,
-    commentText: "",
-    pending: false,
-    failed: false,
-  }),
+  state: (options) => {
+    const state: FeedbackState = {
+      ...popupState(options),
+      ...presentation(options),
+      rating: toRating(options.rating ?? options.defaultRating),
+      commentText: "",
+      pending: false,
+      failed: false,
+    };
+    // The box opens only from "Add a comment", so it can't start open without it.
+    return showsComment(state) ? state : { ...state, open: false, mounted: false };
+  },
   sync: (options) => ({
     ...presentation(options),
-    ...(options.rating === undefined ? {} : { rating: options.rating }),
+    ...(options.rating === undefined ? {} : { rating: toRating(options.rating) }),
     ...(options.open === undefined ? {} : { open: options.open }),
   }),
   controlled: ["rating"],
@@ -241,9 +248,12 @@ export const feedbackPrimitive: FeedbackPrimitive = definePrimitive<
     };
     store.subscribe(syncRating);
     // The box goes with "Add a comment", as when an agent clears the rating.
+    let commenting = showsComment(store.get());
     store.subscribe(() => {
       const state = store.get();
-      if (state.open && !showsComment(state)) popup.setOpen(false);
+      const was = commenting;
+      commenting = showsComment(state);
+      if (was && !commenting && state.open) popup.setOpen(false);
     });
 
     // The controller reads `undefined` until the Textarea attaches it.
@@ -278,7 +288,7 @@ export const feedbackPrimitive: FeedbackPrimitive = definePrimitive<
       return true;
     };
 
-    const ratingState: FeedbackRatingState = {
+    const thumbsState: FeedbackThumbsState = {
       controller: toggles,
       defaultValue: initial ? [initial] : [],
       "aria-label": "Rating",
@@ -302,6 +312,7 @@ export const feedbackPrimitive: FeedbackPrimitive = definePrimitive<
         const state = store.get();
         if (!showsComment(state) || state.pending) return undefined;
         return (text?: string) => {
+          if (store.get().pending || (text !== undefined && !text.trim())) return false;
           if (text !== undefined) setText(text);
           return send();
         };
@@ -325,12 +336,13 @@ export const feedbackPrimitive: FeedbackPrimitive = definePrimitive<
         const kept = el.querySelector("textarea")?.value;
         if (kept && kept !== store.get().commentText) store.set({ commentText: kept });
       },
-      ratingState: () => ratingState,
+      thumbsState: () => thumbsState,
       commentTextState: (state) => commentTextState(state.pending, state.commentText),
       recovery: createFocusRecovery({
         fallback: () =>
           context.element("thanks") ??
-          context.element("rating")?.querySelector<HTMLElement>('[aria-pressed="true"], button') ??
+          context.element("thumbs")?.querySelector<HTMLElement>('[aria-pressed="true"]') ??
+          context.element("thumbs")?.querySelector<HTMLElement>("button") ??
           null,
       }),
       enterSwap: (el) => {
@@ -356,8 +368,8 @@ export const feedbackPrimitive: FeedbackPrimitive = definePrimitive<
         }),
         bind: (_el, { api }) => api.bindRoot(),
       }),
-      rating: slot<BaseSlotProps, FeedbackRatingState>({
-        state: (_state, { api }) => api.ratingState(),
+      thumbs: slot<BaseSlotProps, FeedbackThumbsState>({
+        state: (_state, { api }) => api.thumbsState(),
         // UI SDK's Toggle sets the group's value on click, before the click bubbles here.
         on: { click: (event, { api }) => api.read(event) },
         bind: (_el, { api }) => api.syncRating(),
@@ -391,6 +403,7 @@ export const feedbackPrimitive: FeedbackPrimitive = definePrimitive<
           input: (event, { store }) =>
             store.set({ commentText: (event.target as HTMLTextAreaElement).value }),
         },
+        bind: (el, { api }) => api.bindText(el),
       }),
       "comment-send": slot<BaseSlotProps, { pending: boolean }>({
         role: "button",

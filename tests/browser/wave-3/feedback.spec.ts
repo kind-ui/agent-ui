@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Fixture = {
   kindHost: {
@@ -95,6 +96,14 @@ for (const name of ["all", "controlled"]) {
   });
 }
 
+test("a controlling host that refuses a rating keeps the thumbs unpressed", async ({ page }) => {
+  await open(page, "refuse");
+  await up(page).click();
+  await expect(up(page)).toHaveAttribute("aria-pressed", "false");
+  await expect(addComment(page)).toBeHidden();
+  expect((await ratings(page)).map(({ rating }) => rating)).toEqual(["up"]);
+});
+
 test("the comment button appears without moving the thumbs", async ({ page }) => {
   await open(page);
   const boxes = () =>
@@ -160,6 +169,27 @@ test("Escape closes the box and returns focus to its button, and the text waits 
   await expect(text(page)).toHaveValue("Half a thought");
 });
 
+test("an element put back in the page keeps the comment its box held, and sends it", async ({
+  page,
+}, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "Web Components only");
+  await open(page);
+  await openBox(page);
+  await text(page).fill("Kept text");
+  await page.keyboard.press("Escape");
+  await page.evaluate(async () => {
+    const el = document.querySelector("#feedback") as HTMLElement;
+    const parent = el.parentElement as HTMLElement;
+    el.remove();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    parent.prepend(el);
+  });
+  await addComment(page).click();
+  await expect(text(page)).toHaveValue("Kept text");
+  await send(page).click();
+  expect((await comments(page)).map(({ text }) => text)).toEqual(["Kept text"]);
+});
+
 test("with reduced motion the box only fades", async ({ page }) => {
   await open(page, "reduced");
   await openBox(page);
@@ -181,9 +211,11 @@ test("an agent rates and comments, each offered only when it applies", async ({ 
   await expect(down(page)).toHaveAttribute("aria-pressed", "true");
   expect(await ratings(page)).toEqual([{ rating: "down", reason: "imperative", source: "agent" }]);
   await expectAgentActions(page, "Feedback", ["press", "rate", "submitComment"]);
-  expect(await act(page, "submitComment", ["Missed the point"])).toContain('"ok":true');
+  const sent = act(page, "submitComment", ["Missed the point"]);
+  await expect.poll(() => comments(page)).toEqual([{ text: "Missed the point", source: "agent" }]);
   await expectAgentActions(page, "Feedback", ["press", "rate"]);
-  expect(await comments(page)).toEqual([{ text: "Missed the point", source: "agent" }]);
+  await settle(page, "resolve");
+  expect(await sent).toContain('"ok":true');
 });
 
 for (const colorScheme of ["light", "dark"] as const) {

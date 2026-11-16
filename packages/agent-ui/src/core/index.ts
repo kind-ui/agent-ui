@@ -101,8 +101,8 @@ export {
   type FeedbackPrimitive,
   type FeedbackRating,
   type FeedbackRatingChangeReason,
-  type FeedbackRatingState,
   type FeedbackState,
+  type FeedbackThumbsState,
   feedbackPrimitive,
 } from "./feedback/index.js";
 export type { IndicatorOptions, IndicatorPrimitive, IndicatorState } from "./indicator.js";

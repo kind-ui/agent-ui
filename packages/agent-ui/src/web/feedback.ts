@@ -15,7 +15,7 @@ import { defineInternalTextarea } from "./internal/textarea.js";
 const THUMB = (value: "up" | "down", label: string) =>
   `<ui-toggle value="${value}"><button aria-label="${label}"><ui-toggle-icon data-feedback-icon="${value}"></ui-toggle-icon></button></ui-toggle>`;
 
-const DEFAULT_PARTS = `<kind-feedback-rating><ui-toggle-group data-agent-hidden>${THUMB("up", "Good response")}${THUMB("down", "Bad response")}</ui-toggle-group></kind-feedback-rating><kind-feedback-comment><button>Add a comment</button></kind-feedback-comment><kind-feedback-thanks>Thanks for your feedback</kind-feedback-thanks><kind-feedback-content hidden><kind-feedback-title><h2>Add a comment</h2></kind-feedback-title><kind-feedback-comment-text><kind-internal-textarea><ui-textarea><textarea aria-label="Comment" placeholder="What could be better?" rows="3"></textarea></ui-textarea></kind-internal-textarea></kind-feedback-comment-text><div data-feedback-actions><kind-feedback-comment-status><kind-feedback-comment-status-icon></kind-feedback-comment-status-icon>Sending</kind-feedback-comment-status><kind-feedback-comment-error>Comment not sent. Try again.</kind-feedback-comment-error><kind-feedback-comment-send><button>Send</button></kind-feedback-comment-send></div></kind-feedback-content>`;
+const DEFAULT_PARTS = `<kind-feedback-thumbs><ui-toggle-group data-agent-hidden>${THUMB("up", "Good response")}${THUMB("down", "Bad response")}</ui-toggle-group></kind-feedback-thumbs><kind-feedback-comment><button>Add a comment</button></kind-feedback-comment><kind-feedback-thanks>Thanks for your feedback</kind-feedback-thanks><kind-feedback-content hidden><kind-feedback-title><h2>Add a comment</h2></kind-feedback-title><kind-feedback-comment-text><kind-internal-textarea><ui-textarea><textarea aria-label="Comment" placeholder="What could be better?" rows="3"></textarea></ui-textarea></kind-internal-textarea></kind-feedback-comment-text><div data-feedback-actions><kind-feedback-comment-status><kind-feedback-comment-status-icon></kind-feedback-comment-status-icon>Sending</kind-feedback-comment-status><kind-feedback-comment-error>Comment not sent. Try again.</kind-feedback-comment-error><kind-feedback-comment-send><button>Send</button></kind-feedback-comment-send></div></kind-feedback-content>`;
 
 const write = <Target extends object, Key extends keyof Target>(
   target: Target | null,
@@ -56,9 +56,9 @@ export function defineFeedback(): void {
         const api = instance.api as FeedbackApi;
         const draw = () => {
           const state = instance.get() as FeedbackState;
-          const { controller, "aria-label": ariaLabel } = api.ratingState();
+          const { controller, "aria-label": ariaLabel } = api.thumbsState();
           const group = el.querySelector<Element & { controller?: unknown }>(
-            "kind-feedback-rating ui-toggle-group",
+            "kind-feedback-thumbs ui-toggle-group",
           );
           write(group, "controller", controller);
           write(group, "ariaLabel", ariaLabel);
@@ -79,7 +79,7 @@ export function defineFeedback(): void {
         return instance.subscribe(draw);
       },
     },
-    rating: { tag: "kind-feedback-rating", display: "contents" },
+    thumbs: { tag: "kind-feedback-thumbs", display: "contents" },
     comment: { tag: "kind-feedback-comment", target: wrappedButton, display: "contents" },
     thanks: "kind-feedback-thanks",
     content: "kind-feedback-content",
@@ -111,7 +111,7 @@ export interface KindFeedbackElement
 declare global {
   interface HTMLElementTagNameMap {
     "kind-feedback": KindFeedbackElement;
-    "kind-feedback-rating": HTMLElement;
+    "kind-feedback-thumbs": HTMLElement;
     "kind-feedback-comment": HTMLElement;
     "kind-feedback-thanks": HTMLElement;
     "kind-feedback-content": HTMLElement;

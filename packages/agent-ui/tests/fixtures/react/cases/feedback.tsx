@@ -5,7 +5,15 @@ import { feedbackHost } from "../../shared/feedback.js";
 
 const { host, record, comment } = feedbackHost();
 
-function Page({ motion, controlled = false }: { motion?: MotionMode; controlled?: boolean }) {
+function Page({
+  motion,
+  controlled = false,
+  refuse = false,
+}: {
+  motion?: MotionMode;
+  controlled?: boolean;
+  refuse?: boolean;
+}) {
   const [commentSent, setCommentSent] = useState(false);
   const [rating, setRating] = useState<FeedbackRating>(null);
   useEffect(() => {
@@ -17,10 +25,10 @@ function Page({ motion, controlled = false }: { motion?: MotionMode; controlled?
       <div className="flex items-center gap-2">
         <Feedback
           id="feedback"
-          {...(controlled && { rating })}
+          {...((controlled || refuse) && { rating })}
           onRatingChange={(next, details) => {
             record(next, details);
-            setRating(next);
+            if (!refuse) setRating(next);
           }}
           onComment={comment}
           commentSent={commentSent}
@@ -37,5 +45,6 @@ function Page({ motion, controlled = false }: { motion?: MotionMode; controlled?
 export const cases = {
   all: () => <Page />,
   controlled: () => <Page controlled />,
+  refuse: () => <Page refuse />,
   reduced: () => <Page motion="reduced" />,
 };
