@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `882023e` (Wave 3 Task 4 Question)
+Last reviewed: `a6a6440` (Wave 3 Task 5 Checkpoint)
 
 ## Settled
 
@@ -17,6 +17,8 @@ Last reviewed: `882023e` (Wave 3 Task 4 Question)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Checkpoint: "Restored" is wider than the Restore icon,** so the line (or a long description) gets about 47px shorter in one frame when it swaps in. Nothing moves vertically.
+- **Checkpoint's restore icon doesn't mirror in right-to-left text;** undecided whether a counter-clockwise arrow should.
 - **Re-checking a checkbox while its indicator fades out restarts the fade-in** for about 2 frames: UI SDK puts `data-starting-style` back on the same element (report upstream).
 - **Question's indicator fades with the default `ease` while it scales with `--kind-ease`,** as `status-mark.css` does.
 - **A long denial reason in Confirmation's outcome is cut with an ellipsis** and can't be read in full on screen; it stays in the DOM.
@@ -30,6 +32,7 @@ Last reviewed: `882023e` (Wave 3 Task 4 Question)
 
 ## Resolved
 
+- **Checkpoint (Wave 3 Task 5):** a wrapped error made the dialog 8px taller on narrow screens (the error's line height is 1rem, so two lines fit the row); the backdrop closed 50ms after the dialog (both use the fast duration); reduced-motion fades were `linear` (now `--kind-ease-out`, as the JS helper's).
 - **The internal Textarea was 14px beside 13px Confirmation and Question text (Wave 3 Task 4).** Fixed: it inherits its font size and line height. Question's option rows wrap their context in `:where()`, so they stay one attribute deep.
 - **The composer's attachments area opened and closed in one frame (Wave 3 Task 2).** Fixed: the area plays the motion helper's `expand` in the frame after its first chip arrives (so the chip has rendered and measures) and its `expand` exit when the last is removed, and stays shown until the collapse and the chip's exit both end. The dropzone grid has no row gap; the area's spacing is inside it, so a collapsed area takes no room. Reduced motion fades it with no height change; `motion="none"` opens and closes at once. The helper's springs start at rest (`velocity: 0`), so a chip attached mid-collapse reverses it without overshooting, and the area's top padding holds a chip's remove badge inside the box the expand clips. `composer.spec.ts` follows `kind-composer-input` each painted frame in both layers.
 - **Removed chips and uploader rows left without an exit, and the items after them jumped (Wave 2 Task 9).** Fixed with Queue's leaving rows (spec §6 "Removed items"): the row stays `inert` and `aria-hidden` while it fades, then the items after it slide into place; a leaving row keeps its preview and Cancel/Retry button, so it doesn't reflow as it fades; the composer keeps its attachments area while the last chip leaves. `layout` now writes its inverted position at once, and the slide starts on the list's first DOM change, so the rows don't sit a frame at their new place before sliding (also Queue's). Reduced motion is a 120 ms fade with no slide; `motion="none"` leaves at once (tested on both layers). An `enter` after an interrupted `fade-up` settles the held `transform` as it plays instead of snapping at the end (`motion.spec.ts`).

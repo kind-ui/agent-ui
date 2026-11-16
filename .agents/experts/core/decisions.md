@@ -2,10 +2,12 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `882023e` (Wave 3 Task 4 Question)
+Last reviewed: `a6a6440` (Wave 3 Task 5 Checkpoint)
 
 ## Settled
 
+- **Checkpoint `defaultOpen` logs UI SDK's dev warning that `agent.actions` lists `restore`** (Wave 3 Task 5): `restore` is a getter that returns `undefined` while the dialog is open, as the other Wave 3 actions do.
+- **Checkpoint's `restored` isn't in `controlled`** (Wave 3 Task 5): on web a boolean attribute turned off reads `undefined`, which made UI SDK warn that it stopped controlling it. An agent sees Restore gone and "Restored" instead.
 - **A denial in a Tool is announced twice, "Denied" then "<name> denied" (Wave 3 Task 3):** spec §4.1 keeps the recorded response and the resulting execution state apart; Confirmation announces the first and Tool its outcome, and a host sets them in separate updates.
 - **`kind-queue`'s web `api` lists no `reorder` or `remove`:** both are getters that return `undefined` while unavailable, and a web root's `api` list copies methods once (AGENTS.md, Task 10 "Actions offered while available"). Hosts call them through the agent bridge or the core api.
 - **UI SDK's dev warning that `agent.actions` lists `cancel` (or `accept`) while the api lacks it** is expected: those actions are getters that return `undefined` while unavailable (spec §6), and the warning is once per mount (AGENTS.md).
@@ -24,6 +26,7 @@ Last reviewed: `882023e` (Wave 3 Task 4 Question)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A Checkpoint owner who refuses a close sees it close and reopen** (Escape, then `onOpenChange` cancels): UI SDK reports the close only after it happens, through `controller.open()`'s promise, since web hears neither `openchange` nor a Close part's `action`.
 - **No test proves Question's `ownQuestion` `selects`** (UI SDK asks each primitive with `selects` to prove it); traced by hand, and Chain of Thought, Task and Plan have none either.
 - **A failed Skip announces "Answers not sent"** (Question), which reads oddly after a skip; wording only.
 - **Confirmation: a microtask between `pending` clearing and `sent` setting** could let an `act` scheduled in a promise callback slip a second decision through. Not reproduced; a press can't land there.
@@ -47,6 +50,7 @@ Last reviewed: `882023e` (Wave 3 Task 4 Question)
 
 ## Resolved
 
+- **Checkpoint (Wave 3 Task 5):** `open` stuck `true` and the web page left `inert` when `restored` was set with the dialog open (the dialog now closes when Restore leaves, and an `"unmount"` close reports `open: false`); a refused press-open left the dialog showing (`follow` changes `open` first and closes it again); a failed restore then a new press closed and reopened the dialog; a detached controller threw on `defaultOpen` without `onRestore` (the dialog opens only while the `restore` part is bound); an agent's `press` on the dialog's Restore wasn't always gated (the confirm part always renders `data-agent-confirm`); web ignored `agentConfirm = false` (`defaults`).
 - **Question ids like `constructor` crashed, new questions kept the last round's answers, `setValue` ignored the lock, and an answer no option matches read as blank (Wave 3 Task 4).** Fixed: answers and questions are read by own key (`answerOf`, `questionOf`), new question ids drop the answers and controllers of the questions that left (uncontrolled), `setValue` returns `false` while locked or answered, and `answerText` returns `undefined` (unit tests in `question.test.mjs`).
 - **"Decision not sent" wasn't announced (Wave 3 Task 3).** Fixed: Confirmation announces it on entering `submit-failed`, and the recorded outcome on `responded` or `auto`; Tool embeds it and announces nothing more (tested in `confirmation.spec.ts` and `tool.spec.ts`, both layers).
 - **Removing the last chip from a composer left focus on `<body>` (Wave 3 Task 2).** Fixed: Attachments takes a `focusFallback` option for when no chip is left to take focus, and the composer passes its editor (tested in `composer.spec.ts`, both layers).
