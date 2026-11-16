@@ -30,7 +30,10 @@ export type InlineCitationOpenChangeReason = PopoverOpenChangeReason | "trigger-
 export type InlineCitationOptions = {
   /** The sources the citation points to, in the order the card pages through them. Defaults to none. */
   sources?: Source[];
-  /** The marker's text, like `"1"`. Defaults to the first source's host name, with "+N" for the others. */
+  /**
+   * The marker's text, like `"1"`. Defaults to the first source's host name, or its title without a safe `url`, with
+   * "+N" for the others.
+   */
   label?: string;
   /** Whether the card is open. Passing it controls it: change it in `onOpenChange`. */
   open?: boolean;
@@ -54,7 +57,7 @@ export type InlineCitationState = PopupState & {
   sources: Source[];
   /** Each source as the card shows it, by id. */
   entries: Record<string, SourceEntry>;
-  /** The marker's text: the `label`, else the first source's host name and "+N". */
+  /** The marker's text: the `label`, else the first source's host name (or title) and "+N". */
   label: string;
   /** "Source: <title>", or "Sources: N" for more than one, which names the card. */
   summary: string;
@@ -138,11 +141,28 @@ const noEntry: SourceEntry = {
   initial: "",
 };
 
-const entries = memo(
-  (sources: Source[]): Record<string, SourceEntry> =>
-    Object.fromEntries(sources.map((source) => [source.id, sourceEntry(source)])),
-);
-const ids = memo((sources: Source[]) => sources.map((source) => source.id));
+// Cached by object rather than with `memo`, so citations in one paragraph don't evict each other's entries.
+const entryCache = new WeakMap<Source, SourceEntry>();
+const entriesCache = new WeakMap<Source[], Record<string, SourceEntry>>();
+const idsCache = new WeakMap<Source[], string[]>();
+const entryOf = (source: Source) => {
+  let entry = entryCache.get(source);
+  if (!entry) entryCache.set(source, (entry = sourceEntry(source)));
+  return entry;
+};
+const entries = (sources: Source[]) => {
+  let byId = entriesCache.get(sources);
+  if (!byId) {
+    byId = Object.fromEntries(sources.map((source) => [source.id, entryOf(source)]));
+    entriesCache.set(sources, byId);
+  }
+  return byId;
+};
+const ids = (sources: Source[]) => {
+  let list = idsCache.get(sources);
+  if (!list) idsCache.set(sources, (list = sources.map((source) => source.id)));
+  return list;
+};
 // Own keys only, so an item `value` like "constructor" doesn't find `Object`'s.
 const entryAt = ({ entries }: InlineCitationState, key: string) =>
   Object.hasOwn(entries, key) ? (entries[key] as SourceEntry) : noEntry;
@@ -204,22 +224,26 @@ export const inlineCitationPrimitive: InlineCitationPrimitive = definePrimitive<
     );
     const { store } = context;
     const carousel = createCarouselController();
+    // The controller returns `undefined` until a Carousel attaches it.
     const syncPage = () => {
       const page = carousel.getPage();
-      if (page !== store.get().page) store.set({ page });
+      if (typeof page === "number" && page !== store.get().page) store.set({ page });
     };
     // The Carousel clamps its page when sources go, so "N of M" follows.
     context.onOptions((options) => {
       const count = Math.max(options.sources?.length ?? 0, 1);
       if (store.get().page > count) store.set({ page: count });
     });
-    const carouselState = memo((ids: string[], defaultPage: number) => ({
+    // `defaultPage` is read when the Carousel mounts, each time React opens the card, so paging renders no slide again.
+    const carouselState = memo((ids: string[]) => ({
       controller: carousel,
-      defaultPage,
+      get defaultPage() {
+        return store.get().page;
+      },
       ids,
     }));
     const paging = (move: () => boolean) => () => {
-      const moved = move();
+      const moved = move() === true;
       syncPage();
       return moved;
     };
@@ -239,7 +263,7 @@ export const inlineCitationPrimitive: InlineCitationPrimitive = definePrimitive<
         const { open, page } = store.get();
         return open && page > 1 ? paging(() => carousel.previous()) : undefined;
       },
-      carouselState: (state) => carouselState(ids(state.sources), state.page),
+      carouselState: (state) => carouselState(ids(state.sources)),
       pageText: (state) => `${state.page} of ${state.sources.length}`,
       syncPage,
     };
@@ -267,15 +291,21 @@ export const inlineCitationPrimitive: InlineCitationPrimitive = definePrimitive<
       }),
       content: slot<PopupContentProps & BaseSlotProps, PopupContentState>({
         ...content,
-        attrs: (state, part) => ({ ...content.attrs?.(state, part), "aria-label": state.summary }),
+        // Named by the summary, not by the trigger as UI SDK's popup content is.
+        attrs: (state, part) => ({
+          ...content.attrs?.(state, part),
+          "aria-labelledby": undefined,
+          "aria-label": state.summary,
+        }),
       }),
       carousel: slot<BaseSlotProps, InlineCitationCarouselState>({
         present: (state) => state.sources.length > 1,
         state: (state, { api }) => api.carouselState(state),
-        // UI SDK's Carousel changes its page on Previous, Next and the arrow keys before they bubble here.
+        // UI SDK's Carousel changes its page on Previous, Next and the arrow keys before they bubble here. It cancels
+        // the keydown, which a part's handler skips, so the page is read on keyup.
         on: {
           click: (_event, { api }) => api.syncPage(),
-          keydown: (_event, { api }) => api.syncPage(),
+          keyup: (_event, { api }) => api.syncPage(),
         },
       }),
       item: slot<ItemProps & BaseSlotProps>({ props: { value: "string" }, selects: own }),

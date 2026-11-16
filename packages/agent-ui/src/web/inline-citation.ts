@@ -34,6 +34,14 @@ const fill = (part: Element | null, text: string) => {
   if (claim(part) && part.textContent !== text) part.textContent = text;
 };
 
+type Movable = Element & { moveBefore?: (node: Node, child: Node | null) => void };
+
+// `moveBefore` keeps a focused link focused where the browser has it; `insertBefore` blurs it.
+function move(row: Movable, slide: Element, before: Element | null): void {
+  if (row.moveBefore && slide.isConnected) row.moveBefore(slide, before);
+  else row.insertBefore(slide, before);
+}
+
 const createItem = (doc: Document, id: string) => {
   const item = doc.createElement("kind-inline-citation-item");
   item.setAttribute("value", id);
@@ -67,7 +75,7 @@ const drawContent = (content: Element, ids: string[], controller: CarouselContro
     }
     const element = carousel.querySelector<HTMLElement & { controller?: CarouselController }>("ui-carousel");
     if (element && element.controller !== controller) element.controller = controller;
-    const row = carousel.querySelector("ui-carousel-content");
+    const row = carousel.querySelector<Movable>("ui-carousel-content");
     if (!row) return;
     const slides = new Map<string, Element>();
     for (const slide of row.children) slides.set(slide.firstElementChild?.getAttribute("value") ?? "", slide);
@@ -80,7 +88,7 @@ const drawContent = (content: Element, ids: string[], controller: CarouselContro
         slide.append(createItem(doc, id));
       }
       const before: Element | null = previous ? previous.nextElementSibling : row.firstElementChild;
-      if (before !== slide) row.insertBefore(slide, before);
+      if (before !== slide) move(row, slide, before);
       previous = slide;
     }
     for (const slide of slides.values()) slide.remove();
@@ -130,7 +138,19 @@ export function defineInlineCitation(): void {
           fill(content.querySelector("kind-inline-citation-index"), api.pageText(state));
         };
         draw();
-        return instance.subscribe(draw);
+        const unsubscribe = instance.subscribe(draw);
+        // Items and parts written after the element connects are filled in too.
+        const arrivals = new MutationObserver((records) => {
+          const changed = records.some((record) =>
+            [...record.addedNodes].some((node) => node instanceof Element),
+          );
+          if (changed) draw();
+        });
+        arrivals.observe(el, { childList: true, subtree: true });
+        return () => {
+          unsubscribe();
+          arrivals.disconnect();
+        };
       },
     },
     trigger: { tag: "kind-inline-citation-trigger", target: wrappedButton, display: "contents" },

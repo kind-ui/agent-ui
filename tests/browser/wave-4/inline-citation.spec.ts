@@ -1,12 +1,13 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
-type Fixture = { agent: { act(input: unknown): Promise<unknown> } };
+type Fixture = { agent: { act(input: unknown): Promise<unknown> }; kindHost: { openings: string[] } };
 
 const marker = (page: Page, id: "many" | "one") =>
   page.locator(`#${id} [data-slot="kind-inline-citation-trigger"]`);
-const card = (page: Page, name: string) => page.getByRole("dialog", { name });
+const card = (page: Page, name: string) => page.getByRole("dialog", { name, exact: true });
 const act = (page: Page, ref: string, action: string) =>
   page.evaluate(
     ([ref, name]) =>
@@ -36,6 +37,20 @@ test("markers read their sources and keep the paragraph's line height", async ({
     lineHeight: getComputedStyle(el).lineHeight,
   }));
   expect(`${height}px`).toBe(lineHeight);
+});
+
+test("markers keep even a line height of 1", async ({ page }) => {
+  await open(page);
+  const heights = await page.locator("#prose").evaluate((el) => {
+    el.style.lineHeight = "1";
+    const bare = el.cloneNode(true) as HTMLElement;
+    for (const citation of bare.querySelectorAll("#many, #one")) citation.replaceWith("x");
+    el.after(bare);
+    const result = [el.getBoundingClientRect().height, bare.getBoundingClientRect().height];
+    bare.remove();
+    return result;
+  });
+  expect(heights[0]).toBe(heights[1]);
 });
 
 test("a press opens the card and Escape returns focus to the marker", async ({ page }) => {
@@ -100,11 +115,32 @@ test("Next and Previous page through three sources, and the unsafe one is text",
   expect(await many.evaluate((el) => el.getBoundingClientRect().height)).toBe(height);
   await previous.click();
   await expect(index).toHaveText("2 of 3");
+  await many.locator('[data-slot="carousel-viewport"]').focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(index).toHaveText("3 of 3");
+  await page.keyboard.press("Home");
+  await expect(index).toHaveText("1 of 3");
+  await page.keyboard.press("ArrowRight");
+  await expect(index).toHaveText("2 of 3");
+  await marker(page, "many").focus();
   await page.keyboard.press("Escape");
   await expect(many).toBeHidden();
   await marker(page, "many").click();
   await expect(index).toHaveText("2 of 3");
   await expect(many.getByText("Exponential backoff and jitter")).toBeVisible();
+});
+
+test("an owner that keeps the card closed is told of each opening, and it stays closed", async ({
+  page,
+}, testInfo) => {
+  test.skip(layerOf(testInfo) !== "react", "controlled `open` is a React prop");
+  await open(page, "refused");
+  await marker(page, "one").click();
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as Fixture).kindHost.openings))
+    .toEqual(["trigger-press"]);
+  await expect(card(page, "Source: Rate limit headers")).toBeHidden();
+  await expect(marker(page, "one")).toHaveAttribute("aria-expanded", "false");
 });
 
 test("with reduced motion the card only fades", async ({ page }) => {

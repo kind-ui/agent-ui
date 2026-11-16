@@ -134,6 +134,7 @@ export function InlineCitationItem({ children, ...props }: InlineCitationItemPro
   return <parts.Item {...props}>{children !== undefined ? children : DEFAULT_ITEM_PARTS}</parts.Item>;
 }
 
+/** Links to the source's `url` in a new tab; an `a` without `href`, which is text, when the URL isn't safe. */
 export const InlineCitationLink = parts.Link;
 
 export type InlineCitationHostProps = ComponentProps<typeof parts.Host>;
