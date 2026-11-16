@@ -28,6 +28,7 @@ import { Question } from "./components/ui/question.js";
 import { Queue } from "./components/ui/queue.js";
 import { Reasoning } from "./components/ui/reasoning.js";
 import { ReasoningEffort } from "./components/ui/reasoning-effort.js";
+import { Sources } from "./components/ui/sources.js";
 import { Status } from "./components/ui/status.js";
 import { Step, StepContent, StepIcon, StepTitle, StepTrigger } from "./components/ui/step.js";
 import { StreamingText } from "./components/ui/streaming-text.js";
@@ -144,6 +145,9 @@ const items = {
       reason="The response included personal data."
       detail="Policy."
     />
+  ),
+  sources: (
+    <Sources sources={[{ id: "docs", title: "Rate limits", url: "https://docs.github.com/en/rest" }]} />
   ),
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">

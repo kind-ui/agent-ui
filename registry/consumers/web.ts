@@ -21,6 +21,7 @@ import { defineQuestion } from "./components/ui/web/question.js";
 import { defineQueue } from "./components/ui/web/queue.js";
 import { defineReasoning } from "./components/ui/web/reasoning.js";
 import { defineReasoningEffort } from "./components/ui/web/reasoning-effort.js";
+import { defineSources } from "./components/ui/web/sources.js";
 import { defineStatus } from "./components/ui/web/status.js";
 import { defineStep } from "./components/ui/web/step.js";
 import { defineStreamingText } from "./components/ui/web/streaming-text.js";
@@ -53,6 +54,7 @@ for (const define of [
   defineFeedback,
   defineNotice,
   defineGuardrailNotice,
+  defineSources,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -95,6 +97,7 @@ const items = {
   feedback: `<kind-feedback can-comment></kind-feedback>`,
   notice: `<kind-notice variant="warning" label="Rate limited" can-dismiss><kind-notice-description>Responses are slower for the next few minutes.</kind-notice-description></kind-notice>`,
   "guardrail-notice": `<kind-guardrail-notice blocking label="Model output withheld" reason="The response included personal data." detail="Policy."></kind-guardrail-notice>`,
+  sources: `<kind-sources></kind-sources>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>
@@ -175,6 +178,9 @@ Object.assign(main.querySelector("kind-chain-of-thought") as HTMLElement, {
 });
 Object.assign(main.querySelector("kind-task") as HTMLElement, {
   items: [{ id: "schema", status: "complete", title: "Read the schema", files: ["db/schema.sql"] }],
+});
+Object.assign(main.querySelector("kind-sources") as HTMLElement, {
+  sources: [{ id: "docs", title: "Rate limits", url: "https://docs.github.com/en/rest" }],
 });
 Object.assign(main.querySelector("kind-plan") as HTMLElement, {
   items: [{ id: "audit", status: "complete", title: "Audit the current schema" }],
