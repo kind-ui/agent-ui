@@ -15,6 +15,7 @@ import { Loader } from "./components/ui/loader.js";
 import { Markdown } from "./components/ui/markdown.js";
 import { MarkdownTable } from "./components/ui/markdown-table.js";
 import { Message, MessageContent, MessageCopy, MessageToolbar } from "./components/ui/message.js";
+import { Status } from "./components/ui/status.js";
 import { Step, StepContent, StepIcon, StepTitle, StepTrigger } from "./components/ui/step.js";
 import { StreamingText } from "./components/ui/streaming-text.js";
 import { ThinkingIndicator } from "./components/ui/thinking-indicator.js";
@@ -34,6 +35,7 @@ const items = {
       </StepContent>
     </Step>
   ),
+  status: <Status status="running" />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
       <ConversationViewport>

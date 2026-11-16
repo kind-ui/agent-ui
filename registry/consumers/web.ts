@@ -8,6 +8,7 @@ import { defineLoader } from "./components/ui/web/loader.js";
 import { defineMarkdown } from "./components/ui/web/markdown.js";
 import { defineMarkdownTable } from "./components/ui/web/markdown-table.js";
 import { defineMessage } from "./components/ui/web/message.js";
+import { defineStatus } from "./components/ui/web/status.js";
 import { defineStep } from "./components/ui/web/step.js";
 import { defineStreamingText } from "./components/ui/web/streaming-text.js";
 import { defineThinkingIndicator } from "./components/ui/web/thinking-indicator.js";
@@ -17,6 +18,7 @@ import "./index.css";
 
 for (const define of [
   defineStep,
+  defineStatus,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -39,6 +41,7 @@ const items = {
       <kind-step-trigger><button><kind-step-icon></kind-step-icon><kind-step-title>Read the logs</kind-step-title></button></kind-step-trigger>
       <kind-step-content><p>Three timeouts.</p></kind-step-content>
     </kind-step>`,
+  status: `<kind-status status="running"></kind-status>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>
