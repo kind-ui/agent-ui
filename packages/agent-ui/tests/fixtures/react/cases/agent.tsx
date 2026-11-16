@@ -1,4 +1,4 @@
-import type { QueueItem } from "@kind-ui/agent-ui";
+import type { Answers, QueueItem } from "@kind-ui/agent-ui";
 import type { AttachmentItem, UploadItem } from "@kind-ui/agent-ui/core";
 import type { AgentAction } from "@ui-sdk/react/agent";
 import { useEffect, useState } from "react";
@@ -334,6 +334,7 @@ function Foundation() {
 const rateLimited = notices.find((notice) => notice.id === "warning") as NoticeData;
 
 function HumanInput({ confirm }: { confirm: boolean }) {
+  const [submitted, setSubmitted] = useState<Answers>();
   const [shown, setShown] = useState({ notice: true, guardrail: true });
   const remove = (part: keyof typeof shown) => () => {
     host.calls.push("dismiss");
@@ -365,8 +366,17 @@ function HumanInput({ confirm }: { confirm: boolean }) {
           questions={deployQuestions}
           agentConfirm={confirm}
           onValueChange={(_value, details) => host.change("question", details)}
-          onSubmit={host.decide("submit")}
-          onSkip={host.decide("skip")}
+          submitted={submitted}
+          onSubmit={(answers, details) =>
+            host
+              .decide("submit")(answers, details)
+              .then(() => setSubmitted(answers))
+          }
+          onSkip={(answers, details) =>
+            host
+              .decide("skip")(answers, details)
+              .then(() => setSubmitted({}))
+          }
         />
       </section>
       <section data-case="checkpoint">

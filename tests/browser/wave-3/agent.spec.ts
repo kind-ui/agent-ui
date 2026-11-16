@@ -308,6 +308,7 @@ test("Step-based parts take their colors at once as the page loads", async ({ pa
       "transitionrun",
       ({ target, propertyName }) => {
         if (
+          propertyName.includes("color") &&
           target instanceof Element &&
           target.closest('[data-step-part="root"]') &&
           target.checkVisibility()

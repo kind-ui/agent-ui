@@ -316,11 +316,29 @@ function wireHumanInput(wave: Element) {
   const question = element("kind-question");
   question.questions = deployQuestions;
   question.addEventListener("valuechange", (event) => recordChange("question", event));
-  question.addEventListener("questionsubmit", decide("submit"));
-  question.addEventListener("skip", decide("skip"));
+  question.addEventListener("questionsubmit", (event) =>
+    event.detail.waitUntil(
+      host
+        .decide("submit")(event.detail)
+        .then(() => {
+          question.submitted = event.detail.value;
+        }),
+    ),
+  );
+  question.addEventListener("skip", (event) =>
+    event.detail.waitUntil(
+      host
+        .decide("skip")(event.detail)
+        .then(() => {
+          question.submitted = {};
+        }),
+    ),
+  );
   const checkpoint = element("kind-checkpoint");
   checkpoint.addEventListener("openchange", (event) => recordChange("checkpoint", event));
-  checkpoint.addEventListener("restore", decide("restore"));
+  checkpoint.addEventListener("restore", (event) =>
+    event.detail.waitUntil(host.decide("restore")(event.detail.value)),
+  );
   confirmable.push(question, checkpoint);
   const model = Object.assign(document.createElement("kind-model-selector"), {
     id: "model",
