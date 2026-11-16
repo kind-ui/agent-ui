@@ -11,6 +11,7 @@ function Page({ motion }: { motion?: MotionMode }) {
   const [status, setStatus] = useState<GeneratedImageStatus>("generating");
   const [progress, setProgress] = useState<number | undefined>(40);
   const [src, setSrc] = useState<string>();
+  const [previewUrl, setPreviewUrl] = useState<string | undefined>(preview);
   useEffect(() => {
     Object.assign(window, {
       kindHost: {
@@ -18,6 +19,7 @@ function Page({ motion }: { motion?: MotionMode }) {
         resolve: () => recorded.settle?.resolve(),
         reject: () => recorded.settle?.reject(),
         progress: setProgress,
+        preview: (show: boolean) => setPreviewUrl(show ? preview : undefined),
         ready: (url: string) => {
           setSrc(url);
           setStatus("ready");
@@ -35,7 +37,7 @@ function Page({ motion }: { motion?: MotionMode }) {
         alt="A lighthouse at night"
         status={status}
         progress={progress}
-        preview={preview}
+        preview={previewUrl}
         src={src}
         {...size}
         motion={motion}

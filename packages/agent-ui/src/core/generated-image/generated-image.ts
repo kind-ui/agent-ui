@@ -47,9 +47,12 @@ export type GeneratedImageOptions = {
    * @default "ready"
    */
   status?: GeneratedImageStatus;
-  /** How far generation has come, from 0 to 100. Without it, the bar shows that work is under way. */
+  /**
+   * How far generation has come, from 0 to 100. The preview sharpens and the grain thins as it rises, and the corner
+   * reads it, like "Creating image · 42%". Without it, both stay where they start and the corner reads "Creating image".
+   */
   progress?: number;
-  /** A partial image's URL while generating. It shows blurred until the image loads. */
+  /** A partial image's URL while generating. It shows blurred, sharpening with `progress`, until the image loads. */
   preview?: string;
   /**
    * The image's width in pixels. With `height`, it gives the frame its shape in every phase, so nothing moves when
@@ -80,8 +83,9 @@ export type GeneratedImageOptions = {
   /** Called when the full size view opens or closes, with what caused it. */
   onOpenChange?: (open: boolean, details: ChangeDetails<DialogOpenChangeReason>) => void;
   /**
-   * At full motion the placeholder shimmers, the image fades in and the full size view rises in. Reduced motion only
-   * fades, in 120 ms, with no shimmer. `"auto"` follows `prefers-reduced-motion`.
+   * At full motion the placeholder drifts and its grain flickers, the image settles in over it and the
+   * full size view rises in. Reduced motion holds the placeholder still and only fades, in 120 ms. `"auto"` follows
+   * `prefers-reduced-motion`.
    * @default "auto"
    */
   motion?: MotionMode;
@@ -142,7 +146,7 @@ type Slot<
 export type GeneratedImageProgressState = {
   /** Pass it to the Progress as its `value`: null while how far is unknown. */
   value: number | null;
-  /** The Progress's label: "Generating image", or "Loading image" once the host is ready. */
+  /** The Progress's label: "Creating image", or "Loading image" once the host is ready. */
   label: string;
 };
 
@@ -297,7 +301,7 @@ export const generatedImagePrimitive: GeneratedImagePrimitive = definePrimitive<
       },
       progressState: (state) =>
         state.phase === "generating"
-          ? { value: state.progress ?? null, label: "Generating image" }
+          ? { value: state.progress ?? null, label: "Creating image" }
           : { value: null, label: "Loading image" },
       errorMessage: (state) =>
         state.error ??
@@ -324,6 +328,10 @@ export const generatedImagePrimitive: GeneratedImagePrimitive = definePrimitive<
           style: css({
             "aspect-ratio": `${state.width} / ${state.height}`,
             "--kind-generated-image-width": `${state.width}px`,
+            // How resolved the preview looks, from 0 to 1: generation's progress, then whole once the host is ready.
+            "--kind-generated-image-resolve": String(
+              state.phase === "generating" ? (state.progress ?? 0) / 100 : 1,
+            ),
           }),
         }),
       }),

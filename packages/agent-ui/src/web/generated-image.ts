@@ -30,8 +30,6 @@ const DEFAULT_PARTS = `
 
 const PROGRESS_PARTS = `<ui-progress><ui-progress-label></ui-progress-label><ui-progress-value></ui-progress-value><ui-progress-track><ui-progress-indicator></ui-progress-indicator></ui-progress-track></ui-progress>`;
 
-const ERROR_PARTS = `<span data-status-mark data-status="error"></span><span></span>`;
-
 // Parts this element wrote into. A part someone wrote into keeps what they wrote, as React's children do. Kept across
 // instances, because UI SDK rebuilds one when the element returns to the page.
 const owned = new WeakSet<Element>();
@@ -55,9 +53,7 @@ const drawProgress = (part: Element | null, { value, label }: { value: number | 
 };
 
 const drawError = (part: Element | null, message: string) => {
-  if (!owns(part)) return;
-  if (!part.firstChild) part.innerHTML = ERROR_PARTS;
-  text(part.lastElementChild, message);
+  if (owns(part)) text(part, message);
 };
 
 /**
