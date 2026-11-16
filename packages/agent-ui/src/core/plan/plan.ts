@@ -97,7 +97,8 @@ export const planPrimitive: PlanPrimitive = definePrimitive<PlanOptions, PlanSta
       const settle = () => {
         if (!destroyed) store.set({ pending: false });
       };
-      Promise.resolve(onAccept()).then(settle, settle);
+      // A host that throws gets Accept back, as one that rejects does.
+      new Promise((resolve) => resolve(onAccept())).then(settle, settle);
     };
     return {
       ...list.api(context),

@@ -13,14 +13,28 @@ type TaskItem = TaskState["items"][number];
 const DEFAULT_PARTS = `<kind-task-trigger><button><kind-task-icon></kind-task-icon><kind-task-title></kind-task-title><kind-task-meta></kind-task-meta></button></kind-task-trigger><kind-task-content><kind-task-list></kind-task-list></kind-task-content>`;
 const ITEM_PARTS = `<kind-task-item-icon></kind-task-item-icon><kind-task-item-title></kind-task-item-title><kind-task-item-files></kind-task-item-files>`;
 
-// Parts this element wrote text into. A part someone wrote text into keeps it. Kept across instances, because UI
-// SDK rebuilds one when the element returns to the page.
+// Parts this element wrote text into, and items it added. A part someone wrote text into keeps it, and an item
+// someone wrote stays, as React's children do. Kept across instances, because UI SDK rebuilds one when the element
+// returns to the page.
 const owned = new WeakSet<Element>();
 
 const fill = (part: Element | null, text: string) => {
   if (!part || !(owned.has(part) || !part.textContent)) return;
   owned.add(part);
   if (part.textContent !== text) part.textContent = text;
+};
+
+const fillFiles = (part: Element | null, files: string[]) => {
+  if (!part || !(owned.has(part) || !part.firstChild)) return;
+  owned.add(part);
+  if ([...part.children].map((file) => file.textContent).join("\n") === files.join("\n")) return;
+  part.replaceChildren(
+    ...files.map((name) => {
+      const code = part.ownerDocument.createElement("code");
+      code.textContent = name;
+      return code;
+    }),
+  );
 };
 
 type Movable = Element & { moveBefore?: (node: Node, child: Node | null) => void };
@@ -31,26 +45,45 @@ function move(list: Movable, item: Element, before: Element | null): void {
   else list.insertBefore(item, before);
 }
 
-function fillItem(el: Element, item: TaskItem): void {
-  if (!el.firstElementChild) el.innerHTML = ITEM_PARTS;
-  const title = el.querySelector("kind-task-item-title");
-  if (title && title.textContent !== item.title) title.textContent = item.title;
-  const files = el.querySelector("kind-task-item-files");
-  const names = item.files ?? [];
-  if (files && [...files.children].map((file) => file.textContent).join("\n") !== names.join("\n")) {
-    files.replaceChildren(
-      ...names.map((name) => {
-        const code = document.createElement("code");
-        code.textContent = name;
-        return code;
-      }),
-    );
+/**
+ * Adds an item for each one the list lacks, in order, removes the items it added for ones that left or that a
+ * written item replaced, and fills in every item's parts.
+ */
+const drawItems = (list: Movable, items: TaskItem[]) => {
+  const children = new Map<string | null, Element>();
+  for (const child of [...list.children]) {
+    const value = child.getAttribute("value");
+    const earlier = children.get(value);
+    if (earlier && owned.has(child)) {
+      child.remove();
+      continue;
+    }
+    if (earlier && owned.has(earlier)) earlier.remove();
+    if (!earlier || owned.has(earlier)) children.set(value, child);
   }
-}
+  const ids = new Set<string | null>(items.map((item) => item.id));
+  for (const [id, child] of children) if (owned.has(child) && !ids.has(id)) child.remove();
+  let previous: Element | null = null;
+  for (const item of items) {
+    let child = children.get(item.id);
+    if (!child) {
+      child = list.ownerDocument.createElement("kind-task-item");
+      child.setAttribute("value", item.id);
+      owned.add(child);
+    }
+    const before: Element | null = previous ? previous.nextElementSibling : list.firstElementChild;
+    if (owned.has(child) && before !== child) move(list, child, before);
+    previous = child;
+    if (!child.firstElementChild) child.innerHTML = ITEM_PARTS;
+    fill(child.querySelector("kind-task-item-title"), item.title);
+    fillFiles(child.querySelector("kind-task-item-files"), item.files ?? []);
+  }
+};
 
 /**
  * `<kind-task label="…">` fills in its trigger and content when it has no children. Set `items` as a property: its
- * list gets a `kind-task-item` for each, with the item's mark, title and files, in order.
+ * list gets a `kind-task-item` for each item it lacks, in order, and every item's empty parts get the item's mark,
+ * title and files. Write a `<kind-task-item value="…">` to render an item yourself.
  */
 export function defineTask(): void {
   if (customElements.get("kind-task")) return;
@@ -66,31 +99,27 @@ export function defineTask(): void {
       api: ["isOpen", "setOpen", "expand", "collapse", "toggle", "getItems"],
       render: (el, instance) => {
         if (!el.firstElementChild) el.innerHTML = DEFAULT_PARTS;
-        const drawn = new WeakMap<Element, TaskItem>();
         const draw = () => {
           const { title, progress, items } = instance.get() as TaskState;
           fill(el.querySelector("kind-task-title"), title);
           fill(el.querySelector("kind-task-meta"), `${progress.done} of ${progress.total}`);
           const list = el.querySelector("kind-task-list");
-          if (!list) return;
-          const existing = new Map([...list.children].map((child) => [child.getAttribute("value"), child]));
-          items.forEach((item, index) => {
-            let child = existing.get(item.id);
-            existing.delete(item.id);
-            if (!child) {
-              child = document.createElement("kind-task-item");
-              child.setAttribute("value", item.id);
-            }
-            if (drawn.get(child) !== item) {
-              fillItem(child, item);
-              drawn.set(child, item);
-            }
-            if (list.children[index] !== child) move(list, child, list.children[index] ?? null);
-          });
-          for (const child of existing.values()) child.remove();
+          if (list) drawItems(list, items);
         };
         draw();
-        return instance.subscribe(draw);
+        const unsubscribe = instance.subscribe(draw);
+        // Parts and items written or removed after the element connects redraw it.
+        const arrivals = new MutationObserver((records) => {
+          const changed = records.some((record) =>
+            [...record.addedNodes, ...record.removedNodes].some((node) => node instanceof Element),
+          );
+          if (changed) draw();
+        });
+        arrivals.observe(el, { childList: true, subtree: true });
+        return () => {
+          unsubscribe();
+          arrivals.disconnect();
+        };
       },
     },
     trigger: { tag: "kind-task-trigger", target: wrappedButton, display: "contents" },

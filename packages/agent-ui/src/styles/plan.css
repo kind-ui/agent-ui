@@ -2,7 +2,8 @@
 @layer components {
   /* Aligned with the title: the trigger's 6px padding, the 16px mark and the 8px gap. */
   [data-step-part="progress"] {
-    padding: 0 6px 4px 30px;
+    padding-block: 0 4px;
+    padding-inline: 30px 6px;
 
     & [data-slot="progress"] {
       display: flex;
@@ -10,8 +11,11 @@
       gap: 8px;
     }
 
+    /* Room for "99 of 99 steps", so the track doesn't narrow when a count gains a digit. */
     & [data-slot="progress-label"] {
       order: 1;
+      min-inline-size: 13ch;
+      text-align: end;
       flex-shrink: 0;
       font-size: 0.75rem;
       line-height: 1rem;
@@ -58,7 +62,8 @@
 
   [data-step-part="accept"] {
     align-self: flex-start;
-    margin: 4px 0 2px 30px;
+    margin-block: 4px 2px;
+    margin-inline-start: 30px;
     border-radius: calc(var(--kind-radius) / 2);
     padding: 4px 10px;
     font-size: 0.8125rem;
@@ -70,7 +75,7 @@
       background-color var(--kind-duration-fast),
       opacity var(--kind-duration-fast);
 
-    &:hover {
+    &:hover:not([aria-disabled="true"]) {
       background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-fg));
     }
     &:focus-visible {

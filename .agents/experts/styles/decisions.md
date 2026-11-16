@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `4286722` (Wave 2 Task 5 Chain of Thought)
+Last reviewed: `HEAD_SHA` (Wave 2 Task 6 Task and Plan)
 
 ## Settled
 
@@ -17,6 +17,8 @@ Last reviewed: `4286722` (Wave 2 Task 5 Chain of Thought)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Task and Plan selectors reach 3–4 attributes** (completed fill, held-still title, item status → title); consumer utilities and unlayered CSS still win by layer order. Wrap the context halves in `:where()` if a consumer writing in `@layer components` hits it.
+- **`plan.spec.ts` doesn't check the progress fill's motion;** checked by hand: `width` over 280 ms at full motion, none under reduced motion and `motion="reduced"`.
 - **Uploader rows leave without an exit animation,** and the rows after them jump up (same gap as attachment chips). Not cheap: the host removes the item, so an exit needs the primitive to keep leaving items in state (changing `items` and the agent snapshot) or a post-render hook for `layout`. Decided in spec §6 "Removed items" (leaving rows, `core/leaving.ts`); Wave 2 Task 9 builds it.
 - **`field-sizing: content` on the message editor grows only in Chromium;** elsewhere it keeps its 2.5rem minimum.
 - **Removed chips leave without an exit animation,** and the chips after them jump into place.
@@ -24,6 +26,7 @@ Last reviewed: `4286722` (Wave 2 Task 5 Chain of Thought)
 
 ## Resolved
 
+- **Plan (Wave 2 Task 6):** the progress bar and Accept use logical offsets, so they line up with the title in right-to-left text (tested); a pending Accept doesn't darken on hover; the progress label reserves `13ch`, so the track doesn't narrow when a count gains a digit.
 - **Chain of Thought (Wave 2 Task 5):** the step line's ends follow `0.5lh`, so it stays 2px clear of both marks at any font size; the held-still summary title is `:where()`-scoped to two attributes.
 - **The needs-input dot sat half a pixel low-right, and the running arc missed its track (Wave 2 Task 3).** Chrome draws the 1.5px ring at 1px, so `inset: 3.5px` and `inset: -1.5px` landed off by half a pixel. Fixed: a 1px ring, a 6px dot centered with `margin: auto`, and an opaque track; `status.spec.ts` measures both at 1x and 2x.
 - **The status mark scaled its glyph under reduced motion, and only Step could draw it (Wave 2 Task 1).** Fixed: `status-mark.css` draws any `[data-status-mark]`, fades the fill and glyph over `--kind-duration-reduced` with no scale under reduced motion, and transitions nothing under `motion="none"`.

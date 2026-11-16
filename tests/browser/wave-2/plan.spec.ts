@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Fixture = {
   kindItems: { setStatus(id: string, status: string): void };
@@ -110,3 +111,31 @@ for (const colorScheme of ["light", "dark"] as const) {
     expect(violations).toEqual([]);
   });
 }
+
+test("the progress bar and Accept line up with the title in right-to-left text", async ({ page }) => {
+  await open(page);
+  await plan(page).evaluate((el) => el.setAttribute("dir", "rtl"));
+  const edges = await plan(page).evaluate((el) => {
+    const right = (selector: string) => el.querySelector(selector)?.getBoundingClientRect().right ?? 0;
+    return {
+      title: right('[data-slot="kind-plan-title"]'),
+      track: right('[data-slot="progress-track"]'),
+      accept: right('[data-slot="kind-plan-accept"]'),
+    };
+  });
+  expect(edges.track).toBeCloseTo(edges.title, 0);
+  expect(edges.accept).toBeCloseTo(edges.title, 0);
+});
+
+test("kind-plan keeps what someone wrote in its progress part", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await open(page);
+  await page.evaluate(() => {
+    const el = document.createElement("kind-plan");
+    el.id = "custom";
+    el.innerHTML = "<kind-plan-progress>Custom progress</kind-plan-progress>";
+    document.getElementById("root")?.append(el);
+    Object.assign(el, { items: [{ id: "a", status: "complete", title: "Alpha" }] });
+  });
+  await expect(page.locator("#custom kind-plan-progress")).toHaveText("Custom progress");
+});

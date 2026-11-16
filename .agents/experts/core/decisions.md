@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `4286722` (Wave 2 Task 5 Chain of Thought)
+Last reviewed: `HEAD_SHA` (Wave 2 Task 6 Task and Plan)
 
 ## Settled
 
@@ -20,6 +20,8 @@ Last reviewed: `4286722` (Wave 2 Task 5 Chain of Thought)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A plan swapped while Accept is pending keeps the lock** until the old promise settles (Wave 2 Task 6). Clearing it on a new `onAccept` can't key on identity, since React passes a new inline function each render; same open spec §4.1 question as the composer's pending lock.
+- **Task and Plan's `known` set never forgets ids,** so an item removed and re-added under the same id gets no entrance (same as the uploader's `mounted`).
 - **Tool re-serializes its input on every options update** (`toolCode` per streamed chunk). Unmeasured on large inputs; memoize by value if it shows up.
 - **"Decision not sent" isn't announced:** `requested` → `submitting` → `submit-failed` stays `awaiting-input`, so the status doesn't change. Confirmation (Wave 3) owns the decision and its error.
 - **`ComposerApi.setValue` with the draft's own text still fires `onValueChange`** with a new draft object and returns `true`; nothing changes on screen.
@@ -37,6 +39,7 @@ Last reviewed: `4286722` (Wave 2 Task 5 Chain of Thought)
 
 ## Resolved
 
+- **Task and Plan (Wave 2 Task 6):** an `onAccept` that throws gives Accept back, as a rejection does; a web task or plan given its items after connecting doesn't announce the status they add up to in the first frame; `ListItem` is no longer exported from the core entry.
 - **Chain of Thought review (Wave 2 Task 5):** agents now see the steps as `agent.items` (id and title, `closed: true`), so `expandStep` takes a title; steps and the chain ending in one update are announced once, joined, since a polite `announce` replaces one still waiting; steps set in the first frame aren't announced; auto open reads a controlled `openSteps` from `synced`; an empty title isn't announced; `setStepOpen` refuses an unknown id.
 - **A denied tool call was announced as "cancelled" (Wave 2 Task 4).** Fixed: Tool's `announcement` says "<name> denied" when `outcome` is `denied` (spec §4.1).
 - **Tool offered `copyInput` with no input (Wave 2 Task 4).** Fixed: it's a getter, `undefined` while the input is empty, and the input copy button is present only with input.

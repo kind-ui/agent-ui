@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Item = { id: string; status: string; title: string; files?: string[] };
 
@@ -85,6 +86,22 @@ test("an item's completion is announced once, and the task's with it", async ({ 
     .toEqual(["Write the migration complete", "Run the tests complete. Migrating the users table complete"]);
 });
 
+test("only an item that arrives after the first frame plays its entrance", async ({ page }) => {
+  await open(page);
+  await page.evaluate(() =>
+    (window as unknown as Fixture).kindItems.append({
+      id: "docs",
+      status: "pending",
+      title: "Update the docs",
+    }),
+  );
+  await expect(item(page, "Update the docs")).toBeVisible();
+  const animated = await task(page)
+    .getByRole("listitem")
+    .evaluateAll((items) => items.map((el) => el.getAnimations().length > 0));
+  expect(animated).toEqual([false, false, false, true]);
+});
+
 test("a status change doesn't move the rows", async ({ page }) => {
   await open(page);
   const boxes = () =>
@@ -141,3 +158,54 @@ for (const colorScheme of ["light", "dark"] as const) {
     expect(violations).toEqual([]);
   });
 }
+
+test("kind-task given its items after it connects announces nothing", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await open(page);
+  await page.evaluate(() => {
+    const late = document.createElement("kind-task");
+    late.setAttribute("label", "Late task");
+    document.getElementById("root")?.append(late);
+    Object.assign(late, { items: [{ id: "a", status: "complete", title: "Done already" }] });
+  });
+  await expect(page.locator("kind-task[label='Late task']")).toHaveAttribute("data-status", "complete");
+  await page.evaluate(
+    () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+  );
+  expect(await announced(page)).toEqual([]);
+});
+
+test("kind-task keeps the items someone wrote, and fills a list written late", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await open(page);
+  const written = page.locator("#written");
+  await page.evaluate(() => {
+    const el = document.createElement("kind-task");
+    el.id = "written";
+    el.innerHTML =
+      "<kind-task-trigger><button><kind-task-title></kind-task-title></button></kind-task-trigger>" +
+      '<kind-task-content><kind-task-list><kind-task-item value="a"><kind-task-item-title>Custom alpha</kind-task-item-title></kind-task-item></kind-task-list></kind-task-content>';
+    document.getElementById("root")?.append(el);
+    Object.assign(el, {
+      open: true,
+      items: [
+        { id: "a", status: "complete", title: "Alpha" },
+        { id: "b", status: "running", title: "Beta" },
+      ],
+    });
+  });
+  await expect(written.getByRole("listitem")).toHaveText(["Custom alpha", "Beta"]);
+  await page.evaluate(() => {
+    const el = document.createElement("kind-task");
+    el.id = "late-list";
+    el.innerHTML =
+      "<kind-task-trigger><button><kind-task-title></kind-task-title></button></kind-task-trigger>";
+    document.getElementById("root")?.append(el);
+    Object.assign(el, { open: true, items: [{ id: "a", status: "running", title: "Alpha" }] });
+    el.insertAdjacentHTML(
+      "beforeend",
+      "<kind-task-content><kind-task-list></kind-task-list></kind-task-content>",
+    );
+  });
+  await expect(page.locator("#late-list").getByRole("listitem")).toHaveText(["Alpha"]);
+});

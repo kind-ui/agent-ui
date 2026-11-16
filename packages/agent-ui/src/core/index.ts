@@ -68,7 +68,6 @@ export {
   type ItemProgress,
   itemProgress,
   itemsStatus,
-  type ListItem,
 } from "./item-list.js";
 export { dropRow, type LeavingRow, mergeLeaving } from "./leaving.js";
 export { createListFocus, type ListFocus } from "./list-focus.js";

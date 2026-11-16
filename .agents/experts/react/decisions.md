@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `4286722` (Wave 2 Task 5 Chain of Thought)
+Last reviewed: `HEAD_SHA` (Wave 2 Task 6 Task and Plan)
 
 ## Settled
 
@@ -14,6 +14,7 @@ Last reviewed: `4286722` (Wave 2 Task 5 Chain of Thought)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Task and Plan: a host `items` update renders every item's parts (Wave 2 Task 6),** 514 renders for one status change among 100 plan items, as Chain of Thought's steps do. Same upstream report to UI SDK; per item update, not per token.
 - **Every tool's copy buttons and code blocks share labels** ("Copy input", "Input"), so agent refs by label are ambiguous across tools; the group around them is named by the tool. Same class as Markdown's "Code" / "Table".
 - **React hosts must memo Conversation rows** for a streamed token to render one row; the fixture does. The Conversation docs page (Wave 1 docs) should say so.
 - **Streaming Text renders twice per `text` change,** like Markdown: `text` reaches state through `onOptions`, a layout effect. Before paint.
@@ -33,6 +34,7 @@ Last reviewed: `4286722` (Wave 2 Task 5 Chain of Thought)
 
 ## Resolved
 
+- **Task and Plan (Wave 2 Task 6):** `TaskItemFiles` keys files by place, so a file listed twice renders; the entrance of an item appended after the first frame is tested; the Plan fixture's sibling plans keep their `items` arrays.
 - **Chain of Thought (Wave 2 Task 5):** `onOpenStepsChange` (auto and pressed) and find in page's revealed text are now tested.
 - **Code Block re-rendered its scroll area on every streamed chunk (Wave 2 Task 4).** Fixed: the scroll content is one shared element tree; a streamed tool input renders 25 components, not 31.
 - **The Tool fixture's `set` (host `status`, `label`) and output copy had no spec (Wave 2 Task 4).** Fixed: `tool.spec.ts` covers them.

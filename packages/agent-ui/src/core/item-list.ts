@@ -140,7 +140,7 @@ export const itemList = <
       let prevItems = store.get().items;
       let prevStatus = store.get().status;
       // Web hosts can only set `items` once the element exists, so items in the first frame count as known: they
-      // don't play the entrance or announce.
+      // don't play the entrance, and neither they nor the status they add up to announce.
       let mounting = true;
       const known = new Set(prevItems.map((item) => item.id));
 
@@ -159,7 +159,7 @@ export const itemList = <
         const status = synced?.status ?? prevStatus;
         if (status !== prevStatus) {
           prevStatus = status;
-          const text = stepAnnouncement(status, options.label ?? defaultTitle);
+          const text = !mounting && stepAnnouncement(status, options.label ?? defaultTitle);
           if (text) texts.push(text);
         }
         // A polite announcement replaces one still waiting, so items that end with the list are read as one.

@@ -17,6 +17,9 @@ const initial: Item[] = [
   { id: "verify", status: "pending", title: "Verify the counts" },
 ];
 
+const quickItems = initial.slice(0, 2);
+const readonlyItems = initial.slice(0, 1);
+
 const accepts: { resolve(): void; reject(): void }[] = [];
 
 function Plans({ motion }: { motion?: PlanOptions["motion"] }) {
@@ -48,14 +51,8 @@ function Plans({ motion }: { motion?: PlanOptions["motion"] }) {
             : undefined
         }
       />
-      <Plan
-        id="quick"
-        label="Quick plan"
-        items={initial.slice(0, 2)}
-        agentConfirm={false}
-        onAccept={() => {}}
-      />
-      <Plan id="readonly" label="Read-only plan" items={initial.slice(0, 1)} />
+      <Plan id="quick" label="Quick plan" items={quickItems} agentConfirm={false} onAccept={() => {}} />
+      <Plan id="readonly" label="Read-only plan" items={readonlyItems} />
     </div>
   );
 }

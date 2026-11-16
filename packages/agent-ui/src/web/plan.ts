@@ -15,8 +15,9 @@ const DEFAULT_PARTS = `<kind-plan-trigger><button><kind-plan-icon></kind-plan-ic
 const PROGRESS_PARTS = `<ui-progress><ui-progress-label></ui-progress-label><ui-progress-track><ui-progress-indicator></ui-progress-indicator></ui-progress-track></ui-progress>`;
 const ITEM_PARTS = `<kind-plan-item-icon></kind-plan-item-icon><kind-plan-item-title></kind-plan-item-title><kind-plan-item-description></kind-plan-item-description>`;
 
-// Parts this element wrote text into. A part someone wrote text into keeps it. Kept across instances, because UI
-// SDK rebuilds one when the element returns to the page.
+// Parts this element wrote text into, and items it added. A part someone wrote text into keeps it, and an item
+// someone wrote stays, as React's children do. Kept across instances, because UI SDK rebuilds one when the element
+// returns to the page.
 const owned = new WeakSet<Element>();
 
 const fill = (part: Element | null, text: string) => {
@@ -33,19 +34,60 @@ function move(list: Movable, item: Element, before: Element | null): void {
   else list.insertBefore(item, before);
 }
 
-function fillItem(el: Element, item: PlanItem): void {
-  if (!el.firstElementChild) el.innerHTML = ITEM_PARTS;
-  const title = el.querySelector("kind-plan-item-title");
-  if (title && title.textContent !== item.title) title.textContent = item.title;
-  const description = el.querySelector("kind-plan-item-description");
-  const text = item.description ?? "";
-  if (description && description.textContent !== text) description.textContent = text;
-}
+/**
+ * Adds an item for each one the list lacks, in order, removes the items it added for ones that left or that a
+ * written item replaced, and fills in every item's parts.
+ */
+const drawItems = (list: Movable, items: PlanItem[]) => {
+  const children = new Map<string | null, Element>();
+  for (const child of [...list.children]) {
+    const value = child.getAttribute("value");
+    const earlier = children.get(value);
+    if (earlier && owned.has(child)) {
+      child.remove();
+      continue;
+    }
+    if (earlier && owned.has(earlier)) earlier.remove();
+    if (!earlier || owned.has(earlier)) children.set(value, child);
+  }
+  const ids = new Set<string | null>(items.map((item) => item.id));
+  for (const [id, child] of children) if (owned.has(child) && !ids.has(id)) child.remove();
+  let previous: Element | null = null;
+  for (const item of items) {
+    let child = children.get(item.id);
+    if (!child) {
+      child = list.ownerDocument.createElement("kind-plan-item");
+      child.setAttribute("value", item.id);
+      owned.add(child);
+    }
+    const before: Element | null = previous ? previous.nextElementSibling : list.firstElementChild;
+    if (owned.has(child) && before !== child) move(list, child, before);
+    previous = child;
+    if (!child.firstElementChild) child.innerHTML = ITEM_PARTS;
+    fill(child.querySelector("kind-plan-item-title"), item.title);
+    fill(child.querySelector("kind-plan-item-description"), item.description ?? "");
+  }
+};
+
+/** Fills an empty progress part with a UI SDK Progress, and keeps the one it wrote current. */
+const drawProgress = (part: Element | null, { done, total, percent }: PlanState["progress"]) => {
+  if (!part || !(owned.has(part) || !part.firstChild)) return;
+  if (!owned.has(part)) {
+    owned.add(part);
+    part.innerHTML = PROGRESS_PARTS;
+  }
+  const bar = part.querySelector("ui-progress") as (Element & { value: number | null }) | null;
+  if (bar && bar.value !== percent) bar.value = percent;
+  const label = part.querySelector("ui-progress-label");
+  const text = `${done} of ${total} ${total === 1 ? "step" : "steps"}`;
+  if (label && label.textContent !== text) label.textContent = text;
+};
 
 /**
  * `<kind-plan label="…">` fills in its trigger, progress bar, content and Accept button when it has no children,
  * and an empty `kind-plan-progress` with a UI SDK Progress. Set `items` as a property: its list gets a
- * `kind-plan-item` for each, with the item's mark, title and description, in order. The `can-accept` attribute
+ * `kind-plan-item` for each item it lacks, in order, and every item's empty parts get the item's mark, title and
+ * description. Write a `<kind-plan-item value="…">` to render an item yourself. The `can-accept` attribute
  * shows Accept, which fires `accept`: call `event.detail.waitUntil(promise)` to keep it pending.
  */
 export function definePlan(): void {
@@ -66,39 +108,28 @@ export function definePlan(): void {
       api: ["isOpen", "setOpen", "expand", "collapse", "toggle", "getItems"],
       render: (el, instance) => {
         if (!el.firstElementChild) el.innerHTML = DEFAULT_PARTS;
-        const drawn = new WeakMap<Element, PlanItem>();
         const draw = () => {
           const { title, progress, items } = instance.get() as PlanState;
           fill(el.querySelector("kind-plan-title"), title);
           fill(el.querySelector("kind-plan-meta"), `${progress.done} of ${progress.total}`);
-          const part = el.querySelector("kind-plan-progress");
-          if (part && !part.firstElementChild) part.innerHTML = PROGRESS_PARTS;
-          const bar = part?.querySelector("ui-progress") as (Element & { value: number | null }) | null;
-          if (bar && bar.value !== progress.percent) bar.value = progress.percent;
-          fill(
-            part?.querySelector("ui-progress-label") ?? null,
-            `${progress.done} of ${progress.total} ${progress.total === 1 ? "step" : "steps"}`,
-          );
+          drawProgress(el.querySelector("kind-plan-progress"), progress);
           const list = el.querySelector("kind-plan-list");
-          if (!list) return;
-          const existing = new Map([...list.children].map((child) => [child.getAttribute("value"), child]));
-          items.forEach((item, index) => {
-            let child = existing.get(item.id);
-            existing.delete(item.id);
-            if (!child) {
-              child = document.createElement("kind-plan-item");
-              child.setAttribute("value", item.id);
-            }
-            if (drawn.get(child) !== item) {
-              fillItem(child, item);
-              drawn.set(child, item);
-            }
-            if (list.children[index] !== child) move(list, child, list.children[index] ?? null);
-          });
-          for (const child of existing.values()) child.remove();
+          if (list) drawItems(list, items);
         };
         draw();
-        return instance.subscribe(draw);
+        const unsubscribe = instance.subscribe(draw);
+        // Parts and items written or removed after the element connects redraw it.
+        const arrivals = new MutationObserver((records) => {
+          const changed = records.some((record) =>
+            [...record.addedNodes, ...record.removedNodes].some((node) => node instanceof Element),
+          );
+          if (changed) draw();
+        });
+        arrivals.observe(el, { childList: true, subtree: true });
+        return () => {
+          unsubscribe();
+          arrivals.disconnect();
+        };
       },
     },
     trigger: { tag: "kind-plan-trigger", target: wrappedButton, display: "contents" },

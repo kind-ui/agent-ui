@@ -73,7 +73,8 @@ export type TaskItemFilesProps = ComponentProps<typeof parts.ItemFiles>;
 
 /** The item's `files`, each as code, unless you pass children. Rendered only while the item has files. */
 export function TaskItemFiles({
-  children = ({ files }) => files.map((file) => <code key={file}>{file}</code>),
+  // A step can touch one file twice, so files are keyed by place.
+  children = ({ files }) => files.map((file, index) => <code key={index}>{file}</code>),
   ...props
 }: TaskItemFilesProps) {
   return <parts.ItemFiles {...props}>{children}</parts.ItemFiles>;

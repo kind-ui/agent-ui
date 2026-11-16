@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `4286722` (Wave 2 Task 5 Chain of Thought)
+Last reviewed: `HEAD_SHA` (Wave 2 Task 6 Task and Plan)
 
 ## Settled
 
+- **`kind-task` and `kind-plan` look up their parts with `querySelector`,** not Chain of Thought's `own()`: no part of theirs holds arbitrary content, so no nested task or plan sits inside one.
 - **`notified` in `budgets.spec.ts` counts shown parts only** (hidden parts sync without `getAttribute`), at most the jump and empty parts, constant across list sizes. The `remount` fixture keeps the last unmounted tree until the next mount; leaks are measured while mounted.
 - **Theme defaults land on `:root, :host`** (Tailwind's `@theme` output), so inside a shadow root that loads the stylesheet a page's `:root` override doesn't reach; the README tells consumers to set `:host` there too. It also makes the stylesheet work when loaded only in a shadow root.
 - **`can-<action>` attributes stand for a callback's presence;** the root's `options` hook sets the callback to `undefined` while one is off. A listener can't be seen, and `@ui-sdk/web`'s proxy fills in a dispatcher for any callback key that's missing.
@@ -16,6 +17,8 @@ Last reviewed: `4286722` (Wave 2 Task 5 Chain of Thought)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **An empty `<kind-task>` or `<kind-plan>` inserts its parts on upgrade** (same class as `kind-chain-of-thought` and `kind-reasoning`), which can shift layout before the element is defined.
+- **Web Task and Plan play color transitions on first render** (progress fill, Accept, item titles) as `data-*` attributes land after the first style pass; Chain of Thought's marks do the same. Trace which upgrade step causes it.
 - **`kind-tool` draws twice for one `call` change** (the store subscription and one more notification). Harmless, since every write is guarded.
 - **`<kind-reasoning text="…">` shows nothing before upgrade,** then inserts its trigger and content, which shifts layout; same class as `kind-streaming-text` below. Writing the parts as children avoids it; undocumented.
 - **Indicators and `kind-uploader` fill in their parts when they connect with no children,** so a definition loaded before hand-written markup is parsed could double them (unconfirmed; `ui-calendar` does the same).
@@ -32,6 +35,7 @@ Last reviewed: `4286722` (Wave 2 Task 5 Chain of Thought)
 
 ## Resolved
 
+- **Task and Plan (Wave 2 Task 6):** the lists keep items someone wrote (and their text), and a written item replaces the one the element added, as Chain of Thought's do; parts and items written or removed after connecting redraw; a `kind-plan-progress` with text keeps it.
 - **Chain of Thought (Wave 2 Task 5):** `openSteps` is root state (`getOpenSteps` / `setOpenSteps`), so a moved element keeps its open steps; an item a host writes after its step replaces the one the element added; parts are looked up only in the element's own chain, so a chain nested in a step's content keeps its own; removing a written item redraws; the fixture listens for `openstepschange`.
 - **A hand-written `kind-tool` with empty input and output parts showed nothing (Wave 2 Task 4).** Fixed: the root fills an empty `kind-tool-input` or `kind-tool-output` with its heading, copy button and code block.
 - **Leaving out a code block's header needed internal markup in a JS string (Wave 2 Task 4).** Fixed: `<kind-code-block headerless>`, read when it fills in its parts, like React's `header={false}`.

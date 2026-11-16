@@ -58,3 +58,16 @@ test("accept is offered only with onAccept, and once while pending", async () =>
   assert.equal(typeof plan.api.accept, "function");
   assert.equal(plan.get().pending, false);
 });
+
+test("an onAccept that throws gives Accept back", async () => {
+  const plan = planPrimitive({
+    items: [],
+    onAccept: () => {
+      throw new Error("no");
+    },
+  });
+  plan.api.accept();
+  await new Promise((resolve) => setTimeout(resolve));
+  assert.equal(plan.get().pending, false);
+  assert.equal(typeof plan.api.accept, "function");
+});
