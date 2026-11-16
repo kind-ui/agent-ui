@@ -74,6 +74,16 @@ test("every component ships in both layers", () => {
   for (const { name } of react) assert.ok(names.includes(`${name}-web`), name);
 });
 
+test("every React render file is a client module", () => {
+  const files = catalog.items.flatMap((each) => (each.layer === "react" ? each.files : []));
+  for (const file of files.filter((path) => path.endsWith(".tsx"))) {
+    assert.ok(
+      readFileSync(new URL(`../../${file}`, import.meta.url), "utf8").startsWith('"use client";\n'),
+      file,
+    );
+  }
+});
+
 test("hidden items are marked in meta, and files keep their layer's folders", () => {
   const registry = toRegistry(catalog);
   const scrollArea = registry.items.find((each) => each.name === "internal-scroll-area-web");

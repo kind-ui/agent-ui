@@ -1,3 +1,5 @@
+"use client";
+
 import { type UploaderListState, uploaderPrimitive } from "@kind-ui/agent-ui/core";
 import { FileInput, FileInputDropzone, FileInputTrigger } from "@ui-sdk/react/file-input";
 import { createParts } from "@ui-sdk/react/primitive";

@@ -63,6 +63,8 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup
+      # The docs check opens built pages in Chromium.
+      - run: npx playwright install --with-deps chromium
       - run: npm run build:docs
 
   browser:

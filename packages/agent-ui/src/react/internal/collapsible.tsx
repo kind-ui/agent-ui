@@ -1,3 +1,5 @@
+"use client";
+
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@ui-sdk/react/collapsible";
 import { withKindClass } from "./kind-class.js";
 

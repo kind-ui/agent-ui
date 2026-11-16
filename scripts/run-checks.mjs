@@ -24,6 +24,7 @@ const stages = {
   "check:registry-consumers": ["node", "scripts/check-registry-consumers.mjs"],
   "dev:docs:run": ["npm", "run", "dev", "-w", "apps/docs"],
   "build:docs:run": ["npm", "run", "build", "-w", "apps/docs"],
+  "check:docs": ["node", "scripts/check-docs.mjs"],
 };
 
 const groups = {
@@ -41,10 +42,10 @@ const groups = {
   "check:size": ["build", "check:size:run"],
   // The docs render the registry's source files, which import the package's built core.
   "dev:docs": ["build", "dev:docs:run"],
-  "build:docs": ["build", "build:docs:run"],
+  "build:docs": ["build", "build:docs:run", "check:docs"],
   "check:fast": ["lint", "typecheck", "test:scripts", "test:unit"],
   "check:packed": ["check:package", "check:size", "build:registry", "check:registry-consumers"],
-  check: ["check:fast", "check:packed", "build:docs:run", "test:browser"],
+  check: ["check:fast", "check:packed", "build:docs:run", "check:docs", "test:browser"],
 };
 
 export function expand(name) {

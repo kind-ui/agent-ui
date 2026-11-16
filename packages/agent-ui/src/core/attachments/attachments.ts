@@ -38,6 +38,8 @@ export type AttachmentsOptions = {
   items?: readonly AttachmentItem[];
   /** Called with an item's `id` when someone removes it. While it's set, chips can be removed. */
   onRemove?: (id: string, details: ChangeDetails<"remove-press" | "imperative">) => void;
+  /** Where focus goes when a focused chip leaves and no chip is left to take it, like the composer's editor. */
+  focusFallback?: () => HTMLElement | null | undefined;
   /**
    * `"auto"` follows `prefers-reduced-motion`.
    * @default "auto"
@@ -121,7 +123,7 @@ const rowOf = (state: AttachmentsState, id: string) => state.rows.find((row) => 
 
 export const attachmentsPrimitive: AttachmentsPrimitive = definePrimitive({
   name: "kind-attachments",
-  options: { items: "value", onRemove: "callback", motion: "string" },
+  options: { items: "value", onRemove: "callback", focusFallback: "value", motion: "string" },
   state: (options: AttachmentsOptions): AttachmentsState => ({
     ...presentation(options),
     rows: (options.items ?? NO_ITEMS).map((item) => ({ item, leaving: false })),
@@ -150,7 +152,7 @@ export const attachmentsPrimitive: AttachmentsPrimitive = definePrimitive({
         const index = order.indexOf(lost.key);
         const items = roving.items();
         const at = (key: string | undefined) => items.find((item) => item.key === key);
-        return (at(order[index + 1]) ?? at(order[index - 1]))?.el;
+        return (at(order[index + 1]) ?? at(order[index - 1]))?.el ?? context.options().focusFallback?.();
       },
     });
 

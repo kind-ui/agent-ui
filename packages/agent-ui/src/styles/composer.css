@@ -50,7 +50,8 @@
         "input input input"
         "attach . send";
       align-items: center;
-      gap: 0.5rem;
+      /* Rows space themselves, so the attachments row takes no room while it's collapsed. */
+      column-gap: 0.5rem;
       padding: 0.75rem;
       border-radius: inherit;
     }
@@ -85,7 +86,11 @@
     grid-area: attachments;
   }
 
-  /* Shown while the last chip fades out. */
+  [data-slot="kind-composer-attachments"] [data-slot="kind-attachments"] {
+    padding-bottom: 0.5rem;
+  }
+
+  /* Shown while it collapses and the last chip fades out. */
   [data-slot="kind-composer-attachments"][data-empty]:where(:not(:has([data-leaving]))) {
     display: none;
   }
@@ -94,6 +99,7 @@
     display: block;
     grid-area: input;
     min-width: 0;
+    margin-bottom: 0.5rem;
   }
 
   [data-slot="kind-composer"] [data-slot="token-input-editor"] {

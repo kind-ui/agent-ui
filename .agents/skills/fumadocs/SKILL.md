@@ -27,7 +27,7 @@ description: Edits the agent-ui docs site in apps/docs (Fumadocs on Next.js, sta
 
 Copy `content/docs/components/step.mdx` and its example, and write the words with the [`write-docs`](../write-docs/SKILL.md) skill. The page is: frontmatter `title` and `description` → an opening paragraph → `<Example caption="…">` holding the live component and `<include cwd lang="tsx">` of the same file → `## Installation` (`bash tab="React"` and `tab="Web Components"` blocks) → `## Composition` when it has parts → `## Usage` → `## API Reference` → `### Agent` → a `<Caption>` with the "Runs in React and Web Components." line. Add the page to `components/meta.json`. `npm run test:scripts` checks the sections.
 
-- **Examples** are React only and start with `"use client"`: the render files call `createParts` from client-only UI SDK modules.
+- **Examples** are React only. The render files are client modules already, so an example starts with `"use client"` only when it holds state or handlers; the others stay server components.
 - **API tables** are `<auto-type-table path="…" name="…" />`, generated at build time from the core `<Name>Options`, and `type='Pick<NameApi, "action" | …>'` for the agent actions. `path` is relative to the MDX file. Write the docs as TSDoc on those types (`@default`, `@internal` to hide a field). A wrong `path` or `name` fails the build. `source.config.ts` spells out string unions and shows short types as written.
 - Web Components share the props: each is a kebab-case attribute and each callback a lowercase event, which the page's last line says.
 - Never name an `internal-` registry item on a page.

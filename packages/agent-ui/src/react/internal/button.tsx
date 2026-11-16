@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@ui-sdk/react/button";
 import { withKindClass } from "./kind-class.js";
 

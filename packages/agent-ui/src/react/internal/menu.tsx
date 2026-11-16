@@ -1,3 +1,5 @@
+"use client";
+
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@ui-sdk/react/menu";
 import { withKindClass } from "./kind-class.js";
 

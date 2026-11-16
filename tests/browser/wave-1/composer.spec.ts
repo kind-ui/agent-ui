@@ -183,6 +183,80 @@ test("Delete removes the focused attachment and focus moves to its neighbor", as
   await expect(items.first()).toBeFocused();
 });
 
+test("removing the last attachment with Delete leaves focus in the editor", async ({ page }) => {
+  const editor = await open(page);
+  await attach(editor, [{ name: "a.txt", size: 10, type: "text/plain" }], "paste");
+  const items = page.getByRole("list", { name: "Attachments" }).getByRole("listitem");
+  await items.first().focus();
+  await page.keyboard.press("Delete");
+  await expect(editor).toBeFocused();
+});
+
+/** Records the editor's top at every frame until `stop` returns the path. */
+const followEditor = async (page: Page) => {
+  await page.evaluate(() => {
+    const input = document.querySelector('[data-slot="kind-composer-input"]') as HTMLElement;
+    const path: { x: number; y: number }[] = [];
+    let following = true;
+    // Read after each frame paints, so a change made and undone within one frame doesn't count.
+    const record = () => {
+      if (!following) return;
+      path.push({ x: 0, y: input.getBoundingClientRect().y });
+      requestAnimationFrame(() => setTimeout(record));
+    };
+    record();
+    Object.assign(window, {
+      stopFollowing: () => {
+        following = false;
+        return path;
+      },
+    });
+  });
+  return {
+    stop: async () => {
+      await settled(page);
+      return page.evaluate(() =>
+        (window as unknown as { stopFollowing(): { x: number; y: number }[] }).stopFollowing(),
+      );
+    },
+  };
+};
+
+const attachThenRemove = async (page: Page, query: string) => {
+  const editor = await open(page, query);
+  const items = page.getByRole("list", { name: "Attachments" }).getByRole("listitem");
+  const opening = await followEditor(page);
+  await attach(editor, [{ name: "a.txt", size: 10, type: "text/plain" }], "paste");
+  await expect(items).toHaveCount(1);
+  const opened = await opening.stop();
+  await items.first().focus();
+  const closing = await followEditor(page);
+  await page.keyboard.press("Delete");
+  await expect(page.locator('[data-slot="kind-attachments-item"]')).toHaveCount(0);
+  return { opened, closed: await closing.stop() };
+};
+
+test("the attachments area expands for the first chip and collapses after the last, so the editor slides", async ({
+  page,
+}) => {
+  const { opened, closed } = await attachThenRemove(page, "case=full");
+  for (const path of [opened, closed]) {
+    const { total, largestStep } = travel(path);
+    expect(total).toBeGreaterThan(40);
+    expect(largestStep).toBeLessThan(total / 2);
+  }
+  expect(closed.at(-1)?.y).toBeCloseTo(opened[0]?.y ?? Number.NaN, 0);
+});
+
+test('with motion="none" the attachments area opens and closes at once', async ({ page }) => {
+  const { opened, closed } = await attachThenRemove(page, "case=full&motion=none");
+  for (const path of [opened, closed]) {
+    const { total, largestStep } = travel(path);
+    expect(total).toBeGreaterThan(40);
+    expect(largestStep).toBe(total);
+  }
+});
+
 test("Stop takes Send's place only while pending, and only with onStop", async ({ page }) => {
   let editor = await open(page);
   await editor.click();

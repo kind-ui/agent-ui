@@ -23,7 +23,6 @@ Last reviewed: `8b38a4c` (Wave 3 Task 1 groundwork)
 
 ## Known and open (don't report again, check whether fixed)
 
-- **Removing the last chip from a composer leaves focus on `<body>`:** the attachments' focus recovery has no neighbor, and the composer gives it no fallback (the editor). Same before Wave 2 Task 9.
 - **A double press on a Queue item's remove control calls `onRemove` twice** when the host removes the item asynchronously; there's no per-item lock like the uploader's.
 - **Queue's `known` set never forgets ids,** so an item removed and re-added under the same id after its exit gets no entrance (same as Task and Plan).
 - **A plan swapped while Accept is pending keeps the lock** until the old promise settles (Wave 2 Task 6). Clearing it on a new `onAccept` can't key on identity, since React passes a new inline function each render; same open spec §4.1 question as the composer's pending lock.
@@ -45,6 +44,7 @@ Last reviewed: `8b38a4c` (Wave 3 Task 1 groundwork)
 
 ## Resolved
 
+- **Removing the last chip from a composer left focus on `<body>` (Wave 3 Task 2).** Fixed: Attachments takes a `focusFallback` option for when no chip is left to take focus, and the composer passes its editor (tested in `composer.spec.ts`, both layers).
 - **Wave 2 agent conformance (Task 10):** the generic `initials` export is now `avatarInitials`; a Queue item's remove badge removes it on click (the item's reorder used to capture the pointer and take the click; tested).
 
 - **Exits (Wave 2 Task 9):** a leaving row with no element to play its exit (Attachments children rendered from `items`, a headless instance) is dropped at once, so it never leaks its object URL, entrance memory or the uploader list's `data-empty`; `AttachmentsRootState` and `UploaderListState` have JSDoc; the uploader's slide watches its list, not the whole root.

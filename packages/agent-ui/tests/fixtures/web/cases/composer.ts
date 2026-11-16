@@ -50,6 +50,7 @@ function full(root: HTMLElement, submitOn: "enter" | "mod-enter") {
   const composer = root.querySelector("kind-composer") as KindComposerElement;
   const { onSubmit, onStop } = recorder();
   Object.assign(composer, { mentions, commands, history, canStop: params.has("stop") });
+  if (params.has("motion")) composer.setAttribute("motion", params.get("motion") as string);
   composer.addEventListener("stop", onStop);
   composer.addEventListener("composersubmit", ({ detail }) => detail.waitUntil(onSubmit(detail.value)));
   composer.addEventListener("valuechange", (event) => {

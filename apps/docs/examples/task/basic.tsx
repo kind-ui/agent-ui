@@ -1,4 +1,3 @@
-"use client";
 import { Task } from "@/components/ui/task";
 
 export default function TaskExample() {
