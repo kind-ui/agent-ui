@@ -5,9 +5,9 @@ description: Show an image the agent is making, from its progress and a blurred 
 
 import GeneratedImageExample from "@/examples/generated-image/basic";
 
-Use a generated image when the agent makes a picture and you want to show it arriving in the conversation. It holds a frame of the image's shape the whole time, so the conversation never jumps: first the progress and a blurred preview, then the image, or what went wrong.
+Use a generated image when the agent makes a picture and you want to show it arriving in the conversation. It holds a frame of the image's shape the whole time, so the conversation never jumps: grain over a drifting field, then over a blurred preview that sharpens as it progresses, then the image dissolving in, or what went wrong.
 
-<Example caption="Watch the progress fill and the preview sharpen into the image. Press the image, or focus it and press Enter, to view it full size, and Escape to close it. Press Generate again to start over.">
+<Example caption="Watch the grain thin and the preview sharpen until the image dissolves in. Press the image, or focus it and press Enter, to view it full size, and Escape to close it. Press Replay to watch it again.">
   <GeneratedImageExample />
 
   <include cwd lang="tsx">./examples/generated-image/basic.tsx</include>
@@ -42,7 +42,7 @@ GeneratedImage
     └── GeneratedImageClose
 ```
 
-`GeneratedImage` is a figure named by its `alt`. `GeneratedImageFrame` takes the image's shape and holds the rest: `GeneratedImagePreview` is the blurred `preview`, `GeneratedImageImage` the image at `src`, `GeneratedImageProgress` a UI SDK Progress while the image is on its way, and `GeneratedImageError` what went wrong. `GeneratedImageTrigger` covers the loaded image as **View full size**, and `GeneratedImageDownload` sits in its corner. `GeneratedImageDialog` shows `GeneratedImageFullImage` with the `alt` as its `GeneratedImageTitle`, **Download** and **Close**, over `GeneratedImageBackdrop`. To arrange the parts yourself, pass them as children of `GeneratedImage`.
+`GeneratedImage` is a figure named by its `alt`. `GeneratedImageFrame` takes the image's shape and holds the rest: `GeneratedImagePreview` is the blurred `preview`, `GeneratedImageImage` the image at `src`, `GeneratedImageProgress` a UI SDK Progress, read as a quiet label in the corner while the image is on its way, and `GeneratedImageError` what went wrong. `GeneratedImageTrigger` covers the loaded image as **View full size**, and `GeneratedImageDownload` sits in its corner. `GeneratedImageDialog` shows `GeneratedImageFullImage` with the `alt` as its `GeneratedImageTitle`, **Download** and **Close**, over `GeneratedImageBackdrop`. To arrange the parts yourself, pass them as children of `GeneratedImage`.
 
 ## Usage
 
@@ -50,9 +50,9 @@ GeneratedImage
 
 Pass `width` and `height`, the image's size in pixels. The frame takes their shape before anything arrives and keeps it in every phase, so nothing around it moves.
 
-Set `status` to `"generating"` while the image is being made. Pass `progress`, from 0 to 100, when you know how far it has come, and `preview`, the URL of a partial image, when your model streams one. The preview shows blurred under a shimmer, with **Generating image** and the percentage at the frame's foot.
+Set `status` to `"generating"` while the image is being made. Until there's a preview, the frame is a soft field of the accent color under film grain. Pass `preview`, the URL of a partial image, when your model streams one: it shows heavily blurred and muted. Pass `progress`, from 0 to 100, when you know how far it has come: the grain thins and the preview sharpens toward it, and a label in the corner reads, for example, **Creating image · 42%**. Screen readers get the same value from the progress bar.
 
-Once the image is made, set `status` to `"ready"` and `src` to its URL. The component then reads the image's own `load` and `error`: it shows **Loading image** until the image is in, then fades it in as the preview sharpens. Keep `preview` until then, so the frame never goes blank. The figure is `aria-busy` until the image loads.
+Once the image is made, set `status` to `"ready"` and `src` to its URL. The component then reads the image's own `load` and `error`: it shows **Loading image** until the image is in, then dissolves it in over the preview, grain first, as the last of the grain clears. Keep `preview` until then, so the frame never goes blank. The figure is `aria-busy` until the image loads.
 
 ```tsx
 <GeneratedImage
@@ -68,7 +68,7 @@ Once the image is made, set `status` to `"ready"` and `src` to its URL. The comp
 
 ### Errors
 
-Set `status` to `"error"` when generation fails, with `error` saying why. An image at `src` that fails to load shows an error too. The frame keeps its size and shows a failed mark with the `error`, else "The image couldn't be generated." or "The image couldn't be loaded.".
+Set `status` to `"error"` when generation fails, with `error` saying why. An image at `src` that fails to load shows an error too. The frame keeps its size and shows a muted image glyph with the `error`, else "The image couldn't be generated." or "The image couldn't be loaded.".
 
 For an image it saw being generated, the component announces "Image ready" when it loads or "Image failed" when it fails, once for each `src`. Images that were ready when they first rendered, like earlier ones in the conversation, stay quiet.
 
@@ -80,7 +80,7 @@ Press the loaded image, or focus it and press Enter or Space, to open it full si
 
 ### Motion
 
-At full motion the frame shimmers while the image is on its way, the image fades in as the preview sharpens, and the dialog rises in. Under `prefers-reduced-motion`, or with `motion="reduced"`, nothing shimmers or sharpens, and the image and dialog fade in over 120 ms. With `motion="none"` nothing animates.
+At full motion the field drifts, the grain flickers and a sheen passes now and then while the image is on its way; the preview sharpens smoothly, the image dissolves in and settles, and the dialog rises in. Under `prefers-reduced-motion`, or with `motion="reduced"`, the field and grain hold still, the preview sharpens in steps, and the image and dialog fade in over 120 ms. With `motion="none"` nothing animates.
 
 ## API Reference
 

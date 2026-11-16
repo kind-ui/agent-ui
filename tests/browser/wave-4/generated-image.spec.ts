@@ -9,6 +9,7 @@ type Fixture = {
     resolve(): void;
     reject(): void;
     progress(value: number): void;
+    preview(show: boolean): void;
     ready(url: string): void;
     fail(): void;
     generate(): void;
@@ -82,7 +83,11 @@ test("the frame keeps its box from generating through loading to loaded", async 
   await expect(root(page, "lifecycle")).toHaveAttribute("data-phase", "generating");
   await expect(root(page, "lifecycle")).toHaveAttribute("aria-busy", "true");
   await expect(part(page, "lifecycle", "preview")).toBeVisible();
-  const progress = page.locator("#lifecycle").getByRole("progressbar", { name: "Generating image" });
+  await host(page, "preview", false);
+  await expect(part(page, "lifecycle", "preview")).toHaveCount(0);
+  expect(await frame.boundingBox()).toEqual(box);
+  await host(page, "preview", true);
+  const progress = page.locator("#lifecycle").getByRole("progressbar", { name: "Creating image" });
   await expect(progress).toHaveAttribute("aria-valuenow", "40");
   await host(page, "progress", 70);
   await expect(progress).toHaveAttribute("aria-valuenow", "70");
@@ -145,19 +150,21 @@ test("the trigger opens the image full size, and Escape returns focus to it", as
   await expect(trigger).toBeFocused();
 });
 
-test("the shimmer shows at full motion only", async ({ page }) => {
-  const shimmer = () =>
-    part(page, "lifecycle", "frame").evaluate((el) => {
-      const { animationName, opacity } = getComputedStyle(el, "::after");
-      return `${animationName} ${opacity}`;
-    });
+test("the grain thins as progress rises and the field drifts at full motion only", async ({ page }) => {
+  const frame = () => part(page, "lifecycle", "frame");
+  const grain = () => frame().evaluate((el) => Number(getComputedStyle(el, "::before").opacity));
+  const drift = () => frame().evaluate((el) => getComputedStyle(el).animationName);
   await open(page);
-  expect(await shimmer()).toBe("kind-shimmer 1");
+  await expect(part(page, "lifecycle", "progress")).toHaveText("Creating image40%");
+  const early = await grain();
+  await host(page, "progress", 90);
+  await expect.poll(grain).toBeLessThan(early);
+  expect(await drift()).toContain("kind-generated-image-drift");
   await page.emulateMedia({ reducedMotion: "reduce" });
-  expect(await shimmer()).toBe("none 0");
+  expect(await drift()).toBe("none");
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await open(page, "reduced");
-  expect(await shimmer()).toBe("none 0");
+  expect(await drift()).toBe("none");
 });
 
 test("agents open, close and download once the image is loaded", async ({ page }) => {

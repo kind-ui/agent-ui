@@ -44,12 +44,15 @@ export function GeneratedImageFrame({ children = DEFAULT_FRAME, ...props }: Gene
   return <parts.Frame {...props}>{children}</parts.Frame>;
 }
 
-/** The `preview`, blurred, while the image is on its way. */
+/** The `preview`, blurred and sharpening with `progress`, while the image is on its way. */
 export const GeneratedImagePreview = parts.Preview;
 
 export type GeneratedImageProgressProps = ComponentProps<typeof parts.Progress>;
 
-/** A UI SDK Progress, "Generating image" with its percentage, until the image loads, unless you pass children. */
+/**
+ * A UI SDK Progress, read as a quiet corner label like "Creating image · 42%" until the image loads, unless you pass
+ * children.
+ */
 export function GeneratedImageProgress({
   children = ({ value, label }) => (
     <Progress value={value}>
@@ -70,14 +73,9 @@ export const GeneratedImageImage = parts.Image;
 
 export type GeneratedImageErrorProps = ComponentProps<typeof parts.Error>;
 
-/** A failed mark and what went wrong, unless you pass children. */
+/** What went wrong, under a muted image glyph, unless you pass children. */
 export function GeneratedImageError({
-  children = ({ message }) => (
-    <>
-      <span data-status-mark="" data-status="error" />
-      <span>{message}</span>
-    </>
-  ),
+  children = ({ message }) => message,
   ...props
 }: GeneratedImageErrorProps) {
   return <parts.Error {...props}>{children}</parts.Error>;

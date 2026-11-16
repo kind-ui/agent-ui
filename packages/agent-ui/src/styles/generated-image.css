@@ -1,10 +1,67 @@
-/* Generated Image (spec §7): a frame of the image's shape that holds its progress, a blurred preview, the image or the
-   error, and a dialog that shows it full size. */
+/* Generated Image (spec §7): a frame of the image's shape where grain over a drifting field, then over a preview that
+   sharpens with progress, denoises into the image, and a dialog that shows it full size. */
+@property --kind-generated-image-drift {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --kind-generated-image-glow {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 55%;
+}
+
+@property --kind-generated-image-dissolve {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@keyframes kind-generated-image-drift {
+  to {
+    --kind-generated-image-drift: 360deg;
+  }
+}
+
+@keyframes kind-generated-image-glow {
+  from {
+    --kind-generated-image-glow: 35%;
+  }
+}
+
+/* Film grain: the noise tile jumps between offsets, so it flickers without moving. */
+@keyframes kind-generated-image-grain {
+  25% {
+    background-position: 40px 90px;
+  }
+  50% {
+    background-position: 110px 30px;
+  }
+  75% {
+    background-position: 70px 140px;
+  }
+}
+
+/* The sheen crosses in the first third of each cycle and waits off the frame for the rest. */
+@keyframes kind-generated-image-sheen {
+  30%,
+  100% {
+    background-position: 100% 0;
+  }
+}
+
 @layer components {
   [data-slot="kind-generated-image"] {
-    /* Lucide "download" and "maximize-2", see THIRD_PARTY_NOTICES.md. */
+    /* Lucide "download", "maximize-2" and "image-off", see THIRD_PARTY_NOTICES.md. */
     --kind-generated-image-download-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 15V3'/%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
     --kind-generated-image-zoom-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h6v6'/%3E%3Cpath d='m21 3-7 7'/%3E%3Cpath d='m3 21 7-7'/%3E%3Cpath d='M9 21H3v-6'/%3E%3C/svg%3E");
+    --kind-generated-image-error-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 2 20 20'/%3E%3Cpath d='M10.41 10.41a2 2 0 1 1-2.83-2.83'/%3E%3Cpath d='M13.5 13.5 6 21'/%3E%3Cpath d='m18 12 3 3'/%3E%3Cpath d='M3.59 3.59A1.99 1.99 0 0 0 3 5v14a2 2 0 0 0 2 2h14c.55 0 1.052-.22 1.41-.59'/%3E%3Cpath d='M21 15V5a2 2 0 0 0-2-2H9'/%3E%3C/svg%3E");
+    /* Grey film grain for the overlay, and a speckled alpha noise the image dissolves in through. */
+    --kind-generated-image-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1.6 0 0 0 -0.3 1.6 0 0 0 -0.3 1.6 0 0 0 -0.3 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --kind-generated-image-speckle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 6 0 0 0 -3.4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --kind-generated-image-reveal: calc(var(--kind-duration-panel) * 2.5);
+    --kind-generated-image-dissolve-duration: calc(var(--kind-generated-image-reveal) * 1.4);
 
     display: block;
     color: var(--kind-color-fg);
@@ -12,38 +69,80 @@
     line-height: 1.25rem;
   }
 
-  /* `aspect-ratio` and the width come from the image's `width` and `height`, so every phase takes the same box. */
+  /* `aspect-ratio` and the width come from the image's `width` and `height`, so every phase takes the same box. While
+     the image is on its way, the frame is a field of the accent that drifts and breathes. */
   [data-slot="kind-generated-image-frame"] {
     position: relative;
     display: block;
     isolation: isolate;
     max-inline-size: min(100%, var(--kind-generated-image-width));
     overflow: hidden;
-    border: 1px solid var(--kind-color-border);
     border-radius: var(--kind-radius);
-    background-color: var(--kind-color-hover);
+    background-color: color-mix(in oklab, var(--kind-color-accent) 6%, var(--kind-color-surface));
 
-    /* The shimmer, over the preview and under the progress, while the image is on its way. */
+    &:where([data-phase="generating"], [data-phase="loading"]) {
+      background-image:
+        radial-gradient(
+          circle at calc(30% + 18% * cos(var(--kind-generated-image-drift)))
+            calc(35% + 14% * sin(var(--kind-generated-image-drift))),
+          color-mix(in oklab, var(--kind-color-accent) var(--kind-generated-image-glow), transparent),
+          transparent 60%
+        ),
+        radial-gradient(
+          circle at calc(72% - 16% * sin(var(--kind-generated-image-drift)))
+            calc(65% + 16% * cos(var(--kind-generated-image-drift))),
+          color-mix(in oklab, var(--kind-color-accent) 30%, var(--kind-color-fg) 12%),
+          transparent 60%
+        ),
+        radial-gradient(
+          circle at calc(55% + 20% * sin(var(--kind-generated-image-drift)))
+            calc(20% - 10% * cos(var(--kind-generated-image-drift))),
+          color-mix(in oklab, var(--kind-color-surface) 70%, transparent),
+          transparent 50%
+        );
+      animation:
+        kind-generated-image-drift 18s linear infinite,
+        kind-generated-image-glow 4s ease-in-out infinite alternate;
+    }
+
+    /* Grain over the field or the preview: heavy at first, thinning as `progress` rises, and gone as the image lands. */
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      background: var(--kind-generated-image-grain) 0 0 / 160px;
+      mix-blend-mode: overlay;
+      opacity: calc(0.6 - 0.4 * var(--kind-generated-image-resolve, 0));
+      animation: kind-generated-image-grain 0.5s steps(1) infinite;
+      transition: opacity var(--kind-generated-image-reveal) var(--kind-ease);
+    }
+    &:where([data-phase="loaded"], [data-phase="error"])::before {
+      opacity: 0;
+      animation: none;
+    }
+
+    /* A sheen now and then while the image is on its way, and an inner border, so a light image keeps its edge. */
     &::after {
       content: "";
       position: absolute;
       inset: 0;
-      z-index: 1;
+      z-index: 3;
       pointer-events: none;
-      opacity: 0;
-      background:
-        linear-gradient(
-          100deg,
-          transparent 35%,
-          color-mix(in oklab, var(--kind-color-surface) 45%, transparent) 50%,
-          transparent 65%
-        )
-        0 0 / 200% 100%;
-      transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+      border-radius: inherit;
+      box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--kind-color-fg) 10%, transparent);
     }
     &:where([data-phase="generating"], [data-phase="loading"])::after {
-      opacity: 1;
-      animation: kind-shimmer 2s linear infinite;
+      background:
+        linear-gradient(
+          105deg,
+          transparent 40%,
+          color-mix(in oklab, var(--kind-color-surface) 30%, transparent) 50%,
+          transparent 60%
+        )
+        0 0 / 250% 100% no-repeat;
+      animation: kind-generated-image-sheen 5s var(--kind-ease) infinite;
     }
   }
 
@@ -56,93 +155,104 @@
     object-fit: cover;
   }
 
-  /* Scaled up a little, so the blur doesn't fade the edges to the frame's color. It sharpens and fades out as the
-     image fades in, so a transparent image doesn't show it. */
+  /* Blurred and muted at first, sharpening toward 4px and full color as `progress` rises. Scaled up a little, so the
+     blur doesn't fade the edges to the frame's color. */
   [data-slot="kind-generated-image-preview"] {
-    filter: blur(16px);
-    scale: 1.08;
+    z-index: 1;
+    filter: blur(calc(24px - 20px * var(--kind-generated-image-resolve, 0)))
+      saturate(calc(0.6 + 0.4 * var(--kind-generated-image-resolve, 0)));
+    scale: 1.04;
     transition:
-      filter var(--kind-duration-panel) var(--kind-ease),
-      scale var(--kind-duration-panel) var(--kind-ease),
-      opacity var(--kind-duration-panel) var(--kind-ease-out);
+      filter var(--kind-generated-image-reveal) var(--kind-ease),
+      scale var(--kind-generated-image-reveal) var(--kind-ease);
   }
+  /* Sharp under the image as it settles in, then gone, so a transparent image doesn't show it. */
   :where([data-slot="kind-generated-image-frame"][data-phase="loaded"])
     [data-slot="kind-generated-image-preview"] {
-    filter: blur(0);
+    filter: none;
     scale: 1;
     opacity: 0;
+    transition:
+      filter var(--kind-generated-image-reveal) var(--kind-ease),
+      scale var(--kind-generated-image-reveal) var(--kind-ease),
+      opacity 0s linear var(--kind-generated-image-dissolve-duration);
   }
 
-  /* Above the shimmer, so it fades in over it. */
+  /* Dissolves in over the preview through a noise mask, grain first, while the last of the grain clears, and settles.
+     The mask's solid layer fills in with `--kind-generated-image-dissolve`. */
   [data-slot="kind-generated-image-image"] {
+    --kind-generated-image-dissolve: 0;
+
     z-index: 2;
     opacity: 0;
-    transition: opacity var(--kind-duration-panel) var(--kind-ease-out);
+    scale: 1.02;
+    mask-image:
+      var(--kind-generated-image-speckle),
+      linear-gradient(rgb(0 0 0 / var(--kind-generated-image-dissolve)) 0 0);
+    mask-size:
+      240px 240px,
+      100% 100%;
+    transition:
+      opacity calc(var(--kind-generated-image-reveal) / 3) linear,
+      --kind-generated-image-dissolve var(--kind-generated-image-dissolve-duration) linear,
+      scale var(--kind-generated-image-reveal) var(--kind-ease);
 
     &[data-loaded] {
+      --kind-generated-image-dissolve: 1;
+
       opacity: 1;
+      scale: 1;
     }
   }
 
-  /* "Generating image" and its percentage over a track, on a card at the frame's foot. */
+  /* A quiet label in the corner, like "Creating image · 42%". The Progress keeps its role and value; its track
+     doesn't show. */
   [data-slot="kind-generated-image-progress"] {
     position: absolute;
-    inset-inline: 12px;
-    inset-block-end: 12px;
-    z-index: 3;
+    inset-inline-start: 10px;
+    inset-block-start: 10px;
+    z-index: 4;
     display: block;
-    padding: 8px 10px 10px;
-    border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) * 2 / 3);
-    background-color: color-mix(in oklab, var(--kind-color-surface) 88%, transparent);
+    max-inline-size: calc(100% - 20px);
+    padding: 2px 8px;
+    border-radius: 999px;
+    background-color: color-mix(in oklab, var(--kind-color-surface) 72%, transparent);
     backdrop-filter: blur(8px);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--kind-color-fg) 8%, transparent);
+    color: var(--kind-color-fg);
     font-size: 0.75rem;
-    line-height: 1rem;
+    line-height: 1.25rem;
   }
 
   :where([data-slot="kind-generated-image-progress"]) {
     & [data-slot="progress"] {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      row-gap: 6px;
+      display: flex;
+      min-width: 0;
     }
     & [data-slot="progress-label"] {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    /* As wide as "100%", so a new value never moves the label. */
     & [data-slot="progress-value"] {
-      min-width: 4ch;
-      text-align: end;
+      flex: none;
       color: var(--kind-color-muted);
       font-variant-numeric: tabular-nums;
+
+      &::before {
+        content: "\00a0·\00a0";
+      }
     }
-    & [data-slot="progress-track"] {
-      grid-column: 1 / -1;
-      height: 4px;
-      overflow: hidden;
-      border-radius: 999px;
-      background-color: var(--kind-color-border);
-    }
-    /* UI SDK Progress writes the fill's width inline. */
-    & [data-slot="progress-indicator"] {
-      display: block;
-      height: 100%;
-      border-radius: inherit;
-      background-color: var(--kind-color-accent);
-      transition: width var(--kind-duration-panel) var(--kind-ease);
-    }
-    /* How far is unknown: the track stays, empty, so the card keeps its size and the shimmer shows the work. */
-    & [data-slot="progress-indicator"]:where([data-indeterminate]) {
-      visibility: hidden;
+    & :is([data-slot="progress-value"]:where([data-indeterminate]), [data-slot="progress-track"]) {
+      display: none;
     }
   }
 
+  /* Calm: the frame's own tint, a muted glyph and one line. */
   [data-slot="kind-generated-image-error"] {
     position: absolute;
     inset: 0;
-    z-index: 3;
+    z-index: 4;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -153,13 +263,22 @@
     font-size: 0.8125rem;
     text-align: center;
     text-wrap: balance;
+
+    &::before {
+      content: "";
+      width: 1.5rem;
+      height: 1.5rem;
+      background-color: currentColor;
+      opacity: 0.7;
+      mask: var(--kind-generated-image-error-icon) center / contain no-repeat;
+    }
   }
 
   /* "View full size" covers the image; its glyph shows on hover and keyboard focus. */
   [data-slot="kind-generated-image-trigger"] {
     position: absolute;
     inset: 0;
-    z-index: 3;
+    z-index: 5;
     display: block;
     width: 100%;
     height: 100%;
@@ -244,7 +363,7 @@
     position: absolute;
     inset-inline-end: 8px;
     inset-block-start: 8px;
-    z-index: 4;
+    z-index: 6;
     width: 1.75rem;
     height: 1.75rem;
     padding: 0;
@@ -332,8 +451,10 @@
     white-space: nowrap;
   }
 
-  /* Motion: the image fades in as the preview sharpens, and the dialog rises in over a fading backdrop. Reduced
-     motion only fades the image and dialog, in 120 ms, with no shimmer or blur transition; `none` doesn't animate. */
+  /* Motion: the field drifts and breathes, the grain flickers and a sheen passes now and then, the preview sharpens
+     with progress, and the image dissolves in; the dialog rises in over a fading backdrop. Reduced motion holds the
+     field and grain still, steps the preview's blur, and only fades the image and dialog, in 120 ms; `none` doesn't
+     animate. */
   :where([data-slot="kind-generated-image"]) {
     & [data-slot="kind-generated-image-content"] {
       transition:
@@ -364,19 +485,32 @@
 
   @media (prefers-reduced-motion: reduce) {
     :where([data-slot="kind-generated-image"][data-motion="auto"]) {
+      & [data-slot="kind-generated-image-frame"],
+      & [data-slot="kind-generated-image-frame"]::before,
       & [data-slot="kind-generated-image-frame"]::after {
-        opacity: 0;
         animation: none;
-        transition: none;
       }
+      & [data-slot="kind-generated-image-frame"]::before,
       & [data-slot="kind-generated-image-trigger"]::before,
       & [data-slot="kind-generated-image-trigger"]::after,
-      & :is([data-slot="progress-indicator"], [data-slot="kind-generated-image-download"]) {
+      & :is([data-slot="kind-generated-image-preview"], [data-slot="kind-generated-image-download"]) {
         transition: none;
+      }
+      & [data-slot="kind-generated-image-preview"] {
+        scale: none;
+      }
+      & [data-slot="kind-generated-image-image"] {
+        --kind-generated-image-dissolve: 1;
+
+        scale: none;
+      }
+      &
+        :where([data-slot="kind-generated-image-frame"][data-phase="loaded"])
+        [data-slot="kind-generated-image-preview"] {
+        transition: opacity 0s linear var(--kind-duration-reduced);
       }
       &
         :is(
-          [data-slot="kind-generated-image-preview"],
           [data-slot="kind-generated-image-image"],
           [data-slot="kind-generated-image-content"],
           [data-slot="kind-generated-image-backdrop"]
@@ -393,19 +527,32 @@
   }
 
   :where([data-slot="kind-generated-image"][data-motion="reduced"]) {
+    & [data-slot="kind-generated-image-frame"],
+    & [data-slot="kind-generated-image-frame"]::before,
     & [data-slot="kind-generated-image-frame"]::after {
-      opacity: 0;
       animation: none;
-      transition: none;
     }
+    & [data-slot="kind-generated-image-frame"]::before,
     & [data-slot="kind-generated-image-trigger"]::before,
     & [data-slot="kind-generated-image-trigger"]::after,
-    & :is([data-slot="progress-indicator"], [data-slot="kind-generated-image-download"]) {
+    & :is([data-slot="kind-generated-image-preview"], [data-slot="kind-generated-image-download"]) {
       transition: none;
+    }
+    & [data-slot="kind-generated-image-preview"] {
+      scale: none;
+    }
+    & [data-slot="kind-generated-image-image"] {
+      --kind-generated-image-dissolve: 1;
+
+      scale: none;
+    }
+    &
+      :where([data-slot="kind-generated-image-frame"][data-phase="loaded"])
+      [data-slot="kind-generated-image-preview"] {
+      transition: opacity 0s linear var(--kind-duration-reduced);
     }
     &
       :is(
-        [data-slot="kind-generated-image-preview"],
         [data-slot="kind-generated-image-image"],
         [data-slot="kind-generated-image-content"],
         [data-slot="kind-generated-image-backdrop"]
@@ -421,18 +568,21 @@
   }
 
   :where([data-slot="kind-generated-image"][data-motion="none"]) {
+    & [data-slot="kind-generated-image-frame"],
+    & [data-slot="kind-generated-image-frame"]::before,
     & [data-slot="kind-generated-image-frame"]::after {
-      opacity: 0;
       animation: none;
     }
-    & [data-slot="kind-generated-image-frame"]::after,
+    & [data-slot="kind-generated-image-frame"]::before,
     & [data-slot="kind-generated-image-trigger"]::before,
     & [data-slot="kind-generated-image-trigger"]::after,
+    &
+      :where([data-slot="kind-generated-image-frame"][data-phase="loaded"])
+      [data-slot="kind-generated-image-preview"],
     &
       :is(
         [data-slot="kind-generated-image-preview"],
         [data-slot="kind-generated-image-image"],
-        [data-slot="progress-indicator"],
         [data-slot="kind-generated-image-download"],
         [data-slot="kind-generated-image-close"],
         [data-slot="kind-generated-image-content"],
@@ -444,7 +594,8 @@
 
   @media (forced-colors: active) {
     [data-slot="kind-generated-image-download"]::before,
-    [data-slot="kind-generated-image-trigger"]::after {
+    [data-slot="kind-generated-image-trigger"]::after,
+    [data-slot="kind-generated-image-error"]::before {
       forced-color-adjust: none;
       background-color: ButtonText;
     }

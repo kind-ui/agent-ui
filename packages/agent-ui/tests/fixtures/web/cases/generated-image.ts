@@ -51,6 +51,9 @@ const page =
         downloads,
         resolve: () => settle?.resolve(),
         reject: () => settle?.reject(),
+        preview: (show: boolean) => {
+          lifecycle.preview = show ? preview : undefined;
+        },
         progress: (value: number | undefined) => {
           lifecycle.progress = value;
         },
