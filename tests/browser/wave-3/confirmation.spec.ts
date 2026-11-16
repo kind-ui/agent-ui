@@ -227,6 +227,9 @@ for (const colorScheme of ["light", "dark"] as const) {
   test(`axe reports no violations in ${colorScheme} mode`, async ({ page }) => {
     await page.emulateMedia({ colorScheme, reducedMotion: "reduce" });
     await open(page);
+    await page.waitForFunction(() =>
+      document.getAnimations().every((animation) => animation.playState !== "running"),
+    );
     // The fixture page has no background of its own, which axe reads as white.
     await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     const { violations } = await new AxeBuilder({ page }).include("#root").analyze();
