@@ -70,6 +70,12 @@ const components = {
     description: "How hard the model thinks, as a row of levels with a mark that slides to the chosen one.",
     uses: ["internal-segmented-control"],
   },
+  suggestion: {
+    title: "Suggestion",
+    description:
+      "A row of prompts a person can send in one press, which scrolls sideways when they don't fit.",
+    uses: ["internal-carousel"],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",
@@ -120,6 +126,7 @@ const internals = [
   "alert-dialog",
   "avatar",
   "button",
+  "carousel",
   "checkbox",
   "collapsible",
   "combobox",

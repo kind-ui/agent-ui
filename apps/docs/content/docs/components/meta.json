@@ -15,6 +15,7 @@
     "checkpoint",
     "model-selector",
     "reasoning-effort",
+    "suggestion",
     "conversation",
     "message",
     "markdown",

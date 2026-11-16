@@ -243,6 +243,16 @@ export {
   subagentStatus,
 } from "./subagent/index.js";
 export {
+  type SuggestionApi,
+  type SuggestionItemState,
+  type SuggestionOptions,
+  type SuggestionPickReason,
+  type SuggestionPrimitive,
+  type SuggestionRootState,
+  type SuggestionState,
+  suggestionPrimitive,
+} from "./suggestion/index.js";
+export {
   type TaskApi,
   type TaskOptions,
   type TaskPrimitive,

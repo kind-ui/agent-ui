@@ -1,0 +1,129 @@
+/* Suggestion (spec §7): a row of prompt chips that scrolls sideways when they don't fit, with Previous and Next after it. */
+@layer components {
+  [data-slot="kind-suggestion"] {
+    display: block;
+    min-width: 0;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    color: var(--kind-color-fg);
+
+    /* The edge with more chips past it fades. */
+    &:has([data-slot="carousel-previous"]:not([data-disabled])) {
+      --kind-suggestion-fade-start: 24px;
+    }
+    &:has([data-slot="carousel-next"]:not([data-disabled])) {
+      --kind-suggestion-fade-end: 24px;
+    }
+
+    /* The margin and padding make room for a chip's focus ring, which the scrolling viewport would clip. */
+    & [data-slot="carousel-viewport"] {
+      margin: -4px;
+      padding: 4px;
+      scroll-padding-inline: 4px;
+      mask-image: linear-gradient(
+        to right,
+        transparent,
+        #000 var(--kind-suggestion-fade-start, 0px),
+        #000 calc(100% - var(--kind-suggestion-fade-end, 0px)),
+        transparent
+      );
+    }
+    &:dir(rtl) [data-slot="carousel-viewport"] {
+      mask-image: linear-gradient(
+        to left,
+        transparent,
+        #000 var(--kind-suggestion-fade-start, 0px),
+        #000 calc(100% - var(--kind-suggestion-fade-end, 0px)),
+        transparent
+      );
+    }
+
+    & [data-slot="carousel-content"] {
+      align-items: center;
+    }
+
+    & [data-suggestion-controls] {
+      display: flex;
+      flex-shrink: 0;
+      gap: 4px;
+    }
+    /* Previous and Next take no room while every chip fits. */
+    &:not(
+        :has([data-slot="carousel-previous"]:not([data-disabled])),
+        :has([data-slot="carousel-next"]:not([data-disabled]))
+      )
+      [data-suggestion-controls] {
+      display: none;
+    }
+  }
+
+  [data-slot="kind-suggestion-item"] {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    max-width: 18rem;
+    padding: 5px 12px;
+    border: 1px solid var(--kind-color-border);
+    border-radius: 999px;
+    background-color: var(--kind-color-surface);
+    color: var(--kind-color-fg);
+    text-align: start;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--kind-duration-fast) var(--kind-ease-out),
+      border-color var(--kind-duration-fast) var(--kind-ease-out),
+      scale var(--kind-duration-fast) var(--kind-ease-out);
+
+    &:hover:not([aria-disabled="true"]) {
+      border-color: color-mix(in oklab, var(--kind-color-border) 60%, var(--kind-color-muted));
+      background-color: var(--kind-color-hover);
+    }
+    &:active:not([aria-disabled="true"]) {
+      scale: 0.97;
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+    &[aria-disabled="true"] {
+      cursor: default;
+    }
+    /* A chip with a description is a small card, two lines tall. */
+    &:has([data-suggestion-description]:not(:empty)) {
+      padding-block: 6px;
+      border-radius: calc(var(--kind-radius) * 2 / 3);
+    }
+
+    & > [data-suggestion-label],
+    & > [data-suggestion-description] {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    & > [data-suggestion-description] {
+      font-size: 0.75rem;
+      line-height: 1rem;
+      color: var(--kind-color-muted);
+    }
+    & > [data-suggestion-description]:empty {
+      display: none;
+    }
+  }
+
+  /* Reduced motion: a press doesn't scale, and colors change in 120 ms. */
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot="kind-suggestion"][data-motion="auto"] [data-slot="kind-suggestion-item"] {
+      transition-duration: var(--kind-duration-reduced);
+      scale: none;
+    }
+  }
+  [data-slot="kind-suggestion"][data-motion="reduced"] [data-slot="kind-suggestion-item"] {
+    transition-duration: var(--kind-duration-reduced);
+    scale: none;
+  }
+  [data-slot="kind-suggestion"][data-motion="none"] [data-slot="kind-suggestion-item"] {
+    transition: none;
+    scale: none;
+  }
+}

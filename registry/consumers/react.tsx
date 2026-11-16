@@ -28,6 +28,7 @@ import { Status } from "./components/ui/status.js";
 import { Step, StepContent, StepIcon, StepTitle, StepTrigger } from "./components/ui/step.js";
 import { StreamingText } from "./components/ui/streaming-text.js";
 import { Subagent } from "./components/ui/subagent.js";
+import { Suggestion } from "./components/ui/suggestion.js";
 import { Task } from "./components/ui/task.js";
 import { ThinkingIndicator } from "./components/ui/thinking-indicator.js";
 import { Tool } from "./components/ui/tool.js";
@@ -124,6 +125,7 @@ const items = {
     />
   ),
   "reasoning-effort": <ReasoningEffort defaultValue="medium" />,
+  suggestion: <Suggestion suggestions={[{ id: "a", label: "Summarize this thread" }]} onPick={() => {}} />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
       <ConversationViewport>

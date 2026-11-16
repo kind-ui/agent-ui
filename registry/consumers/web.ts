@@ -21,6 +21,7 @@ import { defineStatus } from "./components/ui/web/status.js";
 import { defineStep } from "./components/ui/web/step.js";
 import { defineStreamingText } from "./components/ui/web/streaming-text.js";
 import { defineSubagent } from "./components/ui/web/subagent.js";
+import { defineSuggestion } from "./components/ui/web/suggestion.js";
 import { defineTask } from "./components/ui/web/task.js";
 import { defineThinkingIndicator } from "./components/ui/web/thinking-indicator.js";
 import { defineTool } from "./components/ui/web/tool.js";
@@ -43,6 +44,7 @@ for (const define of [
   defineCheckpoint,
   defineModelSelector,
   defineReasoningEffort,
+  defineSuggestion,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -80,6 +82,7 @@ const items = {
   checkpoint: `<kind-checkpoint description="Before editing auth.ts" can-restore></kind-checkpoint>`,
   "model-selector": `<kind-model-selector></kind-model-selector>`,
   "reasoning-effort": `<kind-reasoning-effort></kind-reasoning-effort>`,
+  suggestion: `<kind-suggestion can-pick></kind-suggestion>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>
@@ -151,6 +154,9 @@ Object.assign(main.querySelector("kind-question") as HTMLElement, {
       ],
     },
   ],
+});
+Object.assign(main.querySelector("kind-suggestion") as HTMLElement, {
+  suggestions: [{ id: "a", label: "Summarize this thread" }],
 });
 Object.assign(main.querySelector("kind-chain-of-thought") as HTMLElement, {
   steps: [{ id: "search", status: "complete", title: "Search flights", durationSeconds: 3 }],
