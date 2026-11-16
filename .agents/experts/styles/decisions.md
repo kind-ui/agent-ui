@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `9ec23f2` (Wave 3 Task 7 Suggestion)
+Last reviewed: `c66ae7c` (Wave 3 Task 8 Context Meter)
 
 ## Settled
 
+- **The Context Meter ring sweeps by transitioning `--meter-value`** (Wave 3 Task 8), which repaints its `conic-gradient` on the main thread: a 16 px element for 280 ms, never on mount, and off under reduced motion.
 - **Reasoning restyles nested parts through variables** (`--kind-markdown-*`, `--kind-status-mark-complete`) set with one attribute selector, so a class on the content or icon part wins. Code blocks and tables in the thoughts keep their own colors.
 - **The Streaming Text caret bar sits 0.15 em past the text:** laid over the last glyph it cuts the letter; past it, a scroll container sized to `max-content` gains about 0.3 em of overflow. Width and line height never change.
 - **The uploader progress fill transitions `width`:** UI SDK Progress writes the fill's width inline, and the bar is a 4 px leaf in an `overflow: hidden` track. A `scale` fill would squash its rounded ends.
@@ -17,6 +18,7 @@ Last reviewed: `9ec23f2` (Wave 3 Task 7 Suggestion)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **The Context Meter's high-level glyph in light mode** is `--kind-color-warning` on white, about 2.5:1, under 3:1 for graphics; the percentage beside it carries the value.
 - **Suggestion: Tab to a chip half out of view doesn't scroll it in** (UI SDK Carousel counts it in view), so its end and focus ring sit under the end fade.
 - **Suggestion: `motion="none"` doesn't stop Carousel's paging scroll,** which follows only `prefers-reduced-motion`; UI SDK's Carousel takes no motion option. The docs say so.
 - **Checkpoint: "Restored" is wider than the Restore icon,** so the line (or a long description) gets about 47px shorter in one frame when it swaps in. Nothing moves vertically.
@@ -34,6 +36,7 @@ Last reviewed: `9ec23f2` (Wave 3 Task 7 Suggestion)
 
 ## Resolved
 
+- **Context Meter (Wave 3 Task 8):** the details closed in 150 ms under reduced motion (the exit duration is set again in the reduced rules, tested); the percentage reserves `4ch + 1em`, so "100 %" in `de-DE` doesn't widen the trigger (tested); level, motion and `[hidden]` rules sit behind `:where()`; the trigger's transitions use `--kind-ease-out`.
 - **Suggestion (Wave 3 Task 7):** Previous and Next stay shown while one holds focus; a page Next scrolled to starts past the start fade (the viewport's start inset holds it); context selectors sit in `:where()`, so a class in `@layer components` restyles a two-line chip.
 - **Model Selector and Reasoning Effort (Wave 3 Task 6):** the effort mark slides with `translate` and `width`, not `left`/`top`; the reduced fill runs color, background and border in 120 ms together; the list's exit runs every property at `--kind-duration-fast`; the search field is `h-full`, inside the field's border.
 - **Checkpoint (Wave 3 Task 5):** a wrapped error made the dialog 8px taller on narrow screens (the error's line height is 1rem, so two lines fit the row); the backdrop closed 50ms after the dialog (both use the fast duration); reduced-motion fades were `linear` (now `--kind-ease-out`, as the JS helper's).

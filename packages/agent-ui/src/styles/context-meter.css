@@ -1,8 +1,9 @@
 /* Context Meter (spec §7): a ring and a percentage for how full the context window is, with its counts in a popover. */
-@property --kind-context-ratio {
-  syntax: "<number>";
+/* UI SDK Meter writes where its value sits as `--meter-value` for a ring to follow. Registered so the ring can sweep. */
+@property --meter-value {
+  syntax: "<percentage>";
   inherits: true;
-  initial-value: 0;
+  initial-value: 0%;
 }
 
 @layer components {
@@ -14,14 +15,13 @@
     font-size: 0.75rem;
     line-height: 1rem;
     color: var(--kind-color-muted);
-    transition: --kind-context-ratio var(--kind-duration-panel) var(--kind-ease);
+  }
 
-    &[data-level="high"] {
-      --kind-context-color: var(--kind-color-warning);
-    }
-    &[data-level="full"] {
-      --kind-context-color: var(--kind-color-danger);
-    }
+  :where([data-slot="kind-context-meter"])[data-level="high"] {
+    --kind-context-color: var(--kind-color-warning);
+  }
+  :where([data-slot="kind-context-meter"])[data-level="full"] {
+    --kind-context-color: var(--kind-color-danger);
   }
 
   [data-slot="kind-context-meter-trigger"] {
@@ -35,8 +35,8 @@
     color: inherit;
     font: inherit;
     transition:
-      background-color var(--kind-duration-fast),
-      color var(--kind-duration-fast);
+      background-color var(--kind-duration-fast) var(--kind-ease-out),
+      color var(--kind-duration-fast) var(--kind-ease-out);
 
     &:hover,
     &[data-open] {
@@ -57,6 +57,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    transition: --meter-value var(--kind-duration-panel) var(--kind-ease);
   }
 
   /* The ring is the track's `::before`, the level's glyph its `::after`, so the glyph sits inside the ring without
@@ -75,10 +76,7 @@
       border-radius: 50%;
     }
     &::before {
-      background: conic-gradient(
-        var(--kind-context-color) calc(var(--kind-context-ratio) * 1turn),
-        var(--kind-color-border) 0
-      );
+      background: conic-gradient(var(--kind-context-color) var(--meter-value), var(--kind-color-border) 0);
       mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
     }
   }
@@ -94,9 +92,9 @@
     background-color: var(--kind-context-color);
   }
 
-  /* As wide as "100%", so a new value never moves what's beside the meter. */
+  /* As wide as "100 %", the widest a locale writes it, so a new value never moves what's beside the meter. */
   :where([data-slot="kind-context-meter"]) [data-slot="meter-value"] {
-    min-width: 4.5ch;
+    min-width: calc(4ch + 1em);
     font-variant-numeric: tabular-nums;
     text-align: end;
   }
@@ -172,7 +170,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    [data-slot="kind-context-meter"][data-motion="auto"] {
+    :where([data-slot="kind-context-meter"][data-motion="auto"]) [data-slot="meter"] {
       transition: none;
     }
     :where([data-slot="kind-context-meter"][data-motion="auto"]) [data-slot="kind-context-meter-content"] {
@@ -181,11 +179,12 @@
       &:is([data-starting-style], [data-ending-style]) {
         translate: none;
         scale: none;
+        transition-duration: var(--kind-duration-reduced);
       }
     }
   }
 
-  [data-slot="kind-context-meter"][data-motion="reduced"] {
+  :where([data-slot="kind-context-meter"][data-motion="reduced"]) [data-slot="meter"] {
     transition: none;
   }
   :where([data-slot="kind-context-meter"][data-motion="reduced"]) [data-slot="kind-context-meter-content"] {
@@ -194,16 +193,20 @@
     &:is([data-starting-style], [data-ending-style]) {
       translate: none;
       scale: none;
+      transition-duration: var(--kind-duration-reduced);
     }
   }
 
-  [data-slot="kind-context-meter"][data-motion="none"],
   :where([data-slot="kind-context-meter"][data-motion="none"])
-    :is([data-slot="kind-context-meter-trigger"], [data-slot="kind-context-meter-content"]) {
+    :is(
+      [data-slot="kind-context-meter-trigger"],
+      [data-slot="meter"],
+      [data-slot="kind-context-meter-content"]
+    ) {
     transition: none;
   }
 
-  :is([data-slot="kind-context-meter-content"], [data-slot="kind-context-meter-rows"])[hidden] {
+  :where([data-slot="kind-context-meter-content"], [data-slot="kind-context-meter-rows"])[hidden] {
     display: none;
   }
 }

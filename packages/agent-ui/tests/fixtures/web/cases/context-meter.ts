@@ -5,7 +5,7 @@ import { context, contextHost, levels } from "../../shared/context-meter.js";
 const { host, record } = contextHost();
 
 const page =
-  (used: number = context.used, motion?: MotionMode) =>
+  (used: number = context.used, motion?: MotionMode, locale?: string, markup?: string) =>
   (root: HTMLElement) => {
     defineContextMeter();
     const wrapper = document.createElement("div");
@@ -20,6 +20,8 @@ const page =
     meter.usage = context.usage;
     meter.cost = context.cost;
     if (motion) meter.motion = motion;
+    if (locale) meter.locale = locale;
+    if (markup) meter.innerHTML = markup;
     meter.addEventListener("openchange", (event) => record(event.detail.value, event.detail));
     const beside = Object.assign(document.createElement("span"), { id: "beside", textContent: "Beside" });
     row.append(meter, beside);
@@ -40,4 +42,11 @@ export const cases = {
   high: page(levels.high),
   full: page(levels.full),
   reduced: page(context.used, "reduced"),
+  german: page(context.used, undefined, "de-DE"),
+  written: page(
+    context.used,
+    undefined,
+    undefined,
+    `<kind-context-meter-trigger><button><kind-context-meter-value><ui-meter><ui-meter-track></ui-meter-track><ui-meter-value></ui-meter-value></ui-meter></kind-context-meter-value></button></kind-context-meter-trigger><kind-context-meter-content hidden><kind-context-meter-title><h2>Context window</h2></kind-context-meter-title></kind-context-meter-content>`,
+  ),
 };

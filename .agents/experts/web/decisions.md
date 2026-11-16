@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `9ec23f2` (Wave 3 Task 7 Suggestion)
+Last reviewed: `c66ae7c` (Wave 3 Task 8 Context Meter)
 
 ## Settled
 
@@ -18,6 +18,7 @@ Last reviewed: `9ec23f2` (Wave 3 Task 7 Suggestion)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **An empty `kind-context-meter` moves what's beside it when it's defined** (Wave 3 Task 8), as the empty Task, Plan and Checkpoint do; no shadow-root case in its fixture either (checked by hand).
 - **`ui-carousel-content` is `aria-live="polite"` (UI SDK),** so a suggestion added while the row is in view may be read aloud; not checked with a screen reader.
 - **An empty `kind-model-selector` or `kind-reasoning-effort` adds its parts on upgrade,** shifting layout once, as Task and Plan do.
 - **`kind-checkpoint` fills in its parts when it upgrades empty,** the same layout-shift class as the empty `kind-task`/`kind-plan` entry.
@@ -43,6 +44,7 @@ Last reviewed: `9ec23f2` (Wave 3 Task 7 Suggestion)
 
 ## Resolved
 
+- **Context Meter (Wave 3 Task 8):** a content part written by hand left focus moving into the details (`render` now sets `initial-focus="none"` on one without it, tested with a `written` case); the title is an `h2`, as React's and UI SDK's PopoverTitle are.
 - **Suggestion (Wave 3 Task 7):** `el.api.getSuggestions()` works (the root lists it in `api`); a chip in a `<form>` doesn't submit it (`form` fixture case, both layers).
 - **Model Selector and Reasoning Effort (Wave 3 Task 6):** the web events are `modelchange` and `effortchange`, since the inner Combobox and Segmented Control fire a composed `valuechange` a capture listener hears first; equal `levels` keep a focused level focused (levels are moved only when out of place); a written field keeps its own labels; the list opens 6px below the field with `align="start"` as in React; `value` is typed to take a string.
 - **Checkpoint (Wave 3 Task 5):** setting `restored` with the dialog open left the page `inert` (a hidden web part keeps its dialog), and Firefox crashed running axe after a role query on the trigger (axe tests reach it with a CSS locator; add the Tooltip/Alert Dialog trigger to the upstream report).

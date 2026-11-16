@@ -24,17 +24,42 @@ test("contextRows lists only what's supplied, in order, including zeros", () => 
 });
 
 test("contextRows keeps a small cost from reading as zero", () => {
-  assert.deepEqual(contextRows(undefined, 0.0034, "USD", "en-US"), [{ label: "Cost", value: "$0.0034" }]);
-  assert.deepEqual(contextRows(undefined, 12.345, "USD", "en-US"), [{ label: "Cost", value: "$12.35" }]);
+  const cost = (value) => contextRows(undefined, value, "USD", "en-US")[0].value;
+  assert.equal(cost(0.0034), "$0.0034");
+  assert.equal(cost(0.00004), "$0.00004");
+  assert.equal(cost(12.345), "$12.35");
+  assert.equal(cost(1234.5678), "$1,234.57");
 });
 
-test("the level is high from 80% and full from 95%", () => {
-  const meter = contextMeterPrimitive({ used: 79, total: 100 });
-  assert.equal(meter.get().level, "normal");
-  meter.setOptions({ used: 80, total: 100 });
-  assert.equal(meter.get().level, "high");
-  meter.setOptions({ used: 95, total: 100 });
-  assert.equal(meter.get().level, "full");
+test("the level is high from 80% and full from 95%, as the percentage reads", () => {
+  const level = (used, total = 1000) => contextMeterPrimitive({ used, total }).get().level;
+  assert.equal(level(794), "normal");
+  assert.equal(level(795), "high");
+  assert.equal(level(944), "high");
+  assert.equal(level(9496, 10_000), "full");
+});
+
+test("a missing count reads as zero, and the value text is English until the page's language is known", () => {
+  const meter = contextMeterPrimitive({ used: Number.NaN, total: 128_000, locale: "" });
+  assert.equal(meter.api.valueText(meter.get()), "0 of 128,000 tokens, 0%");
+  meter.setOptions({ used: 57_600, total: 128_000, locale: "de-DE" });
+  assert.equal(meter.api.valueText(meter.get()), "57.600 of 128.000 tokens, 45\u00a0%");
+});
+
+test("the same counts in a new usage object keep the rows", () => {
+  const meter = contextMeterPrimitive({ used: 1, total: 2, usage: { input: 3 } });
+  const rows = meter.api.rows(meter.get());
+  meter.setOptions({ used: 1, total: 2, usage: { input: 3 } });
+  assert.equal(meter.api.rows(meter.get()), rows);
+});
+
+test("a controlled or cancelled open waits for the host", () => {
+  const controlled = contextMeterPrimitive({ open: false, onOpenChange: () => {} });
+  assert.equal(controlled.api.open(), true);
+  assert.equal(controlled.get().open, false);
+  const cancelled = contextMeterPrimitive({ onOpenChange: (_open, details) => details.cancel() });
+  assert.equal(cancelled.api.open(), false);
+  assert.equal(cancelled.get().open, false);
 });
 
 test("open is offered while closed and close while open", () => {

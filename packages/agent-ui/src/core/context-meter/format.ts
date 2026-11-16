@@ -35,11 +35,12 @@ export function contextRows(
     if (value !== undefined) rows.push({ label, value: count.format(value) });
   }
   if (cost !== undefined) {
-    // Below one unit, a call's cost needs more than two decimals to read as more than zero.
+    // Two significant digits where the currency's decimals would round a small cost to zero.
     const money = new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
-      maximumFractionDigits: Math.abs(cost) < 1 ? 4 : 2,
+      maximumSignificantDigits: 2,
+      roundingPriority: "morePrecision",
     });
     rows.push({ label: "Cost", value: money.format(cost) });
   }

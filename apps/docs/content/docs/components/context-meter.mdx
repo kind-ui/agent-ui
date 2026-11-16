@@ -41,11 +41,11 @@ ContextMeter
 
 ### The Value
 
-Pass `used` and `total` in tokens. The ring fills to how much of the window is used and the percentage sits beside it, in tabular numbers at a fixed width, so a new value never moves what's next to the meter. Screen readers hear the button as "57,600 of 128,000 tokens, 45%". Pass `locale` to format the numbers for a language other than the browser's.
+Pass `used` and `total` in tokens. The ring fills to how much of the window is used and the percentage sits beside it, in tabular numbers at a fixed width, so a new value never moves what's next to the meter. Screen readers hear the button as "57,600 of 128,000 tokens, 45%". Numbers follow the page's `lang`, or the browser's language without one; pass `locale` to choose another.
 
 ### Levels
 
-From 80% the ring turns to the warning color with an exclamation mark inside it, and from 95% to the danger color with its middle filled. The root's `data-level` reads `normal`, `high` or `full` for your own styles.
+From 80%, as the percentage reads, the ring turns to the warning color with an exclamation mark inside it, and from 95% to the danger color with its middle filled. The root's `data-level` reads `normal`, `high` or `full` for your own styles.
 
 ### Details
 
@@ -57,7 +57,7 @@ Pass `usage` with any of `input`, `output`, `reasoning` and `cached`, and `cost`
 
 ### Opening
 
-The details open when the pointer rests on the meter for 600 ms, when keyboard focus rests on it as long, and when it's pressed, by pointer, Enter or Space. They close on Escape, a second press, a press outside or focus leaving the meter, and details the pointer opened also close 300 ms after it leaves both the meter and the details. Opening them by pointer or keyboard leaves focus on the meter, since they hold nothing to press.
+The details open when the pointer rests on the meter for 600 ms, when keyboard focus rests on it as long, and when it's pressed, by pointer, Enter or Space. They close on Escape, a press outside or focus leaving the meter, and a press on the meter closes them unless resting the pointer opened them. Details the pointer opened also close 300 ms after it leaves both the meter and the details. Opening them by pointer or keyboard leaves focus on the meter, since they hold nothing to press.
 
 Pass `open` and `onOpenChange` to control them, or `defaultOpen` to start with them open. `onOpenChange` gets UI SDK Popover's reason, like `trigger-hover`, `trigger-press` or `escape-key`, or `trigger-focus` when keyboard focus opened them.
 

@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Fixture = {
   kindHost: { changes: { open: boolean; reason: string; source: string }[]; setUsed(used: number): void };
@@ -40,6 +41,7 @@ test("a group named by its label, whose button reads the tokens and the percenta
   await expect(trigger(page)).toHaveAttribute("aria-expanded", "false");
   await expect(meter(page).locator('[data-slot="meter"]')).toHaveAttribute("aria-valuetext", VALUE);
   await expect(meter(page)).toHaveAttribute("data-level", "normal");
+  expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
 });
 
 test("a press opens the details with each count and the cost, and Escape closes them", async ({ page }) => {
@@ -70,7 +72,25 @@ test("keyboard focus opens the details and leaves focus on the trigger; Escape c
   await page.keyboard.press("Escape");
   await expect(details(page)).toBeHidden();
   await expect(trigger(page)).toBeFocused();
-  expect((await changes(page)).map(({ reason }) => reason)).toEqual(["trigger-focus", "escape-key"]);
+  // UI SDK keeps press-opened details open on a press only when the pointer opened them, so Enter toggles.
+  await page.keyboard.press("Enter");
+  await expect(details(page)).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(details(page)).toBeHidden();
+  expect((await changes(page)).map(({ reason }) => reason)).toEqual([
+    "trigger-focus",
+    "escape-key",
+    "trigger-press",
+    "trigger-press",
+  ]);
+});
+
+test("details written by hand also leave focus on the trigger", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "Web Components only");
+  await open(page, "written");
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("dialog", { name: "Context window" })).toBeVisible();
+  await expect(trigger(page)).toBeFocused();
 });
 
 test("resting the pointer opens the details, and leaving closes them", async ({ page }) => {
@@ -85,15 +105,21 @@ test("resting the pointer opens the details, and leaving closes them", async ({ 
   ]);
 });
 
-test("a new value keeps the trigger's width, so nothing beside it moves", async ({ page }) => {
+for (const name of ["all", "german"]) {
+  test(`a new value keeps the trigger's width, so nothing beside it moves (${name})`, async ({ page }) => {
+    await open(page, name);
+    const width = () => trigger(page).evaluate((el) => el.getBoundingClientRect().width);
+    const before = await width();
+    for (const used of [1_000, 128_000, 6_400]) {
+      await setUsed(page, used);
+      await expect(meter(page).locator('[data-slot="meter-value"]')).not.toHaveText(/^45/);
+      expect(await width()).toBe(before);
+    }
+  });
+}
+
+test("the button's name follows a new value", async ({ page }) => {
   await open(page);
-  const width = () => trigger(page).evaluate((el) => el.getBoundingClientRect().width);
-  const before = await width();
-  for (const used of [1_000, 128_000, 6_400]) {
-    await setUsed(page, used);
-    await expect(meter(page).locator('[data-slot="meter-value"]')).not.toHaveText("45%");
-    expect(await width()).toBe(before);
-  }
   await setUsed(page, 128_000);
   await expect(trigger(page)).toHaveAccessibleName("128,000 of 128,000 tokens, 100%");
 });
@@ -119,10 +145,18 @@ for (const [level, glyph] of [
 
 test("with reduced motion the ring jumps and the details only fade", async ({ page }) => {
   await open(page, "reduced");
-  expect(await meter(page).evaluate((el) => getComputedStyle(el).transitionProperty)).toBe("none");
+  const ring = meter(page).locator('[data-slot="meter"]');
+  expect(await ring.evaluate((el) => getComputedStyle(el).transitionProperty)).toBe("none");
   await trigger(page).click();
   await expect(details(page)).toBeVisible();
   expect(await details(page).evaluate((el) => getComputedStyle(el).transitionProperty)).toBe("opacity");
+  const exit = await details(page).evaluate((el) => {
+    el.setAttribute("data-ending-style", "");
+    const duration = getComputedStyle(el).transitionDuration;
+    el.removeAttribute("data-ending-style");
+    return duration;
+  });
+  expect(exit).toBe("0.12s");
 });
 
 test("an agent opens and closes the details, each offered only when it applies", async ({ page }) => {

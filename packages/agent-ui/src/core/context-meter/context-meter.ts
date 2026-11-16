@@ -1,7 +1,6 @@
 import {
   type ChangeDetails,
   createPopup,
-  css,
   definePrimitive,
   type PopupContentProps,
   type PopupContentState,
@@ -9,12 +8,14 @@ import {
   type PopupState,
   type PopupTriggerProps,
   type PopupTriggerState,
+  pageLocale,
   popupContent,
   popupDescription,
   popupState,
   popupTitle,
   popupTrigger,
   type SlotDefinition,
+  toLocale,
 } from "@ui-sdk/core";
 import { hoverCardPreset } from "@ui-sdk/core/hover-card";
 import { type PopoverOpenChangeReason, popoverPreset } from "@ui-sdk/core/popover";
@@ -46,11 +47,14 @@ export type ContextMeterOptions = {
   /** What the conversation has cost so far, in `currency`. The details show it when supplied. */
   cost?: number;
   /**
-   * The ISO 4217 code `cost` is in.
+   * The ISO 4217 code `cost` is in, like `"EUR"`.
    * @default "USD"
    */
   currency?: string;
-  /** The locale numbers are formatted in, like `"de-DE"`. Defaults to the browser's. */
+  /**
+   * The locale numbers are formatted in, like `"de-DE"`. Defaults to the page's `lang`, or the browser's language
+   * without one, once the meter is in the page; server markup uses English until then.
+   */
   locale?: string;
   /**
    * Names the meter.
@@ -81,12 +85,8 @@ export type ContextMeterState = PopupState & {
   used: number;
   /** The `total` option. */
   total: number;
-  /** How much of the window is used, from 0 to 1. */
-  ratio: number;
-  /** How full the window is. */
+  /** How full the window is, by the percentage shown. */
   level: ContextLevel;
-  /** The value screen readers hear, like "57,600 of 128,000 tokens, 45%". */
-  valueText: string;
   /** `usage.input`. */
   input: number | undefined;
   /** `usage.output`. */
@@ -99,8 +99,10 @@ export type ContextMeterState = PopupState & {
   cost: number | undefined;
   /** The `currency`, else "USD". */
   currency: string;
-  /** The `locale` option. */
+  /** The `locale` option, when it's a valid tag. */
   locale: string | undefined;
+  /** The page's language where the meter is, read once it's in the page. Null on the server. */
+  pageLocale: string | null;
   /** The `motion` option. */
   motion: MotionMode;
 };
@@ -112,7 +114,7 @@ export type ContextMeterValueState = {
   /** Pass it to the Meter as its `max`. */
   max: number;
   /** Pass it to the Meter. */
-  locale: string | undefined;
+  locale: string;
   /** Pass it to the Meter as its `aria-label`. */
   label: string;
   /** Pass it to the Meter, so screen readers hear the tokens as well as the percentage. */
@@ -126,6 +128,8 @@ export type ContextMeterApi = Omit<Popup, "open" | "close"> & {
   readonly open: (() => boolean) | undefined;
   /** Closes the details. Offered only while they're open. Returns whether the change was accepted. */
   readonly close: (() => boolean) | undefined;
+  /** What screen readers hear for the value, like "57,600 of 128,000 tokens, 45%". */
+  valueText: (state: ContextMeterState) => string;
   /** Hands the Meter its props. Called by the value slot. */
   valueState: (state: ContextMeterState) => ContextMeterValueState;
   /** The details' lines. Called by the rows slot. */
@@ -165,24 +169,26 @@ const preset: PopupPreset = {
 // Components `@ui-sdk/web` fills in the callbacks on read.
 const HOVER = { openOnHover: { value: true } };
 
-const presentation = (options: ContextMeterOptions): Omit<ContextMeterState, keyof PopupState> => {
-  const used = options.used ?? 0;
-  const total = options.total ?? 0;
-  const ratio = contextRatio(used, total);
+const count = (value: number | undefined) => (value !== undefined && Number.isFinite(value) ? value : 0);
+
+const presentation = (
+  options: ContextMeterOptions,
+): Omit<ContextMeterState, keyof PopupState | "pageLocale"> => {
+  const used = count(options.used);
+  const total = count(options.total);
+  const percent = Math.round(contextRatio(used, total) * 100);
   return {
     label: options.label ?? "Context",
     used,
     total,
-    ratio,
-    level: ratio >= 0.95 ? "full" : ratio >= 0.8 ? "high" : "normal",
-    valueText: contextValueText(used, total, options.locale),
+    level: percent >= 95 ? "full" : percent >= 80 ? "high" : "normal",
     input: options.usage?.input,
     output: options.usage?.output,
     reasoning: options.usage?.reasoning,
     cached: options.usage?.cached,
     cost: options.cost,
     currency: options.currency ?? "USD",
-    locale: options.locale,
+    locale: toLocale(options.locale),
     motion: options.motion ?? "auto",
   };
 };
@@ -207,7 +213,7 @@ export const contextMeterPrimitive: ContextMeterPrimitive = definePrimitive<
     onOpenChange: "callback",
     motion: "string",
   },
-  state: (options) => ({ ...popupState(options), ...presentation(options) }),
+  state: (options) => ({ ...popupState(options), ...presentation(options), pageLocale: null }),
   sync: (options) => ({
     ...presentation(options),
     ...(options.open === undefined ? {} : { open: options.open }),
@@ -219,8 +225,11 @@ export const contextMeterPrimitive: ContextMeterPrimitive = definePrimitive<
       { preset },
     );
     const { store } = context;
+    // Server markup is English, as UI SDK Meter's is, so it never disagrees with the client's.
+    const localeOf = (state: ContextMeterState) => state.locale ?? state.pageLocale ?? "en-US";
+    const valueText = memo(contextValueText);
     const valueState = memo(
-      (value: number, max: number, locale: string | undefined, label: string, valueText: string) => ({
+      (value: number, max: number, locale: string, label: string, valueText: string) => ({
         value,
         max,
         locale,
@@ -236,7 +245,7 @@ export const contextMeterPrimitive: ContextMeterPrimitive = definePrimitive<
         cached: number | undefined,
         cost: number | undefined,
         currency: string,
-        locale: string | undefined,
+        locale: string,
       ) => contextRows({ input, output, reasoning, cached }, cost, currency, locale),
     );
     return {
@@ -247,7 +256,15 @@ export const contextMeterPrimitive: ContextMeterPrimitive = definePrimitive<
       get close() {
         return store.get().open ? () => popup.setOpen(false) : undefined;
       },
-      valueState: (state) => valueState(state.used, state.total, state.locale, state.label, state.valueText),
+      valueText: (state) => valueText(state.used, state.total, localeOf(state)),
+      valueState: (state) =>
+        valueState(
+          state.used,
+          state.total,
+          localeOf(state),
+          state.label,
+          valueText(state.used, state.total, localeOf(state)),
+        ),
       rows: (state) =>
         rows(
           state.input,
@@ -256,7 +273,7 @@ export const contextMeterPrimitive: ContextMeterPrimitive = definePrimitive<
           state.cached,
           state.cost,
           state.currency,
-          state.locale,
+          localeOf(state),
         ),
     };
   },
@@ -269,8 +286,10 @@ export const contextMeterPrimitive: ContextMeterPrimitive = definePrimitive<
           "aria-label": state.label,
           "data-level": state.level,
           "data-motion": state.motion,
-          style: css({ "--kind-context-ratio": String(state.ratio) }),
         }),
+        bind: (el, { store }) => {
+          store.set({ pageLocale: pageLocale(el) ?? null });
+        },
       }),
       // Named by its value, since the meter inside a button isn't read on its own.
       trigger: slot({
@@ -278,7 +297,7 @@ export const contextMeterPrimitive: ContextMeterPrimitive = definePrimitive<
         attrs: (state, part) => ({
           ...trigger.attrs?.(state, part),
           type: "button",
-          "aria-label": state.valueText,
+          "aria-label": part.api.valueText(state),
         }),
       }),
       value: slot<BaseSlotProps, ContextMeterValueState>({
@@ -286,7 +305,10 @@ export const contextMeterPrimitive: ContextMeterPrimitive = definePrimitive<
       }),
       content: popupContent(slot),
       title: slot({ ...popupTitle(slot), state: (state) => ({ label: state.label }) }),
-      description: slot({ ...popupDescription(slot), state: (state) => ({ valueText: state.valueText }) }),
+      description: slot({
+        ...popupDescription(slot),
+        state: (state, { api }) => ({ valueText: api.valueText(state) }),
+      }),
       rows: slot<BaseSlotProps, { rows: ContextRow[] }>({
         present: (state, { api }) => api.rows(state).length > 0,
         state: (state, { api }) => ({ rows: api.rows(state) }),

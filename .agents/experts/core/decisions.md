@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `9ec23f2` (Wave 3 Task 7 Suggestion)
+Last reviewed: `c66ae7c` (Wave 3 Task 8 Context Meter)
 
 ## Settled
 
@@ -28,6 +28,8 @@ Last reviewed: `9ec23f2` (Wave 3 Task 7 Suggestion)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Enter on Context Meter details that keyboard focus opened closes them** (Wave 3 Task 8): UI SDK's press opening keeps a popup open on a press only when the pointer opened it, and that rule isn't exported; ask upstream for a focus-opened popup to stay open too. Pinned in `context-meter.spec.ts`.
+- **A Context Meter `currency` that isn't an ISO 4217 code throws** from `Intl.NumberFormat` when the details render (the JSDoc asks for one); a bad `locale` is ignored through `toLocale`.
 - **Chain of Thought's `setStepOpen` checks `id in stepsById`,** so an inherited name like `"constructor"` gets past it; Suggestion and Question read by own key (`Object.hasOwn`).
 - **A Checkpoint owner who refuses a close sees it close and reopen** (Escape, then `onOpenChange` cancels): UI SDK reports the close only after it happens, through `controller.open()`'s promise, since web hears neither `openchange` nor a Close part's `action`.
 - **No test proves Question's `ownQuestion` `selects`** (UI SDK asks each primitive with `selects` to prove it); traced by hand, and Chain of Thought, Task and Plan have none either.
@@ -53,6 +55,7 @@ Last reviewed: `9ec23f2` (Wave 3 Task 7 Suggestion)
 
 ## Resolved
 
+- **Context Meter (Wave 3 Task 8):** numbers format in `locale`, else the page's language read in `bind`, else English, so server markup and the Meter beside it agree; the level follows the rounded percentage shown; a non-finite `used` or `total` reads as 0; a small cost keeps two significant digits (`roundingPriority`, with `ES2023.Intl` in the base `lib`); controlled and cancelled opens and the rows memo are unit-tested.
 - **Suggestion (Wave 3 Task 7):** `pick` and the chips read suggestions by own key, so `pick("constructor")` is refused (`suggestion.test.mjs`); an id that leaves `suggestions` is forgotten, so it plays its entrance when added again; a removed chip's focus moves to its neighbor (`createFocusRecovery`); the chips are `type="button"`; the render-state types have JSDoc.
 - **Model Selector and Reasoning Effort (Wave 3 Task 6):** `agent.items` carry `disabled`, so the bridge refuses a disabled model instead of reporting a silent `false`; the open button's name is an `openLabel` option rather than an English plural of `label`; the Combobox and Segmented Control state types have JSDoc; the radio group is named by `label`.
 - **Checkpoint (Wave 3 Task 5):** `open` stuck `true` and the web page left `inert` when `restored` was set with the dialog open (the dialog now closes when Restore leaves, and an `"unmount"` close reports `open: false`); a refused press-open left the dialog showing (`follow` changes `open` first and closes it again); a failed restore then a new press closed and reopened the dialog; a detached controller threw on `defaultOpen` without `onRestore` (the dialog opens only while the `restore` part is bound); an agent's `press` on the dialog's Restore wasn't always gated (the confirm part always renders `data-agent-confirm`); web ignored `agentConfirm = false` (`defaults`).

@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `9ec23f2` (Wave 3 Task 7 Suggestion)
+Last reviewed: `c66ae7c` (Wave 3 Task 8 Context Meter)
 
 ## Settled
 
@@ -14,6 +14,7 @@ Last reviewed: `9ec23f2` (Wave 3 Task 7 Suggestion)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A Context Meter root `className` or `render` function gets `{}`,** as Status's root does (Wave 3 Task 8): style by `data-level`. The docs should say this covers every root.
 - **Renaming the chosen model leaves its old name in Model Selector's field** (Wave 3 Task 6): UI SDK's Combobox keeps the label it showed when `itemToLabel` or the item's label changes, even a bare `<Combobox>`; report upstream. The group beside it updates.
 - **Question's radio and checkbox groups have no name of their own:** the item's group, named by its prompt, names them, as UI SDK Field's "Groups in a Field Set" says; Radio's own docs point the group at the legend too. Not checked with a screen reader.
 - **A custom `QuestionItem` without `QuestionPrompt` has a dangling `aria-labelledby`,** as Step's group does without `StepTitle`.
@@ -40,6 +41,7 @@ Last reviewed: `9ec23f2` (Wave 3 Task 7 Suggestion)
 
 ## Resolved
 
+- **Context Meter text hydrated in the server's locale (Wave 3 Task 8).** Fixed: it formats in English until the root binds and reads the page's language, as UI SDK Meter does.
 - **Suggestion (Wave 3 Task 7):** a chip inside a form no longer submits it (`type="button"` from core); `SuggestionControls` is exported, so a layout you compose hides Previous and Next too; the server markup shows neither controls nor fades until Carousel has measured, so a row that fits doesn't grow 64px on hydration.
 - **Model Selector and Reasoning Effort (Wave 3 Task 6):** `ModelSelectorItem` and `ModelSelectorGroup` pass `className`, `ref` and other props through; `<ReasoningEffort>{null}</ReasoningEffort>` renders nothing, as other components' children do; a refusing host has a fixture case and a spec in both layers.
 - **Checkpoint (Wave 3 Task 5):** server markup named Restore by nothing until hydration (the tooltip is `type="label"`); `CheckpointDialog` dropped its answers for `{null}` children (a destructuring default); the dialog sat in a `span` (the `restore` part is a `div`).
