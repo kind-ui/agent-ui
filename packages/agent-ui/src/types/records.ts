@@ -73,7 +73,7 @@ export interface SuggestionItem {
   description?: string;
 }
 
-/** Token counts for a context window, each optional. */
+/** Token counts for one context window, as the model reports them. */
 export interface TokenUsage {
   input?: number;
   output?: number;
