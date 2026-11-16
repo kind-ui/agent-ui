@@ -80,6 +80,7 @@ export type UploaderRootState = {
   fileInput: Pick<FileInputOptions, "accept" | "maxSize" | "multiple" | "onValueChange" | "onReject">;
 };
 
+/** What the list hands its render function: the rows to render, each removed one included while it fades out. */
 export type UploaderListState = { rows: LeavingRow<UploadItem>[] };
 
 export type UploadItemState = {
@@ -99,8 +100,10 @@ export type UploaderApi = {
   readonly retry: ((id: string, event?: Event) => void) | undefined;
   /** Plays an item's entrance when it's added, and its exit once it's removed. */
   bindItem: (el: HTMLElement, id: string) => () => void;
-  /** Hears File Input's events on web, marks the end of the first frame, and moves rows after a removed one. */
+  /** Hears File Input's events on web, and marks the end of the first frame. */
   bindRoot: (el: HTMLElement) => () => void;
+  /** Moves the rows after a removed one into its place. */
+  bindList: (el: HTMLElement) => () => void;
   /** Tracks an action button, so focus moves to a neighbor's when a cancelled item's button leaves. */
   bindAction: (el: HTMLElement, part: Part<UploaderState, UploaderApi, ItemProps>) => () => void;
   partState: { root: (state: UploaderState) => UploaderRootState };
@@ -267,7 +270,9 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
     let mounting = true;
     const elements = new Map<string, HTMLElement>();
     const slide = createRowSlide(elements, () => store.get().motion);
-    function setRows(rows: LeavingRow<UploadItem>[]) {
+    // A leaving row with no element to play its exit is dropped at once.
+    function setRows(next: LeavingRow<UploadItem>[]) {
+      const rows = next.filter((row) => !row.leaving || elements.has(row.item.id));
       slide.measure(store.get().rows, rows);
       for (const id of mounted) if (!rows.some((row) => row.item.id === id)) mounted.delete(id);
       store.set({ rows });
@@ -312,7 +317,9 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
         });
         return () => {
           unbind();
-          if (elements.get(id) === el) elements.delete(id);
+          if (elements.get(id) !== el) return;
+          elements.delete(id);
+          if (rowOf(store.get(), id)?.leaving) setRows(store.get().rows);
         };
       },
       bindRoot: (el) => {
@@ -320,13 +327,12 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
           mounting = false;
         });
         const unforward = forwardFileInputEvents(el, intake);
-        const unslide = slide.bind(el);
         return () => {
           cancelAnimationFrame(frame);
           unforward();
-          unslide();
         };
       },
+      bindList: (el) => slide.bind(el),
       bindAction: (el, part) => {
         const id = part.props.value;
         actions.set(id, el);
@@ -364,6 +370,7 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
       role: "list",
       attrs: (state) => ({ "data-empty": state.rows.length === 0 ? "" : undefined }),
       state: (state) => ({ rows: state.rows }),
+      bind: (el, { api }) => api.bindList(el),
     }),
     item: slot<ItemProps, UploadItemState>({
       role: "listitem",

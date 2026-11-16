@@ -62,10 +62,13 @@ export function defineAttachments(): void {
         const drawn = new WeakMap<Element, { item: AttachmentItem; preview: string | undefined }>();
         const draw = () => {
           const { rows } = instance.get();
+          const ids = new Set(rows.map(({ item }) => item.id));
+          // Dropped rows leave first, so placing the rest never moves (and blurs) a focused one.
+          for (const child of [...el.children])
+            if (!ids.has(child.getAttribute("value") ?? "")) child.remove();
           const existing = new Map([...el.children].map((child) => [child.getAttribute("value"), child]));
           rows.forEach(({ item }, index) => {
             let child = existing.get(item.id);
-            existing.delete(item.id);
             if (!child) {
               child = document.createElement("kind-attachments-item");
               child.setAttribute("value", item.id);
@@ -78,7 +81,6 @@ export function defineAttachments(): void {
             }
             if (el.children[index] !== child) el.insertBefore(child, el.children[index] ?? null);
           });
-          for (const child of existing.values()) child.remove();
         };
         draw();
         return instance.subscribe(draw);

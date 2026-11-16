@@ -60,6 +60,7 @@ export type AttachmentsState = {
 
 type ItemProps = { value: string };
 
+/** What the root hands its render function: the chips to render, each removed one included while it fades out. */
 export type AttachmentsRootState = { rows: LeavingRow<AttachmentItem>[] };
 
 export type AttachmentState = {
@@ -169,8 +170,9 @@ export const attachmentsPrimitive: AttachmentsPrimitive = definePrimitive({
     const elements = new Map<string, HTMLElement>();
     const slide = createRowSlide(elements, () => store.get().motion);
 
-    // A leaving chip keeps its preview until it's dropped.
-    const setRows = (rows: LeavingRow<AttachmentItem>[]) => {
+    // A leaving chip keeps its preview until it's dropped. One with no element to play its exit is dropped at once.
+    const setRows = (next: LeavingRow<AttachmentItem>[]) => {
+      const rows = next.filter((row) => !row.leaving || elements.has(row.item.id));
       slide.measure(store.get().rows, rows);
       for (const id of mounted) if (!rows.some((row) => row.item.id === id)) mounted.delete(id);
       const gone = revokeGone(rows.map((row) => row.item));
@@ -235,7 +237,9 @@ export const attachmentsPrimitive: AttachmentsPrimitive = definePrimitive({
         });
         return () => {
           unbind();
-          if (elements.get(id) === el) elements.delete(id);
+          if (elements.get(id) !== el) return;
+          elements.delete(id);
+          if (rowOf(store.get(), id)?.leaving) setRows(store.get().rows);
         };
       },
       bindRoot: (el) => slide.bind(el),

@@ -130,6 +130,11 @@ function definitionFor(
     if (now !== undefined) start = typeof value === "number" ? Number.parseFloat(now) : now;
     definition[key] = [start, value];
   }
+  // A transform an interrupted run held inline settles from where it is, rather than snapping when this run ends.
+  if (direction === "in" && !("transform" in definition) && el.style.transform) {
+    if (mode === "full") definition.transform = [getComputedStyle(el).transform, "matrix(1, 0, 0, 1, 0, 0)"];
+    else el.style.removeProperty("transform");
+  }
   if (preset === "expand" && mode === "full") {
     const height = getComputedStyle(el).height;
     el.style.overflow = "hidden";

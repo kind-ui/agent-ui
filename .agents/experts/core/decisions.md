@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `b1676ea` (Wave 2 Task 8 Queue)
+Last reviewed: `c3bf470` (Wave 2 Task 9 exits)
 
 ## Settled
 
@@ -22,6 +22,7 @@ Last reviewed: `b1676ea` (Wave 2 Task 8 Queue)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Removing the last chip from a composer leaves focus on `<body>`:** the attachments' focus recovery has no neighbor, and the composer gives it no fallback (the editor). Same before Wave 2 Task 9.
 - **A double press on a Queue item's remove control calls `onRemove` twice** when the host removes the item asynchronously; there's no per-item lock like the uploader's.
 - **Queue's `known` set never forgets ids,** so an item removed and re-added under the same id after its exit gets no entrance (same as Task and Plan).
 - **`initials` is a generic export name** on the core entry, like `Token` and `Highlight`; consider `avatarInitials` before 0.1, since Message will show avatars too.
@@ -44,6 +45,7 @@ Last reviewed: `b1676ea` (Wave 2 Task 8 Queue)
 
 ## Resolved
 
+- **Exits (Wave 2 Task 9):** a leaving row with no element to play its exit (Attachments children rendered from `items`, a headless instance) is dropped at once, so it never leaks its object URL, entrance memory or the uploader list's `data-empty`; `AttachmentsRootState` and `UploaderListState` have JSDoc; the uploader's slide watches its list, not the whole root.
 - **The uploader's `mounted` set never forgot ids (Wave 2 Task 9).** Fixed: the uploader and attachments forget an id once its row is dropped (or at once with `motion="none"`), so an item removed and added again under the same id plays its entrance (tested).
 - **Queue (Wave 2 Task 8):** focus follows a focused item that completes into an open Completed section (`createListFocus` tries the lost item's key first, which also covers any list whose item gets a new element); `reorder` refuses an index outside `items`; its JSDoc says the index places the item among the pending ones and `details.index` is where that lands in `items`.
 - **Subagent (Wave 2 Task 7):** an unknown web `status` shows the pending words in the meta; `initials` takes each word's first grapheme, skips words that start with punctuation or an emoji, and keeps "ß"; a cancel is announced as "<name> stopped", matching Stop; `agentName`'s TSDoc says what shows without it.

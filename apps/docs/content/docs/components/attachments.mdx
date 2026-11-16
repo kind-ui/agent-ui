@@ -30,7 +30,7 @@ Attachments
 └── Attachment
 ```
 
-`Attachments` renders a list, and an `Attachment` chip for each of its `items`. Pass `Attachment` children yourself, each with the item's `id` as its `value`, when you want to style the chips. Name the list with `aria-label`.
+`Attachments` renders a list, and an `Attachment` chip for each of its `items`. To style the chips, pass a function of `{ rows }` as its children that renders an `Attachment` per row, each with the item's `id` as its `value`. Name the list with `aria-label`.
 
 ## Usage
 
@@ -42,7 +42,7 @@ Pass `items`, each with an `id`, a `name` and optionally its `size` in bytes and
 
 Pass `onRemove` to let people remove chips. It gets the item's `id`, and you take the item out of `items`. Each chip shows a remove button for the pointer, and Delete or Backspace removes the focused chip. Focus then moves to the next chip, or the previous one at the end.
 
-A removed chip stays in place and fades out, hidden from assistive technology and out of reach, then the chips after it slide into its place. Under `prefers-reduced-motion`, or with `motion="reduced"`, it fades over 120 ms and nothing slides, and with `motion="none"` it leaves at once. Chips you pass as children leave as soon as you remove them.
+A removed chip stays in place and fades out, hidden from assistive technology and out of reach, then the chips after it slide into its place. Under `prefers-reduced-motion`, or with `motion="reduced"`, it fades over 120 ms and nothing slides, and with `motion="none"` it leaves at once. To style the chips and keep the exit, pass `Attachments` a function of `{ rows }` that renders an `Attachment` for each row; chips you render from `items` leave as soon as you remove them.
 
 ### Keyboard
 

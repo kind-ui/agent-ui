@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `b1676ea` (Wave 2 Task 8 Queue)
+Last reviewed: `c3bf470` (Wave 2 Task 9 exits)
 
 ## Settled
 
@@ -17,6 +17,7 @@ Last reviewed: `b1676ea` (Wave 2 Task 8 Queue)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **The composer's attachments area opens and closes in one frame:** when its first chip arrives or its last one is dropped, the input and buttons below move by the area's height (48px) at once. Fix in the composer: play `expand` on the area and hide it once that ends, and have a test follow `kind-composer-input`.
 - **A dropped Queue row snaps from the pointer to its slot in one frame:** `createReorder` clears `--drag-x`/`--drag-y` before the drop commits, so the root's `layout` has no rect from before. Carrying it needs the row's rect before UI SDK's drag stops.
 - **Subagent's guide line and nested marks are half a pixel off at 1x,** likely Chrome drawing the 1.5px guide border at 1px (as the status mark ring noted); a result already complete on load fades in once on mount.
 - **Task and Plan selectors reach 3–4 attributes** (completed fill, held-still title, item status → title); consumer utilities and unlayered CSS still win by layer order. Wrap the context halves in `:where()` if a consumer writing in `@layer components` hits it.
@@ -26,7 +27,7 @@ Last reviewed: `b1676ea` (Wave 2 Task 8 Queue)
 
 ## Resolved
 
-- **Removed chips and uploader rows left without an exit, and the items after them jumped (Wave 2 Task 9).** Fixed with Queue's leaving rows (spec §6 "Removed items"): the row stays `inert` and `aria-hidden` while it fades, then the items after it slide into place; a leaving row keeps its preview and Cancel/Retry button, so it doesn't reflow as it fades; the composer keeps its attachments area while the last chip leaves. `layout` now writes its inverted position at once, and the slide starts on the list's first DOM change, so the rows don't sit a frame at their new place before sliding (also Queue's). Reduced motion is a 120 ms fade with no slide; `motion="none"` leaves at once (tested on both layers).
+- **Removed chips and uploader rows left without an exit, and the items after them jumped (Wave 2 Task 9).** Fixed with Queue's leaving rows (spec §6 "Removed items"): the row stays `inert` and `aria-hidden` while it fades, then the items after it slide into place; a leaving row keeps its preview and Cancel/Retry button, so it doesn't reflow as it fades; the composer keeps its attachments area while the last chip leaves. `layout` now writes its inverted position at once, and the slide starts on the list's first DOM change, so the rows don't sit a frame at their new place before sliding (also Queue's). Reduced motion is a 120 ms fade with no slide; `motion="none"` leaves at once (tested on both layers). An `enter` after an interrupted `fade-up` settles the held `transform` as it plays instead of snapping at the end (`motion.spec.ts`).
 - **Queue (Wave 2 Task 8):** a picked-up row isn't clipped by its section's panel (`overflow: visible` while one is grabbed); the remove control's pointer target is 24px; context selectors sit in `:where()`, so each rule stays one attribute.
 - **Subagent (Wave 2 Task 7):** the result's fade honors `prefers-reduced-motion` (the media rule now outranks the base rule); an empty result hides; the trigger's corner is concentric with the frame; the avatar's rules are `:where()`-wrapped to one attribute.
 - **Plan (Wave 2 Task 6):** the progress bar and Accept use logical offsets, so they line up with the title in right-to-left text (tested); a pending Accept doesn't darken on hover; the progress label reserves `13ch`, so the track doesn't narrow when a count gains a digit.

@@ -87,10 +87,13 @@ export function defineUploader(): void {
             if (fileInput.maxSize !== maxSize) fileInput.maxSize = maxSize;
           }
           if (!list) return;
+          const ids = new Set(rows.map(({ item }) => item.id));
+          // Dropped rows leave first, so placing the rest never moves (and blurs) a focused one.
+          for (const child of [...list.children])
+            if (!ids.has(child.getAttribute("value") ?? "")) child.remove();
           const existing = new Map([...list.children].map((child) => [child.getAttribute("value"), child]));
           rows.forEach(({ item }, index) => {
             let child = existing.get(item.id);
-            existing.delete(item.id);
             if (!child) {
               child = document.createElement("kind-uploader-item");
               child.setAttribute("value", item.id);
@@ -101,7 +104,6 @@ export function defineUploader(): void {
             }
             if (list.children[index] !== child) move(list, child, list.children[index] ?? null);
           });
-          for (const child of existing.values()) child.remove();
         };
         draw();
         return instance.subscribe(draw);

@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `b1676ea` (Wave 2 Task 8 Queue)
+Last reviewed: `c3bf470` (Wave 2 Task 9 exits)
 
 ## Settled
 
@@ -36,6 +36,7 @@ Last reviewed: `b1676ea` (Wave 2 Task 8 Queue)
 
 ## Resolved
 
+- **Exits (Wave 2 Task 9):** `Attachments` takes a function of `{ rows }` as children, so styled chips keep their exit (chips rendered from `items` leave at once, and core drops their rows); the composer spec covers a chip added back and the host removing the focused chip.
 - **Queue (Wave 2 Task 8):** the spec covers an item added after the first frame playing its entrance, and an item completing (focus, counts, one Tab stop).
 - **Subagent (Wave 2 Task 7):** a complete subagent without `result` no longer keeps an empty 6px result strip (`:empty` hides it); the fixture now covers `avatarSrc` and React 19 rendering a `kind-subagent`'s steps.
 - **Task and Plan (Wave 2 Task 6):** `TaskItemFiles` keys files by place, so a file listed twice renders; the entrance of an item appended after the first frame is tested; the Plan fixture's sibling plans keep their `items` arrays.

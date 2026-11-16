@@ -206,6 +206,33 @@ test("a run that replaces an interrupted one leaves no stray inline style", asyn
   expect(inline).toBe("margin-left: 40px; opacity: 0;");
 });
 
+test("a fade after an interrupted fade-up settles the held transform as it plays", async ({ page }) => {
+  await open(page);
+  const transforms = await page.evaluate(async () => {
+    const box = document.getElementById("box") as HTMLElement;
+    const frame = () => new Promise((r) => requestAnimationFrame(r));
+    void window.kindMotion.enter(box, "fade-up");
+    await frame();
+    await frame();
+    void window.kindMotion.exit(box, "fade").catch(() => {});
+    await frame();
+    const entered = window.kindMotion.enter(box, "fade");
+    const seen: string[] = [];
+    let done = false;
+    void entered.then(() => {
+      done = true;
+    });
+    while (!done) {
+      seen.push(getComputedStyle(box).transform);
+      await frame();
+    }
+    return { first: seen[0], last: seen.at(-1), after: getComputedStyle(box).transform };
+  });
+  expect(transforms.first).not.toBe("none");
+  expect(transforms.last).toMatch(/^(none|matrix\(1, 0, 0, 1, 0, 0(\.\d+)?\))$/);
+  expect(transforms.after).toBe("none");
+});
+
 for (const boxSizing of ["border-box", "content-box"]) {
   test(`expand ends at the bordered ${boxSizing} element's own height`, async ({ page }) => {
     await open(page);

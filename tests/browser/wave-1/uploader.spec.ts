@@ -166,6 +166,7 @@ test("when the host removes the row whose Cancel is focused, focus moves to a ne
   await page.evaluate(() => (window as unknown as Fixture).kindUploader.remove("report"));
   await expect(page.getByRole("button", { name: "Cancel meeting-notes.md" })).toBeFocused();
   await expect(page.locator(rows.row)).toHaveCount(3);
+  await expect(page.getByRole("button", { name: "Cancel meeting-notes.md" })).toBeFocused();
 });
 
 test("axe reports no violations", async ({ page }) => {

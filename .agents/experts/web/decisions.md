@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `b1676ea` (Wave 2 Task 8 Queue)
+Last reviewed: `c3bf470` (Wave 2 Task 9 exits)
 
 ## Settled
 
@@ -36,6 +36,7 @@ Last reviewed: `b1676ea` (Wave 2 Task 8 Queue)
 
 ## Resolved
 
+- **A focused chip or uploader row blurred when an earlier one was dropped (Wave 2 Task 9).** Fixed: `draw` removes dropped rows before placing the rest, so no row after them moves; the focus specs check again once the row is gone, and pass in Chromium, Firefox and WebKit.
 - **Queue (Wave 2 Task 8):** `kind-queue` keeps its open sections when it leaves the page and comes back (`openSections` root state, restored through `defaultOpenSections`); sections written after it connects are filled in through a `MutationObserver`; `KindQueueElement` types its `api`.
 - **Subagent (Wave 2 Task 7):** `kind-subagent` no longer moves the host's children (React 19 threw on `insertBefore`/`removeChild`): the host writes steps inside `kind-subagent-content` and the element adds its parts around it; without a `result` the result part stays empty and hides.
 - **Task and Plan (Wave 2 Task 6):** the lists keep items someone wrote (and their text), and a written item replaces the one the element added, as Chain of Thought's do; parts and items written or removed after connecting redraw; a `kind-plan-progress` with text keeps it.

@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { layerOf } from "../layer.js";
-import { travel, watchExit } from "../leaving.js";
+import { addBack, travel, watchExit } from "../leaving.js";
 
 type Draft = { text: string; attachments: { name: string; error?: string }[] };
 type Fixture = {
@@ -179,6 +179,8 @@ test("Delete removes the focused attachment and focus moves to its neighbor", as
   await expect(items).toHaveCount(1);
   await expect(items.first()).toContainText("b.txt");
   await expect(items.first()).toBeFocused();
+  await expect(page.locator('[data-slot="kind-attachments-item"]')).toHaveCount(1);
+  await expect(items.first()).toBeFocused();
 });
 
 test("Stop takes Send's place only while pending, and only with onStop", async ({ page }) => {
@@ -285,6 +287,24 @@ test('with motion="none" a removed chip leaves at once', async ({ page }) => {
   const { leaving, slid } = await watchExit(page, { ...chips, id: "a" });
   expect({ leaving, slid }).toEqual({ leaving: [], slid: [] });
   await expect(page.locator(chips.row)).toHaveCount(2);
+});
+
+test("a chip removed and added again plays its entrance", async ({ page }) => {
+  await openChips(page);
+  await watchExit(page, { ...chips, id: "a" });
+  expect(await addBack(page, { ...chips, id: "a", text: "diagram.png" })).toBe(true);
+});
+
+test("when the host removes the focused chip, focus moves to the next one", async ({ page }) => {
+  await openChips(page);
+  const items = page.getByRole("list", { name: "Files" }).getByRole("listitem");
+  await items.filter({ hasText: "notes.md" }).focus();
+  await page.evaluate(() =>
+    (window as unknown as { kindAttachments: { remove(id: string): void } }).kindAttachments.remove("b"),
+  );
+  await expect(items.filter({ hasText: "archive.zip" })).toBeFocused();
+  await expect(page.locator(chips.row)).toHaveCount(2);
+  await expect(items.filter({ hasText: "archive.zip" })).toBeFocused();
 });
 
 test("an edit the owner cancels puts the editor back to the draft", async ({ page }) => {
