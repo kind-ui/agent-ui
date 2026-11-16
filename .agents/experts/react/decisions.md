@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `HEAD_SHA` (Wave 2 Task 6 Task and Plan)
+Last reviewed: `044795f` (Wave 2 Task 6 Task and Plan)
 
 ## Settled
 
