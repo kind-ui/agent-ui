@@ -1,0 +1,245 @@
+/* Feedback (spec §7): quiet thumbs up and down, then "Add a comment", which opens a small box to write one. */
+@layer components {
+  [data-slot="kind-feedback"] {
+    /* Lucide "thumbs-up", outlined and filled, see THIRD_PARTY_NOTICES.md. Down is the same glyph turned over. */
+    --kind-feedback-thumb: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 10v12'/%3E%3Cpath d='M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z'/%3E%3C/svg%3E");
+    --kind-feedback-thumb-pressed: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 10v12'/%3E%3Cpath d='M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z' fill='black'/%3E%3C/svg%3E");
+
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--kind-color-muted);
+  }
+
+  [data-slot="kind-feedback-rating"] {
+    display: contents;
+  }
+
+  :where([data-slot="kind-feedback"]) [data-slot="toggle-group"] {
+    display: inline-flex;
+    gap: 2px;
+  }
+
+  /* Quiet until pressed: muted and bare, then the thumb fills in the foreground color on a soft fill. */
+  :where([data-slot="kind-feedback"]) [data-slot="toggle"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--kind-radius) / 2);
+    background-color: transparent;
+    color: inherit;
+    transition:
+      background-color var(--kind-duration-fast) var(--kind-ease-out),
+      color var(--kind-duration-fast) var(--kind-ease-out);
+
+    &:hover,
+    &[data-pressed] {
+      background-color: var(--kind-color-hover);
+      color: var(--kind-color-fg);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  :where([data-slot="kind-feedback"]) [data-feedback-icon] {
+    display: block;
+    width: 16px;
+    height: 16px;
+    background-color: currentColor;
+    mask: var(--kind-feedback-thumb) center / contain no-repeat;
+  }
+  :where([data-slot="kind-feedback"]) [data-feedback-icon="down"] {
+    rotate: 180deg;
+  }
+  :where([data-slot="kind-feedback"]) [data-pressed] [data-feedback-icon] {
+    mask-image: var(--kind-feedback-thumb-pressed);
+  }
+
+  /* "Add a comment" and the thanks share one place at the thumbs' height, so swapping them moves nothing. */
+  :is([data-slot="kind-feedback-comment"], [data-slot="kind-feedback-thanks"]) {
+    display: inline-flex;
+    align-items: center;
+    height: 1.75rem;
+    padding-inline: 8px;
+    border-radius: calc(var(--kind-radius) / 2);
+    font: inherit;
+    color: inherit;
+
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  [data-slot="kind-feedback-comment"] {
+    border: 0;
+    background-color: transparent;
+    font-weight: 500;
+    transition:
+      background-color var(--kind-duration-fast) var(--kind-ease-out),
+      color var(--kind-duration-fast) var(--kind-ease-out);
+
+    &:hover,
+    &[data-open] {
+      background-color: var(--kind-color-hover);
+      color: var(--kind-color-fg);
+    }
+  }
+
+  [data-slot="kind-feedback-content"] {
+    z-index: 50;
+    display: grid;
+    gap: 8px;
+    width: 18rem;
+    max-width: calc(100vw - 16px);
+    padding: 12px;
+    border: 1px solid var(--kind-color-border);
+    border-radius: var(--kind-radius);
+    background-color: var(--kind-color-surface);
+    box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 20%, transparent);
+    color: var(--kind-color-fg);
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    outline: none;
+    transform-origin: var(--transform-origin);
+  }
+
+  [data-slot="kind-feedback-title"] {
+    display: block;
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+  }
+
+  [data-slot="kind-feedback-comment-text"] {
+    display: block;
+  }
+
+  /* Send stays at the end; the status or the error sits before it, one at a time, so neither moves it. */
+  :where([data-slot="kind-feedback-content"]) [data-feedback-actions] {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 1.75rem;
+  }
+
+  [data-slot="kind-feedback-comment-status"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--kind-color-muted);
+    font-size: 0.75rem;
+  }
+
+  [data-slot="kind-feedback-comment-error"] {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--kind-color-danger);
+    font-size: 0.75rem;
+  }
+
+  [data-slot="kind-feedback-comment-send"] {
+    display: inline-flex;
+    align-items: center;
+    height: 1.75rem;
+    margin-inline-start: auto;
+    padding-inline: 12px;
+    border: 0;
+    border-radius: calc(var(--kind-radius) / 2);
+    background-color: var(--kind-color-accent);
+    color: var(--kind-color-on-accent);
+    font: inherit;
+    font-weight: 500;
+    transition:
+      background-color var(--kind-duration-fast),
+      opacity var(--kind-duration-fast);
+
+    &:hover:not([aria-disabled="true"]) {
+      background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-fg));
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+    &[aria-disabled="true"] {
+      cursor: default;
+    }
+    /* Empty text dims Send; a pending send keeps it solid beside its status. */
+    &[aria-disabled="true"]:not([data-pending]) {
+      opacity: 0.5;
+    }
+    &[data-pending] {
+      cursor: progress;
+    }
+  }
+
+  /* Motion: the box rises in. Reduced motion only fades, in 120 ms; `none` doesn't animate. */
+  :where([data-slot="kind-feedback"]) [data-slot="kind-feedback-content"] {
+    transition:
+      opacity var(--kind-duration-base) var(--kind-ease),
+      translate var(--kind-duration-base) var(--kind-ease),
+      scale var(--kind-duration-base) var(--kind-ease);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+      translate: 0 4px;
+      scale: 0.98;
+    }
+    &[data-ending-style] {
+      transition-duration: var(--kind-duration-fast);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-slot="kind-feedback"][data-motion="auto"]) [data-slot="kind-feedback-content"] {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+      &:is([data-starting-style], [data-ending-style]) {
+        translate: none;
+        scale: none;
+        transition-duration: var(--kind-duration-reduced);
+      }
+    }
+  }
+
+  :where([data-slot="kind-feedback"][data-motion="reduced"]) [data-slot="kind-feedback-content"] {
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      translate: none;
+      scale: none;
+      transition-duration: var(--kind-duration-reduced);
+    }
+  }
+
+  :where([data-slot="kind-feedback"][data-motion="none"])
+    :is(
+      [data-slot="toggle"],
+      [data-slot="kind-feedback-comment"],
+      [data-slot="kind-feedback-content"],
+      [data-slot="kind-feedback-comment-send"]
+    ) {
+    transition: none;
+  }
+
+  :is(
+    [data-slot="kind-feedback-comment"],
+    [data-slot="kind-feedback-thanks"],
+    [data-slot="kind-feedback-content"],
+    [data-slot="kind-feedback-comment-status"],
+    [data-slot="kind-feedback-comment-error"]
+  )[hidden] {
+    display: none;
+  }
+}

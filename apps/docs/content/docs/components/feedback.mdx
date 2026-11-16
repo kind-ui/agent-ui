@@ -1,0 +1,97 @@
+---
+title: Feedback
+description: Let a person rate a response with a thumb up or down, and add a comment if they want to say more.
+---
+
+import FeedbackExample from "@/examples/feedback/basic";
+
+Use feedback in a message's actions, so a person can tell you which answers helped. It's two quiet thumbs, and once one is pressed, an **Add a comment** button that opens a small box to write in.
+
+<Example caption="Press the thumbs up, then Add a comment. Write a few words and press Send: the box closes and a thank-you takes the button's place.">
+  <FeedbackExample />
+
+  <include cwd lang="tsx">./examples/feedback/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/feedback
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/feedback-web
+```
+
+## Composition
+
+```text
+Feedback
+├── FeedbackRating
+│   ├── FeedbackUp
+│   └── FeedbackDown
+├── FeedbackComment
+├── FeedbackThanks
+└── FeedbackContent
+    ├── FeedbackTitle
+    ├── FeedbackCommentText
+    ├── FeedbackCommentStatus
+    ├── FeedbackCommentError
+    └── FeedbackCommentSend
+```
+
+`Feedback` renders these parts when you pass no children: a group named by its `label`. `FeedbackRating` holds UI SDK's Toggle group, and `FeedbackUp` and `FeedbackDown` are its toggles, named **Good response** and **Bad response**. `FeedbackComment` is the **Add a comment** button and `FeedbackThanks` the text that replaces it. `FeedbackContent` is the popover: `FeedbackTitle` names it, `FeedbackCommentText` is UI SDK's Textarea, and `FeedbackCommentSend` sends the text, with `FeedbackCommentStatus` or `FeedbackCommentError` beside it.
+
+## Usage
+
+### Rating
+
+Pressing a thumb presses it and unpresses the other, and pressing the pressed thumb again clears the rating. The thumbs are one Tab stop: the arrow keys move between them, and Enter or Space presses the focused one. `onRatingChange` gets `"up"`, `"down"` or `null`, with `details.reason` set to `"item-press"`.
+
+Pass `defaultRating` to start with a rating, or `rating` with `onRatingChange` to control it. Call `details.cancel()` in `onRatingChange` to keep the rating as it was.
+
+```tsx
+const [rating, setRating] = useState<FeedbackRating>(null);
+
+<Feedback rating={rating} onRatingChange={(next) => setRating(next)} />
+```
+
+### Comments
+
+Pass `onComment` to offer a comment. **Add a comment** appears beside the thumbs once one is pressed, without moving them, and leaves when the rating is cleared. Pressing it opens the box with focus in the text. A rating alone never opens it.
+
+**Send** calls `onComment` with the text, trimmed, and stays disabled while the text is empty. Return a promise to hold the box open while it settles: Send stays disabled with a running mark and "Sending" beside it, so a second press calls you once. When it resolves, the box closes, empties and returns focus to **Add a comment**, and "Comment sent" is announced. When it rejects, the text stays with "Comment not sent. Try again." beside Send, and "Comment not sent" is announced.
+
+Once you have the comment, pass `commentSent`: "Thanks for your feedback" takes the button's place at its height, and focus moves to it if the button had it.
+
+```tsx
+const [commentSent, setCommentSent] = useState(false);
+
+<Feedback
+  commentSent={commentSent}
+  onComment={async (text) => {
+    await saveComment(text);
+    setCommentSent(true);
+  }}
+/>
+```
+
+Escape or a press outside closes the box and keeps what was written for the next time it opens. Pass `open` and `onOpenChange` to control the box, or `defaultOpen` to start with it open; `onOpenChange` gets UI SDK Popover's reason, like `trigger-press` or `escape-key`.
+
+### Motion
+
+The box rises and fades in, and **Add a comment** and the thanks fade in when they appear. Under `prefers-reduced-motion`, or with `motion="reduced"`, the box only fades, over 120 ms, and with `motion="none"` nothing animates.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/feedback/feedback.ts" name="FeedbackOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the feedback by its label and reads its `rating`. `rate("up")`, `rate("down")` or `rate(null)` changes it as a press does, reporting `details.source` as `"agent"` to `onRatingChange`. `submitComment(text)` fills the box and sends it through `onComment`, offered while **Add a comment** shows and no comment is being sent. Neither asks a person first; require one through `createAgent`'s `allow` if your `onComment` posts somewhere public. Like any component with a button, it also has UI SDK's generic `press`.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/feedback/feedback.ts" name="FeedbackAgentActions" type='Pick<FeedbackApi, "rate" | "submitComment">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-feedback>`, props are kebab-case attributes and `rating` and `open` are properties too; `onRatingChange` is the `ratingchange` event and `onOpenChange` the `openchange` event. The `can-comment` attribute offers a comment, and Send fires `comment` with the text as `detail.value`: call `event.detail.waitUntil(promise)` to hold the box open. The element fills in its parts when it has no children.
+</Caption>

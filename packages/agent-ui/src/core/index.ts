@@ -93,6 +93,18 @@ export {
   type FollowState,
   nextFollowState,
 } from "./conversation/index.js";
+export {
+  type FeedbackApi,
+  type FeedbackCommentCallback,
+  type FeedbackCommentTextState,
+  type FeedbackOptions,
+  type FeedbackPrimitive,
+  type FeedbackRating,
+  type FeedbackRatingChangeReason,
+  type FeedbackRatingState,
+  type FeedbackState,
+  feedbackPrimitive,
+} from "./feedback/index.js";
 export type { IndicatorOptions, IndicatorPrimitive, IndicatorState } from "./indicator.js";
 export {
   type ItemListApi,

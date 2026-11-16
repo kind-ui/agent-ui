@@ -14,6 +14,7 @@ import {
   ConversationRow,
   ConversationViewport,
 } from "./components/ui/conversation.js";
+import { Feedback } from "./components/ui/feedback.js";
 import { KindToolbar, KindToolbarButton } from "./components/ui/internal/toolbar.js";
 import { Loader } from "./components/ui/loader.js";
 import { Markdown } from "./components/ui/markdown.js";
@@ -128,6 +129,7 @@ const items = {
   "reasoning-effort": <ReasoningEffort defaultValue="medium" />,
   suggestion: <Suggestion suggestions={[{ id: "a", label: "Summarize this thread" }]} onPick={() => {}} />,
   "context-meter": <ContextMeter used={57_600} total={128_000} usage={{ input: 40_000 }} cost={0.42} />,
+  feedback: <Feedback defaultRating="up" onComment={() => {}} />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
       <ConversationViewport>

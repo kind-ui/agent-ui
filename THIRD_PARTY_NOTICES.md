@@ -25,9 +25,9 @@
 
 ## Lucide
 
-- Source: https://github.com/lucide-icons/lucide, the `check`, `x`, `minus`, `arrow-down`, `copy`, `wrap-text`, `refresh-cw`, `pencil`, `chevron-left`, `chevron-right`, `arrow-up`, `paperclip`, `at-sign`, `square-slash`, `file`, `circle-alert` and `upload` icon paths.
-- Used in: `packages/agent-ui/src/styles/step.css` (Step status glyphs), `packages/agent-ui/src/styles/conversation.css` (the jump control's arrow), `packages/agent-ui/src/styles/agent-ui.css` (copy and copied), `packages/agent-ui/src/styles/code-block.css` (wrap) and `packages/agent-ui/src/styles/message.css` (regenerate, edit and the branch arrows), `packages/agent-ui/src/styles/composer.css` (send, attach, token kinds and token removal), `packages/agent-ui/src/styles/attachments.css` (file, error and removal) and `packages/agent-ui/src/styles/uploader.css` (drop zone, file, done, error, cancel and retry), as CSS mask images.
-- Changes: stroke width set to 3.5 (Step), 2.5 (Conversation), 2.25 and 2.5 (Composer), 3 (Attachments) and 2.25 and 2.5 (Uploader); the others are unchanged.
+- Source: https://github.com/lucide-icons/lucide, the `check`, `x`, `minus`, `arrow-down`, `copy`, `wrap-text`, `refresh-cw`, `pencil`, `chevron-left`, `chevron-right`, `arrow-up`, `paperclip`, `at-sign`, `square-slash`, `file`, `circle-alert`, `upload` and `thumbs-up` icon paths.
+- Used in: `packages/agent-ui/src/styles/step.css` (Step status glyphs), `packages/agent-ui/src/styles/conversation.css` (the jump control's arrow), `packages/agent-ui/src/styles/agent-ui.css` (copy and copied), `packages/agent-ui/src/styles/code-block.css` (wrap) and `packages/agent-ui/src/styles/message.css` (regenerate, edit and the branch arrows), `packages/agent-ui/src/styles/composer.css` (send, attach, token kinds and token removal), `packages/agent-ui/src/styles/attachments.css` (file, error and removal) `packages/agent-ui/src/styles/uploader.css` (drop zone, file, done, error, cancel and retry) and `packages/agent-ui/src/styles/feedback.css` (the thumbs), as CSS mask images.
+- Changes: stroke width set to 3.5 (Step), 2.5 (Conversation), 2.25 and 2.5 (Composer), 3 (Attachments) and 2.25 and 2.5 (Uploader); Feedback adds a filled `thumbs-up` and turns it over for down; the others are unchanged.
 - Licensed under the ISC License; the icons that derive from Feather (all but `wrap-text`, `pencil`, `paperclip`, `square-slash` and `file`) are also under the MIT License.
 
 ---

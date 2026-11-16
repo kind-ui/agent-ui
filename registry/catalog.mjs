@@ -82,6 +82,11 @@ const components = {
       "How full the context window is, as a ring and a percentage, with token counts and cost in a popover.",
     uses: [],
   },
+  feedback: {
+    title: "Feedback",
+    description: "Thumbs up and down for a response, with an optional comment written in a popover.",
+    uses: ["internal-textarea"],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

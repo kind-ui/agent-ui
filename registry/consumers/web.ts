@@ -7,6 +7,7 @@ import { defineComposer } from "./components/ui/web/composer.js";
 import { defineConfirmation } from "./components/ui/web/confirmation.js";
 import { defineContextMeter } from "./components/ui/web/context-meter.js";
 import { defineConversation } from "./components/ui/web/conversation.js";
+import { defineFeedback } from "./components/ui/web/feedback.js";
 import { defineInternalToolbar } from "./components/ui/web/internal/toolbar.js";
 import { defineLoader } from "./components/ui/web/loader.js";
 import { defineMarkdown } from "./components/ui/web/markdown.js";
@@ -47,6 +48,7 @@ for (const define of [
   defineReasoningEffort,
   defineSuggestion,
   defineContextMeter,
+  defineFeedback,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -86,6 +88,7 @@ const items = {
   "reasoning-effort": `<kind-reasoning-effort></kind-reasoning-effort>`,
   suggestion: `<kind-suggestion can-pick></kind-suggestion>`,
   "context-meter": `<kind-context-meter used="57600" total="128000" cost="0.42"></kind-context-meter>`,
+  feedback: `<kind-feedback can-comment></kind-feedback>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>
