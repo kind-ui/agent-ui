@@ -1,4 +1,3 @@
-"use client";
 import { Markdown } from "@/components/ui/markdown";
 
 const source = `### Retry with backoff

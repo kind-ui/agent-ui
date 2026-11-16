@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `c1e394a` (Wave 2 Task 11 showcase and changeset)
+Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
 
 ## Settled
 
@@ -13,6 +13,7 @@ Last reviewed: `c1e394a` (Wave 2 Task 11 showcase and changeset)
 - **A Step's `announcement` runs only once the step has a title** (`label` or the title part's text): every Step-based component has a title, and the JSDoc says so.
 - **Markdown and Streaming Text have no accessible name:** they're content with no role, which ARIA doesn't let a name sit on, and they offer no actions (spec §6).
 - Everything in AGENTS.md "UI SDK API notes".
+- **Queue `reorder` and `remove`, Uploader `cancel` and Attachments `remove` don't render `data-agent-confirm` (Wave 3 D1):** UI SDK's bridge reads the mark per component, so it would also gate Queue `reorder` and Uploader `retry`, and each action is reversible or only changes the list. Inside a composer, `removeAttachment` follows the composer's `agentConfirm`. Their docs pages show the host's `allow` asking a person instead.
 - **`affected-specs.mjs` runs every spec for a file it can't place,** and none for code no fixture page loads (the AI SDK adapter); nightly runs cover what a PR skips.
 - **Conversation `virtualize` is mount-only,** like a `default*` option: it is read in `state` and not synced.
 - **The composer's draft `text` is the Token Input's codec text** and edits sync through the controller's `editor.subscribe`; a cancelled change writes the draft back to the editor. A controlled owner refuses an edit by cancelling it (AGENTS.md, Task 11).
@@ -22,8 +23,6 @@ Last reviewed: `c1e394a` (Wave 2 Task 11 showcase and changeset)
 
 ## Known and open (don't report again, check whether fixed)
 
-- **Queue `reorder` and `remove`, Uploader `cancel` and Attachments `remove` don't need a person:** spec §6 lists the consequential actions that render `data-agent-confirm`, and these aren't on it. Adding them is a spec change.
-- **Removing the last chip from a composer leaves focus on `<body>`:** the attachments' focus recovery has no neighbor, and the composer gives it no fallback (the editor). Same before Wave 2 Task 9.
 - **A double press on a Queue item's remove control calls `onRemove` twice** when the host removes the item asynchronously; there's no per-item lock like the uploader's.
 - **Queue's `known` set never forgets ids,** so an item removed and re-added under the same id after its exit gets no entrance (same as Task and Plan).
 - **A plan swapped while Accept is pending keeps the lock** until the old promise settles (Wave 2 Task 6). Clearing it on a new `onAccept` can't key on identity, since React passes a new inline function each render; same open spec §4.1 question as the composer's pending lock.
@@ -45,6 +44,7 @@ Last reviewed: `c1e394a` (Wave 2 Task 11 showcase and changeset)
 
 ## Resolved
 
+- **Removing the last chip from a composer left focus on `<body>` (Wave 3 Task 2).** Fixed: Attachments takes a `focusFallback` option for when no chip is left to take focus, and the composer passes its editor (tested in `composer.spec.ts`, both layers).
 - **Wave 2 agent conformance (Task 10):** the generic `initials` export is now `avatarInitials`; a Queue item's remove badge removes it on click (the item's reorder used to capture the pointer and take the click; tested).
 
 - **Exits (Wave 2 Task 9):** a leaving row with no element to play its exit (Attachments children rendered from `items`, a headless instance) is dropped at once, so it never leaks its object URL, entrance memory or the uploader list's `data-empty`; `AttachmentsRootState` and `UploaderListState` have JSDoc; the uploader's slide watches its list, not the whole root.

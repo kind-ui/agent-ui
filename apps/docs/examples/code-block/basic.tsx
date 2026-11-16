@@ -1,4 +1,3 @@
-"use client";
 import { CodeBlock } from "@/components/ui/code-block";
 
 const code = `async function retry<T>(run: () => Promise<T>, tries = 4): Promise<T> {

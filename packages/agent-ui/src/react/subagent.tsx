@@ -1,3 +1,5 @@
+"use client";
+
 import { subagentPrimitive } from "@kind-ui/agent-ui/core";
 import { Avatar, AvatarFallback, AvatarImage } from "@ui-sdk/react/avatar";
 import { createParts } from "@ui-sdk/react/primitive";

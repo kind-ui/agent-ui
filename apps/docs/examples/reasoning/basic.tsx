@@ -1,4 +1,3 @@
-"use client";
 import { Reasoning } from "@/components/ui/reasoning";
 
 export default function ReasoningExample() {

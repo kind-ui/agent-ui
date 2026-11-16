@@ -21,7 +21,7 @@ import type { TriggerDefinition } from "@ui-sdk/core/trigger-menu";
 import type { AttachmentsOptions } from "../attachments/index.js";
 import { type FileIntake, forwardFileInputEvents } from "../file-input-events.js";
 import { memo } from "../memo.js";
-import { enter, type MotionMode } from "../motion/index.js";
+import { cancel, enter, exit, type MotionMode } from "../motion/index.js";
 import {
   type ComposerAttachment,
   type ComposerDraft,
@@ -95,6 +95,8 @@ export type ComposerState = {
   value: ComposerDraft;
   /** Whether a submission is in flight; Send is locked until it settles. */
   pending: boolean;
+  /** Whether the attachments part is collapsing after its last chip was removed; it stays shown until it ends. */
+  attachmentsClosing: boolean;
   /** Whether `onStop` is set, so Stop takes Send's place while pending. */
   canStop: boolean;
   /** The options of the same name, with their defaults. */
@@ -136,6 +138,8 @@ export type ComposerApi = {
   recovery: ReturnType<typeof createFocusRecovery>;
   /** Plays Send's entrance when it comes back from Stop, not when the composer mounts. */
   enterSubmit: (el: HTMLElement) => void;
+  /** Expands the attachments part as its first chip arrives, and collapses it once the last is removed. */
+  bindAttachments: (el: HTMLElement) => () => void;
   /** Each part's state for render functions, kept while what it's built from stays the same. */
   partState: {
     root: (state: ComposerState) => ComposerRootState;
@@ -160,8 +164,13 @@ export type ComposerInputState = {
 
 export type ComposerTriggerMenuState = { triggers: TriggerDefinition[] };
 
-/** Props for the Attachments inside the attachments part. `onRemove` is left out while the composer is disabled. */
-export type ComposerAttachmentsState = Required<Pick<AttachmentsOptions, "items" | "motion">> &
+/**
+ * Props for the Attachments inside the attachments part. `onRemove` is left out while the composer is disabled, and
+ * focus goes to the editor when the last chip leaves.
+ */
+export type ComposerAttachmentsState = Required<
+  Pick<AttachmentsOptions, "items" | "motion" | "focusFallback">
+> &
   Pick<AttachmentsOptions, "onRemove">;
 
 type ComposerSlot<Public extends object = Record<never, never>> = SlotDefinition<
@@ -241,6 +250,7 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       ...presentation(options),
       value: options.value ?? options.defaultValue ?? emptyDraft(),
       pending: false,
+      attachmentsClosing: false,
     };
   },
   sync: (options: ComposerOptions) => ({
@@ -407,10 +417,12 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
         return { triggers };
       },
     );
+    const focusEditor = () => tokenInput.editor.element;
     const attachments = memo(
       (items: ComposerAttachment[], motion: MotionMode, disabled: boolean): ComposerAttachmentsState => ({
         items,
         motion,
+        focusFallback: focusEditor,
         ...(!disabled && { onRemove: (id, details) => void removeAttachment(id, details.event) }),
       }),
     );
@@ -448,6 +460,35 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
         if (!returningFromStop) return;
         returningFromStop = false;
         void enter(el, "fade", { motion: store.get().motion });
+      },
+      bindAttachments: (el) => {
+        const motion = () => ({ motion: store.get().motion });
+        let filled = store.get().value.attachments.length > 0;
+        let frame = 0;
+        const unsubscribe = store.subscribe(() => {
+          if (filled === store.get().value.attachments.length > 0) return;
+          filled = !filled;
+          cancelAnimationFrame(frame);
+          if (filled) {
+            if (store.get().attachmentsClosing) store.set({ attachmentsClosing: false });
+            // By the next frame the first chip has rendered and filled in, so it measures; it plays before that
+            // frame paints.
+            frame = requestAnimationFrame(() => void enter(el, "expand", motion()));
+            return;
+          }
+          store.set({ attachmentsClosing: true });
+          exit(el, "expand", motion()).then(
+            () => store.set({ attachmentsClosing: false }),
+            // A chip arrived during the collapse.
+            () => {},
+          );
+        });
+        return () => {
+          cancelAnimationFrame(frame);
+          unsubscribe();
+          cancel(el);
+          if (store.get().attachmentsClosing) store.set({ attachmentsClosing: false });
+        };
       },
       partState: {
         root: (state) => root(state.disabled, state.accept, state.maxSize),
@@ -493,8 +534,11 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
     }),
     // Stays mounted while empty, so the first attachment plays its entrance like the rest.
     attachments: slot<BaseSlotProps, ComposerAttachmentsState>({
-      attrs: (state) => ({ "data-empty": state.value.attachments.length === 0 ? "" : undefined }),
+      attrs: (state) => ({
+        "data-empty": state.value.attachments.length === 0 && !state.attachmentsClosing ? "" : undefined,
+      }),
       state: (state, { api }) => api.partState.attachments(state),
+      bind: (el, { api }) => api.bindAttachments(el),
     }),
     submit: slot({
       role: "button",

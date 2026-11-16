@@ -44,6 +44,7 @@ function Full({ submitOn }: { submitOn?: "enter" | "mod-enter" }) {
           if ((window as { refuseEdits?: boolean }).refuseEdits) details.cancel();
         }}
         {...(params.has("stop") ? { onStop } : {})}
+        {...(params.has("motion") ? { motion: params.get("motion") as MotionMode } : {})}
       >
         <ComposerAttachments />
         <ComposerInput

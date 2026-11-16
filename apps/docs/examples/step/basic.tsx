@@ -1,4 +1,3 @@
-"use client";
 import { Step, StepContent, StepIcon, StepMeta, StepTitle, StepTrigger } from "@/components/ui/step";
 
 export default function StepExample() {

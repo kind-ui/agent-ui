@@ -1,4 +1,3 @@
-"use client";
 import type { CSSProperties } from "react";
 import { MarkdownTable } from "@/components/ui/markdown-table";
 

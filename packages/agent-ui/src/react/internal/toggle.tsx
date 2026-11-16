@@ -1,3 +1,5 @@
+"use client";
+
 import { Toggle, ToggleIcon } from "@ui-sdk/react/toggle";
 import { withKindClass } from "./kind-class.js";
 

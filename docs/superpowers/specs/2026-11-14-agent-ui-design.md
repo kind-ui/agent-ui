@@ -91,7 +91,7 @@ AI components need general controls. These are UI SDK components or `@ui-sdk/cor
 | --- | --- | --- |
 | Button | Button | almost all |
 | Collapsible | Collapsible, `bindPanel`, `bindFindable` | Step and every Step-based component, Sources, Queue |
-| Popover, Tooltip, Hover Card | Popover, Tooltip, Hover Card | Feedback, Checkpoint, Context, Inline Citation |
+| Popover, Tooltip, Hover Card | Popover, Tooltip, Hover Card | Feedback, Checkpoint, Context Meter, Inline Citation |
 | Menu | Menu | Message, Document |
 | Alert Dialog, Dialog | Alert Dialog, Dialog | Checkpoint, Generated Image |
 | Scroll Area | Scroll Area, `createStickToBottom` | Conversation, Terminal, Code Block, Markdown Table, Document |
@@ -102,7 +102,7 @@ AI components need general controls. These are UI SDK components or `@ui-sdk/cor
 | Carousel | Carousel | Suggestion, Inline Citation |
 | Tree | Tree, `treeFromPaths` | File Tree, Test Results |
 | Avatar | Avatar | Message, Subagent |
-| Meter, Progress | Meter, Progress | Context, Plan, Uploader |
+| Meter, Progress | Meter, Progress | Context Meter, Plan, Uploader |
 | Radio, Checkbox, Textarea | Radio, Checkbox, Textarea | Question, Feedback, Confirmation |
 
 ### Repository layout
@@ -426,6 +426,7 @@ Code highlighting is pluggable through `highlight?: (code, lang) => Promise<Toke
 - An action is listed only while available. `composer.stop` appears only while a submission is in flight and the host supplies `onStop`. Host-callback actions (for example `message.regenerate`) appear only when the host supplies the callback. On Web Components, where a listener can't be seen, a `can-<action>` boolean attribute (for example `can-regenerate`) stands for the callback, and the callback is a DOM event.
 - Actions run the same code paths as pointer and keyboard input. Change callbacks receive `details.source === "agent"` so hosts can distinguish and cancel agent changes.
 - These consequential actions render `data-agent-confirm`, so `createAgent` permissions and WebMCP `registerTools` `allow` require a person: `composer.submit`, `confirmation.approve`, `confirmation.deny`, `checkpoint.restore`, `plan.accept`, `subagent.cancel`, `question.submit`. Confirmation's marking cannot be turned off; the others accept the primitive option `agentConfirm: false`.
+- No other action renders `data-agent-confirm`, including Queue `reorder` and `remove`, Uploader `cancel` and `retry`, Attachments `remove`, and Wave 3's `suggestion.pick`, `feedback.rate`, `feedback.submitComment`, `notice.dismiss` and `setValue`. UI SDK's bridge reads the mark per component, not per action, so marking one action would gate every action of that component. A host that wants a person for any of them requires it through `createAgent`'s or `registerTools`' `allow`, and those components' docs show how.
 - Every component root with a role requires an accessible name; agents address components by that label or by `ref`. Markdown and Streaming Text are content with no role, which ARIA does not let a name sit on, and offer no actions.
 - Kind UI ships no agent bridge. Hosts create one with `createAgent` from `@ui-sdk/react/agent` or `@ui-sdk/web/agent`. Docs show both, plus `registerTools` for WebMCP.
 
@@ -491,20 +492,20 @@ Behavior requirements:
 | **Model Selector** | Combobox, `fuzzyScore`, `matchSegments` | `setValue` | model-selector |
 | **Reasoning Effort** | Segmented Control | `setValue` | kind-ui/charts#253 |
 | **Suggestion** | Carousel, Button | `pick(id)` | suggestion |
-| **Context** | Meter, Hover Card | `open`, `close` | context |
+| **Context Meter** | Meter, Popover (opens on hover, focus, and press) | `open`, `close` | context |
 | **Feedback** | Toggle, Popover, Textarea | `rate("up" \| "down" \| null)`, `submitComment` | feedback-bar |
 | **Notice** | Button, `announce` | `dismiss` | callout |
 | **Guardrail Notice** | Notice, Collapsible | `dismiss`, `expand`, `collapse` | kind-ui/charts#253 |
 
 Behavior requirements:
 
-- **Confirmation:** bound to `approvalId` and `generation`. Activation disables both choices synchronously. `submit-failed` re-enables them while the request is current. Results for a replaced generation, an unmounted component, or a host-resolved request are ignored. Only host-supplied choices render; `auto` approvals render as status. Tool embeds Confirmation when `call.approval` is present. The full approval contract is in §4.1.
-- **Question:** single choice, multiple choice, and free text, as one question or a sequence. `submit` is disabled until required answers exist; `skip` appears only when the host supplies `onSkip`.
-- **Checkpoint:** `restore` opens an Alert Dialog before calling `onRestore`.
+- **Confirmation:** bound to `approvalId` and `generation`. Activation disables both choices synchronously. `submit-failed` re-enables them while the request is current. Results for a replaced generation, an unmounted component, or a host-resolved request are ignored. Only host-supplied choices render; `auto` approvals render as status. Tool embeds Confirmation when `call.approval` is present. With the `reason` option, a Textarea shows above the choices from the start and Deny sends its text (an agent's `deny(reason)` fills it); there is no second step. Confirmation announces "Decision not sent" on `submit-failed` and the recorded outcome on `responded` or `auto`. The full approval contract is in §4.1.
+- **Question:** single choice, multiple choice, and free text, as one question or a sequence. A sequence is one form with each question in its own fieldset and one Submit, so no required question hides on a later page. `submit` is disabled until required answers exist; `skip` appears only when the host supplies `onSkip`.
+- **Checkpoint:** `restore` opens an Alert Dialog before calling `onRestore`, whether a person or an agent runs it; only the dialog's Restore button calls `onRestore`.
 - **Model Selector:** grouped options with fuzzy search and match highlighting. Reasoning Effort is a separate component placed beside it.
-- **Context:** Meter shows used and total tokens with accessible value text; Hover Card lists input, output, reasoning, and cached tokens and cost when supplied.
-- **Feedback:** `rate` toggles thumbs up or down; `submitComment` sends the optional comment through `onComment`.
-- **Notice:** variants `info`, `success`, `warning`, `error`; `dismiss` appears only when the host supplies `onDismiss`. Guardrail Notice adds a policy reason and an optional expandable detail, and uses `role="alert"` only when the outcome blocks the response.
+- **Context Meter:** Meter shows used and total tokens with accessible value text; a Popover that opens on hover, focus, and press lists input, output, reasoning, and cached tokens and cost when supplied. (A Hover Card needs a link as its trigger, and touch and screen reader users may never open it.)
+- **Feedback:** `rate` toggles thumbs up or down; `submitComment` sends the optional comment through `onComment`. An "Add a comment" button appears once a rating is set and the host supplies `onComment`, and opens a Popover with a Textarea; rating never opens a popup by itself.
+- **Notice:** variants `info`, `success`, `warning`, `error`; `dismiss` appears only when the host supplies `onDismiss`. Dismiss moves focus to the host's `focusFallback`, else the next focusable element after the notice, plays the `"fade"` exit, then calls `onDismiss`; the host removes the notice. A notice the host removes without Dismiss leaves at once. Guardrail Notice adds a policy reason and an optional expandable detail, and uses `role="alert"` only when the outcome blocks the response.
 
 ### Wave 4 (0.4): artifacts and developer output
 

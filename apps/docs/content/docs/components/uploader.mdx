@@ -51,6 +51,20 @@ An agent connected with `createAgent` reads the uploader's `items`. It can run t
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/uploader/uploader.ts" name="UploaderAgentActions" type='Pick<UploaderApi, "cancel" | "retry">' />
 
+Neither action waits for a person to confirm, since a cancelled upload can be added again. To ask the person first, return their answer from your `allow`, which also answers every action that does need a person:
+
+```ts
+import { createAgent } from "@ui-sdk/react/agent";
+
+const agent = createAgent({
+  allow: ({ component, action, confirm }) => {
+    if (confirm) return window.confirm(confirm);
+    if (component === "kind-uploader") return window.confirm(`Let the agent ${action} an upload?`);
+    return true;
+  },
+});
+```
+
 <Caption>
   Runs in React and Web Components. On `<kind-uploader>`, `items` is a property and the other props are kebab-case attributes, so `maxSize` is `max-size`. Accepted files fire `files`, and turned-down ones `uploadreject`. Cancel and Retry need the `can-cancel` and `can-retry` attributes, and fire `uploadcancel` and `uploadretry` with the item's `id`.
 </Caption>

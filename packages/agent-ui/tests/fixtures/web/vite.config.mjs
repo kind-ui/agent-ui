@@ -9,6 +9,8 @@ export default defineConfig({
   root: here("."),
   cacheDir: here("../../../../../node_modules/.vite/fixture-web"),
   plugins: [tailwindcss()],
+  // A file written during a run would otherwise reload open pages and destroy the context a test evaluates in.
+  server: { hmr: false },
   resolve: { alias: { "@kind-ui/agent-ui/core": here("../../../src/core/index.ts") } },
   optimizeDeps: {
     include: [

@@ -41,7 +41,7 @@ function fill(el: Element, item: AttachmentItem, preview: string | undefined): v
 /**
  * `<kind-attachments aria-label="Files">` renders a `kind-attachments-item` for each entry of its `items`
  * property, and keeps a removed one while it fades out. The `can-remove` attribute lets items be removed, each firing
- * `remove` with the item's id.
+ * `remove` with the item's id. Set the `focusFallback` property to name where focus goes when the last chip leaves.
  */
 export function defineAttachments(): void {
   if (customElements.get("kind-attachments")) return;
@@ -101,6 +101,7 @@ export interface KindAttachmentsElement
   canRemove: boolean;
   items?: AttachmentsOptions["items"];
   removeHandler?: AttachmentsOptions["onRemove"];
+  focusFallback?: AttachmentsOptions["focusFallback"];
 }
 
 declare global {

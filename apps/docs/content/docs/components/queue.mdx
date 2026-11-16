@@ -77,6 +77,20 @@ An agent connected with `createAgent` finds the queue by its `label` and reads i
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/queue/queue.ts" name="QueueAgentActions" type='Pick<QueueApi, "reorder" | "remove">' />
 
+Neither action waits for a person to confirm, since each only changes the list. To ask the person first, return their answer from your `allow`, which also answers every action that does need a person:
+
+```ts
+import { createAgent } from "@ui-sdk/react/agent";
+
+const agent = createAgent({
+  allow: ({ component, action, confirm }) => {
+    if (confirm) return window.confirm(confirm);
+    if (component === "kind-queue") return window.confirm(`Let the agent ${action} a queued item?`);
+    return true;
+  },
+});
+```
+
 <Caption>
   Runs in React and Web Components. On `<kind-queue>`, `items` and `openSections` are properties only, and `label` and `motion` are attributes. Reordering needs the `can-reorder` attribute and fires `reorder`, and removing needs `can-remove` and fires `remove`, each with the item's `id` in `event.detail.value`; `reorder` also has `event.detail.index`. The element fills in its sections and items itself.
 </Caption>

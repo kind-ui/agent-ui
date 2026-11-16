@@ -1,4 +1,3 @@
-"use client";
 import type { ToolCall } from "@kind-ui/agent-ui";
 import { Subagent } from "@/components/ui/subagent";
 import { Tool } from "@/components/ui/tool";

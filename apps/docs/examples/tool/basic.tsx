@@ -1,4 +1,3 @@
-"use client";
 import { fromUIMessagePart } from "@kind-ui/agent-ui/adapters/ai-sdk";
 import { Tool } from "@/components/ui/tool";
 

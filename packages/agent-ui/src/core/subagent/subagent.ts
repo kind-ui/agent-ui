@@ -2,6 +2,7 @@ import { createFocusRecovery, definePrimitive, type SlotDefinition } from "@ui-s
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { StepStatus } from "../../types/index.js";
 import { stepDuration } from "../chain-of-thought/open-steps.js";
+import { createPendingAction } from "../pending.js";
 import { type StepApi, type StepOptions, type StepState, stepAnnouncement, stepBase } from "../step/base.js";
 
 export type SubagentOptions = StepOptions & {
@@ -148,19 +149,10 @@ export const subagentPrimitive: SubagentPrimitive = definePrimitive<
   sync: (options) => ({ ...base.sync(options), ...presentation(options) }),
   api: (context) => {
     const { store } = context;
-    let destroyed = false;
-    context.onDestroy(() => {
-      destroyed = true;
-    });
+    const pendingCancel = createPendingAction(context, { state: "pending" });
     const cancel = () => {
       const { onCancel } = context.options();
-      if (!onCancel || store.get().pending) return;
-      store.set({ pending: true });
-      const settle = () => {
-        if (!destroyed) store.set({ pending: false });
-      };
-      // A host that throws gets Stop back, as one that rejects does.
-      new Promise((resolve) => resolve(onCancel())).then(settle, settle);
+      if (onCancel) pendingCancel.run(onCancel);
     };
     return {
       ...base.api(context),

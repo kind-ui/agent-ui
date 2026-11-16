@@ -24,6 +24,7 @@ const stages = {
   "check:registry-consumers": ["node", "scripts/check-registry-consumers.mjs"],
   "dev:docs:run": ["npm", "run", "dev", "-w", "apps/docs"],
   "build:docs:run": ["npm", "run", "build", "-w", "apps/docs"],
+  "check:docs": ["node", "scripts/check-docs.mjs"],
 };
 
 const groups = {
@@ -44,7 +45,7 @@ const groups = {
   "build:docs": ["build", "build:docs:run"],
   "check:fast": ["lint", "typecheck", "test:scripts", "test:unit"],
   "check:packed": ["check:package", "check:size", "build:registry", "check:registry-consumers"],
-  check: ["check:fast", "check:packed", "build:docs:run", "test:browser"],
+  check: ["check:fast", "check:packed", "build:docs:run", "check:docs", "test:browser"],
 };
 
 export function expand(name) {

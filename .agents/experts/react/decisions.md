@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `fd660f7` (Wave 2 Task 10 agent conformance)
+Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
 
 ## Settled
 
@@ -20,6 +20,7 @@ Last reviewed: `fd660f7` (Wave 2 Task 10 agent conformance)
 - **Task and Plan: a host `items` update renders every item's parts (Wave 2 Task 6),** 514 renders for one status change among 100 plan items, as Chain of Thought's steps do. Same upstream report to UI SDK; per item update, not per token.
 - **React hosts must memo Conversation rows** for a streamed token to render one row; the fixture does. The Conversation docs page (Wave 1 docs) should say so.
 - **Streaming Text renders twice per `text` change,** like Markdown: `text` reaches state through `onOptions`, a layout effect. Before paint.
+- **File sizes in Attachments and Uploader format in the runtime's default locale** (UI SDK `formatFileSize` with no locale), so a server render in one locale hydrates with React error #418 in a browser set to another (the docs' Attachments and Uploader pages in a `de-DE` browser). Needs a locale the server and the browser share, like a `locale` option.
 - **Uploader progress bars have no accessible name in server markup** until hydration adds `aria-labelledby` (UI SDK Progress; report upstream).
 - **A Step without `StepTitle` has a dangling `aria-labelledby`** on its group.
 - **Server markup writes `hidden=""` on closed content**, not `until-found`, until it binds (UI SDK `toReactProps`; report upstream).
@@ -36,6 +37,8 @@ Last reviewed: `fd660f7` (Wave 2 Task 10 agent conformance)
 
 ## Resolved
 
+- **Next.js App Router consumers had to wrap every render file in their own client module (Wave 3 Task 2).** Fixed: every `src/react/**/*.tsx` starts with `"use client";` (`registry.test.mjs` checks it; the registry copies it byte for byte), and the docs examples without state or handlers are now server components, so `npm run build:docs` builds an App Router consumer of them.
+- **Every docs page logged React error #418 (Wave 3 Task 2).** The static export wrote `docs/step.html`, so a plain static host served the page at `/docs/step.html`; the client's pathname then matched no page, and Fumadocs' client-rendered footer (previous and next page) and sidebar rendered different text than the server had. Fixed with `trailingSlash: true` (`docs/step/index.html`, served at `/docs/step/`). `check:docs` opens built pages on a plain file server and fails on any console error.
 - **Tools' copy buttons and code blocks shared labels (Wave 2 Task 10).** Fixed: each is named after its tool ("Copy search_docs input", "search_docs input") in both layers, tested in `wave-2/agent.spec.ts`. Markdown's "Code" / "Table" and two calls of the same tool stay open below.
 
 - **Exits (Wave 2 Task 9):** `Attachments` takes a function of `{ rows }` as children, so styled chips keep their exit (chips rendered from `items` leave at once, and core drops their rows); the composer spec covers a chip added back and the host removing the focused chip.

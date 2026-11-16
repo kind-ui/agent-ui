@@ -183,6 +183,122 @@ test("Delete removes the focused attachment and focus moves to its neighbor", as
   await expect(items.first()).toBeFocused();
 });
 
+test("removing the last attachment with Delete leaves focus in the editor", async ({ page }) => {
+  const editor = await open(page);
+  await attach(editor, [{ name: "a.txt", size: 10, type: "text/plain" }], "paste");
+  const items = page.getByRole("list", { name: "Attachments" }).getByRole("listitem");
+  await items.first().focus();
+  await page.keyboard.press("Delete");
+  await expect(editor).toBeFocused();
+});
+
+/** Records the editor's top at every frame until `stop` returns the path. */
+const followEditor = async (page: Page) => {
+  await page.evaluate(() => {
+    const input = document.querySelector('[data-slot="kind-composer-input"]') as HTMLElement;
+    const path: { x: number; y: number }[] = [];
+    let following = true;
+    // A new ResizeObserver reports once, after the frame's animation callbacks and just before it paints, so each
+    // sample is what that frame shows.
+    const record = () => {
+      if (!following) return;
+      const observer = new ResizeObserver(() => {
+        observer.disconnect();
+        path.push({ x: 0, y: input.getBoundingClientRect().y });
+        requestAnimationFrame(record);
+      });
+      observer.observe(input);
+    };
+    path.push({ x: 0, y: input.getBoundingClientRect().y });
+    record();
+    Object.assign(window, {
+      stopFollowing: () => {
+        following = false;
+        return [...path, { x: 0, y: input.getBoundingClientRect().y }];
+      },
+    });
+  });
+  return {
+    stop: async () => {
+      await settled(page);
+      return page.evaluate(() =>
+        (window as unknown as { stopFollowing(): { x: number; y: number }[] }).stopFollowing(),
+      );
+    },
+  };
+};
+
+const attachThenRemove = async (page: Page, query: string) => {
+  const editor = await open(page, query);
+  const items = page.getByRole("list", { name: "Attachments" }).getByRole("listitem");
+  const opening = await followEditor(page);
+  await attach(editor, [{ name: "a.txt", size: 10, type: "text/plain" }], "paste");
+  await expect(items).toHaveCount(1);
+  const opened = await opening.stop();
+  await items.first().focus();
+  const closing = await followEditor(page);
+  await page.keyboard.press("Delete");
+  await expect(page.locator('[data-slot="kind-attachments-item"]')).toHaveCount(0);
+  return { opened, closed: await closing.stop() };
+};
+
+test("the attachments area expands for the first chip and collapses after the last, so the editor slides", async ({
+  page,
+}) => {
+  const { opened, closed } = await attachThenRemove(page, "case=full");
+  for (const path of [opened, closed]) {
+    const { total, largestStep } = travel(path);
+    expect(total).toBeGreaterThan(40);
+    expect(largestStep).toBeLessThan(total / 2);
+  }
+  expect(closed.at(-1)?.y).toBeCloseTo(opened[0]?.y ?? Number.NaN, 0);
+});
+
+test("a chip attached while the area collapses reverses it without growing past its height", async ({
+  page,
+}) => {
+  const editor = await open(page);
+  await attach(editor, [{ name: "a.txt", size: 10, type: "text/plain" }], "paste");
+  await settled(page);
+  const items = page.getByRole("list", { name: "Attachments" }).getByRole("listitem");
+  await items.first().focus();
+  const heights = await page.evaluate(async () => {
+    const area = document.querySelector('[data-slot="kind-composer-attachments"]') as HTMLElement;
+    const frames = (count: number) =>
+      Array.from({ length: count }).reduce<Promise<number[]>>(
+        async (list) =>
+          new Promise((resolve) =>
+            requestAnimationFrame(async () =>
+              resolve([...(await list), area.getBoundingClientRect().height]),
+            ),
+          ),
+        Promise.resolve([]),
+      );
+    const open = area.getBoundingClientRect().height;
+    document.activeElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Delete", bubbles: true }));
+    await frames(8);
+    const data = new DataTransfer();
+    data.items.add(new File(["x"], "b.txt", { type: "text/plain" }));
+    const paste = new ClipboardEvent("paste", { bubbles: true, cancelable: true });
+    Object.defineProperty(paste, "clipboardData", { value: data });
+    document.querySelector('[data-slot="token-input-editor"]')?.dispatchEvent(paste);
+    return { open, path: await frames(40) };
+  });
+  expect(Math.max(...heights.path)).toBeLessThanOrEqual(heights.open + 1);
+  await expect
+    .poll(async () => (await page.locator('[data-slot="kind-composer-attachments"]').boundingBox())?.height)
+    .toBeCloseTo(heights.open, 0);
+});
+
+test('with motion="none" the attachments area opens and closes at once', async ({ page }) => {
+  const { opened, closed } = await attachThenRemove(page, "case=full&motion=none");
+  for (const path of [opened, closed]) {
+    const { total, largestStep } = travel(path);
+    expect(total).toBeGreaterThan(40);
+    expect(largestStep).toBe(total);
+  }
+});
+
 test("Stop takes Send's place only while pending, and only with onStop", async ({ page }) => {
   let editor = await open(page);
   await editor.click();
