@@ -1,0 +1,28 @@
+---
+title: Agent Activity
+description: Watch one agent run go from thinking to a finished plan, built from the step components.
+---
+
+import AgentActivityShowcase from "@/examples/showcase/agent-activity";
+
+This run puts the step components together the way a host app would. The agent thinks with [Reasoning](/docs/components/reasoning), calls two [Tools](/docs/components/tool) at once, proposes a [Plan](/docs/components/plan), hands the work to a [Subagent](/docs/components/subagent) and keeps follow-up prompts in a [Queue](/docs/components/queue). A [Status](/docs/components/status) badge shows where the whole run stands.
+
+<Example caption="The run streams its thinking, waits on the delete_branch approval, then stops on the plan. Press Accept to let the subagent do the work, or Replay to start over. Drag a follow-up to reorder it, or press Delete to remove the focused one.">
+  <AgentActivityShowcase />
+
+  <include cwd lang="tsx">./examples/showcase/agent-activity.tsx</include>
+</Example>
+
+## What Happens
+
+- **Thinking:** Reasoning streams its text while `running`, then closes and reads "Thought for 6 s".
+- **Tools:** both calls run side by side. `delete_branch` shows "Waiting for approval", and the run's badge reads "Needs input", until the host records the decision. The tool then keeps "Approved", not the request.
+- **Plan:** the run stops on the plan until you press **Accept**. Its steps then tick off as the subagent finishes them.
+- **Subagent:** its own tool calls nest inside it, and its result shows once it's done.
+- **Queue:** the follow-ups wait their turn. Drag one to reorder it, or focus it and press Space to pick it up, the arrow keys to move it and Space to drop it. Delete removes it.
+
+Each component gets its state from the host as plain data, here a timer stepping through a script. In an app, the same data comes from your model's stream, for example through the [AI SDK adapter](/docs/adapters/ai-sdk).
+
+<Caption>
+  Every component here runs in React and Web Components. The example is React.
+</Caption>

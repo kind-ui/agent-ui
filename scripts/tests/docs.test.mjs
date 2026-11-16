@@ -30,6 +30,16 @@ test("the sidebar lists every component page", () => {
   assert.deepEqual([...meta.pages].sort(), [...components].sort());
 });
 
+test("the sidebar has a Showcase section with one live example", () => {
+  const root = JSON.parse(readFileSync(new URL("meta.json", content), "utf8"));
+  assert.ok(root.pages.includes("---Showcase---") && root.pages.includes("...showcase"));
+  const meta = JSON.parse(readFileSync(new URL("showcase/meta.json", content), "utf8"));
+  assert.deepEqual(meta.pages, ["agent-activity"]);
+  const source = readFileSync(new URL("showcase/agent-activity.mdx", content), "utf8");
+  assert.equal(source.match(/<Example /g)?.length, 1);
+  assert.ok(source.includes('<include cwd lang="tsx">./examples/showcase/agent-activity.tsx</include>'));
+});
+
 test("no page mentions an internal registry item", () => {
   for (const file of readdirSync(content, { recursive: true })) {
     if (!file.endsWith(".mdx")) continue;
