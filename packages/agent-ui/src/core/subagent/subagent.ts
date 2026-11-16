@@ -2,10 +2,13 @@ import { createFocusRecovery, definePrimitive, type SlotDefinition } from "@ui-s
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { StepStatus } from "../../types/index.js";
 import { stepDuration } from "../chain-of-thought/open-steps.js";
-import { type StepApi, type StepOptions, type StepState, stepBase } from "../step/base.js";
+import { type StepApi, type StepOptions, type StepState, stepAnnouncement, stepBase } from "../step/base.js";
 
 export type SubagentOptions = StepOptions & {
-  /** The subagent's name: the title, unless `label` replaces it, and the avatar's initials. */
+  /**
+   * The subagent's name: the title, unless `label` replaces it, and the avatar's initials. Without one, the title
+   * is "Subagent" and the avatar shows "?".
+   */
   agentName?: string;
   /** The avatar image. Without it, or until it loads, the avatar shows the name's initials. */
   avatarSrc?: string;
@@ -73,13 +76,21 @@ export type SubagentPrimitive = ReturnType<
   typeof definePrimitive<SubagentOptions, SubagentState, SubagentApi, SubagentSlots>
 >;
 
-/** The first letters of the first two words of `name`, in upper case, or "?" when it has none. */
+const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
+/**
+ * The first character of each of the first two words of `name` that start with a letter or digit, in upper case,
+ * or "?" when there are none. A character whose upper case is longer, like "ß", stays as it is.
+ */
 export const initials = (name: string): string =>
-  (name.match(/\S+/gu) ?? [])
+  (name.match(/[\p{L}\p{N}]\S*/gu) ?? [])
     .slice(0, 2)
-    .map(([first]) => first)
-    .join("")
-    .toUpperCase() || "?";
+    .map((word) => {
+      const segment = graphemes.segment(word).containing(0)?.segment ?? word;
+      const upper = segment.toUpperCase();
+      return upper.length === segment.length ? upper : segment;
+    })
+    .join("") || "?";
 
 const STATUS_LABELS: Record<StepStatus, string> = {
   pending: "Waiting",
@@ -93,12 +104,18 @@ const STATUS_LABELS: Record<StepStatus, string> = {
 /** The status in words, with the time it took once complete: "Working", "Done in 12 s". */
 export const subagentStatus = (status: StepStatus, durationSeconds?: number): string => {
   const duration = status === "complete" ? stepDuration(durationSeconds) : "";
-  return duration ? `Done in ${duration}` : STATUS_LABELS[status];
+  // A web `status` attribute can hold any string.
+  return duration ? `Done in ${duration}` : (STATUS_LABELS[status] ?? STATUS_LABELS.pending);
 };
 
 const ACTIVE = new Set<StepStatus>(["pending", "running", "awaiting-input"]);
 
-const base = stepBase<SubagentState, SubagentApi, SubagentOptions>({ kind: "subagent" });
+const base = stepBase<SubagentState, SubagentApi, SubagentOptions>({
+  kind: "subagent",
+  // Matches Stop and the meta's "Stopped".
+  announcement: (status, title) =>
+    status === "cancelled" ? `${title} stopped` : stepAnnouncement(status, title),
+});
 
 const presentation = (options: SubagentOptions) => ({
   title: options.label ?? (options.agentName || "Subagent"),

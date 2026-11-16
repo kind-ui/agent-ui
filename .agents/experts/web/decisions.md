@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `044795f` (Wave 2 Task 6 Task and Plan)
+Last reviewed: `57558d8` (Wave 2 Task 7 Subagent)
 
 ## Settled
 
@@ -17,6 +17,7 @@ Last reviewed: `044795f` (Wave 2 Task 6 Task and Plan)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **`kind-subagent` adds its trigger above server-rendered steps on upgrade,** shifting them down once, the same class as the empty `<kind-task>`/`<kind-plan>` entry.
 - **An empty `<kind-task>` or `<kind-plan>` inserts its parts on upgrade** (same class as `kind-chain-of-thought` and `kind-reasoning`), which can shift layout before the element is defined.
 - **Web Task and Plan play color transitions on first render** (progress fill, Accept, item titles) as `data-*` attributes land after the first style pass; Chain of Thought's marks do the same. Trace which upgrade step causes it.
 - **`kind-tool` draws twice for one `call` change** (the store subscription and one more notification). Harmless, since every write is guarded.
@@ -35,6 +36,7 @@ Last reviewed: `044795f` (Wave 2 Task 6 Task and Plan)
 
 ## Resolved
 
+- **Subagent (Wave 2 Task 7):** `kind-subagent` no longer moves the host's children (React 19 threw on `insertBefore`/`removeChild`): the host writes steps inside `kind-subagent-content` and the element adds its parts around it; without a `result` the result part stays empty and hides.
 - **Task and Plan (Wave 2 Task 6):** the lists keep items someone wrote (and their text), and a written item replaces the one the element added, as Chain of Thought's do; parts and items written or removed after connecting redraw; a `kind-plan-progress` with text keeps it.
 - **Chain of Thought (Wave 2 Task 5):** `openSteps` is root state (`getOpenSteps` / `setOpenSteps`), so a moved element keeps its open steps; an item a host writes after its step replaces the one the element added; parts are looked up only in the element's own chain, so a chain nested in a step's content keeps its own; removing a written item redraws; the fixture listens for `openstepschange`.
 - **A hand-written `kind-tool` with empty input and output parts showed nothing (Wave 2 Task 4).** Fixed: the root fills an empty `kind-tool-input` or `kind-tool-output` with its heading, copy button and code block.

@@ -96,5 +96,5 @@ An agent connected with `createAgent` finds the subagent by its title and reads 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/subagent/subagent.ts" name="SubagentAgentActions" type='Pick<SubagentApi, "expand" | "collapse" | "cancel">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-subagent>`, props are kebab-case attributes, so `agentName` is `agent-name` and `avatarSrc` is `avatar-src`, and `onOpenChange` fires `openchange`. Stop needs the `can-cancel` attribute and fires `subagentcancel`: call `event.detail.waitUntil(promise)` to keep it pending. The element fills in its parts when it has none of its own, and moves its other children, and any appended later, into its `<kind-subagent-children>`.
+  Runs in React and Web Components. On `<kind-subagent>`, props are kebab-case attributes, so `agentName` is `agent-name` and `avatarSrc` is `avatar-src`, and `onOpenChange` fires `openchange`. Stop needs the `can-cancel` attribute and fires `subagentcancel`: call `event.detail.waitUntil(promise)` to keep it pending. Write the steps inside a `<kind-subagent-content>`: the element adds its trigger before it and its Stop button and result after it, unless you wrote a trigger of its own.
 </Caption>

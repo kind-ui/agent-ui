@@ -99,17 +99,28 @@ test("nested steps streaming in don't move the header", async ({ page }) => {
   expect(await header()).toEqual(before);
 });
 
-test("with motion reduced, the steps and result only fade for 120 ms", async ({ page }) => {
-  await open(page, "reduced");
-  await setStatus(page, "complete");
-  const transition = (name: string) =>
-    part(page, "subagent", name).evaluate((el) => {
-      const style = getComputedStyle(el);
-      return { property: style.transitionProperty, duration: style.transitionDuration };
-    });
-  expect(await transition("result")).toEqual({ property: "opacity", duration: "0.12s" });
-  expect((await transition("content")).property).not.toContain("height");
-});
+for (const [name, setup] of [
+  ["motion reduced", (page: Page) => open(page, "reduced")],
+  [
+    "prefers-reduced-motion",
+    async (page: Page) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await open(page);
+    },
+  ],
+] as const) {
+  test(`with ${name}, the steps and result only fade for 120 ms`, async ({ page }) => {
+    await setup(page);
+    await setStatus(page, "complete");
+    const transition = (slot: string) =>
+      part(page, "subagent", slot).evaluate((el) => {
+        const style = getComputedStyle(el);
+        return { property: style.transitionProperty, duration: style.transitionDuration };
+      });
+    expect(await transition("result")).toEqual({ property: "opacity", duration: "0.12s" });
+    expect((await transition("content")).property).not.toContain("height");
+  });
+}
 
 for (const colorScheme of ["light", "dark"] as const) {
   test(`axe reports no violations in ${colorScheme} mode`, async ({ page }) => {
@@ -122,13 +133,32 @@ for (const colorScheme of ["light", "dark"] as const) {
   });
 }
 
-test("kind-subagent moves steps appended to it into its children part", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+test("the avatar shows its image once loaded, and initials without one", async ({ page }) => {
   await open(page);
-  await page.evaluate(() => {
-    const step = document.createElement("p");
-    step.textContent = "Late step";
-    document.getElementById("readonly")?.append(step);
-  });
-  await expect(page.locator('#readonly [data-slot="kind-subagent-children"] > p')).toHaveText("Late step");
+  await expect(part(page, "quick", "avatar").locator("img")).toBeVisible();
+  await expect(part(page, "readonly", "avatar").locator("img")).toHaveCount(0);
+  await expect(part(page, "readonly", "avatar")).toHaveText("TR");
+});
+
+test("a complete subagent without a result shows no result part", async ({ page }) => {
+  await open(page);
+  await expect(part(page, "empty", "meta")).toHaveText("Done");
+  await expect(part(page, "empty", "result")).toBeHidden();
+});
+
+test("React keeps rendering the steps of a kind-subagent", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) === "web", "React renders the element");
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/?c=subagent&case=web-element");
+  const element = page.locator("#element");
+  await expect(element.locator("kind-subagent-title")).toHaveText("Code reviewer");
+  await page.evaluate(() =>
+    (window as unknown as { kindSteps(steps: string[]): void }).kindSteps(["edit", "grep"]),
+  );
+  await expect(element.locator("kind-subagent-content > p")).toHaveText(["edit", "grep"]);
+  await page.evaluate(() => (window as unknown as { kindSteps(steps: string[]): void }).kindSteps([]));
+  await expect(element.locator("kind-subagent-content > p")).toHaveCount(0);
+  await expect(element.locator("kind-subagent-title")).toHaveText("Code reviewer");
+  expect(errors).toEqual([]);
 });

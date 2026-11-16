@@ -6,11 +6,16 @@
     padding: 4px;
   }
 
+  /* Concentric with the frame: its radius less the 1px border and 4px padding. */
+  [data-slot="kind-subagent-trigger"] {
+    border-radius: max(0px, calc(var(--kind-radius) * 2 / 3 - 5px));
+  }
+
   [data-step-part="avatar"] {
     display: inline-flex;
     flex-shrink: 0;
 
-    & [data-slot="avatar"] {
+    & :where([data-slot="avatar"]) {
       position: relative;
       display: inline-flex;
       width: 20px;
@@ -26,7 +31,7 @@
       line-height: 1;
     }
 
-    & img {
+    & :where(img) {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -38,6 +43,14 @@
   [data-slot="kind-subagent-content"] {
     margin-inline-start: 15.25px;
     padding-inline-start: 11.25px;
+
+    /* Steps a web host writes straight into the content sit as close as React's children part. */
+    & > * {
+      padding-block: 0;
+    }
+    &:not(:empty) {
+      padding-block: 4px;
+    }
   }
 
   [data-slot="kind-subagent-children"] {
@@ -85,13 +98,14 @@
     --kind-markdown-font-size: 0.875rem;
     --kind-markdown-line-height: 1.6;
 
-    &[hidden] {
+    &[hidden],
+    &:empty {
       display: none;
     }
   }
 
   /* The result fades in once, when it appears; reduced motion keeps the 120 ms fade, "none" keeps nothing. */
-  [data-step-part="result"]:not([data-motion="none"]) {
+  [data-step-part="result"] {
     transition: opacity var(--kind-duration-base) var(--kind-ease-out);
 
     @starting-style {
@@ -99,12 +113,16 @@
     }
   }
 
+  [data-step-part="result"][data-motion="none"] {
+    transition: none;
+  }
+
   [data-step-part="result"][data-motion="reduced"] {
     transition-duration: var(--kind-duration-reduced);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    [data-step-part="result"] {
+    [data-step-part="result"][data-motion] {
       transition-duration: var(--kind-duration-reduced);
     }
   }

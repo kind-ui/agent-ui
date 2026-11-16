@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `044795f` (Wave 2 Task 6 Task and Plan)
+Last reviewed: `57558d8` (Wave 2 Task 7 Subagent)
 
 ## Settled
 
+- **UI SDK's dev warning that `agent.actions` lists `cancel` (or `accept`) while the api lacks it** is expected: those actions are getters that return `undefined` while unavailable (spec §6), and the warning is once per mount (AGENTS.md).
 - **A Tool's error part follows its status, not `outcome` (Wave 2 Task 4):** a host `status="error"` shows its message too, and a host status over an errored call hides it. The JSDoc and AGENTS.md say so.
 - **A Reasoning `label` is announced as is on completion,** like a Status label; failures and stops still say "Thinking failed" / "Thinking stopped". The JSDoc says to name the outcome in it.
 - **A Step's `announcement` runs only once the step has a title** (`label` or the title part's text): every Step-based component has a title, and the JSDoc says so.
@@ -20,6 +21,7 @@ Last reviewed: `044795f` (Wave 2 Task 6 Task and Plan)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **`initials` is a generic export name** on the core entry, like `Token` and `Highlight`; consider `avatarInitials` before 0.1, since Message will show avatars too.
 - **A plan swapped while Accept is pending keeps the lock** until the old promise settles (Wave 2 Task 6). Clearing it on a new `onAccept` can't key on identity, since React passes a new inline function each render; same open spec §4.1 question as the composer's pending lock.
 - **Task and Plan's `known` set never forgets ids,** so an item removed and re-added under the same id gets no entrance (same as the uploader's `mounted`).
 - **Tool re-serializes its input on every options update** (`toolCode` per streamed chunk). Unmeasured on large inputs; memoize by value if it shows up.
@@ -39,6 +41,7 @@ Last reviewed: `044795f` (Wave 2 Task 6 Task and Plan)
 
 ## Resolved
 
+- **Subagent (Wave 2 Task 7):** an unknown web `status` shows the pending words in the meta; `initials` takes each word's first grapheme, skips words that start with punctuation or an emoji, and keeps "ß"; a cancel is announced as "<name> stopped", matching Stop; `agentName`'s TSDoc says what shows without it.
 - **Task and Plan (Wave 2 Task 6):** an `onAccept` that throws gives Accept back, as a rejection does; a web task or plan given its items after connecting doesn't announce the status they add up to in the first frame; `ListItem` is no longer exported from the core entry.
 - **Chain of Thought review (Wave 2 Task 5):** agents now see the steps as `agent.items` (id and title, `closed: true`), so `expandStep` takes a title; steps and the chain ending in one update are announced once, joined, since a polite `announce` replaces one still waiting; steps set in the first frame aren't announced; auto open reads a controlled `openSteps` from `synced`; an empty title isn't announced; `setStepOpen` refuses an unknown id.
 - **A denied tool call was announced as "cancelled" (Wave 2 Task 4).** Fixed: Tool's `announcement` says "<name> denied" when `outcome` is `denied` (spec §4.1).

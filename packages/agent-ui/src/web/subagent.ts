@@ -11,9 +11,8 @@ import { createParts, type UiActionDetail, wrappedButton } from "@ui-sdk/web";
 import type { AttributeProperties, UiChangeEvent, UiElement } from "@ui-sdk/web/events";
 import { defineMarkdown, type KindMarkdownElement } from "./markdown.js";
 
-const DEFAULT_PARTS = `<kind-subagent-trigger><button><kind-subagent-avatar></kind-subagent-avatar><kind-subagent-title></kind-subagent-title><kind-subagent-icon></kind-subagent-icon><kind-subagent-meta></kind-subagent-meta></button></kind-subagent-trigger><kind-subagent-content><kind-subagent-children></kind-subagent-children></kind-subagent-content><kind-subagent-cancel><button>Stop</button></kind-subagent-cancel><kind-subagent-result></kind-subagent-result>`;
-
-const isPart = (node: Node) => node instanceof Element && node.localName.startsWith("kind-subagent-");
+const TRIGGER = `<kind-subagent-trigger><button><kind-subagent-avatar></kind-subagent-avatar><kind-subagent-title></kind-subagent-title><kind-subagent-icon></kind-subagent-icon><kind-subagent-meta></kind-subagent-meta></button></kind-subagent-trigger>`;
+const END = `<kind-subagent-cancel><button>Stop</button></kind-subagent-cancel><kind-subagent-result></kind-subagent-result>`;
 
 // Parts this element filled in. A part someone wrote into keeps what they wrote, as React's children do. Kept
 // across instances, because UI SDK rebuilds one when the element returns to the page.
@@ -51,11 +50,10 @@ const drawAvatar = (part: Element | null, name: string, src: string | undefined)
 };
 
 /**
- * `<kind-subagent agent-name="…" status="…">` fills in its trigger, content, Stop button and result when it has
- * none of its own parts, and moves its other children, the subagent's steps, into its `kind-subagent-children`, as
- * it does with steps appended later. It writes its `result` into a `<kind-markdown>` inside an empty
- * `kind-subagent-result`. The `can-cancel` attribute shows Stop, which fires `subagentcancel`: call
- * `event.detail.waitUntil(promise)` to keep it pending.
+ * `<kind-subagent agent-name="…" status="…">` takes the subagent's steps inside a `<kind-subagent-content>`, and
+ * adds its trigger before that and its Stop button and result after it, unless it has a trigger of its own. It
+ * writes its `result` into a `<kind-markdown>` inside an empty `kind-subagent-result`. The `can-cancel` attribute
+ * shows Stop, which fires `subagentcancel`: call `event.detail.waitUntil(promise)` to keep it pending.
  */
 export function defineSubagent(): void {
   if (customElements.get("kind-subagent")) return;
@@ -79,16 +77,13 @@ export function defineSubagent(): void {
         // Lookups stay out of nested subagents.
         const own = (tag: string) =>
           [...el.querySelectorAll(tag)].find((part) => part.closest("kind-subagent") === el) ?? null;
-        const adopt = (nodes: Node[]) => {
-          const steps = own("kind-subagent-children");
-          if (steps && owned.has(steps)) steps.append(...nodes);
-        };
-        if (![...el.children].some(isPart)) {
-          const steps = [...el.childNodes];
-          el.innerHTML = DEFAULT_PARTS;
-          const children = own("kind-subagent-children");
-          if (children) owned.add(children);
-          adopt(steps);
+        // The parts go around the content, never the other way, so a framework rendering the steps keeps every node
+        // where it put it.
+        if (!own("kind-subagent-trigger")) {
+          let content = el.querySelector(":scope > kind-subagent-content");
+          if (!content) content = el.appendChild(el.ownerDocument.createElement("kind-subagent-content"));
+          content.insertAdjacentHTML("beforebegin", TRIGGER);
+          content.insertAdjacentHTML("afterend", END);
         }
         const draw = () => {
           const { title, status, durationSeconds, agentName, avatarSrc, result } =
@@ -99,27 +94,27 @@ export function defineSubagent(): void {
           const resultPart = own("kind-subagent-result");
           if (claim(resultPart)) {
             let markdown = resultPart.querySelector<KindMarkdownElement>(":scope > kind-markdown");
-            if (!markdown) {
-              markdown = resultPart.ownerDocument.createElement("kind-markdown");
-              resultPart.replaceChildren(markdown);
+            // Left empty without a result, so the part hides.
+            if (!result) markdown?.remove();
+            else {
+              if (!markdown) {
+                markdown = resultPart.ownerDocument.createElement("kind-markdown");
+                resultPart.replaceChildren(markdown);
+              }
+              if (markdown.source !== result) markdown.source = result;
             }
-            if (markdown.source !== result) markdown.source = result;
           }
         };
         draw();
         const unsubscribe = instance.subscribe(draw);
         const arrivals = new MutationObserver((records) => {
-          const steps = records.flatMap((record) =>
-            record.target === el ? [...record.addedNodes].filter((node) => !isPart(node)) : [],
-          );
-          if (steps.length > 0) adopt(steps);
           // The subagent's steps and the blocks `kind-markdown` renders aren't its parts.
           const arrived = records.some(
             (record) =>
               !(
                 record.target instanceof Element &&
-                record.target.closest("kind-subagent-children, kind-markdown")
-              ) && [...record.addedNodes].some(isPart),
+                record.target.closest("kind-subagent-content, kind-markdown")
+              ) && [...record.addedNodes].some((node) => node instanceof Element),
           );
           if (arrived) draw();
         });

@@ -12,6 +12,8 @@ const call = (name: string): ToolCall => ({
   output: { state: "available", value: "ok" },
 });
 
+const AVATAR = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="#7c6cf0"/></svg>')}`;
+
 const RESULT = "Found **2** issues: an unused import and a missing `await`.";
 
 const tool = (name: string) => {
@@ -40,12 +42,19 @@ const subagents = (motion?: SubagentOptions["motion"]) => (root: HTMLElement) =>
   const main = subagent("subagent", { agentName: "Code reviewer", status: "running", result: RESULT });
   main.canCancel = true;
   if (motion) main.motion = motion;
-  main.append(list);
+  const content = document.createElement("kind-subagent-content");
+  content.append(list);
+  main.append(content);
   const cancels: { resolve(): void; reject(): void }[] = [];
   main.addEventListener("subagentcancel", (event) =>
     event.detail.waitUntil(new Promise<void>((resolve, reject) => cancels.push({ resolve, reject }))),
   );
-  const quick = subagent("quick", { agentName: "Docs writer", status: "running", agentConfirm: false });
+  const quick = subagent("quick", {
+    agentName: "Docs writer",
+    avatarSrc: AVATAR,
+    status: "running",
+    agentConfirm: false,
+  });
   quick.canCancel = true;
   page.append(
     main,
@@ -57,6 +66,7 @@ const subagents = (motion?: SubagentOptions["motion"]) => (root: HTMLElement) =>
       durationSeconds: 4,
       result: RESULT,
     }),
+    subagent("empty", { agentName: "Linter", status: "complete" }),
   );
   root.append(page);
   Object.assign(window, {
