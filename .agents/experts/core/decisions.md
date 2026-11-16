@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `c1e394a` (Wave 2 Task 11 showcase and changeset)
+Last reviewed: `8b38a4c` (Wave 3 Task 1 groundwork)
 
 ## Settled
 
@@ -13,7 +13,7 @@ Last reviewed: `c1e394a` (Wave 2 Task 11 showcase and changeset)
 - **A Step's `announcement` runs only once the step has a title** (`label` or the title part's text): every Step-based component has a title, and the JSDoc says so.
 - **Markdown and Streaming Text have no accessible name:** they're content with no role, which ARIA doesn't let a name sit on, and they offer no actions (spec §6).
 - Everything in AGENTS.md "UI SDK API notes".
-- **Queue `reorder` and `remove`, Uploader `cancel` and Attachments `remove` don't render `data-agent-confirm` (Wave 3 D1):** UI SDK's bridge reads the mark per component, so it would also gate Queue `reorder` and Uploader `retry`, and each action is reversible or touches only unsent items. Their docs pages show the host's `allow` asking a person instead.
+- **Queue `reorder` and `remove`, Uploader `cancel` and Attachments `remove` don't render `data-agent-confirm` (Wave 3 D1):** UI SDK's bridge reads the mark per component, so it would also gate Queue `reorder` and Uploader `retry`, and each action is reversible or only changes the list. Inside a composer, `removeAttachment` follows the composer's `agentConfirm`. Their docs pages show the host's `allow` asking a person instead.
 - **`affected-specs.mjs` runs every spec for a file it can't place,** and none for code no fixture page loads (the AI SDK adapter); nightly runs cover what a PR skips.
 - **Conversation `virtualize` is mount-only,** like a `default*` option: it is read in `state` and not synced.
 - **The composer's draft `text` is the Token Input's codec text** and edits sync through the controller's `editor.subscribe`; a cancelled change writes the draft back to the editor. A controlled owner refuses an edit by cancelling it (AGENTS.md, Task 11).

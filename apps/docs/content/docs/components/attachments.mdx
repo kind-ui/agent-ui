@@ -58,7 +58,7 @@ An agent connected with `createAgent` reads the list's `items`. While `onRemove`
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/attachments/attachments.ts" name="AttachmentsAgentActions" type='Pick<AttachmentsApi, "remove">' />
 
-Removing doesn't wait for a person to confirm, since a removed file can be attached again. To ask the person first, return their answer from your `allow`, which also answers every action that does need a person:
+Removing doesn't wait for a person to confirm, since a removed file can be attached again. To ask the person first, return their answer from your `allow`, which also answers every action that does need a person. Inside a composer, an agent removes attachments through the composer's `removeAttachment`, which waits for a person while `agentConfirm` is on:
 
 ```ts
 import { createAgent } from "@ui-sdk/react/agent";

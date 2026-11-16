@@ -77,7 +77,7 @@ An agent connected with `createAgent` finds the queue by its `label` and reads i
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/queue/queue.ts" name="QueueAgentActions" type='Pick<QueueApi, "reorder" | "remove">' />
 
-Neither action waits for a person to confirm, since each touches only items that haven't been sent yet. To ask the person first, return their answer from your `allow`, which also answers every action that does need a person:
+Neither action waits for a person to confirm, since each only changes the list. To ask the person first, return their answer from your `allow`, which also answers every action that does need a person:
 
 ```ts
 import { createAgent } from "@ui-sdk/react/agent";

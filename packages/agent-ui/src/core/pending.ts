@@ -7,7 +7,10 @@ type PendingContext<Key extends string> = Pick<PrimitiveContext<unknown, object,
 export interface PendingActionOptions<Key extends string> {
   /** The boolean state key that is `true` while a call is pending. */
   state: Key;
-  /** What the call acts on, like an approval's `approvalKey`. A result after it changes is stale. */
+  /**
+   * What the call acts on, like an approval's `approvalKey`. A result after it changes is stale and keeps the
+   * lock, so call `release` when the key changes. Without it, only `release` and destroy make a result stale.
+   */
   key?: () => string;
 }
 
