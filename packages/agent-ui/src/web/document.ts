@@ -43,7 +43,7 @@ const DEFAULT_PARTS = `
 
 const CONTENT_PARTS = `<kind-markdown></kind-markdown><kind-code-block headerless></kind-code-block><pre></pre>`;
 
-// Parts this element wrote into, and downloads it added. A part someone wrote into keeps what they wrote, as React's
+// Parts this element wrote into, and Downloads it added. A part someone wrote into keeps what they wrote, as React's
 // children do. Kept across instances, because UI SDK rebuilds one when the element returns to the page.
 const owned = new WeakSet<Element>();
 
@@ -61,40 +61,59 @@ const write = <Target extends object, Key extends keyof Target>(
   if (target[key] !== value) target[key] = value;
 };
 
-const downloadElement = (toolbar: Element, value: string | undefined, label: string | undefined) => {
-  const part = toolbar.ownerDocument.createElement("kind-document-download");
-  if (value !== undefined) part.setAttribute("value", value);
-  part.innerHTML = `<ui-toolbar-button><button></button></ui-toolbar-button>`;
-  const button = part.querySelector("button") as HTMLButtonElement;
-  button.ariaLabel = label ? `Download ${label}` : "Download";
-  button.textContent = label ?? "";
-  owned.add(part);
-  return part;
+type Movable = Element & { moveBefore?: (node: Node, child: Node | null) => void };
+
+// `moveBefore` keeps a focused button focused where the browser has it; `insertBefore` blurs it.
+function move(parent: Movable, child: Element, before: Element | null): void {
+  if (parent.moveBefore && child.isConnected) parent.moveBefore(child, before);
+  else parent.insertBefore(child, before);
+}
+
+const label = (part: Element, text: string | undefined) => {
+  const button = part.querySelector("button");
+  if (!button) return;
+  const name = text ? `Download ${text}` : "Download";
+  if (button.ariaLabel !== name) button.ariaLabel = name;
+  if (button.textContent !== (text ?? "")) button.textContent = text ?? "";
 };
 
-/** Keeps one Download the element added for each of the `downloads`, or one for none or one, after Copy. */
-const drawDownloads = (toolbar: Element, { downloads, canDownload }: DocumentState) => {
-  const added = [...toolbar.children].filter((child) => owned.has(child));
-  const wanted = !canDownload
-    ? []
-    : downloads.length > 1
-      ? downloads
-      : [{ id: downloads[0]?.id, label: undefined }];
-  const same =
-    added.length === wanted.length &&
-    added.every(
-      (part, index) =>
-        part.getAttribute("value") === (wanted[index]?.id ?? null) &&
-        part.textContent === (wanted[index]?.label ?? ""),
-    );
-  if (same) return;
-  for (const part of added) part.remove();
-  toolbar.append(...wanted.map(({ id, label }) => downloadElement(toolbar, id, label)));
+/**
+ * Keeps a Download after Copy for each of the `downloads`, or one for none or one, reusing the parts it added by
+ * `value`. A Download the page wrote replaces them all.
+ */
+const drawDownloads = (toolbar: Movable, { downloads, canDownload }: DocumentState) => {
+  const parts = [...toolbar.querySelectorAll(":scope > kind-document-download")];
+  const written = parts.some((part) => !owned.has(part));
+  const wanted =
+    !canDownload || written
+      ? []
+      : downloads.length > 1
+        ? downloads
+        : [{ id: downloads[0]?.id, label: undefined }];
+  const added = new Map(
+    parts.filter((part) => owned.has(part)).map((part) => [part.getAttribute("value"), part]),
+  );
+  let previous = toolbar.querySelector(":scope > kind-document-copy");
+  for (const { id, label: text } of wanted) {
+    let part = added.get(id ?? null);
+    added.delete(id ?? null);
+    if (!part) {
+      part = toolbar.ownerDocument.createElement("kind-document-download");
+      if (id !== undefined) part.setAttribute("value", id);
+      part.innerHTML = "<ui-toolbar-button><button></button></ui-toolbar-button>";
+      owned.add(part);
+    }
+    label(part, text);
+    const before: Element | null = previous ? previous.nextElementSibling : toolbar.firstElementChild;
+    if (before !== part) move(toolbar, part, before);
+    previous = part;
+  }
+  for (const part of added.values()) part.remove();
 };
 
 const drawContent = (content: Element | null, state: DocumentState) => {
   if (!content) return;
-  if (!content.firstElementChild) content.innerHTML = CONTENT_PARTS;
+  if (!content.firstElementChild && !content.textContent?.trim()) content.innerHTML = CONTENT_PARTS;
   const markdown = content.querySelector<KindMarkdownElement>(":scope > kind-markdown");
   if (markdown) {
     write(markdown, "hidden", state.format !== "markdown");
@@ -122,9 +141,11 @@ const drawContent = (content: Element | null, state: DocumentState) => {
 };
 
 /**
- * `<kind-document label="README.md">` fills in its header and body when it has no children. Set `content`, and
- * `downloads` as a property; the `can-download` attribute offers Download, which fires `download` with the chosen
- * format's `id`. Copy fires `documentcopy` first.
+ * `<kind-document label="README.md">` fills in its header and body when it has no children, and an empty
+ * `<kind-document-content>` with the view `format` names. Set `content`, and `downloads` as a property; the
+ * `can-download` attribute offers Download, which fires `download` with the chosen format's `id`. A
+ * `<kind-document-download value="…">` written in the toolbar replaces the ones it adds. Copy fires `documentcopy`
+ * first.
  */
 export function defineDocument(): void {
   if (customElements.get("kind-document")) return;

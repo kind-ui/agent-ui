@@ -16,11 +16,13 @@ import type { MotionMode } from "../motion/index.js";
 import { createPendingAction } from "../pending.js";
 import { holdTransitions } from "../step/base.js";
 
+/** How a document's `content` shows: through Markdown, through Code Block, or as wrapped plain text. */
 export type DocumentFormat = "markdown" | "code" | "text";
 
 /** A format the host can download the document as, like `{ id: "md", label: "Markdown" }`. */
 export type DocumentDownload = { id: string; label: string };
 
+/** What expanded or collapsed the preview: Show more, or a call to the api or an agent. */
 export type DocumentOpenChangeReason = "trigger-press" | "imperative";
 
 export type DocumentOptions = {
@@ -48,7 +50,10 @@ export type DocumentOptions = {
    * @default false
    */
   streaming?: boolean;
-  /** The formats `onDownload` offers. With more than one, each has its own button; with one or none, one Download. */
+  /**
+   * The formats `onDownload` offers. With more than one, each has its own button; with one or none, one Download.
+   * @default []
+   */
   downloads?: DocumentDownload[];
   /**
    * Called with the chosen download's `id`, or `undefined` without `downloads`. Shows Download while set. The host
@@ -76,23 +81,30 @@ export type DocumentOptions = {
 export type DocumentState = {
   /** The `label`, else "Document". */
   label: string;
+  /** The `content` option, `""` without one. */
   content: string;
+  /** The `format` option, `"markdown"` without one. */
   format: DocumentFormat;
+  /** The `language` option, for `"code"`. */
   language: string | undefined;
+  /** The `highlight` option. */
   highlight: Highlight | undefined;
+  /** The `streaming` option. */
   streaming: boolean;
   /** What the document is and its size, like "Markdown · 2.4 kB" or "ts · 512 bytes". */
   meta: string;
   downloads: DocumentDownload[];
   /** Whether `onDownload` is set. */
   canDownload: boolean;
-  /** Whether a promise `onDownload` returned is still pending. */
-  downloading: boolean;
+  /** Whether a promise `onDownload` returned is still pending. Agents wait on it. */
+  pending: boolean;
   /** Whether the preview shows in full. */
   open: boolean;
   /** Whether the content is taller than the collapsed preview. */
   overflowing: boolean;
+  /** Whether Copy wrote `content`, for two seconds after it did. */
   copied: boolean;
+  /** The `motion` option, `"auto"` without one. */
   motion: MotionMode;
 };
 
@@ -127,6 +139,7 @@ type Slot<
   Public extends object = Record<never, never>,
 > = SlotDefinition<DocumentState, DocumentApi, Props, Public>;
 
+/** What the content part renders from. */
 export type DocumentContentState = Pick<
   DocumentState,
   "format" | "content" | "language" | "highlight" | "streaming"
@@ -160,12 +173,13 @@ const MEGABYTES = new Intl.NumberFormat("en", { style: "unit", unit: "megabyte",
 export const documentSize = (text: string): string => {
   let bytes = 0;
   for (let i = 0; i < text.length; i++) {
-    const code = text.charCodeAt(i);
-    // Each half of a surrogate pair is half of a four-byte character.
-    bytes += code < 0x80 ? 1 : code < 0x800 || (code >= 0xd800 && code <= 0xdfff) ? 2 : 3;
+    const code = text.codePointAt(i) as number;
+    bytes += code < 0x80 ? 1 : code < 0x800 ? 2 : code < 0x10000 ? 3 : 4;
+    if (code >= 0x10000) i++;
   }
   if (bytes < 1000) return BYTES.format(bytes);
-  if (bytes < 1_000_000) return KILOBYTES.format(bytes / 1000);
+  // Past 999.9 kB, which would round to "1,000 kB".
+  if (bytes < 999_950) return KILOBYTES.format(bytes / 1000);
   return MEGABYTES.format(bytes / 1_000_000);
 };
 
@@ -218,7 +232,7 @@ export const documentPrimitive: DocumentPrimitive = definePrimitive<
     ...presentation(options),
     open: options.open ?? options.defaultOpen ?? false,
     overflowing: false,
-    downloading: false,
+    pending: false,
     copied: false,
   }),
   sync: (options) => ({
@@ -230,7 +244,7 @@ export const documentPrimitive: DocumentPrimitive = definePrimitive<
     const { store } = context;
     const change = createChange(context);
     const copy = createCopy(context);
-    const pendingDownload = createPendingAction(context, { state: "downloading" });
+    const pendingDownload = createPendingAction(context, { state: "pending" });
     const setOpen = (open: boolean, event?: Event) =>
       change("open", open, event ? { reason: "trigger-press", event } : { reason: "imperative" });
     const download = (formatId?: string, event?: Event) => {
@@ -271,8 +285,8 @@ export const documentPrimitive: DocumentPrimitive = definePrimitive<
         return copy(content);
       },
       get download() {
-        const { canDownload, downloading } = store.get();
-        return canDownload && !downloading ? download : undefined;
+        const { canDownload, pending } = store.get();
+        return canDownload && !pending ? download : undefined;
       },
       getDownloads: () => store.get().downloads,
       bindContent: (el) => {
@@ -323,7 +337,7 @@ export const documentPrimitive: DocumentPrimitive = definePrimitive<
       present: (state) => state.canDownload,
       state: (state, { props }) => ({ label: downloadLabel(state.downloads, props.value) }),
       attrs: (state) => ({
-        "data-pending": state.downloading ? "" : undefined,
+        "data-pending": state.pending ? "" : undefined,
       }),
       on: { click: (event, { api, props }) => api.download?.(props.value, event) },
     }),

@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { allowClipboard, readClipboard } from "../clipboard.js";
+import { layerOf } from "../layer.js";
 
 type Host = { kindHost: { downloads: [string | undefined, string][]; next(): void } };
 
@@ -134,6 +135,51 @@ test("agents copy, download and expand while they're offered", async ({ page }) 
     }),
   );
   await expect.poll(() => downloads(page)).toEqual([["txt", "agent"]]);
+});
+
+test("an owner that keeps the preview collapsed, a pending and failed download, and a cancelled copy", async ({
+  page,
+  context,
+  browserName,
+}, testInfo) => {
+  test.skip(layerOf(testInfo) !== "react", "controlled `open` and callbacks are React props");
+  await allowClipboard(context, browserName);
+  await page.goto("/?c=document&case=refused");
+  const expand = part(page, "readme", "expand");
+  await expand.click();
+  await expect
+    .poll(() =>
+      page.evaluate(() => (window as unknown as { kindHost: { openings: string[] } }).kindHost.openings),
+    )
+    .toEqual(["true:trigger-press"]);
+  await expect(expand).toHaveAttribute("aria-expanded", "false");
+  await region(page, "README.md").getByRole("button", { name: "Download", exact: true }).click();
+  await expect(part(page, "readme", "download")).toHaveAttribute("data-pending", "");
+  await expectAgentActions(page, "README.md", ["copy", "expand", "press"]);
+  await page.evaluate(() => (window as unknown as { kindHost: { reject(): void } }).kindHost.reject());
+  await expect(part(page, "readme", "download")).not.toHaveAttribute("data-pending", "");
+  await expectAgentActions(page, "README.md", ["copy", "download", "expand", "press"]);
+  await region(page, "README.md").getByRole("button", { name: "Copy", exact: true }).click();
+  await expect(part(page, "readme", "copy")).not.toHaveAttribute("data-copied", "");
+});
+
+test("a web document keeps a Download and content the page wrote, and focus through a downloads change", async ({
+  page,
+}, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "written parts and properties are Web Components markup");
+  await page.goto("/?c=document&case=written");
+  const written = region(page, "notes.txt");
+  await expect(written.getByRole("button", { name: /Download|Save/ })).toHaveCount(1);
+  await expect(part(page, "written", "content")).toHaveText("Server-rendered notes");
+  await open(page);
+  const markdown = region(page, "README.md").getByRole("button", { name: "Download Markdown" });
+  await markdown.focus();
+  await page.evaluate(() => {
+    const element = document.querySelector("kind-document") as HTMLElement & { downloads: unknown[] };
+    element.downloads = [...element.downloads, { id: "pdf", label: "PDF" }];
+  });
+  await expect(region(page, "README.md").getByRole("button", { name: "Download PDF" })).toBeVisible();
+  await expect(markdown).toBeFocused();
 });
 
 for (const colorScheme of ["light", "dark"] as const) {

@@ -146,7 +146,7 @@ export function DocumentExpand({ children = ({ label }) => label, ...props }: Do
 
 const COPY_BUTTON = <KindToolbarButton aria-label="Copy" />;
 
-// Shared, so a streamed chunk renders only the parts whose state changed.
+// Shared, so a streamed chunk doesn't render the scroll area's viewport and scrollbar again.
 const SCROLL_CONTENT = (
   <>
     <KindScrollAreaViewport>

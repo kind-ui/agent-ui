@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `161b83e` (Wave 4 Task 3 Inline Citation)
+Last reviewed: `63722ca` (Wave 4 Task 4 Document)
 
 ## Settled
 
@@ -21,6 +21,7 @@ Last reviewed: `161b83e` (Wave 4 Task 3 Inline Citation)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **An empty `<kind-document>` shows nothing before upgrade,** then adds its whole card, which moves what's below it; same class as `kind-reasoning` and `kind-streaming-text`. Moving it and a shadow root were checked by hand, not in the spec.
 - **`kind-inline-citation` has no written-item, shadow-root or moved fixture case** (Wave 4 Task 3): a shadow root and items written after connecting were checked by hand (a `MutationObserver` now fills them in), not in the spec. Its index after a move is the core entry on pages the Carousel changes itself.
 - **`kind-sources` has no written-item or shadow-root fixture case** (Wave 4 Task 2): checked by hand (a written item replaces the added one; the trigger lookup now uses `getRootNode()`), not in the spec.
 - **A `kind-notice` written with only its description grows by 40 px when it's defined** (Wave 3 Task 10), as it adds its mark and title; same class as the empty Task, Plan and Checkpoint entries.
@@ -52,6 +53,7 @@ Last reviewed: `161b83e` (Wave 4 Task 3 Inline Citation)
 
 ## Resolved
 
+- **`kind-document` replaced its Downloads on any `downloads` change, added one beside a written Download, and wiped written content text** (Wave 4 Task 4): Downloads it added are kept by `value` and moved with `moveBefore`, a written `kind-document-download` replaces them all, and content is filled only with no element or text in it; the `written` case and a focus-through-change test pin them.
 - **Reordering `kind-inline-citation`'s sources blurred a focused link** (Wave 4 Task 3): slides move with `moveBefore` where the browser has it.
 - **Sources (Wave 4 Task 2):** the axe tests reach the trigger with a CSS locator (Firefox crash), and closing inside a shadow root returns focus to the trigger.
 - **Step-based elements played color transitions on first render (Task, Plan, Chain of Thought, Tool).** Cause: `@ui-sdk/web` gives each part its attributes as it connects, and a part that reads style as it binds (UI SDK `bindPanel`'s `getAnimations()` on a content bound open, Scroll Area's measure in a code block) styles the parts after it, on the page too, bare. Fixed: the step root holds `data-mounting` until its second frame, and `step.css` turns transitions off under it; state changes still animate.

@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `161b83e` (Wave 4 Task 3 Inline Citation)
+Last reviewed: `63722ca` (Wave 4 Task 4 Document)
 
 ## Settled
 
@@ -31,6 +31,7 @@ Last reviewed: `161b83e` (Wave 4 Task 3 Inline Citation)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A Document without `document.css` never overflows** (Wave 4 Task 4): `--kind-document-max-height` doesn't parse, so `overflowing` stays false and Show more never shows. Nothing is clipped without the stylesheet either; undocumented.
 - **Inline Citation's "N of M" doesn't follow a page the Carousel changes on its own** (Wave 4 Task 3), like a host reordering `sources` or a web element put back after paging: the Carousel's page events don't bubble and no render layer may listen, so `syncPage` runs on a click, a keyup and the api's own paging. Needs a spec §2 row or a bubbling UI SDK event.
 - **`treeFromPaths` drops a leading `/` below the top level** (Wave 4 Task 1): `/a/b.ts` becomes a `""` folder holding `a/b.ts`. `pathItems` documents relative paths; report upstream.
 - **`ansi-sequence-parser` applies a sequence's resets before its sets** (Wave 4 Task 1), so `ESC[33;0m` stays yellow where a terminal resets; splitting SGR into one parameter per sequence would fix it.
@@ -66,6 +67,7 @@ Last reviewed: `161b83e` (Wave 4 Task 3 Inline Citation)
 
 ## Resolved
 
+- **Document's download lock, size and JSDoc** (Wave 4 Task 4): the lock is `pending`, the key the agent bridge reads and waits on (it was `downloading`); `documentSize` switches to MB from 999,950 bytes, not "1,000 kB", and counts a lone surrogate as 3 bytes, as `TextEncoder` does; state and types have JSDoc; `document.test.mjs` pins the one-at-a-time download, the refused id, the first-id default and a controlled `open`.
 - **Inline Citation's arrow keys left "N of M" and `next`/`previous` on the old page** (Wave 4 Task 3): a part's `on` handler skips a cancelled event and the Carousel cancels the keydown it pages on, so the page is read on keyup. `syncPage` ignores the controller's `undefined` before a Carousel attaches, and paging returns a boolean. Entries and ids are cached by object in `WeakMap`s, so citations in one paragraph don't evict each other's (`tests/core/inline-citation.test.mjs`).
 - **Sources (Wave 4 Task 2):** entries are kept by id while a source's fields are equal (a per-object cache went stale when a host edited a source in place), item parts read entries by own key (`Object.hasOwn`; a null prototype broke `@ui-sdk/web`), a protocol-relative `url` gets its host, and the content finds its trigger through `getRootNode()`, so a close inside a shadow root returns focus. An international host shows as punycode, by design (documented on `SourceEntry.host`).
 - **Wave 3 agent conformance (Task 11):** Guardrail Notice spread the notice base's api, which read its `dismiss` getter once, so `dismiss` stayed offered after `onDismiss` went away (web `can-dismiss` removed) or while the notice was leaving; it now delegates the getter (`wave-3/agent.spec.ts`). Chain of Thought's `setStepOpen` reads steps by own key (`Object.hasOwn`), as Suggestion and Question do.

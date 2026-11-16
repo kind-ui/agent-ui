@@ -47,7 +47,39 @@ function Streaming() {
   );
 }
 
+function Refused() {
+  const [openings, setOpenings] = useState<string[]>([]);
+  useEffect(() => {
+    let settle: { resolve: () => void; reject: () => void } | undefined;
+    Object.assign(window, {
+      kindHost: {
+        openings,
+        resolve: () => settle?.resolve(),
+        reject: () => settle?.reject(),
+      },
+      kindDownload: () =>
+        new Promise<void>((resolve, reject) => {
+          settle = { resolve, reject };
+        }),
+    });
+  }, [openings]);
+  return (
+    <div className="w-[34rem] p-6">
+      <Document
+        id="readme"
+        label="README.md"
+        content={readme}
+        open={false}
+        onOpenChange={(open, details) => setOpenings((current) => [...current, `${open}:${details.reason}`])}
+        onDownload={() => (window as unknown as { kindDownload(): Promise<void> }).kindDownload()}
+        onCopy={(_content, details) => details.cancel()}
+      />
+    </div>
+  );
+}
+
 export const cases = {
+  refused: () => <Refused />,
   all: () => <Page />,
   reduced: () => <Page motion="reduced" />,
   streaming: () => <Streaming />,

@@ -52,4 +52,21 @@ const streaming = (root: HTMLElement) => {
   });
 };
 
-export const cases = { all: page(), reduced: page({ motion: "reduced" }), streaming };
+const written = (root: HTMLElement) => {
+  defineDocument();
+  root.innerHTML = `<div class="w-[34rem] p-6">
+    <kind-document id="written" label="notes.txt" can-download>
+      <kind-document-header>
+        <kind-document-title></kind-document-title>
+        <kind-document-toolbar>
+          <kind-internal-toolbar><ui-toolbar aria-label="Document actions">
+            <kind-document-download><ui-toolbar-button><button>Save</button></ui-toolbar-button></kind-document-download>
+          </ui-toolbar></kind-internal-toolbar>
+        </kind-document-toolbar>
+      </kind-document-header>
+      <kind-document-body><kind-document-content>Server-rendered notes</kind-document-content></kind-document-body>
+    </kind-document>
+  </div>`;
+};
+
+export const cases = { all: page(), reduced: page({ motion: "reduced" }), streaming, written };
