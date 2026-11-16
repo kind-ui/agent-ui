@@ -3,6 +3,7 @@
 @import "./status.css";
 @import "./reasoning.css";
 @import "./tool.css";
+@import "./chain-of-thought.css";
 @import "./conversation.css";
 @import "./markdown.css";
 @import "./code-block.css";

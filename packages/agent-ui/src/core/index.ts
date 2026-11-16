@@ -10,6 +10,17 @@ export {
   attachmentsPrimitive,
 } from "./attachments/index.js";
 export {
+  type ChainOfThoughtApi,
+  type ChainOfThoughtOptions,
+  type ChainOfThoughtPrimitive,
+  type ChainOfThoughtState,
+  type ChainOfThoughtStep,
+  chainOfThoughtPrimitive,
+  type NextOpenStepsInput,
+  nextOpenSteps,
+  stepDuration,
+} from "./chain-of-thought/index.js";
+export {
   type CodeBlockApi,
   type CodeBlockOptions,
   type CodeBlockPrimitive,

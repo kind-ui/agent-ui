@@ -19,6 +19,11 @@ const components = {
     description: "A tool call as a step, from its streamed input to its output or error.",
     uses: ["markdown", "code-block"],
   },
+  "chain-of-thought": {
+    title: "Chain of Thought",
+    description: "A summary of the steps an agent took, which opens into each step's details.",
+    uses: [],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

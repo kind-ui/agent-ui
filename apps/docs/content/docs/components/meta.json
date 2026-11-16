@@ -5,6 +5,7 @@
     "status",
     "reasoning",
     "tool",
+    "chain-of-thought",
     "conversation",
     "message",
     "markdown",
