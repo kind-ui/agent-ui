@@ -13,6 +13,8 @@
     "confirmation",
     "question",
     "checkpoint",
+    "model-selector",
+    "reasoning-effort",
     "conversation",
     "message",
     "markdown",

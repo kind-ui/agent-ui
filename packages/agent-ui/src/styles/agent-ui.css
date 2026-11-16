@@ -2,9 +2,11 @@
 @import "./step.css";
 @import "./status.css";
 @import "./reasoning.css";
+@import "./reasoning-effort.css";
 @import "./confirmation.css";
 @import "./question.css";
 @import "./checkpoint.css";
+@import "./model-selector.css";
 @import "./tool.css";
 @import "./chain-of-thought.css";
 @import "./item-list.css";

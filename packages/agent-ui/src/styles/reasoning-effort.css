@@ -1,0 +1,50 @@
+/* Reasoning Effort (spec §7): a row of levels with a mark that slides to the chosen one. */
+@layer components {
+  [data-slot="kind-reasoning-effort"] {
+    display: inline-flex;
+
+    & ui-segmented-control {
+      display: contents;
+    }
+  }
+
+  :where([data-slot="kind-reasoning-effort"]) {
+    & [data-slot="segmented-control-indicator"] {
+      transition-property: top, left, width, height;
+      transition-duration: var(--kind-duration-base);
+      transition-timing-function: var(--kind-ease);
+    }
+    & [data-slot="segmented-control-item"] {
+      transition:
+        color var(--kind-duration-fast),
+        background-color var(--kind-duration-reduced) var(--kind-ease-out);
+    }
+  }
+
+  /* Reduced motion: the mark doesn't move. The chosen level fills in its place, in 120 ms. */
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-slot="kind-reasoning-effort"][data-motion="auto"]) {
+      & [data-slot="segmented-control-indicator"] {
+        display: none;
+      }
+      & [data-slot="segmented-control-item"][data-checked] {
+        background-color: var(--kind-color-surface);
+        box-shadow: inset 0 0 0 1px var(--kind-color-border);
+      }
+    }
+  }
+
+  :where([data-slot="kind-reasoning-effort"]:is([data-motion="reduced"], [data-motion="none"])) {
+    & [data-slot="segmented-control-indicator"] {
+      display: none;
+    }
+    & [data-slot="segmented-control-item"][data-checked] {
+      background-color: var(--kind-color-surface);
+      box-shadow: inset 0 0 0 1px var(--kind-color-border);
+    }
+  }
+
+  :where([data-slot="kind-reasoning-effort"][data-motion="none"]) [data-slot="segmented-control-item"] {
+    transition: none;
+  }
+}

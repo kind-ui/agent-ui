@@ -120,6 +120,19 @@ export {
   messagePrimitive,
 } from "./message/index.js";
 export {
+  filterModels,
+  type ModelGroup,
+  type ModelSelectorApi,
+  type ModelSelectorComboboxState,
+  type ModelSelectorContentState,
+  type ModelSelectorItem,
+  type ModelSelectorOptions,
+  type ModelSelectorPrimitive,
+  type ModelSelectorState,
+  type ModelSelectorValueChangeReason,
+  modelSelectorPrimitive,
+} from "./model-selector/index.js";
+export {
   enter,
   exit,
   layout,
@@ -173,6 +186,16 @@ export {
   reasoningPrimitive,
   reasoningTitle,
 } from "./reasoning/index.js";
+export {
+  type ReasoningEffortApi,
+  type ReasoningEffortControlState,
+  type ReasoningEffortLevel,
+  type ReasoningEffortOptions,
+  type ReasoningEffortPrimitive,
+  type ReasoningEffortState,
+  type ReasoningEffortValueChangeReason,
+  reasoningEffortPrimitive,
+} from "./reasoning-effort/index.js";
 export {
   type StatusOptions,
   type StatusPrimitive,
