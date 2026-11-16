@@ -1,75 +1,25 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
+import {
+  act,
+  actionsOf,
+  type Conformance,
+  components,
+  entry,
+  expectSameAsPerson,
+  host,
+  setConfirm,
+  setHost,
+  settled,
+  snapshot,
+} from "../agent-conformance.js";
 import { allowClipboard } from "../clipboard.js";
 import { layerOf } from "../layer.js";
-
-type Entry = { ref: string; component: string; label?: string; actions: string[]; open?: boolean };
-type ActResult = { ok: boolean; error?: { message: string } };
-type Host = {
-  permit: boolean;
-  refuse: boolean;
-  changes: string[];
-  calls: string[];
-  confirm(on: boolean): void;
-};
-type Fixture = {
-  agent: { snapshot(): Entry[]; act(input: { steps: unknown[] }): Promise<ActResult> };
-  kindAgent: Host;
-};
 
 const open = async (page: Page) => {
   await page.goto("/?c=agent&case=wave-2");
   await expect.poll(() => components(page)).toContain("kind-queue");
   await settled(page);
 };
-const snapshot = (page: Page) => page.evaluate(() => (window as Partial<Fixture>).agent?.snapshot() ?? []);
-const components = async (page: Page) => (await snapshot(page)).map((entry) => entry.component);
-const entry = async (page: Page, component: string, label: string) =>
-  (await snapshot(page)).find((item) => item.component === component && item.label === label);
-const host = (page: Page) => page.evaluate(() => (window as unknown as Fixture).kindAgent);
-const setHost = (page: Page, values: Partial<Pick<Host, "permit" | "refuse">>) =>
-  page.evaluate((next) => Object.assign((window as unknown as Fixture).kindAgent, next), values);
-const setConfirm = (page: Page, on: boolean) =>
-  page.evaluate((value) => (window as unknown as Fixture).kindAgent.confirm(value), on);
-
-const run = (page: Page, ref: string | undefined, action: string, args: unknown[] = []) =>
-  page.evaluate((steps) => (window as unknown as Fixture).agent.act({ steps }), [{ ref, action, args }]);
-
-async function act(page: Page, component: string, label: string, action: string, args: unknown[] = []) {
-  const found = await entry(page, component, label);
-  expect(found?.actions, `${component} "${label}" offers ${action}`).toContain(action);
-  return run(page, found?.ref, action, args);
-}
-
-// Every animation but the endless loops (spinners, dots) has finished. Firefox never advances a transition inside
-// hidden content, so those are skipped.
-const settled = (page: Page) =>
-  page.waitForFunction(() =>
-    document
-      .getAnimations()
-      .every(
-        (animation) =>
-          animation.playState !== "running" ||
-          animation.effect?.getComputedTiming().iterations === Number.POSITIVE_INFINITY ||
-          (animation.effect as KeyframeEffect | null)?.target?.checkVisibility() === false,
-      ),
-  );
-
-// Every attribute and text in a component, so an agent's action and a person's can be compared. Inline styles
-// (motion, measurement) and `tabindex` (where focus went: a pointer moves it, an agent doesn't) are left out.
-const signature = (scope: Locator) =>
-  scope.evaluate((root) =>
-    [root, ...root.querySelectorAll("*")].map((el) => {
-      const attributes = [...el.attributes]
-        .filter(({ name }) => name !== "style" && name !== "tabindex")
-        .map(({ name, value }) => `${name}=${value}`)
-        .sort();
-      const text = [...el.childNodes]
-        .filter((node) => node.nodeType === Node.TEXT_NODE)
-        .map((node) => node.textContent?.trim())
-        .join("");
-      return `${el.localName}[${attributes.join(" ")}]${text}`;
-    }),
-  );
 
 type Target = { component: string; label: string; id: string; trigger: RegExp };
 
@@ -90,15 +40,6 @@ const setOpen = (target: Target, open: boolean) => async (page: Page) => {
   if ((await entry(page, target.component, target.label))?.open !== open) await trigger(page, target).click();
   await expect.poll(async () => (await entry(page, target.component, target.label))?.open).toBe(open);
   await settled(page);
-};
-
-type Conformance = {
-  target: Pick<Target, "component" | "label" | "id">;
-  action: string;
-  args?: unknown[];
-  before?: (page: Page) => Promise<void>;
-  /** What a person does for the same result. */
-  pointer: (page: Page) => Promise<void>;
 };
 
 const tool = targets[1] as Target;
@@ -246,32 +187,9 @@ test("each tool names its own code blocks and copy buttons", async ({ page }) =>
       await expect(page.getByRole("button", { name: `Copy ${name} ${part}` })).toHaveCount(1);
 });
 
-for (const { target, action, args, before, pointer } of conformance) {
-  test(`${target.component}.${action} leaves the page as a person's input does`, async ({ page }) => {
-    const scope = byId(target.id);
-    await open(page);
-    await before?.(page);
-    const result = await act(page, target.component, target.label, action, args);
-    expect(result.error).toBeUndefined();
-    let byAgent: string[] = [];
-    // Waits for the entrance and exit transitions to finish, so both sides are compared at rest. A leaving row's
-    // attributes hold still while it fades, so animations are waited for too.
-    await expect
-      .poll(async () => {
-        const previous = byAgent;
-        await settled(page);
-        byAgent = await signature(scope(page));
-        return previous.join("\n") === byAgent.join("\n");
-      })
-      .toBe(true);
-    const calls = (await host(page)).calls;
-
-    await open(page);
-    await before?.(page);
-    await pointer(page);
-    await expect.poll(() => signature(scope(page))).toEqual(byAgent);
-    expect((await host(page)).calls).toEqual(calls);
-  });
+for (const item of conformance) {
+  test(`${item.target.component}.${item.action} leaves the page as a person's input does`, ({ page }) =>
+    expectSameAsPerson(page, open, item));
 }
 
 const queueTitles = (page: Page) =>
@@ -316,9 +234,6 @@ test("plan.accept and subagent.cancel need a person, unless agentConfirm is fals
   expect((await act(page, "kind-subagent", "Code reviewer", "cancel")).ok).toBe(true);
   expect((await host(page)).calls).toEqual(["accept", "cancel"]);
 });
-
-const actionsOf = async (page: Page, component: string, label: string) =>
-  [...((await entry(page, component, label))?.actions ?? [])].sort();
 
 test("can-accept, can-cancel, can-reorder and can-remove offer their actions", async ({ page }, testInfo) => {
   test.skip(layerOf(testInfo) !== "web", "web attributes only");

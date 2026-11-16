@@ -4,6 +4,7 @@ import type { AgentAction } from "@ui-sdk/react/agent";
 import { useEffect, useState } from "react";
 import { Attachments } from "../../../../src/react/attachments.js";
 import { ChainOfThought } from "../../../../src/react/chain-of-thought.js";
+import { Checkpoint } from "../../../../src/react/checkpoint.js";
 import {
   Composer,
   ComposerAttach,
@@ -13,6 +14,8 @@ import {
   ComposerSubmit,
   ComposerTriggerMenu,
 } from "../../../../src/react/composer.js";
+import { Confirmation } from "../../../../src/react/confirmation.js";
+import { ContextMeter } from "../../../../src/react/context-meter.js";
 import {
   Conversation,
   ConversationContent,
@@ -20,6 +23,8 @@ import {
   ConversationRow,
   ConversationViewport,
 } from "../../../../src/react/conversation.js";
+import { Feedback } from "../../../../src/react/feedback.js";
+import { GuardrailNotice } from "../../../../src/react/guardrail-notice.js";
 import { KindToolbar, KindToolbarButton } from "../../../../src/react/internal/toolbar.js";
 import { Loader } from "../../../../src/react/loader.js";
 import { Markdown } from "../../../../src/react/markdown.js";
@@ -36,9 +41,13 @@ import {
   MessageRegenerate,
   MessageToolbar,
 } from "../../../../src/react/message.js";
+import { ModelSelector } from "../../../../src/react/model-selector.js";
+import { Notice } from "../../../../src/react/notice.js";
 import { Plan } from "../../../../src/react/plan.js";
+import { Question as QuestionForm } from "../../../../src/react/question.js";
 import { Queue } from "../../../../src/react/queue.js";
 import { Reasoning } from "../../../../src/react/reasoning.js";
+import { ReasoningEffort } from "../../../../src/react/reasoning-effort.js";
 import { Status } from "../../../../src/react/status.js";
 import {
   Step,
@@ -51,6 +60,7 @@ import {
 } from "../../../../src/react/step.js";
 import { StreamingText } from "../../../../src/react/streaming-text.js";
 import { Subagent } from "../../../../src/react/subagent.js";
+import { Suggestion } from "../../../../src/react/suggestion.js";
 import { Task } from "../../../../src/react/task.js";
 import { ThinkingIndicator } from "../../../../src/react/thinking-indicator.js";
 import { Tool } from "../../../../src/react/tool.js";
@@ -58,6 +68,7 @@ import { TypingIndicator } from "../../../../src/react/typing-indicator.js";
 import { Uploader } from "../../../../src/react/uploader.js";
 import {
   agentHost,
+  approvalCall,
   chainSteps,
   files,
   filler,
@@ -72,7 +83,12 @@ import {
   toolCalls,
 } from "../../shared/agent.js";
 import { commands, mentions } from "../../shared/composer.js";
+import { context } from "../../shared/context-meter.js";
 import { answer } from "../../shared/markdown.js";
+import { levels, models } from "../../shared/model-selector.js";
+import { guardrails, type NoticeData, notices } from "../../shared/notice.js";
+import { deployQuestions } from "../../shared/question.js";
+import { suggestions } from "../../shared/suggestion.js";
 import { uploads } from "../../shared/uploader.js";
 
 const host = agentHost();
@@ -196,12 +212,16 @@ function Uploads() {
   return <Uploader aria-label="Uploads" items={items} {...callbacks} />;
 }
 
-function Activity() {
+function useAgentConfirm() {
   const [confirm, setConfirm] = useState(true);
-  const [queue, setQueue] = useState<readonly QueueItem[]>(queueItems);
   useEffect(() => {
     host.confirm = setConfirm;
   }, []);
+  return confirm;
+}
+
+function Activity({ confirm }: { confirm: boolean }) {
+  const [queue, setQueue] = useState<readonly QueueItem[]>(queueItems);
   return (
     <div className="flex w-[40rem] flex-col gap-8 p-6">
       <section data-case="status">
@@ -319,12 +339,116 @@ function Foundation() {
   );
 }
 
-export const cases = {
-  all: () => <Foundation />,
-  "wave-2": () => (
+const rateLimited = notices.find((notice) => notice.id === "warning") as NoticeData;
+
+function HumanInput({ confirm }: { confirm: boolean }) {
+  const [shown, setShown] = useState({ notice: true, guardrail: true });
+  const remove = (part: keyof typeof shown) => () => {
+    host.calls.push("dismiss");
+    setShown((current) => ({ ...current, [part]: false }));
+  };
+  return (
+    <div className="flex w-[40rem] flex-col gap-8 p-6">
+      <section data-case="tool-approval">
+        <Tool
+          id="delete_file"
+          call={approvalCall}
+          onApprove={host.decide("approve")}
+          onDeny={host.decide("deny")}
+        />
+      </section>
+      <section data-case="confirmation">
+        <Confirmation
+          id="confirmation"
+          label="Run the migration?"
+          approval={{ approvalId: "migrate", generation: 1, state: "requested" }}
+          onApprove={host.decide("approve")}
+          onDeny={host.decide("deny")}
+        />
+      </section>
+      <section data-case="question">
+        <QuestionForm
+          id="question"
+          label="Deploy questions"
+          questions={deployQuestions}
+          agentConfirm={confirm}
+          onValueChange={(_value, details) => host.change("question", details)}
+          onSubmit={host.decide("submit")}
+          onSkip={host.decide("skip")}
+        />
+      </section>
+      <section data-case="checkpoint">
+        <Checkpoint
+          id="checkpoint"
+          description="Before editing auth.ts"
+          agentConfirm={confirm}
+          onOpenChange={(_open, details) => host.change("checkpoint", details)}
+          onRestore={host.decide("restore")}
+        />
+      </section>
+      <section data-case="model-selector" className="flex items-center gap-2">
+        <ModelSelector
+          id="model"
+          models={models}
+          defaultValue="gpt-5"
+          onValueChange={(_value, details) => host.change("model", details)}
+        />
+        <ReasoningEffort
+          id="effort"
+          levels={levels}
+          defaultValue="medium"
+          onValueChange={(_value, details) => host.change("effort", details)}
+        />
+        <ContextMeter
+          id="context"
+          {...context}
+          onOpenChange={(_open, details) => host.change("context", details)}
+        />
+      </section>
+      <section data-case="suggestion">
+        <Suggestion id="suggestion" suggestions={suggestions} onPick={host.decide("pick")} />
+      </section>
+      <section data-case="feedback">
+        <Feedback
+          id="feedback"
+          onRatingChange={(_rating, details) => host.change("feedback", details)}
+          onComment={host.decide("comment")}
+        />
+      </section>
+      <section id="notice" data-case="notice">
+        {shown.notice ? (
+          <Notice variant={rateLimited.variant} label={rateLimited.label} onDismiss={remove("notice")}>
+            {rateLimited.text}
+          </Notice>
+        ) : null}
+      </section>
+      <section id="guardrail" data-case="guardrail-notice">
+        {shown.guardrail ? (
+          <GuardrailNotice
+            {...guardrails.blocking}
+            blocking
+            onOpenChange={(_open, details) => host.change("guardrail", details)}
+            onDismiss={remove("guardrail")}
+          />
+        ) : null}
+      </section>
+    </div>
+  );
+}
+
+function Page({ wave }: { wave: 2 | 3 }) {
+  const confirm = useAgentConfirm();
+  return (
     <>
       <Foundation />
-      <Activity />
+      <Activity confirm={confirm} />
+      {wave === 3 ? <HumanInput confirm={confirm} /> : null}
     </>
-  ),
+  );
+}
+
+export const cases = {
+  all: () => <Foundation />,
+  "wave-2": () => <Page wave={2} />,
+  "wave-3": () => <Page wave={3} />,
 };
