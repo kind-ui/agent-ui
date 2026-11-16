@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `04a31c9` (Wave 4 Task 2 Sources)
+Last reviewed: `161b83e` (Wave 4 Task 3 Inline Citation)
 
 ## Settled
 
+- **A hand-written empty `kind-inline-citation-content` stays empty** (Wave 4 Task 3), as React's bare `InlineCitationContent` does: the element fills in only the content it wrote.
 - **`kind-sources`' `api` leaves out `expand` and `collapse`** (Wave 4 Task 2): they are availability getters, and a web root's `api` list copies methods once, as Guardrail Notice's does; `open` and `setOpen` cover them.
 - **Fixtures carry no comments** (Wave 3 Task 11): the agent page builds `kind-model-selector` and `kind-reasoning-effort` with `createElement` because `defaultValue` is a property read when the element connects (AGENTS.md, Wave 3 agent conformance), not because markup was overlooked.
 - **`kind-suggestion` fills in only its own row** (Wave 3 Task 7): a row a page writes is the internal Carousel's markup with its `kind-suggestion-item`s, as a written `kind-reasoning-effort` holds its own Segmented Control; the element's JSDoc says so. There are no `kind-suggestion-viewport`/`-previous`/`-next` tags.
@@ -20,6 +21,7 @@ Last reviewed: `04a31c9` (Wave 4 Task 2 Sources)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **`kind-inline-citation` has no written-item, shadow-root or moved fixture case** (Wave 4 Task 3): a shadow root and items written after connecting were checked by hand (a `MutationObserver` now fills them in), not in the spec. Its index after a move is the core entry on pages the Carousel changes itself.
 - **`kind-sources` has no written-item or shadow-root fixture case** (Wave 4 Task 2): checked by hand (a written item replaces the added one; the trigger lookup now uses `getRootNode()`), not in the spec.
 - **A `kind-notice` written with only its description grows by 40 px when it's defined** (Wave 3 Task 10), as it adds its mark and title; same class as the empty Task, Plan and Checkpoint entries.
 - **An empty `kind-context-meter` moves what's beside it when it's defined** (Wave 3 Task 8), as the empty Task, Plan and Checkpoint do; no shadow-root case in its fixture either (checked by hand).
@@ -50,6 +52,7 @@ Last reviewed: `04a31c9` (Wave 4 Task 2 Sources)
 
 ## Resolved
 
+- **Reordering `kind-inline-citation`'s sources blurred a focused link** (Wave 4 Task 3): slides move with `moveBefore` where the browser has it.
 - **Sources (Wave 4 Task 2):** the axe tests reach the trigger with a CSS locator (Firefox crash), and closing inside a shadow root returns focus to the trigger.
 - **Step-based elements played color transitions on first render (Task, Plan, Chain of Thought, Tool).** Cause: `@ui-sdk/web` gives each part its attributes as it connects, and a part that reads style as it binds (UI SDK `bindPanel`'s `getAnimations()` on a content bound open, Scroll Area's measure in a code block) styles the parts after it, on the page too, bare. Fixed: the step root holds `data-mounting` until its second frame, and `step.css` turns transitions off under it; state changes still animate.
 - **Notice and Guardrail Notice (Wave 3 Task 10):** Dismiss stays the last child when a host adds text or buttons after the element connects (moved with `moveBefore` where the browser has it), so Tab reaches them first; a notice removed and put back neither rises in nor is announced again.

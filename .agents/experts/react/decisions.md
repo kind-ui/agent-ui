@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `04a31c9` (Wave 4 Task 2 Sources)
+Last reviewed: `161b83e` (Wave 4 Task 3 Inline Citation)
 
 ## Settled
 
@@ -42,6 +42,7 @@ Last reviewed: `04a31c9` (Wave 4 Task 2 Sources)
 
 ## Resolved
 
+- **Inline Citation re-rendered every slide on each page, and its card took the marker's name** (Wave 4 Task 3): `carouselState` is memoized on the ids alone with `defaultPage` a getter read at mount, and the content drops UI SDK's `aria-labelledby` for the summary. The fixture gained a `refused` case.
 - **Sources (Wave 4 Task 2):** a refusing-owner case (`refused`) and favicon, host and snippet assertions joined `wave-4/sources.spec.ts`.
 - **Guardrail Notice (Wave 3 Task 10):** hydrating server-rendered notices after `load` no longer plays their entrance or announces them; a refusing `open` owner is tested (`refused` case); `GuardrailNotice` takes `children` into its description, as the web element does.
 - **Feedback (Wave 3 Task 9):** the agent spec settles `onComment` instead of waiting out the bridge's timeout; a refusing host has a fixture case and a spec in both layers; the thumbs part is `FeedbackThumbs`, so it doesn't clash with the `FeedbackRating` type.

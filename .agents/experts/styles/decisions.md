@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `04a31c9` (Wave 4 Task 2 Sources)
+Last reviewed: `161b83e` (Wave 4 Task 3 Inline Citation)
 
 ## Settled
 
@@ -39,6 +39,7 @@ Last reviewed: `04a31c9` (Wave 4 Task 2 Sources)
 
 ## Resolved
 
+- **The Inline Citation marker made a line under 1.3 line height taller, and the carousel clipped a focused link's ring** (Wave 4 Task 3): the marker has `margin-block: -0.25em` (spec at line height 1), and the slides have 4 px padding inside a viewport pulled out by as much.
 - **Sources (Wave 4 Task 2):** selectors are one attribute with context in `:where()`, so a consumer class restyles the panel, row hover and title hover; a long host name shrinks before the title; the item's hover fade no longer half-follows reduced motion (matches the Step trigger).
 - **Notice and the status mark (Wave 3 Task 10):** in forced colors the running mark's track is `GrayText`, so its arc still shows; the light warning glyph uses `--kind-color-on-warning` (white on amber was 2.57:1); a closed Guardrail detail takes back its row gap; the notice's padding is logical; Why? and Dismiss follow the reduced and `none` motion modes.
 - **Feedback (Wave 3 Task 9):** the thumbs show in forced colors; the pressed icon rule wraps its context in `:where()`, so a consumer's icon class wins.
