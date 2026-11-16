@@ -69,6 +69,19 @@ export {
   confirmationPrimitive,
 } from "./confirmation/index.js";
 export {
+  type ContextLevel,
+  type ContextMeterApi,
+  type ContextMeterOpenChangeReason,
+  type ContextMeterOptions,
+  type ContextMeterPrimitive,
+  type ContextMeterState,
+  type ContextMeterValueState,
+  type ContextRow,
+  contextMeterPrimitive,
+  contextRows,
+  contextValueText,
+} from "./context-meter/index.js";
+export {
   type ConversationApi,
   type ConversationController,
   type ConversationOptions,

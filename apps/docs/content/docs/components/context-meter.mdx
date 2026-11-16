@@ -1,0 +1,80 @@
+---
+title: Context Meter
+description: Show how much of the model's context window a conversation uses, with its token counts and cost a hover away.
+---
+
+import ContextMeterExample from "@/examples/context-meter/basic";
+
+Use a context meter beside the composer, so a person can see when a conversation is about to run out of room. It's a small ring and a percentage, and its details list the tokens by kind and what the conversation has cost.
+
+<Example caption="Rest the pointer on the meter, or press it, to show its details. Press Escape to close them.">
+  <ContextMeterExample />
+
+  <include cwd lang="tsx">./examples/context-meter/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/context-meter
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/context-meter-web
+```
+
+## Composition
+
+```text
+ContextMeter
+├── ContextMeterTrigger
+│   └── ContextMeterValue
+└── ContextMeterContent
+    ├── ContextMeterTitle
+    ├── ContextMeterDescription
+    └── ContextMeterRows
+```
+
+`ContextMeter` renders these parts when you pass no children: a group named by its `label`. `ContextMeterTrigger` is a button that opens the details, and `ContextMeterValue` holds UI SDK's Meter, drawn as a ring with the percentage beside it. `ContextMeterContent` is the popover with the details: `ContextMeterTitle` names it, `ContextMeterDescription` reads the tokens used, and `ContextMeterRows` lists each count and the cost.
+
+## Usage
+
+### The Value
+
+Pass `used` and `total` in tokens. The ring fills to how much of the window is used and the percentage sits beside it, in tabular numbers at a fixed width, so a new value never moves what's next to the meter. Screen readers hear the button as "57,600 of 128,000 tokens, 45%". Pass `locale` to format the numbers for a language other than the browser's.
+
+### Levels
+
+From 80% the ring turns to the warning color with an exclamation mark inside it, and from 95% to the danger color with its middle filled. The root's `data-level` reads `normal`, `high` or `full` for your own styles.
+
+### Details
+
+Pass `usage` with any of `input`, `output`, `reasoning` and `cached`, and `cost` with its `currency` (`"USD"` unless you say), to list them in the details. Only what you pass shows, `0` included, in that order. Without either, the details show the title and the tokens used.
+
+```tsx
+<ContextMeter used={57_600} total={128_000} usage={{ input: 40_000, cached: 20_000 }} cost={0.42} currency="EUR" />
+```
+
+### Opening
+
+The details open when the pointer rests on the meter for 600 ms, when keyboard focus rests on it as long, and when it's pressed, by pointer, Enter or Space. They close on Escape, a second press, a press outside or focus leaving the meter, and details the pointer opened also close 300 ms after it leaves both the meter and the details. Opening them by pointer or keyboard leaves focus on the meter, since they hold nothing to press.
+
+Pass `open` and `onOpenChange` to control them, or `defaultOpen` to start with them open. `onOpenChange` gets UI SDK Popover's reason, like `trigger-hover`, `trigger-press` or `escape-key`, or `trigger-focus` when keyboard focus opened them.
+
+### Motion
+
+The ring sweeps to a new value, and the details rise and fade in. Under `prefers-reduced-motion`, or with `motion="reduced"`, the ring moves at once and the details only fade, over 120 ms, and with `motion="none"` nothing animates.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/context-meter/context-meter.ts" name="ContextMeterOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the meter by its label and reads whether its details are open. `open` is offered while they're closed and `close` while they're open; both report `details.source` as `"agent"` to `onOpenChange`. Like any component with a button, it also has UI SDK's generic `press`.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/context-meter/context-meter.ts" name="ContextMeterAgentActions" type='Pick<ContextMeterApi, "open" | "close">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-context-meter>`, props are kebab-case attributes, `usage` is a property, and `open` is a property too; `onOpenChange` is the `openchange` event. The element fills in its parts when it has no children.
+</Caption>

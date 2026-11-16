@@ -76,6 +76,12 @@ const components = {
       "A row of prompts a person can send in one press, which scrolls sideways when they don't fit.",
     uses: ["internal-carousel"],
   },
+  "context-meter": {
+    title: "Context Meter",
+    description:
+      "How full the context window is, as a ring and a percentage, with token counts and cost in a popover.",
+    uses: [],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",
