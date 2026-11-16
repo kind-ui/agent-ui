@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `73f3438` (Wave 3 Task 3 Confirmation)
+Last reviewed: `882023e` (Wave 3 Task 4 Question)
 
 ## Settled
 
@@ -24,6 +24,8 @@ Last reviewed: `73f3438` (Wave 3 Task 3 Confirmation)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **No test proves Question's `ownQuestion` `selects`** (UI SDK asks each primitive with `selects` to prove it); traced by hand, and Chain of Thought, Task and Plan have none either.
+- **A failed Skip announces "Answers not sent"** (Question), which reads oddly after a skip; wording only.
 - **Confirmation: a microtask between `pending` clearing and `sent` setting** could let an `act` scheduled in a promise callback slip a second decision through. Not reproduced; a press can't land there.
 - **A double press on a Queue item's remove control calls `onRemove` twice** when the host removes the item asynchronously; there's no per-item lock like the uploader's.
 - **Queue's `known` set never forgets ids,** so an item removed and re-added under the same id after its exit gets no entrance (same as Task and Plan).
@@ -45,6 +47,7 @@ Last reviewed: `73f3438` (Wave 3 Task 3 Confirmation)
 
 ## Resolved
 
+- **Question ids like `constructor` crashed, new questions kept the last round's answers, `setValue` ignored the lock, and an answer no option matches read as blank (Wave 3 Task 4).** Fixed: answers and questions are read by own key (`answerOf`, `questionOf`), new question ids drop the answers and controllers of the questions that left (uncontrolled), `setValue` returns `false` while locked or answered, and `answerText` returns `undefined` (unit tests in `question.test.mjs`).
 - **"Decision not sent" wasn't announced (Wave 3 Task 3).** Fixed: Confirmation announces it on entering `submit-failed`, and the recorded outcome on `responded` or `auto`; Tool embeds it and announces nothing more (tested in `confirmation.spec.ts` and `tool.spec.ts`, both layers).
 - **Removing the last chip from a composer left focus on `<body>` (Wave 3 Task 2).** Fixed: Attachments takes a `focusFallback` option for when no chip is left to take focus, and the composer passes its editor (tested in `composer.spec.ts`, both layers).
 - **Wave 2 agent conformance (Task 10):** the generic `initials` export is now `avatarInitials`; a Queue item's remove badge removes it on click (the item's reorder used to capture the pointer and take the click; tested).

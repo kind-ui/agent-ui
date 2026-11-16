@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `73f3438` (Wave 3 Task 3 Confirmation)
+Last reviewed: `882023e` (Wave 3 Task 4 Question)
 
 ## Settled
 
@@ -14,6 +14,8 @@ Last reviewed: `73f3438` (Wave 3 Task 3 Confirmation)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Question's radio and checkbox groups have no name of their own:** the item's group, named by its prompt, names them, as UI SDK Field's "Groups in a Field Set" says; Radio's own docs point the group at the legend too. Not checked with a screen reader.
+- **A custom `QuestionItem` without `QuestionPrompt` has a dangling `aria-labelledby`,** as Step's group does without `StepTitle`.
 - **Two calls of the same tool share their copy-button and code-block names** ("search_docs input"): names come from the title, and a `toolCallId` isn't a name a person can read. A host can tell them apart with `label`.
 - **A keyboard move in a React Queue blurs and refocuses the picked-up row on each step:** React moves the keyed `li` with `insertBefore`, and UI SDK's reorder focuses it again (web uses `moveBefore`). It follows UI SDK's documented React pattern, so it belongs upstream.
 - **A `Subagent` placed directly in a `StepList` adds its own Tab stop;** joining it needs `SubagentRoot` with `StepListItem render={<SubagentTrigger />}`. Undocumented, and `SubagentRoot` arrangements have no browser spec.
@@ -37,6 +39,7 @@ Last reviewed: `73f3438` (Wave 3 Task 3 Confirmation)
 
 ## Resolved
 
+- **A controlled Question didn't follow its owner (Wave 3 Task 4).** Fixed: the groups and text boxes hold their own value, so a change a controlling owner doesn't take is written back through the controllers the next frame (a cancelled one at once). The agent test no longer waits 15 s for an unsettled submit (`question.spec.ts`, both layers).
 - **Next.js App Router consumers had to wrap every render file in their own client module (Wave 3 Task 2).** Fixed: every `src/react/**/*.tsx` starts with `"use client";` (`registry.test.mjs` checks it; the registry copies it byte for byte), and the docs examples without state or handlers are now server components, so `npm run build:docs` builds an App Router consumer of them.
 - **Every docs page logged React error #418 (Wave 3 Task 2).** The static export wrote `docs/step.html`, so a plain static host served the page at `/docs/step.html`; the client's pathname then matched no page, and Fumadocs' client-rendered footer (previous and next page) and sidebar rendered different text than the server had. Fixed with `trailingSlash: true` (`docs/step/index.html`, served at `/docs/step/`). `check:docs` opens built pages on a plain file server and fails on any console error.
 - **Tools' copy buttons and code blocks shared labels (Wave 2 Task 10).** Fixed: each is named after its tool ("Copy search_docs input", "search_docs input") in both layers, tested in `wave-2/agent.spec.ts`. Markdown's "Code" / "Table" and two calls of the same tool stay open below.

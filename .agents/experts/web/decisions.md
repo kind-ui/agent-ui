@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `73f3438` (Wave 3 Task 3 Confirmation)
+Last reviewed: `882023e` (Wave 3 Task 4 Question)
 
 ## Settled
 
@@ -17,6 +17,8 @@ Last reviewed: `73f3438` (Wave 3 Task 3 Confirmation)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Firefox crashes running axe after Playwright's role query on a UI SDK `ui-radio`/`ui-checkbox`** (bare UI SDK markup reproduces it; report upstream). `question.spec.ts`'s axe tests click through a CSS locator.
+- **A `<kind-question-item>` written directly in `<kind-question>`, outside a `<form>`, isn't supported;** the JSDoc says to write items inside a `<form>` child, since moving the host's nodes breaks React 19.
 - **Focus recovery inside a shadow root lands on `<body>`** (Confirmation's choices leaving, any `createFocusRecovery`): UI SDK's `focus-recovery.js` reads `document.activeElement`, not the root node's. Report upstream.
 - **`kind-subagent` adds its trigger above server-rendered steps on upgrade,** shifting them down once, the same class as the empty `<kind-task>`/`<kind-plan>` entry.
 - **An empty `<kind-task>` or `<kind-plan>` inserts its parts on upgrade** (same class as `kind-chain-of-thought` and `kind-reasoning`), which can shift layout before the element is defined.
@@ -37,6 +39,7 @@ Last reviewed: `73f3438` (Wave 3 Task 3 Confirmation)
 
 ## Resolved
 
+- **`kind-question` rebuilt its choices for a new array with the same content, and written items didn't win (Wave 3 Task 4).** Fixed: options are compared by content, a written item replaces the added one wherever it sits, and one written empty is filled in (`question.spec.ts`, web).
 - **Tool code-block names (Wave 2 Task 10):** `kind-tool` names only the code blocks it wrote, so a host's own code block keeps its `aria-label` (tested).
 
 - **A focused chip or uploader row blurred when an earlier one was dropped (Wave 2 Task 9).** Fixed: `draw` removes dropped rows before placing the rest, so no row after them moves; the focus specs check again once the row is gone, and pass in Chromium, Firefox and WebKit.
