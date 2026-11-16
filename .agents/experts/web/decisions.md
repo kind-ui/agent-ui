@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `d60061c` (Wave 2 Task 4 Tool)
+Last reviewed: `4286722` (Wave 2 Task 5 Chain of Thought)
 
 ## Settled
 
@@ -28,9 +28,11 @@ Last reviewed: `d60061c` (Wave 2 Task 4 Tool)
 - **Trigger Menu items show no description on web:** the list renders its own items from data, label only. React renders the description.
 - **Inside a shadow root, Enter with the Trigger Menu open submits the form** instead of choosing the item (UI SDK; report upstream).
 - **An unknown `motion` attribute matches no `data-motion` rule,** so reduced motion stops applying. Every animated component shares it; validate `motion` once for all of them.
+- **An empty `<kind-chain-of-thought>` inserts its parts on upgrade** (same class as `kind-reasoning`), which can shift layout before the element is defined.
 
 ## Resolved
 
+- **Chain of Thought (Wave 2 Task 5):** `openSteps` is root state (`getOpenSteps` / `setOpenSteps`), so a moved element keeps its open steps; an item a host writes after its step replaces the one the element added; parts are looked up only in the element's own chain, so a chain nested in a step's content keeps its own; removing a written item redraws; the fixture listens for `openstepschange`.
 - **A hand-written `kind-tool` with empty input and output parts showed nothing (Wave 2 Task 4).** Fixed: the root fills an empty `kind-tool-input` or `kind-tool-output` with its heading, copy button and code block.
 - **Leaving out a code block's header needed internal markup in a JS string (Wave 2 Task 4).** Fixed: `<kind-code-block headerless>`, read when it fills in its parts, like React's `header={false}`.
 - **`kind-tool` rewrote `hidden` on its output blocks every update (Wave 2 Task 4).** Fixed: guarded like its other writes.

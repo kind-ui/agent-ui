@@ -3,8 +3,11 @@ import { nextOpen, type StepAutoOpen } from "../step/auto-open.js";
 
 /** One step the agent took. Keep its `id` as its status changes. */
 export type ChainOfThoughtStep = {
+  /** Keys the step's item (its `value`), open state and focus. Unique within the chain. */
   id: string;
+  /** What the step is doing. Its icon shows it, and a change into `awaiting-input`, `complete`, `error` or `cancelled` is announced. */
   status: StepStatus;
+  /** Names the step, in its item and in announcements. An empty title isn't announced. */
   title: string;
   /** Shown beside the title, and written as `--kind-step-duration`. */
   durationSeconds?: number;

@@ -33,6 +33,10 @@ const chains = (motion?: ChainOfThoughtOptions["motion"]) => (root: HTMLElement)
     steps: initial,
   });
   if (motion) chain.motion = motion;
+  const openStepsChanges: [string[], string][] = [];
+  chain.addEventListener("openstepschange", (event) =>
+    openStepsChanges.push([event.detail.value, event.detail.reason]),
+  );
   const plain = document.createElement("kind-chain-of-thought");
   plain.id = "plain";
   Object.assign(plain, { label: "Planning the trip", status: "complete", steps: initial.slice(0, 1) });
@@ -40,9 +44,13 @@ const chains = (motion?: ChainOfThoughtOptions["motion"]) => (root: HTMLElement)
   root.append(page);
   const steps = () => chain.steps ?? [];
   Object.assign(window, {
+    kindOpenStepsChanges: openStepsChanges,
     kindChain: {
       setStatus: (id: string, status: ChainOfThoughtStep["status"]) => {
         chain.steps = steps().map((step) => (step.id === id ? { ...step, status } : step));
+      },
+      setStatuses: (statuses: Record<string, ChainOfThoughtStep["status"]>) => {
+        chain.steps = steps().map((step) => ({ ...step, status: statuses[step.id] ?? step.status }));
       },
       append: (step: ChainOfThoughtStep) => {
         chain.querySelector("kind-chain-of-thought-list")?.append(item(step));

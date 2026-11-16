@@ -8,10 +8,12 @@ type Step = { id: string; status: string; title: string; durationSeconds?: numbe
 type Fixture = {
   kindChain: {
     setStatus(id: string, status: string): void;
+    setStatuses(statuses: Record<string, string>): void;
     append(step: Step): void;
     remove(id: string): void;
   };
   kindAnnounced: string[];
+  kindOpenStepsChanges: [string[], string][];
   agent: { act(input: unknown): Promise<unknown> };
 };
 
@@ -27,9 +29,9 @@ const announced = (page: Page) => page.evaluate(() => (window as unknown as Fixt
 const act = (page: Page, action: string, args: unknown[] = []) =>
   page.evaluate(
     ([a, rest]) =>
-      (window as unknown as Fixture).agent.act({
-        steps: [{ ref: "Researching flights", action: a, args: rest }],
-      }),
+      (window as unknown as Fixture).agent
+        .act({ steps: [{ ref: "Researching flights", action: a, args: rest }] })
+        .then(JSON.stringify, (error: Error) => error.message),
     [action, args] as const,
   );
 
@@ -101,20 +103,53 @@ test("removing the focused step moves focus to a neighbor", async ({ page }) => 
   await expect(stepTrigger(page, "Compare fares")).toBeFocused();
 });
 
-test("agents expand a step by id, and an unknown id changes nothing", async ({ page }) => {
+test("agents see the steps, and expand one by id or title", async ({ page }) => {
   await open(page);
   await expectAgentActions(page, "Researching flights", ["collapse", "expand", "expandStep", "press"]);
+  const items = await page.evaluate(
+    () =>
+      (window as unknown as { agent: { snapshot(): { label?: string; items?: unknown }[] } }).agent
+        .snapshot()
+        .find((entry) => entry.label === "Researching flights")?.items,
+  );
+  expect(items).toEqual([
+    { value: "plan", label: "Plan the search" },
+    { value: "search", label: "Search flights" },
+    { value: "compare", label: "Compare fares" },
+  ]);
   await act(page, "expandStep", ["plan"]);
   await expect(stepTrigger(page, "Plan the search")).toHaveAttribute("aria-expanded", "true");
+  await act(page, "expandStep", ["Compare fares"]);
+  await expect(stepTrigger(page, "Compare fares")).toHaveAttribute("aria-expanded", "true");
   const expanded = () =>
     chain(page).locator('[data-slot="kind-chain-of-thought-item-trigger"][aria-expanded="true"]').count();
   const before = await expanded();
-  await act(page, "expandStep", ["missing"]);
+  expect(await act(page, "expandStep", ["missing"])).toContain("Plan the search");
   expect(await expanded()).toBe(before);
   // Expanded by an agent, the step stays open when it completes.
   await setStatus(page, "plan", "running");
   await setStatus(page, "plan", "complete");
   await expect(stepTrigger(page, "Plan the search")).toHaveAttribute("aria-expanded", "true");
+});
+
+test("onOpenStepsChange reports auto and pressed changes", async ({ page }) => {
+  await open(page);
+  const changes = () => page.evaluate(() => (window as unknown as Fixture).kindOpenStepsChanges);
+  await setStatus(page, "compare", "running");
+  await expect.poll(changes).toEqual([[["search", "compare"], "auto"]]);
+  await stepTrigger(page, "Plan the search").click();
+  await expect.poll(changes).toEqual([
+    [["search", "compare"], "auto"],
+    [["search", "compare", "plan"], "trigger-press"],
+  ]);
+});
+
+test("steps that end together are read as one announcement", async ({ page }) => {
+  await open(page);
+  await page.evaluate(() =>
+    (window as unknown as Fixture).kindChain.setStatuses({ search: "error", compare: "complete" }),
+  );
+  await expect.poll(() => announced(page)).toEqual(["Search flights failed. Compare fares complete"]);
 });
 
 test("thirty appended steps announce only their terminal transitions", async ({ page }) => {
@@ -145,6 +180,7 @@ test("find in page opens a closed step", async ({ page }) => {
   await content.evaluate((el) => el.dispatchEvent(new Event("beforematch", { bubbles: true })));
   await expect(stepTrigger(page, "Plan the search")).toHaveAttribute("aria-expanded", "true");
   await expect(stepTrigger(page, "Plan the search")).toHaveAttribute("aria-controls", /.+/);
+  await expect(page.getByText("Collapsed text: kumquat plan.")).toBeVisible();
 });
 
 // Transitions started while a step opens, collected until bindPanel settles the height to `auto`.
@@ -217,4 +253,57 @@ test("kind-chain-of-thought adds and removes the items it writes", async ({ page
       el.api.expandStep("b"),
     ]),
   ).toEqual([true, false]);
+});
+
+test("kind-chain-of-thought keeps its open steps when moved", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await open(page);
+  await stepTrigger(page, "Plan the search").click();
+  await chain(page).evaluate(async (el) => {
+    const parent = el.parentElement as HTMLElement;
+    el.remove();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    parent.prepend(el);
+  });
+  await expect(stepTrigger(page, "Plan the search")).toHaveAttribute("aria-expanded", "true");
+  await expect(stepTrigger(page, "Search flights")).toHaveAttribute("aria-expanded", "true");
+});
+
+test("kind-chain-of-thought gives way to an item written after its step", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await open(page);
+  await chain(page).evaluate((el: HTMLElement & { steps: Step[] }) => {
+    el.steps = [...el.steps, { id: "late", status: "running", title: "Late" }];
+  });
+  await expect(stepTrigger(page, "Late")).toBeVisible();
+  await chain(page).evaluate((el) => {
+    const late = document.createElement("kind-chain-of-thought-item");
+    late.setAttribute("value", "late");
+    late.innerHTML =
+      "<kind-chain-of-thought-item-content><p>Late details.</p></kind-chain-of-thought-item-content>";
+    el.querySelector("kind-chain-of-thought-list")?.append(late);
+  });
+  await expect(page.getByText("Late details.")).toBeVisible();
+  await expect(stepTrigger(page, "Late")).toHaveCount(1);
+});
+
+test("kind-chain-of-thought leaves a chain nested in a step's content alone", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await open(page);
+  await chain(page).evaluate((el: HTMLElement & { steps: Step[] }) => {
+    const sub = document.createElement("kind-chain-of-thought-item");
+    sub.setAttribute("value", "sub");
+    const content = document.createElement("kind-chain-of-thought-item-content");
+    const inner = document.createElement("kind-chain-of-thought");
+    inner.id = "inner";
+    Object.assign(inner, { label: "Inner", steps: [{ id: "i1", status: "complete", title: "Inner step" }] });
+    content.append(inner);
+    sub.append(content);
+    el.querySelector("kind-chain-of-thought-list")?.append(sub);
+    el.steps = [...el.steps, { id: "sub", status: "running", title: "Sub-agent" }];
+  });
+  await expect(stepTrigger(page, "Sub-agent")).toHaveCount(1);
+  await expect(page.locator('#inner [data-slot="kind-chain-of-thought-item-title"]')).toHaveText(
+    "Inner step",
+  );
 });

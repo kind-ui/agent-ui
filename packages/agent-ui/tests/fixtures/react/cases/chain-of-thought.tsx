@@ -19,13 +19,18 @@ const initial: ChainOfThoughtStep[] = [
   { id: "compare", status: "pending", title: "Compare fares" },
 ];
 
+const openStepsChanges: [string[], string][] = [];
+
 function Chains({ motion }: { motion?: ChainOfThoughtOptions["motion"] }) {
   const [steps, setSteps] = useState(initial);
   useEffect(() => {
     Object.assign(window, {
+      kindOpenStepsChanges: openStepsChanges,
       kindChain: {
         setStatus: (id: string, status: ChainOfThoughtStep["status"]) =>
           setSteps((all) => all.map((step) => (step.id === id ? { ...step, status } : step))),
+        setStatuses: (statuses: Record<string, ChainOfThoughtStep["status"]>) =>
+          setSteps((all) => all.map((step) => ({ ...step, status: statuses[step.id] ?? step.status }))),
         append: (step: ChainOfThoughtStep) => setSteps((all) => [...all, step]),
         remove: (id: string) => setSteps((all) => all.filter((step) => step.id !== id)),
       },
@@ -40,6 +45,7 @@ function Chains({ motion }: { motion?: ChainOfThoughtOptions["motion"] }) {
         durationSeconds={12}
         steps={steps}
         motion={motion}
+        onOpenStepsChange={(openSteps, details) => openStepsChanges.push([openSteps, details.reason])}
       >
         <ChainOfThoughtTrigger>
           <ChainOfThoughtIcon />

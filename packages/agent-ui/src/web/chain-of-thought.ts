@@ -23,17 +23,27 @@ const fill = (part: Element | null, text: string) => {
   if (part.textContent !== text) part.textContent = text;
 };
 
+/** This element's own part of `selector` under `scope`, not one of a chain nested in a step's content. */
+const own = (scope: Element, selector: string, root: Element) =>
+  [...scope.querySelectorAll(selector)].find((part) => part.closest("kind-chain-of-thought") === root) ??
+  null;
+
 /**
- * Adds an item for each step the list lacks, in order, removes the items it added for steps that left, and gives
- * every item without a trigger the default one.
+ * Adds an item for each step the list lacks, in order, removes the items it added for steps that left or that a
+ * written item replaced, and gives every item without a trigger the default one.
  */
-const drawItems = (list: Element, { steps }: ChainOfThoughtState) => {
-  const items = new Map(
-    [...list.querySelectorAll(":scope > kind-chain-of-thought-item")].map((item) => [
-      item.getAttribute("value"),
-      item,
-    ]),
-  );
+const drawItems = (root: Element, list: Element, { steps }: ChainOfThoughtState) => {
+  const items = new Map<string | null, Element>();
+  for (const item of list.querySelectorAll(":scope > kind-chain-of-thought-item")) {
+    const value = item.getAttribute("value");
+    const earlier = items.get(value);
+    if (earlier && owned.has(item)) {
+      item.remove();
+      continue;
+    }
+    if (earlier && owned.has(earlier)) earlier.remove();
+    if (!earlier || owned.has(earlier)) items.set(value, item);
+  }
   const ids = new Set<string | null>(steps.map((step) => step.id));
   for (const [id, item] of items) if (owned.has(item) && !ids.has(id)) item.remove();
   let previous: Element | undefined;
@@ -47,10 +57,10 @@ const drawItems = (list: Element, { steps }: ChainOfThoughtState) => {
       else list.prepend(item);
     }
     previous = item;
-    if (!item.querySelector("kind-chain-of-thought-item-trigger"))
+    if (!item.querySelector(":scope > kind-chain-of-thought-item-trigger"))
       item.insertAdjacentHTML("afterbegin", ITEM_TRIGGER_PARTS);
-    fill(item.querySelector("kind-chain-of-thought-item-title"), step.title);
-    fill(item.querySelector("kind-chain-of-thought-item-meta"), stepDuration(step.durationSeconds));
+    fill(own(item, "kind-chain-of-thought-item-title", root), step.title);
+    fill(own(item, "kind-chain-of-thought-item-meta", root), stepDuration(step.durationSeconds));
   }
 };
 
@@ -70,19 +80,34 @@ export function defineChainOfThought(): void {
           get: (api) => api.isOpen(),
           set: (api, open) => api.setOpen(!!open),
         },
+        openSteps: {
+          get: (api) => api.getOpenSteps(),
+          set: (api, openSteps) => api.setOpenSteps(openSteps as string[]),
+        },
       },
-      api: ["isOpen", "setOpen", "expand", "collapse", "toggle", "isStepOpen", "setStepOpen", "expandStep"],
+      api: [
+        "isOpen",
+        "setOpen",
+        "expand",
+        "collapse",
+        "toggle",
+        "getOpenSteps",
+        "setOpenSteps",
+        "isStepOpen",
+        "setStepOpen",
+        "expandStep",
+      ],
       render: (el, instance) => {
         if (!el.firstElementChild) el.innerHTML = DEFAULT_PARTS;
         let drawn: ChainOfThoughtState["steps"] | undefined;
         const draw = (force = false) => {
           const state = instance.get() as ChainOfThoughtState;
-          fill(el.querySelector("kind-chain-of-thought-title"), state.title);
-          fill(el.querySelector("kind-chain-of-thought-meta"), stepDuration(state.durationSeconds));
+          fill(own(el, "kind-chain-of-thought-title", el), state.title);
+          fill(own(el, "kind-chain-of-thought-meta", el), stepDuration(state.durationSeconds));
           if (state.steps === drawn && !force) return;
           drawn = state.steps;
-          const list = el.querySelector("kind-chain-of-thought-list");
-          if (list) drawItems(list, state);
+          const list = own(el, "kind-chain-of-thought-list", el);
+          if (list) drawItems(el, list, state);
         };
         draw();
         const unsubscribe = instance.subscribe(() => draw());
@@ -126,12 +151,22 @@ export type KindChainOfThoughtEvents = {
 
 export interface KindChainOfThoughtElement
   extends UiElement<KindChainOfThoughtEvents>,
-    AttributeProperties<typeof chainOfThoughtPrimitive, "api" | "open" | "steps"> {
+    AttributeProperties<typeof chainOfThoughtPrimitive, "api" | "open" | "openSteps" | "steps"> {
   open: boolean;
+  openSteps: string[];
   steps?: ChainOfThoughtOptions["steps"];
   api: Pick<
     ChainOfThoughtApi,
-    "isOpen" | "setOpen" | "expand" | "collapse" | "toggle" | "isStepOpen" | "setStepOpen" | "expandStep"
+    | "isOpen"
+    | "setOpen"
+    | "expand"
+    | "collapse"
+    | "toggle"
+    | "getOpenSteps"
+    | "setOpenSteps"
+    | "isStepOpen"
+    | "setStepOpen"
+    | "expandStep"
   >;
 }
 

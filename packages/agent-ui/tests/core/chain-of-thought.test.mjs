@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { nextOpenSteps } from "@kind-ui/agent-ui/core";
+import { chainOfThoughtPrimitive, nextOpenSteps } from "@kind-ui/agent-ui/core";
 
 const s = (id, status) => ({ id, status, title: id });
 
@@ -57,3 +57,27 @@ test('autoOpen "never" leaves every step as it was', () =>
     }),
     ["a"],
   ));
+
+test("auto open starts from the owner's openSteps of the same update", () => {
+  const changes = [];
+  const chain = chainOfThoughtPrimitive({
+    steps: [s("a", "running")],
+    openSteps: ["a"],
+    onOpenStepsChange: (open) => changes.push(open),
+  });
+  chain.setOptions({
+    steps: [s("a", "running"), s("b", "running")],
+    openSteps: [],
+    onOpenStepsChange: (open) => changes.push(open),
+  });
+  assert.deepEqual(changes, [["b"]]);
+});
+
+test("only a step in the chain opens", () => {
+  const chain = chainOfThoughtPrimitive({ steps: [s("a", "complete")] });
+  assert.equal(chain.api.setStepOpen("missing", true), false);
+  assert.equal(chain.api.expandStep("missing"), false);
+  assert.equal(chain.api.expandStep("a"), true);
+  assert.equal(chain.api.expandStep("a"), false);
+  assert.deepEqual(chain.api.getOpenSteps(), ["a"]);
+});

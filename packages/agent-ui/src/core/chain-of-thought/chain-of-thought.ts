@@ -28,7 +28,7 @@ import {
 import { type ChainOfThoughtStep, nextOpenSteps, stepDuration } from "./open-steps.js";
 
 export type ChainOfThoughtOptions = Omit<StepOptions, "label"> & {
-  /** The steps the agent took, in order. Update a step's `status` as it runs, keeping its `id`. */
+  /** The steps the agent took, in order. Update a step's `status` as it runs, keeping its `id`. Defaults to none. */
   steps?: ChainOfThoughtStep[];
   /** The summary the title shows, else "N steps". Also names the chain in announcements. */
   label?: string;
@@ -68,9 +68,15 @@ type ItemPartProps = { value?: string };
 
 export type ChainOfThoughtApi = StepApi &
   ListFocus<ChainOfThoughtState, ItemPartProps> & {
+    /** The `steps` option. */
+    getSteps: () => ChainOfThoughtStep[];
+    /** The ids of the open steps; the owner's `openSteps` when controlled. */
+    getOpenSteps: () => string[];
+    /** Opens exactly these steps, without stopping their auto open and close. Returns whether the change was accepted. */
+    setOpenSteps: (openSteps: string[], cause?: Cause) => boolean;
     /** Whether the step with this id is open. */
     isStepOpen: (id: string) => boolean;
-    /** Opens or closes one step. Returns whether the change was accepted. */
+    /** Opens or closes one step. Returns `false` for an unknown step, else whether the change was accepted. */
     setStepOpen: (id: string, open: boolean, cause?: Cause) => boolean;
     /**
      * Opens one step, which then stays open when it completes. Returns `false` for an unknown or open step, else
@@ -125,8 +131,10 @@ const presentation = ({ steps = NO_STEPS, label }: ChainOfThoughtOptions) => ({
 
 const sameIds = (a: string[], b: string[]) => a.length === b.length && a.every((id) => b.includes(id));
 
+// The chain announces its own status with its steps' (see `api`), so the messages of one update don't replace each other.
 const base = stepBase<ChainOfThoughtState, ChainOfThoughtApi, ChainOfThoughtOptions>({
   kind: "chain-of-thought",
+  announcement: () => undefined,
 });
 
 // A step's parts hear only about their own step: its entry, and whether it's open or closing.
@@ -184,20 +192,30 @@ export const chainOfThoughtPrimitive: ChainOfThoughtPrimitive = definePrimitive<
     const panels = new Set<string>();
     let prevSteps = store.get().steps;
     let prevOpen = store.get().openSteps;
+    let prevStatus = store.get().status;
+    // Web hosts can only set `steps` once the element exists, so steps in the first frame count as known: they don't
+    // play the entrance or announce.
+    let mounting = true;
+    const known = new Set(prevSteps.map((step) => step.id));
 
     const isStepOpen = (id: string) => store.get().openSteps.includes(id);
-    const setStepOpen = (id: string, open: boolean, { reason = "imperative", event }: Cause = {}) => {
-      const { openSteps } = store.get();
-      if (openSteps.includes(id) === open) return false;
-      const next = open ? [...openSteps, id] : openSteps.filter((each) => each !== id);
-      const auto = reason === "auto";
-      const changed = change(
+    const setOpenSteps = (openSteps: string[], { reason = "imperative", event }: Cause = {}) =>
+      !sameIds(openSteps, store.get().openSteps) &&
+      change(
         "openSteps",
-        next,
-        auto ? { reason, source: "programmatic" } : event ? { reason, event } : { reason },
+        openSteps,
+        reason === "auto" ? { reason, source: "programmatic" } : event ? { reason, event } : { reason },
+      );
+    const setStepOpen = (id: string, open: boolean, cause: Cause = {}) => {
+      const { openSteps, stepsById } = store.get();
+      if (!(id in stepsById) || openSteps.includes(id) === open) return false;
+      const changed = setOpenSteps(
+        open ? [...openSteps, id] : openSteps.filter((each) => each !== id),
+        cause,
       );
       // Spec §5: only a person or agent toggling stops auto behavior, not a host write.
-      if (changed && !auto && reason !== "imperative") toggled.add(id);
+      if (changed && cause.reason !== undefined && cause.reason !== "auto" && cause.reason !== "imperative")
+        toggled.add(id);
       return changed;
     };
 
@@ -210,26 +228,37 @@ export const chainOfThoughtPrimitive: ChainOfThoughtPrimitive = definePrimitive<
       if (!sameIds(exiting, exitingSteps)) store.set({ exitingSteps: exiting });
     });
 
-    context.onOptions((options) => {
+    context.onOptions((options, synced) => {
+      const texts: string[] = [];
       const steps = options.steps ?? NO_STEPS;
-      if (steps === prevSteps) return;
-      const { openSteps } = store.get();
-      const next = nextOpenSteps({
-        prev: prevSteps,
-        next: steps,
-        open: openSteps,
-        toggled: [...toggled],
-        autoOpen: options.autoOpen ?? "running",
-      });
-      const statuses = new Map(prevSteps.map((step) => [step.id, step.status]));
-      prevSteps = steps;
-      for (const id of toggled) if (!steps.some((step) => step.id === id)) toggled.delete(id);
-      if (!sameIds(next, openSteps)) change("openSteps", next, { reason: "auto", source: "programmatic" });
-      for (const { id, status, title } of steps) {
-        if (status === (statuses.get(id) ?? "pending")) continue;
-        const text = stepAnnouncement(status, title);
-        if (text) announce(text, { priority: "polite" });
+      if (steps !== prevSteps) {
+        const next = nextOpenSteps({
+          prev: prevSteps,
+          next: steps,
+          // The store takes `synced` after the listeners run, so a controlled `openSteps` is read from it.
+          open: synced?.openSteps ?? store.get().openSteps,
+          toggled: [...toggled],
+          autoOpen: options.autoOpen ?? "running",
+        });
+        const statuses = new Map(prevSteps.map((step) => [step.id, step.status]));
+        prevSteps = steps;
+        for (const id of toggled) if (!steps.some((step) => step.id === id)) toggled.delete(id);
+        setOpenSteps(next, { reason: "auto" });
+        for (const { id, status, title } of steps) {
+          if (mounting || !title || status === (statuses.get(id) ?? "pending")) continue;
+          const text = stepAnnouncement(status, title);
+          if (text) texts.push(text);
+        }
       }
+      const status = synced?.status ?? prevStatus;
+      if (status !== prevStatus) {
+        prevStatus = status;
+        const title = options.label ?? context.element("title")?.textContent?.trim();
+        const text = title && stepAnnouncement(status, title);
+        if (text) texts.push(text);
+      }
+      // A polite announcement replaces one still waiting, so steps that end together are read as one.
+      if (texts.length) announce(texts.join(". "), { priority: "polite" });
     });
 
     let syncQueued = false;
@@ -242,17 +271,15 @@ export const chainOfThoughtPrimitive: ChainOfThoughtPrimitive = definePrimitive<
       });
     };
 
-    const known = new Set(prevSteps.map((step) => step.id));
-    // Web hosts can only set `steps` once the element exists, so steps in the first frame count as known.
-    let mounting = true;
-
     return {
       ...base.api(context),
       ...createListFocus<ChainOfThoughtState, ItemPartProps>(context, { slot: "item-trigger" }),
+      getSteps: () => store.get().steps,
+      getOpenSteps: () => store.get().openSteps,
+      setOpenSteps,
       isStepOpen,
       setStepOpen,
       expandStep: (id) => {
-        if (isStepOpen(id) || !store.get().steps.some((step) => step.id === id)) return false;
         const changed = setStepOpen(id, true);
         if (changed) toggled.add(id);
         return changed;
@@ -416,5 +443,10 @@ export const chainOfThoughtPrimitive: ChainOfThoughtPrimitive = definePrimitive<
       }),
     };
   },
-  agent: { actions: ["expand", "collapse", "expandStep"] },
+  // Steps are listed by title, so an agent can name one to `expandStep`, and an unknown one is refused.
+  agent: {
+    actions: ["expand", "collapse", "expandStep"],
+    items: (api: ChainOfThoughtApi) => api.getSteps().map((step) => ({ value: step.id, label: step.title })),
+    closed: true,
+  },
 });

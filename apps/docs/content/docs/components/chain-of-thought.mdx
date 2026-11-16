@@ -76,7 +76,7 @@ The step triggers are one Tab stop. The arrow keys move between them, Home and E
 
 ### Streaming
 
-A new step fades in once as it arrives, at the end of the list, so nothing above it moves. A removed step leaves at once. Screen readers hear each step's title and its outcome, like "Compare fares complete", when it needs input, completes, fails or is cancelled, and nothing while it runs.
+A new step fades in once as it arrives, at the end of the list, so nothing above it moves. A removed step leaves at once. Screen readers hear each step's title and its outcome, like "Compare fares complete", when it needs input, completes, fails or is cancelled, and nothing while it runs. Steps that end in the same update, and the chain itself, are read in one message.
 
 ### Motion
 
@@ -88,7 +88,7 @@ Steps grow open and shut. Under `prefers-reduced-motion`, or with `motion="reduc
 
 ### Agent
 
-An agent connected with `createAgent` finds the chain by its title and reads its `open`, `status` and `openSteps`. It can run these actions, and press a trigger like a person would. `expandStep` takes a step's `id`, and a step it opens stays open when it completes.
+An agent connected with `createAgent` finds the chain by its title and reads its `open`, `status` and `openSteps`, and each step's `id` and title. It can run these actions, and press a trigger like a person would. `expandStep` takes a step's `id` or title, refuses one that isn't a step, and a step it opens stays open when it completes.
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/chain-of-thought/chain-of-thought.ts" name="ChainOfThoughtAgentActions" type='Pick<ChainOfThoughtApi, "expand" | "collapse" | "expandStep">' />
 
