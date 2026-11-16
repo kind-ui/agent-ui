@@ -82,18 +82,22 @@ export function defineTool(): void {
           const state = instance.get() as ToolState;
           const { highlight } = state;
           fill(el.querySelector("kind-tool-title"), state.title);
-          const { onApprove, onDeny, ...confirmation } = api.approvalState(state);
-          const approval = fillParts(
-            el.querySelector("kind-tool-approval"),
-            "<kind-confirmation></kind-confirmation>",
-          )?.querySelector(":scope > kind-confirmation");
-          if (approval)
+          // Filled only once there's an approval, so a tool without one holds no Confirmation.
+          const approval =
+            state.approval &&
+            fillParts(
+              el.querySelector("kind-tool-approval"),
+              "<kind-confirmation></kind-confirmation>",
+            )?.querySelector(":scope > kind-confirmation");
+          if (approval) {
+            const { onApprove, onDeny, ...confirmation } = api.approvalState(state);
             for (const [key, value] of Object.entries({
               ...confirmation,
               approveHandler: onApprove,
               denyHandler: onDeny,
             }))
               write(approval as unknown as Record<string, unknown>, key, value);
+          }
           fill(el.querySelector("kind-tool-error"), state.errorMessage);
           const input = fillParts(el.querySelector("kind-tool-input"), INPUT_PARTS);
           const inputCode = input?.querySelector<KindCodeBlockElement>(":scope > kind-code-block");
