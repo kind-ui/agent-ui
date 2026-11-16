@@ -165,9 +165,7 @@ const preset: PopupPreset = {
 // Components `@ui-sdk/web` fills in the callbacks on read.
 const HOVER = { openOnHover: { value: true } };
 
-const levelOf = (ratio: number): ContextLevel => (ratio >= 0.95 ? "full" : ratio >= 0.8 ? "high" : "normal");
-
-const presentation = (options: ContextMeterOptions) => {
+const presentation = (options: ContextMeterOptions): Omit<ContextMeterState, keyof PopupState> => {
   const used = options.used ?? 0;
   const total = options.total ?? 0;
   const ratio = contextRatio(used, total);
@@ -176,7 +174,7 @@ const presentation = (options: ContextMeterOptions) => {
     used,
     total,
     ratio,
-    level: levelOf(ratio),
+    level: ratio >= 0.95 ? "full" : ratio >= 0.8 ? "high" : "normal",
     valueText: contextValueText(used, total, options.locale),
     input: options.usage?.input,
     output: options.usage?.output,
