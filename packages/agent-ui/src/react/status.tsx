@@ -6,11 +6,13 @@ const parts = createParts(statusPrimitive, { root: "span", icon: "span", label: 
 
 export type StatusProps = ComponentProps<typeof parts.Root>;
 
-/** A run status badge: its mark and label, unless you pass `StatusIcon` and `StatusLabel` yourself. */
+/** A run status badge: its mark and label. Any `children`, `StatusIcon` and `StatusLabel` among them, replace both. */
 export function Status({ children, ...props }: StatusProps) {
   return (
     <parts.Root {...props}>
-      {children ?? (
+      {children !== undefined ? (
+        children
+      ) : (
         <>
           <parts.Icon />
           <StatusLabel />

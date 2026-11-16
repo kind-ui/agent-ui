@@ -31,7 +31,7 @@ Status
 └── StatusLabel
 ```
 
-`Status` renders both parts when you pass no children. `StatusIcon` draws the mark and is hidden from screen readers, and `StatusLabel` shows the text.
+`Status` renders both parts when you pass no children; any children you pass replace them. `StatusIcon` draws the mark and is hidden from screen readers, and `StatusLabel` shows the label, or its own children.
 
 ## Usage
 
@@ -58,5 +58,5 @@ The mark morphs from one status to the next. Under `prefers-reduced-motion`, or 
 An agent connected with `createAgent` sees each badge as a `kind-status` and reads its `status`. It has no actions.
 
 <Caption>
-  Runs in React and Web Components. On `<kind-status>`, `status`, `label` and `motion` are attributes of the same name, and the element fills in its mark and label when it has no children.
+  Runs in React and Web Components. On `<kind-status>`, `status`, `label` and `motion` are attributes of the same name, and the element fills in its mark and label when it has no children. It writes the label into an empty `<kind-status-label>`, and leaves text you wrote there alone.
 </Caption>

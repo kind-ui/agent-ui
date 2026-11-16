@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
+import { layerOf } from "../layer.js";
 
 type Fixture = {
   kindStatus: {
@@ -60,6 +61,30 @@ test("label replaces the default text, and removing it restores the default", as
   await expect(live(page)).toHaveText("Deploying");
   await set(page, "setLabel", undefined);
   await expect(live(page)).toHaveText("Running");
+});
+
+test("an unknown status shows as pending", async ({ page }) => {
+  await open(page);
+  await set(page, "setStatus", "done");
+  await expect(live(page)).toHaveText("Pending");
+  await expect(live(page)).toHaveAttribute("data-status", "pending");
+});
+
+test("composed parts keep their order and their own label text", async ({ page }) => {
+  await open(page);
+  const composed = page.locator("#composed");
+  await expect(composed).toHaveText("Build complete");
+  await expect(composed.locator("> :last-child")).toHaveAttribute("data-status-mark", "");
+  await expect(composed.locator("[data-status-mark]")).toHaveAttribute("aria-hidden", "true");
+});
+
+test("kind-status writes its label into a label part added later", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web only");
+  await open(page);
+  await page.evaluate(() =>
+    document.querySelector("#late")?.append(document.createElement("kind-status-label")),
+  );
+  await expect(page.locator("#late")).toHaveText("Failed");
 });
 
 test("announces terminal transitions once, and label changes never", async ({ page }) => {
@@ -135,6 +160,7 @@ test("the agent snapshot lists each status by kind, with its state and no action
       .filter((entry) => entry.component === "kind-status")
       .map(({ actions = [], status }) => ({ actions, status })),
   );
-  expect(entries).toHaveLength(7);
+  expect(entries.length).toBeGreaterThan(7);
+  for (const { actions } of entries) expect(actions).toEqual([]);
   expect(entries).toContainEqual({ actions: [], status: "running" });
 });

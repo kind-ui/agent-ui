@@ -1,7 +1,7 @@
 import type { StepStatus } from "@kind-ui/agent-ui";
 import type { MotionMode } from "@kind-ui/agent-ui/core";
 import { useEffect, useState } from "react";
-import { Status } from "../../../../src/react/status.js";
+import { Status, StatusIcon, StatusLabel } from "../../../../src/react/status.js";
 
 const statuses: StepStatus[] = ["pending", "running", "awaiting-input", "complete", "error", "cancelled"];
 
@@ -22,6 +22,10 @@ export const cases = {
         <Status key={status} status={status} />
       ))}
       <Live />
+      <Status id="composed" status="complete">
+        <StatusLabel>{({ label }) => `Build ${label.toLowerCase()}`}</StatusLabel>
+        <StatusIcon />
+      </Status>
     </div>
   ),
 };

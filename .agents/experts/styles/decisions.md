@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `481da58` (Wave 2 Task 1 groundwork)
+Last reviewed: `0391584` (Wave 2 Task 2 Status)
 
 ## Settled
 
@@ -12,6 +12,7 @@ Last reviewed: `481da58` (Wave 2 Task 1 groundwork)
 - **Theme colors are `light-dark()` pairs keyed on `color-scheme`, not a `prefers-color-scheme` block:** `@theme` can't nest in a media query, and a class-based dark theme sets `color-scheme: dark` on its root. Highlighter token colors follow the same switch when passed as `light-dark()`.
 - **Inline code's radius is `calc(var(--kind-radius) / 2)` in rem, not `0.375em`:** CSS can't divide by a unit, and following `--kind-radius` (0 squares it) matters more than scaling with heading size.
 - **Radii scale from `--kind-radius` by `/ 3`, `/ 2`, `* 2 / 3`, `1` and `* 1.5`;** pills and 1–2 px detail radii stay fixed. Nested corners subtract the inset, floored at 0.
+- **A Status badge's width follows its label;** its height doesn't change, and the docs say to put it at the end of a row.
 
 ## Known and open (don't report again, check whether fixed)
 
@@ -33,6 +34,7 @@ Last reviewed: `481da58` (Wave 2 Task 1 groundwork)
 - **`layout()` collapsed the element to `scale(0, 0)` on every run** (motion zeroed `"none"`). Fixed with the move to `translate`/`scale`, whose end is identity.
 - **An interrupted run left stray inline styles** (motion's `stop()` commits a frame later). Fixed: runs are cancelled with values held inline, and a finished run resolves in motion's render step.
 - **`expand` snapped for bordered elements.** Fixed: it starts from the computed `height` and ends at the `height` that `box-sizing` needs, for `border-box` and `content-box`.
+- **The Status mark sat 1px off-center in its pill (Wave 2 Task 2).** Fixed: the start padding is worked out from the pill's height.
 
 ## Revisit
 

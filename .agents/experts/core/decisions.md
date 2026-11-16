@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `481da58` (Wave 2 Task 1 groundwork)
+Last reviewed: `0391584` (Wave 2 Task 2 Status)
 
 ## Settled
 
@@ -13,6 +13,8 @@ Last reviewed: `481da58` (Wave 2 Task 1 groundwork)
 - **Conversation `virtualize` is mount-only,** like a `default*` option: it is read in `state` and not synced.
 - **The composer's draft `text` is the Token Input's codec text** and edits sync through the controller's `editor.subscribe`; a cancelled change writes the draft back to the editor. A controlled owner refuses an edit by cancelling it (AGENTS.md, Task 11).
 - **`validateCatalog` forwarding UI SDK guard errors has no unit test:** a failing render file would have to sit in `src/`, where the guard's own tests and `npm run lint` already fail it.
+- **Status keeps `controlled: ["status"]`** so agents read its status. Clearing `status` resets it to pending while UI SDK's dev warning says it keeps its last value, as with Step's `status`.
+- **A Status with a fixed `label` announces that label** on terminal transitions, as the Wave 2 plan says: a host that names its own label names the outcome in it.
 
 ## Known and open (don't report again, check whether fixed)
 
@@ -47,6 +49,7 @@ Last reviewed: `481da58` (Wave 2 Task 1 groundwork)
 - **No-`ai` consumers needed `skipLibCheck`.** Fixed: each adapter `import type … from "ai"` carries a JSDoc `/** @ts-ignore */` that survives into the `.d.ts`; `tests/types/no-ai` runs with `skipLibCheck: false`.
 - **A host `setOpen` turned off auto close.** Fixed: only the trigger, find in page and `expand`/`collapse` set `userToggled` (spec §5).
 - **Composer `disabled` is now exposed on the submit part** (`aria-disabled`), and a disabled composer offers the agent no actions.
+- **An unknown Status `status` showed a badge with no text (Wave 2 Task 2).** Fixed: it shows as pending.
 
 ## Revisit
 

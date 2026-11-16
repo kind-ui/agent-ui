@@ -22,6 +22,7 @@ export type StatusOptions = {
   motion?: MotionMode;
 };
 
+/** What the badge shows, which agents read through `status`. */
 export type StatusState = { status: StepStatus; label: string; motion: MotionMode };
 
 type StatusApi = Record<never, never>;
@@ -55,7 +56,8 @@ const LABELS: Record<StepStatus, string> = {
 const ANNOUNCED: ReadonlySet<StepStatus> = new Set(["awaiting-input", "complete", "error", "cancelled"]);
 
 const presentation = (options: StatusOptions): StatusState => {
-  const status = options.status ?? "pending";
+  // Web attributes are untyped: an unknown status shows as pending, not as a badge with no text.
+  const status = options.status && Object.hasOwn(LABELS, options.status) ? options.status : "pending";
   return { status, label: options.label ?? LABELS[status], motion: options.motion ?? "auto" };
 };
 

@@ -2,7 +2,10 @@ import { statusPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/web";
 import type { AttributeProperties, UiElement } from "@ui-sdk/web/events";
 
-/** `<kind-status status="…">` fills in its mark and label when it has no children. */
+/**
+ * `<kind-status status="…">` fills in its mark and label when it has no children, and writes the label into an empty
+ * `<kind-status-label>`.
+ */
 export function defineStatus(): void {
   if (customElements.get("kind-status")) return;
   createParts(statusPrimitive, {
@@ -11,13 +14,26 @@ export function defineStatus(): void {
       render: (el, instance) => {
         if (!el.firstElementChild)
           el.innerHTML = "<kind-status-icon></kind-status-icon><kind-status-label></kind-status-label>";
-        const label = el.querySelector("kind-status-label");
+        // A label someone wrote text into keeps it, as React's `StatusLabel` children do.
+        const owned = new WeakSet<Element>();
         const draw = () => {
+          const label = el.querySelector("kind-status-label");
+          if (!label || (!owned.has(label) && label.textContent)) return;
+          owned.add(label);
           const text = instance.get().label;
-          if (label && label.textContent !== text) label.textContent = text;
+          if (label.textContent !== text) label.textContent = text;
         };
         draw();
-        return instance.subscribe(draw);
+        const unsubscribe = instance.subscribe(draw);
+        const arrivals = new MutationObserver((records) => {
+          if (records.some((record) => [...record.addedNodes].some((node) => node instanceof Element)))
+            draw();
+        });
+        arrivals.observe(el, { childList: true, subtree: true });
+        return () => {
+          unsubscribe();
+          arrivals.disconnect();
+        };
       },
     },
     icon: "kind-status-icon",

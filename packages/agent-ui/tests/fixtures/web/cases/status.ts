@@ -9,6 +9,10 @@ export const cases = {
       <div class="flex flex-col items-start gap-3 p-6">
         ${statuses.map((status) => `<kind-status status="${status}"></kind-status>`).join("")}
         <kind-status id="live" status="running"></kind-status>
+        <kind-status id="composed" status="complete">
+          <kind-status-label>Build complete</kind-status-label><kind-status-icon></kind-status-icon>
+        </kind-status>
+        <kind-status id="late" status="error"><kind-status-icon></kind-status-icon></kind-status>
       </div>`;
     const live = root.querySelector("#live") as HTMLElement;
     const write = (name: string) => (value: string | undefined) =>

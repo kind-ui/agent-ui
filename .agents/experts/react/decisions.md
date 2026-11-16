@@ -2,13 +2,14 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `481da58` (Wave 2 Task 1 groundwork)
+Last reviewed: `0391584` (Wave 2 Task 2 Status)
 
 ## Settled
 
 - **Count budgets render counting** (`budgets.spec.ts`) follows DevTools: a render that bails out on equal state isn't counted, and a compare-`memo` wrapper (tag 14) is left out so its component counts once.
 - Everything in AGENTS.md "UI SDK API notes".
 - **StrictMode runs on Chromium only:** its double render doesn't depend on the engine, so the cross-browser projects are `wave-1-react` and `wave-1-web`.
+- **A `Status` root's `className` or `render` function gets `{}`:** the root has no part state; style it through `data-status`.
 
 ## Known and open (don't report again, check whether fixed)
 
@@ -36,6 +37,7 @@ Last reviewed: `481da58` (Wave 2 Task 1 groundwork)
 - **A server-rendered image attachment pointed at a `blob:nodedata:` URL.** Fixed: object URLs are made when an item binds, so the server and hydration render the icon.
 - **The first attachment skipped its entrance in React.** Fixed: the composer's attachments part stays mounted while empty (`data-empty`).
 - **Two Kind wrappers composed through `render` stacked both base class lists.** Fixed: `withKindClass` renders a Kind `render` target as its bare UI SDK part, so the outer base applies once, for element and function `render` targets and nested targets alike.
+- **`<Status>{false}</Status>` and `<Status>{null}</Status>` differed (Wave 2 Task 2).** Fixed: any `children` replace the default parts.
 
 ## Revisit
 
