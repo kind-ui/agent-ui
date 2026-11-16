@@ -6,55 +6,63 @@
     font-size: 0.8125rem;
     line-height: 1.25rem;
     color: var(--kind-color-fg);
+  }
 
-    /* The edge with more chips past it fades. */
-    &:has([data-slot="carousel-previous"]:not([data-disabled])) {
+  /* The edge with more chips past it fades. Carousel marks the slides in view once it has measured them, so a page
+     rendered on the server shows neither fades nor Previous and Next. */
+  :where([data-slot="kind-suggestion"]:has([data-slot="carousel-item"][data-in-view])) {
+    &:where(:has([data-slot="carousel-previous"]:not([data-disabled]))) {
       --kind-suggestion-fade-start: 24px;
     }
-    &:has([data-slot="carousel-next"]:not([data-disabled])) {
+    &:where(:has([data-slot="carousel-next"]:not([data-disabled]))) {
       --kind-suggestion-fade-end: 24px;
     }
+  }
 
-    /* The margin and padding make room for a chip's focus ring, which the scrolling viewport would clip. */
-    & [data-slot="carousel-viewport"] {
-      margin: -4px;
-      padding: 4px;
-      scroll-padding-inline: 4px;
-      mask-image: linear-gradient(
-        to right,
-        transparent,
-        #000 var(--kind-suggestion-fade-start, 0px),
-        #000 calc(100% - var(--kind-suggestion-fade-end, 0px)),
-        transparent
-      );
-    }
-    &:dir(rtl) [data-slot="carousel-viewport"] {
-      mask-image: linear-gradient(
-        to left,
-        transparent,
-        #000 var(--kind-suggestion-fade-start, 0px),
-        #000 calc(100% - var(--kind-suggestion-fade-end, 0px)),
-        transparent
-      );
-    }
+  /* The block and end insets make room for a chip's focus ring, which the scrolling viewport would clip. The start
+     inset holds the start fade, so a page that Next scrolled to starts past it. */
+  :where([data-slot="kind-suggestion"]) [data-slot="carousel-viewport"] {
+    margin-block: -4px;
+    margin-inline: -24px -4px;
+    padding-block: 4px;
+    padding-inline: 24px 4px;
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 var(--kind-suggestion-fade-start, 0px),
+      #000 calc(100% - var(--kind-suggestion-fade-end, 0px)),
+      transparent
+    );
+  }
+  :where([data-slot="kind-suggestion"]:dir(rtl)) [data-slot="carousel-viewport"] {
+    mask-image: linear-gradient(
+      to left,
+      transparent,
+      #000 var(--kind-suggestion-fade-start, 0px),
+      #000 calc(100% - var(--kind-suggestion-fade-end, 0px)),
+      transparent
+    );
+  }
 
-    & [data-slot="carousel-content"] {
-      align-items: center;
-    }
+  :where([data-slot="kind-suggestion"]) [data-slot="carousel-content"] {
+    align-items: center;
+  }
 
-    & [data-suggestion-controls] {
-      display: flex;
-      flex-shrink: 0;
-      gap: 4px;
-    }
-    /* Previous and Next take no room while every chip fits. */
-    &:not(
+  :where([data-slot="kind-suggestion"]) [data-suggestion-controls] {
+    display: flex;
+    flex-shrink: 0;
+    gap: 4px;
+  }
+  /* Previous and Next take no room while every chip fits, unless one holds focus, which would drop to the page. */
+  :where(
+      [data-slot="kind-suggestion"]:not(
         :has([data-slot="carousel-previous"]:not([data-disabled])),
         :has([data-slot="carousel-next"]:not([data-disabled]))
-      )
-      [data-suggestion-controls] {
-      display: none;
-    }
+      ),
+      [data-slot="kind-suggestion"]:not(:has([data-slot="carousel-item"][data-in-view]))
+    )
+    [data-suggestion-controls]:not(:focus-within) {
+    display: none;
   }
 
   [data-slot="kind-suggestion-item"] {
@@ -75,54 +83,53 @@
       border-color var(--kind-duration-fast) var(--kind-ease-out),
       scale var(--kind-duration-fast) var(--kind-ease-out);
 
-    &:hover:not([aria-disabled="true"]) {
+    &:where(:hover:not([aria-disabled="true"])) {
       border-color: color-mix(in oklab, var(--kind-color-border) 60%, var(--kind-color-muted));
       background-color: var(--kind-color-hover);
     }
-    &:active:not([aria-disabled="true"]) {
+    &:where(:active:not([aria-disabled="true"])) {
       scale: 0.97;
     }
     &:focus-visible {
       outline: 2px solid var(--kind-color-ring);
       outline-offset: 2px;
     }
-    &[aria-disabled="true"] {
+    &:where([aria-disabled="true"]) {
       cursor: default;
     }
     /* A chip with a description is a small card, two lines tall. */
-    &:has([data-suggestion-description]:not(:empty)) {
+    &:where(:has([data-suggestion-description]:not(:empty))) {
       padding-block: 6px;
       border-radius: calc(var(--kind-radius) * 2 / 3);
     }
 
-    & > [data-suggestion-label],
-    & > [data-suggestion-description] {
+    & > :where([data-suggestion-label], [data-suggestion-description]) {
       max-width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    & > [data-suggestion-description] {
+    & > :where([data-suggestion-description]) {
       font-size: 0.75rem;
       line-height: 1rem;
       color: var(--kind-color-muted);
     }
-    & > [data-suggestion-description]:empty {
+    & > :where([data-suggestion-description]:empty) {
       display: none;
     }
   }
 
   /* Reduced motion: a press doesn't scale, and colors change in 120 ms. */
   @media (prefers-reduced-motion: reduce) {
-    [data-slot="kind-suggestion"][data-motion="auto"] [data-slot="kind-suggestion-item"] {
+    :where([data-slot="kind-suggestion"][data-motion="auto"]) [data-slot="kind-suggestion-item"] {
       transition-duration: var(--kind-duration-reduced);
       scale: none;
     }
   }
-  [data-slot="kind-suggestion"][data-motion="reduced"] [data-slot="kind-suggestion-item"] {
+  :where([data-slot="kind-suggestion"][data-motion="reduced"]) [data-slot="kind-suggestion-item"] {
     transition-duration: var(--kind-duration-reduced);
     scale: none;
   }
-  [data-slot="kind-suggestion"][data-motion="none"] [data-slot="kind-suggestion-item"] {
+  :where([data-slot="kind-suggestion"][data-motion="none"]) [data-slot="kind-suggestion-item"] {
     transition: none;
     scale: none;
   }

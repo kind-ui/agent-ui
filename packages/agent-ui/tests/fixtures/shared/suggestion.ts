@@ -20,5 +20,6 @@ export function suggestionHost() {
   const picks: { id: string; reason: string; source: string }[] = [];
   const record = (id: string, details: { reason: string; source: string }) =>
     picks.push({ id, reason: details.reason, source: details.source });
-  return { host: { picks }, record };
+  const submits: string[] = [];
+  return { host: { picks, submits }, record };
 }

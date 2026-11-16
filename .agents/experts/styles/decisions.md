@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `623765f` (Wave 3 Task 6 Model Selector and Reasoning Effort)
+Last reviewed: `9ec23f2` (Wave 3 Task 7 Suggestion)
 
 ## Settled
 
@@ -17,6 +17,8 @@ Last reviewed: `623765f` (Wave 3 Task 6 Model Selector and Reasoning Effort)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Suggestion: Tab to a chip half out of view doesn't scroll it in** (UI SDK Carousel counts it in view), so its end and focus ring sit under the end fade.
+- **Suggestion: `motion="none"` doesn't stop Carousel's paging scroll,** which follows only `prefers-reduced-motion`; UI SDK's Carousel takes no motion option. The docs say so.
 - **Checkpoint: "Restored" is wider than the Restore icon,** so the line (or a long description) gets about 47px shorter in one frame when it swaps in. Nothing moves vertically.
 - **Checkpoint's restore icon doesn't mirror in right-to-left text;** undecided whether a counter-clockwise arrow should.
 - **Re-checking a checkbox while its indicator fades out restarts the fade-in** for about 2 frames: UI SDK puts `data-starting-style` back on the same element (report upstream).
@@ -32,6 +34,7 @@ Last reviewed: `623765f` (Wave 3 Task 6 Model Selector and Reasoning Effort)
 
 ## Resolved
 
+- **Suggestion (Wave 3 Task 7):** Previous and Next stay shown while one holds focus; a page Next scrolled to starts past the start fade (the viewport's start inset holds it); context selectors sit in `:where()`, so a class in `@layer components` restyles a two-line chip.
 - **Model Selector and Reasoning Effort (Wave 3 Task 6):** the effort mark slides with `translate` and `width`, not `left`/`top`; the reduced fill runs color, background and border in 120 ms together; the list's exit runs every property at `--kind-duration-fast`; the search field is `h-full`, inside the field's border.
 - **Checkpoint (Wave 3 Task 5):** a wrapped error made the dialog 8px taller on narrow screens (the error's line height is 1rem, so two lines fit the row); the backdrop closed 50ms after the dialog (both use the fast duration); reduced-motion fades were `linear` (now `--kind-ease-out`, as the JS helper's).
 - **The internal Textarea was 14px beside 13px Confirmation and Question text (Wave 3 Task 4).** Fixed: it inherits its font size and line height. Question's option rows wrap their context in `:where()`, so they stay one attribute deep.

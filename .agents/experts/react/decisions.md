@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `623765f` (Wave 3 Task 6 Model Selector and Reasoning Effort)
+Last reviewed: `9ec23f2` (Wave 3 Task 7 Suggestion)
 
 ## Settled
 
@@ -40,6 +40,7 @@ Last reviewed: `623765f` (Wave 3 Task 6 Model Selector and Reasoning Effort)
 
 ## Resolved
 
+- **Suggestion (Wave 3 Task 7):** a chip inside a form no longer submits it (`type="button"` from core); `SuggestionControls` is exported, so a layout you compose hides Previous and Next too; the server markup shows neither controls nor fades until Carousel has measured, so a row that fits doesn't grow 64px on hydration.
 - **Model Selector and Reasoning Effort (Wave 3 Task 6):** `ModelSelectorItem` and `ModelSelectorGroup` pass `className`, `ref` and other props through; `<ReasoningEffort>{null}</ReasoningEffort>` renders nothing, as other components' children do; a refusing host has a fixture case and a spec in both layers.
 - **Checkpoint (Wave 3 Task 5):** server markup named Restore by nothing until hydration (the tooltip is `type="label"`); `CheckpointDialog` dropped its answers for `{null}` children (a destructuring default); the dialog sat in a `span` (the `restore` part is a `div`).
 - **A controlled Question didn't follow its owner (Wave 3 Task 4).** Fixed: the groups and text boxes hold their own value, so a change a controlling owner doesn't take is written back through the controllers the next frame (a cancelled one at once). The agent test no longer waits 15 s for an unsettled submit (`question.spec.ts`, both layers).

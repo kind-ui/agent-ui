@@ -65,7 +65,8 @@ const drawSuggestions = (row: Movable, suggestions: SuggestionState["suggestions
 
 /**
  * `<kind-suggestion can-pick>` fills in its row when it has no children. Set `suggestions` as a property; the
- * `can-pick` attribute lets a person choose one, which fires `pick` with its id as `detail.value`.
+ * `can-pick` attribute lets a person choose one, which fires `pick` with its id as `detail.value`. A row you write
+ * yourself is the internal Carousel's markup, `kind-suggestion-item`s included, and keeps what you write in it.
  */
 export function defineSuggestion(): void {
   if (customElements.get("kind-suggestion")) return;
@@ -76,6 +77,7 @@ export function defineSuggestion(): void {
       kinds: { canPick: "boolean" },
       // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
       options: (el) => ((el as KindSuggestionElement).canPick ? {} : { onPick: undefined }),
+      api: ["getSuggestions"],
       render: (el, instance) => {
         if (!el.firstElementChild) {
           el.innerHTML = DEFAULT_PARTS;

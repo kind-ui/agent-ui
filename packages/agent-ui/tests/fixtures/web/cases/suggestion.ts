@@ -11,11 +11,13 @@ const page =
     motion,
     pickable = true,
     width,
+    inForm = false,
   }: {
     initial?: SuggestionItem[];
     motion?: MotionMode;
     pickable?: boolean;
     width?: number;
+    inForm?: boolean;
   } = {}) =>
   (root: HTMLElement) => {
     defineSuggestion();
@@ -30,13 +32,24 @@ const page =
     if (motion) suggestion.motion = motion;
     suggestion.addEventListener("pick", (event) => record(event.detail.value, event.detail));
     const below = Object.assign(document.createElement("p"), { id: "below", textContent: "Below" });
-    container.append(above, suggestion, below);
+    if (inForm) {
+      const form = document.createElement("form");
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        host.submits.push("submit");
+      });
+      form.append(suggestion);
+      container.append(above, form, below);
+    } else container.append(above, suggestion, below);
     root.append(container);
     Object.assign(window, {
       kindHost: {
         ...host,
         add: () => {
           suggestion.suggestions = [...(suggestion.suggestions ?? []), added];
+        },
+        remove: () => {
+          suggestion.suggestions = (suggestion.suggestions ?? []).filter((item) => item.id !== "b");
         },
         rename: () => {
           suggestion.suggestions = (suggestion.suggestions ?? []).map((item) =>
@@ -52,4 +65,5 @@ export const cases = {
   overflow: page({ initial: manySuggestions, width: 360 }),
   reduced: page({ motion: "reduced" }),
   static: page({ pickable: false }),
+  form: page({ inForm: true }),
 };

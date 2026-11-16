@@ -29,11 +29,12 @@ npx shadcn@latest add @kind-ui/suggestion-web
 Suggestion
 ├── SuggestionViewport
 │   └── SuggestionItem
-├── SuggestionPrevious
-└── SuggestionNext
+└── SuggestionControls
+    ├── SuggestionPrevious
+    └── SuggestionNext
 ```
 
-`Suggestion` is a group named by its `label` that holds UI SDK's Carousel. `SuggestionViewport` is the row that scrolls, each `SuggestionItem` is a button showing a suggestion's `label` and `description`, and `SuggestionPrevious` and `SuggestionNext` scroll the row.
+`Suggestion` is a group named by its `label` that holds UI SDK's Carousel. `SuggestionViewport` is the row that scrolls, each `SuggestionItem` is a button showing a suggestion's `label` and `description`, and `SuggestionPrevious` and `SuggestionNext` scroll the row. `SuggestionControls` holds them and hides them while every suggestion fits.
 
 ## Usage
 
@@ -60,7 +61,7 @@ Tab moves through the suggestions in view, then **Previous** and **Next**. Enter
 
 ### Motion
 
-A suggestion added after the row first shows fades up once; one you update or that was there from the start doesn't. A removed one leaves at once. Under `prefers-reduced-motion`, or with `motion="reduced"`, new ones only fade and a press doesn't shrink the chip. With `motion="none"`, nothing animates.
+A suggestion added after the row first shows fades up once; one you update or that was there from the start doesn't. A removed one leaves at once, and if it had focus, focus moves to the next suggestion. Under `prefers-reduced-motion`, or with `motion="reduced"`, new ones only fade and a press doesn't shrink the chip. With `motion="none"`, neither animates. Scrolling to another page follows `prefers-reduced-motion` only.
 
 ## API Reference
 

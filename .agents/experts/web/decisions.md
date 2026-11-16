@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `623765f` (Wave 3 Task 6 Model Selector and Reasoning Effort)
+Last reviewed: `9ec23f2` (Wave 3 Task 7 Suggestion)
 
 ## Settled
 
+- **`kind-suggestion` fills in only its own row** (Wave 3 Task 7): a row a page writes is the internal Carousel's markup with its `kind-suggestion-item`s, as a written `kind-reasoning-effort` holds its own Segmented Control; the element's JSDoc says so. There are no `kind-suggestion-viewport`/`-previous`/`-next` tags.
 - **`kind-task` and `kind-plan` look up their parts with `querySelector`,** not Chain of Thought's `own()`: no part of theirs holds arbitrary content, so no nested task or plan sits inside one.
 - **`notified` in `budgets.spec.ts` counts shown parts only** (hidden parts sync without `getAttribute`), at most the jump and empty parts, constant across list sizes. The `remount` fixture keeps the last unmounted tree until the next mount; leaks are measured while mounted.
 - **Theme defaults land on `:root, :host`** (Tailwind's `@theme` output), so inside a shadow root that loads the stylesheet a page's `:root` override doesn't reach; the README tells consumers to set `:host` there too. It also makes the stylesheet work when loaded only in a shadow root.
@@ -17,6 +18,7 @@ Last reviewed: `623765f` (Wave 3 Task 6 Model Selector and Reasoning Effort)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **`ui-carousel-content` is `aria-live="polite"` (UI SDK),** so a suggestion added while the row is in view may be read aloud; not checked with a screen reader.
 - **An empty `kind-model-selector` or `kind-reasoning-effort` adds its parts on upgrade,** shifting layout once, as Task and Plan do.
 - **`kind-checkpoint` fills in its parts when it upgrades empty,** the same layout-shift class as the empty `kind-task`/`kind-plan` entry.
 - **Firefox crashes running axe after Playwright's role query on a UI SDK `ui-radio`/`ui-checkbox`** (bare UI SDK markup reproduces it; report upstream). `question.spec.ts`'s axe tests click through a CSS locator.
@@ -41,6 +43,7 @@ Last reviewed: `623765f` (Wave 3 Task 6 Model Selector and Reasoning Effort)
 
 ## Resolved
 
+- **Suggestion (Wave 3 Task 7):** `el.api.getSuggestions()` works (the root lists it in `api`); a chip in a `<form>` doesn't submit it (`form` fixture case, both layers).
 - **Model Selector and Reasoning Effort (Wave 3 Task 6):** the web events are `modelchange` and `effortchange`, since the inner Combobox and Segmented Control fire a composed `valuechange` a capture listener hears first; equal `levels` keep a focused level focused (levels are moved only when out of place); a written field keeps its own labels; the list opens 6px below the field with `align="start"` as in React; `value` is typed to take a string.
 - **Checkpoint (Wave 3 Task 5):** setting `restored` with the dialog open left the page `inert` (a hidden web part keeps its dialog), and Firefox crashed running axe after a role query on the trigger (axe tests reach it with a CSS locator; add the Tooltip/Alert Dialog trigger to the upstream report).
 - **`kind-question` rebuilt its choices for a new array with the same content, and written items didn't win (Wave 3 Task 4).** Fixed: options are compared by content, a written item replaces the added one wherever it sits, and one written empty is filled in (`question.spec.ts`, web).

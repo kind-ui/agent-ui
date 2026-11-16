@@ -1,9 +1,16 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Fixture = {
-  kindHost: { picks: { id: string; reason: string; source: string }[]; add(): void; rename(): void };
+  kindHost: {
+    picks: { id: string; reason: string; source: string }[];
+    submits: string[];
+    add(): void;
+    remove(): void;
+    rename(): void;
+  };
   agent: { act(input: unknown): Promise<unknown> };
 };
 
@@ -12,7 +19,7 @@ const chip = (page: Page, name: string) => row(page).getByRole("button", { name 
 const previous = (page: Page) => row(page).getByRole("button", { name: "Previous suggestions" });
 const next = (page: Page) => row(page).getByRole("button", { name: "Next suggestions" });
 const picks = (page: Page) => page.evaluate(() => (window as unknown as Fixture).kindHost.picks);
-const host = (page: Page, method: "add" | "rename") =>
+const host = (page: Page, method: "add" | "remove" | "rename") =>
   page.evaluate((name) => (window as unknown as Fixture).kindHost[name](), method);
 const act = (page: Page, id: string) =>
   page.evaluate(
@@ -82,6 +89,40 @@ test("a press or Enter picks a suggestion", async ({ page }) => {
     { id: "b", reason: "item-press", source: "mouse" },
     { id: "c", reason: "item-press", source: "keyboard" },
   ]);
+});
+
+test("a suggestion in a form picks without submitting it", async ({ page }) => {
+  await open(page, "form");
+  await chip(page, "Draft a reply").click();
+  await chip(page, "Draft a reply").press("Enter");
+  expect(await picks(page)).toHaveLength(2);
+  expect(await page.evaluate(() => (window as unknown as Fixture).kindHost.submits)).toEqual([]);
+});
+
+test("when the host removes the focused suggestion, focus moves to the next one", async ({ page }) => {
+  await open(page);
+  await chip(page, "Draft a reply").focus();
+  await host(page, "remove");
+  await expect(chip(page, "List the open questions")).toBeFocused();
+});
+
+test("Previous and Next stay while one holds focus, though every suggestion now fits", async ({ page }) => {
+  await open(page, "overflow");
+  await next(page).focus();
+  await page.locator("#suggestion").evaluate((el) => {
+    (el.closest(".p-6") as HTMLElement).style.width = "1400px";
+  });
+  await expect(next(page)).toHaveAttribute("aria-disabled", "true");
+  await expect(next(page)).toBeFocused();
+  await chip(page, "Summarize this thread").focus();
+  await expect(next(page)).toBeHidden();
+});
+
+test("SuggestionControls hides Previous and Next in a layout you compose", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "react", "React parts only");
+  await open(page, "custom");
+  await expect(chip(page, "Draft a reply")).toBeVisible();
+  await expect(next(page)).toBeHidden();
 });
 
 test("a new suggestion fades up once; an updated one doesn't replay, and nothing above moves", async ({

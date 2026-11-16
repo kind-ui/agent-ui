@@ -48,10 +48,7 @@ export function Suggestion({ children, ...props }: SuggestionProps) {
                   <SuggestionItem key={suggestion.id} value={suggestion.id} />
                 ))}
               </SuggestionViewport>
-              <div data-suggestion-controls="">
-                <SuggestionPrevious />
-                <SuggestionNext />
-              </div>
+              <SuggestionControls />
             </>
           )}
         </KindCarousel>
@@ -96,10 +93,27 @@ export function SuggestionItem({
   );
 }
 
+/** Holds Previous and Next, unless you pass children, and hides them while every suggestion fits. */
+export function SuggestionControls({
+  children = (
+    <>
+      <SuggestionPrevious />
+      <SuggestionNext />
+    </>
+  ),
+  ...props
+}: ComponentProps<"div">) {
+  return (
+    <div data-suggestion-controls="" {...props}>
+      {children}
+    </div>
+  );
+}
+
 // Previous and Next are hidden from agents, which takes the Carousel out of their snapshot: an agent picks any
 // suggestion by its id with the Suggestion's own `pick`, wherever it has scrolled.
 
-/** Scrolls back to earlier suggestions. Shown only while the suggestions don't fit. */
+/** Scrolls back to earlier suggestions. Put it in `SuggestionControls` to hide it while every suggestion fits. */
 export function SuggestionPrevious({
   children = CHEVRON_LEFT,
   ...props
@@ -111,7 +125,7 @@ export function SuggestionPrevious({
   );
 }
 
-/** Scrolls on to later suggestions. Shown only while the suggestions don't fit. */
+/** Scrolls on to later suggestions. Put it in `SuggestionControls` to hide it while every suggestion fits. */
 export function SuggestionNext({
   children = CHEVRON_RIGHT,
   ...props

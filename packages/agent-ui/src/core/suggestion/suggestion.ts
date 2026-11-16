@@ -1,4 +1,11 @@
-import { type ChangeDetails, definePrimitive, dispatch, type SlotDefinition, selects } from "@ui-sdk/core";
+import {
+  type ChangeDetails,
+  createFocusRecovery,
+  definePrimitive,
+  dispatch,
+  type SlotDefinition,
+  selects,
+} from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { SuggestionItem } from "../../types/index.js";
 import { memo } from "../memo.js";
@@ -8,7 +15,10 @@ import { enter, type MotionMode } from "../motion/index.js";
 export type SuggestionPickReason = "item-press" | "imperative";
 
 export type SuggestionOptions = {
-  /** The suggestions, in the order they show. */
+  /**
+   * The suggestions, in the order they show.
+   * @default []
+   */
   suggestions?: SuggestionItem[];
   /** Called with a suggestion's `id` when a person or `pick` chooses it. Without it the suggestions can't be chosen. */
   onPick?: (id: string, details: ChangeDetails<SuggestionPickReason>) => void;
@@ -50,17 +60,29 @@ export type SuggestionApi = {
   press: (id: string, event?: Event) => void;
   /** Plays a suggestion's entrance when it arrives after the first frame. Called by the item slot. */
   bindItem: (el: HTMLElement, id: string) => void;
+  /** Moves focus to a neighbor when the focused suggestion leaves. Bound by the item slot. */
+  recovery: ReturnType<typeof createFocusRecovery<ItemProps>>;
   /** Starts counting suggestions as new after the first frame. Called by the root slot. */
   bindRoot: () => () => void;
 };
 
 type ItemProps = { value: string };
 
-/** What the root hands its render function: the Carousel's name and the suggestions to draw. */
-export type SuggestionRootState = { label: string; suggestions: SuggestionItem[] };
+/** What the root hands its render function. */
+export type SuggestionRootState = {
+  /** The `label`, which names the Carousel. */
+  label: string;
+  /** The `suggestions` to draw, one `SuggestionItem` each. */
+  suggestions: SuggestionItem[];
+};
 
 /** What a suggestion hands its render function. */
-export type SuggestionItemState = { label: string; description: string | undefined };
+export type SuggestionItemState = {
+  /** The suggestion's `label`, its first line. */
+  label: string;
+  /** The suggestion's `description`, a muted second line when set. */
+  description: string | undefined;
+};
 
 type SuggestionSlots = {
   root: SlotDefinition<SuggestionState, SuggestionApi, BaseSlotProps, SuggestionRootState>;
@@ -77,6 +99,8 @@ const NO_SUGGESTIONS: SuggestionItem[] = [];
 const byId = memo((suggestions: SuggestionItem[]) =>
   Object.fromEntries(suggestions.map((suggestion) => [suggestion.id, suggestion])),
 );
+const suggestionOf = (state: SuggestionState, id: string) =>
+  Object.hasOwn(state.suggestionsById, id) ? state.suggestionsById[id] : undefined;
 
 const presentation = ({ suggestions = NO_SUGGESTIONS, label, onPick, motion }: SuggestionOptions) => ({
   suggestions,
@@ -113,10 +137,21 @@ export const suggestionPrimitive: SuggestionPrimitive = definePrimitive<
     // they don't play the entrance.
     let mounting = true;
     const known = new Set<string>();
+    // Recovery runs once the lost suggestion has left `suggestions`, so keep the order from before.
+    let current = store.get().suggestions.map((suggestion) => suggestion.id);
+    let previous = current;
+
+    context.onOptions((options) => {
+      const ids = (options.suggestions ?? NO_SUGGESTIONS).map((suggestion) => suggestion.id);
+      previous = current;
+      current = ids;
+      // Forgotten, so a suggestion added again plays its entrance.
+      for (const id of known) if (!ids.includes(id)) known.delete(id);
+    });
 
     const pick = (id: string, event?: Event) => {
-      const { canPick, suggestionsById } = store.get();
-      if (!canPick || !(id in suggestionsById)) return false;
+      const state = store.get();
+      if (!state.canPick || !suggestionOf(state, id)) return false;
       return !dispatch(
         context,
         "onPick",
@@ -136,6 +171,14 @@ export const suggestionPrimitive: SuggestionPrimitive = definePrimitive<
         known.add(id);
         if (!mounting) void enter(el, "fade-up", { motion: store.get().motion });
       },
+      recovery: createFocusRecovery<ItemProps>({
+        fallback: (lost) => {
+          const order = current.includes(lost.key) ? current : previous;
+          const index = order.indexOf(lost.key);
+          const at = (id: string | undefined) => (id === undefined ? null : context.element("item", id));
+          return at(order[index + 1]) ?? at(order[index - 1]) ?? undefined;
+        },
+      }),
       bindRoot: () => {
         const frame = requestAnimationFrame(() => {
           mounting = false;
@@ -158,11 +201,14 @@ export const suggestionPrimitive: SuggestionPrimitive = definePrimitive<
       selects: ownSuggestion,
       press: ({ api, key }, event) => api.press(key, event),
       state: (state, { key }) => ({
-        label: state.suggestionsById[key]?.label ?? "",
-        description: state.suggestionsById[key]?.description,
+        label: suggestionOf(state, key)?.label ?? "",
+        description: suggestionOf(state, key)?.description,
       }),
-      attrs: (state) => ({ "aria-disabled": state.canPick ? undefined : "true" }),
-      bind: (el, { api, key }) => api.bindItem(el, key),
+      attrs: (state) => ({ type: "button", "aria-disabled": state.canPick ? undefined : "true" }),
+      bind: (el, part) => {
+        part.api.bindItem(el, part.key);
+        return part.api.recovery.bind(el, part);
+      },
     }),
   }),
   agent: {

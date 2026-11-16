@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `623765f` (Wave 3 Task 6 Model Selector and Reasoning Effort)
+Last reviewed: `9ec23f2` (Wave 3 Task 7 Suggestion)
 
 ## Settled
 
+- **Suggestion's `pick` has no lock** (Wave 3 Task 7): `onPick` is a `callback`, as the plan says, so a double press calls it twice. A host whose pick sends a prompt drops a repeat itself, as it would for a double-clicked send.
 - **Model Selector marks matches only in the name** (Wave 3 Task 6): a model the query found through its group or description shows no mark. Spec §7 asks for match highlighting on the options, which are named by the model; marking descriptions would add a second highlighted line per row.
 - **Checkpoint `defaultOpen` logs UI SDK's dev warning that `agent.actions` lists `restore`** (Wave 3 Task 5): `restore` is a getter that returns `undefined` while the dialog is open, as the other Wave 3 actions do.
 - **Checkpoint's `restored` isn't in `controlled`** (Wave 3 Task 5): on web a boolean attribute turned off reads `undefined`, which made UI SDK warn that it stopped controlling it. An agent sees Restore gone and "Restored" instead.
@@ -27,6 +28,7 @@ Last reviewed: `623765f` (Wave 3 Task 6 Model Selector and Reasoning Effort)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Chain of Thought's `setStepOpen` checks `id in stepsById`,** so an inherited name like `"constructor"` gets past it; Suggestion and Question read by own key (`Object.hasOwn`).
 - **A Checkpoint owner who refuses a close sees it close and reopen** (Escape, then `onOpenChange` cancels): UI SDK reports the close only after it happens, through `controller.open()`'s promise, since web hears neither `openchange` nor a Close part's `action`.
 - **No test proves Question's `ownQuestion` `selects`** (UI SDK asks each primitive with `selects` to prove it); traced by hand, and Chain of Thought, Task and Plan have none either.
 - **A failed Skip announces "Answers not sent"** (Question), which reads oddly after a skip; wording only.
@@ -51,6 +53,7 @@ Last reviewed: `623765f` (Wave 3 Task 6 Model Selector and Reasoning Effort)
 
 ## Resolved
 
+- **Suggestion (Wave 3 Task 7):** `pick` and the chips read suggestions by own key, so `pick("constructor")` is refused (`suggestion.test.mjs`); an id that leaves `suggestions` is forgotten, so it plays its entrance when added again; a removed chip's focus moves to its neighbor (`createFocusRecovery`); the chips are `type="button"`; the render-state types have JSDoc.
 - **Model Selector and Reasoning Effort (Wave 3 Task 6):** `agent.items` carry `disabled`, so the bridge refuses a disabled model instead of reporting a silent `false`; the open button's name is an `openLabel` option rather than an English plural of `label`; the Combobox and Segmented Control state types have JSDoc; the radio group is named by `label`.
 - **Checkpoint (Wave 3 Task 5):** `open` stuck `true` and the web page left `inert` when `restored` was set with the dialog open (the dialog now closes when Restore leaves, and an `"unmount"` close reports `open: false`); a refused press-open left the dialog showing (`follow` changes `open` first and closes it again); a failed restore then a new press closed and reopened the dialog; a detached controller threw on `defaultOpen` without `onRestore` (the dialog opens only while the `restore` part is bound); an agent's `press` on the dialog's Restore wasn't always gated (the confirm part always renders `data-agent-confirm`); web ignored `agentConfirm = false` (`defaults`).
 - **Question ids like `constructor` crashed, new questions kept the last round's answers, `setValue` ignored the lock, and an answer no option matches read as blank (Wave 3 Task 4).** Fixed: answers and questions are read by own key (`answerOf`, `questionOf`), new question ids drop the answers and controllers of the questions that left (uncontrolled), `setValue` returns `false` while locked or answered, and `answerText` returns `undefined` (unit tests in `question.test.mjs`).
