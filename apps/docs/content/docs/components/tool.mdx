@@ -29,17 +29,17 @@ npx shadcn@latest add @kind-ui/tool-web
 Tool
 ├── ToolTrigger
 │   ├── ToolIcon
-│   ├── ToolTitle
-│   └── ToolApproval
-└── ToolContent
-    ├── ToolInput
-    │   └── ToolInputCopy
-    ├── ToolOutput
-    │   └── ToolOutputCopy
-    └── ToolError
+│   └── ToolTitle
+├── ToolContent
+│   ├── ToolInput
+│   │   └── ToolInputCopy
+│   ├── ToolOutput
+│   │   └── ToolOutputCopy
+│   └── ToolError
+└── ToolApproval
 ```
 
-`Tool` renders these parts when you pass no children; any children you pass replace them. The trigger is a native button that shows or hides the content. `ToolTitle` shows the tool's name, `ToolApproval` where its approval stands, `ToolInput` and `ToolOutput` the values as a [Code Block](/docs/components/code-block) or [Markdown](/docs/components/markdown), and `ToolError` the error. Each takes its own children instead.
+`Tool` renders these parts when you pass no children; any children you pass replace them. The trigger is a native button that shows or hides the content. `ToolTitle` shows the tool's name, `ToolInput` and `ToolOutput` the values as a [Code Block](/docs/components/code-block) or [Markdown](/docs/components/markdown), and `ToolError` the error. `ToolApproval` renders a [Confirmation](/docs/components/confirmation) while the call has an approval, after the content, so it shows while the tool is closed. Each takes its own children instead.
 
 ## Usage
 
@@ -61,13 +61,25 @@ Each has a copy button, shown once there's a value, that copies it as shown, che
 
 ### Approvals and Errors
 
-While the call has an approval, the header says where it stands: "Waiting for approval", "Sending decision", "Decision not sent", "Approved", "Denied", or "Approved automatically" and "Denied automatically". It's status only: Tool renders no approve or deny buttons.
+While the call has an approval, the tool shows a [Confirmation](/docs/components/confirmation) named after it, like "Run search_docs?". Pass `onApprove` and `onDeny` to offer **Approve** and **Deny**; each is called with the approval's `approvalId` and `generation`, and `approvalReason` adds a box for the reason Deny sends. `toApprovalResponse` comes from the [AI SDK adapter](/docs/adapters/ai-sdk). Without them, it shows where the approval stands, like "Waiting for approval". Once the decision is recorded, the outcome stays, like "Approved". When a choice goes away with focus, focus moves to the tool's trigger.
+
+```tsx
+<Tool
+  call={step.call}
+  onApprove={() => addToolApprovalResponse(toApprovalResponse(step.call.approval, { approved: true }))}
+  onDeny={({ reason }) =>
+    addToolApprovalResponse(toApprovalResponse(step.call.approval, { approved: false, reason }))
+  }
+/>
+```
+
+The tool's status stays `awaiting-input` until the decision is recorded, even when it wasn't sent.
 
 When the status is `error`, the content shows `error.message`, or "The tool failed." without one.
 
 ### Opening and Closing
 
-A tool opens while it runs or waits for approval, closes into its header when it completes, and stays open when it fails. Once someone opens or closes it, it stays as they left it. Screen readers hear the tool's name and its outcome, like "search_docs complete", when it needs input, completes, fails or is cancelled, and "search_docs denied" when its approval is denied.
+A tool opens while it runs or waits for approval, closes into its header when it completes, and stays open when it fails. Once someone opens or closes it, it stays as they left it. Screen readers hear the tool's name and its outcome, like "search_docs complete", when it needs input, completes, fails or is cancelled, and "search_docs denied" when its approval is denied. The confirmation announces the decision itself, like "Approved", and "Decision not sent" when it fails.
 
 ### Motion
 
@@ -84,5 +96,5 @@ An agent connected with `createAgent` finds a tool by its name and reads its `op
 <auto-type-table path="../../../../../packages/agent-ui/src/core/tool/tool.ts" name="ToolAgentActions" type='Pick<ToolApi, "expand" | "collapse" | "copyInput" | "copyOutput">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-tool>`, `call`, `error` and `highlight` are properties only, other props are kebab-case attributes, and `onOpenChange` fires `openchange`. The element fills in its parts when it has no children, and an empty `<kind-tool-input>` or `<kind-tool-output>` with its heading, copy button and code block, writes its title, approval and error into those parts while they're empty, and writes the input and output into the `<kind-code-block>` and `<kind-markdown>` inside them.
+  Runs in React and Web Components. On `<kind-tool>`, `call`, `error` and `highlight` are properties only, other props are kebab-case attributes, and `onOpenChange` fires `openchange`. Approve and Deny need the `can-approve` and `can-deny` attributes and fire `approve` and `deny` on the tool, as Confirmation's do. The element fills in its parts when it has no children, and an empty `<kind-tool-input>` or `<kind-tool-output>` with its heading, copy button and code block, writes its title and error into those parts while they're empty, and writes the input and output into the `<kind-code-block>` and `<kind-markdown>` inside them.
 </Caption>

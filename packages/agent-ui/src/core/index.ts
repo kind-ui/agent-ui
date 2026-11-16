@@ -51,6 +51,16 @@ export {
   isSubmittable,
 } from "./composer/index.js";
 export {
+  type ConfirmationApi,
+  type ConfirmationCallback,
+  type ConfirmationDecision,
+  type ConfirmationOptions,
+  type ConfirmationPrimitive,
+  type ConfirmationReasonState,
+  type ConfirmationState,
+  confirmationPrimitive,
+} from "./confirmation/index.js";
+export {
   type ConversationApi,
   type ConversationController,
   type ConversationOptions,
@@ -196,6 +206,7 @@ export {
 export { thinkingIndicatorPrimitive } from "./thinking-indicator/index.js";
 export {
   type ToolApi,
+  type ToolApprovalState,
   type ToolOptions,
   type ToolPrimitive,
   type ToolState,

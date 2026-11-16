@@ -1,5 +1,8 @@
 import type { ToolCall } from "@kind-ui/agent-ui";
 import { defineTool } from "../../../../src/web/tool.js";
+import { confirmationHost } from "../../shared/confirmation.js";
+
+const { host, approve, deny } = confirmationHost();
 
 type Row = Partial<Pick<HTMLElementTagNameMap["kind-tool"], "status" | "error" | "motion" | "label">> & {
   call: ToolCall;
@@ -40,9 +43,21 @@ const tools = (rows: Record<string, Row>) => (root: HTMLElement) => {
     Object.assign(tool, row);
     list.append(tool);
   }
+  const approval = list.querySelector("#approve") as HTMLElementTagNameMap["kind-tool"] | null;
+  if (approval) {
+    approval.canApprove = true;
+    approval.canDeny = true;
+    approval.addEventListener("approve", (event) =>
+      event.detail.waitUntil(Promise.resolve(approve(event.detail.value, event.detail))),
+    );
+    approval.addEventListener("deny", (event) =>
+      event.detail.waitUntil(Promise.resolve(deny(event.detail.value, event.detail))),
+    );
+  }
   root.append(list);
   const element = (id: string) => root.querySelector(`#${id}`) as HTMLElementTagNameMap["kind-tool"];
   Object.assign(window, {
+    kindHost: host,
     kindTool: {
       set: (id: string, next: Partial<Row>) => Object.assign(element(id), next),
       setCall: (id: string, next: Partial<ToolCall>) => {

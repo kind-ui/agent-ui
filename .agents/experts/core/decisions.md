@@ -28,7 +28,6 @@ Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
 - **A plan swapped while Accept is pending keeps the lock** until the old promise settles (Wave 2 Task 6). Clearing it on a new `onAccept` can't key on identity, since React passes a new inline function each render; same open spec §4.1 question as the composer's pending lock.
 - **Task and Plan's `known` set never forgets ids,** so an item removed and re-added under the same id gets no entrance (same as the uploader's `mounted`).
 - **Tool re-serializes its input on every options update** (`toolCode` per streamed chunk). Unmeasured on large inputs; memoize by value if it shows up.
-- **"Decision not sent" isn't announced:** `requested` → `submitting` → `submit-failed` stays `awaiting-input`, so the status doesn't change. Confirmation (Wave 3) owns the decision and its error.
 - **`ComposerApi.setValue` with the draft's own text still fires `onValueChange`** with a new draft object and returns `true`; nothing changes on screen.
 - **Enter held or pressed twice on an uploader Cancel cancels the next row too:** focus recovery moves to the neighbor's Cancel between presses. Spec §7 needs to say whether that's the list-deletion pattern or needs a pause.
 - **Queue's `known` set never forgets ids,** so a Queue item removed and added again under the same id gets no entrance (the uploader and attachments now forget an id when its row is dropped).
@@ -44,6 +43,7 @@ Last reviewed: `de506e6` (Wave 3 Task 2 follow-ups)
 
 ## Resolved
 
+- **"Decision not sent" wasn't announced (Wave 3 Task 3).** Fixed: Confirmation announces it on entering `submit-failed`, and the recorded outcome on `responded` or `auto`; Tool embeds it and announces nothing more (tested in `confirmation.spec.ts` and `tool.spec.ts`, both layers).
 - **Removing the last chip from a composer left focus on `<body>` (Wave 3 Task 2).** Fixed: Attachments takes a `focusFallback` option for when no chip is left to take focus, and the composer passes its editor (tested in `composer.spec.ts`, both layers).
 - **Wave 2 agent conformance (Task 10):** the generic `initials` export is now `avatarInitials`; a Queue item's remove badge removes it on click (the item's reorder used to capture the pointer and take the click; tested).
 

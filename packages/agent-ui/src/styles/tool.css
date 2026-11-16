@@ -5,19 +5,11 @@
     font-size: 0.8125rem;
   }
 
-  /* Beside the title, so a header reads the same height through every approval state. */
+  /* Aligned with the title: the trigger's 6px padding, the 16px mark and the 8px gap. */
   [data-slot="kind-tool-approval"] {
-    flex-shrink: 0;
-    max-width: 50%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 0.75rem;
-
-    &:is([data-approval="requested"], [data-approval="submit-failed"]) {
-      color: var(--kind-color-fg);
-      font-weight: 500;
-    }
+    display: block;
+    padding-block: 2px 4px;
+    padding-inline: 30px 6px;
   }
 
   [data-slot="kind-tool-content"] {

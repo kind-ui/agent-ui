@@ -17,7 +17,7 @@ const components = {
   tool: {
     title: "Tool",
     description: "A tool call as a step, from its streamed input to its output or error.",
-    uses: ["markdown", "code-block"],
+    uses: ["markdown", "code-block", "confirmation"],
   },
   "chain-of-thought": {
     title: "Chain of Thought",
@@ -43,6 +43,11 @@ const components = {
     title: "Queue",
     description: "The agent's to-do list, queued and completed, that people can reorder and clear.",
     uses: [],
+  },
+  confirmation: {
+    title: "Confirmation",
+    description: "Approve or deny an agent's request, with an optional reason, then the recorded outcome.",
+    uses: ["internal-textarea"],
   },
   conversation: {
     title: "Conversation",
@@ -98,6 +103,7 @@ const internals = [
   "menu",
   "progress",
   "scroll-area",
+  "textarea",
   "toggle",
   "token-input",
   "toolbar",

@@ -2,6 +2,7 @@
 @import "./step.css";
 @import "./status.css";
 @import "./reasoning.css";
+@import "./confirmation.css";
 @import "./tool.css";
 @import "./chain-of-thought.css";
 @import "./item-list.css";

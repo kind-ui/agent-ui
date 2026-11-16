@@ -10,6 +10,7 @@ type Fixture = {
     setCall(id: string, next: Record<string, unknown>): void;
   };
   kindAnnounced: string[];
+  kindHost: { decisions: { choice: string; decision: unknown; resolve(): void }[] };
 };
 
 const tool = (page: Page, id: string) => page.locator(`#${id}`);
@@ -21,6 +22,17 @@ const set = (page: Page, id: string, next: Record<string, unknown>) =>
 const setCall = (page: Page, id: string, next: Record<string, unknown>) =>
   page.evaluate(([i, n]) => (window as unknown as Fixture).kindTool.setCall(i, n), [id, next] as const);
 const announced = (page: Page) => page.evaluate(() => (window as unknown as Fixture).kindAnnounced);
+const outcome = (page: Page, id: string) =>
+  part(page, id, "approval").locator('[data-slot="kind-confirmation-outcome"]');
+const decisions = (page: Page) =>
+  page.evaluate(() =>
+    (window as unknown as Fixture).kindHost.decisions.map(({ choice, decision }) => ({ choice, decision })),
+  );
+const sent = (page: Page) =>
+  page.evaluate(() => (window as unknown as Fixture).kindHost.decisions[0]?.resolve());
+const approval = (state: string, decision?: { approved: boolean }) => ({
+  approval: { approvalId: "a1", generation: 1, state, ...(decision && { decision }) },
+});
 
 const open = async (page: Page) => {
   // Records each text UI SDK's live regions are given.
@@ -102,13 +114,13 @@ test("the header keeps its height from running through approval to complete", as
   const height = async () => (await trigger(page, "run").boundingBox())?.height;
   const before = await height();
   await setCall(page, "run", { approval: { approvalId: "a2", generation: 1, state: "requested" } });
-  await expect(part(page, "run", "approval")).toHaveText("Waiting for approval");
+  await expect(outcome(page, "run")).toHaveText("Waiting for approval");
   expect(await height()).toBe(before);
   await setCall(page, "run", {
     approval: { approvalId: "a2", generation: 1, state: "responded", decision: { approved: true } },
     output: { state: "available", value: { passed: 42 } },
   });
-  await expect(part(page, "run", "approval")).toHaveText("Approved");
+  await expect(outcome(page, "run")).toHaveText("Approved");
   await expect(tool(page, "run")).toHaveAttribute("data-status", "complete");
   expect(await height()).toBe(before);
 });
@@ -139,15 +151,14 @@ test("an error shows its message and is announced once", async ({ page }) => {
 
 test("a denial is announced apart from a cancellation", async ({ page }) => {
   await open(page);
-  await setCall(page, "approve", {
-    approval: { approvalId: "a1", generation: 1, state: "responded", decision: { approved: false } },
-    outcome: "denied",
-  });
+  await setCall(page, "approve", approval("responded", { approved: false }));
+  await expect(outcome(page, "approve")).toHaveText("Denied");
+  await expect.poll(() => announced(page)).toEqual(["Denied"]);
+  await setCall(page, "approve", { outcome: "denied" });
   await expect(tool(page, "approve")).toHaveAttribute("data-status", "cancelled");
-  await expect(part(page, "approve", "approval")).toHaveText("Denied");
-  await expect.poll(() => announced(page)).toEqual(["delete_file denied"]);
+  await expect.poll(() => announced(page)).toEqual(["Denied", "delete_file denied"]);
   await setCall(page, "run", { outcome: "cancelled" });
-  await expect.poll(() => announced(page)).toEqual(["delete_file denied", "run_tests cancelled"]);
+  await expect.poll(() => announced(page)).toEqual(["Denied", "delete_file denied", "run_tests cancelled"]);
 });
 
 test("a host status and label replace the call's", async ({ page }) => {
@@ -164,12 +175,37 @@ test("with no input yet, there's nothing to copy", async ({ page }) => {
   await expectAgentActions(page, "search_docs", ["collapse", "expand", "press"]);
 });
 
-test("an approval request shows as status, needing input", async ({ page }) => {
+test("without onApprove or onDeny, an approval request shows as status", async ({ page }) => {
   await open(page);
+  await setCall(page, "run", approval("requested"));
+  await expect(tool(page, "run")).toHaveAttribute("data-status", "awaiting-input");
+  await expect(outcome(page, "run")).toHaveText("Waiting for approval");
+  await expect(part(page, "run", "approval")).toHaveAttribute("data-approval", "requested");
+  await expect(tool(page, "run").getByRole("button", { name: /approve|deny/i })).toHaveCount(0);
+});
+
+test("an approval request is decided in the tool, which stays awaiting input until it's recorded", async ({
+  page,
+}) => {
+  await open(page);
+  const confirmation = tool(page, "approve").getByRole("group", { name: "Run delete_file?" });
   await expect(tool(page, "approve")).toHaveAttribute("data-status", "awaiting-input");
-  await expect(part(page, "approve", "approval")).toHaveText("Waiting for approval");
-  await expect(part(page, "approve", "approval")).toHaveAttribute("data-approval", "requested");
-  await expect(tool(page, "approve").getByRole("button", { name: /approve|deny/i })).toHaveCount(0);
+  await confirmation.getByRole("button", { name: "Approve" }).click();
+  expect(await decisions(page)).toEqual([
+    { choice: "approve", decision: { approvalId: "a1", generation: 1 } },
+  ]);
+  await sent(page);
+  await setCall(page, "approve", approval("submit-failed"));
+  await expect(tool(page, "approve")).toHaveAttribute("data-status", "awaiting-input");
+  await expect(confirmation.getByRole("button", { name: "Approve" })).not.toHaveAttribute("aria-disabled");
+  await expect.poll(() => announced(page)).toEqual(["Decision not sent"]);
+});
+
+test("when the choices leave with focus, focus moves to the tool's trigger", async ({ page }) => {
+  await open(page);
+  await tool(page, "approve").getByRole("button", { name: "Deny" }).focus();
+  await setCall(page, "approve", approval("responded", { approved: false }));
+  await expect(trigger(page, "approve")).toBeFocused();
 });
 
 for (const colorScheme of ["light", "dark"] as const) {
