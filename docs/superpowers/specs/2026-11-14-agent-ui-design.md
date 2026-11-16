@@ -93,7 +93,7 @@ AI components need general controls. These are UI SDK components or `@ui-sdk/cor
 | Collapsible | Collapsible, `bindPanel`, `bindFindable` | Step and every Step-based component, Sources, Queue |
 | Popover, Tooltip | Popover (`createPopup`; Context Meter and Inline Citation add hover and focus opening), Tooltip | Feedback, Checkpoint, Context Meter, Inline Citation |
 | Menu | Menu | Message |
-| Alert Dialog, Dialog | Alert Dialog, Dialog | Checkpoint, Generated Image |
+| Alert Dialog, Dialog | Alert Dialog, Dialog (`createPopup` with `dialogPreset` for Generated Image) | Checkpoint, Generated Image |
 | Scroll Area | Scroll Area, `createStickToBottom` | Conversation, Terminal, Code Block, Markdown Table, Document |
 | Token Input, Trigger Menu | Token Input, Trigger Menu | Composer |
 | File Input | File Input | Composer, Uploader |
@@ -102,7 +102,7 @@ AI components need general controls. These are UI SDK components or `@ui-sdk/cor
 | Carousel | Carousel | Suggestion, Inline Citation |
 | Tree | Tree, `treeFromPaths` | File Tree, Test Results |
 | Avatar | Avatar | Message, Subagent |
-| Meter, Progress | Meter, Progress | Context Meter, Plan, Uploader |
+| Meter, Progress | Meter, Progress | Context Meter, Plan, Uploader, Generated Image |
 | Radio, Checkbox, Textarea | Radio, Checkbox, Textarea | Question, Feedback, Confirmation |
 
 ### Repository layout
@@ -515,7 +515,7 @@ Behavior requirements:
 | **Sources** | Collapsible | `expand`, `collapse` | sources |
 | **Inline Citation** | Popover (opens on hover, focus, and press), Carousel | `open`, `close`, `next`, `previous` | inline-citation |
 | **Document** | Toolbar, Scroll Area | `copy`, `download`, `expand`, `collapse` | document |
-| **Generated Image** | Dialog, Button | `open`, `close`, `download` | generated-image |
+| **Generated Image** | Dialog (`createPopup` with `dialogPreset`), Progress | `open`, `close`, `download` | generated-image |
 | **File Tree** | Tree, `treeFromPaths`, `createTypeahead` | `expand(path)`, `collapse(path)`, `select(path)` | (new) |
 | **Terminal** | Step, Scroll Area, `createStickToBottom`, `createVirtualizer`, `ansi-sequence-parser` | `expand`, `collapse`, `copy` | (new) |
 | **Stack Trace** | Step, `createRovingFocus`, `stacktrace-parser` | `copy`, `toggleLibraryFrames`, `openFrame(index)` | (new) |

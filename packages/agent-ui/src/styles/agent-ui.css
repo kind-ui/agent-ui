@@ -11,6 +11,7 @@
 @import "./sources.css";
 @import "./inline-citation.css";
 @import "./document.css";
+@import "./generated-image.css";
 @import "./question.css";
 @import "./checkpoint.css";
 @import "./model-selector.css";

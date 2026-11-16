@@ -9,6 +9,7 @@ import { defineContextMeter } from "./components/ui/web/context-meter.js";
 import { defineConversation } from "./components/ui/web/conversation.js";
 import { defineDocument } from "./components/ui/web/document.js";
 import { defineFeedback } from "./components/ui/web/feedback.js";
+import { defineGeneratedImage } from "./components/ui/web/generated-image.js";
 import { defineGuardrailNotice } from "./components/ui/web/guardrail-notice.js";
 import { defineInlineCitation } from "./components/ui/web/inline-citation.js";
 import { defineInternalToolbar } from "./components/ui/web/internal/toolbar.js";
@@ -59,6 +60,7 @@ for (const define of [
   defineSources,
   defineInlineCitation,
   defineDocument,
+  defineGeneratedImage,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -104,6 +106,7 @@ const items = {
   sources: `<kind-sources></kind-sources>`,
   "inline-citation": `<p>Back off on a limit <kind-inline-citation></kind-inline-citation></p>`,
   document: `<kind-document label="README.md" content="Back off on a 429."></kind-document>`,
+  "generated-image": `<kind-generated-image alt="A lighthouse at dusk" status="generating" progress="40" width="768" height="512"></kind-generated-image>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>

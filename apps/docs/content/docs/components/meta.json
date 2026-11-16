@@ -23,6 +23,7 @@
     "sources",
     "inline-citation",
     "document",
+    "generated-image",
     "conversation",
     "message",
     "markdown",

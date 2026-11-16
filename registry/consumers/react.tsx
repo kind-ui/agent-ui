@@ -16,6 +16,7 @@ import {
 } from "./components/ui/conversation.js";
 import { Document } from "./components/ui/document.js";
 import { Feedback } from "./components/ui/feedback.js";
+import { GeneratedImage } from "./components/ui/generated-image.js";
 import { GuardrailNotice } from "./components/ui/guardrail-notice.js";
 import { InlineCitation } from "./components/ui/inline-citation.js";
 import { KindToolbar, KindToolbarButton } from "./components/ui/internal/toolbar.js";
@@ -160,6 +161,9 @@ const items = {
     </p>
   ),
   document: <Document label="README.md" content={"# Rate limits\n\nBack off on a 429."} />,
+  "generated-image": (
+    <GeneratedImage alt="A lighthouse at dusk" status="generating" progress={40} width={768} height={512} />
+  ),
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
       <ConversationViewport>

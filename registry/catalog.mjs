@@ -116,6 +116,12 @@ const components = {
       "A document card with its title, kind and size, copy and download, and a preview that expands.",
     uses: ["markdown", "code-block", "internal-toolbar", "internal-scroll-area"],
   },
+  "generated-image": {
+    title: "Generated Image",
+    description:
+      "An image the agent is making, from progress and a blurred preview to the image, which opens full size.",
+    uses: [],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",
