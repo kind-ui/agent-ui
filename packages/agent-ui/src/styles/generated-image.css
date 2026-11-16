@@ -56,20 +56,26 @@
     object-fit: cover;
   }
 
-  /* Scaled up a little, so the blur doesn't fade the edges to the frame's color. It sharpens as the image fades in. */
+  /* Scaled up a little, so the blur doesn't fade the edges to the frame's color. It sharpens and fades out as the
+     image fades in, so a transparent image doesn't show it. */
   [data-slot="kind-generated-image-preview"] {
     filter: blur(16px);
     scale: 1.08;
     transition:
       filter var(--kind-duration-panel) var(--kind-ease),
-      scale var(--kind-duration-panel) var(--kind-ease);
+      scale var(--kind-duration-panel) var(--kind-ease),
+      opacity var(--kind-duration-panel) var(--kind-ease-out);
   }
-  [data-slot="kind-generated-image-frame"][data-phase="loaded"] [data-slot="kind-generated-image-preview"] {
+  :where([data-slot="kind-generated-image-frame"][data-phase="loaded"])
+    [data-slot="kind-generated-image-preview"] {
     filter: blur(0);
     scale: 1;
+    opacity: 0;
   }
 
+  /* Above the shimmer, so it fades in over it. */
   [data-slot="kind-generated-image-image"] {
+    z-index: 2;
     opacity: 0;
     transition: opacity var(--kind-duration-panel) var(--kind-ease-out);
 
@@ -83,7 +89,7 @@
     position: absolute;
     inset-inline: 12px;
     inset-block-end: 12px;
-    z-index: 2;
+    z-index: 3;
     display: block;
     padding: 8px 10px 10px;
     border: 1px solid var(--kind-color-border);
@@ -92,7 +98,9 @@
     backdrop-filter: blur(8px);
     font-size: 0.75rem;
     line-height: 1rem;
+  }
 
+  :where([data-slot="kind-generated-image-progress"]) {
     & [data-slot="progress"] {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -126,7 +134,7 @@
       transition: width var(--kind-duration-panel) var(--kind-ease);
     }
     /* How far is unknown: the track stays, empty, so the card keeps its size and the shimmer shows the work. */
-    & [data-slot="progress-indicator"][data-indeterminate] {
+    & [data-slot="progress-indicator"]:where([data-indeterminate]) {
       visibility: hidden;
     }
   }
@@ -134,7 +142,7 @@
   [data-slot="kind-generated-image-error"] {
     position: absolute;
     inset: 0;
-    z-index: 2;
+    z-index: 3;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -151,7 +159,7 @@
   [data-slot="kind-generated-image-trigger"] {
     position: absolute;
     inset: 0;
-    z-index: 2;
+    z-index: 3;
     display: block;
     width: 100%;
     height: 100%;
@@ -232,11 +240,11 @@
   }
 
   /* In the frame, Download is an icon in the corner, shown on hover and focus, and always where nothing hovers. */
-  [data-slot="kind-generated-image-frame"] [data-slot="kind-generated-image-download"] {
+  :where([data-slot="kind-generated-image-frame"]) [data-slot="kind-generated-image-download"] {
     position: absolute;
     inset-inline-end: 8px;
     inset-block-start: 8px;
-    z-index: 3;
+    z-index: 4;
     width: 1.75rem;
     height: 1.75rem;
     padding: 0;
@@ -250,12 +258,12 @@
       background-color: var(--kind-color-surface);
     }
   }
-  [data-slot="kind-generated-image-frame"]:is(:hover, :focus-within)
+  :where([data-slot="kind-generated-image-frame"]:is(:hover, :focus-within))
     [data-slot="kind-generated-image-download"] {
     opacity: 1;
   }
   @media (hover: none) {
-    [data-slot="kind-generated-image-frame"] [data-slot="kind-generated-image-download"] {
+    :where([data-slot="kind-generated-image-frame"]) [data-slot="kind-generated-image-download"] {
       opacity: 1;
     }
   }
@@ -292,6 +300,8 @@
   /* As large as the screen leaves room for, beside the padding and the actions row, keeping its shape. */
   [data-slot="kind-generated-image-full-image"] {
     display: block;
+    align-self: center;
+    object-fit: contain;
     width: auto;
     height: auto;
     max-width: calc(100vw - 2rem - 22px);
@@ -300,7 +310,9 @@
     background-color: var(--kind-color-hover);
   }
 
+  /* Sized by the image, not the title, which a long `alt` would make as wide as the screen. */
   [data-generated-image-actions] {
+    contain: inline-size;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -321,7 +333,7 @@
   }
 
   /* Motion: the image fades in as the preview sharpens, and the dialog rises in over a fading backdrop. Reduced
-     motion only fades, in 120 ms, without the shimmer or the blur's transition; `none` doesn't animate. */
+     motion only fades the image and dialog, in 120 ms, with no shimmer or blur transition; `none` doesn't animate. */
   :where([data-slot="kind-generated-image"]) {
     & [data-slot="kind-generated-image-content"] {
       transition:
@@ -353,13 +365,18 @@
   @media (prefers-reduced-motion: reduce) {
     :where([data-slot="kind-generated-image"][data-motion="auto"]) {
       & [data-slot="kind-generated-image-frame"]::after {
+        opacity: 0;
         animation: none;
+        transition: none;
       }
-      & :is([data-slot="kind-generated-image-preview"], [data-slot="progress-indicator"]) {
+      & [data-slot="kind-generated-image-trigger"]::before,
+      & [data-slot="kind-generated-image-trigger"]::after,
+      & :is([data-slot="progress-indicator"], [data-slot="kind-generated-image-download"]) {
         transition: none;
       }
       &
         :is(
+          [data-slot="kind-generated-image-preview"],
           [data-slot="kind-generated-image-image"],
           [data-slot="kind-generated-image-content"],
           [data-slot="kind-generated-image-backdrop"]
@@ -377,13 +394,18 @@
 
   :where([data-slot="kind-generated-image"][data-motion="reduced"]) {
     & [data-slot="kind-generated-image-frame"]::after {
+      opacity: 0;
       animation: none;
+      transition: none;
     }
-    & :is([data-slot="kind-generated-image-preview"], [data-slot="progress-indicator"]) {
+    & [data-slot="kind-generated-image-trigger"]::before,
+    & [data-slot="kind-generated-image-trigger"]::after,
+    & :is([data-slot="progress-indicator"], [data-slot="kind-generated-image-download"]) {
       transition: none;
     }
     &
       :is(
+        [data-slot="kind-generated-image-preview"],
         [data-slot="kind-generated-image-image"],
         [data-slot="kind-generated-image-content"],
         [data-slot="kind-generated-image-backdrop"]
@@ -400,6 +422,7 @@
 
   :where([data-slot="kind-generated-image"][data-motion="none"]) {
     & [data-slot="kind-generated-image-frame"]::after {
+      opacity: 0;
       animation: none;
     }
     & [data-slot="kind-generated-image-frame"]::after,

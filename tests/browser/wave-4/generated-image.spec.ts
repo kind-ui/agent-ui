@@ -4,7 +4,16 @@ import { expect, type Page, type Route, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 
 type Fixture = {
-  kindHost: { downloads: string[]; ready(url?: string): void; fail(): void; missing: string };
+  kindHost: {
+    downloads: string[];
+    resolve(): void;
+    reject(): void;
+    progress(value: number): void;
+    ready(url: string): void;
+    fail(): void;
+    generate(): void;
+    missing: string;
+  };
   kindAnnounced: string[];
   agent: { act(input: unknown): Promise<unknown> };
 };
@@ -75,6 +84,8 @@ test("the frame keeps its box from generating through loading to loaded", async 
   await expect(part(page, "lifecycle", "preview")).toBeVisible();
   const progress = page.locator("#lifecycle").getByRole("progressbar", { name: "Generating image" });
   await expect(progress).toHaveAttribute("aria-valuenow", "40");
+  await host(page, "progress", 70);
+  await expect(progress).toHaveAttribute("aria-valuenow", "70");
 
   const answer = await holdImage(page);
   await host(page, "ready", "/late.png");
@@ -108,6 +119,10 @@ test("an image that fails after ready keeps its frame, shows why, announces it o
   await host(page, "fail");
   await expect(part(page, "lifecycle", "error")).toHaveText("The image couldn't be generated.");
   expect(await announced(page)).toEqual(["Image failed"]);
+  await host(page, "generate");
+  await expect(root(page, "lifecycle")).toHaveAttribute("data-phase", "generating");
+  await host(page, "fail");
+  await expect.poll(() => announced(page)).toEqual(["Image failed", "Image failed"]);
   await expect(part(page, "failed", "error")).toHaveText("Generation timed out.");
 });
 
@@ -130,16 +145,19 @@ test("the trigger opens the image full size, and Escape returns focus to it", as
   await expect(trigger).toBeFocused();
 });
 
-test("the shimmer runs at full motion only", async ({ page }) => {
+test("the shimmer shows at full motion only", async ({ page }) => {
   const shimmer = () =>
-    part(page, "lifecycle", "frame").evaluate((el) => getComputedStyle(el, "::after").animationName);
+    part(page, "lifecycle", "frame").evaluate((el) => {
+      const { animationName, opacity } = getComputedStyle(el, "::after");
+      return `${animationName} ${opacity}`;
+    });
   await open(page);
-  expect(await shimmer()).toBe("kind-shimmer");
+  expect(await shimmer()).toBe("kind-shimmer 1");
   await page.emulateMedia({ reducedMotion: "reduce" });
-  expect(await shimmer()).toBe("none");
+  expect(await shimmer()).toBe("none 0");
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await open(page, "reduced");
-  expect(await shimmer()).toBe("none");
+  expect(await shimmer()).toBe("none 0");
 });
 
 test("agents open, close and download once the image is loaded", async ({ page }) => {
@@ -150,12 +168,19 @@ test("agents open, close and download once the image is loaded", async ({ page }
   await expectAgentActions(page, "A lighthouse in a storm", ["press"]);
   await page.locator("#loaded").hover();
   await page.locator("#loaded").getByRole("button", { name: "Download" }).click();
+  const frameDownload = part(page, "loaded", "frame").locator('[data-slot="kind-generated-image-download"]');
+  await expect(frameDownload).toHaveAttribute("data-pending", "");
+  await expectAgentActions(page, "A lighthouse at dusk", ["open", "press"]);
+  await host(page, "reject");
+  await expect(frameDownload).not.toHaveAttribute("data-pending", "");
+  await expect.poll(() => announced(page)).toContain("Download failed");
   await page.evaluate(() =>
     (window as unknown as Fixture).agent.act({
       steps: [{ ref: "A lighthouse at dusk", action: "download", args: [] }],
     }),
   );
   await expect.poll(() => host(page, "downloads")).toEqual(["mouse", "agent"]);
+  await host(page, "resolve");
   await page.evaluate(() =>
     (window as unknown as Fixture).agent.act({
       steps: [{ ref: "A lighthouse at dusk", action: "open", args: [] }],
@@ -179,7 +204,10 @@ for (const colorScheme of ["light", "dark"] as const) {
     };
     await check();
     await host(page, "ready", await host(page, "missing"));
-    await expect(root(page, "lifecycle")).toHaveAttribute("data-phase", "error");
+    // Firefox crashes when a locator queries the page right after axe and a DOM change, so this waits in the page.
+    await page.waitForFunction(
+      () => document.querySelector<HTMLElement>("#lifecycle")?.dataset.phase === "error",
+    );
     await page.locator("#loaded").getByRole("button", { name: "View full size" }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await check();

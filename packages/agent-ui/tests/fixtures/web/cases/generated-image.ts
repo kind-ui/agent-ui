@@ -16,6 +16,7 @@ const page =
   (root: HTMLElement) => {
     defineGeneratedImage();
     const downloads: string[] = [];
+    let settle: { resolve(): void; reject(): void } | undefined;
     const container = document.createElement("div");
     container.className = "flex w-[30rem] flex-col gap-4 p-6";
     const lifecycle = create(
@@ -26,7 +27,14 @@ const page =
     );
     const loaded = create("loaded", "A lighthouse at dusk", { src: lighthouse }, motion);
     loaded.canDownload = true;
-    loaded.addEventListener("download", (event) => downloads.push(event.detail.source));
+    loaded.addEventListener("download", (event) => {
+      downloads.push(event.detail.source);
+      event.detail.waitUntil(
+        new Promise<void>((resolve, reject) => {
+          settle = { resolve, reject };
+        }),
+      );
+    });
     container.append(
       lifecycle,
       loaded,
@@ -41,15 +49,20 @@ const page =
     Object.assign(window, {
       kindHost: {
         downloads,
+        resolve: () => settle?.resolve(),
+        reject: () => settle?.reject(),
         progress: (value: number | undefined) => {
           lifecycle.progress = value;
         },
-        ready: (url?: string) => {
-          lifecycle.src = url ?? lighthouse;
+        ready: (url: string) => {
+          lifecycle.src = url;
           lifecycle.status = "ready";
         },
         fail: () => {
           lifecycle.status = "error";
+        },
+        generate: () => {
+          lifecycle.status = "generating";
         },
         missing,
       },

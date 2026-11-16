@@ -39,10 +39,11 @@ export type GeneratedImagePhase = "generating" | "loading" | "loaded" | "error";
 export type GeneratedImageOptions = {
   /** Describes the image. Names it, and titles the full size view. */
   alt: string;
-  /** The image's URL, once `status` is `"ready"`. */
+  /** The image's URL. Set it with, or before, `status` `"ready"`; until it's set the frame shows "Loading image". */
   src?: string;
   /**
-   * `"generating"` while the image is being made, `"ready"` once `src` holds it, `"error"` when it failed.
+   * `"generating"` while the image is being made, `"ready"` once `src` holds it, `"error"` when it failed. Any other
+   * value reads as `"ready"`.
    * @default "ready"
    */
   status?: GeneratedImageStatus;
@@ -65,13 +66,14 @@ export type GeneratedImageOptions = {
   error?: string;
   /**
    * Called when Download is pressed. Shows Download while set. The host fetches and saves the file; return a promise
-   * to keep Download pending until it settles.
+   * to keep Download pending until it settles. If it rejects or throws, Download is offered again and the component
+   * announces "Download failed".
    */
   onDownload?: (details: GeneratedImageDownloadDetails) => unknown;
   /** Whether the full size view is open. Passing it controls it. */
   open?: boolean;
   /**
-   * Whether the full size view is open at first, when `open` isn't passed.
+   * Whether the full size view opens by itself, when `open` isn't passed. It opens once the image loads.
    * @default false
    */
   defaultOpen?: boolean;
@@ -165,13 +167,19 @@ export type GeneratedImagePrimitive = ReturnType<
   typeof definePrimitive<GeneratedImageOptions, GeneratedImageState, GeneratedImageApi, GeneratedImageSlots>
 >;
 
-const dimension = (value: number | undefined) => (value !== undefined && value > 0 ? value : 1024);
+const STATUSES: readonly GeneratedImageStatus[] = ["generating", "ready", "error"];
+
+const dimension = (value: number | undefined) =>
+  value !== undefined && Number.isFinite(value) && value > 0 ? value : 1024;
 
 const presentation = (options: GeneratedImageOptions) => ({
   alt: options.alt ?? "",
   src: options.src || undefined,
-  status: options.status ?? "ready",
-  progress: options.progress === undefined ? undefined : Math.min(100, Math.max(0, options.progress)),
+  status: options.status && STATUSES.includes(options.status) ? options.status : "ready",
+  progress:
+    options.progress !== undefined && Number.isFinite(options.progress)
+      ? Math.min(100, Math.max(0, options.progress))
+      : undefined,
   preview: options.preview || undefined,
   width: dimension(options.width),
   height: dimension(options.height),
@@ -191,10 +199,12 @@ const phaseOf = ({
   return src !== undefined && src === loadedSrc ? "loaded" : "loading";
 };
 
+type ImageStore = { set(state: Partial<GeneratedImageState>): void };
+
 // The attribute rather than `src`, which the browser resolves to a full URL.
-const settle = (image: HTMLImageElement, store: { set(state: Partial<GeneratedImageState>): void }) => {
+const settle = (image: HTMLImageElement, store: ImageStore, loaded: boolean) => {
   const src = image.getAttribute("src");
-  if (src) store.set(image.naturalWidth > 0 ? { loadedSrc: src } : { failedSrc: src });
+  if (src) store.set(loaded ? { loadedSrc: src } : { failedSrc: src });
 };
 
 export const generatedImagePrimitive: GeneratedImagePrimitive = definePrimitive<
@@ -221,7 +231,13 @@ export const generatedImagePrimitive: GeneratedImagePrimitive = definePrimitive<
   },
   state: (options) => {
     const image = { ...presentation(options), loadedSrc: undefined, failedSrc: undefined };
-    return { ...popupState(options), ...image, phase: phaseOf(image), pending: false };
+    // `defaultOpen` waits for the image: the subscription in `api` opens the view once it loads.
+    return {
+      ...popupState({ open: options.open ?? false }),
+      ...image,
+      phase: phaseOf(image),
+      pending: false,
+    };
   },
   sync: (options) => ({
     ...presentation(options),
@@ -234,8 +250,8 @@ export const generatedImagePrimitive: GeneratedImagePrimitive = definePrimitive<
     const pendingDownload = createPendingAction(context, { state: "pending" });
     // Outcomes are announced only for an image this instance saw being made, so a page of earlier images is quiet.
     let sawGenerating = store.get().phase === "generating";
-    let announced = "";
     let shown = store.get().phase;
+    let openWhenLoaded = context.options().open === undefined && context.options().defaultOpen === true;
     store.subscribe(() => {
       const state = store.get();
       const phase = phaseOf(state);
@@ -245,11 +261,12 @@ export const generatedImagePrimitive: GeneratedImagePrimitive = definePrimitive<
       if (shown === "loaded" && state.open) popup.setOpen(false);
       shown = phase;
       if (phase === "generating") sawGenerating = true;
-      if (!sawGenerating || (phase !== "loaded" && phase !== "error")) return;
-      const key = `${phase}:${state.src ?? ""}`;
-      if (key === announced) return;
-      announced = key;
-      announce(phase === "loaded" ? "Image ready" : "Image failed", { priority: "polite" });
+      if (phase === "loaded" && openWhenLoaded) {
+        openWhenLoaded = false;
+        popup.setOpen(true);
+      }
+      if (sawGenerating && (phase === "loaded" || phase === "error"))
+        announce(phase === "loaded" ? "Image ready" : "Image failed", { priority: "polite" });
     });
     const download = (event?: Event) => {
       const { onDownload } = context.options();
@@ -328,12 +345,13 @@ export const generatedImagePrimitive: GeneratedImagePrimitive = definePrimitive<
           "data-loaded": state.phase === "loaded" ? "" : undefined,
         }),
         on: {
-          load: (event, { store }) => settle(event.currentTarget as HTMLImageElement, store),
-          error: (event, { store }) => settle(event.currentTarget as HTMLImageElement, store),
+          load: (event, { store }) => settle(event.currentTarget as HTMLImageElement, store, true),
+          error: (event, { store }) => settle(event.currentTarget as HTMLImageElement, store, false),
         },
         // An image the server rendered may have loaded, or failed, before its listeners were bound.
         bind: (el, { store }) => {
-          if ((el as HTMLImageElement).complete) settle(el as HTMLImageElement, store);
+          const image = el as HTMLImageElement;
+          if (image.complete) settle(image, store, image.naturalWidth > 0);
         },
       }),
       error: slot<BaseSlotProps, { message: string }>({
@@ -362,9 +380,10 @@ export const generatedImagePrimitive: GeneratedImagePrimitive = definePrimitive<
       }),
       backdrop: popupBackdrop(slot),
       content: popupContent(slot),
+      // The image that last loaded, so a view an owner keeps open while the next one generates isn't blank.
       "full-image": slot({
         attrs: (state) => ({
-          src: state.src,
+          src: state.loadedSrc ?? state.src,
           alt: state.alt,
           width: String(state.width),
           height: String(state.height),

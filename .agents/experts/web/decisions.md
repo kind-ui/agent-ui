@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `63722ca` (Wave 4 Task 4 Document)
+Last reviewed: `7e7a593` (Wave 4 Task 5 Generated Image)
 
 ## Settled
 
@@ -21,6 +21,7 @@ Last reviewed: `63722ca` (Wave 4 Task 4 Document)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **An empty `<kind-generated-image>` takes no height until it upgrades** (Wave 4 Task 5): its frame and `aspect-ratio` come from the element, and a `:not(:defined)` rule can't read `width`/`height`, as with the empty Task, Plan and Document. The fixture has no moved, shadow-root, written-part or `can-download`-toggle case; each was checked by hand in review.
 - **An empty `<kind-document>` shows nothing before upgrade,** then adds its whole card, which moves what's below it; same class as `kind-reasoning` and `kind-streaming-text`. Moving it and a shadow root were checked by hand, not in the spec.
 - **`kind-inline-citation` has no written-item, shadow-root or moved fixture case** (Wave 4 Task 3): a shadow root and items written after connecting were checked by hand (a `MutationObserver` now fills them in), not in the spec. Its index after a move is the core entry on pages the Carousel changes itself.
 - **`kind-sources` has no written-item or shadow-root fixture case** (Wave 4 Task 2): checked by hand (a written item replaces the added one; the trigger lookup now uses `getRootNode()`), not in the spec.
@@ -53,6 +54,7 @@ Last reviewed: `63722ca` (Wave 4 Task 4 Document)
 
 ## Resolved
 
+- **Generated Image's axe test crashed Firefox** (Wave 4 Task 5): a locator query right after axe and a DOM change crashes the page; the spec waits for the phase with `waitForFunction` first. Add this trigger to the upstream report beside the `ui-radio` one.
 - **`kind-document` replaced its Downloads on any `downloads` change, added one beside a written Download, and wiped written content text** (Wave 4 Task 4): Downloads it added are kept by `value` and moved with `moveBefore`, a written `kind-document-download` replaces them all, and content is filled only with no element or text in it; the `written` case and a focus-through-change test pin them.
 - **Reordering `kind-inline-citation`'s sources blurred a focused link** (Wave 4 Task 3): slides move with `moveBefore` where the browser has it.
 - **Sources (Wave 4 Task 2):** the axe tests reach the trigger with a CSS locator (Firefox crash), and closing inside a shadow root returns focus to the trigger.

@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `63722ca` (Wave 4 Task 4 Document)
+Last reviewed: `7e7a593` (Wave 4 Task 5 Generated Image)
 
 ## Settled
 
@@ -18,6 +18,7 @@ Last reviewed: `63722ca` (Wave 4 Task 4 Document)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **The shimmer's band snaps to its start as it fades out when the image loads** (Wave 4 Task 5, suspected, not measured frame by frame): the animation stops with the phase; the image fades in over it.
 - **An expanded Document whose content resizes after streaming ends eases to the new height over `--kind-duration-panel`** (suspected, not reproduced), so its last lines could be clipped that long.
 - **On web, a step's content that starts closed can fade its parts' colors in the first time it opens** (Wave 3 Task 11): `hidden="until-found"` skips style updates, so parts styled bare by a bind's style read before their attributes landed keep that style until the reveal, after `data-mounting` is gone. Rows and roots hold through their first frames; ending the hold at a part's first styled frame needs UI SDK binds not to read style while parts connect (upstream).
 - **Mask-drawn icons vanish in forced colors** in the stylesheets without a `forced-colors` rule; Feedback's thumbs, the status mark and Notice's Dismiss have one.
@@ -40,6 +41,7 @@ Last reviewed: `63722ca` (Wave 4 Task 4 Document)
 
 ## Resolved
 
+- **Generated Image's dialog, reduced motion and specificity** (Wave 4 Task 5): a long `alt` stretched the full image (the actions row is `contain: inline-size`, the image `object-fit: contain`); reduced motion and `none` left a still shimmer band (the `::after` now hides) and ran the 150 ms hover fades; the frame, progress and preview contexts sit in `:where()`; the preview fades out under the loaded image, so a transparent image doesn't show it.
 - **Document's Show more moved the card 40px in one frame, its focus ring was invisible, it sat off-centre in right-to-left text, and its selectors were five attributes deep** (Wave 4 Task 4): Show more stays absolute over a spacer kept whenever the content overflows, and the expanded `max-height` adds that space; the body draws the viewport's ring (`:has(:focus-visible)`), as Conversation's root does; it centres with `left: 50%`; the context is in `:where()`; the header's padding is logical. Its rules also now reach only the outermost scroll area, not a table's or Code Block's inside it.
 - **The Inline Citation marker made a line under 1.3 line height taller, and the carousel clipped a focused link's ring** (Wave 4 Task 3): the marker has `margin-block: -0.25em` (spec at line height 1), and the slides have 4 px padding inside a viewport pulled out by as much.
 - **Sources (Wave 4 Task 2):** selectors are one attribute with context in `:where()`, so a consumer class restyles the panel, row hover and title hover; a long host name shrinks before the title; the item's hover fade no longer half-follows reduced motion (matches the Step trigger).

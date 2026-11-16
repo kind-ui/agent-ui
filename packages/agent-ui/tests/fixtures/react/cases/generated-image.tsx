@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { GeneratedImage } from "../../../../src/react/generated-image.js";
 import { lighthouse, missing, preview, size } from "../../shared/generated-image.js";
 
-type Recorded = { downloads: string[] };
+type Settle = { resolve(): void; reject(): void };
 
-const recorded: Recorded = { downloads: [] };
+const recorded: { downloads: string[]; settle?: Settle } = { downloads: [] };
 
 function Page({ motion }: { motion?: MotionMode }) {
   const [status, setStatus] = useState<GeneratedImageStatus>("generating");
@@ -14,13 +14,16 @@ function Page({ motion }: { motion?: MotionMode }) {
   useEffect(() => {
     Object.assign(window, {
       kindHost: {
-        ...recorded,
+        downloads: recorded.downloads,
+        resolve: () => recorded.settle?.resolve(),
+        reject: () => recorded.settle?.reject(),
         progress: setProgress,
-        ready: (url?: string) => {
-          setSrc(url ?? lighthouse);
+        ready: (url: string) => {
+          setSrc(url);
           setStatus("ready");
         },
         fail: () => setStatus("error"),
+        generate: () => setStatus("generating"),
         missing,
       },
     });
@@ -42,7 +45,12 @@ function Page({ motion }: { motion?: MotionMode }) {
         alt="A lighthouse at dusk"
         src={lighthouse}
         {...size}
-        onDownload={(details) => void recorded.downloads.push(details.source)}
+        onDownload={(details) => {
+          recorded.downloads.push(details.source);
+          return new Promise<void>((resolve, reject) => {
+            recorded.settle = { resolve, reject };
+          });
+        }}
         motion={motion}
       />
       <GeneratedImage

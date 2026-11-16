@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `63722ca` (Wave 4 Task 4 Document)
+Last reviewed: `7e7a593` (Wave 4 Task 5 Generated Image)
 
 ## Settled
 
+- **Generated Image with `status` `"ready"` and no `src` shows "Loading image"** (Wave 4 Task 5): an error there would flash, and announce, whenever a web host sets `status` before `src`; the `src` JSDoc says to set it with or before `ready`.
 - **The Step root writes `data-mounting` in its `bind`, not through `attrs`** (Wave 3 Task 11): it lasts two frames per element and isn't state, so a store flag would render every React part again to clear it; `wave-3/agent.spec.ts` checks no Step part runs a transition on load. **`imports` in `size-budget.json` is required:** the file is ours, and a missing key fails the check.
 - **A dismissed notice the host never removes stays faded and inert** (Wave 3 Task 10, D10): the host removes it in `onDismiss`; only a rejection brings it back.
 - **A Feedback comment that failed keeps its error and text until the next send** (Wave 3 Task 9), through a close and a rating change: the error belongs to the text it failed to send, which the box still holds.
@@ -67,6 +68,7 @@ Last reviewed: `63722ca` (Wave 4 Task 4 Document)
 
 ## Resolved
 
+- **Generated Image's announcements, `defaultOpen` and input checks** (Wave 4 Task 5): a retry that failed again stayed quiet (announcements now fire on each phase change of an image the instance saw generating); `defaultOpen` opened an empty view (it now waits for the first `loaded`); an unknown `status` reads as `"ready"`; a non-finite `progress`, `width` or `height` falls back; `load`/`error` decide the outcome, `naturalWidth` only in `bind`; `onDownload`'s JSDoc says what a rejection does (`tests/core/generated-image.test.mjs`).
 - **Document's download lock, size and JSDoc** (Wave 4 Task 4): the lock is `pending`, the key the agent bridge reads and waits on (it was `downloading`); `documentSize` switches to MB from 999,950 bytes, not "1,000 kB", and counts a lone surrogate as 3 bytes, as `TextEncoder` does; state and types have JSDoc; `document.test.mjs` pins the one-at-a-time download, the refused id, the first-id default and a controlled `open`.
 - **Inline Citation's arrow keys left "N of M" and `next`/`previous` on the old page** (Wave 4 Task 3): a part's `on` handler skips a cancelled event and the Carousel cancels the keydown it pages on, so the page is read on keyup. `syncPage` ignores the controller's `undefined` before a Carousel attaches, and paging returns a boolean. Entries and ids are cached by object in `WeakMap`s, so citations in one paragraph don't evict each other's (`tests/core/inline-citation.test.mjs`).
 - **Sources (Wave 4 Task 2):** entries are kept by id while a source's fields are equal (a per-object cache went stale when a host edited a source in place), item parts read entries by own key (`Object.hasOwn`; a null prototype broke `@ui-sdk/web`), a protocol-relative `url` gets its host, and the content finds its trigger through `getRootNode()`, so a close inside a shadow root returns focus. An international host shows as punycode, by design (documented on `SourceEntry.host`).
