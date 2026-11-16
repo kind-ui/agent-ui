@@ -66,6 +66,7 @@ jobs:
       # The docs check opens built pages in Chromium.
       - run: npx playwright install --with-deps chromium
       - run: npm run build:docs
+      - run: node scripts/run-checks.mjs check:docs
 
   browser:
     name: Browser (${{ matrix.shard }}/4)

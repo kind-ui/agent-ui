@@ -170,7 +170,9 @@ function run(
   definition: DOMKeyframesDefinition,
   mode: "full" | "reduced",
 ): Promise<boolean> {
-  const transition = mode === "full" ? SPRING : { duration: DURATION.reduced, ease: EASE.out };
+  // motion would carry the speed of the run this one replaced, so a reversed spring overshoots far past its target.
+  const transition =
+    mode === "full" ? { ...SPRING, velocity: 0 } : { duration: DURATION.reduced, ease: EASE.out };
   return track(el, animate(el, definition, transition), Object.keys(definition), running);
 }
 

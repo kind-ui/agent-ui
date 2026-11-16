@@ -42,7 +42,7 @@ const groups = {
   "check:size": ["build", "check:size:run"],
   // The docs render the registry's source files, which import the package's built core.
   "dev:docs": ["build", "dev:docs:run"],
-  "build:docs": ["build", "build:docs:run", "check:docs"],
+  "build:docs": ["build", "build:docs:run"],
   "check:fast": ["lint", "typecheck", "test:scripts", "test:unit"],
   "check:packed": ["check:package", "check:size", "build:registry", "check:registry-consumers"],
   check: ["check:fast", "check:packed", "build:docs:run", "check:docs", "test:browser"],

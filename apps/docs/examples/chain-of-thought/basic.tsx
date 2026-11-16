@@ -1,4 +1,3 @@
-"use client";
 import type { ChainOfThoughtStep } from "@kind-ui/agent-ui/core";
 import {
   ChainOfThought,

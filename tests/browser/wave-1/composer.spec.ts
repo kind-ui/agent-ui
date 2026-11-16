@@ -198,17 +198,23 @@ const followEditor = async (page: Page) => {
     const input = document.querySelector('[data-slot="kind-composer-input"]') as HTMLElement;
     const path: { x: number; y: number }[] = [];
     let following = true;
-    // Read after each frame paints, so a change made and undone within one frame doesn't count.
+    // A new ResizeObserver reports once, after the frame's animation callbacks and just before it paints, so each
+    // sample is what that frame shows.
     const record = () => {
       if (!following) return;
-      path.push({ x: 0, y: input.getBoundingClientRect().y });
-      requestAnimationFrame(() => setTimeout(record));
+      const observer = new ResizeObserver(() => {
+        observer.disconnect();
+        path.push({ x: 0, y: input.getBoundingClientRect().y });
+        requestAnimationFrame(record);
+      });
+      observer.observe(input);
     };
+    path.push({ x: 0, y: input.getBoundingClientRect().y });
     record();
     Object.assign(window, {
       stopFollowing: () => {
         following = false;
-        return path;
+        return [...path, { x: 0, y: input.getBoundingClientRect().y }];
       },
     });
   });
@@ -246,6 +252,42 @@ test("the attachments area expands for the first chip and collapses after the la
     expect(largestStep).toBeLessThan(total / 2);
   }
   expect(closed.at(-1)?.y).toBeCloseTo(opened[0]?.y ?? Number.NaN, 0);
+});
+
+test("a chip attached while the area collapses reverses it without growing past its height", async ({
+  page,
+}) => {
+  const editor = await open(page);
+  await attach(editor, [{ name: "a.txt", size: 10, type: "text/plain" }], "paste");
+  await settled(page);
+  const items = page.getByRole("list", { name: "Attachments" }).getByRole("listitem");
+  await items.first().focus();
+  const heights = await page.evaluate(async () => {
+    const area = document.querySelector('[data-slot="kind-composer-attachments"]') as HTMLElement;
+    const frames = (count: number) =>
+      Array.from({ length: count }).reduce<Promise<number[]>>(
+        async (list) =>
+          new Promise((resolve) =>
+            requestAnimationFrame(async () =>
+              resolve([...(await list), area.getBoundingClientRect().height]),
+            ),
+          ),
+        Promise.resolve([]),
+      );
+    const open = area.getBoundingClientRect().height;
+    document.activeElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Delete", bubbles: true }));
+    await frames(8);
+    const data = new DataTransfer();
+    data.items.add(new File(["x"], "b.txt", { type: "text/plain" }));
+    const paste = new ClipboardEvent("paste", { bubbles: true, cancelable: true });
+    Object.defineProperty(paste, "clipboardData", { value: data });
+    document.querySelector('[data-slot="token-input-editor"]')?.dispatchEvent(paste);
+    return { open, path: await frames(40) };
+  });
+  expect(Math.max(...heights.path)).toBeLessThanOrEqual(heights.open + 1);
+  await expect
+    .poll(async () => (await page.locator('[data-slot="kind-composer-attachments"]').boundingBox())?.height)
+    .toBeCloseTo(heights.open, 0);
 });
 
 test('with motion="none" the attachments area opens and closes at once', async ({ page }) => {

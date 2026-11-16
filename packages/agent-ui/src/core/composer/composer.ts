@@ -21,7 +21,7 @@ import type { TriggerDefinition } from "@ui-sdk/core/trigger-menu";
 import type { AttachmentsOptions } from "../attachments/index.js";
 import { type FileIntake, forwardFileInputEvents } from "../file-input-events.js";
 import { memo } from "../memo.js";
-import { enter, exit, type MotionMode } from "../motion/index.js";
+import { cancel, enter, exit, type MotionMode } from "../motion/index.js";
 import {
   type ComposerAttachment,
   type ComposerDraft,
@@ -486,6 +486,8 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
         return () => {
           cancelAnimationFrame(frame);
           unsubscribe();
+          cancel(el);
+          if (store.get().attachmentsClosing) store.set({ attachmentsClosing: false });
         };
       },
       partState: {

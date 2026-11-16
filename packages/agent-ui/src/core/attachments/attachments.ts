@@ -38,7 +38,10 @@ export type AttachmentsOptions = {
   items?: readonly AttachmentItem[];
   /** Called with an item's `id` when someone removes it. While it's set, chips can be removed. */
   onRemove?: (id: string, details: ChangeDetails<"remove-press" | "imperative">) => void;
-  /** Where focus goes when a focused chip leaves and no chip is left to take it, like the composer's editor. */
+  /**
+   * Where focus goes when a focused chip leaves and no chip is left to take it, like the composer's editor. Without
+   * it, focus is lost.
+   */
   focusFallback?: () => HTMLElement | null | undefined;
   /**
    * `"auto"` follows `prefers-reduced-motion`.
