@@ -1,0 +1,100 @@
+---
+title: Subagent
+description: Show a subagent's run, from the steps it takes to the answer it returns.
+---
+
+import SubagentExample from "@/examples/subagent/basic";
+
+Use a subagent when an agent hands part of its work to another agent. It shows the subagent's avatar, name and status, the steps it takes nested under it, a Stop button while you offer one, and its result once it's done.
+
+<Example caption="Press Code reviewer, or focus it and press Enter or Space, to hide the tools it called. The result stays in view.">
+  <SubagentExample />
+
+  <include cwd lang="tsx">./examples/subagent/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/subagent
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/subagent-web
+```
+
+## Composition
+
+```text
+Subagent
+├── SubagentTrigger
+│   ├── SubagentAvatar
+│   ├── SubagentTitle
+│   ├── SubagentIcon
+│   └── SubagentMeta
+├── SubagentContent
+│   └── SubagentChildren
+├── SubagentCancel
+└── SubagentResult
+```
+
+`Subagent` renders these parts, and puts its children, the subagent's steps, in `SubagentChildren`. The trigger is a native button that shows or hides them. `SubagentAvatar` is a UI SDK Avatar of `avatarSrc`, showing the initials of `agentName` until the image loads or without one. `SubagentTitle` shows the `label`, else the `agentName`. `SubagentIcon` is the status mark, and `SubagentMeta` the status in words, like "Working" or "Done in 14 s". `SubagentCancel` renders only while the subagent can be stopped, and `SubagentResult` only once it's complete. To arrange the parts yourself, render them inside `SubagentRoot`.
+
+## Usage
+
+### Steps
+
+Pass the subagent's steps as children, like a [Tool](/docs/components/tool) for each call it makes, and append new ones as they arrive. Each is its own Tab stop; to make them one, wrap them in a [StepList](/docs/components/step) and join each trigger to it with `StepListItem`. A step you remove leaves at once.
+
+```tsx
+<Subagent agentName="Code reviewer" status="running">
+  <StepList aria-label="Code reviewer's steps">
+    {calls.map((call) => (
+      <Tool key={call.toolCallId} call={call}>
+        <StepListItem value={call.toolCallId} render={<ToolTrigger />}>
+          <ToolIcon />
+          <ToolTitle />
+        </StepListItem>
+        <ToolContent>
+          <ToolInput />
+          <ToolOutput />
+        </ToolContent>
+      </Tool>
+    ))}
+  </StepList>
+</Subagent>
+```
+
+### Result
+
+Pass the subagent's final answer as `result`, in Markdown. It shows under the steps once the status is `complete`, and stays in view when the steps close. Pass `SubagentResult` children to render it yourself.
+
+### Stopping
+
+Pass `onCancel` to show **Stop** while the status is `pending`, `running` or `awaiting-input`. Return a promise to keep the button pending until it settles: a second press does nothing meanwhile, and a rejection makes it available again. Once the subagent stops, set its `status` to `cancelled`, and the button goes away. If it had focus, focus moves to the trigger.
+
+### Opening and Closing
+
+The subagent opens and closes like a [Step](/docs/components/step): it opens while it runs or waits for input and closes when it completes, until someone opens or closes it. Pass `open` with `onOpenChange` to control it.
+
+### Streaming
+
+New steps grow the content below the ones before, so the header and earlier steps never move. A status change morphs only the mark and the words beside it, and the result fades in once, when the subagent completes. Screen readers hear the subagent's name and its outcome when it needs input, completes, fails or is cancelled.
+
+### Motion
+
+The mark morphs between statuses, the steps grow open and shut, and the result fades in. Under `prefers-reduced-motion`, or with `motion="reduced"`, the steps and result fade over 120 ms instead and nothing moves or spins, and with `motion="none"` everything changes at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/subagent/subagent.ts" name="SubagentOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the subagent by its title and reads its `open` and `status`. It can run these actions, and `cancel` only while Stop shows. While `agentConfirm` is on, every one of them waits for a person to confirm, unless the host's `allow` lets it through.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/subagent/subagent.ts" name="SubagentAgentActions" type='Pick<SubagentApi, "expand" | "collapse" | "cancel">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-subagent>`, props are kebab-case attributes, so `agentName` is `agent-name` and `avatarSrc` is `avatar-src`, and `onOpenChange` fires `openchange`. Stop needs the `can-cancel` attribute and fires `subagentcancel`: call `event.detail.waitUntil(promise)` to keep it pending. The element fills in its parts when it has none of its own, and moves its other children, and any appended later, into its `<kind-subagent-children>`.
+</Caption>

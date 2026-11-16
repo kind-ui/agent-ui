@@ -34,6 +34,11 @@ const components = {
     description: "The steps an agent plans to take, with a progress bar and an Accept button.",
     uses: [],
   },
+  subagent: {
+    title: "Subagent",
+    description: "A subagent's run: its own steps, a Stop button and its result.",
+    uses: ["markdown"],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

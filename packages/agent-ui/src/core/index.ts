@@ -162,6 +162,15 @@ export {
   streamingTextPrimitive,
 } from "./streaming-text/index.js";
 export {
+  initials,
+  type SubagentApi,
+  type SubagentOptions,
+  type SubagentPrimitive,
+  type SubagentState,
+  subagentPrimitive,
+  subagentStatus,
+} from "./subagent/index.js";
+export {
   type TaskApi,
   type TaskOptions,
   type TaskPrimitive,

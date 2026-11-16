@@ -6,6 +6,7 @@
 @import "./chain-of-thought.css";
 @import "./item-list.css";
 @import "./plan.css";
+@import "./subagent.css";
 @import "./conversation.css";
 @import "./markdown.css";
 @import "./code-block.css";
