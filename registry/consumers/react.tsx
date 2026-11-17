@@ -1,5 +1,6 @@
 // The React registry consumer's entry: every component, as `shadcn add` copies it, one section each.
 import { createRoot } from "react-dom/client";
+import { Action } from "./components/ui/action.js";
 import { Attachments } from "./components/ui/attachments.js";
 import { ChainOfThought } from "./components/ui/chain-of-thought.js";
 import { Checkpoint } from "./components/ui/checkpoint.js";
@@ -32,6 +33,7 @@ import { Question } from "./components/ui/question.js";
 import { Queue } from "./components/ui/queue.js";
 import { Reasoning } from "./components/ui/reasoning.js";
 import { ReasoningEffort } from "./components/ui/reasoning-effort.js";
+import { Selection } from "./components/ui/selection.js";
 import { Sources } from "./components/ui/sources.js";
 import { StackTrace } from "./components/ui/stack-trace.js";
 import { Status } from "./components/ui/status.js";
@@ -197,6 +199,14 @@ const items = {
       currentTime={1}
       onSeek={() => {}}
     />
+  ),
+  selection: (
+    <Selection actions={[{ id: "ask", label: "Ask" }]} onAction={() => {}}>
+      <p>Retry with backoff.</p>
+    </Selection>
+  ),
+  action: (
+    <Action label="Explain" quote="Retry with backoff." result="Wait, then try again." status="complete" />
   ),
   terminal: <Terminal command="npm test" output={"\x1b[32m✓\x1b[0m 22 passed"} exitCode={0} defaultOpen />,
   conversation: (

@@ -1,0 +1,80 @@
+/* Selection (spec §7): the host's text, and a small toolbar of actions floating above what the reader selected. */
+@layer components {
+  /* Custom elements on Web Components are inline until styled. */
+  :is([data-slot="kind-selection"], [data-slot="kind-selection-content"]) {
+    display: block;
+  }
+
+  [data-slot="kind-selection-content"] {
+    border-radius: calc(var(--kind-radius) / 2);
+    outline: none;
+
+    &:focus-visible {
+      outline: 1.5px solid var(--kind-color-ring);
+      outline-offset: 4px;
+    }
+  }
+
+  /* A top-layer popover that UI SDK `position` places: it writes `position`, `inset`, `margin`, `left` and `top`
+     inline, so this resets only the rest of the popover's UA box. Motion uses `translate`, which `position` measures
+     around. */
+  [data-slot="kind-selection-toolbar"] {
+    display: block;
+    width: max-content;
+    max-width: calc(100vw - 16px);
+    overflow: visible;
+    padding: 4px;
+    border: 1px solid var(--kind-color-border);
+    border-radius: var(--kind-radius);
+    background-color: var(--kind-color-surface);
+    box-shadow:
+      0 1px 2px color-mix(in oklab, var(--kind-color-shadow) 6%, transparent),
+      0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 20%, transparent);
+    color: var(--kind-color-fg);
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    transform-origin: var(--transform-origin);
+    transition:
+      opacity var(--kind-duration-base) var(--kind-ease-out),
+      translate var(--kind-duration-base) var(--kind-ease);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+    }
+    &[data-ending-style] {
+      transition-duration: var(--kind-duration-fast);
+    }
+    &[data-motion="reduced"] {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+    }
+    &[data-motion="none"] {
+      transition: none;
+    }
+  }
+
+  [data-slot="kind-selection-toolbar"][hidden] {
+    display: none;
+  }
+
+  [data-slot="kind-selection-item"] {
+    display: contents;
+  }
+
+  /* Full motion only: it rises toward the side it sits on. Reduced motion fades over 120 ms with no move, "none"
+     keeps nothing (spec §6). */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-slot="kind-selection-toolbar"][data-motion="auto"]:is([data-starting-style], [data-ending-style]) {
+      translate: 0 4px;
+
+      &[data-side="bottom"] {
+        translate: 0 -4px;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot="kind-selection-toolbar"][data-motion="auto"] {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+    }
+  }
+}

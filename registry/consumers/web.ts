@@ -1,4 +1,5 @@
 // The Web Components registry consumer's entry: every component, as `shadcn add` copies it, one section each.
+import { defineAction } from "./components/ui/web/action.js";
 import { defineAttachments } from "./components/ui/web/attachments.js";
 import { defineChainOfThought } from "./components/ui/web/chain-of-thought.js";
 import { defineCheckpoint } from "./components/ui/web/checkpoint.js";
@@ -25,6 +26,7 @@ import { defineQuestion } from "./components/ui/web/question.js";
 import { defineQueue } from "./components/ui/web/queue.js";
 import { defineReasoning } from "./components/ui/web/reasoning.js";
 import { defineReasoningEffort } from "./components/ui/web/reasoning-effort.js";
+import { defineSelection } from "./components/ui/web/selection.js";
 import { defineSources } from "./components/ui/web/sources.js";
 import { defineStackTrace } from "./components/ui/web/stack-trace.js";
 import { defineStatus } from "./components/ui/web/status.js";
@@ -71,6 +73,8 @@ for (const define of [
   defineStackTrace,
   defineTestResults,
   defineTranscript,
+  defineSelection,
+  defineAction,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -122,6 +126,8 @@ const items = {
     at main (/app/src/index.ts:7:1)"></kind-stack-trace>`,
   "test-results": `<kind-test-results default-open></kind-test-results>`,
   transcript: `<kind-transcript can-seek current-time="1"></kind-transcript>`,
+  selection: `<kind-selection can-run><kind-selection-content><p>Retry with backoff.</p></kind-selection-content></kind-selection>`,
+  action: `<kind-action label="Explain" quote="Retry with backoff." result="Wait, then try again." status="complete"></kind-action>`,
   terminal: `<kind-terminal command="npm test" exit-code="0" default-open></kind-terminal>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
@@ -213,6 +219,9 @@ Object.assign(main.querySelector("kind-test-results") as HTMLElement, {
 });
 Object.assign(main.querySelector("kind-transcript") as HTMLElement, {
   segments: [{ id: "1", speaker: "Priya", start: 0, end: 4, text: "Let's start with the checklist." }],
+});
+Object.assign(main.querySelector("kind-selection") as HTMLElement, {
+  actions: [{ id: "ask", label: "Ask" }],
 });
 Object.assign(main.querySelector("kind-file-tree") as HTMLElement, {
   entries: [{ path: "src/index.ts", change: "modified", additions: 2 }],

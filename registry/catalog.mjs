@@ -151,6 +151,16 @@ const components = {
       "Speaker-labelled, timed segments with search, marking the segment and word playing and seeking on a press.",
     uses: [],
   },
+  selection: {
+    title: "Selection",
+    description: "A small toolbar of actions that floats above text a person selects in a reply.",
+    uses: ["internal-toolbar"],
+  },
+  action: {
+    title: "Action",
+    description: "An action run on selected text as a step, quoting the text above its streamed result.",
+    uses: ["markdown"],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

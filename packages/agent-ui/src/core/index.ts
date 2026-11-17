@@ -1,3 +1,9 @@
+export {
+  type ActionOptions,
+  type ActionPrimitive,
+  type ActionState,
+  actionPrimitive,
+} from "./action/index.js";
 export { type AnsiLine, type AnsiLines, type AnsiSpan, createAnsiLines } from "./ansi.js";
 export { approvalKey, approvalLabel, isActionable } from "./approval.js";
 export {
@@ -284,6 +290,18 @@ export {
   type ReasoningEffortValueChangeReason,
   reasoningEffortPrimitive,
 } from "./reasoning-effort/index.js";
+export {
+  type SelectionActionReason,
+  type SelectionActionRun,
+  type SelectionApi,
+  type SelectionDismissReason,
+  type SelectionItemState,
+  type SelectionOptions,
+  type SelectionPrimitive,
+  type SelectionState,
+  type SelectionToolbarState,
+  selectionPrimitive,
+} from "./selection/index.js";
 export {
   type SourceEntry,
   type SourcesApi,

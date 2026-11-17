@@ -29,6 +29,8 @@
     "stack-trace",
     "test-results",
     "transcript",
+    "selection",
+    "action",
     "conversation",
     "message",
     "markdown",

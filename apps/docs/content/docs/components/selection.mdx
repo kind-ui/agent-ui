@@ -1,0 +1,80 @@
+---
+title: Selection
+description: Offer actions on the text a person selects in a reply.
+---
+
+import SelectionExample from "@/examples/selection/basic";
+
+Use a selection around an assistant reply, so a person can select part of it and ask about it, quote it or copy it. A toolbar of your actions appears just above the selected text.
+
+<Example caption="Select some text in the reply, then press Ask, Quote or Copy in the toolbar above it.">
+  <SelectionExample />
+
+  <include cwd lang="tsx">./examples/selection/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/selection
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/selection-web
+```
+
+## Composition
+
+```text
+Selection
+├── SelectionContent
+└── SelectionToolbar
+    └── SelectionItem
+```
+
+`Selection` is a group named by its `label`, and puts its children in `SelectionContent`, the text people select. `SelectionToolbar` is the toolbar that appears over the selection, holding one `SelectionItem` button per action, with the action's `label` as its text and its `description` as its tooltip. To arrange the parts yourself, use `SelectionRoot` and keep `SelectionToolbar` right after `SelectionContent`.
+
+## Usage
+
+### Actions
+
+Pass `actions`, each with an `id`, a `label` and an optional `description`, and `onAction`, which gets the chosen action's `actionId` and the selected `text`. What happens next is up to you: send a follow-up, put a quote in the composer, or copy the text.
+
+```tsx
+<Selection
+  actions={[{ id: "ask", label: "Ask" }]}
+  onAction={({ actionId, text }) => ask(text)}
+>
+  <Markdown source={reply} />
+</Selection>
+```
+
+`onAction` gets the reason `item-press` when a person pressed an action, or `imperative` from `run`. The toolbar hides after an action runs, unless you cancel the change. Without `onAction`, the actions show but are disabled.
+
+### Showing the Toolbar
+
+The toolbar appears when a person finishes selecting text with the pointer or the keyboard, placed above the selection, and moves when the selection changes. It shows only for a selection that lies wholly inside the reply: one that reaches outside it, or holds only whitespace, shows no toolbar. Clearing the selection hides it.
+
+Pressing the toolbar keeps the selection and focus where they are. Escape or a press outside the reply hides the toolbar and keeps the selection, and `onDismiss` gets the selected text with the reason `escape-key` or `outside-press`. The same selection doesn't bring the toolbar back; selecting again does.
+
+### Keyboard
+
+The reply is a Tab stop, so a person can select its text with Shift and the arrow keys. The toolbar never takes focus when it appears: Tab moves from the reply to the toolbar, the arrow keys move between its actions, and Enter or Space runs one. Escape hides the toolbar and keeps the selection. If the toolbar hides while it holds focus, focus moves back to the reply.
+
+### Motion
+
+The toolbar rises in and sinks out. Under `prefers-reduced-motion`, or with `motion="reduced"`, it only fades, and with `motion="none"` it appears and hides at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/selection/selection.ts" name="SelectionOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the selection by its `label` and reads whether the toolbar is `open` and the selected `text`. While the toolbar shows, it can `run` an action by its `id` or label, the same as a person pressing it, and refuses one that isn't listed; `run` is offered only while `onAction` is set. It can also `dismiss` the toolbar, which keeps the selection.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/selection/selection.ts" name="SelectionAgentActions" type='Pick<SelectionApi, "run" | "dismiss">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-selection>`, set `actions` as a property, and `label` and `motion` as attributes, and write the reply inside a `<kind-selection-content>`; the element adds its toolbar after it. Running actions needs the `can-run` attribute: `onAction` fires `selectionaction`, with `actionId` and `text` in `event.detail.value`, and `onDismiss` fires `dismiss`.
+</Caption>

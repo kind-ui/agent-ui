@@ -2,6 +2,7 @@
 @import "./step.css";
 @import "./status.css";
 @import "./reasoning.css";
+@import "./action.css";
 @import "./reasoning-effort.css";
 @import "./confirmation.css";
 @import "./context-meter.css";
@@ -20,6 +21,7 @@
 @import "./question.css";
 @import "./checkpoint.css";
 @import "./model-selector.css";
+@import "./selection.css";
 @import "./suggestion.css";
 @import "./tool.css";
 @import "./chain-of-thought.css";

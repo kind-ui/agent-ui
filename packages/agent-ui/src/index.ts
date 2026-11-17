@@ -11,6 +11,7 @@ export type {
   QuestionOption,
   QueueItem,
   Role,
+  SelectionActionItem,
   Source,
   StackFrame,
   Step,
