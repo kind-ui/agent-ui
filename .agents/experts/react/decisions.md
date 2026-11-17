@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `3821f99` (Wave 4 Task 9 Test Results)
+Last reviewed: `54f9ef7` (Wave 4 Task 10 Transcript)
 
 ## Settled
 
@@ -45,6 +45,8 @@ Last reviewed: `3821f99` (Wave 4 Task 9 Test Results)
 
 ## Resolved
 
+- **Server-rendered Transcript segments overlapped at a 72px guess and moved on hydration** (Wave 4 Task 10): fixed; until the viewport connects (`measured`), segments stack in the flow, then sit at the measured offsets.
+- **No Transcript case with an owner refusing the search** (Wave 4 Task 10): fixed; `refused` in both fixtures and its spec.
 - **Test Results rows all re-rendered per streamed test, and no owner refused** (Wave 4 Task 9): tree items are cached per suite and `TestResultsRow` is memoized by item; the `refused` case pins the filter and open-row write-back.
 - **Stack Trace had no accepting owner or find-in-page case (Wave 4 Task 8):** the `owned` fixture gained `accepted` (`onShowLibraryFramesChange` sets `showLibraryFrames`), and the spec checks the `library-press` and `find-in-page` reasons and a `beforematch` reveal.
 - **Terminal server markup had no lines (Wave 4 Task 7),** so the screen grew ~312px on hydration: `state` now seeds the first 16 lines at the 20px guess (`firstRows`), which the virtualizer replaces once it connects. Owner-held `open` and a cancelled `onCopy` have an `owned` case; the docs' composition tree shows the `data-terminal-screen` and `data-terminal-header` wrappers the stylesheet styles.

@@ -46,7 +46,7 @@ Transcript
 
 ### Segments
 
-Pass `segments` in time order. Each has an `id`, a `speaker`, a `start` and `end` in seconds, and its `text`. Give it `words`, each with its `text`, `start` and `end`, to mark the word playing; without them, the transcript marks the whole segment. Only the segments in view are rendered, so a long recording costs the same as a short one.
+Pass `segments` in time order. Each has an `id`, a `speaker`, a `start` and `end` in seconds, and its `text`. Give it `words`, each with its `text`, `start` and `end`, to mark the word playing; without them, the transcript marks the whole segment. Only the segments in view are rendered, so a long recording costs the same as a short one. The view is 24rem tall, whatever the search leaves in it; set `--kind-transcript-height` to change it.
 
 ```tsx
 <Transcript

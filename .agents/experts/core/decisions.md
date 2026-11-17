@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `3821f99` (Wave 4 Task 9 Test Results)
+Last reviewed: `54f9ef7` (Wave 4 Task 10 Transcript)
 
 ## Settled
 
@@ -72,6 +72,9 @@ Last reviewed: `3821f99` (Wave 4 Task 9 Test Results)
 
 ## Resolved
 
+- **Transcript highlights marked letters across the speaker and the text** (Wave 4 Task 10): fixed; the speaker and the words are marked apart, as `searchSegments` scores them.
+- **Transcript `timeOf`, `wordValues` and `highlights` read `Object.prototype` ids** (Wave 4 Task 10): fixed through `segmentOf` (`Object.hasOwn`), and a non-finite `start` formats as 0:00; `tests/core/transcript.test.mjs` pins `seek`, `search` and `timeOf`.
+- **Arrow keys past a Transcript's first or last time scrolled the view** (Wave 4 Task 10): fixed; `move` returns the key it's on.
 - **Test Results trusted host data** (Wave 4 Task 9): an unknown test status reads as `skip` (`testStatus`), an unknown `filter`/`defaultFilter` as `"all"` (`knownFilter`), rows are defined so a `__proto__` id gets its own, durations round before choosing ms or s, open rows whose suite or test is gone close (reason `"auto"`), and the `suites` JSDoc says ids can't hold `/`. Pinned in `test-results.test.mjs`.
 - **Stack Trace (Wave 4 Task 8):** `openFrame` read `""`, `" "` and `"1e0"` as indexes (it now takes a number or digits only); `copy` copied an empty string for a trace with only a `label` (now a getter offered while `copyText` isn't empty, and the button is present only then); `showLibraryFrames`, `StackTraceRow` and `bindLibrary` have JSDoc. `tests/core/stack-trace.test.mjs` pins the message split, the index checks and `copy`.
 - **Terminal (Wave 4 Task 7):** Copy and the agent's `copy` emptied the clipboard before any output; `copy` is now a getter and the button is present only with output (`hasOutput`). An OSC cut short by another escape showed its text; it now ends at the next ESC too. Line parts skip `following`, `jumpExiting`, `hasOutput` and `copied`; output that starts over calls `virtual.reset()`; Jump to latest syncs with `following` as it binds. `terminal.spec.ts` pins `data-last` moving and output replaced whole.

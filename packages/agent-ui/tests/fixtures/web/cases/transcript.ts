@@ -3,21 +3,22 @@ import type { TranscriptOptions } from "@kind-ui/agent-ui/core";
 import { defineTranscript } from "../../../../src/web/transcript.js";
 import { manySegments, standup } from "../../shared/transcript.js";
 
-type Row = TranscriptOptions & { id: string; seekable?: boolean };
+type Row = TranscriptOptions & { id: string; seekable?: boolean; refused?: boolean };
 
 const transcripts = (rows: Row[]) => (root: HTMLElement) => {
   defineTranscript();
   const recorded: { seeks: [number, string][]; queries: [string, string][] } = { seeks: [], queries: [] };
   const list = document.createElement("div");
   list.className = "flex w-[34rem] flex-col gap-3 p-6";
-  for (const { id, seekable, ...row } of rows) {
+  for (const { id, seekable, refused, ...row } of rows) {
     const transcript = document.createElement("kind-transcript");
     transcript.id = id;
     Object.assign(transcript, row);
     transcript.canSeek = seekable ?? false;
-    transcript.addEventListener("querychange", (event) =>
-      recorded.queries.push([event.detail.value, event.detail.reason]),
-    );
+    transcript.addEventListener("querychange", (event) => {
+      recorded.queries.push([event.detail.value, event.detail.reason]);
+      if (refused) event.preventDefault();
+    });
     transcript.addEventListener("seek", (event) =>
       recorded.seeks.push([event.detail.value, `${event.detail.reason}:${event.detail.source}`]),
     );
@@ -39,6 +40,7 @@ const transcripts = (rows: Row[]) => (root: HTMLElement) => {
 export const cases = {
   all: transcripts([{ id: "standup", segments: standup, seekable: true }]),
   plain: transcripts([{ id: "plain", label: "Standup notes", segments: standup }]),
+  refused: transcripts([{ id: "standup", segments: standup, refused: true }]),
   "many-100": transcripts([
     { id: "many", segments: manySegments(100), seekable: true, motion: "none", query: "" },
   ]),

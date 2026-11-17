@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `3821f99` (Wave 4 Task 9 Test Results)
+Last reviewed: `54f9ef7` (Wave 4 Task 10 Transcript)
 
 ## Settled
 
+- **The Transcript match count changes width as you type** (Wave 4 Task 10): it sits inside the search field after the input, which only shrinks; nothing outside the field moves.
 - **Switching the Test Results filter plays the rows' entrance again** (Wave 4 Task 9): the filter mounts the rows it lets through, which is a mount; reduced motion keeps it to a 120 ms fade.
 - **Terminal's Copy hover fade runs under every `motion`** (Wave 4 Task 7), as the Step trigger's and Tool's copy buttons' do: a 150 ms color change on hover isn't movement.
 
@@ -49,6 +50,9 @@ Last reviewed: `3821f99` (Wave 4 Task 9 Test Results)
 
 ## Resolved
 
+- **Transcript segments' entrance was cancelled when `data-entering` cleared** (Wave 4 Task 10): fixed; `opacity` and `translate` stay in the segment's `transition`, and only `@starting-style` sits behind `[data-entering]`.
+- **Transcript marks in upcoming words fell under 4.5:1, the search lost its ring in forced colors, the playing bar stayed left in RTL, state selectors outranked a class, and the word highlight ignored `--kind-radius`** (Wave 4 Task 10): fixed (`mark` takes `--kind-color-fg`, a transparent outline, an `inset-inline-start` bar, `:where()`, `calc(var(--kind-radius) / 3)`).
+- **Upcoming words flashed back to full color in each pause between words** (Wave 4 Task 10): fixed in core; `currentAt` keeps the last word that started until the segment ends.
 - **Test Results motion and header** (Wave 4 Task 9): `motion="none"` turns the row labels' transition off under OS reduced motion too, rows in a suite opening for the first time come in with it (no entrance of their own), the count dots no longer fade (React and web now match), and the duration reserves `6ch` so the counts don't slide. Pinned in `test-results.spec.ts`.
 - **Stack Trace (Wave 4 Task 8):** the library chevron turned under `motion="reduced"` (now off for `reduced` and `none`, as Step's trigger); the message ran under Copy in right-to-left text (logical `padding-inline`); library-frame and frame-button context selectors are in `:where()`, so a consumer class wins; the panel has a `min-height` for Copy when it holds nothing else.
 - **Terminal (Wave 4 Task 7):** the cursor blinked under `prefers-reduced-motion` (a 4-attribute base rule beat the media override) and wrapped a full last line; it now blinks only inside `no-preference` at `motion="auto"` and overhangs into the line's padding. Jump to latest moved 8px under reduced motion; its offset is now full motion only. Extra attributes sit in `:where()`, and the header's padding is logical.

@@ -85,6 +85,8 @@ export type TranscriptState = {
   rows: readonly VirtualItem[];
   /** The height of every shown segment together, in pixels. */
   size: number;
+  /** Whether the virtualizer has measured the segments, so they sit at its offsets rather than one after another. */
+  measured: boolean;
   /** The id of the segment playing, or `null`. */
   currentSegment: string | null;
   /** The word playing, as `"<segment id>/<index>"`, or `null`. */
@@ -216,6 +218,7 @@ const numberFormats = new Map<string, { plain: Intl.NumberFormat; padded: Intl.N
 
 /** `seconds` as "1:05", or "1:02:05" past an hour, in the digits of `locale`. */
 const formatTime = (seconds: number, locale: string): string => {
+  const whole = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0;
   let formats = numberFormats.get(locale);
   if (!formats) {
     formats = {
@@ -225,7 +228,6 @@ const formatTime = (seconds: number, locale: string): string => {
     numberFormats.set(locale, formats);
   }
   const { plain, padded } = formats;
-  const whole = Math.max(0, Math.floor(seconds));
   const hours = Math.floor(whole / 3600);
   const minutes = Math.floor(whole / 60) % 60;
   const rest = padded.format(whole % 60);
@@ -234,13 +236,16 @@ const formatTime = (seconds: number, locale: string): string => {
     : `${plain.format(minutes)}:${rest}`;
 };
 
+const segmentOf = (state: TranscriptState, id: string) =>
+  Object.hasOwn(state.segmentsById, id) ? state.segmentsById[id] : undefined;
+
 const timeLocale = (state: TranscriptState) => state.locale ?? state.pageLocale ?? "en-US";
 
 const countText = ({ query, matches }: Pick<TranscriptState, "query" | "matches">) =>
   !query.trim() ? "" : matches === 0 ? "No matches" : matches === 1 ? "1 match" : `${matches} matches`;
 
-// Until the viewport binds and the virtualizer measures, the first segments at a guessed height, so server markup
-// shows them and hydrating moves nothing.
+// Until the viewport binds, the first segments, which the stylesheet stacks in the page's flow because their heights
+// differ, so server markup shows them without overlap.
 const SEGMENT_HEIGHT_GUESS = 72;
 const firstRows = (shown: TranscriptSegment[]): VirtualItem[] =>
   shown.slice(0, 8).map((segment, index) => ({
@@ -277,6 +282,7 @@ const ownSegment = selects<TranscriptState, TranscriptApi, SegmentProps>({
   currentWord: [],
   focused: [],
   query: [],
+  measured: [],
 });
 
 const ownPart = selects<TranscriptState, TranscriptApi, TranscriptItemPartProps>({
@@ -290,6 +296,7 @@ const ownPart = selects<TranscriptState, TranscriptApi, TranscriptItemPartProps>
   currentSegment: [],
   currentWord: [],
   entering: [],
+  measured: [],
 });
 
 const wordAt = (value: string) => {
@@ -308,6 +315,7 @@ const ownWord = selects<TranscriptState, TranscriptApi, WordProps>({
   currentSegment: [],
   entering: [],
   focused: [],
+  measured: [],
 });
 
 // The parts around the list read neither the segments nor playback.
@@ -321,6 +329,7 @@ const outsideList = selects<TranscriptState, TranscriptApi, BaseSlotProps>({
   currentWord: [],
   entering: [],
   focused: [],
+  measured: [],
 });
 
 const fromSegment = { value: { kind: "string", from: "segment" } } as const;
@@ -358,6 +367,7 @@ export const transcriptPrimitive: TranscriptPrimitive = definePrimitive<
       matches: shown.length,
       rows: firstRows(shown),
       size: shown.length * SEGMENT_HEIGHT_GUESS,
+      measured: false,
       pageLocale: null,
       entering: NO_IDS,
       focused: null,
@@ -481,8 +491,7 @@ export const transcriptPrimitive: TranscriptPrimitive = definePrimitive<
     const wordValueCache = new WeakMap<TranscriptSegment, readonly string[]>();
 
     const seek = (id: string, event?: Event) => {
-      const { segmentsById } = store.get();
-      const segment = Object.hasOwn(segmentsById, id) ? segmentsById[id] : undefined;
+      const segment = segmentOf(store.get(), id);
       if (!segment) return false;
       const details = event ? { reason: "segment-press" as const, event } : { reason: "imperative" as const };
       dispatch(context, "onSeek", segment.start, details);
@@ -498,8 +507,10 @@ export const transcriptPrimitive: TranscriptPrimitive = definePrimitive<
           const { shown } = store.get();
           const index = indexOf(from.key) ?? -1;
           const to = { ArrowDown: index + 1, ArrowUp: index - 1, Home: 0, End: shown.length - 1 }[event.key];
-          const target = to === undefined ? undefined : shown[to];
-          if (to === undefined || !target) return undefined;
+          if (to === undefined) return undefined;
+          // At either end focus stays, and the key doesn't scroll the view.
+          const target = shown[to];
+          if (!target) return from.key;
           virtual.scrollToIndex(to);
           return target.id;
         },
@@ -509,7 +520,7 @@ export const transcriptPrimitive: TranscriptPrimitive = definePrimitive<
       getSegments: () => store.get().segments,
       timeOf: (id) => {
         const state = store.get();
-        const segment = state.segmentsById[id];
+        const segment = segmentOf(state, id);
         return segment ? formatTime(segment.start, timeLocale(state)) : "";
       },
       get seek() {
@@ -538,7 +549,7 @@ export const transcriptPrimitive: TranscriptPrimitive = definePrimitive<
       countText,
       searchState: () => searchState,
       wordValues: (state, id) => {
-        const segment = state.segmentsById[id];
+        const segment = segmentOf(state, id);
         return segment
           ? cached(wordValueCache, segment, () =>
               Array.from({ length: segment.words?.length ?? 1 }, (_, index) => `${id}/${index}`),
@@ -546,11 +557,15 @@ export const transcriptPrimitive: TranscriptPrimitive = definePrimitive<
           : NO_IDS;
       },
       highlights: (state, id) => {
-        const segment = state.segmentsById[id];
+        const segment = segmentOf(state, id);
         if (!segment) return noHighlights;
         const entry = highlightCache.get(segment);
         if (entry?.query === state.query) return entry;
-        const pieces = highlightPieces([segment.speaker, ...segmentPieces(segment)], state.query);
+        // Marked as the search scores them: the speaker apart from the words.
+        const pieces = [
+          ...highlightPieces([segment.speaker], state.query),
+          ...highlightPieces(segmentPieces(segment), state.query),
+        ];
         // A piece the search marks as it did keeps its array, so its word doesn't render again.
         const [speaker = [], ...words] = pieces.map((piece, index) => {
           const before = index === 0 ? entry?.speaker : entry?.words[index - 1];
@@ -563,6 +578,7 @@ export const transcriptPrimitive: TranscriptPrimitive = definePrimitive<
       bindViewport: (el) => {
         viewport = el;
         const disconnect = virtual.connect(el);
+        store.set({ rows: virtual.items(), size: virtual.size(), measured: true });
         followPlayback();
         return () => {
           disconnect();
@@ -639,6 +655,7 @@ export const transcriptPrimitive: TranscriptPrimitive = definePrimitive<
       state: (state) => ({ rows: state.rows }),
       attrs: (state) => ({
         "aria-label": state.label,
+        "data-measured": state.measured ? "" : undefined,
         style: css({ "--kind-transcript-size": `${state.size}px` }),
       }),
     }),
@@ -688,7 +705,7 @@ export const transcriptPrimitive: TranscriptPrimitive = definePrimitive<
       present: (state) => state.canSeek,
       press: ({ api, key }, event) => api.seek?.(key, event),
       attrs: (state, part) => {
-        const segment = state.segmentsById[part.key];
+        const segment = segmentOf(state, part.key);
         return {
           type: "button",
           "aria-label": segment ? `Seek to ${formatTime(segment.start, timeLocale(state))}` : undefined,
@@ -713,7 +730,7 @@ export const transcriptPrimitive: TranscriptPrimitive = definePrimitive<
       props: fromSegment,
       selects: ownPart,
       state: (state, { key }) => {
-        const segment = state.segmentsById[key];
+        const segment = segmentOf(state, key);
         return { time: segment ? formatTime(segment.start, timeLocale(state)) : "" };
       },
     }),

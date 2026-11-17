@@ -2,7 +2,7 @@
    marked. Segments sit at the virtualizer's offsets inside a list as tall as all of them. */
 @layer components {
   [data-slot="kind-transcript"] {
-    --kind-transcript-max-height: 24rem;
+    --kind-transcript-height: 24rem;
     --kind-transcript-search-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21 21-4.34-4.34'/%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3C/svg%3E");
     --kind-transcript-clear-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E");
     display: flex;
@@ -54,6 +54,8 @@
       }
       &:has(input:focus-visible) {
         box-shadow: 0 0 0 1.5px var(--kind-color-ring);
+        /* Shows in forced colors, where the shadow doesn't. */
+        outline: 1.5px solid transparent;
       }
     }
 
@@ -117,8 +119,9 @@
     white-space: nowrap;
   }
 
+  /* A fixed height, so a search that leaves fewer segments doesn't move what's below the transcript. */
   [data-slot="kind-transcript-viewport"] {
-    max-height: var(--kind-transcript-max-height);
+    height: var(--kind-transcript-height);
     overflow-y: auto;
     overscroll-behavior: contain;
     padding-block: 0.25rem;
@@ -132,29 +135,51 @@
     }
   }
 
+  /* Until the virtualizer has measured them, as in server markup, segments stack in the flow: their heights differ, so
+     no guessed offset fits them all. */
   [data-slot="kind-transcript-list"] {
     position: relative;
-    height: var(--kind-transcript-size);
+
+    &:where([data-measured]) {
+      height: var(--kind-transcript-size);
+    }
   }
 
   /* The padding is inside the measured height, so segments sit apart without margins the virtualizer can't see. */
   [data-slot="kind-transcript-segment"] {
-    position: absolute;
-    inset-inline: 0.25rem;
-    top: var(--kind-transcript-segment-start, 0px);
+    position: relative;
+    margin-inline: 0.25rem;
     padding: 0.5rem 0.75rem;
     border-radius: calc(var(--kind-radius) * 2 / 3);
-    box-shadow: inset 2px 0 0 transparent;
 
+    &:where([data-measured] > *) {
+      position: absolute;
+      inset-inline: 0;
+      top: var(--kind-transcript-segment-start, 0px);
+    }
     &:where([data-can-seek]) {
       cursor: pointer;
     }
     &:where([data-can-seek]:hover) {
       background-color: var(--kind-color-hover);
     }
-    &[aria-current] {
+    &:where([aria-current]) {
       background-color: color-mix(in oklab, var(--kind-color-accent) 8%, transparent);
-      box-shadow: inset 2px 0 0 var(--kind-color-accent);
+    }
+
+    /* The playing segment's bar, on the side its text starts. */
+    &::before {
+      content: "";
+      position: absolute;
+      inset-block: 0;
+      inset-inline-start: 0;
+      width: 2px;
+      border-start-start-radius: inherit;
+      border-end-start-radius: inherit;
+      background-color: transparent;
+    }
+    &:where([aria-current])::before {
+      background-color: var(--kind-color-accent);
     }
   }
 
@@ -211,10 +236,11 @@
 
   /* The word playing, and the words still to come in its segment. */
   [data-slot="kind-transcript-word"] {
-    border-radius: 0.25rem;
+    border-radius: calc(var(--kind-radius) / 3);
+    -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
 
-    &[data-current] {
+    &:where([data-current]) {
       background-color: color-mix(in oklab, var(--kind-color-accent) 18%, transparent);
       box-shadow: 0 0 0 1px color-mix(in oklab, var(--kind-color-accent) 18%, transparent);
     }
@@ -226,49 +252,40 @@
   :is([data-slot="kind-transcript-speaker"], [data-slot="kind-transcript-word"]) mark {
     border-radius: 2px;
     background-color: color-mix(in oklab, var(--kind-color-warning) 35%, transparent);
-    color: inherit;
+    color: var(--kind-color-fg);
   }
 
+  /* Opacity and translate run only as a segment arrives, since a segment never changes them later: it rises in at full
+     motion, fades in over 120 ms under reduced motion, and shows at once with "none" (spec §6). */
   :where([data-slot="kind-transcript"]:not([data-motion="none"])) {
     & [data-slot="kind-transcript-segment"],
+    & [data-slot="kind-transcript-segment"]::before,
     & [data-slot="kind-transcript-word"] {
       transition:
+        opacity var(--kind-duration-reduced) var(--kind-ease-out),
         background-color var(--kind-duration-fast) var(--kind-ease-out),
         box-shadow var(--kind-duration-fast) var(--kind-ease-out),
         color var(--kind-duration-fast) var(--kind-ease-out);
     }
-  }
-
-  /* A segment that arrives after the first frame rises in once; reduced motion fades it in over 120 ms, and "none"
-     shows it at once (spec §6). */
-  @media (prefers-reduced-motion: no-preference) {
-    [data-slot="kind-transcript"][data-motion="auto"] [data-slot="kind-transcript-segment"][data-entering] {
-      transition:
-        opacity var(--kind-duration-base) var(--kind-ease-out),
-        translate var(--kind-duration-base) var(--kind-ease),
-        background-color var(--kind-duration-fast) var(--kind-ease-out);
-
+    & [data-slot="kind-transcript-segment"]:where([data-entering]) {
       @starting-style {
         opacity: 0;
-        translate: 0 4px;
       }
     }
   }
 
-  [data-slot="kind-transcript"][data-motion="reduced"] [data-slot="kind-transcript-segment"][data-entering] {
-    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+  @media (prefers-reduced-motion: no-preference) {
+    :where([data-slot="kind-transcript"][data-motion="auto"]) [data-slot="kind-transcript-segment"] {
+      transition:
+        opacity var(--kind-duration-base) var(--kind-ease-out),
+        translate var(--kind-duration-base) var(--kind-ease),
+        background-color var(--kind-duration-fast) var(--kind-ease-out),
+        color var(--kind-duration-fast) var(--kind-ease-out);
 
-    @starting-style {
-      opacity: 0;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    [data-slot="kind-transcript"][data-motion="auto"] [data-slot="kind-transcript-segment"][data-entering] {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
-
-      @starting-style {
-        opacity: 0;
+      &:where([data-entering]) {
+        @starting-style {
+          translate: 0 4px;
+        }
       }
     }
   }

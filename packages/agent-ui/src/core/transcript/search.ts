@@ -56,14 +56,14 @@ const lastStartedBy = (items: readonly { start: number }[], time: number) => {
 };
 
 /**
- * The segment playing at `time`, by id, and the index of its word playing then. Segments are in time order, and so
- * are a segment's words. Before the first segment, in a gap between two, or between two words, there's none.
+ * The segment playing at `time`, by id, and the index of its last word to start by then, which stays through the
+ * pause before the next. Segments are in time order, and so are a segment's words. Before the first segment, or in a
+ * gap between two, there's none.
  */
 export function currentAt(segments: TranscriptSegment[], time: number): { segment?: string; word?: number } {
   const segment = segments[lastStartedBy(segments, time)];
   if (!segment || time >= segment.end) return {};
   const words = segment.words ?? [];
-  const index = lastStartedBy(words, time);
-  const word = words[index];
-  return word && time < word.end ? { segment: segment.id, word: index } : { segment: segment.id };
+  const word = lastStartedBy(words, time);
+  return word < 0 ? { segment: segment.id } : { segment: segment.id, word };
 }

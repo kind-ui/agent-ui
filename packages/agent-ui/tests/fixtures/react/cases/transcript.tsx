@@ -42,6 +42,7 @@ function Transcripts({ rows: first }: { rows: Row[] }) {
 export const cases = {
   all: () => <Transcripts rows={[{ id: "standup", segments: standup, seekable: true }]} />,
   plain: () => <Transcripts rows={[{ id: "plain", label: "Standup notes", segments: standup }]} />,
+  refused: () => <Transcripts rows={[{ id: "standup", segments: standup, query: "" }]} />,
   "many-100": () => (
     <Transcripts
       rows={[{ id: "many", segments: manySegments(100), seekable: true, motion: "none", query: "" }]}

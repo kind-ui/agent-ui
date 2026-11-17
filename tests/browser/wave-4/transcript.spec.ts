@@ -38,6 +38,20 @@ const scrollTopAtRest = (page: Page, id = "standup") =>
     return top;
   });
 
+// Any error the page reports, a ResizeObserver loop included, fails the test.
+test.beforeEach(({ page }) =>
+  page.addInitScript(() => {
+    const errors: string[] = [];
+    Object.assign(window, { kindErrors: errors });
+    window.addEventListener("error", (event) => errors.push(event.message));
+  }),
+);
+test.afterEach(async ({ page }) => {
+  expect(
+    await page.evaluate(() => (window as unknown as { kindErrors?: string[] }).kindErrors ?? []),
+  ).toEqual([]);
+});
+
 const open = async (page: Page, name = "all") => {
   // Records each text UI SDK's live regions are given.
   await page.addInitScript(() => {
@@ -105,6 +119,15 @@ test("a search keeps the segments that match and marks the match, and clearing i
   await expect(part(page, "segment").locator("mark")).toHaveCount(0);
 });
 
+test("an owner that refuses a search keeps the field and every segment", async ({ page }) => {
+  await open(page, "refused");
+  const field = transcript(page).getByRole("searchbox");
+  await field.pressSequentially("bil");
+  await expect(field).toHaveValue("");
+  await expect(part(page, "segment")).toHaveCount(7);
+  expect((await host(page)).queries).toContainEqual(["b", "input-change"]);
+});
+
 test("arrow keys move between times, Enter seeks, and a press on a segment seeks to its start", async ({
   page,
 }) => {
@@ -114,6 +137,8 @@ test("arrow keys move between times, Enter seeks, and a press on a segment seeks
   await page.keyboard.press("ArrowDown");
   await expect(seeks.nth(1)).toBeFocused();
   await page.keyboard.press("End");
+  await expect(seeks.last()).toBeFocused();
+  await page.keyboard.press("ArrowDown");
   await expect(seeks.last()).toBeFocused();
   await page.keyboard.press("ArrowUp");
   await expect(seeks.nth(5)).toBeFocused();
@@ -142,9 +167,7 @@ test("playback brings its segment into view while focus is outside, and leaves t
 }) => {
   await open(page);
   await page.evaluate(() =>
-    document
-      .querySelector<HTMLElement>("#standup")
-      ?.style.setProperty("--kind-transcript-max-height", "8rem"),
+    document.querySelector<HTMLElement>("#standup")?.style.setProperty("--kind-transcript-height", "8rem"),
   );
   await expect.poll(() => scrollTopAtRest(page)).toBe(0);
 
