@@ -183,10 +183,13 @@
     }
   }
 
+  /* A set height: aligning the speaker's and time's baselines makes the row as tall as the font's metrics say, so
+     segment heights, and how many are in view, would differ by platform. */
   [data-transcript-header] {
     display: flex;
     align-items: baseline;
     gap: 0.5rem;
+    height: 1.25rem;
     margin-block-end: 0.125rem;
     line-height: 1.25rem;
   }

@@ -6,6 +6,7 @@ Last reviewed: `3e87640` (Wave 4 Task 13 Test Results first-style fix)
 
 ## Settled
 
+- **A Transcript segment's header has a set `height: 1.25rem`** (Wave 4 Task 13): baseline alignment of the speaker and time made it as tall as the font's metrics (22px on macOS), so segment heights and the Transcript budgets differed on Linux CI. The search budget rose to 72 writes, 201 renders and 140 re-reads because 62px segments put one more in view, the count Linux CI already measured.
 - **Choosing a Model Selector model without an icon moves the field's text toward the start** (suspected, Wave 4 Task 12b): the field keeps its width, so nothing outside it moves.
 - **The Model Selector icon rule must stay after the trigger's `& svg` rule** (Wave 4 Task 12b): both are one attribute and one element, so the later 16px rule wins over 14px.
 - **The Transcript match count changes width as you type** (Wave 4 Task 10): it sits inside the search field after the input, which only shrinks; nothing outside the field moves.
