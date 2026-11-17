@@ -1,6 +1,6 @@
 {
   ".": 265,
-  "./core": 209000,
+  "./core": 215000,
   "./adapters/ai-sdk": 1345,
   "imports": {
     "stepBase": 5500,
@@ -18,6 +18,7 @@
     "transcriptPrimitive": 19000,
     "selectionPrimitive": 12500,
     "actionPrimitive": 8000,
-    "menuBase": 4000
+    "menuBase": 4000,
+    "pickerPrimitive": 49000
   }
 }

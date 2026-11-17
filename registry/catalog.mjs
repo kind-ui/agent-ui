@@ -161,6 +161,12 @@ const components = {
     description: "An action run on selected text as a step, quoting the text above its streamed result.",
     uses: ["markdown"],
   },
+  picker: {
+    title: "Picker",
+    description:
+      "A button that opens a searchable list of choices, with groups, two-line rows, pages and footer actions.",
+    uses: ["internal-command"],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

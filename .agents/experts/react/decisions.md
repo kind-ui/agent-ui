@@ -15,7 +15,7 @@ Last reviewed: `7aa718e` (Wave 5 Task 1 groundwork)
 
 ## Known and open (don't report again, check whether fixed)
 
-- **UI SDK `CommandGroup` renders `hidden` without `aria-labelledby` on the server (Wave 5 Task 1):** a server-rendered Kind Command shows an empty group until hydration. UI SDK's; matters once Command renders outside a closed popup.
+- **UI SDK `CommandGroup` renders `hidden` without `aria-labelledby` on the server (Wave 5 Task 1):** a server-rendered Kind Command shows an empty group until hydration. UI SDK's; matters once Command renders outside a closed popup. Picker (Wave 5 Task 2) renders Command only while its list is open, so needs no workaround.
 - **UI SDK's `ComboboxValueIcon` has no server markup and keeps an icon copied before its content changed in place** (Wave 4 Task 12b): Model Selector draws its field icon from data instead (its own `icon` part); report upstream.
 - **A streamed Test Results update renders every row's UI SDK Tree parts and item parts** (Wave 4 Task 9): the known options-change cost (as Chain of Thought, Task and Sources). Our `TestResultsRow` components skip suites the host kept, since core caches tree items per suite.
 - **File Tree: the root `group` and the Tree are both named "Files"** (Wave 4 Task 6), so a screen reader may say it twice; and a function `className` on the root gets the Tree's props. Not checked with a screen reader.

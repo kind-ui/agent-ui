@@ -38,7 +38,7 @@ Last reviewed: `7aa718e` (Wave 5 Task 1 groundwork)
 
 ## Known and open (don't report again, check whether fixed)
 
-- **`hearComposed` doesn't tell nested components apart (Wave 5 Task 1):** an outer root hears the `ui-*` events of a component nested in its content, and `menuBase` filters by tag only. Fix (skip targets whose nearest Kind root isn't `el`'s) with a nested-roots test before Model Control (Task 9) nests Effort Slider.
+- **`hearComposed` doesn't tell nested components apart (Wave 5 Task 1):** an outer root hears the `ui-*` events of a component nested in its content, and `menuBase` filters by tag only. Fix (skip targets whose nearest Kind root isn't `el`'s) with a nested-roots test before Model Control (Task 9) nests Effort Slider. Picker (Wave 5 Task 2) nests no Kind component and hears only `ui-command` targets, so it isn't affected.
 - **Terminal relies on the virtualizer laying out again when its count changes** (Wave 4 Task 12): a new line sets `rows` and `size` from it instead of calling `refresh()`, which UI SDK's docs ask for after a count change but which reads the viewport twice more per line. `budgets.spec.ts` and `terminal.spec.ts` pin it; ask upstream for a count-only update.
 - **Queue's remove lock isn't in state** (Wave 4 Task 12): a second `remove` of an item already asked returns `false`, and neither the remove control nor the snapshot shows the pending removal. A host declining without `cancel()` passes a new object for the item to allow another try (on `onRemove`).
 - **Stack Trace's library panels still find their toggle with an `[aria-controls]` query over `getRootNode()`**, where Step and Guardrail Notice now use `context.element`; the toggle is keyed per group.
