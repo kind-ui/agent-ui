@@ -371,7 +371,6 @@ export const stackTracePrimitive: StackTracePrimitive = definePrimitive<
         state: ({ title, name, summary }) => ({ title, name, summary }),
       }),
       content,
-      // The message's lines after its first, which the title shows.
       message: slot<BaseSlotProps, { text: string }>({
         present: (state) => state.details !== "",
         state: (state) => ({ text: state.details }),
@@ -398,7 +397,6 @@ export const stackTracePrimitive: StackTracePrimitive = definePrimitive<
           "data-library": state.entries[Number(key)]?.library ? "" : undefined,
         }),
       }),
-      // The frame's function and location inside a button, while `onOpenFrame` is set.
       "frame-open": slot<StackTraceItemPartProps & BaseSlotProps>({
         role: "button",
         focus: "roving",

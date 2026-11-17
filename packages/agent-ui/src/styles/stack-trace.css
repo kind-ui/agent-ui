@@ -64,7 +64,6 @@
     list-style: none;
   }
 
-  /* A frame: its function, then where it is. App frames read in full color, library frames quieter. */
   [data-slot="kind-stack-trace-frame"] {
     padding-inline-end: 2.25rem;
   }
@@ -130,7 +129,6 @@
     }
   }
 
-  /* "N library frames", with a chevron that turns as they open. */
   [data-slot="kind-stack-trace-library"] {
     display: flex;
     align-items: center;
@@ -184,8 +182,7 @@
     }
   }
 
-  /* A group's frames sit under its toggle on a guide line. Their height animates through
-     `--kind-step-content-height`, which the panel binding writes, as a step's content does. */
+  /* `--kind-step-content-height` comes from `bindStepPanel`, as a step's content does. */
   [data-slot="kind-stack-trace-library-frames"] {
     height: var(--kind-step-content-height);
     overflow: hidden;
