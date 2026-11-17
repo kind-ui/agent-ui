@@ -168,6 +168,12 @@ const components = {
       "A button that opens a searchable list of choices, with groups, two-line rows, pages and footer actions.",
     uses: ["internal-command"],
   },
+  "add-menu": {
+    title: "Add Menu",
+    description:
+      "A plus button that opens a menu of what can be added, with icons, descriptions, groups and submenus.",
+    uses: ["internal-menu"],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

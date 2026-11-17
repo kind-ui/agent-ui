@@ -11,11 +11,17 @@ const trigger = (page: Page) => page.getByRole("button", { name: "Add" });
 const menu = (page: Page) => page.getByRole("menu").first();
 const item = (page: Page, name: string | RegExp) => page.getByRole("menuitem", { name });
 const actions = (page: Page) => page.evaluate(() => (window as unknown as Fixture).kindHost.actions);
+// A sheet's drag runs on scroll-driven animations, which never finish, so only time-driven ones count.
 const settled = (page: Page) =>
   page.waitForFunction(
     () =>
       !document.querySelector("[data-starting-style]") &&
-      document.getAnimations().every((animation) => animation.playState !== "running"),
+      document
+        .getAnimations()
+        .every(
+          (animation) =>
+            !(animation.timeline instanceof DocumentTimeline) || animation.playState !== "running",
+        ),
   );
 
 const load = async (page: Page, name = "all") => {
@@ -87,3 +93,77 @@ for (const scheme of ["light", "dark"] as const)
     const results = await new AxeBuilder({ page }).include("#root").analyze();
     expect(results.violations).toEqual([]);
   });
+
+const content = (page: Page) => page.locator('[data-slot="menu-content"]');
+
+test("the trigger is an icon button named Add inside a group named Add, and keeps its width when the menu opens", async ({
+  page,
+}) => {
+  await load(page);
+  const group = page.getByRole("group", { name: "Add" });
+  await expect(group).toBeVisible();
+  await expect(group.getByRole("button", { name: "Add" })).toBeVisible();
+  await expect(trigger(page)).toHaveText("");
+  const width = () => trigger(page).evaluate((el) => el.getBoundingClientRect().width);
+  expect(await width()).toBe(32);
+  await trigger(page).click();
+  await expect(menu(page)).toBeVisible();
+  await settled(page);
+  expect(await width()).toBe(32);
+});
+
+test("the disabled item is aria-disabled and choosing it calls nothing", async ({ page }) => {
+  await load(page);
+  await trigger(page).click();
+  const screenshot = item(page, "Screenshot");
+  await expect(screenshot).toHaveAttribute("aria-disabled", "true");
+  await screenshot.click({ force: true });
+  await screenshot.press("Enter");
+  await expect(menu(page)).toBeVisible();
+  expect(await actions(page)).toEqual([]);
+});
+
+test("with reduced motion the menu only fades", async ({ page }) => {
+  await load(page, "reduced");
+  await trigger(page).click();
+  await expect(menu(page)).toBeVisible();
+  const transition = await content(page)
+    .first()
+    .evaluate((el) => getComputedStyle(el).transitionProperty);
+  expect(transition).toBe("opacity");
+});
+
+test.describe("on a small touch screen", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+  test("the menu is a sheet, a plugin's submenu replaces the level, and going back returns to it", async ({
+    page,
+  }) => {
+    await load(page);
+    await trigger(page).focus();
+    await page.keyboard.press("Enter");
+    await expect(content(page).first()).toHaveAttribute("data-presentation", "sheet");
+    await expect(item(page, /^Upload file/)).toBeFocused();
+    await settled(page);
+    const { violations } = await new AxeBuilder({ page }).include("#root").analyze();
+    expect(violations).toEqual([]);
+
+    await item(page, "GitHub").focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(item(page, "Add an issue")).toBeFocused();
+    // UI SDK keeps the open submenu's trigger above it as the level's heading and hides the rest of the root level.
+    for (const name of [/^Upload file/, /^Add context/, "Linear"])
+      await expect(item(page, name)).toBeHidden();
+    await page.keyboard.press("ArrowLeft");
+    await expect(item(page, "GitHub")).toBeFocused();
+    await expect(item(page, "Add an issue")).toBeHidden();
+    for (const name of [/^Upload file/, /^Add context/, "Linear"])
+      await expect(item(page, name)).toBeVisible();
+    await settled(page);
+    await page.keyboard.press("ArrowRight");
+    await expect(item(page, "Add an issue")).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(item(page, "GitHub")).toBeFocused();
+    await expect(item(page, /^Upload file/)).toBeVisible();
+  });
+});
