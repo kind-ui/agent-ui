@@ -23,6 +23,7 @@ Last reviewed: `7aa718e` (Wave 5 Task 1 groundwork)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A `kind-picker` removed while open and put back stays `open` with its popover hidden (Wave 5 Task 2):** it takes two clicks to reopen; a bare `ui-popover` does the same, so it's UI SDK's to report. An empty `kind-picker` also draws its trigger only once upgraded, the layout shift already listed for other elements.
 - **`hearComposed` doesn't tell nested components apart (Wave 5 Task 1):** an outer root hears the `ui-*` events of a component nested in its content, and `menuBase` filters by tag only. Fix (skip targets whose nearest Kind root isn't `el`'s) with a nested-roots test before Model Control (Task 9) nests Effort Slider. Picker (Wave 5 Task 2) nests no Kind component and hears only `ui-command` targets, so it isn't affected.
 - **`@ui-sdk/web`'s Combobox content `anchor` stringifies an element** (Wave 4 Task 12b): only a selector works, so Model Selector anchors through `data-model-selector-field`; report upstream.
 - **Closing a Step or Guardrail Notice panel inside a shadow root leaves focus on a hidden button** (Wave 4 Task 12): the trigger lookup is now `context.element`, but UI SDK's `bindPanel` asks for it only when `el.contains(document.activeElement)`, which is the shadow host there. Add to the upstream report beside `focus-recovery.js`; a shadow-root test comes with the fix.

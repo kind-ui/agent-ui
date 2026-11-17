@@ -24,12 +24,12 @@ export const KindCommand = withKindClass(
 );
 export const KindCommandInput = withKindClass(
   CommandInput,
-  "h-9 w-full min-w-0 border-b border-[var(--kind-color-border)] bg-transparent px-3 text-sm text-[var(--kind-color-fg)] outline-none placeholder:text-[var(--kind-color-muted)]",
+  "h-[var(--kind-command-input-height,2.25rem)] w-full min-w-0 border-b border-[var(--kind-color-border)] bg-transparent px-3 text-sm text-[var(--kind-color-fg)] outline-none placeholder:text-[var(--kind-color-muted)]",
   "KindCommandInput",
 );
 export const KindCommandList = withKindClass(
   CommandList,
-  "max-h-72 overflow-y-auto overscroll-contain p-1 outline-none",
+  "max-h-[var(--kind-command-list-max-height,18rem)] overflow-y-auto overscroll-contain p-1 outline-none",
   "KindCommandList",
 );
 export const KindCommandGroup = withKindClass(CommandGroup, "py-0.5", "KindCommandGroup");
@@ -40,17 +40,17 @@ export const KindCommandGroupLabel = withKindClass(
 );
 export const KindCommandItem = withKindClass(
   CommandItem,
-  "flex cursor-default select-none items-center gap-2 rounded-[calc(var(--kind-radius)/3)] px-2 py-1.5 outline-none data-highlighted:bg-[var(--kind-color-hover)] data-disabled:cursor-not-allowed data-disabled:opacity-50 data-pending:cursor-wait",
+  "flex cursor-default select-none items-center gap-2 rounded-[calc(var(--kind-radius)/3)] px-2 py-[var(--kind-command-item-padding-block,0.375rem)] outline-none data-highlighted:bg-[var(--kind-color-hover)] data-disabled:cursor-not-allowed data-disabled:opacity-50 data-pending:cursor-wait",
   "KindCommandItem",
 );
 export const KindCommandItemIcon = withKindClass(
   CommandItemIcon,
-  "inline-flex size-4 shrink-0 items-center justify-center text-[var(--kind-color-muted)] [&_svg]:size-4",
+  "inline-flex size-4 shrink-0 items-center justify-center text-[var(--kind-command-icon-color,var(--kind-color-muted))] [&_svg]:size-4",
   "KindCommandItemIcon",
 );
 export const KindCommandItemText = withKindClass(
   CommandItemText,
-  "min-w-0 truncate [&_mark]:bg-transparent [&_mark]:font-medium [&_mark]:text-[var(--kind-color-fg)]",
+  "min-w-0 truncate [&_mark]:bg-transparent [&_mark]:[font-weight:var(--kind-command-mark-weight,500)] [&_mark]:text-[var(--kind-command-mark-color,var(--kind-color-fg))]",
   "KindCommandItemText",
 );
 export const KindCommandShortcut = withKindClass(

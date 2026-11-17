@@ -29,6 +29,7 @@ Last reviewed: `3e87640` (Wave 4 Task 13 Test Results first-style fix)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **UI SDK's scroll-snap sheet slides in at full motion under reduced motion (Wave 5 Task 2):** its `open()` doesn't check `reducedMotion()` (its `nudge()` does), and a component's `motion` option never reaches it, so a Picker sheet slides about 446px whatever the settings. UI SDK's; report upstream.
 - **A selected composer token and Checkpoint's open Restore lose their state in forced colors** (suspected, Wave 4 Task 12): both are drawn by a background forced colors replaces; no fixture renders a token.
 - **`forced-colors.spec.ts` doesn't reach the Queue remove badge on web.**
 - **A Selection toolbar with many actions may spill past its border on a narrow screen** (Wave 4 Task 11): it doesn't wrap; not reproduced with three actions.

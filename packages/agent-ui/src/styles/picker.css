@@ -4,6 +4,12 @@
 @layer components {
   [data-slot="kind-picker"] {
     --kind-picker-row-height: 2.75rem;
+    /* Read by the internal Command, whose Tailwind utilities a component layer can't override. */
+    --kind-command-input-height: 2.5rem;
+    --kind-command-item-padding-block: 0px;
+    --kind-command-icon-color: var(--kind-color-fg);
+    --kind-command-mark-color: var(--kind-color-accent);
+    --kind-command-mark-weight: 600;
     --kind-picker-icon-check: var(--kind-icon-check);
     /* Lucide "chevron-down" and "chevron-right", see THIRD_PARTY_NOTICES.md. */
     --kind-picker-icon-chevron-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
@@ -85,6 +91,12 @@
     background-color: var(--kind-color-surface);
     color: var(--kind-color-fg);
     box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 25%, transparent);
+    /* The list takes what room the window leaves below the search field. `--available-height` isn't inherited, so
+       it's read here, on the popup. */
+    --kind-command-list-max-height: min(
+      20rem,
+      calc(var(--available-height, 22.5rem) - var(--kind-command-input-height) - 2px)
+    );
 
     &[data-presentation="sheet"] {
       width: 100%;
@@ -98,15 +110,8 @@
   }
 
   :where([data-slot="kind-picker"]) {
-    & [data-slot="command-input"] {
-      height: 2.5rem;
-    }
-    & [data-slot="command-list"] {
-      max-height: min(20rem, var(--available-height, 20rem));
-    }
     & [data-slot="command-item"] {
       height: var(--kind-picker-row-height);
-      padding-block: 0;
     }
     & [data-slot="kind-picker-item"] {
       display: flex;
@@ -131,7 +136,7 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    & :is([data-slot="command-item-text"], [data-picker-description]) mark {
+    & [data-picker-description] mark {
       background: none;
       color: var(--kind-color-accent);
       font-weight: 600;
@@ -184,13 +189,18 @@
 
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
-    :where([data-slot="kind-picker"]) :is([data-picker-chevron], [data-picker-mark]) {
+    [data-slot="kind-picker"] [data-picker-chevron] {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+    [data-slot="kind-picker"] :is([data-chosen], [data-opens], [data-row="back"]) [data-picker-mark] {
+      forced-color-adjust: none;
       background-color: CanvasText;
     }
   }
 
   /* Motion: the list rises and fades in from the button. Reduced motion only fades, in 120 ms; `none` doesn't
-     animate. A sheet moves itself. */
+     animate. A sheet is UI SDK's, which slides whatever the motion settings. */
   [data-slot="kind-picker-content"]:where(:not([data-presentation="sheet"])) {
     transition:
       opacity var(--kind-duration-fast) var(--kind-ease-out),

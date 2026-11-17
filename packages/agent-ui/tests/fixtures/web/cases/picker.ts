@@ -43,7 +43,23 @@ const page =
     Object.assign(window, { kindHost: host });
   };
 
+/** A picker whose items have no icons and nothing chosen. */
+const plain = (root: HTMLElement) => {
+  definePicker();
+  const wrapper = Object.assign(document.createElement("div"), { className: "p-6" });
+  const picker = document.createElement("kind-picker");
+  picker.id = "picker";
+  picker.label = "Branch";
+  picker.items = [
+    { value: "main", label: "main" },
+    { value: "dev", label: "dev" },
+  ];
+  wrapper.append(picker);
+  root.append(wrapper);
+};
+
 export const cases = {
+  plain,
   all: page(),
   reduced: page({ motion: "reduced" }),
   refusing: page({ refusing: true }),

@@ -1,13 +1,14 @@
 "use client";
 
 import {
+  type PickerCommandState,
   type PickerOptions,
   type PickerRow,
   type PickerSection,
   pickerPrimitive,
 } from "@kind-ui/agent-ui/core";
-import { createParts } from "@ui-sdk/react/primitive";
-import type { ComponentProps, ReactElement, ReactNode } from "react";
+import { createParts, renderElement } from "@ui-sdk/react/primitive";
+import { type ComponentProps, Fragment, type ReactElement, type ReactNode } from "react";
 import {
   KindCommand,
   KindCommandEmpty,
@@ -78,71 +79,98 @@ export function PickerTrigger({
 export type PickerContentProps = ComponentProps<typeof parts.Content>;
 
 /** The popover: the search field and the list, unless you pass children. Focus moves to the search field. */
-export function PickerContent({ children = DEFAULT_LIST, ...props }: PickerContentProps) {
+export function PickerContent({ children = DEFAULT_LIST, render, ...props }: PickerContentProps) {
   return (
-    <parts.Content initialFocus="input" sideOffset={6} align="start" render={inViewport} {...props}>
+    <parts.Content
+      initialFocus="input"
+      sideOffset={6}
+      align="start"
+      {...props}
+      // A sheet sits in a full-screen viewport, which renders only while the content presents as one.
+      render={(content, state) => {
+        const element = renderElement("div", content, render, state);
+        return state.presentation === "sheet" ? <parts.Viewport>{element}</parts.Viewport> : element;
+      }}
+    >
       {children}
     </parts.Content>
   );
 }
 
-// A sheet sits in a full-screen viewport, which renders only while the content presents as one.
-const inViewport = (props: ComponentProps<"div">, { presentation }: { presentation: string }) =>
-  presentation === "sheet" ? (
-    <parts.Viewport>
-      <div {...props} />
-    </parts.Viewport>
-  ) : (
-    <div {...props} />
-  );
+export type PickerListProps = Omit<ComponentProps<typeof parts.Command>, "children"> & {
+  /** What sits in the list, from the rows: every page by default. */
+  children?: (state: PickerCommandState) => ReactNode;
+};
 
-export type PickerListProps = Omit<ComponentProps<typeof parts.Command>, "children">;
-
-/** UI SDK Command: the search field, what shows while nothing matches, and every page of rows. */
-export function PickerList(props: PickerListProps) {
+/**
+ * UI SDK Command: the search field, what shows while nothing matches, and the list, holding every page of rows unless
+ * you pass children, a function of the rows.
+ */
+export function PickerList({ children = DEFAULT_ROWS, ...props }: PickerListProps) {
   return (
     <parts.Command {...props}>
-      {({ props: command, label, placeholder, emptyText, pages }) => (
-        <KindCommand {...command}>
-          <KindCommandInput aria-label={label} placeholder={placeholder} data-agent-hidden="" />
-          <KindCommandEmpty>{emptyText}</KindCommandEmpty>
-          <KindCommandList>
-            {pages.map(({ page, sections }) => (
-              <KindCommandPage key={page ?? ""} value={page}>
-                {sections.map((section, index) => (
-                  <PickerSectionRows
-                    key={section.footer ? "\u0000footer" : (section.label ?? "")}
-                    section={section}
-                    first={index === 0}
-                  />
-                ))}
-              </KindCommandPage>
-            ))}
-          </KindCommandList>
+      {(state) => (
+        <KindCommand {...state.props}>
+          <KindCommandInput aria-label={state.label} placeholder={state.placeholder} data-agent-hidden="" />
+          <KindCommandEmpty>{state.emptyText}</KindCommandEmpty>
+          <KindCommandList>{children(state)}</KindCommandList>
         </KindCommand>
       )}
     </parts.Command>
   );
 }
 
-function PickerSectionRows({ section, first }: { section: PickerSection; first: boolean }) {
+const DEFAULT_ROWS = ({ pages }: PickerCommandState) =>
+  pages.map(({ page, sections }) => (
+    <KindCommandPage key={page ?? ""} value={page}>
+      {sections.map((section, index) => (
+        <PickerSectionRows
+          key={section.footer ? "\u0000footer" : (section.label ?? "")}
+          section={section}
+          separated={section.footer && index > 0}
+        />
+      ))}
+    </KindCommandPage>
+  ));
+
+export type PickerSectionRowsProps = {
+  section: PickerSection;
+  /** Whether a separator comes before it, as before the footer. */
+  separated?: boolean;
+  /** Renders each row: a `PickerRowItem` by default. */
+  children?: (row: PickerRow) => ReactNode;
+};
+
+/** A group of rows under its label, or the footer. */
+export function PickerSectionRows({
+  section,
+  separated = false,
+  children = (row) => <PickerRowItem row={row} />,
+}: PickerSectionRowsProps) {
   return (
     <>
-      {section.footer && !first ? <KindCommandSeparator /> : null}
+      {separated ? <KindCommandSeparator /> : null}
       <KindCommandGroup>
         {section.label ? <KindCommandGroupLabel>{section.label}</KindCommandGroupLabel> : null}
         {section.rows.map((row) => (
-          <PickerRowItem key={row.option.value} row={row} />
+          <Fragment key={row.option.value}>{children(row)}</Fragment>
         ))}
       </KindCommandGroup>
     </>
   );
 }
 
-function PickerRowItem({ row }: { row: PickerRow }) {
+export type PickerRowItemProps = Omit<ComponentProps<typeof KindCommandItem>, keyof PickerRow["option"]> & {
+  row: PickerRow;
+  /** The row's content: a `PickerItem` by default. */
+  children?: ReactNode;
+};
+
+/** A row: UI SDK's `CommandItem` with the row's props, holding its `PickerItem` unless you pass children. */
+export function PickerRowItem({ row, children, ...props }: PickerRowItemProps) {
   return (
-    <KindCommandItem {...row.option}>
-      <PickerItem value={row.option.value} />
+    <KindCommandItem {...props} {...row.option}>
+      {children ?? <PickerItem value={row.option.value} />}
     </KindCommandItem>
   );
 }

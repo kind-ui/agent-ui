@@ -32,20 +32,22 @@ Picker
 ├── PickerTrigger
 └── PickerContent
     └── PickerList
-        └── PickerItem
+        └── PickerSectionRows
+            └── PickerRowItem
+                └── PickerItem
 ```
 
-`Picker` is a group named by its `label` and the chosen item. `PickerTrigger` is the button, with the chosen item's icon and label, or the `label` while nothing is chosen. `PickerContent` is the popover, and `PickerList` is UI SDK's Command inside it: the search field, the text shown while nothing matches, and every page of rows. `PickerItem` is a row's content: its icon, label, description, trailing text and a check on the chosen item.
+`Picker` is a group named by its `label` and the chosen item. `PickerTrigger` is the button, with the chosen item's icon and label, or the `label` while nothing is chosen. `PickerContent` is the popover, and `PickerList` is UI SDK's Command inside it: the search field, the text shown while nothing matches, and every page of rows. To arrange the list yourself, pass `PickerList` a function of its state that renders `PickerSectionRows` for each section of `pages`. `PickerRowItem` is a row, and `PickerItem` is its content: its icon, label, description, trailing text and a check on the chosen item.
 
 ## Usage
 
 ### Items
 
-Pass `items`, each with a `value` and a `label`, and optionally a `description` (a second line under the label), `meta` (trailing text), an `icon`, `keywords`, a `group` and `disabled`. Groups show in the order they first appear. A disabled item stays in the list, dimmed, and can't be chosen. Every `value` must be unique, on every page.
+Pass `items`, each with a `value` and a `label`, and optionally a `description` (a second line under the label), `meta` (trailing text), an `icon`, `keywords`, a `group` and `disabled`. Groups show in the order they first appear. A disabled item stays in the list, dimmed, and can't be chosen. Every `value` must be unique, on every page, and differ from every action's `id`.
 
 In React, `icon` is an image URL or an element, like an inline `<svg>`. Icons render at 16px and are hidden from assistive technology, so the label names the row.
 
-Pass `value` and `onValueChange` to control the chosen item, or `defaultValue` to start with one. `onValueChange` gets the item's `value`, with the reason `item-press` when a person chose it, or `imperative` from `setValue`. Choosing an item closes the list.
+Pass `value` and `onValueChange` to control the chosen item, or `defaultValue` to start with one. `onValueChange` gets the item's `value`, with the reason `item-press` when a person chose it, or `imperative` from `setValue`. Choosing an item closes the list, unless you cancel the change with `details.cancel()`.
 
 ### Searching
 
@@ -53,7 +55,7 @@ Typing in the search field filters the list as you type. An item matches when it
 
 ### Actions
 
-Pass `actions`, each with an `id` and a `label`, for footer rows after the items, like **New project**. They show on the first page, and the arrow keys reach them like any row. Running one calls `onAction` with its `id` and closes the list; cancel it with `details.cancel()` to keep the list open. Without `onAction`, the actions can't run.
+Pass `actions`, each with an `id` and a `label`, for footer rows after the items, like **New project**. They show on the first page, and the arrow keys reach them like any row. Pressing one calls `onAction` with its `id` and closes the list; cancel it with `details.cancel()` to keep the list open. Without `onAction`, the actions can't run.
 
 ```tsx
 <Picker
@@ -101,7 +103,7 @@ Put each branch's ahead and behind counts in `meta`, which sits at the end of it
 
 ### Agent
 
-An agent connected with `createAgent` finds the picker by its label and reads `open` and the chosen item's `value`. Its `setValue` takes any item on any page and refuses an unknown or disabled one. `run` takes an action's `id` and is offered only while `onAction` is set. It needs no person to confirm.
+An agent connected with `createAgent` finds the picker by its label and reads `open` and the chosen item's `value`. Its `setValue` takes any item on any page and refuses an unknown or disabled one. `run` takes an action's `id` and is offered only while `onAction` is set. Neither closes the list, and neither is offered while the picker is `disabled`. It needs no person to confirm.
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/picker/picker.ts" name="PickerAgentActions" type='Pick<PickerApi, "open" | "close" | "setValue" | "run">' />
 

@@ -54,7 +54,7 @@ const iconNodes = (document: Document, icon: unknown): Node[] =>
 /** The trigger's icon, text and chevron, drawn only when they changed. */
 const drawTrigger = (button: Element, text: string, icon: unknown) => {
   const document = button.ownerDocument;
-  if (drawn.get(button) !== icon) {
+  if (!drawn.has(button) || drawn.get(button) !== icon) {
     drawn.set(button, icon);
     button.replaceChildren(
       ...(icon === undefined ? [] : [element(document, "span", { "data-picker-icon": "" })]),
@@ -119,7 +119,9 @@ const drawRow = (document: Document, items: Map<string, Element>, row: PickerRow
   items.delete(value);
   if (!item) {
     item = element(document, "ui-command-item", { value }) as CommandItemElement;
-    item.append(element(document, "kind-picker-item", { value }));
+    const part = element(document, "kind-picker-item", { value });
+    owned.add(part);
+    item.append(part);
   }
   if (item.getAttribute("label") !== label) item.setAttribute("label", label);
   item.toggleAttribute("disabled", disabled);
@@ -201,12 +203,13 @@ export function definePicker(): void {
         },
         value: {
           get: (api) => api.getValue(),
-          set: (api, value) => api.setValue(String(value)),
+          set: (api, value) => api.setValue?.(String(value)),
         },
       },
       // The inner Command fires `valuechange` and `action` of its own, and its items a `select`.
       events: { onValueChange: "pickerchange", onAction: "pickeraction" },
-      api: ["isOpen", "setOpen", "getValue", "setValue"],
+      // `setValue` is offered only while enabled, so it isn't copied onto `api`.
+      api: ["isOpen", "setOpen", "getValue"],
       // A sheet sits in a full-screen viewport, which the content moves into while it presents as one.
       portal: {
         slots: ["content"],
@@ -261,6 +264,9 @@ export function definePicker(): void {
             if (list) drawList(list, commandState.pages);
           }
           for (const part of el.querySelectorAll("kind-picker-command kind-picker-item")) {
+            // An item written empty fills itself in, as React's bare `PickerItem` does.
+            if (!owned.has(part) && part.firstChild) continue;
+            owned.add(part);
             const item = api.itemState(state, part.getAttribute("value") ?? "");
             if (item) drawItem(part, item);
           }
@@ -307,7 +313,7 @@ export interface KindPickerElement
   open: boolean;
   /** Whether a person can run the `actions`, which fires `pickeraction`. */
   canRun: boolean;
-  api: Pick<PickerApi, "isOpen" | "setOpen" | "getValue" | "setValue">;
+  api: Pick<PickerApi, "isOpen" | "setOpen" | "getValue">;
 }
 
 declare global {

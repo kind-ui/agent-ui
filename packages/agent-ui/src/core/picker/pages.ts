@@ -11,6 +11,7 @@ export type PickerOption = {
   label: string;
   /** More words the search matches: the item's `keywords` and its description. */
   keywords: string[] | undefined;
+  /** Whether it can't be chosen. Arrow keys skip it. */
   disabled: boolean;
   /** The page choosing it opens, for an item with `items`. */
   page: string | undefined;
@@ -18,13 +19,19 @@ export type PickerOption = {
   "aria-checked": "true" | "false" | undefined;
 };
 
+/** A row of the list, with what it shows and the props its `CommandItem` takes. */
 export type PickerRow = {
+  /** Whether it's an item, an action or the way back. */
   kind: PickerRowKind;
   /** The item's `value` or the action's `id`; for the way back, the page's item. */
   value: string;
+  /** Its first line, which the search marks. */
   label: string;
+  /** Its second line. */
   description: string | undefined;
+  /** Its trailing text. */
   meta: string | undefined;
+  /** Passed through untouched, for the render layer to draw. */
   icon: unknown;
   /** Whether choosing it opens a page. */
   opens: boolean;
@@ -32,7 +39,13 @@ export type PickerRow = {
 };
 
 /** A run of rows under one label: a `group` of items, or the footer, which has none. */
-export type PickerSection = { label: string | undefined; footer: boolean; rows: PickerRow[] };
+export type PickerSection = {
+  /** The `group` it holds, which names it. */
+  label: string | undefined;
+  /** Whether it's the footer: the actions, or the way back. */
+  footer: boolean;
+  rows: PickerRow[];
+};
 
 /** A page of the list: the first, then one per item with `items`, named by that item's row key. */
 export type PickerPage = { page: string | undefined; sections: PickerSection[] };

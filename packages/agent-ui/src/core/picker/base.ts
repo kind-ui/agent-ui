@@ -42,7 +42,11 @@ export type PickerOpenChangeReason = PopoverOpenChangeReason | "item-press";
 export type PickerPresentation = "auto" | "popover" | "sheet";
 
 export type PickerBaseOptions = {
-  /** Footer rows after the items, like "More models", in one group the arrow keys reach. Shown on the first page. */
+  /**
+   * Footer rows after the items, like "More models", in one group the arrow keys reach. Shown on the first page. Each
+   * `id` differs from every item's `value`, since agents name both alike.
+   * @default []
+   */
   actions?: PickerAction<unknown>[];
   /**
    * Names the trigger, with the chosen item's label after it, and the search field.
@@ -136,15 +140,22 @@ export type PickerCommandState = {
   props: {
     /** The primitive's own, which it resets the search and pages through when the list opens. */
     controller: CommandController;
+    /** Typing keeps the rows with its letters in order. */
     filter: "fuzzy";
+    /** The best match is highlighted as a person types, so Enter chooses it. */
     autoHighlight: true;
+    /** Chooses an item, runs an action or goes back, by the row's key. */
     onAction: (value: string, details: CommandActionDetails) => void;
+    /** Follows the search, for the description's marks. */
     onQueryChange: (query: string, details: ChangeDetails<CommandQueryChangeReason>) => void;
+    /** Follows the open pages. */
     onPagesChange: (pages: string[], details: ChangeDetails<CommandPagesChangeReason>) => void;
   };
   /** Names the search field. */
   label: string;
+  /** The search field's placeholder. */
   placeholder: string;
+  /** What shows while nothing matches. */
   emptyText: string;
   /** Every page of rows: render each in a `CommandPage` with its `page` as the value. */
   pages: PickerPage[];
@@ -170,9 +181,12 @@ export type PickerBaseApi = Omit<Popup, "open" | "close"> & {
   readonly close: (() => boolean) | undefined;
   /** The chosen item's `value`. */
   getValue: () => string | null;
-  /** Chooses an item by its `value`, on any page. Returns `false` for an unknown or disabled one, or a refused change. */
-  setValue: (value: string) => boolean;
-  /** Runs one of the `actions` by its `id`. Offered only while `onAction` is set. */
+  /**
+   * Chooses an item by its `value`, on any page, leaving the list as it is. Returns `false` for an unknown or disabled
+   * one, or a refused change. Offered only while the picker is enabled.
+   */
+  readonly setValue: ((value: string) => boolean) | undefined;
+  /** Runs one of the `actions` by its `id`, leaving the list as it is. Offered only while `onAction` is set and the picker is enabled. */
   readonly run: ((id: string) => boolean) | undefined;
   /** Every item that can be chosen and every action, for agents. */
   getChoices: () => { value: string; label: string; disabled?: boolean }[];
@@ -307,7 +321,7 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
         wasOpen = open;
       });
 
-      const close = (event?: Event) =>
+      const close = (event: Event | undefined) =>
         popup.setOpen(false, event ? { reason: "item-press", event } : { reason: "item-press" });
 
       const setValue = (value: string, event?: Event) => {
@@ -320,14 +334,15 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
 
       const run = (id: string, event?: Event) => {
         const state = store.get();
-        if (!state.canRun || !state.actions.some((action) => action.id === id)) return false;
+        if (!state.canRun || state.disabled || !state.actions.some((action) => action.id === id))
+          return false;
         const canceled = dispatch(
           context,
           "onAction",
           id,
           event ? { reason: "item-press", event } : { reason: "imperative" },
         );
-        if (!canceled && store.get().open) close(event);
+        if (!canceled && event) close(event);
         return !canceled;
       };
 
@@ -337,10 +352,8 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
         if (kind === "back") controller.pop();
         else if (kind === "action") run(value, event);
         // A row with `items` opens its page, which Command does.
-        else if (leafOf(store.get(), value)) {
-          setValue(value, event);
-          close(event);
-        }
+        // A choice the owner refuses keeps the list open, as a canceled action does.
+        else if (setValue(value, event)) close(event);
       };
       const onQueryChange = (query: string) => store.set({ query });
       const onPagesChange = (pages: string[]) => store.set({ pages: pages.map(keyValue) });
@@ -428,9 +441,12 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
           return store.get().open ? () => popup.setOpen(false) : undefined;
         },
         getValue: () => store.get().value,
-        setValue: (value) => setValue(value),
+        get setValue() {
+          return store.get().disabled ? undefined : (value: string) => setValue(value);
+        },
         get run() {
-          return store.get().canRun ? (id: string) => run(id) : undefined;
+          const { canRun, disabled } = store.get();
+          return canRun && !disabled ? (id: string) => run(id) : undefined;
         },
         getChoices: () => {
           const state = store.get();

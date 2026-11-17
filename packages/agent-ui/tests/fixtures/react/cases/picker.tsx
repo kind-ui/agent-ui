@@ -27,7 +27,10 @@ function Page({
           items={places}
           actions={placeActions}
           {...(refusing ? { value: "kind-ui/agent-ui" } : { defaultValue: "kind-ui/agent-ui" })}
-          onValueChange={record("value")}
+          onValueChange={(value, details) => {
+            record("value")(value, details);
+            if (refusing) details.cancel();
+          }}
           onAction={(id, details) => {
             record("action")(id, details);
             if (refusing) details.cancel();
@@ -41,7 +44,24 @@ function Page({
   );
 }
 
+/** A picker whose items have no icons and nothing chosen. */
+function Plain() {
+  return (
+    <div className="p-6">
+      <Picker
+        id="picker"
+        label="Branch"
+        items={[
+          { value: "main", label: "main" },
+          { value: "dev", label: "dev" },
+        ]}
+      />
+    </div>
+  );
+}
+
 export const cases = {
+  plain: () => <Plain />,
   all: () => <Page />,
   reduced: () => <Page motion="reduced" />,
   refusing: () => <Page refusing />,

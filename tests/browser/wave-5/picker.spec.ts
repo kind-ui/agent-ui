@@ -32,7 +32,7 @@ const settled = (page: Page) =>
 
 const load = async (page: Page, name = "all") => {
   await page.goto(`/?c=picker&case=${name}`);
-  await expect(trigger(page)).toHaveAccessibleName("Work in, kind-ui/agent-ui");
+  await expect(trigger(page)).toHaveAccessibleName(name === "plain" ? "Branch" : "Work in, kind-ui/agent-ui");
 };
 const openList = async (page: Page) => {
   await trigger(page).click();
@@ -132,12 +132,14 @@ test("a click chooses the item, closes and renames the trigger", async ({ page }
   ]);
 });
 
-test("a host that refuses keeps the value, and a cancelled action keeps the list open", async ({ page }) => {
+test("a host that refuses keeps the value and the list open, as a cancelled action does", async ({
+  page,
+}) => {
   await load(page, "refusing");
   await openList(page);
   await option(page, /^kind-ui\/docs/).click();
+  await expect(content(page)).toBeVisible();
   await expect(trigger(page)).toHaveAccessibleName("Work in, kind-ui/agent-ui");
-  await openList(page);
   await option(page, "New project").click();
   await expect(content(page)).toBeVisible();
   expect((await changes(page)).map(({ component, value }) => [component, value])).toEqual([
@@ -149,12 +151,42 @@ test("a host that refuses keeps the value, and a cancelled action keeps the list
 test.describe("on a small touch screen", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 
-  test("the list is a sheet", async ({ page }) => {
+  test("the list is a sheet in its viewport, flush with the screen's bottom and sides", async ({ page }) => {
     await load(page);
     await trigger(page).tap();
     await expect(content(page)).toBeVisible();
     await expect(content(page)).toHaveAttribute("data-presentation", "sheet");
+    await expect(
+      page.locator('[data-slot="kind-picker-viewport"] > [data-slot="kind-picker-content"]'),
+    ).toHaveCount(1);
+    await expect
+      .poll(() => content(page).evaluate((el) => el.getBoundingClientRect().toJSON()))
+      .toMatchObject({ left: 0, right: 390, bottom: 844 });
   });
+});
+
+test("presentation sheet puts the list in its viewport on a desktop too, and closing leaves none", async ({
+  page,
+}) => {
+  await load(page, "sheet");
+  await trigger(page).click();
+  await expect(content(page)).toHaveAttribute("data-presentation", "sheet");
+  await expect(
+    page.locator('[data-slot="kind-picker-viewport"] > [data-slot="kind-picker-content"]'),
+  ).toHaveCount(1);
+  await page.keyboard.press("Escape");
+  await expect(trigger(page)).toBeFocused();
+  await expect(page.locator('[data-slot="kind-picker-viewport"]')).toHaveCount(0);
+});
+
+test("without an icon or a choice, the trigger shows the label, then the chosen item", async ({ page }) => {
+  await load(page, "plain");
+  await expect(trigger(page)).toHaveText("Branch");
+  await expect(trigger(page)).toHaveAccessibleName("Branch");
+  await trigger(page).click();
+  await option(page, "dev").click();
+  await expect(trigger(page)).toHaveText("dev");
+  await expect(trigger(page)).toHaveAccessibleName("Branch, dev");
 });
 
 test("an agent sees open, setValue and run, chooses a leaf on a page and is refused an unknown value", async ({
@@ -202,3 +234,24 @@ for (const colorScheme of ["light", "dark"] as const) {
     expect(violations).toEqual([]);
   });
 }
+
+test("in forced colors the chevron and the check keep a system color, unlike what's behind them", async ({
+  page,
+}) => {
+  await page.emulateMedia({ forcedColors: "active", colorScheme: "dark" });
+  await load(page);
+  await openList(page);
+  const colors = await page.evaluate(() => {
+    const color = (selector: string) => {
+      const el = document.querySelector(selector);
+      return el ? getComputedStyle(el).backgroundColor : null;
+    };
+    return {
+      chevron: color("[data-picker-chevron]"),
+      check: color("[data-chosen] [data-picker-mark]"),
+      canvas: color('[data-slot="kind-picker-content"]'),
+    };
+  });
+  expect(colors.chevron).not.toBe(colors.canvas);
+  expect(colors.check).not.toBe(colors.canvas);
+});
