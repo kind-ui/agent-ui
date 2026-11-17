@@ -1,4 +1,5 @@
 import type { AgentAction } from "@ui-sdk/web/agent";
+import { defineAction } from "../../../../src/web/action.js";
 import { defineAttachments, type KindAttachmentsElement } from "../../../../src/web/attachments.js";
 import { defineChainOfThought } from "../../../../src/web/chain-of-thought.js";
 import { defineCheckpoint } from "../../../../src/web/checkpoint.js";
@@ -6,8 +7,12 @@ import { defineComposer, type KindComposerElement } from "../../../../src/web/co
 import { defineConfirmation } from "../../../../src/web/confirmation.js";
 import { defineContextMeter } from "../../../../src/web/context-meter.js";
 import { defineConversation } from "../../../../src/web/conversation.js";
+import { defineDocument } from "../../../../src/web/document.js";
 import { defineFeedback } from "../../../../src/web/feedback.js";
+import { defineFileTree } from "../../../../src/web/file-tree.js";
+import { defineGeneratedImage } from "../../../../src/web/generated-image.js";
 import { defineGuardrailNotice } from "../../../../src/web/guardrail-notice.js";
+import { defineInlineCitation } from "../../../../src/web/inline-citation.js";
 import { defineInternalToolbar } from "../../../../src/web/internal/toolbar.js";
 import { defineLoader } from "../../../../src/web/loader.js";
 import { defineMarkdown } from "../../../../src/web/markdown.js";
@@ -19,14 +24,20 @@ import { defineQuestion } from "../../../../src/web/question.js";
 import { defineQueue } from "../../../../src/web/queue.js";
 import { defineReasoning } from "../../../../src/web/reasoning.js";
 import { defineReasoningEffort } from "../../../../src/web/reasoning-effort.js";
+import { defineSelection } from "../../../../src/web/selection.js";
+import { defineSources } from "../../../../src/web/sources.js";
+import { defineStackTrace } from "../../../../src/web/stack-trace.js";
 import { defineStatus } from "../../../../src/web/status.js";
 import { defineStep, defineStepList } from "../../../../src/web/step.js";
 import { defineStreamingText } from "../../../../src/web/streaming-text.js";
 import { defineSubagent } from "../../../../src/web/subagent.js";
 import { defineSuggestion } from "../../../../src/web/suggestion.js";
 import { defineTask } from "../../../../src/web/task.js";
+import { defineTerminal } from "../../../../src/web/terminal.js";
+import { defineTestResults } from "../../../../src/web/test-results.js";
 import { defineThinkingIndicator } from "../../../../src/web/thinking-indicator.js";
 import { defineTool } from "../../../../src/web/tool.js";
+import { defineTranscript } from "../../../../src/web/transcript.js";
 import { defineTypingIndicator } from "../../../../src/web/typing-indicator.js";
 import { defineUploader, type KindUploaderElement } from "../../../../src/web/uploader.js";
 import {
@@ -40,6 +51,7 @@ import {
   question,
   queueItems,
   replies,
+  selectionActions,
   steps,
   taskItems,
   thoughts,
@@ -47,11 +59,19 @@ import {
 } from "../../shared/agent.js";
 import { commands, mentions } from "../../shared/composer.js";
 import { context } from "../../shared/context-meter.js";
+import { downloads, readme } from "../../shared/document.js";
+import { entries } from "../../shared/file-tree.js";
+import { lighthouse, size } from "../../shared/generated-image.js";
 import { answer } from "../../shared/markdown.js";
 import { levels, models } from "../../shared/model-selector.js";
 import { guardrails, type NoticeData, notices } from "../../shared/notice.js";
 import { deployQuestions } from "../../shared/question.js";
+import { sources } from "../../shared/sources.js";
+import { typeErrorStack } from "../../shared/stack-trace.js";
 import { suggestions } from "../../shared/suggestion.js";
+import { installRun } from "../../shared/terminal.js";
+import { suites } from "../../shared/test-results.js";
+import { standup } from "../../shared/transcript.js";
 import { uploads } from "../../shared/uploader.js";
 
 const host = agentHost();
@@ -376,6 +396,91 @@ function wireHumanInput(wave: Element) {
   });
 }
 
+const artifacts = `
+  <div class="flex w-[40rem] flex-col gap-8 p-6">
+    <section data-case="sources"><kind-sources id="sources"></kind-sources></section>
+    <section data-case="inline-citation">
+      <p>Back off when you hit a limit <kind-inline-citation id="citation"></kind-inline-citation>.</p>
+    </section>
+    <section data-case="document"><kind-document id="document" label="README.md" can-download></kind-document></section>
+    <section data-case="generated-image">
+      <kind-generated-image id="image" alt="A lighthouse at dusk" can-download></kind-generated-image>
+    </section>
+    <section data-case="file-tree"></section>
+    <section data-case="terminal">
+      <kind-terminal id="terminal" command="npm install" exit-code="0" duration-seconds="3"></kind-terminal>
+    </section>
+    <section data-case="stack-trace"><kind-stack-trace id="stack-trace" can-open-frame></kind-stack-trace></section>
+    <section data-case="test-results"><kind-test-results id="test-results" default-open></kind-test-results></section>
+    <section data-case="transcript"><kind-transcript id="transcript" can-seek></kind-transcript></section>
+    <section data-case="selection">
+      <kind-selection id="selection" can-run>
+        <kind-selection-content>
+          <p id="selection-text">Rate limits reset every hour. Each response carries the remaining count in its headers.</p>
+        </kind-selection-content>
+      </kind-selection>
+    </section>
+    <section data-case="action">
+      <kind-action id="action" label="Explain" status="running" quote="Rate limits reset every hour."></kind-action>
+    </section>
+  </div>`;
+
+function wireArtifacts(wave: Element) {
+  const element = <Tag extends keyof HTMLElementTagNameMap>(tag: Tag, id: string) =>
+    wave.querySelector(`${tag}#${id}`) as HTMLElementTagNameMap[Tag];
+  const sourceList = element("kind-sources", "sources");
+  sourceList.sources = sources;
+  sourceList.addEventListener("openchange", (event) => recordChange("sources", event));
+  const citation = element("kind-inline-citation", "citation");
+  citation.sources = sources;
+  citation.addEventListener("openchange", (event) => recordChange("citation", event));
+  const documentElement = element("kind-document", "document");
+  Object.assign(documentElement, { content: readme, downloads });
+  documentElement.addEventListener("openchange", (event) => recordChange("document", event));
+  documentElement.addEventListener("documentcopy", decide("copy"));
+  documentElement.addEventListener("download", decide("download"));
+  const image = element("kind-generated-image", "image");
+  Object.assign(image, size, { src: lighthouse });
+  image.addEventListener("openchange", (event) => recordChange("image", event));
+  image.addEventListener("download", decide("download"));
+  const tree = Object.assign(document.createElement("kind-file-tree"), {
+    id: "file-tree",
+    canSelect: true,
+    defaultExpanded: ["src"],
+  });
+  wave.querySelector('[data-case="file-tree"]')?.append(tree);
+  tree.entries = entries;
+  tree.addEventListener("pathchange", (event) => recordChange("file-tree", event));
+  tree.addEventListener("expandchange", (event) => recordChange("file-tree", event));
+  tree.addEventListener("fileselect", decide("select"));
+  const terminal = element("kind-terminal", "terminal");
+  terminal.output = installRun;
+  terminal.addEventListener("openchange", (event) => recordChange("terminal", event));
+  terminal.addEventListener("terminalcopy", decide("copy"));
+  const trace = element("kind-stack-trace", "stack-trace");
+  trace.stack = typeErrorStack;
+  trace.addEventListener("openchange", (event) => recordChange("stack-trace", event));
+  trace.addEventListener("showlibraryframeschange", (event) => recordChange("stack-trace", event));
+  trace.addEventListener("stackcopy", decide("copy"));
+  trace.addEventListener("openframe", decide("openFrame"));
+  const results = element("kind-test-results", "test-results");
+  results.suites = suites;
+  results.addEventListener("openchange", (event) => recordChange("test-results", event));
+  results.addEventListener("filterchange", (event) => recordChange("test-results", event));
+  results.addEventListener("expandchange", (event) => recordChange("test-results", event));
+  const transcript = element("kind-transcript", "transcript");
+  transcript.segments = standup;
+  transcript.addEventListener("querychange", (event) => recordChange("transcript", event));
+  transcript.addEventListener("seek", decide("seek"));
+  const selection = element("kind-selection", "selection");
+  selection.actions = selectionActions;
+  selection.addEventListener("selectionaction", decide("run"));
+  selection.addEventListener("dismiss", decide("dismiss"));
+  const action = element("kind-action", "action");
+  action.result = "The limit resets on the hour.";
+  action.addEventListener("openchange", (event) => recordChange("action", event));
+}
+
 function foundation(root: HTMLElement) {
   defineStep();
   defineStepList();
@@ -413,22 +518,40 @@ function waveTwo(root: HTMLElement) {
   wireActivity(root);
 }
 
+function waveThree(root: HTMLElement) {
+  waveTwo(root);
+  defineConfirmation();
+  defineQuestion();
+  defineCheckpoint();
+  defineModelSelector();
+  defineReasoningEffort();
+  defineContextMeter();
+  defineSuggestion();
+  defineFeedback();
+  defineNotice();
+  defineGuardrailNotice();
+  root.insertAdjacentHTML("beforeend", humanInput);
+  wireHumanInput(root.lastElementChild as Element);
+}
+
 export const cases = {
   all: foundation,
   "wave-2": waveTwo,
-  "wave-3": (root: HTMLElement) => {
-    waveTwo(root);
-    defineConfirmation();
-    defineQuestion();
-    defineCheckpoint();
-    defineModelSelector();
-    defineReasoningEffort();
-    defineContextMeter();
-    defineSuggestion();
-    defineFeedback();
-    defineNotice();
-    defineGuardrailNotice();
-    root.insertAdjacentHTML("beforeend", humanInput);
-    wireHumanInput(root.lastElementChild as Element);
+  "wave-3": waveThree,
+  "wave-4": (root: HTMLElement) => {
+    waveThree(root);
+    defineSources();
+    defineInlineCitation();
+    defineDocument();
+    defineGeneratedImage();
+    defineFileTree();
+    defineTerminal();
+    defineStackTrace();
+    defineTestResults();
+    defineTranscript();
+    defineSelection();
+    defineAction();
+    root.insertAdjacentHTML("beforeend", artifacts);
+    wireArtifacts(root.lastElementChild as Element);
   },
 };
