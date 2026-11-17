@@ -64,6 +64,59 @@ function stripComments(source) {
   return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/.*$/gm, "$1");
 }
 
+/**
+ * The selectors that reach a status mark: `[data-status-mark]`, and the part attribute and `data-slot` of every core
+ * slot that writes it.
+ */
+function statusMarkSelectors(coreDir) {
+  const selectors = new Set(["[data-status-mark]"]);
+  for (const path of walk(coreDir).filter((f) => f.endsWith(".ts"))) {
+    const source = stripComments(readFileSync(path, "utf8"));
+    const component = relative(coreDir, dirname(path)).split(sep)[0];
+    for (const { index } of source.matchAll(/["']data-status-mark["']\s*:/g)) {
+      const before = source.slice(0, index);
+      const slotAt = before.search(
+        /["']?[\w-]+["']?\s*:\s*slot(<[^(]*>)?\(\{(?![\s\S]*\bslot(<[^(]*>)?\(\{)/,
+      );
+      const slot = slotAt === -1 ? undefined : /["']?([\w-]+)["']?\s*:/.exec(before.slice(slotAt))?.[1];
+      const own = before.slice(slotAt === -1 ? 0 : slotAt);
+      for (const [, name, value] of own.matchAll(/["']data-([\w-]+-part)["']\s*:\s*["']([\w-]+)["']/g)) {
+        selectors.add(`[data-${name}="${value}"]`);
+      }
+      if (slot && component && path.endsWith(`${component}/${component}.ts`)) {
+        selectors.add(`[data-slot="kind-${component}-${slot}"]`);
+      }
+    }
+  }
+  return [...selectors];
+}
+
+const MARK_PROPERTIES = /^(mask(-[\w-]+)?|width|height|inline-size|block-size|min-width|min-height)$/;
+
+/** Each declaration with the selectors of the rules it sits in, outermost first. */
+function declarations(css) {
+  const found = [];
+  const stack = [];
+  let text = "";
+  for (const char of css.replace(/\/\*[\s\S]*?\*\//g, "")) {
+    if (char === "{") {
+      stack.push(text.trim());
+      text = "";
+    } else if (char === "}") {
+      const rest = text.trim();
+      if (rest) found.push({ rules: [...stack], declaration: rest });
+      stack.pop();
+      text = "";
+    } else if (char === ";") {
+      found.push({ rules: [...stack], declaration: text.trim() });
+      text = "";
+    } else {
+      text += char;
+    }
+  }
+  return found;
+}
+
 const camelCase = (name) => name.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase());
 const importsFrom = (source, name, specifier) =>
   new RegExp(`import\\s*\\{[^}]*\\b${name}\\b[^}]*\\}\\s*from\\s*["']${specifier}["']`).test(source);
@@ -139,6 +192,23 @@ export function checkUiSdkUsage(root, exceptions) {
       if (matches(source, pattern)) {
         errors.push(`${file}: ${pattern} must come from UI SDK (or be a spec §2 exception)`);
       }
+    }
+  }
+
+  // Rule 6: only status-mark.css sizes or masks the status mark; components set `--kind-status-mark-size`, so its
+  // glyph stays centered at every size.
+  const marks = statusMarkSelectors(coreDir);
+  for (const path of walk(join(root, "src/styles")).filter((f) => f.endsWith(".css"))) {
+    const file = rel(path);
+    if (file.endsWith("/status-mark.css")) continue;
+    for (const { rules, declaration } of declarations(readFileSync(path, "utf8"))) {
+      const property = declaration.split(":")[0].trim();
+      if (!MARK_PROPERTIES.test(property)) continue;
+      const mark = marks.find((selector) => rules.some((rule) => rule.includes(selector)));
+      if (mark)
+        errors.push(
+          `${file}: ${property} on ${mark} belongs in status-mark.css; set --kind-status-mark-size`,
+        );
     }
   }
 

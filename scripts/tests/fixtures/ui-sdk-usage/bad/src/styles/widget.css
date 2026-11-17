@@ -1,0 +1,7 @@
+.row [data-status-mark] {
+  width: 14px;
+
+  &::after {
+    mask-size: 9px;
+  }
+}

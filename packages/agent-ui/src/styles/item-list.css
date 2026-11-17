@@ -32,7 +32,7 @@
 
     /* Centered on the first line. */
     & > [data-step-part="icon"] {
-      margin-block: calc(0.5lh - 8px);
+      margin-block: calc(0.5lh - var(--kind-status-mark-size, 16px) / 2);
     }
 
     & > [data-step-part="title"] {

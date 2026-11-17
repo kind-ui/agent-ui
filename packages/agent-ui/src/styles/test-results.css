@@ -155,13 +155,8 @@
 
   /* After the name in the page, before it on screen. */
   [data-test-results-part="status"] {
+    --kind-status-mark-size: 14px;
     order: -1;
-    width: 14px;
-    height: 14px;
-
-    &::after {
-      mask-size: 9px;
-    }
   }
 
   /* A failed test's Stack Trace, lined up with its name. `--tree-level` is the test's. */
