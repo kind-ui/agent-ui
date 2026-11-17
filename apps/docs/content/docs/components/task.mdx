@@ -3,7 +3,7 @@ title: Task
 description: Show the steps an agent takes for one task, as it takes them.
 ---
 
-import TaskExample from "@/examples/task/basic";
+import TaskExample from "../../../examples/task/basic";
 
 Use a task to follow one piece of work an agent carries out, like a change across a few files. Its header shows how many steps are done, and it opens into the steps, each with its status and the files it touched.
 
@@ -51,7 +51,7 @@ Without a `status` of its own, the task's status is what the items add up to: `e
 
 ### Opening and Closing
 
-The task opens and closes like a [Step](/docs/components/step): it opens while it runs or waits for input, closes when it completes, and stays open when it fails, until someone opens or closes it. Pass `open` with `onOpenChange` to control it, or `autoOpen="never"` to keep it closed until someone opens it.
+The task opens and closes like a [Step](./step.mdx): it opens while it runs or waits for input, closes when it completes, and stays open when it fails, until someone opens or closes it. Pass `open` with `onOpenChange` to control it, or `autoOpen="never"` to keep it closed until someone opens it.
 
 ### Keyboard
 

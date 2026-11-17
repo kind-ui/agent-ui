@@ -3,7 +3,7 @@ title: Subagent
 description: Show a subagent's run, from the steps it takes to the answer it returns.
 ---
 
-import SubagentExample from "@/examples/subagent/basic";
+import SubagentExample from "../../../examples/subagent/basic";
 
 Use a subagent when an agent hands part of its work to another agent. It shows the subagent's avatar, name and status, the steps it takes nested under it, a Stop button while you offer one, and its result once it's done.
 
@@ -44,7 +44,7 @@ Subagent
 
 ### Steps
 
-Pass the subagent's steps as children, like a [Tool](/docs/components/tool) for each call it makes, and append new ones as they arrive. Each is its own Tab stop; to make them one, wrap them in a [StepList](/docs/components/step) and join each trigger to it with `StepListItem`. A step you remove leaves at once.
+Pass the subagent's steps as children, like a [Tool](./tool.mdx) for each call it makes, and append new ones as they arrive. Each is its own Tab stop; to make them one, wrap them in a [StepList](./step.mdx) and join each trigger to it with `StepListItem`. A step you remove leaves at once.
 
 ```tsx
 <Subagent agentName="Code reviewer" status="running">
@@ -75,7 +75,7 @@ Pass `onCancel` to show **Stop** while the status is `pending`, `running` or `aw
 
 ### Opening and Closing
 
-The subagent opens and closes like a [Step](/docs/components/step): it opens while it runs or waits for input and closes when it completes, until someone opens or closes it. Pass `open` with `onOpenChange` to control it.
+The subagent opens and closes like a [Step](./step.mdx): it opens while it runs or waits for input and closes when it completes, until someone opens or closes it. Pass `open` with `onOpenChange` to control it.
 
 ### Streaming
 

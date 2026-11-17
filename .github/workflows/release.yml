@@ -151,7 +151,7 @@ jobs:
     needs: [plan, verify]
     if: needs.verify.outputs.published == 'false'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     # Needs a maintainer's approval; npm trusted publishing trusts this workflow and environment.
     environment: npm-release
     permissions:
@@ -182,13 +182,24 @@ jobs:
           integrity="sha512-$(openssl dgst -sha512 -binary "$TARBALL" | base64 -w0)"
           [ "$integrity" = "$INTEGRITY" ] || { echo "::error::$TARBALL changed after verify."; exit 1; }
           npm publish "$TARBALL" --ignore-scripts --access public --tag "$DIST_TAG"
-          for _ in 1 2 3 4 5 6; do
+          # npm can take minutes to show a new version, so wait while it reports none, up to 10 minutes.
+          delay=5
+          SECONDS=0
+          while :; do
             live=$(npm view "@kind-ui/agent-ui@$VERSION" dist.integrity 2>/dev/null || true)
             [ "$live" = "$INTEGRITY" ] && exit 0
-            sleep 10
+            if [ -n "$live" ]; then
+              echo "::error::npm reports integrity '$live' for @kind-ui/agent-ui@$VERSION, not $INTEGRITY."
+              exit 1
+            fi
+            if [ "$SECONDS" -ge 600 ]; then
+              echo "::error::npm still doesn't show @kind-ui/agent-ui@$VERSION after ${SECONDS}s."
+              exit 1
+            fi
+            echo "::notice::npm doesn't show @kind-ui/agent-ui@$VERSION yet; checking again in ${delay}s."
+            sleep "$delay"
+            delay=$(( delay * 2 > 60 ? 60 : delay * 2 ))
           done
-          echo "::error::npm reports integrity '$live' for @kind-ui/agent-ui@$VERSION, not $INTEGRITY."
-          exit 1
 
   github-release:
     name: GitHub release
