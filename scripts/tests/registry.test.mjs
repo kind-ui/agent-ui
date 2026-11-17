@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import catalog from "../../registry/catalog.mjs";
 import { toRegistry, validateCatalog } from "../build-registry.mjs";
 import { checkRegistryIntegrity } from "../check-registry-consumers.mjs";
+import { liveCatalog } from "../check-registry-namespace.mjs";
 
 const pkg = JSON.parse(
   readFileSync(new URL("../../packages/agent-ui/package.json", import.meta.url), "utf8"),
@@ -18,6 +19,11 @@ const dir = mkdtempSync(join(tmpdir(), "registry-"));
 after(() => rmSync(dir, { recursive: true, force: true }));
 
 test("the catalog is valid", () => assert.deepEqual(validateCatalog(catalog, pkg), []));
+
+test("a missing live catalog has no items, and other failures throw", async () => {
+  assert.deepEqual(await liveCatalog(new Response("Not Found", { status: 404 })), { items: [] });
+  await assert.rejects(liveCatalog(new Response("", { status: 503 })), /503/);
+});
 
 test("duplicate names fail", () =>
   assert.match(

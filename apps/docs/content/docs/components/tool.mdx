@@ -3,7 +3,7 @@ title: Tool
 description: Show a tool call from its streamed input to its output or error.
 ---
 
-import ToolExample from "@/examples/tool/basic";
+import ToolExample from "../../../examples/tool/basic";
 
 Use a tool for each tool call the model makes. Its header shows the tool's name and status, and its content holds the input, then the output or the error.
 
@@ -39,13 +39,13 @@ Tool
 └── ToolApproval
 ```
 
-`Tool` renders these parts when you pass no children; any children you pass replace them. The trigger is a native button that shows or hides the content. `ToolTitle` shows the tool's name, `ToolInput` and `ToolOutput` the values as a [Code Block](/docs/components/code-block) or [Markdown](/docs/components/markdown), and `ToolError` the error. `ToolApproval` renders a [Confirmation](/docs/components/confirmation) while the call has an approval, after the content, so it shows while the tool is closed. Each takes its own children instead.
+`Tool` renders these parts when you pass no children; any children you pass replace them. The trigger is a native button that shows or hides the content. `ToolTitle` shows the tool's name, `ToolInput` and `ToolOutput` the values as a [Code Block](./code-block.mdx) or [Markdown](./markdown.mdx), and `ToolError` the error. `ToolApproval` renders a [Confirmation](./confirmation.mdx) while the call has an approval, after the content, so it shows while the tool is closed. Each takes its own children instead.
 
 ## Usage
 
 ### Tool Calls
 
-Pass the call as `call` and update it as the host does. With the [AI SDK](/docs/adapters/ai-sdk), `fromUIMessagePart` maps each tool part to a step whose `call` and `error` you pass on. Key each tool by its `toolCallId`: updating one call never closes another tool or clears its copied state.
+Pass the call as `call` and update it as the host does. With the [AI SDK](../adapters/ai-sdk.mdx), `fromUIMessagePart` maps each tool part to a step whose `call` and `error` you pass on. Key each tool by its `toolCallId`: updating one call never closes another tool or clears its copied state.
 
 ```tsx
 <Tool key={step.id} call={step.call} error={step.error} />
@@ -61,7 +61,7 @@ Each has a copy button, shown once there's a value, that copies it as shown, che
 
 ### Approvals and Errors
 
-While the call has an approval, the tool shows a [Confirmation](/docs/components/confirmation) named after it, like "Run search_docs?". Pass `onApprove` and `onDeny` to offer **Approve** and **Deny**; each is called with the approval's `approvalId` and `generation`, and `approvalReason` adds a box for the reason Deny sends. `toApprovalResponse` comes from the [AI SDK adapter](/docs/adapters/ai-sdk). Without them, it shows where the approval stands, like "Waiting for approval". Once the decision is recorded, the outcome stays, like "Approved". When a choice goes away with focus, focus moves to the tool's trigger.
+While the call has an approval, the tool shows a [Confirmation](./confirmation.mdx) named after it, like "Run search_docs?". Pass `onApprove` and `onDeny` to offer **Approve** and **Deny**; each is called with the approval's `approvalId` and `generation`, and `approvalReason` adds a box for the reason Deny sends. `toApprovalResponse` comes from the [AI SDK adapter](../adapters/ai-sdk.mdx). Without them, it shows where the approval stands, like "Waiting for approval". Once the decision is recorded, the outcome stays, like "Approved". When a choice goes away with focus, focus moves to the tool's trigger.
 
 ```tsx
 <Tool

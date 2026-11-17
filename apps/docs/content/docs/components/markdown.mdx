@@ -3,7 +3,7 @@ title: Markdown
 description: Render the agent's markdown as it streams in, with code blocks and tables.
 ---
 
-import MarkdownExample from "@/examples/markdown/basic";
+import MarkdownExample from "../../../examples/markdown/basic";
 
 Use Markdown for the text of an assistant's reply. Pass the text so far as `source`, and it parses only the blocks that changed, so a long answer costs no more per chunk than a short one.
 
@@ -37,13 +37,13 @@ While it streams, the last block is repaired before it renders, so an unclosed `
 
 ### What It Renders
 
-Markdown follows GitHub Flavored Markdown: headings, paragraphs, emphasis, strikethrough, quotes, lists, task lists, links, images, rules, tables and fenced code. Fenced code renders in a [Code Block](/docs/components/code-block) labeled "Code", and tables in a [Markdown Table](/docs/components/markdown-table) labeled "Table", each with its own buttons.
+Markdown follows GitHub Flavored Markdown: headings, paragraphs, emphasis, strikethrough, quotes, lists, task lists, links, images, rules, tables and fenced code. Fenced code renders in a [Code Block](./code-block.mdx) labeled "Code", and tables in a [Markdown Table](./markdown-table.mdx) labeled "Table", each with its own buttons.
 
 Raw HTML shows as text. Links and images keep relative, `http`, `https` and `mailto` URLs; any other URL renders as its text, with no link.
 
 ### Highlighting
 
-No highlighter ships with Markdown. Pass a `highlight` function and every code block uses it to color its code; [Code Block](/docs/components/code-block#highlighting) explains what it returns.
+No highlighter ships with Markdown. Pass a `highlight` function and every code block uses it to color its code; [Code Block](./code-block.mdx#highlighting) explains what it returns.
 
 ## API Reference
 

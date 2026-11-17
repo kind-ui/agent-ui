@@ -3,7 +3,7 @@ title: Composer
 description: Let people write to the agent, with mentions, commands and files.
 ---
 
-import ComposerExample from "@/examples/composer/basic";
+import ComposerExample from "../../../examples/composer/basic";
 
 Use a composer where someone writes a prompt. It holds the text, the mentions and commands typed into it, and the attached files, and sends them together as one draft.
 
@@ -35,7 +35,7 @@ Composer
 └── ComposerStop
 ```
 
-The composer renders a form, and everything inside it takes dropped files. `ComposerAttachments` shows the attached files as [Attachments](/docs/components/attachments), and stays empty until there are some. `ComposerInput` is the prompt, and `ComposerTriggerMenu` inside it shows the suggestions. `ComposerAttach` opens the file picker. `ComposerSubmit` and `ComposerStop` are Send and Stop, which take turns in the same place. Name the composer and its input with `aria-label`.
+The composer renders a form, and everything inside it takes dropped files. `ComposerAttachments` shows the attached files as [Attachments](./attachments.mdx), and stays empty until there are some. `ComposerInput` is the prompt, and `ComposerTriggerMenu` inside it shows the suggestions. `ComposerAttach` opens the file picker. `ComposerSubmit` and `ComposerStop` are Send and Stop, which take turns in the same place. Name the composer and its input with `aria-label`.
 
 ## Usage
 

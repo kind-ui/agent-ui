@@ -3,9 +3,9 @@ title: Human Input
 description: Watch an agent ask, wait for approval and take feedback in one run, built from the human input components.
 ---
 
-import HumanInputShowcase from "@/examples/showcase/human-input";
+import HumanInputShowcase from "../../../examples/showcase/human-input";
 
-This run puts the human input components together the way a host app would. The agent asks a [Question](/docs/components/question), waits on a [Confirmation](/docs/components/confirmation) inside a [Tool](/docs/components/tool), and answers with [Feedback](/docs/components/feedback) and [Suggestions](/docs/components/suggestion) after it. A [Checkpoint](/docs/components/checkpoint) marks where the turn started, a [Notice](/docs/components/notice) and a [Guardrail Notice](/docs/components/guardrail-notice) explain what the agent may do, and the composer holds a [Model Selector](/docs/components/model-selector), [Reasoning Effort](/docs/components/reasoning-effort) and a [Context Meter](/docs/components/context-meter).
+This run puts the human input components together the way a host app would. The agent asks a [Question](../components/question.mdx), waits on a [Confirmation](../components/confirmation.mdx) inside a [Tool](../components/tool.mdx), and answers with [Feedback](../components/feedback.mdx) and [Suggestions](../components/suggestion.mdx) after it. A [Checkpoint](../components/checkpoint.mdx) marks where the turn started, a [Notice](../components/notice.mdx) and a [Guardrail Notice](../components/guardrail-notice.mdx) explain what the agent may do, and the composer holds a [Model Selector](../components/model-selector.mdx), [Reasoning Effort](../components/reasoning-effort.mdx) and a [Context Meter](../components/context-meter.mdx).
 
 <Example caption="The run stops on the question until you answer it, then on the deploy until you approve it. The first Approve fails on purpose, so press it again. Rate the reply, pick a suggestion, or press Replay to start over.">
   <HumanInputShowcase />
@@ -22,7 +22,7 @@ This run puts the human input components together the way a host app would. The 
 - **Suggestions:** each one sends a follow-up. "Email the logs to the vendor" is blocked, and the Guardrail Notice says why; press **Why?** for the policy, or dismiss it to pick again.
 - **Composer:** pick a model and an effort level. The context meter fills as the run goes on; hover, focus or press it for the token counts.
 
-Each component gets its state from the host as plain data, here a timer stepping through a script, and calls the host back when a person decides. In an app, the same data comes from your model's stream, for example through the [AI SDK adapter](/docs/adapters/ai-sdk).
+Each component gets its state from the host as plain data, here a timer stepping through a script, and calls the host back when a person decides. In an app, the same data comes from your model's stream, for example through the [AI SDK adapter](../adapters/ai-sdk.mdx).
 
 <Caption>
   Every component here runs in React and Web Components. The example is React.
