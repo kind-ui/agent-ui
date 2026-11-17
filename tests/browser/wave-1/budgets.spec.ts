@@ -9,7 +9,9 @@ const BUDGETS = {
   markdownStream: { parses: 1, writes: 4, renders: 6, notified: 3 },
   toolStream: { writes: 14, renders: 25, notified: 17 },
   terminalChunk: { writes: 6, renders: 7, notified: 4, layoutReads: 17 },
-  terminalLine: { writes: 8, renders: 9, notified: 5, layoutReads: 21 },
+  // A new line in a full viewport reads layout 16 times (17 under StrictMode, which binds the new line twice). The
+  // line that first fills the 10-line case's viewport both grows and scrolls it, which the virtualizer reads twice more.
+  terminalLine: { writes: 8, renders: 9, notified: 5, layoutReads: 19 },
   transcriptWord: { writes: 3, renders: 3, notified: 3, layoutReads: 6 },
   transcriptSegment: { writes: 38, renders: 44, notified: 47, layoutReads: 9 },
   transcriptSearch: { writes: 44, renders: 221, notified: 170, layoutReads: 2 },

@@ -24,9 +24,13 @@ const crossBrowser =
       )
     : [];
 
+// Each run writes traces into its own folder, since a run clears its output folder as it starts and would delete
+// the traces another run is writing. Workers load this file again and inherit the runner's environment.
+process.env.KIND_TEST_RUN ??= `${Date.now()}-${process.pid}`;
+
 export default defineConfig({
   testDir: "tests/browser",
-  outputDir: "artifacts/test-results",
+  outputDir: `artifacts/test-results/${process.env.KIND_TEST_RUN}`,
   forbidOnly: !!process.env.CI,
   // A test that passes on retry is reported as flaky, not passed.
   retries: process.env.CI ? 2 : 0,

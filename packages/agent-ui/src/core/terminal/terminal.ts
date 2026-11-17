@@ -237,7 +237,9 @@ export const terminalPrimitive: TerminalPrimitive = definePrimitive<
       store.set({ lines: next, hasOutput: hasText(next) });
       // Fewer lines, or a new first line among several, means the output started over: its measured heights are stale.
       if (next.length < lines.length || (lines.length > 1 && next[0] !== lines[0])) virtual.reset();
-      if (next.length !== lines.length) virtual.refresh();
+      // The virtualizer lays out again once its count changes. Its scroll listener and ResizeObserver keep where the
+      // viewport sits current, so `refresh()` reading the viewport again on every new line would only add layout reads.
+      else if (next.length !== lines.length) store.set({ rows: virtual.items(), size: virtual.size() });
     });
 
     return {

@@ -41,6 +41,32 @@ const animated = (page: Page, name: string) =>
         (animation.effect as KeyframeEffect).getKeyframes().flatMap((frame) => Object.keys(frame)),
       ),
   );
+// Adds a suggestion and reads its chip's animations in its first frame, once its parts have bound: a 120 ms reduced
+// fade can end before another round trip to the page.
+const entrance = (page: Page) =>
+  page.evaluate(
+    () =>
+      new Promise<string[]>((resolve) => {
+        const observer = new MutationObserver(() => {
+          const added = [...document.querySelectorAll("#suggestion button")].find((el) =>
+            el.textContent?.includes("Translate to French"),
+          );
+          if (!added) return;
+          observer.disconnect();
+          requestAnimationFrame(() =>
+            resolve(
+              added
+                .getAnimations()
+                .flatMap((animation) =>
+                  (animation.effect as KeyframeEffect).getKeyframes().flatMap((frame) => Object.keys(frame)),
+                ),
+            ),
+          );
+        });
+        observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+        (window as unknown as Fixture).kindHost.add();
+      }),
+  );
 
 const open = async (page: Page, name = "all") => {
   await page.goto(`/?c=suggestion&case=${name}`);
@@ -133,11 +159,8 @@ test("a new suggestion fades up once; an updated one doesn't replay, and nothing
   const top = (selector: string) => page.locator(selector).evaluate((el) => el.getBoundingClientRect().top);
   const above = await top("#above");
   const below = await top("#below");
-  await host(page, "add");
+  expect(await entrance(page)).toEqual(expect.arrayContaining(["opacity", "transform"]));
   await expect(chip(page, "Translate to French")).toBeVisible();
-  expect(await animated(page, "Translate to French")).toEqual(
-    expect.arrayContaining(["opacity", "transform"]),
-  );
   expect(await animated(page, "Draft a reply")).toEqual([]);
   await settled(page);
   await host(page, "rename");
@@ -150,8 +173,7 @@ test("a new suggestion fades up once; an updated one doesn't replay, and nothing
 test("with reduced motion a new suggestion only fades", async ({ page }) => {
   await open(page, "reduced");
   await afterFirstFrame(page);
-  await host(page, "add");
-  const keys = await animated(page, "Translate to French");
+  const keys = await entrance(page);
   expect(keys).toContain("opacity");
   expect(keys).not.toContain("transform");
 });
