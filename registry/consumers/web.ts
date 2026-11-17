@@ -37,6 +37,7 @@ import { defineTerminal } from "./components/ui/web/terminal.js";
 import { defineTestResults } from "./components/ui/web/test-results.js";
 import { defineThinkingIndicator } from "./components/ui/web/thinking-indicator.js";
 import { defineTool } from "./components/ui/web/tool.js";
+import { defineTranscript } from "./components/ui/web/transcript.js";
 import { defineTypingIndicator } from "./components/ui/web/typing-indicator.js";
 import { defineUploader } from "./components/ui/web/uploader.js";
 import "./index.css";
@@ -69,6 +70,7 @@ for (const define of [
   defineTerminal,
   defineStackTrace,
   defineTestResults,
+  defineTranscript,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -119,6 +121,7 @@ const items = {
   "stack-trace": `<kind-stack-trace can-open-frame stack="TypeError: x is undefined
     at main (/app/src/index.ts:7:1)"></kind-stack-trace>`,
   "test-results": `<kind-test-results default-open></kind-test-results>`,
+  transcript: `<kind-transcript can-seek current-time="1"></kind-transcript>`,
   terminal: `<kind-terminal command="npm test" exit-code="0" default-open></kind-terminal>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
@@ -207,6 +210,9 @@ Object.assign(main.querySelector("kind-sources") as HTMLElement, {
 Object.assign(main.querySelector("kind-terminal") as HTMLElement, { output: "\x1b[32m✓\x1b[0m 22 passed" });
 Object.assign(main.querySelector("kind-test-results") as HTMLElement, {
   suites: [{ id: "math", name: "math", tests: [{ id: "sum", name: "adds", status: "pass", durationMs: 2 }] }],
+});
+Object.assign(main.querySelector("kind-transcript") as HTMLElement, {
+  segments: [{ id: "1", speaker: "Priya", start: 0, end: 4, text: "Let's start with the checklist." }],
 });
 Object.assign(main.querySelector("kind-file-tree") as HTMLElement, {
   entries: [{ path: "src/index.ts", change: "modified", additions: 2 }],

@@ -44,6 +44,7 @@ import { Terminal } from "./components/ui/terminal.js";
 import { TestResults } from "./components/ui/test-results.js";
 import { ThinkingIndicator } from "./components/ui/thinking-indicator.js";
 import { Tool } from "./components/ui/tool.js";
+import { Transcript } from "./components/ui/transcript.js";
 import { TypingIndicator } from "./components/ui/typing-indicator.js";
 import { Uploader } from "./components/ui/uploader.js";
 import "./index.css";
@@ -188,6 +189,13 @@ const items = {
           ],
         },
       ]}
+    />
+  ),
+  transcript: (
+    <Transcript
+      segments={[{ id: "1", speaker: "Priya", start: 0, end: 4, text: "Let's start with the checklist." }]}
+      currentTime={1}
+      onSeek={() => {}}
     />
   ),
   terminal: <Terminal command="npm test" output={"\x1b[32m✓\x1b[0m 22 passed"} exitCode={0} defaultOpen />,
