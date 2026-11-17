@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `54f9ef7` (Wave 4 Task 10 Transcript)
+Last reviewed: `13d8bb4` (Wave 4 Task 11 Selection and Action)
 
 ## Settled
 
@@ -26,6 +26,7 @@ Last reviewed: `54f9ef7` (Wave 4 Task 10 Transcript)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A Selection toolbar with many actions may spill past its border on a narrow screen** (Wave 4 Task 11): it doesn't wrap; not reproduced with three actions.
 - **A file added to a folder while it opens may be clipped until the open ends** (Wave 4 Task 6): `--tree-group-height` is measured as the open starts. Not reproduced.
 - **The shimmer's band snaps to its start as it fades out when the image loads** (Wave 4 Task 5, suspected, not measured frame by frame): the animation stops with the phase; the image fades in over it.
 - **An expanded Document whose content resizes after streaming ends eases to the new height over `--kind-duration-panel`** (suspected, not reproduced), so its last lines could be clipped that long.
@@ -50,6 +51,7 @@ Last reviewed: `54f9ef7` (Wave 4 Task 10 Transcript)
 
 ## Resolved
 
+- **Selection toolbar** (Wave 4 Task 11): state and motion rules sit at one attribute with their context in `:where()`, so a consumer's class wins; a triple-clicked quote no longer ends in an empty line (core trims `quote`); `selection.spec.ts` pins full, reduced and no motion.
 - **The status mark's ✕ sat off center, again** (Wave 4 Task 10, user report on Test Results): root cause was each glyph masked at a fixed pixel `mask-size` (10px, 16px, and Test Results' 9px) inside a box other stylesheets resized, so (box − mask) / 2 landed on half pixels that round differently per DPR. Fixed for good: glyphs are drawn centered in their 24×24 viewBox and masked `center / 100% 100%` over the whole border box, the mark is sized only through `--kind-status-mark-size` (Test Results and Checkpoint set 14px), `check-ui-sdk-usage.mjs` fails any other stylesheet that sets `mask*`, `width` or `height` on a mark, and `tests/browser/wave-1/status-mark.spec.ts` checks every consumer's size and the glyph centroid for each status and size at 1x and 2x.
 - **Transcript segments' entrance was cancelled when `data-entering` cleared** (Wave 4 Task 10): fixed; `opacity` and `translate` stay in the segment's `transition`, and only `@starting-style` sits behind `[data-entering]`.
 - **Transcript marks in upcoming words fell under 4.5:1, the search lost its ring in forced colors, the playing bar stayed left in RTL, state selectors outranked a class, and the word highlight ignored `--kind-radius`** (Wave 4 Task 10): fixed (`mark` takes `--kind-color-fg`, a transparent outline, an `inset-inline-start` bar, `:where()`, `calc(var(--kind-radius) / 3)`).

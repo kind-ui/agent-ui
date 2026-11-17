@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `54f9ef7` (Wave 4 Task 10 Transcript)
+Last reviewed: `13d8bb4` (Wave 4 Task 11 Selection and Action)
 
 ## Settled
 
@@ -58,6 +58,7 @@ Last reviewed: `54f9ef7` (Wave 4 Task 10 Transcript)
 
 ## Resolved
 
+- **Selection and Action** (Wave 4 Task 11): empty written `kind-action-quote`, `kind-action-result` and `kind-selection-item` parts are filled in as React's defaults are; a `kind-selection` in a shadow root opens (core reads `getComposedRanges`); web fixtures use the tag map's element types.
 - **A web Transcript shorter than its viewport raised a ResizeObserver loop error** (Wave 4 Task 10): fixed; the viewport has a fixed `--kind-transcript-height`, so measuring segments never resizes it, and the spec fails on any window `error`.
 - **`kind-test-results` missed a filter or tree written later, or written with whitespace inside** (Wave 4 Task 9): `draw` looks both up each time, a `MutationObserver` redraws when parts arrive, and whitespace-only parts count as empty. Pinned in `test-results.spec.ts` (late case).
 - **`kind-stack-trace` (Wave 4 Task 8):** a moved element folded its shown library frames (root `state` now maps `showLibraryFrames`); written empty frames, groups, toggles and frame parts stayed empty (now filled from state, as React's defaults are; `written` fixture case); a new `label` or an equal `frames` copy rebuilt every frame node (the list now redraws only when its rows, entries or `canOpen` change by content).

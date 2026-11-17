@@ -3,14 +3,15 @@ import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 
 type Fixture = {
-  kindAction: { set(next: Record<string, string | undefined>): void; append(chunk: string): void };
+  kindAction: { set(next: Record<string, string | boolean | undefined>): void; append(chunk: string): void };
+  kindHost: { openings: unknown[][] };
 };
 
 const action = (page: Page) => page.locator("#action");
 const trigger = (page: Page) => action(page).getByRole("button", { name: "Explain" });
 const content = (page: Page) => action(page).locator('[data-slot="kind-action-content"]');
 const result = (page: Page) => action(page).locator('[data-slot="kind-action-result"]');
-const set = (page: Page, next: Record<string, string | undefined>) =>
+const set = (page: Page, next: Record<string, string | boolean | undefined>) =>
   page.evaluate((n) => (window as unknown as Fixture).kindAction.set(n), next);
 const append = (page: Page, chunk: string) =>
   page.evaluate((c) => (window as unknown as Fixture).kindAction.append(c), chunk);
@@ -19,14 +20,19 @@ const settled = (page: Page) =>
     document.getAnimations().every((animation) => animation.playState !== "running"),
   );
 
-const open = async (page: Page) => {
-  await page.goto("/?c=action&case=all");
+const open = async (page: Page, name = "all") => {
+  await page.goto(`/?c=action&case=${name}`);
   await expect(trigger(page)).toHaveAttribute("aria-expanded", "true");
 };
 
 test("streams its result under the quote and collapses to its header on completion", async ({ page }) => {
   await open(page);
-  await expect(action(page).locator("blockquote")).toHaveText("Rate limits reset every hour.");
+  // The fixture's quote ends in "\n\n", as a triple-click selection does.
+  expect(
+    await action(page)
+      .locator("blockquote")
+      .evaluate((el) => el.textContent),
+  ).toBe("Rate limits reset every hour.");
   await append(page, "The limit **resets**");
   await expect(result(page).locator("strong")).toHaveText("resets");
   await append(page, " on the hour.\n\nRequests after that count again.");
@@ -80,3 +86,21 @@ for (const colorScheme of ["light", "dark"] as const) {
     expect(violations).toEqual([]);
   });
 }
+
+test("an owner of open is told of completion and the trigger, and it stays open until the owner closes it", async ({
+  page,
+}) => {
+  await open(page, "owned");
+  await set(page, { status: "complete" });
+  await trigger(page).click();
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as Fixture).kindHost.openings))
+    .toEqual([
+      [false, "auto"],
+      [false, "trigger-press"],
+    ]);
+  await expect(trigger(page)).toHaveAttribute("aria-expanded", "true");
+  await expect(content(page)).toBeVisible();
+  await set(page, { open: false });
+  await expect(trigger(page)).toHaveAttribute("aria-expanded", "false");
+});

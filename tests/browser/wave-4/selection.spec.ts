@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Fixture = {
   kindHost: { actions: unknown[][]; dismissals: unknown[][] };
@@ -28,8 +29,8 @@ const activeSlot = (page: Page) =>
     return active?.closest("[data-slot]")?.getAttribute("data-slot") ?? active?.tagName;
   });
 
-const open = async (page: Page) => {
-  await page.goto("/?c=selection&case=all");
+const open = async (page: Page, name = "all") => {
+  await page.goto(`/?c=selection&case=${name}`);
   await expect(content(page)).toBeVisible();
 };
 
@@ -37,7 +38,8 @@ const open = async (page: Page) => {
 const pointAt = (page: Page, selector: string, offset: number) =>
   page.evaluate(
     ([sel, at]) => {
-      const text = document.querySelector(sel)?.firstChild as Text;
+      const scope = document.querySelector("#shadow-host")?.shadowRoot ?? document;
+      const text = scope.querySelector(sel)?.firstChild as Text;
       const range = document.createRange();
       range.setStart(text, at);
       range.setEnd(text, at + 1);
@@ -51,6 +53,11 @@ const drag = async (page: Page, from: { x: number; y: number }, to: { x: number;
   await page.mouse.move(from.x, from.y);
   await page.mouse.down();
   await page.mouse.move(to.x, to.y, { steps: 5 });
+};
+
+const dragReply = async (page: Page) => {
+  await drag(page, await pointAt(page, "#reply", 0), await pointAt(page, "#reply", 26));
+  await page.mouse.up();
 };
 
 // Places a selection of the reply's first characters and extends it by one with the keyboard.
@@ -170,3 +177,139 @@ for (const colorScheme of ["light", "dark"] as const) {
     expect(violations).toEqual([]);
   });
 }
+
+test("a press inside the root after Escape lets the same selection show the toolbar again", async ({
+  page,
+}) => {
+  await open(page);
+  await dragReply(page);
+  const text = await selected(page);
+  await page.keyboard.press("Escape");
+  await expect(toolbar(page)).toBeHidden();
+  // A drag that starts on a live selection drags the text instead of selecting, so the press lands elsewhere in the
+  // root and the same range is selected again before it ends.
+  const point = await pointAt(page, "#reply-2", 8);
+  await page.mouse.move(point.x, point.y);
+  await page.mouse.down();
+  await page.evaluate(() => {
+    const node = document.querySelector("#reply")?.firstChild as Text;
+    document.getSelection()?.setBaseAndExtent(node, 0, node, 26);
+  });
+  await page.mouse.up();
+  expect(await selected(page)).toBe(text);
+  await expect(toolbar(page)).toBeVisible();
+});
+
+test("a host that cancels onAction and onDismiss keeps the toolbar and the selection", async ({ page }) => {
+  await open(page, "refused");
+  await selectWithKeyboard(page);
+  await button(page, "Quote").click();
+  await page.keyboard.press("Escape");
+  await page.locator("#outside").click();
+  await frames(page);
+  await expect(toolbar(page)).toBeVisible();
+  expect(await selected(page)).toBe("Rate limits");
+  const log = await host(page);
+  expect(log.actions).toEqual([["quote", "Rate limits", "item-press", "mouse"]]);
+  expect(log.dismissals).toEqual([
+    ["Rate limits", "escape-key", "keyboard"],
+    ["Rate limits", "outside-press", "mouse"],
+  ]);
+});
+
+test("an action's description is its button's title", async ({ page }) => {
+  await open(page);
+  await selectWithKeyboard(page);
+  await expect(button(page, "Copy")).toHaveAttribute("title", "Copy the selected text");
+  await expect(button(page, "Ask")).not.toHaveAttribute("title");
+});
+
+test("without onAction the buttons are disabled and agents can't run one", async ({ page }) => {
+  await open(page, "static");
+  await selectWithKeyboard(page);
+  for (const name of ["Ask", "Quote", "Copy"]) await expect(button(page, name)).toBeDisabled();
+  const actions = await page.evaluate(
+    () =>
+      (window as unknown as { agent: { snapshot(): { label?: string; actions: string[] }[] } }).agent
+        .snapshot()
+        .find((entry) => entry.label === "Selection actions")?.actions,
+  );
+  expect(actions).toContain("dismiss");
+  expect(actions).not.toContain("run");
+});
+
+test("a selection inside a shadow root shows the toolbar", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "a web element in a shadow root");
+  await open(page, "shadow");
+  await dragReply(page);
+  expect(await page.evaluate(() => getSelection()?.toString())).toContain("Rate limits reset every");
+  await expect(toolbar(page)).toBeVisible();
+});
+
+type Motion = { property: string; duration: string; translate: string };
+
+// The toolbar's transition as it shows, and as it starts leaving after Escape.
+const transitions = async (page: Page) => {
+  await selectWithKeyboard(page);
+  await settled(page);
+  const shown = await toolbar(page).evaluate((el) => {
+    const style = getComputedStyle(el);
+    return { property: style.transitionProperty, duration: style.transitionDuration, translate: "" };
+  });
+  await toolbar(page).evaluate((el) => {
+    const record = window as unknown as { leaving?: Motion };
+    record.leaving = undefined;
+    new MutationObserver(() => {
+      if (!el.hasAttribute("data-ending-style") || record.leaving) return;
+      const style = getComputedStyle(el);
+      record.leaving = {
+        property: style.transitionProperty,
+        duration: style.transitionDuration,
+        translate: style.translate,
+      };
+    }).observe(el, { attributes: true, attributeFilter: ["data-ending-style"] });
+  });
+  await page.keyboard.press("Escape");
+  await expect(toolbar(page)).toBeHidden();
+  const leaving = await page.evaluate(() => (window as unknown as { leaving?: Motion }).leaving);
+  return { shown, leaving };
+};
+
+const seconds = (page: Page, token: string) =>
+  page.evaluate(
+    (name) => `${parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) / 1000}s`,
+    token,
+  );
+
+test("full motion fades and rises the toolbar; reduced motion only fades it", async ({ page }) => {
+  await open(page);
+  const base = await seconds(page, "--kind-duration-base");
+  const fast = await seconds(page, "--kind-duration-fast");
+  const reducedDuration = await seconds(page, "--kind-duration-reduced");
+  const full = await transitions(page);
+  expect(full.shown).toMatchObject({ property: "opacity, translate", duration: `${base}, ${base}` });
+  // `[data-ending-style]` sets one duration for both properties.
+  expect(full.leaving).toMatchObject({ property: "opacity, translate", duration: fast });
+  expect(full.leaving?.translate).not.toBe("none");
+
+  const fadeOnly = { property: "opacity", duration: reducedDuration, translate: "none" };
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await open(page);
+  expect((await transitions(page)).leaving).toEqual(fadeOnly);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await open(page, "reduced");
+  expect((await transitions(page)).leaving).toEqual(fadeOnly);
+});
+
+test('motion="none" has no transition and hides the toolbar at once', async ({ page }) => {
+  await open(page, "none");
+  await selectWithKeyboard(page);
+  await expect(toolbar(page)).toHaveCSS("transition-property", "none");
+  await page.keyboard.press("Escape");
+  expect(
+    await page.evaluate(() => {
+      const el = document.querySelector('[data-slot="kind-selection-toolbar"]') as HTMLElement | null;
+      return !el || el.hidden;
+    }),
+  ).toBe(true);
+});

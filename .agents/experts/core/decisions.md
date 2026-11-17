@@ -2,10 +2,12 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `54f9ef7` (Wave 4 Task 10 Transcript)
+Last reviewed: `13d8bb4` (Wave 4 Task 11 Selection and Action)
 
 ## Settled
 
+- **Selection's `onDismiss` hears Escape, an outside press and `dismiss`, not a selection collapsing** (Wave 4 Task 11): a collapse is the reader moving on, not a dismissal; the JSDoc says so.
+- **Selection's root is a `group` named by `label`, which names its Toolbar too** (Wave 4 Task 11): the bridge names a component by its root, and a generic `div` can't carry a name; the same name twice is the cost of one "Selection actions" agent entry.
 - **A Test Results suite whose id is `all`, `fail`, `pass` or `skip` shares an agent item value with a filter** (Wave 4 Task 9): the bridge checks one list per component, and `expand("fail")` still opens the suite; hosts use real ids.
 - **Test Results' `failure` part cancels every click inside its Stack Trace** (Wave 4 Task 9, spec §2 row): UI SDK's Tree would otherwise toggle the row; the trace's buttons have already run. A link added inside Stack Trace later would need its default kept.
 - **A double-click on a File Tree file calls `onSelect` twice** (Wave 4 Task 6): each press is an activation, as Suggestion's `onPick` is; a host that opens files dedupes.
@@ -35,6 +37,7 @@ Last reviewed: `54f9ef7` (Wave 4 Task 10 Transcript)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **What Firefox and WebKit do with Tab from a selection in Selection's content isn't recorded** (Wave 4 Task 11): Chromium reaches the first toolbar button and keeps the selection; the nightly cross-browser run covers the spec.
 - **A person's Test Results filter press reports `source: "programmatic"`** (Wave 4 Task 9): `createChange` reads the Segmented Control's native `change` as programmatic, as Reasoning Effort's does; the reason is `input-change`. Needs the originating key or pointer event, or an upstream source for `change`.
 - **Focus drops to the page when every Stack Trace frame button leaves at once** (Wave 4 Task 8), as when the host removes `onOpenFrame` or passes a trace with no frames while a frame has focus: `createListFocus`'s recovery finds no item left and has no `focusFallback`. Removing one of several frames recovers to a neighbor.
 - **File Tree hears `onSelect` from bubbled clicks and keyups, not the Tree's `onAction`** (Wave 4 Task 6): web's `action` doesn't bubble, so `read` calls `onSelect` only when the event's row is the selection, the owner took it, and no modifier is held. Needs a spec §2 row or a bubbling UI SDK event.
@@ -72,6 +75,7 @@ Last reviewed: `54f9ef7` (Wave 4 Task 10 Transcript)
 
 ## Resolved
 
+- **Selection** (Wave 4 Task 11): the same text selected again after Escape or a press outside reopens the toolbar (a root `pointerdown` clears the closed range), `close` tested `element()` against `null` (it returns `undefined`), `actionsById` is cached by array (`cached`), emptying `actions` closes the toolbar, a selection inside a shadow root reads `getComposedRanges`, and Action trims `quote`. Pinned in `selection.spec.ts` and `action.spec.ts`.
 - **Transcript highlights marked letters across the speaker and the text** (Wave 4 Task 10): fixed; the speaker and the words are marked apart, as `searchSegments` scores them.
 - **Transcript `timeOf`, `wordValues` and `highlights` read `Object.prototype` ids** (Wave 4 Task 10): fixed through `segmentOf` (`Object.hasOwn`), and a non-finite `start` formats as 0:00; `tests/core/transcript.test.mjs` pins `seek`, `search` and `timeOf`.
 - **Arrow keys past a Transcript's first or last time scrolled the view** (Wave 4 Task 10): fixed; `move` returns the key it's on.

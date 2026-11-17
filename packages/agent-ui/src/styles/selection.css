@@ -33,26 +33,29 @@
     color: var(--kind-color-fg);
     font-size: 0.8125rem;
     line-height: 1.25rem;
-    transform-origin: var(--transform-origin);
     transition:
       opacity var(--kind-duration-base) var(--kind-ease-out),
       translate var(--kind-duration-base) var(--kind-ease);
-
-    &:is([data-starting-style], [data-ending-style]) {
-      opacity: 0;
-    }
-    &[data-ending-style] {
-      transition-duration: var(--kind-duration-fast);
-    }
-    &[data-motion="reduced"] {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
-    }
-    &[data-motion="none"] {
-      transition: none;
-    }
   }
 
-  [data-slot="kind-selection-toolbar"][hidden] {
+  /* Every state below stays at the slot's one attribute, so a consumer's class still wins. */
+  [data-slot="kind-selection-toolbar"]:where([data-starting-style], [data-ending-style]) {
+    opacity: 0;
+  }
+
+  [data-slot="kind-selection-toolbar"]:where([data-ending-style]) {
+    transition-duration: var(--kind-duration-fast);
+  }
+
+  [data-slot="kind-selection-toolbar"]:where([data-motion="reduced"]) {
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+  }
+
+  [data-slot="kind-selection-toolbar"]:where([data-motion="none"]) {
+    transition: none;
+  }
+
+  :where([data-slot="kind-selection-toolbar"])[hidden] {
     display: none;
   }
 
@@ -63,17 +66,23 @@
   /* Full motion only: it rises toward the side it sits on. Reduced motion fades over 120 ms with no move, "none"
      keeps nothing (spec §6). */
   @media (prefers-reduced-motion: no-preference) {
-    [data-slot="kind-selection-toolbar"][data-motion="auto"]:is([data-starting-style], [data-ending-style]) {
+    [data-slot="kind-selection-toolbar"]:where([data-motion="auto"]):where(
+        [data-starting-style],
+        [data-ending-style]
+      ) {
       translate: 0 4px;
-
-      &[data-side="bottom"] {
-        translate: 0 -4px;
-      }
+    }
+    [data-slot="kind-selection-toolbar"]:where([data-motion="auto"][data-side="bottom"]):where(
+        [data-starting-style],
+        [data-ending-style]
+      ) {
+      translate: 0 -4px;
     }
   }
 
+  /* After the `data-ending-style` rule, which it ties with. */
   @media (prefers-reduced-motion: reduce) {
-    [data-slot="kind-selection-toolbar"][data-motion="auto"] {
+    [data-slot="kind-selection-toolbar"]:where([data-motion="auto"]) {
       transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
     }
   }

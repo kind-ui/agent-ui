@@ -15,6 +15,10 @@ const fill = (part: Element | null, text: string) => {
   if (part.textContent !== text) part.textContent = text;
 };
 
+const fillEmpty = (part: Element | null, html: string) => {
+  if (part && !part.firstElementChild && !part.textContent?.trim()) part.innerHTML = html;
+};
+
 /**
  * `<kind-action label="…" quote="…" result="…" status="…">` fills in its trigger and content when it has no
  * children. It writes its title into an empty `<kind-action-title>`, its `quote` into an empty `<blockquote>` in
@@ -37,6 +41,9 @@ export function defineAction(): void {
         if (!el.firstElementChild) el.innerHTML = DEFAULT_PARTS;
         const draw = () => {
           const { title, quote, result, status } = instance.get();
+          // Parts a page wrote empty are filled in, as React's defaults are.
+          fillEmpty(el.querySelector("kind-action-quote"), "<blockquote hidden></blockquote>");
+          fillEmpty(el.querySelector("kind-action-result"), "<kind-markdown></kind-markdown>");
           fill(el.querySelector("kind-action-title"), title);
           fill(el.querySelector("kind-action-quote > blockquote"), quote);
           const markdown = el.querySelector<KindMarkdownElement>(
