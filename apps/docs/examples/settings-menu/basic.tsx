@@ -30,7 +30,12 @@ export default function SettingsMenuExample() {
   return (
     <Composer aria-label="Message" onSubmit={() => new Promise<void>((resolve) => setTimeout(resolve, 1000))}>
       <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
-      <SettingsMenu style={{ gridArea: "attach" }} settings={settings} values={values} onValuesChange={setValues} />
+      <SettingsMenu
+        style={{ gridArea: "attach" }}
+        settings={settings}
+        values={values}
+        onValuesChange={setValues}
+      />
       <ComposerSubmit />
     </Composer>
   );
