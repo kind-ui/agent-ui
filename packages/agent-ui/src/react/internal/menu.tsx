@@ -17,6 +17,7 @@ import {
   MenuSubTrigger,
   MenuTrigger,
 } from "@ui-sdk/react/menu";
+import type { ReactElement } from "react";
 import { withKindClass } from "./kind-class.js";
 
 const content =
@@ -63,3 +64,27 @@ export const KindMenuSeparator = withKindClass(
   "-mx-1 my-1 h-px bg-[var(--kind-color-border)]",
   "KindMenuSeparator",
 );
+
+export type KindMenuItemContentProps = {
+  /** An image URL, or an element such as an inline `svg`. */
+  icon?: unknown;
+  label: string;
+  description?: string | undefined;
+};
+
+/** A data row's icon and text, the label over an optional description, as menus built on `menuBase` draw them. */
+export function KindMenuItemContent({ icon, label, description }: KindMenuItemContentProps) {
+  return (
+    <>
+      {icon !== undefined ? (
+        <KindMenuItemIcon>
+          {typeof icon === "string" ? <img src={icon} alt="" /> : (icon as ReactElement)}
+        </KindMenuItemIcon>
+      ) : null}
+      <span data-menu-text="">
+        <span>{label}</span>
+        {description ? <span data-menu-description="">{description}</span> : null}
+      </span>
+    </>
+  );
+}

@@ -16,7 +16,7 @@ import {
   KindMenuGroup,
   KindMenuGroupLabel,
   KindMenuItem,
-  KindMenuItemIcon,
+  KindMenuItemContent,
   KindMenuSeparator,
   KindMenuSub,
   KindMenuSubContent,
@@ -36,32 +36,17 @@ export type AddMenuProps = Omit<ComponentProps<typeof parts.Root>, "children" | 
   children?: ReactNode;
 };
 
-const iconOf = (icon: unknown) =>
-  typeof icon === "string" ? <img src={icon} alt="" /> : (icon as ReactElement | undefined);
-
-function RowText({ row }: { row: AddMenuRow }) {
-  return (
-    <>
-      {row.icon !== undefined ? <KindMenuItemIcon>{iconOf(row.icon)}</KindMenuItemIcon> : null}
-      <span data-menu-text="">
-        <span>{row.label}</span>
-        {row.description ? <span data-menu-description="">{row.description}</span> : null}
-      </span>
-    </>
-  );
-}
-
 function Row({ row }: { row: AddMenuRow }) {
   if (!row.sections)
     return (
       <KindMenuItem value={row.id} label={row.label} disabled={row.disabled}>
-        <RowText row={row} />
+        <KindMenuItemContent icon={row.icon} label={row.label} description={row.description} />
       </KindMenuItem>
     );
   return (
     <KindMenuSub>
       <KindMenuSubTrigger disabled={row.disabled}>
-        <RowText row={row} />
+        <KindMenuItemContent icon={row.icon} label={row.label} description={row.description} />
         <span data-menu-chevron="" />
       </KindMenuSubTrigger>
       <KindMenuSubContent>
@@ -138,7 +123,7 @@ export function AddMenuContent({ children = DEFAULT_ROWS, ...props }: AddMenuCon
 const DEFAULT_ROWS = ({ sections }: AddMenuContentState) => <AddMenuRows sections={sections} />;
 
 // Shared, so an update doesn't render the default parts' wrappers again.
-const PLUS = <span data-add-menu-icon="" aria-hidden="true" />;
+const PLUS = <span data-menu-trigger-icon="" aria-hidden="true" />;
 const DEFAULT_PARTS = (
   <>
     <AddMenuTrigger />

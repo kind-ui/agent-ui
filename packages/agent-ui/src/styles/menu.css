@@ -1,5 +1,6 @@
-/* Menus built on `menuBase` (Add Menu, …): UI SDK Menu inside a root keyed on `data-menu-part`, whose items take
-   the internal Menu's look. This adds what every such menu shares: a submenu's chevron and the popup's motion. */
+/* Menus built on `menuBase` (Add Menu, Settings Menu, …): UI SDK Menu inside a root keyed on `data-menu-part`, whose
+   items take the internal Menu's look. This adds what such menus share: an icon trigger, a submenu's chevron, a radio
+   item's check, a checkbox item drawn as a switch and the popup's motion. */
 @layer components {
   [data-menu-part="root"] {
     /* Lucide "chevron-right", see THIRD_PARTY_NOTICES.md. */
@@ -9,6 +10,42 @@
 
   :is([data-menu-part="trigger"], [data-menu-part="content"]) {
     display: contents;
+  }
+
+  /* A trigger holding only `[data-menu-trigger-icon]` is a square icon button; the menu sets
+     `--kind-menu-trigger-icon`. */
+  :where([data-menu-part="trigger"]) [data-slot="menu-trigger"]:where(:has(> [data-menu-trigger-icon])) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 1px solid var(--kind-color-border);
+    border-radius: calc(var(--kind-radius) / 2);
+    background-color: var(--kind-color-surface);
+    color: var(--kind-color-fg);
+    cursor: default;
+    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+
+    &:hover,
+    &[data-open] {
+      background-color: var(--kind-color-hover);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+    &:is(:disabled, [data-disabled]) {
+      opacity: 0.5;
+    }
+  }
+
+  [data-menu-trigger-icon] {
+    width: 16px;
+    height: 16px;
+    background-color: currentColor;
+    mask: var(--kind-menu-trigger-icon) center / contain no-repeat;
   }
 
   :where([data-menu-part="root"]) {
@@ -27,6 +64,43 @@
     &:dir(rtl) [data-menu-chevron] {
       scale: -1 1;
     }
+    & [data-menu-check] {
+      width: 14px;
+      height: 14px;
+      background-color: currentColor;
+      mask: var(--kind-icon-check) center / contain no-repeat;
+    }
+    /* A checkbox item's indicator drawn as a switch, with UI SDK Switch's look; the item says it's checked. */
+    & [data-menu-switch] {
+      display: inline-flex;
+      flex-shrink: 0;
+      align-self: center;
+      align-items: center;
+      width: 2rem;
+      height: 18px;
+      margin-inline-start: auto;
+      padding: 2px;
+      border-radius: 999px;
+      background-color: var(--kind-color-border);
+      transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+
+      &[data-checked] {
+        --kind-menu-switch-shift: 14px;
+        background-color: var(--kind-color-accent);
+      }
+      &[data-checked]:dir(rtl) {
+        --kind-menu-switch-shift: -14px;
+      }
+      & > [data-menu-switch-thumb] {
+        width: 14px;
+        height: 14px;
+        border-radius: 999px;
+        background-color: var(--kind-color-surface);
+        box-shadow: 0 1px 2px color-mix(in srgb, var(--kind-color-shadow) 10%, transparent);
+        translate: var(--kind-menu-switch-shift, 0) 0;
+        transition: translate var(--kind-duration-fast) var(--kind-ease-out);
+      }
+    }
     & [data-slot="menu-item-icon"] > :is(img, svg) {
       width: 16px;
       height: 16px;
@@ -34,11 +108,30 @@
     }
   }
 
-  /* Forced colors replace a background, which is all a mask draws. */
+  /* Forced colors replace a background, which is all a mask and a switch draw. */
   @media (forced-colors: active) {
-    [data-menu-part="root"] [data-menu-chevron] {
+    [data-menu-part="root"] :is([data-menu-chevron], [data-menu-check]) {
       forced-color-adjust: none;
       background-color: CanvasText;
+    }
+    [data-menu-trigger-icon] {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+    [data-menu-part="root"] [data-menu-switch] {
+      forced-color-adjust: none;
+      border: 1px solid CanvasText;
+      background-color: Canvas;
+
+      &[data-checked] {
+        background-color: Highlight;
+      }
+      & > [data-menu-switch-thumb] {
+        background-color: CanvasText;
+      }
+      &[data-checked] > [data-menu-switch-thumb] {
+        background-color: HighlightText;
+      }
     }
   }
 
@@ -83,8 +176,23 @@
     }
   }
 
+  /* A switch slides only at full motion. */
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-menu-part="root"][data-motion="auto"]) [data-menu-switch] > [data-menu-switch-thumb] {
+      transition: none;
+    }
+  }
+  :where([data-menu-part="root"][data-motion="reduced"]) [data-menu-switch] > [data-menu-switch-thumb] {
+    transition: none;
+  }
+
   :where([data-menu-part="root"][data-motion="none"])
-    :is([data-slot="menu-content"], [data-menu-part="trigger"] *) {
+    :is(
+      [data-slot="menu-content"],
+      [data-menu-part="trigger"] *,
+      [data-menu-switch],
+      [data-menu-switch-thumb]
+    ) {
     transition: none;
   }
 }

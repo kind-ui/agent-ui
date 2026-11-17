@@ -29,6 +29,7 @@ import { defineQueue } from "./components/ui/web/queue.js";
 import { defineReasoning } from "./components/ui/web/reasoning.js";
 import { defineReasoningEffort } from "./components/ui/web/reasoning-effort.js";
 import { defineSelection } from "./components/ui/web/selection.js";
+import { defineSettingsMenu } from "./components/ui/web/settings-menu.js";
 import { defineSources } from "./components/ui/web/sources.js";
 import { defineStackTrace } from "./components/ui/web/stack-trace.js";
 import { defineStatus } from "./components/ui/web/status.js";
@@ -79,6 +80,7 @@ for (const define of [
   defineAction,
   definePicker,
   defineAddMenu,
+  defineSettingsMenu,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -134,6 +136,7 @@ const items = {
   action: `<kind-action label="Explain" quote="Retry with backoff." result="Wait, then try again." status="complete"></kind-action>`,
   picker: `<kind-picker label="Work in"></kind-picker>`,
   "add-menu": `<kind-add-menu can-run></kind-add-menu>`,
+  "settings-menu": `<kind-settings-menu></kind-settings-menu>`,
   terminal: `<kind-terminal command="npm test" exit-code="0" default-open></kind-terminal>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
@@ -235,6 +238,10 @@ Object.assign(main.querySelector("kind-picker") as HTMLElement, {
 });
 Object.assign(main.querySelector("kind-add-menu") as HTMLElement, {
   items: [{ id: "upload", label: "Upload file" }],
+});
+Object.assign(main.querySelector("kind-settings-menu") as HTMLElement, {
+  settings: [{ type: "toggle", id: "search", label: "Web search" }],
+  values: { search: true },
 });
 Object.assign(main.querySelector("kind-file-tree") as HTMLElement, {
   entries: [{ path: "src/index.ts", change: "modified", additions: 2 }],

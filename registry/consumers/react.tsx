@@ -36,6 +36,7 @@ import { Queue } from "./components/ui/queue.js";
 import { Reasoning } from "./components/ui/reasoning.js";
 import { ReasoningEffort } from "./components/ui/reasoning-effort.js";
 import { Selection } from "./components/ui/selection.js";
+import { SettingsMenu } from "./components/ui/settings-menu.js";
 import { Sources } from "./components/ui/sources.js";
 import { StackTrace } from "./components/ui/stack-trace.js";
 import { Status } from "./components/ui/status.js";
@@ -218,6 +219,12 @@ const items = {
     />
   ),
   "add-menu": <AddMenu items={[{ id: "upload", label: "Upload file" }]} onAction={() => {}} />,
+  "settings-menu": (
+    <SettingsMenu
+      settings={[{ type: "toggle", id: "search", label: "Web search" }]}
+      defaultValues={{ search: true }}
+    />
+  ),
   terminal: <Terminal command="npm test" output={"\x1b[32m✓\x1b[0m 22 passed"} exitCode={0} defaultOpen />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">

@@ -170,6 +170,36 @@ export interface MenuEntry<Icon = unknown> {
   items?: MenuEntry<Icon>[];
 }
 
+/** A setting that is on or off, drawn as a switch. */
+export interface SettingsToggle<Icon = unknown> {
+  type: "toggle";
+  id: string;
+  label: string;
+  description?: string;
+  icon?: Icon;
+}
+
+/** A value a choice setting can take. */
+export interface SettingsOption {
+  value: string;
+  label: string;
+}
+
+/** A setting with one value of several, chosen in a submenu of its own. */
+export interface SettingsChoice<Icon = unknown> {
+  type: "choice";
+  id: string;
+  label: string;
+  icon?: Icon;
+  options: SettingsOption[];
+}
+
+/** A row of a settings menu. */
+export type SettingsEntry<Icon = unknown> = SettingsToggle<Icon> | SettingsChoice<Icon>;
+
+/** A settings menu's values by setting `id`: `true` or `false` for a toggle, an option's `value` for a choice. */
+export type SettingsValues = Record<string, boolean | string>;
+
 /** A mode of an approval mode menu. A `danger` mode lets the agent do more without asking. */
 export interface ApprovalModeOption {
   value: string;

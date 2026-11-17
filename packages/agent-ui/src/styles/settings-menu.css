@@ -1,0 +1,30 @@
+/* Settings Menu (spec §7): an icon button that opens a menu of settings. Toggles are checkbox items whose indicator
+   is drawn as a switch, and choices are submenus showing their value. The trigger, switch and menu are `menu.css`'s. */
+@layer components {
+  [data-kind="settings-menu"] {
+    /* Lucide "settings-2", see THIRD_PARTY_NOTICES.md. */
+    --kind-menu-trigger-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 7h-9'/%3E%3Cpath d='M14 17H5'/%3E%3Ccircle cx='17' cy='17' r='3'/%3E%3Ccircle cx='7' cy='7' r='3'/%3E%3C/svg%3E");
+  }
+
+  /* A choice's value sits at the row's end, before its chevron. Every option's label shares one grid cell and only
+     the chosen one shows, so the row keeps its width when the value changes. */
+  [data-settings-menu-value] {
+    display: grid;
+    flex-shrink: 0;
+    align-self: center;
+    margin-inline-start: auto;
+    padding-inline-start: 1rem;
+    color: var(--kind-color-muted);
+
+    & > * {
+      grid-area: 1 / 1;
+      text-align: end;
+    }
+    & > :not([data-current]) {
+      visibility: hidden;
+    }
+    & + [data-menu-chevron] {
+      margin-inline-start: 0.25rem;
+    }
+  }
+}

@@ -1,5 +1,55 @@
 import "@ui-sdk/web/menu";
 
+/** An element with attributes and text, built without parsing markup. */
+export const menuElement = (
+  document: Document,
+  tag: string,
+  attributes: Record<string, string> = {},
+  text?: string,
+): HTMLElement => {
+  const el = document.createElement(tag);
+  for (const [name, value] of Object.entries(attributes)) el.setAttribute(name, value);
+  if (text !== undefined) el.textContent = text;
+  return el;
+};
+
+type Movable = Element & { moveBefore?: (node: Node, child: Node | null) => void };
+
+/**
+ * Puts `child` before `before` in `parent` only when it isn't there, so a focused row keeps focus. `moveBefore` doesn't
+ * reconnect, where the browser has it.
+ */
+export const placeMenuChild = (parent: Movable, child: Element, before: Element | null): void => {
+  if (child.parentElement === parent && child.nextElementSibling === before) return;
+  if (parent.moveBefore && child.isConnected && parent.isConnected) parent.moveBefore(child, before);
+  else parent.insertBefore(child, before);
+};
+
+/** A data row's icon, label and description. An `icon` is an image URL, or an element that is copied. */
+export type MenuItemContent = { label: string; description?: string | undefined; icon?: unknown };
+
+// What each row was last drawn from, so an update that keeps it leaves its nodes alone.
+const drawnContent = new WeakMap<Element, MenuItemContent>();
+
+/**
+ * Fills `target` with a row's icon and text, the label over an optional description, then `extra`, as menus built on
+ * `menuBase` draw their rows. Does nothing while the row's content is unchanged.
+ */
+export const drawMenuItemContent = (target: Element, row: MenuItemContent, extra: Node[] = []): void => {
+  const last = drawnContent.get(target);
+  if (last?.label === row.label && last.description === row.description && last.icon === row.icon) return;
+  drawnContent.set(target, { label: row.label, description: row.description, icon: row.icon });
+  const document = target.ownerDocument;
+  const text = menuElement(document, "span", { "data-menu-text": "" });
+  text.append(menuElement(document, "span", {}, row.label));
+  if (row.description)
+    text.append(menuElement(document, "span", { "data-menu-description": "" }, row.description));
+  const icon = row.icon === undefined ? [] : [menuElement(document, "ui-menu-item-icon")];
+  if (typeof row.icon === "string") icon[0]?.append(menuElement(document, "img", { alt: "", src: row.icon }));
+  else if (row.icon instanceof Element) icon[0]?.append(row.icon.cloneNode(true));
+  target.replaceChildren(...icon, text, ...extra);
+};
+
 // A Kind menu's own trigger, inside its `[data-menu-part=trigger]`, takes its look from the component's stylesheet.
 const classes = [
   "contents",
@@ -99,14 +149,14 @@ const classes = [
   "[&_ui-menu-sub-trigger[data-slot=menu-trigger]]:data-disabled:opacity-50",
   "[&_ui-menu-sub-trigger[data-slot=menu-trigger]]:has-[[data-menu-description]]:items-start",
   "[&_ui-menu-sub-trigger[data-slot=menu-trigger]]:data-open:bg-[var(--kind-color-hover)]",
-  "[&_[data-slot=menu-item-indicator]]:inline-flex",
-  "[&_[data-slot=menu-item-indicator]]:h-5",
-  "[&_[data-slot=menu-item-indicator]]:w-4",
-  "[&_[data-slot=menu-item-indicator]]:shrink-0",
-  "[&_[data-slot=menu-item-indicator]]:items-center",
-  "[&_[data-slot=menu-item-indicator]]:justify-center",
-  "[&_[data-slot=menu-item-indicator]]:text-[var(--kind-color-accent)]",
-  "[&_[data-slot=menu-item-indicator]]:data-unchecked:invisible",
+  "[&_[data-slot=menu-item-indicator]:not([data-menu-switch])]:inline-flex",
+  "[&_[data-slot=menu-item-indicator]:not([data-menu-switch])]:h-5",
+  "[&_[data-slot=menu-item-indicator]:not([data-menu-switch])]:w-4",
+  "[&_[data-slot=menu-item-indicator]:not([data-menu-switch])]:shrink-0",
+  "[&_[data-slot=menu-item-indicator]:not([data-menu-switch])]:items-center",
+  "[&_[data-slot=menu-item-indicator]:not([data-menu-switch])]:justify-center",
+  "[&_[data-slot=menu-item-indicator]:not([data-menu-switch])]:text-[var(--kind-color-accent)]",
+  "[&_[data-slot=menu-item-indicator]:not([data-menu-switch])]:data-unchecked:invisible",
   "[&_[data-slot=menu-item-icon]]:inline-flex",
   "[&_[data-slot=menu-item-icon]]:h-5",
   "[&_[data-slot=menu-item-icon]]:w-4",

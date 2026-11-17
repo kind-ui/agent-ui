@@ -11,9 +11,14 @@ import {
 import type { MenuOpenChangeReason } from "@ui-sdk/core/menu";
 import { createParts } from "@ui-sdk/web";
 import type { AttributeProperties, UiChangeEvent, UiElement } from "@ui-sdk/web/events";
-import { defineInternalMenu } from "./internal/menu.js";
+import {
+  defineInternalMenu,
+  drawMenuItemContent,
+  menuElement as element,
+  placeMenuChild as place,
+} from "./internal/menu.js";
 
-const DEFAULT_PARTS = `<kind-internal-menu><ui-menu><kind-add-menu-trigger><ui-menu-trigger><button type="button" data-agent-hidden><span data-add-menu-icon aria-hidden="true"></span></button></ui-menu-trigger></kind-add-menu-trigger><kind-add-menu-content><ui-menu-content side-offset="6" align="start"></ui-menu-content></kind-add-menu-content></ui-menu></kind-internal-menu>`;
+const DEFAULT_PARTS = `<kind-internal-menu><ui-menu><kind-add-menu-trigger><ui-menu-trigger><button type="button" data-agent-hidden><span data-menu-trigger-icon aria-hidden="true"></span></button></ui-menu-trigger></kind-add-menu-trigger><kind-add-menu-content><ui-menu-content side-offset="6" align="start"></ui-menu-content></kind-add-menu-content></ui-menu></kind-internal-menu>`;
 
 // Contents this element filled in, and so draws the rows of. A content someone wrote keeps its rows, as React's
 // children do. Kept across instances, because UI SDK rebuilds one when the element returns to the page.
@@ -21,49 +26,6 @@ const owned = new WeakSet<Element>();
 const drawn = new WeakMap<Element, AddMenuContentState>();
 
 type AddMenuIcon = string | Element;
-
-const element = (document: Document, tag: string, attributes: Record<string, string> = {}, text?: string) => {
-  const el = document.createElement(tag);
-  for (const [name, value] of Object.entries(attributes)) el.setAttribute(name, value);
-  if (text !== undefined) el.textContent = text;
-  return el;
-};
-
-/** An icon as nodes: a string is an image URL, an element is copied. */
-const iconNodes = (document: Document, icon: unknown): Node[] =>
-  typeof icon === "string"
-    ? [element(document, "img", { alt: "", src: icon })]
-    : icon instanceof Element
-      ? [icon.cloneNode(true)]
-      : [];
-
-type Movable = Element & { moveBefore?: (node: Node, child: Node | null) => void };
-
-// Moves only what is out of place, so a focused row keeps focus. `moveBefore` doesn't reconnect, where the browser
-// has it.
-const place = (parent: Movable, child: Element, before: Element | null) => {
-  if (child.parentElement === parent && child.nextElementSibling === before) return;
-  if (parent.moveBefore && child.isConnected && parent.isConnected) parent.moveBefore(child, before);
-  else parent.insertBefore(child, before);
-};
-
-// What each row's content was last drawn from, so an update that keeps it leaves its nodes alone.
-const drawnRows = new WeakMap<Element, Pick<AddMenuRow, "label" | "description" | "icon">>();
-
-/** A row's icon and text, built from its data so no label is parsed as markup. */
-const drawRowContent = (target: Element, row: AddMenuRow, extra: Node[]) => {
-  const last = drawnRows.get(target);
-  if (last?.label === row.label && last.description === row.description && last.icon === row.icon) return;
-  drawnRows.set(target, { label: row.label, description: row.description, icon: row.icon });
-  const document = target.ownerDocument;
-  const text = element(document, "span", { "data-menu-text": "" });
-  text.append(element(document, "span", {}, row.label));
-  if (row.description)
-    text.append(element(document, "span", { "data-menu-description": "" }, row.description));
-  const icon = row.icon === undefined ? [] : [element(document, "ui-menu-item-icon")];
-  icon[0]?.append(...iconNodes(document, row.icon));
-  target.replaceChildren(...icon, text, ...extra);
-};
 
 /**
  * Draws a level's rows into `parent`, reusing each row's element by its `id` and moving only what is out of place, so
@@ -96,7 +58,7 @@ const drawLevel = (parent: Element, sections: AddMenuSection[]) => {
       el.setAttribute("value", row.id);
       el.setAttribute("label", row.label);
       el.toggleAttribute("disabled", row.disabled);
-      drawRowContent(el, row, []);
+      drawMenuItemContent(el, row);
       return el;
     }
     if (!el) {
@@ -106,7 +68,7 @@ const drawLevel = (parent: Element, sections: AddMenuSection[]) => {
     const trigger = el.querySelector(":scope > ui-menu-sub-trigger");
     if (trigger) {
       trigger.toggleAttribute("disabled", row.disabled);
-      drawRowContent(trigger, row, [element(document, "span", { "data-menu-chevron": "" })]);
+      drawMenuItemContent(trigger, row, [element(document, "span", { "data-menu-chevron": "" })]);
     }
     const sub = el.querySelector(":scope > ui-menu-sub-content");
     if (sub && row.sections) drawLevel(sub, row.sections);

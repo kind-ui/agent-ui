@@ -1,6 +1,6 @@
 {
   ".": 265,
-  "./core": 208000,
+  "./core": 209000,
   "./adapters/ai-sdk": 1345,
   "imports": {
     "stepBase": 5500,
@@ -21,6 +21,7 @@
     "menuBase": 4000,
     "pickerPrimitive": 49000,
     "modelSelectorPrimitive": 49500,
-    "addMenuPrimitive": 7000
+    "addMenuPrimitive": 7000,
+    "settingsMenuPrimitive": 7500
   }
 }

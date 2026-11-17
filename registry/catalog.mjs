@@ -174,6 +174,12 @@ const components = {
       "A plus button that opens a menu of what can be added, with icons, descriptions, groups and submenus.",
     uses: ["internal-menu"],
   },
+  "settings-menu": {
+    title: "Settings Menu",
+    description:
+      "An icon button that opens a menu of settings: toggles drawn as switches, and choices in submenus showing their value.",
+    uses: ["internal-menu"],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",
