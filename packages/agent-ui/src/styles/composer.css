@@ -304,6 +304,9 @@
       forced-color-adjust: none;
       background-color: ButtonText;
     }
+    [data-slot="kind-composer-submit"]:not([data-pending]):where([aria-disabled="true"])::before {
+      background-color: GrayText;
+    }
   }
 
   /* Reduced motion: no scale, a short fade. `none`: no transition at all. */

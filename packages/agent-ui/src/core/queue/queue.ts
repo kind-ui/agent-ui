@@ -43,7 +43,10 @@ export type QueueOptions = {
    * @default ["pending"]
    */
   defaultOpenSections?: QueueSection[];
-  /** Called with an item's `id` when someone removes it. While it's set, items can be removed. */
+  /**
+   * Called with an item's `id` when someone removes it. While it's set, items can be removed. An item is asked for
+   * once: a host that keeps it, say after a failed removal, passes a new object for it to allow another try.
+   */
   onRemove?: (id: string, details: ChangeDetails<"remove-press" | "imperative">) => void;
   /**
    * `"auto"` follows `prefers-reduced-motion`. A removed item fades out before the items after it move up; under
@@ -92,7 +95,7 @@ export type QueueApi = ListFocus<QueueState, ItemProps> & {
   readonly reorder: ((id: string, index: number) => boolean) | undefined;
   /**
    * Removes an item by its `id`, through `onRemove`. Returns whether it was asked; an item already asked isn't asked
-   * again until the host passes new `items`. Offered only while `onRemove` is set and there are items.
+   * again until the host passes a new object for it. Offered only while `onRemove` is set and there are items.
    */
   readonly remove: ((id: string, event?: Event) => boolean) | undefined;
   /** The `items` option. */
@@ -269,17 +272,20 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
     let mounting = true;
     const known = new Set(store.get().items.map((item) => item.id));
     const setRows = (rows: LeavingRow<QueueItem>[]) => {
-      for (const id of known) if (!rows.some((row) => row.item.id === id)) known.delete(id);
+      const ids = new Set(rows.map((row) => row.item.id));
+      for (const id of known) if (!ids.has(id)) known.delete(id);
       store.set({ rows, rowsById: byId(rows) });
     };
 
-    const removing = new Set<string>();
+    // Each item asked to be removed, as it was then: asked again only once the host passes it changed.
+    const removing = new Map<string, QueueItem>();
     let lastItems = store.get().items;
     context.onOptions((options) => {
       const items = options.items ?? NO_ITEMS;
       if (items === lastItems) return;
       lastItems = items;
-      removing.clear();
+      const current = new Map(items.map((item) => [item.id, item]));
+      for (const [id, item] of removing) if (current.get(id) !== item) removing.delete(id);
       setRows(leavingRows(store.get().rows, items, options.motion));
     });
 
@@ -306,14 +312,15 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       store.set({ openSections, exitingSections });
     };
     const remove = (id: string, event?: Event) => {
-      if (removing.has(id) || !store.get().items.some((item) => item.id === id)) return false;
+      const item = store.get().items.find((each) => each.id === id);
+      if (!item || removing.has(id)) return false;
       const asked = !dispatch(
         context,
         "onRemove",
         id,
         event ? { reason: "remove-press", event } : { reason: "imperative" },
       );
-      if (asked) removing.add(id);
+      if (asked) removing.set(id, item);
       return asked;
     };
 

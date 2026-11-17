@@ -90,6 +90,13 @@
       forced-color-adjust: none;
       background-color: ButtonText;
     }
+    [data-slot="kind-code-block-wrap"][aria-pressed="true"] {
+      forced-color-adjust: none;
+      background-color: SelectedItem;
+    }
+    [data-slot="kind-code-block-wrap"][aria-pressed="true"]::before {
+      background-color: SelectedItemText;
+    }
   }
 
   [data-slot="kind-code-block"] [data-slot="scroll-area-viewport"] {

@@ -73,6 +73,8 @@ export type GuardrailNoticeApi = NoticeApi & {
   toggle: (event?: Event) => boolean;
   /** Opens the detail for find in page. Called by the detail slot. */
   reveal: (event: Event) => void;
+  /** "Why?", where focus goes when the detail closes with focus inside. Called by the detail slot. */
+  detailTrigger: () => HTMLElement | undefined;
 };
 
 type Slot<Public extends object = Record<never, never>> = SlotDefinition<
@@ -175,6 +177,7 @@ export const guardrailNoticePrimitive: GuardrailNoticePrimitive = definePrimitiv
       },
       toggle: (event) => setOpen(!store.get().open, "trigger-press", event),
       reveal: (event) => void setOpen(true, "find-in-page", event),
+      detailTrigger: () => context.element("detail-trigger"),
     };
   },
   slots: (slot) => {
@@ -216,16 +219,13 @@ export const guardrailNoticePrimitive: GuardrailNoticePrimitive = definePrimitiv
           ...openAttrs(state.open),
           ...hiddenAttrs(state.open || state.exiting, true),
         }),
-        bind: (el, { api, id, store }) =>
+        bind: (el, { api, store }) =>
           bindStepPanel(el, {
             isOpen: () => store.get().open,
             isExiting: () => store.get().exiting,
             motion: () => store.get().motion,
             reveal: api.reveal,
-            trigger: () =>
-              (el.getRootNode() as Document | ShadowRoot).querySelector<HTMLElement>(
-                `[aria-controls="${id}-detail"]`,
-              ) ?? undefined,
+            trigger: api.detailTrigger,
             subscribe: store.subscribe,
             exited: () => store.set({ exiting: false }),
           }),

@@ -11,6 +11,8 @@ type Fixture = {
     remove(id: string): void;
     add(item: { id: string; status: string; title: string }): void;
     complete(id: string): void;
+    refresh(): void;
+    renew(id: string): void;
   };
   kindAnnounced: string[];
   agent: { act(input: unknown): Promise<unknown> };
@@ -285,11 +287,19 @@ test("an item removed and added again under the same id plays its entrance", asy
   expect(animated).toEqual([false, false, true]);
 });
 
-test("an item already asked to be removed isn't asked again before the host removes it", async ({ page }) => {
+test("an item already asked to be removed is asked again only once the host passes it changed", async ({
+  page,
+}) => {
   await open(page, "remove-later");
   await act(page, "remove", ["b"]);
   await act(page, "remove", ["b"]);
   expect(await calls(page)).toEqual([{ type: "remove", id: "b", reason: "imperative", source: "agent" }]);
+  await page.evaluate(() => (window as unknown as Fixture).kindQueue.refresh());
+  await act(page, "remove", ["b"]);
+  expect(await calls(page)).toHaveLength(1);
+  await page.evaluate(() => (window as unknown as Fixture).kindQueue.renew("b"));
+  await act(page, "remove", ["b"]);
+  expect(await calls(page)).toHaveLength(2);
   await hostRemove(page, "b");
   await expect(queue(page).locator('[data-slot="kind-queue-item"]')).toHaveCount(3);
 });

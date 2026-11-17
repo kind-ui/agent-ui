@@ -1,6 +1,7 @@
 import type { QueueItem } from "@kind-ui/agent-ui";
 import type { QueueOptions } from "@kind-ui/agent-ui/core";
 import { useEffect, useState } from "react";
+import { flushSync } from "react-dom";
 import { Queue } from "../../../../src/react/queue.js";
 
 const initial: QueueItem[] = [
@@ -28,6 +29,9 @@ function Queues({
       kindQueue: {
         remove: (id: string) => setItems((all) => all.filter((item) => item.id !== id)),
         add: (item: QueueItem) => setItems((all) => [...all, item]),
+        refresh: () => flushSync(() => setItems((all) => [...all])),
+        renew: (id: string) =>
+          flushSync(() => setItems((all) => all.map((item) => (item.id === id ? { ...item } : item)))),
         complete: (id: string) =>
           setItems((all) =>
             all.map((item) => (item.id === id ? { ...item, status: "complete" as const } : item)),
