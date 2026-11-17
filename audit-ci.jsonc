@@ -1,0 +1,17 @@
+{
+  "$schema": "https://github.com/IBM/audit-ci/raw/main/docs/schema.json",
+  "high": true,
+  "report-type": "summary",
+  "allowlist": [
+    // picomatch ReDoS through single-branch repeated extglobs: https://github.com/advisories/GHSA-fc5q-39xc-vjpf
+    // No patched picomatch exists yet, and it reaches only dev tooling (changesets, the docs site, Vite).
+    // Remove this entry once picomatch ships a fix (see AGENTS.md "Dependency audit").
+    {
+      "GHSA-fc5q-39xc-vjpf": {
+        "active": true,
+        "notes": "No patched picomatch yet; dev tooling only. Remove once a fix ships.",
+        "expiry": "2027-02-17"
+      }
+    }
+  ]
+}
