@@ -80,7 +80,6 @@ export type PickerParts = Pick<typeof parts, "Trigger" | "Content" | "Viewport" 
  * components that spread `pickerBase` to share Picker's markup. `Default` is the trigger and the popover.
  */
 export function pickerParts(parts: PickerParts) {
-  /** Opens the list. Shows the chosen item's icon and label, or the `label` while none is chosen, unless you pass children. */
   function Trigger({
     children = ({ text, icon }) => (
       <>
@@ -94,7 +93,6 @@ export function pickerParts(parts: PickerParts) {
     return <parts.Trigger {...props}>{children}</parts.Trigger>;
   }
 
-  /** The popover: the search field and the list, unless you pass children. Focus moves to the search field. */
   function Content({ children = DEFAULT_LIST, render, ...props }: PickerContentProps) {
     return (
       <parts.Content
@@ -113,10 +111,6 @@ export function pickerParts(parts: PickerParts) {
     );
   }
 
-  /**
-   * UI SDK Command: the search field, what shows while nothing matches, and the list, holding every page of rows
-   * unless you pass children, a function of the rows.
-   */
   function List({ children = DEFAULT_ROWS, ...props }: PickerListProps) {
     return (
       <parts.Command {...props}>
@@ -144,7 +138,6 @@ export function pickerParts(parts: PickerParts) {
       </KindCommandPage>
     ));
 
-  /** A group of rows under its label, or the footer. */
   function SectionRows({
     section,
     separated = false,
@@ -163,7 +156,6 @@ export function pickerParts(parts: PickerParts) {
     );
   }
 
-  /** A row: UI SDK's `CommandItem` with the row's props, holding its `Item` unless you pass children. */
   function RowItem({ row, children, ...props }: PickerRowItemProps) {
     return (
       <KindCommandItem {...props} {...row.option}>
@@ -172,10 +164,6 @@ export function pickerParts(parts: PickerParts) {
     );
   }
 
-  /**
-   * A row's content: its icon, its label with what the search matched marked, its description, its trailing `meta`,
-   * and a check on the chosen item or a chevron on a row that opens a page, unless you pass children.
-   */
   function Item({
     children = ({ row, description }) => (
       <>
