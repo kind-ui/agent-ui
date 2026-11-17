@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `13d8bb4` (Wave 4 Task 11 Selection and Action)
+Last reviewed: `101e10f` (Wave 4 Task 12 agent conformance)
 
 ## Settled
 
@@ -21,6 +21,8 @@ Last reviewed: `13d8bb4` (Wave 4 Task 11 Selection and Action)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Closing a Step or Guardrail Notice panel inside a shadow root leaves focus on a hidden button** (Wave 4 Task 12): the trigger lookup is now `context.element`, but UI SDK's `bindPanel` asks for it only when `el.contains(document.activeElement)`, which is the shadow host there. Add to the upstream report beside `focus-recovery.js`; a shadow-root test comes with the fix.
+- **Checkpoint's Alert Dialog is named differently by layer in the snapshot:** "Restore checkpoint" in React, "Restore this checkpoint?" on web (Wave 3, seen in Task 12).
 - **The Transcript web fixture has no shadow-root, moved or written-parts case** (Wave 4 Task 10): checked by hand in review, not in the spec, as for Inline Citation and Sources.
 - **Firefox crashes running axe after Playwright's role query on a UI SDK tree row too** (Wave 4 Task 9), not only `ui-radio`/`ui-checkbox`: `test-results.spec.ts` waits with a CSS locator before axe. Add to the upstream report.
 - **macOS WebKit's Tab skips Terminal's Copy button** (Wave 4 Task 7), as it skips buttons without Full Keyboard Access; the keyboard test fails there locally. CI's WebKit runs on Linux, where Tab reaches buttons; not checked there yet.
@@ -48,7 +50,6 @@ Last reviewed: `13d8bb4` (Wave 4 Task 11 Selection and Action)
 - **`<kind-streaming-text text="…">` and an empty `kind-uploader` show nothing before upgrade.** Writing the text as children avoids it; undocumented.
 - **`kind-step-list-item` misses a button that arrives late or is replaced:** its target is `querySelector("button")`, and UI SDK's retarget observer only watches direct children. Deferred: one element can fill only one primitive's slot, so whichever of list item and trigger wraps the other has a nested target; `@ui-sdk/web`'s own `ui-toolbar-button` (nested `wrappedControl`) has the same gap. Needs an upstream subtree retarget.
 - **Removing a `kind-step` and putting it back forgets a person's toggle:** `createParts` rebuilds the instance from the `state` getters only, so `userToggled` is lost and auto close resumes. Needs a `@ui-sdk/web` hook to carry non-public state across instances. The same drops a pending Plan Accept or Subagent Stop (`pending` isn't carried), so a press after the move calls the host a second time.
-- **The step panel finds its trigger with `ownerDocument.querySelector`**, which misses a trigger inside a user's shadow root.
 - **A `kind-code-block` written with children (pre-upgrade `<pre>`) never fills in its parts.** Documented ("when it has no children"); a hand-written fallback needs a marker the element can replace.
 - **A code block removed and put back after a tick asks for highlighting again** and shows plain text meanwhile: same rebuilt-from-state cause as the Step entry above.
 - **Trigger Menu items show no description on web:** the list renders its own items from data, label only. React renders the description.
@@ -58,6 +59,7 @@ Last reviewed: `13d8bb4` (Wave 4 Task 11 Selection and Action)
 
 ## Resolved
 
+- **Wave 4 agent conformance** (Wave 4 Task 12): the web `case=wave-4` page draws the same text as React for all eleven Wave 4 components, and its `can-*` attributes add and remove their actions (`agent.spec.ts`).
 - **Selection and Action** (Wave 4 Task 11): empty written `kind-action-quote`, `kind-action-result` and `kind-selection-item` parts are filled in as React's defaults are; a `kind-selection` in a shadow root opens (core reads `getComposedRanges`); web fixtures use the tag map's element types.
 - **A web Transcript shorter than its viewport raised a ResizeObserver loop error** (Wave 4 Task 10): fixed; the viewport has a fixed `--kind-transcript-height`, so measuring segments never resizes it, and the spec fails on any window `error`.
 - **`kind-test-results` missed a filter or tree written later, or written with whitespace inside** (Wave 4 Task 9): `draw` looks both up each time, a `MutationObserver` redraws when parts arrive, and whitespace-only parts count as empty. Pinned in `test-results.spec.ts` (late case).

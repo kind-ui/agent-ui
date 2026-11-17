@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `13d8bb4` (Wave 4 Task 11 Selection and Action)
+Last reviewed: `101e10f` (Wave 4 Task 12 agent conformance)
 
 ## Settled
 
@@ -37,6 +37,10 @@ Last reviewed: `13d8bb4` (Wave 4 Task 11 Selection and Action)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Terminal relies on the virtualizer laying out again when its count changes** (Wave 4 Task 12): a new line sets `rows` and `size` from it instead of calling `refresh()`, which UI SDK's docs ask for after a count change but which reads the viewport twice more per line. `budgets.spec.ts` and `terminal.spec.ts` pin it; ask upstream for a count-only update.
+- **Queue's remove lock isn't in state** (Wave 4 Task 12): a second `remove` of an item already asked returns `false`, and neither the remove control nor the snapshot shows the pending removal. A host declining without `cancel()` passes a new object for the item to allow another try (on `onRemove`).
+- **Stack Trace's library panels still find their toggle with an `[aria-controls]` query over `getRootNode()`**, where Step and Guardrail Notice now use `context.element`; the toggle is keyed per group.
+- **An unnamed `input` entry with `clear` was seen once in the Wave 4 agent snapshot** (Transcript's Input Group with an empty search, Wave 4 Task 12), while other edits were landing on the fixture servers; it didn't reproduce on clean loads, typing or clearing in any project. Recheck if it comes back.
 - **What Firefox and WebKit do with Tab from a selection in Selection's content isn't recorded** (Wave 4 Task 11): Chromium reaches the first toolbar button and keeps the selection; the nightly cross-browser run covers the spec.
 - **A person's Test Results filter press reports `source: "programmatic"`** (Wave 4 Task 9): `createChange` reads the Segmented Control's native `change` as programmatic, as Reasoning Effort's does; the reason is `input-change`. Needs the originating key or pointer event, or an upstream source for `change`.
 - **Focus drops to the page when every Stack Trace frame button leaves at once** (Wave 4 Task 8), as when the host removes `onOpenFrame` or passes a trace with no frames while a frame has focus: `createListFocus`'s recovery finds no item left and has no `focusFallback`. Removing one of several frames recovers to a neighbor.
@@ -55,14 +59,10 @@ Last reviewed: `13d8bb4` (Wave 4 Task 11 Selection and Action)
 - **No test proves Question's `ownQuestion` `selects`** (UI SDK asks each primitive with `selects` to prove it); traced by hand, and Chain of Thought, Task and Plan have none either.
 - **A failed Skip announces "Answers not sent"** (Question), which reads oddly after a skip; wording only.
 - **Confirmation: a microtask between `pending` clearing and `sent` setting** could let an `act` scheduled in a promise callback slip a second decision through. Not reproduced; a press can't land there.
-- **A double press on a Queue item's remove control calls `onRemove` twice** when the host removes the item asynchronously; there's no per-item lock like the uploader's.
-- **Queue's `known` set never forgets ids,** so an item removed and re-added under the same id after its exit gets no entrance (same as Task and Plan).
 - **A plan swapped while Accept is pending keeps the lock** until the old promise settles (Wave 2 Task 6). Clearing it on a new `onAccept` can't key on identity, since React passes a new inline function each render; same open spec §4.1 question as the composer's pending lock.
-- **Task and Plan's `known` set never forgets ids,** so an item removed and re-added under the same id gets no entrance (same as the uploader's `mounted`).
 - **Tool re-serializes its input on every options update** (`toolCode` per streamed chunk). Unmeasured on large inputs; memoize by value if it shows up.
 - **`ComposerApi.setValue` with the draft's own text still fires `onValueChange`** with a new draft object and returns `true`; nothing changes on screen.
 - **Enter held or pressed twice on an uploader Cancel cancels the next row too:** focus recovery moves to the neighbor's Cancel between presses. Spec §7 needs to say whether that's the list-deletion pattern or needs a pause.
-- **Queue's `known` set never forgets ids,** so a Queue item removed and added again under the same id gets no entrance (the uploader and attachments now forget an id when its row is dropped).
 - **An indicator's new `label` is read out,** as its status content changes; documented on the option. Spec §6 should say whether a label change counts as a terminal transition.
 - **Guard comment stripping is regex-based:** a `//` inside a string hides the rest of the line from the forbidden-pattern checks. Use the TypeScript scanner.
 - **Guard rule 1 misses `definePrimitive<…Record<…>>(`** with nested generics.
@@ -75,6 +75,8 @@ Last reviewed: `13d8bb4` (Wave 4 Task 11 Selection and Action)
 
 ## Resolved
 
+- **Queue, Task and Plan forget a removed id** (Wave 4 Task 12), as the uploader and attachments do, so an item added again under the same id enters again; Queue asks `onRemove` once per item until the host passes a new object for it or drops it. Pinned in `queue.spec.ts` and `task.spec.ts`.
+- **Step and Guardrail Notice panels find their trigger through `context.element`** (Wave 4 Task 12), not a document query, so a trigger inside a shadow root is found.
 - **Selection** (Wave 4 Task 11): the same text selected again after Escape or a press outside reopens the toolbar (a root `pointerdown` clears the closed range), `close` tested `element()` against `null` (it returns `undefined`), `actionsById` is cached by array (`cached`), emptying `actions` closes the toolbar, a selection inside a shadow root reads `getComposedRanges`, and Action trims `quote`. Pinned in `selection.spec.ts` and `action.spec.ts`.
 - **Transcript highlights marked letters across the speaker and the text** (Wave 4 Task 10): fixed; the speaker and the words are marked apart, as `searchSegments` scores them.
 - **Transcript `timeOf`, `wordValues` and `highlights` read `Object.prototype` ids** (Wave 4 Task 10): fixed through `segmentOf` (`Object.hasOwn`), and a non-finite `start` formats as 0:00; `tests/core/transcript.test.mjs` pins `seek`, `search` and `timeOf`.

@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `13d8bb4` (Wave 4 Task 11 Selection and Action)
+Last reviewed: `101e10f` (Wave 4 Task 12 agent conformance)
 
 ## Settled
 
@@ -26,12 +26,13 @@ Last reviewed: `13d8bb4` (Wave 4 Task 11 Selection and Action)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A selected composer token and Checkpoint's open Restore lose their state in forced colors** (suspected, Wave 4 Task 12): both are drawn by a background forced colors replaces; no fixture renders a token.
+- **`forced-colors.spec.ts` doesn't reach the Queue remove badge on web.**
 - **A Selection toolbar with many actions may spill past its border on a narrow screen** (Wave 4 Task 11): it doesn't wrap; not reproduced with three actions.
 - **A file added to a folder while it opens may be clipped until the open ends** (Wave 4 Task 6): `--tree-group-height` is measured as the open starts. Not reproduced.
 - **The shimmer's band snaps to its start as it fades out when the image loads** (Wave 4 Task 5, suspected, not measured frame by frame): the animation stops with the phase; the image fades in over it.
 - **An expanded Document whose content resizes after streaming ends eases to the new height over `--kind-duration-panel`** (suspected, not reproduced), so its last lines could be clipped that long.
 - **On web, a step's content that starts closed can fade its parts' colors in the first time it opens** (Wave 3 Task 11): `hidden="until-found"` skips style updates, so parts styled bare by a bind's style read before their attributes landed keep that style until the reveal, after `data-mounting` is gone. Rows and roots hold through their first frames; ending the hold at a part's first styled frame needs UI SDK binds not to read style while parts connect (upstream).
-- **Mask-drawn icons vanish in forced colors** in the stylesheets without a `forced-colors` rule; Feedback's thumbs, the status mark and Notice's Dismiss have one.
 - **Feedback's thanks is wider than "Add a comment",** so the row grows sideways by its text when it appears; height holds. Feedback ends a message's actions, so nothing usually sits after it.
 - **The Context Meter's high-level glyph in light mode** is `--kind-color-warning` on white, about 2.5:1, under 3:1 for graphics; the percentage beside it carries the value.
 - **Suggestion: Tab to a chip half out of view doesn't scroll it in** (UI SDK Carousel counts it in view), so its end and focus ring sit under the end fade.
@@ -51,6 +52,7 @@ Last reviewed: `13d8bb4` (Wave 4 Task 11 Selection and Action)
 
 ## Resolved
 
+- **Mask-drawn icons vanish in forced colors** (Wave 4 Task 12): every mask icon has a `forced-color-adjust: none` rule (`ButtonText` in buttons, `CanvasText` elsewhere), the Context Meter ring is redrawn in system colors, disabled Send reads `GrayText` and a pressed Wrap `SelectedItem`. Pinned in `forced-colors.spec.ts`.
 - **Selection toolbar** (Wave 4 Task 11): state and motion rules sit at one attribute with their context in `:where()`, so a consumer's class wins; a triple-clicked quote no longer ends in an empty line (core trims `quote`); `selection.spec.ts` pins full, reduced and no motion.
 - **The status mark's ✕ sat off center, again** (Wave 4 Task 10, user report on Test Results): root cause was each glyph masked at a fixed pixel `mask-size` (10px, 16px, and Test Results' 9px) inside a box other stylesheets resized, so (box − mask) / 2 landed on half pixels that round differently per DPR. Fixed for good: glyphs are drawn centered in their 24×24 viewBox and masked `center / 100% 100%` over the whole border box, the mark is sized only through `--kind-status-mark-size` (Test Results and Checkpoint set 14px), `check-ui-sdk-usage.mjs` fails any other stylesheet that sets `mask*`, `width` or `height` on a mark, and `tests/browser/wave-1/status-mark.spec.ts` checks every consumer's size and the glyph centroid for each status and size at 1x and 2x.
 - **Transcript segments' entrance was cancelled when `data-entering` cleared** (Wave 4 Task 10): fixed; `opacity` and `translate` stay in the segment's `transition`, and only `@starting-style` sits behind `[data-entering]`.

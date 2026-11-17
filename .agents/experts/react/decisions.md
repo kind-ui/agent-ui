@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `13d8bb4` (Wave 4 Task 11 Selection and Action)
+Last reviewed: `101e10f` (Wave 4 Task 12 agent conformance)
 
 ## Settled
 
+- **Fixture `main` files carry no comment for the case `<script type="module">`** (Wave 4 Task 12): fixtures hold no comments; the reason is in AGENTS.md "Fixture servers".
 - **A streamed Reasoning chunk renders its step parts once each** (`text` lives in step state): a fixed cost per chunk that doesn't grow with the text, so `budgets.spec.ts` has no Reasoning case. The default parts are one shared element tree.
 - **Count budgets render counting** (`budgets.spec.ts`) follows DevTools: a render that bails out on equal state isn't counted, and a compare-`memo` wrapper (tag 14) is left out so its component counts once.
 - Everything in AGENTS.md "UI SDK API notes".
@@ -45,6 +46,7 @@ Last reviewed: `13d8bb4` (Wave 4 Task 11 Selection and Action)
 
 ## Resolved
 
+- **Wave 4 agent conformance** (Wave 4 Task 12): the `wave-4` page passes the same props and callbacks as web's, uncontrolled so a refusing host's `cancel()` keeps the state; Queue's remove lock holds across a host re-render with a new `items` array (per item, `queue.spec.ts`).
 - **Selection and Action** (Wave 4 Task 11): fixtures gained a refused case (both callbacks cancelled), a case without `onAction` (disabled buttons, no `run`), the description `title`, and an Action whose host owns `open` through a stream.
 - **Server-rendered Transcript segments overlapped at a 72px guess and moved on hydration** (Wave 4 Task 10): fixed; until the viewport connects (`measured`), segments stack in the flow, then sit at the measured offsets.
 - **No Transcript case with an owner refusing the search** (Wave 4 Task 10): fixed; `refused` in both fixtures and its spec.
