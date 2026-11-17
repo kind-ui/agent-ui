@@ -1,4 +1,4 @@
 {
   "title": "Showcase",
-  "pages": ["agent-activity", "human-input"]
+  "pages": ["agent-activity", "human-input", "developer-output"]
 }

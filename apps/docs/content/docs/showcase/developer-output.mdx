@@ -1,0 +1,31 @@
+---
+title: Developer Output
+description: Watch an agent fix a bug, test it and report back in one run, built from the developer output components.
+---
+
+import DeveloperOutputShowcase from "../../../examples/showcase/developer-output";
+
+This run puts the developer output components together the way a host app would. The request comes with a [Transcript](../components/transcript.mdx) of a recorded call. The agent runs the tests in a [Terminal](../components/terminal.mdx), reads the failure in [Test Results](../components/test-results.mdx) and its [Stack Trace](../components/stack-trace.mdx), lists its changes in a [File Tree](../components/file-tree.mdx), writes a [Document](../components/document.mdx) and a [Generated Image](../components/generated-image.mdx), and answers with [Inline Citations](../components/inline-citation.mdx) and [Sources](../components/sources.mdx). The answer sits in a [Selection](../components/selection.mdx), whose **Explain** adds an [Action](../components/action.mdx).
+
+<Example caption="The run streams the test output, the design note and the image, then the answer. Drag the slider under the call to move through it, select text in the answer and press Explain, or press Replay to start over.">
+  <DeveloperOutputShowcase />
+
+  <include cwd lang="tsx">./examples/showcase/developer-output.tsx</include>
+</Example>
+
+## What Happens
+
+- **Transcript:** the slider sets `currentTime`, and the word being said at that moment is marked. Press a segment's time to jump to it.
+- **Terminal:** the test output streams in color and follows the newest line. Once the exit code arrives, the header reads "Exit 1".
+- **Test Results:** the failing suite and test start open, so the failure's stack trace shows without a press. Filter to failures, or close a row with Left Arrow.
+- **File Tree:** each changed file shows its additions, deletions and a badge for added or modified.
+- **Document:** the design note streams in as Markdown, and its header shows the size and a copy button.
+- **Generated Image:** the preview sharpens as the progress climbs, then the finished image dissolves in. Press it to see it full size.
+- **Answer:** hover or focus a citation for its source. The full list sits under the reply.
+- **Selection:** select text in the answer to show the toolbar. **Explain** adds an Action that quotes the text and streams its explanation, then folds to its summary.
+
+Each component gets its state from the host as plain data, here a timer stepping through a script. In an app, the same data comes from your model's stream, for example through the [AI SDK adapter](../adapters/ai-sdk.mdx).
+
+<Caption>
+  Every component here runs in React and Web Components. The example is React.
+</Caption>

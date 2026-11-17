@@ -14,13 +14,7 @@ import { Question } from "@/components/ui/question";
 import { ReasoningEffort } from "@/components/ui/reasoning-effort";
 import { Suggestion } from "@/components/ui/suggestion";
 import { Tool } from "@/components/ui/tool";
-import {
-  AnthropicLogo,
-  GeminiLogo,
-  MicrosoftLogo,
-  OpenAILogo,
-  XAILogo,
-} from "@/examples/model-selector/logos";
+import { AnthropicLogo, GeminiLogo, MicrosoftLogo, OpenAILogo, XAILogo } from "../model-selector/logos";
 
 const ASK = 5;
 const APPROVE = ASK + 1;
