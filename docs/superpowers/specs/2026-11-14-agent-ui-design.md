@@ -13,7 +13,7 @@
 
 1. Become the go-to styled AI component kit built on UI SDK, so other developers adopt it.
 2. Put Kind UI's AI components on one agent-first foundation, UI SDK, instead of Base UI.
-3. Ship 41 AI components in four waves, with every agent step built on a shared Step base.
+3. Ship 50 AI components in five waves, with every agent step built on a shared Step base.
 4. Keep behavior framework-agnostic. Launch with React and Web Components.
 5. Make every interactive component agent-operable through named actions that work with UI SDK `createAgent` and WebMCP.
 6. Meet Kind UI's product criteria: accessibility, reduced motion, explicit async states, typed contracts, and consumer-owned state.
@@ -21,7 +21,7 @@
 ### Non-goals
 
 - Porting code from kind-ui/charts `packages/ai` or `packages/primitives`. `packages/ai/src` in that repository is used only as a catalog of which components exist.
-- Exporting general-purpose components (button, popover, menu, and so on). They exist only to serve AI components and stay internal.
+- Exporting general-purpose components (button, popover, menu, and so on). They exist only to serve AI components and stay internal. Picker (Wave 5) is the one public base of this kind, as `stepPrimitive` is: every composer picker spreads it.
 - Changing `@kind-ui/charts`, or depending on kind-ui/charts code, scripts, or configuration. This repository mirrors its tooling conventions by copying the conventions, not by importing anything.
 - Vue, Svelte, and Solid render layers at launch. The architecture permits them; they are not scheduled.
 - A TanStack AI adapter at launch. It is scheduled after Wave 4.
@@ -73,10 +73,11 @@ Components are built on UI SDK, not around it.
 | --- | --- |
 | Streaming markdown engine (§6) | Content parsing, not interaction. |
 | Motion helper presets (§6) | Animation values. Presence still uses UI SDK `animateIn` / `animateOut`. |
-| Attachment removal on Delete/Backspace | Application action on a focused item. Focus movement stays with `createRovingFocus`, and the keys are declared on the slot. |
+| Attachment and Context Bar chip removal on Delete/Backspace | Application action on a focused item. Focus movement stays with `createRovingFocus`, and the keys are declared on the slot. |
 | Queue item removal on Delete/Backspace | The same action on a focused Queue row, which keeps the list to one Tab stop. Its pointer remove control is hidden from assistive technology, like Attachments'. Focus movement stays with `createRovingFocus`, and the keys are declared on the slot. |
 | Test Results failure rows keep the Tree's keys | UI SDK's Tree handles keys and presses on anything inside a row, so a failed test's Stack Trace couldn't take Enter or a press without toggling the row. The failure part cancels the keys and clicks the Tree handles once the trace has had them, which the Tree then skips, and presses a focused button on Enter. Roving focus, expansion and typeahead stay the Tree's. |
-| Composer and Uploader File Input events on Web Components | `@ui-sdk/web` reports File Input's changes only as `valuechange` and `reject` events on its own element, which don't bubble. The composer (through its form) and the uploader (through its root) hear them as they capture, and hand them to the callbacks React passes as props. |
+| Composed UI SDK component events on Web Components | `@ui-sdk/web` reports a component's changes and actions only as events on its own element, which don't bubble (File Input's `valuechange` and `reject`, Menu's and Command's `action`, Slider's `valuecommit`, …). `core/composed-events.ts` (`hearComposed`) hears the named events of the `ui-*` elements inside a slot's element as they capture, from that slot's `bind`, and hands them to the callbacks React passes as props. The composer, the uploader and every Wave 5 component that composes a UI SDK component use it. |
+| Dictation audio and speech | Microphone capture, its levels and speech recognition are platform APIs (`getUserMedia`, Web Audio `AnalyserNode`, `SpeechRecognition`) no UI SDK behavior covers. `core/dictation.ts` listens to them inside a `DictationSource`, started only from a person's or a confirmed agent's press. |
 | Conversation new-message counter | Counts messages added while not following. Following itself uses `createStickToBottom`. |
 | Streaming Text append diff and Composer draft settlement | Pure data rules. |
 | Clipboard writes for copy actions | `navigator.clipboard.writeText`, used only if the pinned UI SDK has no clipboard utility. |
@@ -92,13 +93,15 @@ AI components need general controls. These are UI SDK components or `@ui-sdk/cor
 | --- | --- | --- |
 | Button | Button | almost all |
 | Collapsible | Collapsible, `bindPanel`, `bindFindable` | Step and every Step-based component, Sources, Queue |
-| Popover, Tooltip | Popover (`createPopup`; Context Meter and Inline Citation add hover and focus opening), Tooltip | Feedback, Checkpoint, Context Meter, Inline Citation |
-| Menu | Menu | Message |
+| Popover, Tooltip | Popover (`createPopup`; Context Meter and Inline Citation add hover and focus opening; Wave 5 popups take `presentation`), Tooltip | Feedback, Checkpoint, Context Meter, Inline Citation, Picker, Effort Slider, Model Control, Context Bar, Prompt Library |
+| Menu | Menu (checkbox and radio items, submenus, `presentation`) | Message, Add Menu, Settings Menu, Approval Mode |
+| Command | Command | Picker, Model Selector, Model Control, Prompt Library |
+| Slider, Switch | Slider; Switch's look for Settings Menu's checkbox items | Effort Slider, Model Control, Settings Menu |
 | Alert Dialog, Dialog | Alert Dialog, Dialog (`createPopup` with `dialogPreset` for Generated Image) | Checkpoint, Generated Image |
 | Scroll Area | Scroll Area, `createStickToBottom` | Conversation, Terminal, Code Block, Markdown Table, Document |
 | Token Input, Trigger Menu | Token Input, Trigger Menu | Composer |
 | File Input | File Input | Composer, Uploader |
-| Combobox, Segmented Control | Combobox, Segmented Control | Model Selector, Reasoning Effort, Test Results |
+| Segmented Control | Segmented Control | Reasoning Effort, Test Results |
 | Toolbar, Toggle | Toolbar, Toggle, and for Selection `position` and `bindLayer` | Message, Code Block, Feedback, Selection, Document |
 | Carousel | Carousel | Suggestion, Inline Citation |
 | Tree | Tree, `treeFromPaths` | File Tree, Test Results |
@@ -205,7 +208,7 @@ Every new check script joins `npm run check`.
 | Specifier | Contents | Runtime deps |
 | --- | --- | --- |
 | `@kind-ui/agent-ui` | Neutral types and type guards | none |
-| `@kind-ui/agent-ui/core` | Every public primitive definition (`stepPrimitive`, `composerPrimitive`, …), their option and state types, the markdown engine, the motion helper, the ANSI and stack trace helpers | `@ui-sdk/core`, `motion`, the markdown libraries (§6), `ansi-sequence-parser`, `stacktrace-parser` |
+| `@kind-ui/agent-ui/core` | Every public primitive definition (`stepPrimitive`, `composerPrimitive`, …), their option and state types, the markdown engine, the motion helper, the ANSI and stack trace helpers, the dictation source (`createSpeechDictation`) | `@ui-sdk/core`, `motion`, the markdown libraries (§6), `ansi-sequence-parser`, `stacktrace-parser` |
 | `@kind-ui/agent-ui/adapters/ai-sdk` | `fromUIMessages`, `fromUIMessagePart`, `toApprovalResponse`, `fromChatStatus` | none (`ai` types only) |
 | `@kind-ui/agent-ui/styles.css` | Tailwind v4 source registration and theme tokens | none |
 
@@ -250,6 +253,7 @@ Components never duplicate the host conversation store. Presentation state deriv
 - The host callback defines acknowledgement. An SDK promise settling may mean the SDK action finished, not that the message was durably accepted; the draft is not cleared merely because a transport wrapper resolved after reporting an error elsewhere.
 - Stop, retry, and submit controls render only when the host supplies the capability. The component creates no transport and never retries silently.
 - Unmounting or switching conversations discards pending completions for the old draft. Pending and error UI are announced without moving focus.
+- Draft restore (Wave 5) saves only an uncontrolled draft, to host-chosen storage under the host's `draftKey`, and restores it only into an empty editor. A resolved submission removes the saved draft only when it still equals the submitted snapshot. A controlled draft is never read from or written to storage.
 
 **Tool call and result contract:**
 
@@ -427,14 +431,14 @@ Code highlighting is pluggable through `highlight?: (code, lang) => Promise<Toke
 - Each primitive declares `agent: { actions: [...] }` and `controlled` snapshot keys in its `definePrimitive` definition. This spec writes actions as `component.action` (for example `composer.submit`); a snapshot shows them as `component: "composer"`, `actions: ["submit"]`.
 - An action is listed only while available. `composer.stop` appears only while a submission is in flight and the host supplies `onStop`. Host-callback actions (for example `message.regenerate`) appear only when the host supplies the callback. On Web Components, where a listener can't be seen, a `can-<action>` boolean attribute (for example `can-regenerate`) stands for the callback, and the callback is a DOM event.
 - Actions run the same code paths as pointer and keyboard input. Change callbacks receive `details.source === "agent"` so hosts can distinguish and cancel agent changes.
-- These consequential actions render `data-agent-confirm`, so `createAgent` permissions and WebMCP `registerTools` `allow` require a person: `composer.submit`, `confirmation.approve`, `confirmation.deny`, `checkpoint.restore`, `plan.accept`, `subagent.cancel`, `question.submit`. Confirmation's marking cannot be turned off; the others accept the primitive option `agentConfirm: false`.
+- These consequential actions render `data-agent-confirm`, so `createAgent` permissions and WebMCP `registerTools` `allow` require a person: `composer.submit`, `confirmation.approve`, `confirmation.deny`, `checkpoint.restore`, `plan.accept`, `subagent.cancel`, `question.submit`, `approvalMode.setValue`, `dictation.start`. Confirmation's marking cannot be turned off; the others accept the primitive option `agentConfirm: false`.
 - No other action renders `data-agent-confirm`, including Queue `reorder` and `remove`, Uploader `cancel` and `retry`, Attachments `remove`, and Wave 3's `suggestion.pick`, `feedback.rate`, `feedback.submitComment`, `notice.dismiss` and `setValue`. UI SDK's bridge reads the mark per component, not per action, so marking one action would gate every action of that component. A host that wants a person for any of them requires it through `createAgent`'s or `registerTools`' `allow`, and those components' docs show how.
 - Every component root with a role requires an accessible name; agents address components by that label or by `ref`. Markdown and Streaming Text are content with no role, which ARIA does not let a name sit on, and offer no actions.
 - Kind UI ships no agent bridge. Hosts create one with `createAgent` from `@ui-sdk/react/agent` or `@ui-sdk/web/agent`. Docs show both, plus `registerTools` for WebMCP.
 
 ## 7. Components by wave
 
-Each wave is a minor release of `@kind-ui/agent-ui` (0.1 to 0.4) with its registry items, docs reference pages, and docs showcase page. "Replaces" names the kind-ui/charts `packages/ai/src` file used as a catalog reference, kind-ui/charts#253 (unmerged), or "(new)" for new additions.
+Each wave is a minor release of `@kind-ui/agent-ui` (0.1 to 0.5) with its registry items and docs reference pages, and a docs showcase page where a scripted run shows something the pages can't (Waves 1–4). "Replaces" names the kind-ui/charts `packages/ai/src` file used as a catalog reference, kind-ui/charts#253 (unmerged), or "(new)" for new additions.
 
 ### Wave 1 (0.1): foundation
 
@@ -536,7 +540,39 @@ Behavior requirements:
 - **Transcript:** speaker-attributed, time-coded segments with word highlighting driven by host-supplied `currentTime`; `seek` calls `onSeek`. The segment at `currentTime` has `aria-current` and its word `data-current`; while `follow` is on (the default) and focus isn't inside the transcript, a new current segment is scrolled into view through `createVirtualizer`'s `scrollToIndex`. `search(text)` shows only the segments whose text or speaker matches (`fuzzyScore` above zero, in time order) and marks the matches with `matchSegments`; clearing it shows every segment again and keeps focus on the segment it was on.
 - **Selection:** a floating toolbar anchored to the current text selection inside its root; Escape and outside press dismiss it. It's an internal Toolbar placed with `position` against the selection's range and registered with `bindLayer` (non-modal), not `createPopup`, which needs a trigger element. The root reads the selection on its own `pointerup` and `keyup`, so no document listener is needed. A selection that reaches outside the root shows no toolbar. The toolbar never takes focus when it appears; it sits in the DOM right after the root's content, so Tab from a keyboard selection reaches it.
 
-Component count: 13 + 8 + 10 + 10 = 41 rows, with Selection and Action counted as one family.
+### Wave 5 (0.5): composer controls
+
+| Component | Composes | Agent actions | Replaces |
+| --- | --- | --- | --- |
+| **Picker** | Popover (`createPopup`), Command | `open`, `close`, `setValue(value)`, `run(actionId)` | (new base) |
+| **Add Menu** | Menu | `open`, `close`, `run(id)` | (new) |
+| **Settings Menu** | Menu, Switch's look | `open`, `close`, `toggle(id, on?)`, `setValue(id, value)` | (new) |
+| **Approval Mode** | Menu | `open`, `close`, `setValue(mode)` | (new) |
+| **Effort Slider** | Popover (`createPopup`), Slider | `open`, `close`, `setValue(level)`, `reset` | (new) |
+| **Model Control** | Picker, Effort Slider (nested popover) | `open`, `close`, `setValue(value)`, `setEffort(level)`, `run(actionId)` | (new) |
+| **Context Bar** | `createRovingFocus`, `createFocusRecovery`, Popover (`createPopup`) | `remove(id)`, `open`, `close` | (new) |
+| **Dictation** | `announce`, `createFocusRecovery`, `core/dictation.ts` | `start`, `stop`, `cancel` | (new) |
+| **Prompt Library** | Picker | `open`, `close`, `insert(id)`, `run(actionId)` | (new) |
+
+Wave 5 also rebuilds **Model Selector** on Picker (it keeps `setValue` and gains `run`), gives **Message** a regenerate-with menu (`regenerate(optionId?)`), and gives **Composer** draft restore (`discardDraft`) and a narrow-screen layout.
+
+Behavior requirements:
+
+- **Every Wave 5 popup** is the primitive's own (`createPopup`), so `open`/`onOpenChange` reach a web host, and takes `presentation: "auto" | "popover" | "sheet"` (default `"auto"`: a bottom sheet on small touch screens). Composed UI SDK parts carry `data-agent-hidden`, so each component is one agent entry.
+- **Picker:** a trigger named by its `label` and the chosen item opens a popup holding UI SDK Command: a search field (focused on open) with fuzzy ranking and match marks, items with an icon, a label and an optional description line and trailing `meta`, sections from `group`, a check mark on the chosen item, footer `actions` in the same list, and rows with `items` that open a page (Backspace in the empty search or Escape goes back). Choosing an item sets `value` and closes; choosing an action calls `onAction`. Work in, project and branch pickers are Picker with their own items.
+- **Model Selector:** Picker over `models`, keeping 0.4.0's per-model `icon`; `actions` adds rows like "More models", and `pages: "groups"` puts each provider on its own page.
+- **Add Menu:** a Menu of grouped entries with icons and descriptions; an entry with `items` is a submenu, as a plugin's commands are. `run` calls `onAction`.
+- **Settings Menu:** toggle rows are Menu checkbox items drawn as switches that keep the menu open; value rows are submenus holding a radio group, showing the current value. Changes report the row's id.
+- **Approval Mode:** a Menu radio group of modes with descriptions; a `danger` mode has a warning mark and words, not only a color; an optional header link is a menu item. `setValue` needs a person while `agentConfirm` is on (default).
+- **Effort Slider:** a popover holding UI SDK Slider whose steps are the host's `levels`, with stop marks, the level's label as its value text, a Reset to `defaultLevel` present only while it would change something, an optional line naming the model, and a sparkle at the top level. A drag reports one change, on commit.
+- **Model Control:** one trigger, "<model> · <effort>", opening a Picker of models whose effort row opens a nested Effort Slider popover beside it; Escape closes only the inner popover.
+- **Context Bar:** chips in one row, one Tab stop with arrow keys, removable by Delete/Backspace or their pointer control; chips past the row's width go behind a "+N" button whose popover lists them. Adding or removing a chip never moves content below the bar.
+- **Dictation:** a mic button starts a host-supplied `DictationSource`; while listening it shows a waveform from the source's levels with Stop and Cancel; Stop inserts the final text once through `onText`, never interim text; Cancel inserts nothing; errors (unsupported, microphone blocked) show their words and are announced. No source ships enabled: `createSpeechDictation` (Web Speech API, which may send audio to the browser's speech service) is opt-in.
+- **Prompt Library:** Picker of the host's prompts, searching title, description and body, with no check mark; a choice calls `onInsert`.
+- **Message regenerate-with:** with `regenerateOptions`, Regenerate becomes a menu whose first item is "Try again"; `onRegenerate` receives the option's id, `undefined` for "Try again".
+- **Composer:** `draftKey` with `draftStorage` restores an uncontrolled draft (§4.1) and shows "Draft restored" with Discard. Below `--kind-composer-compact-width` its controls row wraps under the editor and labelled triggers show only their icon, keeping their names.
+
+Component count: 13 + 8 + 10 + 10 + 9 = 50 rows, with Selection and Action counted as one family.
 
 ## 8. Accessibility requirements
 
@@ -552,7 +588,7 @@ These apply to every component:
 
 ### 9.1 npm package
 
-`@kind-ui/agent-ui` ships the exports in §3. The package starts private at `0.0.0` and becomes public at 0.1 only with explicit publication authorization. Each wave is one minor release (0.1 to 0.4). Before 1.0, breaking API changes increment the minor version and compatible fixes increment the patch version.
+`@kind-ui/agent-ui` ships the exports in §3. The package starts private at `0.0.0` and becomes public at 0.1 only with explicit publication authorization. Each wave is one minor release (0.1 to 0.5). Before 1.0, breaking API changes increment the minor version and compatible fixes increment the patch version.
 
 ### 9.2 Registry
 
