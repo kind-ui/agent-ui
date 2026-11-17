@@ -61,11 +61,14 @@ export interface Question {
 /** Answers by question id: an option's value, several values, or text. */
 export type Answers = Record<string, string | string[]>;
 
-export interface ModelOption {
+/** A model to choose from. `Icon` is what each render layer takes as an icon: an image URL unless it says otherwise. */
+export interface ModelOption<Icon = string> {
   id: string;
   name: string;
   group?: string;
   description?: string;
+  /** Shown before the name, in the list and in the field. Decorative: the name stays the model's label. */
+  icon?: Icon;
   disabled?: boolean;
 }
 

@@ -15,13 +15,17 @@ import { defineInternalCombobox } from "./internal/combobox.js";
 const CHEVRON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
-const DEFAULT_PARTS = `<kind-internal-combobox><ui-combobox><kind-model-selector-trigger><kind-model-selector-input><ui-combobox-input><input data-agent-hidden></ui-combobox-input></kind-model-selector-input><span data-model-selector-group></span><ui-combobox-trigger><button>${CHEVRON}</button></ui-combobox-trigger></kind-model-selector-trigger><kind-model-selector-content><ui-combobox-content hidden side-offset="6" align="start"><ui-combobox-empty>No models found.</ui-combobox-empty><ui-combobox-list></ui-combobox-list></ui-combobox-content></kind-model-selector-content></ui-combobox></kind-internal-combobox>`;
+const DEFAULT_PARTS = `<kind-internal-combobox><ui-combobox><kind-model-selector-trigger><ui-combobox-value-icon></ui-combobox-value-icon><kind-model-selector-input><ui-combobox-input><input data-agent-hidden></ui-combobox-input></kind-model-selector-input><span data-model-selector-group></span><ui-combobox-trigger><button>${CHEVRON}</button></ui-combobox-trigger></kind-model-selector-trigger><kind-model-selector-content><ui-combobox-content hidden side-offset="6" align="start"><ui-combobox-empty>No models found.</ui-combobox-empty><ui-combobox-list></ui-combobox-list></ui-combobox-content></kind-model-selector-content></ui-combobox></kind-internal-combobox>`;
 
 // Fields and lists this element filled in, and so writes. A part someone wrote keeps its own, as React's children do.
 // Kept across instances, because UI SDK rebuilds one when the element returns to the page.
 const owned = new WeakSet<Element>();
 // The content each list was last drawn from, so a redraw for another part's change leaves it alone.
 const drawn = new WeakMap<Element, ModelSelectorContentState>();
+
+type ModelIcon = string | Element;
+// The icon each item icon was drawn from, so an unchanged one isn't drawn again.
+const drawnIcons = new WeakMap<Element, ModelIcon | undefined>();
 
 const write = <Target extends object, Key extends keyof Target>(
   target: Target | null,
@@ -51,6 +55,22 @@ const itemText = (document: Document, model: ModelSelectorItem) => {
   if (model.description)
     text.append(element(document, "span", { "data-model-selector-description": "" }, model.description));
   return text;
+};
+
+/**
+ * Draws a model's icon before its text: a string is an image URL, an element is copied. An item that loses its icon
+ * keeps an empty one, because the Combobox keeps a removed icon to show beside the input.
+ */
+const drawIcon = (item: Element, icon: ModelIcon | undefined) => {
+  const current = item.querySelector(":scope > ui-combobox-item-icon");
+  if (current ? drawnIcons.get(current) === icon : icon === undefined) return;
+  const document = item.ownerDocument;
+  const el = element(document, "ui-combobox-item-icon");
+  if (typeof icon === "string") el.append(element(document, "img", { alt: "", src: icon }));
+  else if (icon) el.append(icon.cloneNode(true));
+  drawnIcons.set(el, icon);
+  if (current) current.replaceWith(el);
+  else item.prepend(el);
 };
 
 type Movable = Element & { moveBefore?: (node: Node, child: Node | null) => void };
@@ -93,6 +113,7 @@ const drawList = (list: Element, content: ModelSelectorContentState) => {
       const text = item.querySelector(":scope > [data-model-selector-item-text]");
       if (text) text.replaceWith(itemText(document, model));
       else item.prepend(itemText(document, model));
+      drawIcon(item, model.icon as ModelIcon | undefined);
       place(groupEl, item, previous ? previous.nextElementSibling : groupEl.firstElementChild);
       previous = item;
     }
@@ -150,9 +171,10 @@ export function defineModelSelector(): void {
               group.textContent = selected?.group ?? "";
           }
           const list = el.querySelector("kind-model-selector-content ui-combobox-list");
-          const content = api.contentState(state);
+          const content = api.contentState(state, instance.id);
           if (list && owned.has(list) && drawn.get(list) !== content) {
             drawn.set(list, content);
+            list.closest("ui-combobox-content")?.setAttribute("anchor", content.anchor);
             drawList(list, content);
           }
           api.syncValue();
@@ -175,7 +197,8 @@ export type KindModelSelectorEvents = {
 export interface KindModelSelectorElement
   extends UiElement<KindModelSelectorEvents>,
     AttributeProperties<typeof modelSelectorPrimitive, "api" | "models" | "value" | "defaultValue"> {
-  models?: ModelSelectorOptions["models"];
+  /** A model's `icon` is an image URL, or an element (such as an `svg`) copied into its row. */
+  models?: (Omit<NonNullable<ModelSelectorOptions["models"]>[number], "icon"> & { icon?: ModelIcon })[];
   get value(): string | null;
   set value(id: string);
   defaultValue?: string | null;

@@ -7,7 +7,7 @@ import ModelSelectorExample from "@/examples/model-selector/basic";
 
 Use a model selector in a prompt's toolbar when people can choose which model answers. The field shows the chosen model and its provider in one compact row, and typing in it filters the list, best match first, with the matching letters marked. Place [Reasoning Effort](/docs/components/reasoning-effort) beside it when the model can think harder.
 
-<Example caption="Type son4 in the Model field to find Sonnet 4, then press Enter. Opus 4 is disabled, so it can't be chosen.">
+<Example caption="Type son55 in the Model field to find Claude Sonnet 5.5, then press Enter. Claude Opus 5.5 is disabled, so it can't be chosen.">
   <ModelSelectorExample />
 
   <include cwd lang="tsx">./examples/model-selector/basic.tsx</include>
@@ -41,24 +41,37 @@ ModelSelector
 
 ### Models
 
-Pass `models`, each with an `id` and a `name`, and optionally a `group`, a `description` and `disabled`. The list shows the groups in the order they first appear, and each model with its description under its name. A disabled model stays in the list, dimmed, and can't be chosen by pointer, keyboard or `setValue`.
+Pass `models`, each with an `id` and a `name`, and optionally a `group`, a `description`, an `icon` and `disabled`. The list shows the groups in the order they first appear, and each model with its description under its name. A disabled model stays in the list, dimmed, and can't be chosen by pointer, keyboard or `setValue`.
 
 ```tsx
 <ModelSelector
   models={[
-    { id: "gpt-5", name: "GPT-5", group: "OpenAI" },
-    { id: "sonnet-4", name: "Sonnet 4", group: "Anthropic", description: "Balanced for everyday work" },
+    { id: "gpt-6.1-sol", name: "GPT-6.1 Sol", group: "OpenAI", icon: "/logos/openai.svg" },
+    { id: "claude-sonnet-5.5", name: "Claude Sonnet 5.5", group: "Anthropic", description: "Balanced" },
   ]}
-  defaultValue="sonnet-4"
+  defaultValue="claude-sonnet-5.5"
   onValueChange={(id) => setModel(id)}
 />
 ```
 
 Pass `value` and `onValueChange` to control the chosen model, or `defaultValue` to start with one. `onValueChange` gets the model's `id`, with the reason `input-change` when a person chose it, or `imperative` from `setValue`.
 
+### Icons
+
+Give a model an `icon` to show it before the name, in its list row and, once it's chosen, in the field before the search text. In React, `icon` is an image URL or an element, like an inline `<svg>`:
+
+```tsx
+const models = [
+  { id: "claude-sonnet-5.5", name: "Claude Sonnet 5.5", group: "Anthropic", icon: <AnthropicLogo /> },
+  { id: "grok-4.7", name: "Grok 4.7", group: "xAI", icon: "/logos/xai.svg" },
+];
+```
+
+Icons render at 16px. A monochrome SVG drawn with `currentColor` takes the text color, so it reads in light and dark. Icons are decorative and hidden from assistive technology, so the model's name stays its label. Rows keep one height and their names line up, whether or not a model has an icon. The package ships no logos; you pass your own.
+
 ### Searching
 
-Typing in the field filters the list as you type. A model matches when its name, group or description holds the letters in order, so "son4" finds Sonnet 4. Within each group, the best match comes first, and a group with no match is hidden. The letters that matched the name are marked. When nothing matches, the list says "No models found.".
+Typing in the field filters the list as you type. A model matches when its name, group or description holds the letters in order, so "son55" finds Claude Sonnet 5.5. Within each group, the best match comes first, and a group with no match is hidden. The letters that matched the name are marked. When nothing matches, the list says "No models found.".
 
 The field keeps its width whatever the model's name, so choosing a longer one moves nothing beside it; a long name is cut short with an ellipsis. Set `--kind-model-selector-width` to change the width.
 
@@ -81,5 +94,5 @@ An agent connected with `createAgent` finds the model selector by its label and 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/model-selector/model-selector.ts" name="ModelSelectorAgentActions" type='Pick<ModelSelectorApi, "setValue">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-model-selector>`, set `models` and `value` as properties, and listen for `modelchange`, with the model's `id` as `event.detail.value`. The element fills in its field and list when it has no children.
+  Runs in React and Web Components. On `<kind-model-selector>`, set `models` and `value` as properties, and listen for `modelchange`, with the model's `id` as `event.detail.value`. A model's `icon` is an image URL or an Element, which the element clones into each row. The element fills in its field and list when it has no children.
 </Caption>

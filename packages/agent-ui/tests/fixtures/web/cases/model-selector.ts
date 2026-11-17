@@ -1,7 +1,7 @@
 import type { MotionMode } from "@kind-ui/agent-ui/core";
 import { defineModelSelector } from "../../../../src/web/model-selector.js";
 import { defineReasoningEffort } from "../../../../src/web/reasoning-effort.js";
-import { levels, models, selectionHost } from "../../shared/model-selector.js";
+import { iconModels, levels, models, selectionHost } from "../../shared/model-selector.js";
 
 const { host, record } = selectionHost();
 
@@ -42,4 +42,35 @@ const toolbar =
     Object.assign(window, { kindHost: host });
   };
 
-export const cases = { all: toolbar(), reduced: toolbar("reduced"), refusing: toolbar(undefined, true) };
+const logo = (markup: string) => {
+  const template = document.createElement("template");
+  template.innerHTML = markup;
+  return template.content.firstElementChild as Element;
+};
+
+const logos = (root: HTMLElement) => {
+  defineModelSelector();
+  const logoModels = iconModels(logo);
+  const page = document.createElement("div");
+  page.className = "flex flex-col gap-4 p-6";
+  const selector = (id: string, defaultValue: string) => {
+    const model = document.createElement("kind-model-selector");
+    model.id = id;
+    model.models = logoModels;
+    model.defaultValue = defaultValue;
+    model.addEventListener("modelchange", (event) => record(id)(event.detail.value, event.detail));
+    return model;
+  };
+  const indented = Object.assign(document.createElement("div"), { className: "ps-32" });
+  indented.append(selector("second", "mai-code-2"));
+  page.append(selector("model", "claude-sonnet-5.5"), indented);
+  root.append(page);
+  Object.assign(window, { kindHost: host });
+};
+
+export const cases = {
+  all: toolbar(),
+  reduced: toolbar("reduced"),
+  refusing: toolbar(undefined, true),
+  logos,
+};

@@ -2,9 +2,9 @@ import { fuzzyScore } from "@ui-sdk/core/text-match";
 import type { ModelOption } from "../../types/index.js";
 
 /** Models that share a `group`, or have none. */
-export type ModelGroup = { group: string | undefined; models: ModelOption[] };
+export type ModelGroup = { group: string | undefined; models: ModelOption<unknown>[] };
 
-const scoreOf = (model: ModelOption, query: string) =>
+const scoreOf = (model: ModelOption<unknown>, query: string) =>
   Math.max(
     fuzzyScore(model.name, query),
     model.group ? fuzzyScore(model.group, query) : 0,
@@ -16,8 +16,8 @@ const scoreOf = (model: ModelOption, query: string) =>
  * by `fuzzyScore` over name, group and description comes first; models that don't match are left out. An empty query
  * keeps every model in order.
  */
-export function filterModels(models: ModelOption[], query: string): ModelGroup[] {
-  const groups = new Map<string | undefined, { model: ModelOption; score: number }[]>();
+export function filterModels(models: ModelOption<unknown>[], query: string): ModelGroup[] {
+  const groups = new Map<string | undefined, { model: ModelOption<unknown>; score: number }[]>();
   for (const model of models) {
     const ranked = groups.get(model.group) ?? [];
     groups.set(model.group, ranked);

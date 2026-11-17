@@ -1,8 +1,12 @@
 "use client";
 
-import { type ModelSelectorItem as Item, modelSelectorPrimitive } from "@kind-ui/agent-ui/core";
+import {
+  type ModelSelectorItem as Item,
+  type ModelSelectorOptions,
+  modelSelectorPrimitive,
+} from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/react/primitive";
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps, ReactElement, ReactNode } from "react";
 import {
   KindCombobox,
   KindComboboxContent,
@@ -11,9 +15,11 @@ import {
   KindComboboxGroupLabel,
   KindComboboxInput,
   KindComboboxItem,
+  KindComboboxItemIcon,
   KindComboboxItemIndicator,
   KindComboboxList,
   KindComboboxTrigger,
+  KindComboboxValueIcon,
 } from "./internal/combobox.js";
 
 const parts = createParts(modelSelectorPrimitive, {
@@ -35,13 +41,19 @@ const CHECK = (
   </svg>
 );
 
-export type ModelSelectorProps = Omit<ComponentProps<typeof parts.Root>, "children"> & {
+/** A model, whose `icon` is an image URL or an element such as an inline `svg`. */
+export type ModelSelectorModel = Omit<NonNullable<ModelSelectorOptions["models"]>[number], "icon"> & {
+  icon?: string | ReactElement;
+};
+
+export type ModelSelectorProps = Omit<ComponentProps<typeof parts.Root>, "children" | "models"> & {
+  models?: ModelSelectorModel[];
   children?: ReactNode;
 };
 
 /**
- * A searchable list of models grouped by provider. The field shows the chosen model and its group; typing filters
- * the list and marks what matched. Any `children` replace the field and the list, inside the Combobox.
+ * A searchable list of models grouped by provider. The field shows the chosen model, its icon and its group; typing
+ * filters the list and marks what matched. Any `children` replace the field and the list, inside the Combobox.
  */
 export function ModelSelector({ children = DEFAULT_PARTS, ...props }: ModelSelectorProps) {
   return (
@@ -51,10 +63,14 @@ export function ModelSelector({ children = DEFAULT_PARTS, ...props }: ModelSelec
 
 export type ModelSelectorTriggerProps = ComponentProps<typeof parts.Trigger>;
 
-/** The field: the search field, the chosen model's group, and the button that opens the list, unless you pass children. */
+/**
+ * The field: the chosen model's icon, the search field, the chosen model's group, and the button that opens the list,
+ * unless you pass children. The list opens against it.
+ */
 export function ModelSelectorTrigger({
   children = ({ group, buttonLabel }) => (
     <>
+      <KindComboboxValueIcon />
       <ModelSelectorInput />
       <span data-model-selector-group="">{group}</span>
       <KindComboboxTrigger aria-label={buttonLabel}>{CHEVRON}</KindComboboxTrigger>
@@ -80,10 +96,13 @@ export function ModelSelectorInput({
 
 export type ModelSelectorContentProps = ComponentProps<typeof parts.Content>;
 
-/** The list, the matching models by group, best match first, unless you pass children. */
+/**
+ * The list, the matching models by group, best match first, unless you pass children. It opens against the field and
+ * stays in the page while closed, so the field shows the chosen model's icon before the list first opens.
+ */
 export function ModelSelectorContent({
-  children = ({ groups }) => (
-    <KindComboboxContent sideOffset={6} align="start">
+  children = ({ anchor, groups }) => (
+    <KindComboboxContent anchor={anchor} sideOffset={6} align="start" keepMounted>
       <ModelSelectorEmpty />
       <KindComboboxList>
         {groups.map(({ group, models }) => (
@@ -121,10 +140,19 @@ export type ModelSelectorItemProps = Omit<
   "value" | "label" | "disabled" | "children"
 > & { model: Item };
 
-/** A model in the list: its name, with what the query matched marked, its description and a check when chosen. */
+/**
+ * A model in the list: its icon, its name with what the query matched marked, its description and a check when
+ * chosen. A string `icon` is an image URL; an element renders as is.
+ */
 export function ModelSelectorItem({ model, ...props }: ModelSelectorItemProps) {
+  const { icon } = model;
   return (
     <KindComboboxItem {...props} value={model.id} label={model.name} disabled={model.disabled}>
+      {icon ? (
+        <KindComboboxItemIcon>
+          {typeof icon === "string" ? <img src={icon} alt="" /> : (icon as ReactElement)}
+        </KindComboboxItemIcon>
+      ) : null}
       <span data-model-selector-item-text="">
         <span data-model-selector-name="">
           {model.segments.map((segment, index) =>
