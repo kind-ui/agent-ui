@@ -135,7 +135,10 @@ export type MenuBaseConfig<Options extends MenuBaseOptions> = {
   kind: string;
   /** The `label` when the options have none. */
   label: string;
-  /** The menu as UI SDK Menu data, read whenever the options change. */
+  /**
+   * The menu as UI SDK Menu data, read whenever the options change. Return one array for the same input, since
+   * every instance of the component shares one cache.
+   */
   toData: (options: Options) => MenuData;
   /** A plain item ran. A returned promise keeps the item pending and the menu open until it settles. */
   onAction?: (value: string, details: MenuRun, context: Context<Options>) => unknown;
@@ -180,10 +183,11 @@ type Detail = {
  * `open`; choices reach the component through `config`, from React's props or, on Web Components, the menu's events.
  */
 export const menuBase = <Options extends MenuBaseOptions>(config: MenuBaseConfig<Options>) => {
-  // Menu data is plain, so equal data keeps its array: a new one makes `ui-menu` render every item again.
+  // Equal data keeps its array. This cache is shared by every instance, so `toData` returns one array per input.
   let last: { key: string; items: MenuData } | undefined;
   const data = (options: Options) => {
     const items = config.toData(options);
+    if (last?.items === items) return items;
     const key = JSON.stringify(items);
     if (last?.key !== key) last = { key, items };
     return last.items;

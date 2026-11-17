@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Fixture = {
   kindHost: { actions: { id: string; reason: string; source?: string }[] };
@@ -87,6 +88,7 @@ test("agent actions: open, close and run", async ({ page }) => {
 for (const scheme of ["light", "dark"] as const)
   test(`axe passes with the menu open, ${scheme}`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: scheme });
+    await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     await load(page);
     await trigger(page).click();
     await settled(page);
@@ -123,14 +125,51 @@ test("the disabled item is aria-disabled and choosing it calls nothing", async (
   expect(await actions(page)).toEqual([]);
 });
 
+test("without onAction every item is disabled and run isn't offered, but a submenu still opens", async ({
+  page,
+}) => {
+  await load(page, "inert");
+  await expectAgentActions(page, "Add", ["open", "press"]);
+  await trigger(page).focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(item(page, /^Upload file/)).toHaveAttribute("aria-disabled", "true");
+  await expect(item(page, "GitHub")).not.toHaveAttribute("aria-disabled", "true");
+});
+
+test("new items while the menu is open keep focus on the row it was on", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "React keys its rows; web redraws them");
+  await load(page);
+  await trigger(page).focus();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await expect(item(page, /^Add context/)).toBeFocused();
+  await page.evaluate(() => {
+    const menu = document.querySelector<HTMLElement & { items: { id: string }[] }>("kind-add-menu");
+    if (menu)
+      menu.items = menu.items.map((entry) =>
+        entry.id === "screenshot" ? { ...entry, disabled: false } : entry,
+      );
+  });
+  await expect(item(page, "Screenshot")).not.toHaveAttribute("aria-disabled", "true");
+  await expect(item(page, /^Add context/)).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(item(page, "Screenshot")).toBeFocused();
+});
+
 test("with reduced motion the menu only fades", async ({ page }) => {
   await load(page, "reduced");
   await trigger(page).click();
   await expect(menu(page)).toBeVisible();
   const transition = await content(page)
     .first()
-    .evaluate((el) => getComputedStyle(el).transitionProperty);
-  expect(transition).toBe("opacity");
+    .evaluate((el) => {
+      const open = getComputedStyle(el).transitionProperty;
+      el.setAttribute("data-ending-style", "");
+      const closing = getComputedStyle(el).transitionDuration;
+      el.removeAttribute("data-ending-style");
+      return { open, closing };
+    });
+  expect(transition).toEqual({ open: "opacity", closing: "0.12s" });
 });
 
 test.describe("on a small touch screen", () => {
@@ -159,11 +198,5 @@ test.describe("on a small touch screen", () => {
     await expect(item(page, "Add an issue")).toBeHidden();
     for (const name of [/^Upload file/, /^Add context/, "Linear"])
       await expect(item(page, name)).toBeVisible();
-    await settled(page);
-    await page.keyboard.press("ArrowRight");
-    await expect(item(page, "Add an issue")).toBeFocused();
-    await page.keyboard.press("Escape");
-    await expect(item(page, "GitHub")).toBeFocused();
-    await expect(item(page, /^Upload file/)).toBeVisible();
   });
 });

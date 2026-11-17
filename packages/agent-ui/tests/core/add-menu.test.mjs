@@ -76,3 +76,19 @@ test("an item the owner cancels keeps the menu open; any other closes it", () =>
   assert.equal(close(), false);
   assert.equal(instance.get().open, false);
 });
+
+test("two menus updating in turn keep their items, and notify nothing, when their options don't change", () => {
+  const other = [{ id: "a", label: "A" }];
+  const onAction = () => {};
+  const one = addMenuPrimitive({ items, onAction });
+  const two = addMenuPrimitive({ items: other, onAction });
+  const before = one.get().items;
+  let notified = 0;
+  one.subscribe(() => notified++);
+  for (let i = 0; i < 3; i++) {
+    one.setOptions({ items, onAction });
+    two.setOptions({ items: other, onAction });
+  }
+  assert.equal(one.get().items, before);
+  assert.equal(notified, 0);
+});

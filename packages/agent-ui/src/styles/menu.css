@@ -56,13 +56,14 @@
       translate: 0 -4px;
       scale: 0.98;
     }
-    &[data-ending-style] {
+    &:where([data-ending-style]) {
       transition-duration: var(--kind-duration-fast);
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    :where([data-menu-part="root"][data-motion="auto"]) [data-slot="menu-content"] {
+    :where([data-menu-part="root"][data-motion="auto"])
+      [data-slot="menu-content"]:where(:not([data-presentation="sheet"])) {
       transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
 
       &:is([data-starting-style], [data-ending-style]) {
@@ -72,7 +73,8 @@
     }
   }
 
-  :where([data-menu-part="root"][data-motion="reduced"]) [data-slot="menu-content"] {
+  :where([data-menu-part="root"][data-motion="reduced"])
+    [data-slot="menu-content"]:where(:not([data-presentation="sheet"])) {
     transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
 
     &:is([data-starting-style], [data-ending-style]) {

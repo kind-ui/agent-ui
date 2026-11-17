@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type AddMenuContentState,
   type AddMenuOptions,
   type AddMenuRow,
   type AddMenuSection,
@@ -117,22 +118,24 @@ export function AddMenuTrigger({ children = PLUS, ...props }: AddMenuTriggerProp
 }
 
 export type AddMenuContentProps = Omit<ComponentProps<typeof KindMenuContent>, "children"> & {
-  /** What the menu holds: its rows by default. */
-  children?: ReactNode;
+  /** What the menu holds, or a function of its rows: the rows by default. */
+  children?: ReactNode | ((state: AddMenuContentState) => ReactNode);
 };
 
 /** The menu: UI SDK's `MenuContent` holding the rows unless you pass children. Props go to it. */
-export function AddMenuContent({ children, ...props }: AddMenuContentProps) {
+export function AddMenuContent({ children = DEFAULT_ROWS, ...props }: AddMenuContentProps) {
   return (
     <parts.Content>
-      {({ sections }) => (
+      {(state) => (
         <KindMenuContent align="start" sideOffset={6} {...props}>
-          {children ?? <AddMenuRows sections={sections} />}
+          {typeof children === "function" ? children(state) : children}
         </KindMenuContent>
       )}
     </parts.Content>
   );
 }
+
+const DEFAULT_ROWS = ({ sections }: AddMenuContentState) => <AddMenuRows sections={sections} />;
 
 // Shared, so an update doesn't render the default parts' wrappers again.
 const PLUS = <span data-add-menu-icon="" aria-hidden="true" />;

@@ -30,11 +30,9 @@ export const addItems: MenuEntry<string>[] = [
 
 export function addMenuHost() {
   const actions: { id: string; reason: string; source?: string }[] = [];
-  const opens: { open: boolean; reason: string }[] = [];
   return {
-    host: { actions, opens },
+    host: { actions },
     action: (id: string, details: { reason: string; source?: string }) =>
       actions.push({ id, reason: details.reason, source: details.source }),
-    open: (open: boolean, details: { reason: string }) => opens.push({ open, reason: details.reason }),
   };
 }

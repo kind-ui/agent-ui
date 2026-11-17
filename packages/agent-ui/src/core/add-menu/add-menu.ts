@@ -36,8 +36,11 @@ export type AddMenuOptions = MenuBaseOptions & {
 
 /** A row of the menu: an item that runs, or one that opens a submenu of its own sections. */
 export type AddMenuRow = {
+  /** The entry's `id`, which `onAction` gets. */
   id: string;
+  /** The first line, and the text typeahead matches. */
   label: string;
+  /** The second line, under the label. */
   description: string | undefined;
   /** Passed through untouched, for the render layer to draw. */
   icon: unknown;
@@ -53,13 +56,17 @@ export type AddMenuSection = { label: string | undefined; rows: AddMenuRow[] };
 export type AddMenuContentState = { sections: AddMenuSection[] };
 
 export type AddMenuState = MenuBaseState & {
+  /** The host's `items` as passed, icons included. */
   entries: MenuEntry<unknown>[];
   /** Whether `onAction` is set; without it every item is disabled. */
   canRun: boolean;
 };
 
 export type AddMenuApi = MenuBaseApi & {
-  /** Runs an item by its `id`, leaving the menu as it is. Offered only while `onAction` is set and the menu is enabled. */
+  /**
+   * Runs an item by its `id`, leaving the menu as it is. Offered only while `onAction` is set and the menu is enabled.
+   * Returns whether it ran: `false` for an unknown, disabled or submenu id, or one the owner cancelled.
+   */
   readonly run: ((id: string) => boolean) | undefined;
   /** The content slot's state, memoized. */
   contentState: (state: AddMenuState) => AddMenuContentState;
@@ -98,11 +105,16 @@ export const addMenuSections = (entries: MenuEntry<unknown>[], canRun: boolean):
   return [...sections.values()];
 };
 
-const toData = (sections: AddMenuSection[]): MenuData =>
+const buildData = (sections: AddMenuSection[]): MenuData =>
   sections.flatMap((section, index): MenuData => {
     const items = section.rows.map((row) =>
       row.sections
-        ? { type: "submenu" as const, label: row.label, items: toData(row.sections), disabled: row.disabled }
+        ? {
+            type: "submenu" as const,
+            label: row.label,
+            items: buildData(row.sections),
+            disabled: row.disabled,
+          }
         : { value: row.id, label: row.label, disabled: row.disabled },
     );
     return [
@@ -122,6 +134,16 @@ const sectionsOf = (entries: MenuEntry<unknown>[], canRun: boolean) => {
     cache.set(entries, sections);
   }
   return sections;
+};
+
+const data = new WeakMap<AddMenuSection[], MenuData>();
+const toData = (sections: AddMenuSection[]) => {
+  let built = data.get(sections);
+  if (!built) {
+    built = buildData(sections);
+    data.set(sections, built);
+  }
+  return built;
 };
 
 const canRunOf = (options: AddMenuOptions) => typeof options.onAction === "function";
