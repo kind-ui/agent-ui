@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `26eef6b` (Wave 4 Task 8 Stack Trace)
+Last reviewed: `3821f99` (Wave 4 Task 9 Test Results)
 
 ## Settled
 
+- **Switching the Test Results filter plays the rows' entrance again** (Wave 4 Task 9): the filter mounts the rows it lets through, which is a mount; reduced motion keeps it to a 120 ms fade.
 - **Terminal's Copy hover fade runs under every `motion`** (Wave 4 Task 7), as the Step trigger's and Tool's copy buttons' do: a 150 ms color change on hover isn't movement.
 
 - **The `--kind-ansi-*` colors are `@theme default static`** (Wave 4 Task 7): only Terminal's script reads them, as inline `color: var(--kind-ansi-red)`, which Tailwind can't see, so it never emitted them from the main block. Light darkens the 16 colors to read on `--kind-color-hover`, dark lightens them; black and white map to grays that read in both. Axe checks them in both schemes.
@@ -48,6 +49,7 @@ Last reviewed: `26eef6b` (Wave 4 Task 8 Stack Trace)
 
 ## Resolved
 
+- **Test Results motion and header** (Wave 4 Task 9): `motion="none"` turns the row labels' transition off under OS reduced motion too, rows in a suite opening for the first time come in with it (no entrance of their own), the count dots no longer fade (React and web now match), and the duration reserves `6ch` so the counts don't slide. Pinned in `test-results.spec.ts`.
 - **Stack Trace (Wave 4 Task 8):** the library chevron turned under `motion="reduced"` (now off for `reduced` and `none`, as Step's trigger); the message ran under Copy in right-to-left text (logical `padding-inline`); library-frame and frame-button context selectors are in `:where()`, so a consumer class wins; the panel has a `min-height` for Copy when it holds nothing else.
 - **Terminal (Wave 4 Task 7):** the cursor blinked under `prefers-reduced-motion` (a 4-attribute base rule beat the media override) and wrapped a full last line; it now blinks only inside `no-preference` at `motion="auto"` and overhangs into the line's padding. Jump to latest moved 8px under reduced motion; its offset is now full motion only. Extra attributes sit in `:where()`, and the header's padding is logical.
 

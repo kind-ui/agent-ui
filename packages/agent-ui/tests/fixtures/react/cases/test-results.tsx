@@ -39,4 +39,8 @@ const all: Row[] = [
   { id: "live", label: "Live run", suites: [], status: "running" },
 ];
 
-export const cases = { all: () => <Runs rows={all} /> };
+const refused: Row[] = [
+  { id: "results", suites, defaultOpen: true, filter: "all", expanded: ["auth", "auth/bad"] },
+];
+
+export const cases = { all: () => <Runs rows={all} />, refused: () => <Runs rows={refused} /> };

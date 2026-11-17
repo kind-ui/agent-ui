@@ -39,8 +39,8 @@ const act = (page: Page, ref: string, action: string, args?: unknown[]) =>
     [ref, action, args] as const,
   );
 
-const open = async (page: Page) => {
-  await page.goto("/?c=test-results&case=all");
+const open = async (page: Page, name = "all") => {
+  await page.goto(`/?c=test-results&case=${name}`);
   await expect(row(page, "results", /^auth/)).toBeVisible();
 };
 
@@ -131,6 +131,32 @@ test("a live run grows without moving its header, and collapses to its counts wh
   await expect(trigger).toHaveAccessibleName("Live run 2 passed 0 failed 0 skipped 3 ms");
 });
 
+test("an owner that refuses keeps the filter and open rows it holds", async ({ page }) => {
+  await open(page, "refused");
+  const run = results(page, "results");
+  await run.getByRole("radio", { name: "Failed" }).click();
+  await expect.poll(async () => (await host(page)).filters.length).toBe(1);
+  await expect(run.getByRole("radio", { name: "All" })).toBeChecked();
+  await expect(row(page, "results", /^cart/)).toBeVisible();
+  await label(page, "results", /^auth/).click();
+  await expect.poll(async () => (await host(page)).expanded).toEqual([[["auth/bad"], "item-press"]]);
+  await expect(row(page, "results", /^auth/)).toHaveAttribute("aria-expanded", "true");
+});
+
+test("rows in a suite that opens for the first time come in with it", async ({ page }) => {
+  await open(page);
+  await label(page, "results", /^cart/).click();
+  await expect(row(page, "results", /^adds an item/)).toBeVisible();
+  const labels = await page.evaluate(
+    () =>
+      document.getAnimations().filter((animation) => {
+        const target = (animation.effect as KeyframeEffect | null)?.target;
+        return target instanceof Element && target.getAttribute("data-slot") === "tree-label";
+      }).length,
+  );
+  expect(labels).toBe(0);
+});
+
 test("a suite that starts failing opens", async ({ page }) => {
   await open(page);
   await set(page, "live", {
@@ -163,7 +189,9 @@ test("agents filter, open a suite and close the run", async ({ page }) => {
 for (const colorScheme of ["light", "dark"] as const) {
   test(`axe reports no violations in ${colorScheme} mode`, async ({ page }) => {
     await page.emulateMedia({ colorScheme });
-    await open(page);
+    // A CSS locator, since Playwright's role query on a UI SDK tree row before axe crashes Firefox.
+    await page.goto("/?c=test-results&case=all");
+    await expect(page.locator('#results [data-slot="tree-label"]').first()).toBeVisible();
     // The fixture page has no background of its own, which axe reads as white.
     await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     await settled(page);
@@ -193,4 +221,19 @@ test("kind-test-results keeps its filter and open rows when put back", async ({ 
   await expect(row(page, "results", /^rejects/)).toHaveAttribute("aria-expanded", "false");
   await label(page, "results", /^auth/).click();
   await expect(row(page, "results", /^auth/)).toHaveAttribute("aria-expanded", "false");
+});
+
+test("kind-test-results fills in a filter and tree written later, with whitespace inside", async ({
+  page,
+}, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await page.goto("/?c=test-results&case=late");
+  const run = results(page, "late");
+  await expect(part(page, "late", "title")).toHaveText("Tests");
+  await run.locator("[data-test-results-panel]").evaluate((panel) => {
+    panel.innerHTML =
+      "<kind-test-results-filter>\n</kind-test-results-filter><kind-test-results-tree></kind-test-results-tree>";
+  });
+  await expect(run.getByRole("radio")).toHaveCount(4);
+  await expect(row(page, "late", /^auth/)).toHaveAttribute("aria-expanded", "true");
 });

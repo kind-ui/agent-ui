@@ -2,10 +2,12 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `26eef6b` (Wave 4 Task 8 Stack Trace)
+Last reviewed: `3821f99` (Wave 4 Task 9 Test Results)
 
 ## Settled
 
+- **A Test Results suite whose id is `all`, `fail`, `pass` or `skip` shares an agent item value with a filter** (Wave 4 Task 9): the bridge checks one list per component, and `expand("fail")` still opens the suite; hosts use real ids.
+- **Test Results' `failure` part cancels every click inside its Stack Trace** (Wave 4 Task 9, spec §2 row): UI SDK's Tree would otherwise toggle the row; the trace's buttons have already run. A link added inside Stack Trace later would need its default kept.
 - **A double-click on a File Tree file calls `onSelect` twice** (Wave 4 Task 6): each press is an activation, as Suggestion's `onPick` is; a host that opens files dedupes.
 - **Generated Image with `status` `"ready"` and no `src` shows "Loading image"** (Wave 4 Task 5): an error there would flash, and announce, whenever a web host sets `status` before `src`; the `src` JSDoc says to set it with or before `ready`.
 - **The Step root writes `data-mounting` in its `bind`, not through `attrs`** (Wave 3 Task 11): it lasts two frames per element and isn't state, so a store flag would render every React part again to clear it; `wave-3/agent.spec.ts` checks no Step part runs a transition on load. **`imports` in `size-budget.json` is required:** the file is ours, and a missing key fails the check.
@@ -33,6 +35,7 @@ Last reviewed: `26eef6b` (Wave 4 Task 8 Stack Trace)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A person's Test Results filter press reports `source: "programmatic"`** (Wave 4 Task 9): `createChange` reads the Segmented Control's native `change` as programmatic, as Reasoning Effort's does; the reason is `input-change`. Needs the originating key or pointer event, or an upstream source for `change`.
 - **Focus drops to the page when every Stack Trace frame button leaves at once** (Wave 4 Task 8), as when the host removes `onOpenFrame` or passes a trace with no frames while a frame has focus: `createListFocus`'s recovery finds no item left and has no `focusFallback`. Removing one of several frames recovers to a neighbor.
 - **File Tree hears `onSelect` from bubbled clicks and keyups, not the Tree's `onAction`** (Wave 4 Task 6): web's `action` doesn't bubble, so `read` calls `onSelect` only when the event's row is the selection, the owner took it, and no modifier is held. Needs a spec §2 row or a bubbling UI SDK event.
 - **A Document without `document.css` never overflows** (Wave 4 Task 4): `--kind-document-max-height` doesn't parse, so `overflowing` stays false and Show more never shows. Nothing is clipped without the stylesheet either; undocumented.
@@ -69,6 +72,7 @@ Last reviewed: `26eef6b` (Wave 4 Task 8 Stack Trace)
 
 ## Resolved
 
+- **Test Results trusted host data** (Wave 4 Task 9): an unknown test status reads as `skip` (`testStatus`), an unknown `filter`/`defaultFilter` as `"all"` (`knownFilter`), rows are defined so a `__proto__` id gets its own, durations round before choosing ms or s, open rows whose suite or test is gone close (reason `"auto"`), and the `suites` JSDoc says ids can't hold `/`. Pinned in `test-results.test.mjs`.
 - **Stack Trace (Wave 4 Task 8):** `openFrame` read `""`, `" "` and `"1e0"` as indexes (it now takes a number or digits only); `copy` copied an empty string for a trace with only a `label` (now a getter offered while `copyText` isn't empty, and the button is present only then); `showLibraryFrames`, `StackTraceRow` and `bindLibrary` have JSDoc. `tests/core/stack-trace.test.mjs` pins the message split, the index checks and `copy`.
 - **Terminal (Wave 4 Task 7):** Copy and the agent's `copy` emptied the clipboard before any output; `copy` is now a getter and the button is present only with output (`hasOutput`). An OSC cut short by another escape showed its text; it now ends at the next ESC too. Line parts skip `following`, `jumpExiting`, `hasOutput` and `copied`; output that starts over calls `virtual.reset()`; Jump to latest syncs with `following` as it binds. `terminal.spec.ts` pins `data-last` moving and output replaced whole.
 

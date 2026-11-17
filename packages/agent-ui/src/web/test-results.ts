@@ -26,8 +26,11 @@ const CHEVRON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 // across instances, because UI SDK rebuilds one when the element returns to the page.
 const owned = new WeakSet<Element>();
 
+// Whitespace a page wrote between tags doesn't count.
+const isEmpty = (part: Element) => !part.firstElementChild && !part.textContent?.trim();
+
 const ownedOrEmpty = (part: Element | null): part is Element => {
-  if (!part || !(owned.has(part) || !part.firstChild)) return false;
+  if (!part || !(owned.has(part) || isEmpty(part))) return false;
   owned.add(part);
   return true;
 };
@@ -67,7 +70,7 @@ const fillMeta = (part: Element | null, { counts, duration }: TestResultsState) 
 
 /** Gives an empty filter its Segmented Control, set up before it connects, since it reads its default as it does. */
 const fillFilter = (part: Element | null, api: TestResultsApi, state: TestResultsState) => {
-  if (!part || part.firstChild) return;
+  if (!part || !isEmpty(part)) return;
   const document = part.ownerDocument;
   const { levels, "aria-label": label, ...props } = api.filterState(state);
   // Hidden from agents, which use the Test Results' own `setFilter`.
@@ -81,7 +84,7 @@ const fillFilter = (part: Element | null, api: TestResultsApi, state: TestResult
   Object.assign(control, props, { ariaLabel: label });
   const host = element(document, "kind-internal-segmented-control");
   host.append(control);
-  part.append(host);
+  part.replaceChildren(host);
 };
 
 // The row each element was last drawn from, so a redraw writes only rows that changed.
@@ -172,6 +175,23 @@ const drawRows = (parent: Element, items: TreeItemData[], state: TestResultsStat
 };
 
 /**
+ * Gives an empty tree part its Tree, which reads its defaults as it connects and draws bare rows of its own from
+ * `items` when it has none, so it gets both, and our rows, before it connects.
+ */
+const fillTree = (part: Element | null, api: TestResultsApi, state: TestResultsState) => {
+  if (!part || !isEmpty(part)) return;
+  const document = part.ownerDocument;
+  const tree = document.createElement("ui-tree");
+  const { "aria-label": label, ...props } = api.treeState(state);
+  drawRows(tree, props.items, state);
+  Object.assign(tree, props);
+  tree.ariaLabel = label;
+  const host = element(document, "kind-internal-tree");
+  host.append(tree);
+  part.replaceChildren(host);
+};
+
+/**
  * `<kind-test-results>` fills in its parts when it has no children. Set `suites` as a property; its tree gets a row
  * for each suite and test, and a failed test opens to a `<kind-stack-trace>`. Choosing a filter fires `filterchange`,
  * and opening or closing rows fires `expandchange`, each with the filter or the open rows as `detail.value`.
@@ -213,24 +233,7 @@ export function defineTestResults(): void {
       render: (el, instance) => {
         if (!el.firstElementChild) el.innerHTML = DEFAULT_PARTS;
         const api = instance.api as TestResultsApi;
-        const filter = el.querySelector("kind-test-results-filter");
-        fillFilter(filter, api, instance.get() as TestResultsState);
-        const treePart = el.querySelector("kind-test-results-tree");
-        // The Tree reads its defaults as it connects, and draws bare rows of its own from `items` when it has none,
-        // so it gets both, and our rows, before it connects.
-        const tree =
-          treePart?.querySelector<UiTreeElement>(":scope > kind-internal-tree > ui-tree") ??
-          el.ownerDocument.createElement("ui-tree");
-        if (treePart && !tree.isConnected) {
-          const state = instance.get() as TestResultsState;
-          const { "aria-label": label, ...props } = api.treeState(state);
-          drawRows(tree, props.items, state);
-          Object.assign(tree, props);
-          tree.ariaLabel = label;
-          const host = el.ownerDocument.createElement("kind-internal-tree");
-          host.append(tree);
-          treePart.replaceChildren(host);
-        }
+        let drawnTree: Element | undefined;
         let drawnItems: TreeItemData[] | undefined;
         let drawnRows: TestResultsState["rows"] | undefined;
         let drawnMotion: TestResultsState["motion"] | undefined;
@@ -239,14 +242,25 @@ export function defineTestResults(): void {
           fill(el.querySelector("kind-test-results-title"), state.title);
           fillMeta(el.querySelector("kind-test-results-meta"), state);
           fill(el.querySelector("kind-test-results-empty"), emptyTestsText(state.filter));
+          const filter = el.querySelector("kind-test-results-filter");
+          fillFilter(filter, api, state);
           const control = filter?.querySelector<Element & Record<string, unknown>>("ui-segmented-control");
           // UI SDK builds a new instance, with a new controller, when the element returns to the page.
           const { controller } = api.filterState(state);
           if (control && control.controller !== controller) control.controller = controller;
           api.syncFilter();
-          if (!tree.isConnected) return;
+          const treePart = el.querySelector("kind-test-results-tree");
+          fillTree(treePart, api, state);
+          const tree = treePart?.querySelector<UiTreeElement>(":scope > kind-internal-tree > ui-tree");
+          if (!tree) return;
           const { "aria-label": label, items, controller: treeController } = api.treeState(state);
-          if (items !== drawnItems || state.rows !== drawnRows || state.motion !== drawnMotion) {
+          if (
+            tree !== drawnTree ||
+            items !== drawnItems ||
+            state.rows !== drawnRows ||
+            state.motion !== drawnMotion
+          ) {
+            drawnTree = tree;
             drawnItems = items;
             drawnRows = state.rows;
             drawnMotion = state.motion;
@@ -258,7 +272,22 @@ export function defineTestResults(): void {
           api.syncTree();
         };
         draw();
-        return instance.subscribe(draw);
+        const unsubscribe = instance.subscribe(draw);
+        // A part a page adds later is filled in when it arrives. The rows and stack traces drawn inside aren't parts.
+        const arrivals = new MutationObserver((records) => {
+          const arrived = records.some(
+            (record) =>
+              !(
+                record.target instanceof Element && record.target.closest("ui-tree, kind-test-results-filter")
+              ) && [...record.addedNodes].some((node) => node instanceof Element),
+          );
+          if (arrived) draw();
+        });
+        arrivals.observe(el, { childList: true, subtree: true });
+        return () => {
+          unsubscribe();
+          arrivals.disconnect();
+        };
       },
     },
     trigger: { tag: "kind-test-results-trigger", target: wrappedButton, display: "contents" },

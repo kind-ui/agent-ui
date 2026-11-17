@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `26eef6b` (Wave 4 Task 8 Stack Trace)
+Last reviewed: `3821f99` (Wave 4 Task 9 Test Results)
 
 ## Settled
 
@@ -21,6 +21,7 @@ Last reviewed: `26eef6b` (Wave 4 Task 8 Stack Trace)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Firefox crashes running axe after Playwright's role query on a UI SDK tree row too** (Wave 4 Task 9), not only `ui-radio`/`ui-checkbox`: `test-results.spec.ts` waits with a CSS locator before axe. Add to the upstream report.
 - **macOS WebKit's Tab skips Terminal's Copy button** (Wave 4 Task 7), as it skips buttons without Full Keyboard Access; the keyboard test fails there locally. CI's WebKit runs on Linux, where Tab reaches buttons; not checked there yet.
 
 - **An empty `<kind-generated-image>` takes no height until it upgrades** (Wave 4 Task 5): its frame and `aspect-ratio` come from the element, and a `:not(:defined)` rule can't read `width`/`height`, as with the empty Task, Plan and Document. The fixture has no moved, shadow-root, written-part or `can-download`-toggle case; each was checked by hand in review.
@@ -56,6 +57,7 @@ Last reviewed: `26eef6b` (Wave 4 Task 8 Stack Trace)
 
 ## Resolved
 
+- **`kind-test-results` missed a filter or tree written later, or written with whitespace inside** (Wave 4 Task 9): `draw` looks both up each time, a `MutationObserver` redraws when parts arrive, and whitespace-only parts count as empty. Pinned in `test-results.spec.ts` (late case).
 - **`kind-stack-trace` (Wave 4 Task 8):** a moved element folded its shown library frames (root `state` now maps `showLibraryFrames`); written empty frames, groups, toggles and frame parts stayed empty (now filled from state, as React's defaults are; `written` fixture case); a new `label` or an equal `frames` copy rebuilt every frame node (the list now redraws only when its rows, entries or `canOpen` change by content).
 - **Terminal (Wave 4 Task 7):** the follow test used a click WebKit doesn't focus with and read `scrollTop` mid smooth scroll in Firefox; it now presses Enter in WebKit and waits for the scroll to rest. A put-back element is tested to redraw its lines and keep `open`.
 

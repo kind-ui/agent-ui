@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `26eef6b` (Wave 4 Task 8 Stack Trace)
+Last reviewed: `3821f99` (Wave 4 Task 9 Test Results)
 
 ## Settled
 
@@ -14,6 +14,7 @@ Last reviewed: `26eef6b` (Wave 4 Task 8 Stack Trace)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A streamed Test Results update renders every row's UI SDK Tree parts and item parts** (Wave 4 Task 9): the known options-change cost (as Chain of Thought, Task and Sources). Our `TestResultsRow` components skip suites the host kept, since core caches tree items per suite.
 - **File Tree: the root `group` and the Tree are both named "Files"** (Wave 4 Task 6), so a screen reader may say it twice; and a function `className` on the root gets the Tree's props. Not checked with a screen reader.
 - **A server-rendered ready Generated Image shows "Loading image" and a shimmer until it hydrates** (Wave 4 Task 5): the phase comes from the `<img>`'s `load`, which only the client hears; the frame keeps its size. Each progress tick renders every part (UI SDK options change), as Chain of Thought's steps do.
 - **Sources re-renders every item's parts on any `sources` change** (Wave 4 Task 2), once per update, not per token: the same UI SDK options-change behavior as Chain of Thought, Task and Plan items despite `selects`.
@@ -44,6 +45,7 @@ Last reviewed: `26eef6b` (Wave 4 Task 8 Stack Trace)
 
 ## Resolved
 
+- **Test Results rows all re-rendered per streamed test, and no owner refused** (Wave 4 Task 9): tree items are cached per suite and `TestResultsRow` is memoized by item; the `refused` case pins the filter and open-row write-back.
 - **Stack Trace had no accepting owner or find-in-page case (Wave 4 Task 8):** the `owned` fixture gained `accepted` (`onShowLibraryFramesChange` sets `showLibraryFrames`), and the spec checks the `library-press` and `find-in-page` reasons and a `beforematch` reveal.
 - **Terminal server markup had no lines (Wave 4 Task 7),** so the screen grew ~312px on hydration: `state` now seeds the first 16 lines at the 20px guess (`firstRows`), which the virtualizer replaces once it connects. Owner-held `open` and a cancelled `onCopy` have an `owned` case; the docs' composition tree shows the `data-terminal-screen` and `data-terminal-header` wrappers the stylesheet styles.
 

@@ -21,10 +21,12 @@ import { type StepApi, type StepOptions, type StepState, stepAnnouncement, stepB
 import { treeValues } from "../tree.js";
 import {
   emptyTestsText,
+  knownFilter,
   type TestCounts,
   type TestResultsFilter,
   testCounts,
   testItems,
+  testStatus,
   testValue,
 } from "./summary.js";
 
@@ -45,8 +47,8 @@ export type TestResultsExpandedChangeReason =
 
 export type TestResultsOptions = Omit<StepOptions, "status" | "label"> & {
   /**
-   * The suites and their tests, as they finish. Pass new arrays and objects for what changed: rows are kept by
-   * object, so only a changed test's row renders again.
+   * The suites and their tests, as they finish. Pass new arrays and objects for what changed, and keep the rest:
+   * rows are kept by object, so a suite you keep keeps its row's state. Ids can't hold `/`, which joins a test's to its suite's.
    * @default []
    */
   suites?: TestSuite[];
@@ -234,8 +236,11 @@ const noRow: TestResultsRow = {
   stack: undefined,
 };
 
-const formatDuration = (ms: number | undefined) =>
-  ms === undefined ? "" : ms < 1000 ? `${Math.round(ms)} ms` : `${(ms / 1000).toFixed(1)} s`;
+const formatDuration = (ms: number | undefined) => {
+  if (ms === undefined) return "";
+  const whole = Math.round(ms);
+  return whole < 1000 ? `${whole} ms` : `${(ms / 1000).toFixed(1)} s`;
+};
 
 const totalMs = (tests: readonly TestCase[]) =>
   tests.some((test) => test.durationMs !== undefined)
@@ -245,7 +250,7 @@ const totalMs = (tests: readonly TestCase[]) =>
 const testRow = (test: TestCase): TestResultsRow => ({
   name: test.name,
   suite: false,
-  status: test.status,
+  status: testStatus(test),
   duration: formatDuration(test.durationMs),
   message: test.error?.message ?? "",
   stack: test.error?.stack,
@@ -255,9 +260,9 @@ const suiteRow = (suite: TestSuite): TestResultsRow => ({
   ...noRow,
   name: suite.name,
   suite: true,
-  status: suite.tests.some((test) => test.status === "fail")
+  status: suite.tests.some((test) => testStatus(test) === "fail")
     ? "fail"
-    : suite.tests.length > 0 && suite.tests.every((test) => test.status === "skip")
+    : suite.tests.length > 0 && suite.tests.every((test) => testStatus(test) === "skip")
       ? "skip"
       : "pass",
   duration: formatDuration(totalMs(suite.tests)),
@@ -267,22 +272,42 @@ const testRows = new WeakMap<TestCase, TestResultsRow>();
 const suiteRows = new WeakMap<TestSuite, TestResultsRow>();
 const rowsCache = new WeakMap<TestSuite[], Record<string, TestResultsRow>>();
 const itemsCache = new WeakMap<TestSuite[], Partial<Record<TestResultsFilter, TreeItemData[]>>>();
+const suiteItems = new WeakMap<TestSuite, Partial<Record<TestResultsFilter, TreeItemData | null>>>();
 const branchesCache = new WeakMap<TestSuite[], Map<string, string | null>>();
 
 // A row keeps its object while the host keeps its suite or test, so only a changed row's parts have new state.
 const rowsOf = (suites: TestSuite[]) =>
   cached(rowsCache, suites, () => {
     const rows: Record<string, TestResultsRow> = {};
+    // Defined rather than assigned, so a suite whose id is `__proto__` gets its own row.
+    const add = (value: string, row: TestResultsRow) =>
+      Object.defineProperty(rows, value, {
+        value: row,
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
     for (const suite of suites) {
-      rows[suite.id] = cached(suiteRows, suite, suiteRow);
-      for (const test of suite.tests) rows[testValue(suite, test)] = cached(testRows, test, testRow);
+      add(suite.id, cached(suiteRows, suite, suiteRow));
+      for (const test of suite.tests) add(testValue(suite, test), cached(testRows, test, testRow));
     }
     return rows;
   });
 
+// A suite's item keeps its object while the host keeps the suite, so React skips the rows of suites that didn't change.
+const suiteItem = (suite: TestSuite, filter: TestResultsFilter) => {
+  const byFilter = cached(
+    suiteItems,
+    suite,
+    (): Partial<Record<TestResultsFilter, TreeItemData | null>> => ({}),
+  );
+  byFilter[filter] ??= testItems([suite], filter)[0] ?? null;
+  return byFilter[filter];
+};
+
 const itemsOf = (suites: TestSuite[], filter: TestResultsFilter) => {
   const byFilter = cached(itemsCache, suites, (): Partial<Record<TestResultsFilter, TreeItemData[]>> => ({}));
-  byFilter[filter] ??= testItems(suites, filter);
+  byFilter[filter] ??= suites.flatMap((suite) => suiteItem(suite, filter) ?? []);
   return byFilter[filter];
 };
 
@@ -300,7 +325,7 @@ const branchesOf = (suites: TestSuite[]) =>
 /** The suites and tests that failed: what opens by default, and what opens when it starts failing. */
 const failing = (suites: TestSuite[]) =>
   suites.flatMap((suite) => {
-    const failed = suite.tests.filter((test) => test.status === "fail");
+    const failed = suite.tests.filter((test) => testStatus(test) === "fail");
     return failed.length === 0 ? [] : [suite.id, ...failed.map((test) => testValue(suite, test))];
   });
 
@@ -372,13 +397,13 @@ export const testResultsPrimitive: TestResultsPrimitive = definePrimitive<
   state: (options) => ({
     ...base.state(options),
     ...presentation(options),
-    filter: options.filter ?? options.defaultFilter ?? "all",
+    filter: knownFilter(options.filter ?? options.defaultFilter ?? "all"),
     expanded: options.expanded ?? options.defaultExpanded ?? failing(options.suites ?? noSuites),
   }),
   sync: (options) => ({
     ...base.sync(options),
     ...presentation(options),
-    ...(options.filter === undefined ? {} : { filter: options.filter }),
+    ...(options.filter === undefined ? {} : { filter: knownFilter(options.filter) }),
     ...(options.expanded === undefined ? {} : { expanded: options.expanded }),
   }),
   controlled: [...base.controlled, "filter", "expanded"],
@@ -393,16 +418,23 @@ export const testResultsPrimitive: TestResultsPrimitive = definePrimitive<
     let resync = 0;
     context.onDestroy(() => cancelAnimationFrame(resync));
 
-    // A suite or test that starts failing opens, so a live run shows its failures as they come.
-    let failed = new Set(failing(initial.suites));
+    // A suite or test that starts failing opens, so a live run shows its failures as they come, and one that's
+    // gone closes, so `expanded` only holds rows that can be closed again.
+    let read = initial.suites;
+    let failed = new Set(failing(read));
     context.onOptions(({ suites = noSuites }) => {
+      if (suites === read) return;
+      read = suites;
       const now = failing(suites);
       const started = now.filter((value) => !failed.has(value));
       failed = new Set(now);
+      const branches = branchesOf(suites);
       const { expanded } = store.get();
-      const opening = started.filter((value) => !expanded.includes(value));
-      if (opening.length > 0)
-        change("expanded", [...expanded, ...opening], { reason: "auto", source: "programmatic" });
+      const next = [
+        ...expanded.filter((value) => branches.has(value)),
+        ...started.filter((value) => !expanded.includes(value)),
+      ];
+      if (!sameValues(next, expanded)) change("expanded", next, { reason: "auto", source: "programmatic" });
     });
 
     const syncFilter = () => {

@@ -123,9 +123,14 @@ export function TestResultsTree({
 export type TestResultsRowsProps = { items: TreeItemData[] };
 
 /** A Tree row for each item: a suite holds its tests, and a failed test its `TestResultsFailure`. */
-export const TestResultsRows = memo(function TestResultsRows({ items }: TestResultsRowsProps) {
-  return items.map((item) => (
-    <KindTreeItem key={item.value} value={item.value}>
+export function TestResultsRows({ items }: TestResultsRowsProps) {
+  return items.map((item) => <TestResultsRow key={item.value} item={item} />);
+}
+
+// Memoized by item, which core keeps while the host keeps its suite, so a streamed test renders only its suite's rows.
+const TestResultsRow = memo(function TestResultsRow({ item }: { item: TreeItemData }) {
+  return (
+    <KindTreeItem value={item.value}>
       <KindTreeItemLabel>
         <KindTreeItemIndicator data-agent-hidden="">{item.children ? CHEVRON : null}</KindTreeItemIndicator>
         <TestResultsItem value={item.value} />
@@ -140,7 +145,7 @@ export const TestResultsRows = memo(function TestResultsRows({ items }: TestResu
         </KindTreeGroup>
       ) : null}
     </KindTreeItem>
-  ));
+  );
 });
 
 export type TestResultsItemProps = ComponentProps<typeof parts.Item>;

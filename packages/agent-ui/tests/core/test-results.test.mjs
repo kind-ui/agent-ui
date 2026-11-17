@@ -53,3 +53,26 @@ test("a run with a failure is an error, opens its failures and refuses unknown f
   assert.deepEqual(results.get().expanded, ["auth/bad", "auth"]);
   assert.equal(testResultsPrimitive({ suites: [suites[1]] }).get().status, "complete");
 });
+
+test("host data a reporter wrote as is still reads right", () => {
+  const results = testResultsPrimitive({
+    filter: "failed",
+    suites: [
+      {
+        id: "__proto__",
+        name: "proto",
+        tests: [{ id: "t", name: "x", status: "passed", durationMs: 999.6 }],
+      },
+    ],
+  });
+  assert.equal(results.get().filter, "all");
+  assert.deepEqual(results.get().counts, { pass: 0, fail: 0, skip: 1, total: 1 });
+  assert.equal(results.get().rows.__proto__.name, "proto");
+  assert.equal(results.get().rows["__proto__/t"].duration, "1.0 s");
+});
+
+test("a failed test that's gone closes", () => {
+  const results = testResultsPrimitive({ suites });
+  results.setOptions({ suites: [suites[1]] });
+  assert.deepEqual(results.get().expanded, []);
+});

@@ -37,7 +37,6 @@
       height: 6px;
       border-radius: 9999px;
       background-color: var(--kind-test-results-count, var(--kind-color-muted));
-      transition: background-color var(--kind-duration-base);
     }
     &[data-test-results-count="pass"] {
       --kind-test-results-count: var(--kind-color-success);
@@ -53,7 +52,11 @@
     }
   }
 
+  /* Room for a few digits, so the counts don't slide as the duration grows. */
   [data-test-results-duration] {
+    display: inline-block;
+    min-width: 6ch;
+    text-align: end;
     white-space: nowrap;
   }
 
@@ -184,6 +187,14 @@
     }
   }
 
+  /* Rows in a suite that opens for the first time come in with it, not on their own. */
+  [data-test-results-part="tree"] [data-slot="tree-group"][data-starting-style] [data-slot="tree-label"] {
+    @starting-style {
+      opacity: 1;
+      translate: none;
+    }
+  }
+
   /* Suites and failures open and close by height at full motion, fade under reduced motion, and switch at once with
      "none". */
   :where([data-test-results-part="tree"]) [data-slot="tree-group"] {
@@ -232,7 +243,8 @@
   [data-test-results-part="tree"]:is([data-motion="reduced"], [data-motion="none"])
     [data-slot="tree-indicator"]
     svg,
-  [data-test-results-part="tree"][data-motion="none"] [data-slot="tree-group"] {
+  [data-test-results-part="tree"][data-motion="none"]
+    :is([data-slot="tree-group"], [data-slot="tree-label"]) {
     transition: none;
   }
 
