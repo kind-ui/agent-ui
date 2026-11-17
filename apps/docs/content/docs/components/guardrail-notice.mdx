@@ -3,9 +3,9 @@ title: Guardrail Notice
 description: Say that a guardrail blocked or filtered content, why, and what the policy says.
 ---
 
-import GuardrailNoticeExample from "@/examples/guardrail-notice/basic";
+import GuardrailNoticeExample from "../../../examples/guardrail-notice/basic";
 
-Use a guardrail notice where a response would have been when a safety or content policy stopped it, or beside results it filtered. It's a [notice](/docs/components/notice) with the policy reason and an optional detail behind **Why?**.
+Use a guardrail notice where a response would have been when a safety or content policy stopped it, or beside results it filtered. It's a [notice](./notice.mdx) with the policy reason and an optional detail behind **Why?**.
 
 <Example caption="Press Why? to read the policy, and press it again to hide it. Press Dismiss to remove the blocked notice.">
   <GuardrailNoticeExample />
@@ -62,7 +62,7 @@ At full motion the detail slides open; under `prefers-reduced-motion`, or with `
 
 ### Dismiss and Announcements
 
-**Dismiss**, `focusFallback` and the announcements work as in [Notice](/docs/components/notice): a guardrail notice added after the page loads announces its title once.
+**Dismiss**, `focusFallback` and the announcements work as in [Notice](./notice.mdx): a guardrail notice added after the page loads announces its title once.
 
 ## API Reference
 

@@ -3,7 +3,7 @@ title: Chain of Thought
 description: Sum up the steps an agent took, and open any one for its details.
 ---
 
-import ChainOfThoughtExample from "@/examples/chain-of-thought/basic";
+import ChainOfThoughtExample from "../../../examples/chain-of-thought/basic";
 
 Use a chain of thought to group the steps behind one answer, like searching, comparing and checking. Its header is a short summary, and it opens into a list of steps, each with its own status and details.
 
@@ -47,7 +47,7 @@ ChainOfThought
 
 ### Steps
 
-Pass the steps as `steps`, each with an `id`, a `status`, a `title` and an optional `durationSeconds`. Update a step's `status` as it runs, and keep its `id`: the open state and focus follow the id. Set the chain's own `status` as a [Step](/docs/components/step)'s, from the run as a whole.
+Pass the steps as `steps`, each with an `id`, a `status`, a `title` and an optional `durationSeconds`. Update a step's `status` as it runs, and keep its `id`: the open state and focus follow the id. Set the chain's own `status` as a [Step](./step.mdx)'s, from the run as a whole.
 
 To give a step details, render its item yourself with a `value` that matches the step's `id`, and put them in `ChainOfThoughtItemContent`:
 
