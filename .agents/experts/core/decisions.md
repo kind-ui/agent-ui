@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `a272144` (Wave 5 Task 4 Add Menu)
+Last reviewed: `9113c72` (Wave 5 Task 5 Settings Menu)
 
 ## Settled
 
@@ -37,6 +37,7 @@ Last reviewed: `a272144` (Wave 5 Task 4 Add Menu)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Two agent calls on a controlled Settings Menu with no render between them (Wave 5 Task 5):** the second builds on the owner's `values`, which haven't come back yet, so `onValuesChange={setValues}` keeps only the second; `setValues` carries values between its own changes. Not reproduced through the bridge.
 - **`MenuRun.keepOpen` with a returned promise (Wave 5 Task 4):** untested, and no menu does both; a later close after the promise settles would be refused. Settle it when a `menuBase` menu first returns a promise.
 - **Every `pickerBase` component warns at mount that `agent.actions` lists `close`** (Wave 5 Task 2): the getter is `undefined` while the list is closed; UI SDK's development check, harmless, as AGENTS.md says for Message.
 - **A `pickerBase` item part with a key no row has gets `undefined` as its state (Wave 5 Task 2):** both layers render keys from `pages`, so none does today; a custom list that renders a stale key would throw reading `row`.
@@ -79,6 +80,7 @@ Last reviewed: `a272144` (Wave 5 Task 4 Add Menu)
 
 ## Resolved
 
+- **Settings Menu `setValues` lost changes while controlled, and read inherited values (Wave 5 Task 5):** each change builds on the one before, and values are read by own key; unit tests pin both.
 - **`menuBase`'s data cache was shared by every instance (Wave 5 Task 4):** two Add Menus updating in turn re-notified; `toData` now returns one array per input (Add Menu caches it per sections) and the cache checks identity first. Unit test with two instances.
 - **Model Selector marked matches only in the name** (Wave 5 Task 3): on Picker it marks a description too, only when the name didn't match, as Picker does.
 - **Model Selector's list anchored through the field's `id`** (Wave 4 Task 12b, core, react and web reviews): an author `id` on the trigger, a page element with the same id or a `"` in it broke the anchor; the trigger now writes `data-model-selector-field` and the anchor is an escaped selector for it, and the `logos` case has a trigger with an author `id`.

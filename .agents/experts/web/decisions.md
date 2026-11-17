@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `a272144` (Wave 5 Task 4 Add Menu)
+Last reviewed: `9113c72` (Wave 5 Task 5 Settings Menu)
 
 ## Settled
 
@@ -66,6 +66,7 @@ Last reviewed: `a272144` (Wave 5 Task 4 Add Menu)
 
 ## Resolved
 
+- **`placeMenuChild` re-added every row on each redraw (Wave 5 Task 5):** a row already in place was moved before itself, which in WebKit (no `moveBefore`) dropped focus and closed a submenu; Task 4's Add Menu fix only held in Chromium. It now leaves the row, and Settings Menu draws a choice's options by value; `settings-menu.spec.ts` counts zero removals on a value change and an equal `settings` copy.
 - **`kind-add-menu` rebuilt every row on an `items` change, dropping focus (Wave 5 Task 4):** rows are now drawn by `id` and moved only when out of place; a written empty `ui-menu-content` fills itself in. Spec covers both.
 - **Model Selector's Combobox `anchor` through `data-model-selector-field`** (Wave 5 Task 3): Model Selector moved onto Picker, whose popup anchors to its own trigger; the field and its anchor are gone.
 - **Wave 4 agent conformance** (Wave 4 Task 12): the web `case=wave-4` page draws the same text as React for all eleven Wave 4 components, and its `can-*` attributes add and remove their actions (`agent.spec.ts`).

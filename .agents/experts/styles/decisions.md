@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `a272144` (Wave 5 Task 4 Add Menu)
+Last reviewed: `9113c72` (Wave 5 Task 5 Settings Menu)
 
 ## Settled
 
@@ -27,6 +27,7 @@ Last reviewed: `a272144` (Wave 5 Task 4 Add Menu)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **The unchecked switch is about 1.3:1 thumb to track, in both schemes (Wave 5 Task 5):** D6 copies UI SDK Switch's look; fix it on `internal-switch` and `menu.css` together.
 - **`--kind-picker-trigger-width` set on an ancestor doesn't reach Model Selector** (Wave 5 Task 3): its trigger maps `--kind-model-selector-width` (default 14rem) onto it, so 0.4's variable works on the trigger too; no CSS keeps both names working at every level. `picker.mdx` doesn't document the variable yet.
 - **UI SDK's scroll-snap sheet slides in at full motion under reduced motion (Wave 5 Task 2):** its `open()` doesn't check `reducedMotion()` (its `nudge()` does), and a component's `motion` option never reaches it, so a Picker sheet slides about 446px whatever the settings. UI SDK's; report upstream.
 - **A selected composer token and Checkpoint's open Restore lose their state in forced colors** (suspected, Wave 4 Task 12): both are drawn by a background forced colors replaces; no fixture renders a token.
@@ -55,6 +56,7 @@ Last reviewed: `a272144` (Wave 5 Task 4 Add Menu)
 
 ## Resolved
 
+- **Settings Menu switch and icon trigger (Wave 5 Task 5):** the switch had a transition under `motion="none"` and its track faded under reduced motion; the icon trigger lost its look with custom children, as Add Menu's did. Both fixed; the spec checks the reduced track and thumb.
 - **Menu exit ran 150 ms under reduced motion, and the Add Menu trigger rule was two attributes deep (Wave 5 Task 4):** the base exit rule and the trigger's context moved into `:where()`; the spec checks the 120 ms exit.
 - **Model Selector's field icon rules** (Wave 5 Task 3): Model Selector moved onto Picker and is styled by `picker.css` through `data-picker-part`; the field and its icon rules are gone.
 - **Model Selector's icon selectors outranked a consumer class** (Wave 4 Task 12b): the row spacer's context is in `:where()`, and the field icon is a single-attribute selector on its own part.

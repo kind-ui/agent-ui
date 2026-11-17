@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `a272144` (Wave 5 Task 4 Add Menu)
+Last reviewed: `9113c72` (Wave 5 Task 5 Settings Menu)
 
 ## Settled
 
@@ -15,6 +15,7 @@ Last reviewed: `a272144` (Wave 5 Task 4 Add Menu)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A Settings Menu choice row's typeahead text includes every option label (Wave 5 Task 5):** `MenuSubTrigger` takes no `label`, so it matches its text; typing from the row's label still finds it.
 - **Add Menu sheet: re-entering a submenu right after going back sometimes closes the sheet (Wave 5 Task 4):** reason `swipe` from UI SDK's sheet swipe-to-dismiss, React only, about 1 in 200; the spec no longer re-enters. Report upstream.
 - **UI SDK `CommandGroup` renders `hidden` without `aria-labelledby` on the server (Wave 5 Task 1):** a server-rendered Kind Command shows an empty group until hydration. UI SDK's; matters once Command renders outside a closed popup. Picker (Wave 5 Task 2) renders Command only while its list is open, so needs no workaround.
 - **A streamed Test Results update renders every row's UI SDK Tree parts and item parts** (Wave 4 Task 9): the known options-change cost (as Chain of Thought, Task and Sources). Our `TestResultsRow` components skip suites the host kept, since core caches tree items per suite.
