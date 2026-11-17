@@ -28,6 +28,7 @@ import { MarkdownTable } from "./components/ui/markdown-table.js";
 import { Message, MessageContent, MessageCopy, MessageToolbar } from "./components/ui/message.js";
 import { ModelSelector } from "./components/ui/model-selector.js";
 import { Notice } from "./components/ui/notice.js";
+import { Picker } from "./components/ui/picker.js";
 import { Plan } from "./components/ui/plan.js";
 import { Question } from "./components/ui/question.js";
 import { Queue } from "./components/ui/queue.js";
@@ -207,6 +208,13 @@ const items = {
   ),
   action: (
     <Action label="Explain" quote="Retry with backoff." result="Wait, then try again." status="complete" />
+  ),
+  picker: (
+    <Picker
+      label="Work in"
+      items={[{ value: "agent-ui", label: "agent-ui", description: "~/code/agent-ui" }]}
+      defaultValue="agent-ui"
+    />
   ),
   terminal: <Terminal command="npm test" output={"\x1b[32m✓\x1b[0m 22 passed"} exitCode={0} defaultOpen />,
   conversation: (

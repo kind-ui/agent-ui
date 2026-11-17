@@ -21,6 +21,7 @@ import { defineMarkdownTable } from "./components/ui/web/markdown-table.js";
 import { defineMessage } from "./components/ui/web/message.js";
 import { defineModelSelector } from "./components/ui/web/model-selector.js";
 import { defineNotice } from "./components/ui/web/notice.js";
+import { definePicker } from "./components/ui/web/picker.js";
 import { definePlan } from "./components/ui/web/plan.js";
 import { defineQuestion } from "./components/ui/web/question.js";
 import { defineQueue } from "./components/ui/web/queue.js";
@@ -75,6 +76,7 @@ for (const define of [
   defineTranscript,
   defineSelection,
   defineAction,
+  definePicker,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -128,6 +130,7 @@ const items = {
   transcript: `<kind-transcript can-seek current-time="1"></kind-transcript>`,
   selection: `<kind-selection can-run><kind-selection-content><p>Retry with backoff.</p></kind-selection-content></kind-selection>`,
   action: `<kind-action label="Explain" quote="Retry with backoff." result="Wait, then try again." status="complete"></kind-action>`,
+  picker: `<kind-picker label="Work in"></kind-picker>`,
   terminal: `<kind-terminal command="npm test" exit-code="0" default-open></kind-terminal>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
@@ -222,6 +225,10 @@ Object.assign(main.querySelector("kind-transcript") as HTMLElement, {
 });
 Object.assign(main.querySelector("kind-selection") as HTMLElement, {
   actions: [{ id: "ask", label: "Ask" }],
+});
+Object.assign(main.querySelector("kind-picker") as HTMLElement, {
+  items: [{ value: "agent-ui", label: "agent-ui", description: "~/code/agent-ui" }],
+  value: "agent-ui",
 });
 Object.assign(main.querySelector("kind-file-tree") as HTMLElement, {
   entries: [{ path: "src/index.ts", change: "modified", additions: 2 }],
