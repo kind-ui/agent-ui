@@ -10,9 +10,11 @@ const BUDGETS = {
   toolStream: { writes: 14, renders: 25, notified: 17 },
   terminalChunk: { writes: 6, renders: 7, notified: 4, layoutReads: 17 },
   terminalLine: { writes: 8, renders: 9, notified: 5, layoutReads: 21 },
-  transcriptWord: { writes: 3, renders: 3, notified: 3, layoutReads: 6 },
-  transcriptSegment: { writes: 38, renders: 44, notified: 47, layoutReads: 9 },
-  transcriptSearch: { writes: 44, renders: 221, notified: 170, layoutReads: 2 },
+  // The fixture's segments fit on one line and their header has a set height, so how many are in view doesn't depend
+  // on the platform's fonts.
+  transcriptWord: { writes: 3, renders: 3, notified: 3, layoutReads: 4 },
+  transcriptSegment: { writes: 32, renders: 32, notified: 35, layoutReads: 9 },
+  transcriptSearch: { writes: 72, renders: 201, notified: 140, layoutReads: 2 },
   remount: { nodes: 0, listeners: 0 },
 };
 const SIZES = [10, 500];
