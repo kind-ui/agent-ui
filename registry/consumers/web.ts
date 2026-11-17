@@ -26,6 +26,7 @@ import { defineQueue } from "./components/ui/web/queue.js";
 import { defineReasoning } from "./components/ui/web/reasoning.js";
 import { defineReasoningEffort } from "./components/ui/web/reasoning-effort.js";
 import { defineSources } from "./components/ui/web/sources.js";
+import { defineStackTrace } from "./components/ui/web/stack-trace.js";
 import { defineStatus } from "./components/ui/web/status.js";
 import { defineStep } from "./components/ui/web/step.js";
 import { defineStreamingText } from "./components/ui/web/streaming-text.js";
@@ -65,6 +66,7 @@ for (const define of [
   defineGeneratedImage,
   defineFileTree,
   defineTerminal,
+  defineStackTrace,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -112,6 +114,8 @@ const items = {
   document: `<kind-document label="README.md" content="Back off on a 429."></kind-document>`,
   "generated-image": `<kind-generated-image alt="A lighthouse at dusk" status="generating" progress="40" width="768" height="512"></kind-generated-image>`,
   "file-tree": `<kind-file-tree></kind-file-tree>`,
+  "stack-trace": `<kind-stack-trace can-open-frame stack="TypeError: x is undefined
+    at main (/app/src/index.ts:7:1)"></kind-stack-trace>`,
   terminal: `<kind-terminal command="npm test" exit-code="0" default-open></kind-terminal>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>

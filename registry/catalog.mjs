@@ -133,6 +133,12 @@ const components = {
       "A command and its output in ANSI colors, following the end as it streams, with its exit code and duration.",
     uses: [],
   },
+  "stack-trace": {
+    title: "Stack Trace",
+    description:
+      "An error's name, message and frames, with library frames folded and each frame able to open its file.",
+    uses: [],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

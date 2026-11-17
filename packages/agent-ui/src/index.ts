@@ -12,6 +12,7 @@ export type {
   QueueItem,
   Role,
   Source,
+  StackFrame,
   Step,
   StepBase,
   StepStatus,

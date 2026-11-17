@@ -1,0 +1,281 @@
+/* Stack Trace (spec §7): the Step base's header with the error's name and message, over a panel of frames in which
+   each run of library frames folds into one row. The trigger comes from step.css, through `data-step-part`. */
+@layer components {
+  [data-slot="kind-stack-trace"] {
+    --kind-stack-trace-font-size: 0.8125rem;
+    --kind-stack-trace-row-height: 1.75rem;
+  }
+
+  /* An error's message can be long: it wraps rather than hiding its end. */
+  [data-slot="kind-stack-trace-title"] {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    color: var(--kind-color-fg);
+  }
+
+  [data-stack-trace-name] {
+    font-weight: 600;
+    color: color-mix(in oklab, var(--kind-color-danger) 70%, var(--kind-color-fg));
+  }
+
+  /* Custom elements on Web Components are inline until styled. */
+  :is(
+    [data-slot="kind-stack-trace-message"],
+    [data-slot="kind-stack-trace-list"],
+    [data-slot="kind-stack-trace-frame"],
+    [data-slot="kind-stack-trace-group"],
+    [data-slot="kind-stack-trace-library-frames"]
+  ) {
+    display: block;
+  }
+
+  /* No guide line: the panel sits under the header at full width. */
+  [data-slot="kind-stack-trace-content"] {
+    margin-inline-start: 0;
+    padding-inline-start: 0;
+    border-inline-start: 0;
+    color: var(--kind-color-fg);
+  }
+
+  [data-stack-trace-panel] {
+    position: relative;
+    border: 1px solid var(--kind-color-border);
+    border-radius: calc(var(--kind-radius) * 2 / 3);
+    background-color: var(--kind-color-hover);
+    padding-block: 0.375rem;
+    font-family: var(--kind-font-mono);
+    font-size: var(--kind-stack-trace-font-size);
+    line-height: 1.25rem;
+  }
+
+  /* Rows leave room for Copy at the panel's corner, so nothing runs under it. */
+  [data-slot="kind-stack-trace-message"] {
+    padding: 0.25rem 2.75rem 0.5rem 0.75rem;
+    margin-block-end: 0.25rem;
+    border-block-end: 1px solid var(--kind-color-border);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    color: var(--kind-color-fg);
+  }
+
+  :is([data-slot="kind-stack-trace-list"], [data-slot="kind-stack-trace-library-frames"]) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* A frame: its function, then where it is. App frames read in full color, library frames quieter. */
+  [data-slot="kind-stack-trace-frame"] {
+    padding-inline-end: 2.25rem;
+  }
+
+  :is([data-slot="kind-stack-trace-frame"], [data-slot="kind-stack-trace-frame-open"]) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0.75rem;
+    min-height: var(--kind-stack-trace-row-height);
+    padding-block: 0.25rem;
+    padding-inline-start: 0.75rem;
+  }
+
+  /* The button fills its frame, so the frame's own padding moves onto it. */
+  [data-slot="kind-stack-trace-frame"]:has([data-slot="kind-stack-trace-frame-open"]) {
+    display: block;
+    padding: 0;
+  }
+
+  [data-slot="kind-stack-trace-frame-open"] {
+    width: 100%;
+    padding-inline-end: 2.25rem;
+    border: 0;
+    border-radius: calc(var(--kind-radius) / 2);
+    background-color: transparent;
+    font: inherit;
+    text-align: start;
+    color: inherit;
+    transition: background-color var(--kind-duration-fast);
+
+    &:hover {
+      background-color: color-mix(in oklab, var(--kind-color-fg) 6%, transparent);
+    }
+    &:focus-visible {
+      outline: 1.5px solid color-mix(in oklab, var(--kind-color-ring) 50%, transparent);
+      outline-offset: -1.5px;
+    }
+  }
+
+  [data-slot="kind-stack-trace-frame-function"] {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-weight: 500;
+    color: var(--kind-color-fg);
+  }
+
+  [data-slot="kind-stack-trace-frame-location"] {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+    color: var(--kind-color-muted);
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  [data-slot="kind-stack-trace-frame"][data-library] {
+    & [data-slot="kind-stack-trace-frame-function"] {
+      font-weight: 400;
+      color: var(--kind-color-muted);
+    }
+  }
+
+  /* "N library frames", with a chevron that turns as they open. */
+  [data-slot="kind-stack-trace-library"] {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: var(--kind-stack-trace-row-height);
+    padding-block: 0.25rem;
+    padding-inline: 0.75rem 2.25rem;
+    border: 0;
+    border-radius: calc(var(--kind-radius) / 2);
+    background-color: transparent;
+    font: inherit;
+    font-style: italic;
+    text-align: start;
+    color: var(--kind-color-muted);
+    transition:
+      color var(--kind-duration-fast),
+      background-color var(--kind-duration-fast);
+
+    &::before {
+      content: "";
+      flex-shrink: 0;
+      width: 5px;
+      height: 5px;
+      margin-inline: 1px 3px;
+      border-right: 1.5px solid currentColor;
+      border-bottom: 1.5px solid currentColor;
+      transform: rotate(-45deg);
+      transition: transform var(--kind-duration-base) var(--kind-ease);
+    }
+    &[data-open]::before {
+      transform: translateY(-1px) rotate(45deg);
+    }
+    &:dir(rtl)::before {
+      transform: rotate(135deg);
+    }
+    &:dir(rtl)[data-open]::before {
+      transform: translateY(-1px) rotate(45deg);
+    }
+    &:hover {
+      color: var(--kind-color-fg);
+      background-color: color-mix(in oklab, var(--kind-color-fg) 6%, transparent);
+    }
+    &:focus-visible {
+      color: var(--kind-color-fg);
+      outline: 1.5px solid color-mix(in oklab, var(--kind-color-ring) 50%, transparent);
+      outline-offset: -1.5px;
+    }
+    &:where([data-motion="none"])::before {
+      transition: none;
+    }
+  }
+
+  /* A group's frames sit under its toggle on a guide line. Their height animates through
+     `--kind-step-content-height`, which the panel binding writes, as a step's content does. */
+  [data-slot="kind-stack-trace-library-frames"] {
+    height: var(--kind-step-content-height);
+    overflow: hidden;
+    margin-inline-start: 1.125rem;
+    border-inline-start: 1.5px solid var(--kind-color-border);
+    transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+    }
+    &[data-motion="reduced"] {
+      transition-duration: var(--kind-duration-reduced);
+    }
+    &[data-motion="none"] {
+      transition: none;
+    }
+    & [data-slot="kind-stack-trace-frame"],
+    & [data-slot="kind-stack-trace-frame-open"] {
+      padding-inline-start: 0.625rem;
+    }
+    & [data-slot="kind-stack-trace-frame"]:has([data-slot="kind-stack-trace-frame-open"]) {
+      padding-inline-start: 0;
+    }
+  }
+
+  [data-slot="kind-stack-trace-copy"] {
+    position: absolute;
+    top: 0.375rem;
+    inset-inline-end: 0.375rem;
+    display: inline-grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--kind-radius) / 2);
+    background-color: transparent;
+    color: var(--kind-color-muted);
+    transition:
+      color var(--kind-duration-fast),
+      background-color var(--kind-duration-fast);
+
+    &::before {
+      content: "";
+      width: 0.875rem;
+      height: 0.875rem;
+      background-color: currentColor;
+      mask: var(--kind-icon-copy) center / contain no-repeat;
+    }
+    &:hover {
+      color: var(--kind-color-fg);
+      background-color: color-mix(in oklab, var(--kind-color-fg) 6%, transparent);
+    }
+    &:focus-visible {
+      color: var(--kind-color-fg);
+      outline: 1.5px solid var(--kind-color-ring);
+      outline-offset: -1.5px;
+    }
+    &[data-copied] {
+      color: var(--kind-color-success);
+    }
+    &[data-copied]::before {
+      mask-image: var(--kind-icon-check);
+    }
+  }
+
+  /* Web keeps parts that aren't present in the page, with `hidden`. */
+  [data-slot="kind-stack-trace-message"][hidden] {
+    display: none;
+  }
+
+  /* Full motion only: reduced motion keeps the 120 ms fade, "none" keeps nothing (spec §6). */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-slot="kind-stack-trace-library-frames"][data-motion="auto"] {
+      transition:
+        height var(--kind-duration-panel) var(--kind-ease),
+        opacity var(--kind-duration-base) var(--kind-ease-out);
+
+      &:is([data-starting-style], [data-ending-style]) {
+        height: 0;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot="kind-stack-trace-library-frames"] {
+      transition-duration: var(--kind-duration-reduced);
+    }
+    [data-slot="kind-stack-trace-library"]::before {
+      transition: none;
+    }
+  }
+}

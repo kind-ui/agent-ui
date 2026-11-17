@@ -33,6 +33,7 @@ import { Queue } from "./components/ui/queue.js";
 import { Reasoning } from "./components/ui/reasoning.js";
 import { ReasoningEffort } from "./components/ui/reasoning-effort.js";
 import { Sources } from "./components/ui/sources.js";
+import { StackTrace } from "./components/ui/stack-trace.js";
 import { Status } from "./components/ui/status.js";
 import { Step, StepContent, StepIcon, StepTitle, StepTrigger } from "./components/ui/step.js";
 import { StreamingText } from "./components/ui/streaming-text.js";
@@ -167,6 +168,12 @@ const items = {
     <GeneratedImage alt="A lighthouse at dusk" status="generating" progress={40} width={768} height={512} />
   ),
   "file-tree": <FileTree entries={[{ path: "src/index.ts", change: "modified", additions: 2 }]} />,
+  "stack-trace": (
+    <StackTrace
+      stack={"TypeError: x is undefined\n    at main (/app/src/index.ts:7:1)"}
+      onOpenFrame={() => {}}
+    />
+  ),
   terminal: <Terminal command="npm test" output={"\x1b[32m✓\x1b[0m 22 passed"} exitCode={0} defaultOpen />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">

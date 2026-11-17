@@ -26,6 +26,7 @@
     "generated-image",
     "file-tree",
     "terminal",
+    "stack-trace",
     "conversation",
     "message",
     "markdown",

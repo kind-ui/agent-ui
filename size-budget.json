@@ -1,6 +1,6 @@
 {
   ".": 265,
-  "./core": 198000,
+  "./core": 200000,
   "./adapters/ai-sdk": 1345,
   "imports": {
     "stepBase": 5500,
@@ -12,6 +12,7 @@
     "documentPrimitive": 7000,
     "generatedImagePrimitive": 38500,
     "fileTreePrimitive": 41000,
-    "terminalPrimitive": 18500
+    "terminalPrimitive": 18500,
+    "stackTracePrimitive": 13500
   }
 }

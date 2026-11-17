@@ -14,6 +14,7 @@
 @import "./generated-image.css";
 @import "./file-tree.css";
 @import "./terminal.css";
+@import "./stack-trace.css";
 @import "./question.css";
 @import "./checkpoint.css";
 @import "./model-selector.css";

@@ -295,6 +295,19 @@ export {
 } from "./sources/index.js";
 export { isLibraryFrame, parseStack } from "./stack.js";
 export {
+  type StackTraceApi,
+  type StackTraceCopyReason,
+  type StackTraceFrameEntry,
+  type StackTraceItemPartProps,
+  type StackTraceLibraryChangeReason,
+  type StackTraceOpenFrameReason,
+  type StackTraceOptions,
+  type StackTracePrimitive,
+  type StackTraceRow,
+  type StackTraceState,
+  stackTracePrimitive,
+} from "./stack-trace/index.js";
+export {
   type StatusOptions,
   type StatusPrimitive,
   type StatusState,

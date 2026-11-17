@@ -1,0 +1,94 @@
+---
+title: Stack Trace
+description: Show an error the agent hit, with its frames and the library frames folded away.
+---
+
+import StackTraceExample from "@/examples/stack-trace/basic";
+
+Use a stack trace when a tool call or a test fails with an error, so readers see what went wrong and where. It's a step: a header with the error's name and message, over a panel of frames in which each run of library frames folds into one row.
+
+<Example caption="Press 2 library frames to show the frames from libraries and Node.js. Focus a frame and use the arrow keys to move between frames, then press Enter to open one.">
+  <StackTraceExample />
+
+  <include cwd lang="tsx">./examples/stack-trace/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/stack-trace
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/stack-trace-web
+```
+
+## Composition
+
+```text
+StackTrace
+├── StackTraceTrigger
+│   ├── StackTraceIcon
+│   └── StackTraceTitle
+└── StackTraceContent
+    └── div[data-stack-trace-panel]
+        ├── StackTraceMessage
+        ├── StackTraceList
+        │   ├── StackTraceFrame
+        │   │   └── StackTraceFrameOpen
+        │   │       ├── StackTraceFrameFunction
+        │   │       └── StackTraceFrameLocation
+        │   └── StackTraceGroup
+        │       ├── StackTraceLibrary
+        │       └── StackTraceLibraryFrames
+        │           └── StackTraceFrame
+        └── StackTraceCopy
+```
+
+`StackTraceTrigger` opens and closes the trace, with the error mark in `StackTraceIcon` and the message's first line in `StackTraceTitle`, the error's name set apart. `StackTraceContent` holds the panel, a `div` with `data-stack-trace-panel` that the stylesheet draws. In it, `StackTraceMessage` shows the message's other lines, and `StackTraceList` renders a `StackTraceFrame` for each app frame and a `StackTraceGroup` for each run of library frames. A frame shows its function in `StackTraceFrameFunction` and its file in `StackTraceFrameLocation`, inside a `StackTraceFrameOpen` button while you pass `onOpenFrame`. A group's `StackTraceLibrary` shows or folds the frames in its `StackTraceLibraryFrames`. `StackTraceCopy` sits in the panel's corner.
+
+## Usage
+
+### Frames
+
+Pass `stack`, a JavaScript stack trace's text as V8, SpiderMonkey or JavaScriptCore write it, and the trace reads the message and frames from it. A line it can't read stays as a frame showing the line itself. For another language, or frames you've already parsed, pass `frames` instead, each with its `raw` line and any of `fn`, `file`, `line` and `column`, and pass `message` for the error.
+
+```tsx
+<StackTrace message="ValueError: bad port" frames={[{ raw: 'File "app.py", line 3', fn: "main", file: "app.py", line: 3 }]} />
+```
+
+The title is the message's first line, or `label` if you pass one, and a name before its first colon, like `TypeError`, shows apart. A frame shows its function and its file's last two segments with line and column; the whole path shows when you hover it.
+
+### Library Frames
+
+A frame is a library frame when its `library` says so, else when its file is under `node_modules/` or starts with `node:` or `internal/`. App frames read in full color and library frames quieter. Each run of library frames folds into one row, "N library frames"; pressing any of them shows every library frame in place, and pressing again folds them. Find in page reveals them too. Pass `defaultShowLibraryFrames` to start with them shown, or control them with `showLibraryFrames` and `onShowLibraryFramesChange`.
+
+### Opening a Frame
+
+Pass `onOpenFrame` and each frame becomes a button. Pressing one, or Enter on a focused one, calls `onOpenFrame` with the frame and its index as `details.index`, so you can open the file in your editor. The trace never opens anything itself.
+
+```tsx
+<StackTrace stack={error.stack} onOpenFrame={(frame) => openInEditor(frame.file, frame.line)} />
+```
+
+### Status and Copying
+
+The status is `error` unless you pass `status`, and the trace starts open; pass `defaultOpen={false}` to show just its header. **Copy stack trace** copies the message and the frames' raw lines and shows a check for 2 seconds. Pass `onCopy` to hear about it; cancel its `details` to copy something else yourself.
+
+### Keyboard and Motion
+
+Tab reaches the header, each "N library frames" row and **Copy stack trace**. While you pass `onOpenFrame`, the frames are one Tab stop too: the arrow keys, Home and End move between them, skipping folded library frames. The trace opens and closes with the step's height animation, as library frames do; under `prefers-reduced-motion`, or with `motion="reduced"`, they fade over 120 ms, and with `motion="none"` nothing moves.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/stack-trace/stack-trace.ts" name="StackTraceOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the trace by its title and reads `open`, `status` and `showLibraryFrames`. It can `expand` and `collapse` the trace, `copy` it, which calls `onCopy` too, and, while there are library frames, `toggleLibraryFrames`. While you pass `onOpenFrame`, it can `openFrame` by index or by a frame's function and location, and a frame that isn't there is refused.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/stack-trace/stack-trace.ts" name="StackTraceAgentActions" type='Pick<StackTraceApi, "expand" | "collapse" | "copy" | "toggleLibraryFrames" | "openFrame">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-stack-trace>`, set `frames` as a property; the other props are kebab-case attributes, and the `can-open-frame` attribute offers `onOpenFrame`, which is the `openframe` event. `onOpenChange` is `openchange`, `onShowLibraryFramesChange` is `showlibraryframeschange` and `onCopy` is `stackcopy`.
+</Caption>
