@@ -72,6 +72,8 @@ export type StepApi = {
   collapse: () => boolean;
   /** Opens a closed step and closes an open one, as the trigger does. Returns whether the change was accepted. */
   toggle: (event?: Event) => boolean;
+  /** The trigger's element, where focus goes when the content closes with focus inside. Called by the content slot. */
+  trigger: () => HTMLElement | undefined;
 };
 
 export type StepBaseConfig<State extends StepState = StepState, Options extends StepOptions = StepOptions> = {
@@ -262,6 +264,7 @@ export const stepBase = <
         expand: () => toggledBy(setOpen(true)),
         collapse: () => toggledBy(setOpen(false)),
         toggle: (event?: Event) => setOpen(!context.store.get().open, { reason: "trigger-press", event }),
+        trigger: () => context.element("trigger"),
       };
     },
     slots: (slot: SlotFactory<State, Api>) => ({
@@ -323,14 +326,13 @@ export const stepBase = <
           ...openAttrs(state.open),
           ...hiddenAttrs(state.open || state.exiting, true),
         }),
-        bind: (el, { api, id, store }) =>
+        bind: (el, { api, store }) =>
           bindStepPanel(el, {
             isOpen: () => store.get().open,
             isExiting: () => store.get().exiting,
             motion: () => store.get().motion,
             reveal: (event) => api.setOpen(true, { reason: "find-in-page", event }),
-            trigger: () =>
-              el.ownerDocument.querySelector<HTMLElement>(`[aria-controls="${id}-content"]`) ?? undefined,
+            trigger: api.trigger,
             subscribe: store.subscribe,
             // TypeScript can't relate a StepState key to a `State` that only extends it.
             exited: () => store.set({ exiting: false } as Partial<State>),

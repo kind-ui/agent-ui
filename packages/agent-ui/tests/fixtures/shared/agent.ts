@@ -1,4 +1,4 @@
-import type { PlanItem, QueueItem, TaskItem, ToolCall } from "@kind-ui/agent-ui";
+import type { PlanItem, QueueItem, SelectionActionItem, TaskItem, ToolCall } from "@kind-ui/agent-ui";
 import type { AttachmentItem, ChainOfThoughtStep, UploadItem } from "@kind-ui/agent-ui/core";
 import { uploadHost } from "./uploader.js";
 
@@ -60,6 +60,11 @@ export const queueItems: QueueItem[] = [
   { id: "a", status: "pending", title: "Write the migration" },
   { id: "b", status: "pending", title: "Update the docs" },
   { id: "c", status: "pending", title: "Run the tests" },
+];
+
+export const selectionActions: SelectionActionItem[] = [
+  { id: "ask", label: "Ask" },
+  { id: "quote", label: "Quote" },
 ];
 
 export const moveItem = (items: readonly QueueItem[], id: string, index: number): QueueItem[] => {

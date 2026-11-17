@@ -96,6 +96,19 @@
     }
   }
 
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    :is(
+        [data-slot="kind-message-copy"],
+        [data-slot="kind-message-regenerate"],
+        [data-slot="kind-message-edit"]
+      )
+      button::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+  }
+
   [data-slot="kind-message-regenerate"] {
     --kind-message-action-icon: var(--kind-message-regenerate-icon);
   }
@@ -158,6 +171,13 @@
 
   [data-slot="kind-message-branch-next"]::before {
     mask-image: var(--kind-message-next-icon);
+  }
+
+  @media (forced-colors: active) {
+    :is([data-slot="kind-message-branch-previous"], [data-slot="kind-message-branch-next"])::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
   }
 
   :is([data-slot="kind-message-branch-previous"], [data-slot="kind-message-branch-next"]):dir(rtl)::before {

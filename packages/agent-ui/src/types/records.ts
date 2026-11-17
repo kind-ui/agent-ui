@@ -4,6 +4,8 @@ export interface Source {
   url?: string;
   snippet?: string;
   mediaType?: string;
+  /** An icon for the source, like its site's favicon. */
+  favicon?: string;
 }
 
 export interface TaskItem {
@@ -59,11 +61,14 @@ export interface Question {
 /** Answers by question id: an option's value, several values, or text. */
 export type Answers = Record<string, string | string[]>;
 
-export interface ModelOption {
+/** A model to choose from. `Icon` is what each render layer takes as an icon: an image URL unless it says otherwise. */
+export interface ModelOption<Icon = string> {
   id: string;
   name: string;
   group?: string;
   description?: string;
+  /** Shown before the name, in the list and in the field. Decorative: the name stays the model's label. */
+  icon?: Icon;
   disabled?: boolean;
 }
 
@@ -79,4 +84,53 @@ export interface TokenUsage {
   output?: number;
   reasoning?: number;
   cached?: number;
+}
+
+/** A file or folder in a file tree. */
+export interface FileTreeEntry {
+  /** Relative and `/`-separated, like `src/index.ts`. A path ending in `/` is an empty folder. */
+  path: string;
+  /** How the change being shown touched the file, shown as a badge. */
+  change?: "added" | "modified" | "deleted" | "renamed";
+  /** Lines the change added, a whole number from 0, shown as `+N`. */
+  additions?: number;
+  /** Lines the change removed, a whole number from 0, shown as `−N`. */
+  deletions?: number;
+}
+
+/** One line of a stack trace. `raw` is the line as written; the rest is what could be read from it. */
+export interface StackFrame {
+  raw: string;
+  fn?: string;
+  file?: string;
+  /** Counted from 1. */
+  line?: number;
+  /** Counted from 1. */
+  column?: number;
+  /** Whether the frame is in a library rather than the app. */
+  library?: boolean;
+}
+
+/** A word of a transcript segment, timed in seconds. */
+export interface TranscriptWord {
+  text: string;
+  start: number;
+  end: number;
+}
+
+/** A speaker's turn in a transcript, timed in seconds. */
+export interface TranscriptSegment {
+  id: string;
+  speaker: string;
+  start: number;
+  end: number;
+  text: string;
+  words?: TranscriptWord[];
+}
+
+/** An action the selection toolbar offers for the selected text. */
+export interface SelectionActionItem {
+  id: string;
+  label: string;
+  description?: string;
 }

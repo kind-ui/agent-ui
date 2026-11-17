@@ -11,6 +11,8 @@ type Fixture = {
     remove(id: string): void;
     add(item: { id: string; status: string; title: string }): void;
     complete(id: string): void;
+    refresh(): void;
+    renew(id: string): void;
   };
   kindAnnounced: string[];
   agent: { act(input: unknown): Promise<unknown> };
@@ -260,6 +262,46 @@ test("only an item that arrives after the first frame plays its entrance", async
       rows.map((el) => el.getAnimations().some((each) => !(each instanceof CSSTransition))),
     );
   expect(animated).toEqual([false, false, false, true]);
+});
+
+test("an item removed and added again under the same id plays its entrance", async ({ page }) => {
+  await open(page);
+  await hostRemove(page, "b");
+  await expect(queue(page).locator('[data-slot="kind-queue-item"]')).toHaveCount(3);
+  await expect(queue(page).locator("[data-leaving]")).toHaveCount(0);
+  // Reads the rows in the frame the item comes back, before a slow round trip could outlast its entrance.
+  const animated = await page.evaluate(async () => {
+    (window as unknown as Fixture).kindQueue.add({ id: "b", status: "pending", title: "Update the docs" });
+    for (let frame = 0; frame < 30; frame++) {
+      const rows = [
+        ...document.querySelectorAll<HTMLElement>(
+          '#queue [data-slot="kind-queue-list"][data-section="pending"] [data-slot="kind-queue-item"]',
+        ),
+      ];
+      if (rows.some((el) => el.textContent?.includes("Update the docs")))
+        return rows.map((el) => el.getAnimations().some((each) => !(each instanceof CSSTransition)));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    }
+    return [];
+  });
+  expect(animated).toEqual([false, false, true]);
+});
+
+test("an item already asked to be removed is asked again only once the host passes it changed", async ({
+  page,
+}) => {
+  await open(page, "remove-later");
+  await act(page, "remove", ["b"]);
+  await act(page, "remove", ["b"]);
+  expect(await calls(page)).toEqual([{ type: "remove", id: "b", reason: "imperative", source: "agent" }]);
+  await page.evaluate(() => (window as unknown as Fixture).kindQueue.refresh());
+  await act(page, "remove", ["b"]);
+  expect(await calls(page)).toHaveLength(1);
+  await page.evaluate(() => (window as unknown as Fixture).kindQueue.renew("b"));
+  await act(page, "remove", ["b"]);
+  expect(await calls(page)).toHaveLength(2);
+  await hostRemove(page, "b");
+  await expect(queue(page).locator('[data-slot="kind-queue-item"]')).toHaveCount(3);
 });
 
 test("agents can reorder and remove items", async ({ page }) => {

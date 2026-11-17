@@ -17,4 +17,6 @@ test("bypassing UI SDK fails", () => {
   assert.match(errors, /not a spec exception/);
   assert.match(errors, /widget\/widget.ts: tabindex must come from UI SDK/);
   assert.match(errors, /widget\/scroller.ts: tabindex must come from UI SDK/);
+  assert.match(errors, /styles\/widget.css: width on \[data-status-mark\] belongs in status-mark.css/);
+  assert.match(errors, /styles\/widget.css: mask-size on \[data-status-mark\] belongs in status-mark.css/);
 });

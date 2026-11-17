@@ -1,0 +1,273 @@
+/* Inline Citation (spec §7): a marker in running text whose card shows the sources it points to, paging when there
+   are several. */
+@layer components {
+  [data-slot="kind-inline-citation"] {
+    display: inline;
+  }
+
+  /* Sized in `em` from the text around it. The negative block margin keeps it inside even a line height of 1, so the
+     paragraph's line height never changes. */
+  [data-slot="kind-inline-citation-trigger"] {
+    display: inline-block;
+    margin-block: -0.25em;
+    margin-inline: 0.125em;
+    padding: 0 0.5em;
+    border: 0;
+    border-radius: 999px;
+    background-color: color-mix(in oklab, var(--kind-color-muted) 14%, var(--kind-color-surface));
+    color: var(--kind-color-muted);
+    font: inherit;
+    font-size: 0.75em;
+    font-style: normal;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.375;
+    white-space: nowrap;
+    vertical-align: baseline;
+    cursor: pointer;
+    transition:
+      background-color var(--kind-duration-fast) var(--kind-ease-out),
+      color var(--kind-duration-fast) var(--kind-ease-out);
+
+    &:hover,
+    &[data-open] {
+      background-color: color-mix(in oklab, var(--kind-color-muted) 26%, var(--kind-color-surface));
+      color: var(--kind-color-fg);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 1px;
+    }
+  }
+
+  /* The card resets what it would otherwise inherit from the paragraph it sits in. */
+  [data-slot="kind-inline-citation-content"] {
+    z-index: 50;
+    display: block;
+    width: 18rem;
+    max-width: calc(100vw - 16px);
+    padding: 12px;
+    border: 1px solid var(--kind-color-border);
+    border-radius: var(--kind-radius);
+    background-color: var(--kind-color-surface);
+    box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 20%, transparent);
+    color: var(--kind-color-fg);
+    font-size: 0.8125rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.25rem;
+    letter-spacing: normal;
+    text-align: start;
+    text-indent: 0;
+    white-space: normal;
+    outline: none;
+    transform-origin: var(--transform-origin);
+  }
+
+  [data-slot="kind-inline-citation-carousel"] {
+    display: block;
+  }
+
+  :where([data-slot="kind-inline-citation-carousel"]) {
+    & [data-slot="carousel"] {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    /* Pulled out by the slides' padding, so a focused link's ring shows inside the viewport's clip. */
+    & [data-slot="carousel-viewport"] {
+      display: block;
+      margin: -4px;
+      border-radius: calc(var(--kind-radius) / 2);
+
+      &:focus-visible {
+        outline: 2px solid var(--kind-color-ring);
+        outline-offset: 2px;
+      }
+    }
+    /* One source to a page, and the viewport as tall as the tallest, so paging never moves the controls. */
+    & [data-slot="carousel-content"] {
+      display: flex;
+      gap: 16px;
+    }
+    & [data-slot="carousel-item"] {
+      display: block;
+      flex: 0 0 100%;
+      min-width: 0;
+      padding: 4px;
+    }
+  }
+
+  [data-inline-citation-controls] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 8px;
+    border-top: 1px solid var(--kind-color-border);
+
+    & :where([data-slot="carousel-previous"], [data-slot="carousel-next"]) {
+      display: inline-flex;
+      width: 24px;
+      height: 24px;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border: 0;
+      border-radius: calc(var(--kind-radius) / 2);
+      background-color: transparent;
+      color: var(--kind-color-muted);
+      cursor: pointer;
+      transition:
+        background-color var(--kind-duration-fast) var(--kind-ease-out),
+        color var(--kind-duration-fast) var(--kind-ease-out);
+
+      &:hover:not([data-disabled]) {
+        background-color: var(--kind-color-hover);
+        color: var(--kind-color-fg);
+      }
+      &:focus-visible {
+        outline: 2px solid var(--kind-color-ring);
+        outline-offset: 1px;
+      }
+      &[data-disabled] {
+        cursor: default;
+        opacity: 0.4;
+      }
+      & svg {
+        width: 16px;
+        height: 16px;
+      }
+      &:dir(rtl) svg {
+        scale: -1 1;
+      }
+    }
+  }
+
+  [data-slot="kind-inline-citation-index"] {
+    color: var(--kind-color-muted);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  [data-slot="kind-inline-citation-item"] {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  [data-slot="kind-inline-citation-link"] {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    border-radius: calc(var(--kind-radius) / 3);
+    color: inherit;
+    text-decoration: none;
+
+    &[href]:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  [data-slot="kind-inline-citation-host"] {
+    display: block;
+    overflow: hidden;
+    color: var(--kind-color-muted);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  [data-slot="kind-inline-citation-source-title"] {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    font-weight: 600;
+
+    &:where([data-slot="kind-inline-citation-link"][href]:hover *) {
+      text-decoration: underline;
+      text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+      text-underline-offset: 2px;
+    }
+  }
+
+  [data-slot="kind-inline-citation-snippet"] {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    color: var(--kind-color-muted);
+    font-size: 0.75rem;
+    line-height: 1.125rem;
+  }
+
+  /* Motion: the card rises in. Reduced motion only fades, in 120 ms; `none` doesn't animate. */
+  :where([data-slot="kind-inline-citation"]) [data-slot="kind-inline-citation-content"] {
+    transition:
+      opacity var(--kind-duration-base) var(--kind-ease),
+      translate var(--kind-duration-base) var(--kind-ease),
+      scale var(--kind-duration-base) var(--kind-ease);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+      translate: 0 4px;
+      scale: 0.98;
+    }
+    &[data-ending-style] {
+      transition-duration: var(--kind-duration-fast);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-slot="kind-inline-citation"][data-motion="auto"])
+      [data-slot="kind-inline-citation-content"] {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+      &:is([data-starting-style], [data-ending-style]) {
+        translate: none;
+        scale: none;
+        transition-duration: var(--kind-duration-reduced);
+      }
+    }
+  }
+
+  :where([data-slot="kind-inline-citation"][data-motion="reduced"])
+    [data-slot="kind-inline-citation-content"] {
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      translate: none;
+      scale: none;
+      transition-duration: var(--kind-duration-reduced);
+    }
+  }
+
+  :where([data-slot="kind-inline-citation"][data-motion="none"])
+    :is(
+      [data-slot="kind-inline-citation-trigger"],
+      [data-slot="kind-inline-citation-content"],
+      [data-slot="carousel-previous"],
+      [data-slot="carousel-next"]
+    ) {
+    transition: none;
+  }
+
+  :where([data-slot="kind-inline-citation-content"])[hidden] {
+    display: none;
+  }
+
+  @media (forced-colors: active) {
+    [data-slot="kind-inline-citation-trigger"]:not(:focus-visible) {
+      outline: 1px solid ButtonText;
+    }
+    [data-slot="kind-inline-citation-source-title"]:where([data-slot="kind-inline-citation-link"][href] *) {
+      color: LinkText;
+    }
+  }
+}

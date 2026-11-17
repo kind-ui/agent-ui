@@ -11,7 +11,7 @@ Agent-operable AI components built on [UI SDK](https://ui-sdk.dev/docs).
 
 Styled React and Web Components are distributed through the registry, not this package.
 
-Components: Step and Step List, Status, Reasoning, Tool, Chain of Thought, Task, Plan, Subagent, Queue, Confirmation, Question, Checkpoint, Model Selector, Reasoning Effort, Suggestion, Context Meter, Feedback, Notice, Guardrail Notice, Conversation, Message, Markdown, Code Block, Markdown Table, Composer, Attachments, Uploader, Loader, Thinking Indicator, Typing Indicator and Streaming Text.
+Components: Step and Step List, Status, Reasoning, Tool, Chain of Thought, Task, Plan, Subagent, Queue, Confirmation, Question, Checkpoint, Model Selector, Reasoning Effort, Suggestion, Context Meter, Feedback, Notice, Guardrail Notice, Conversation, Message, Markdown, Code Block, Markdown Table, Composer, Attachments, Uploader, Loader, Thinking Indicator, Typing Indicator, Streaming Text, Sources, Inline Citation, Document, Generated Image, File Tree, Terminal, Stack Trace, Test Results, Transcript, Selection and Action.
 
 ## Registry
 
@@ -50,6 +50,8 @@ Import `@kind-ui/agent-ui/styles.css` after `tailwindcss` in your stylesheet. It
 | `--kind-color-success`, `--kind-color-warning`, `--kind-color-danger`, `--kind-color-on-status`, `--kind-color-on-warning` | Statuses, and marks on them (`on-warning` on the warning fill) |
 | `--kind-radius` | Base corner radius; others scale from it |
 | `--kind-font-mono` | Code |
+| `--kind-ansi-black` … `--kind-ansi-white`, `--kind-ansi-bright-black` … `--kind-ansi-bright-white` | Terminal's 16 named ANSI colors |
+| `--kind-status-mark-size` | Status mark size (default 16px, even pixels only) |
 
 Colors are `light-dark()` pairs, so dark mode follows `color-scheme`: `light dark` follows the system, and a class-based dark theme sets `color-scheme: dark` on its root. A Code Block `highlight` function can return `light-dark()` token colors to switch with them.
 

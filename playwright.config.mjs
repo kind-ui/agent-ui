@@ -6,7 +6,7 @@ const fixture = (name, port, mode = "development") => ({
   reuseExistingServer: !process.env.CI,
 });
 
-const waves = ["wave-1", "wave-2", "wave-3"];
+const waves = ["wave-1", "wave-2", "wave-3", "wave-4"];
 const layers = waves.flatMap((wave) => [
   { name: `${wave}-react`, wave, baseURL: "http://localhost:4310" },
   { name: `${wave}-web`, wave, baseURL: "http://localhost:4311" },
@@ -24,9 +24,13 @@ const crossBrowser =
       )
     : [];
 
+// Each run writes traces into its own folder, since a run clears its output folder as it starts and would delete
+// the traces another run is writing. Workers load this file again and inherit the runner's environment.
+process.env.KIND_TEST_RUN ??= `${Date.now()}-${process.pid}`;
+
 export default defineConfig({
   testDir: "tests/browser",
-  outputDir: "artifacts/test-results",
+  outputDir: `artifacts/test-results/${process.env.KIND_TEST_RUN}`,
   forbidOnly: !!process.env.CI,
   // A test that passes on retry is reported as flaky, not passed.
   retries: process.env.CI ? 2 : 0,

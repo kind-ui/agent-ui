@@ -1,0 +1,81 @@
+---
+title: File Tree
+description: Show the files a change touched as a folder tree, with each file's change and line counts.
+---
+
+import FileTreeExample from "../../../examples/file-tree/basic";
+
+Use a file tree beside a diff or a summary of what the agent edited, so readers can see which files changed and how much. Each file shows its change as a letter and the lines it added and removed; a folder shows a dot in the color of the most significant change inside it.
+
+<Example caption="Press a folder, or focus a row and press the Right and Left arrow keys, to open and close it. Up and Down move between rows, and typing a name moves to it.">
+  <FileTreeExample />
+
+  <include cwd lang="tsx">./examples/file-tree/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/file-tree
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/file-tree-web
+```
+
+## Composition
+
+```text
+FileTree
+└── FileTreeItem
+    ├── FileTreeCounts
+    └── FileTreeBadge
+```
+
+`FileTree` renders a UI SDK Tree with a row for each folder and file. `FileTreeItem` is a row's icon and name. `FileTreeCounts` shows the lines a file added and removed as `+N −N`, and `FileTreeBadge` its change as `A`, `M`, `D` or `R`. Screen readers hear both as words, like "index.ts 12 additions, 3 deletions modified".
+
+## Usage
+
+### Entries
+
+Pass `entries`, each with a relative `path` like `src/index.ts`, and optionally a `change` (`"added"`, `"modified"`, `"deleted"` or `"renamed"`), `additions` and `deletions`. Folders come from the paths and sort before files, in the order they first appear. A path ending in `/` is an empty folder. A deleted file's name is struck through.
+
+```tsx
+<FileTree
+  entries={[
+    { path: "src/index.ts", change: "modified", additions: 12, deletions: 3 },
+    { path: "src/cache.ts", change: "added", additions: 7 },
+    { path: "README.md" },
+  ]}
+/>
+```
+
+### Updating Entries
+
+Pass new `entries` as the change grows. Open folders stay open, and the focused row keeps focus; when the focused file goes away, focus moves to a row beside it. A file added after the first render fades in once. Folders slide open and closed; under `prefers-reduced-motion`, or with `motion="reduced"`, they fade over 120 ms, and with `motion="none"` they switch at once.
+
+### Selecting Files
+
+Pressing a row, or Enter or Space on it, selects it. Pass `onSelect` to open a file: it gets the file's path when a person presses it or presses Enter on it. Folders open and close instead. Pass `defaultValue`, or `value` with `onValueChange`, for the selected path, and `defaultExpanded`, or `expanded` with `onExpandedChange`, for the open folders, by path without a trailing `/`.
+
+```tsx
+<FileTree entries={entries} onSelect={(path) => openFile(path)} />
+```
+
+### Keyboard
+
+The tree is one Tab stop. Up and Down move between the rows that show, Home and End go to the first and last, Right opens a folder or moves into it, and Left closes it or moves to its folder. Typing moves to the next row whose name starts with what you typed. Closed folders stay in the page, so the browser's find in page reaches the files inside and opens their folders.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/file-tree/file-tree.ts" name="FileTreeOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the tree by its `label`, "Files" by default, and reads `value` and `expanded`. It can name any folder or file by path. `expand(path)` opens a folder and the folders it's in, and `collapse(path)` closes one; both return `false` for a file. `select(path)` selects a file and calls `onSelect`, and is offered only while `onSelect` is set.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/file-tree/file-tree.ts" name="FileTreeAgentActions" type='Pick<FileTreeApi, "expand" | "collapse" | "select">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-file-tree>`, set `entries`, `defaultExpanded` and `expanded` as properties; the other props are kebab-case attributes. `onValueChange` is the `pathchange` event and `onExpandedChange` is `expandchange`. Add `can-select` to fire `fileselect` when a file is pressed.
+</Caption>

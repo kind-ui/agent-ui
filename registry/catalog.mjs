@@ -99,6 +99,68 @@ const components = {
       "Says a guardrail blocked or filtered content, with the policy reason and an expandable detail.",
     uses: [],
   },
+  sources: {
+    title: "Sources",
+    description: "The sources a response used, as a compact count that opens a list of links.",
+    uses: [],
+  },
+  "inline-citation": {
+    title: "Inline Citation",
+    description:
+      "A marker in running text whose card shows the sources it points to, paging through several.",
+    uses: [],
+  },
+  document: {
+    title: "Document",
+    description:
+      "A document card with its title, kind and size, copy and download, and a preview that expands.",
+    uses: ["markdown", "code-block", "internal-toolbar", "internal-scroll-area"],
+  },
+  "generated-image": {
+    title: "Generated Image",
+    description:
+      "An image the agent is making, from progress and a blurred preview to the image, which opens full size.",
+    uses: [],
+  },
+  "file-tree": {
+    title: "File Tree",
+    description: "Changed files as a folder tree, each with its change and the lines it added and removed.",
+    uses: ["internal-tree"],
+  },
+  terminal: {
+    title: "Terminal",
+    description:
+      "A command and its output in ANSI colors, following the end as it streams, with its exit code and duration.",
+    uses: [],
+  },
+  "stack-trace": {
+    title: "Stack Trace",
+    description:
+      "An error's name, message and frames, with library frames folded and each frame able to open its file.",
+    uses: [],
+  },
+  "test-results": {
+    title: "Test Results",
+    description:
+      "A test run's pass, fail and skip counts over a filterable tree of suites, each failure open to its stack trace.",
+    uses: ["stack-trace", "internal-tree", "internal-segmented-control"],
+  },
+  transcript: {
+    title: "Transcript",
+    description:
+      "Speaker-labelled, timed segments with search, marking the segment and word playing and seeking on a press.",
+    uses: [],
+  },
+  selection: {
+    title: "Selection",
+    description: "A small toolbar of actions that floats above text a person selects in a reply.",
+    uses: ["internal-toolbar"],
+  },
+  action: {
+    title: "Action",
+    description: "An action run on selected text as a step, quoting the text above its streamed result.",
+    uses: ["markdown"],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",
@@ -164,6 +226,7 @@ const internals = [
   "token-input",
   "toolbar",
   "tooltip",
+  "tree",
   "trigger-menu",
 ];
 

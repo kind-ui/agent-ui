@@ -1,6 +1,7 @@
 import type { QueueItem } from "@kind-ui/agent-ui";
 import type { QueueOptions } from "@kind-ui/agent-ui/core";
 import { useEffect, useState } from "react";
+import { flushSync } from "react-dom";
 import { Queue } from "../../../../src/react/queue.js";
 
 const initial: QueueItem[] = [
@@ -12,7 +13,15 @@ const initial: QueueItem[] = [
 
 type Call = { type: "reorder" | "remove"; id: string; index?: number; reason: string; source: string };
 
-function Queues({ editable = true, motion }: { editable?: boolean; motion?: QueueOptions["motion"] }) {
+function Queues({
+  editable = true,
+  removeLater = false,
+  motion,
+}: {
+  editable?: boolean;
+  removeLater?: boolean;
+  motion?: QueueOptions["motion"];
+}) {
   const [items, setItems] = useState(initial);
   useEffect(() => {
     Object.assign(window, {
@@ -20,6 +29,9 @@ function Queues({ editable = true, motion }: { editable?: boolean; motion?: Queu
       kindQueue: {
         remove: (id: string) => setItems((all) => all.filter((item) => item.id !== id)),
         add: (item: QueueItem) => setItems((all) => [...all, item]),
+        refresh: () => flushSync(() => setItems((all) => [...all])),
+        renew: (id: string) =>
+          flushSync(() => setItems((all) => all.map((item) => (item.id === id ? { ...item } : item)))),
         complete: (id: string) =>
           setItems((all) =>
             all.map((item) => (item.id === id ? { ...item, status: "complete" as const } : item)),
@@ -39,7 +51,7 @@ function Queues({ editable = true, motion }: { editable?: boolean; motion?: Queu
     },
     onRemove: (id, { reason, source }) => {
       log({ type: "remove", id, reason, source });
-      setItems((all) => all.filter((item) => item.id !== id));
+      if (!removeLater) setItems((all) => all.filter((item) => item.id !== id));
     },
   };
   return (
@@ -52,6 +64,7 @@ function Queues({ editable = true, motion }: { editable?: boolean; motion?: Queu
 export const cases = {
   all: () => <Queues />,
   readonly: () => <Queues editable={false} />,
+  "remove-later": () => <Queues removeLater />,
   reduced: () => <Queues motion="reduced" />,
   none: () => <Queues motion="none" />,
 };

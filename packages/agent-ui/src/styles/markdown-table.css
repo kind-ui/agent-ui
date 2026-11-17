@@ -63,6 +63,14 @@
     }
   }
 
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    [data-slot="kind-markdown-table-copy"]::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+  }
+
   /* Fixed layout, so columns hold their width while rows stream in. With `--kind-markdown-table-columns`
      set to the column count, a wide table scrolls sideways instead of squeezing its columns. */
   [data-slot="kind-markdown-table-table"] {

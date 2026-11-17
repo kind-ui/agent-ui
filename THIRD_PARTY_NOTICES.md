@@ -25,10 +25,18 @@
 
 ## Lucide
 
-- Source: https://github.com/lucide-icons/lucide, the `check`, `x`, `minus`, `arrow-down`, `copy`, `wrap-text`, `refresh-cw`, `pencil`, `chevron-left`, `chevron-right`, `arrow-up`, `paperclip`, `at-sign`, `square-slash`, `file`, `circle-alert`, `upload` and `thumbs-up` icon paths.
-- Used in: `packages/agent-ui/src/styles/step.css` (Step status glyphs), `packages/agent-ui/src/styles/conversation.css` (the jump control's arrow), `packages/agent-ui/src/styles/agent-ui.css` (copy and copied), `packages/agent-ui/src/styles/code-block.css` (wrap) and `packages/agent-ui/src/styles/message.css` (regenerate, edit and the branch arrows), `packages/agent-ui/src/styles/composer.css` (send, attach, token kinds and token removal), `packages/agent-ui/src/styles/attachments.css` (file, error and removal) `packages/agent-ui/src/styles/uploader.css` (drop zone, file, done, error, cancel and retry) and `packages/agent-ui/src/styles/feedback.css` (the thumbs), as CSS mask images.
-- Changes: stroke width set to 3.5 (Step), 2.5 (Conversation), 2.25 and 2.5 (Composer), 3 (Attachments) and 2.25 and 2.5 (Uploader); Feedback adds a filled `thumbs-up` and turns it over for down; the others are unchanged.
-- Licensed under the ISC License; the icons that derive from Feather (all but `wrap-text`, `pencil`, `paperclip`, `square-slash` and `file`) are also under the MIT License.
+- Source: https://github.com/lucide-icons/lucide, the `check`, `x`, `minus`, `arrow-down`, `copy`, `wrap-text`, `refresh-cw`, `pencil`, `chevron-left`, `chevron-right`, `arrow-up`, `paperclip`, `at-sign`, `square-slash`, `file`, `circle-alert`, `upload`, `thumbs-up`, `file-text`, `file-code`, `download`, `chevron-down`, `maximize-2`, `image-off`, `folder` and `folder-open` icon paths.
+- Used in: `packages/agent-ui/src/styles/step.css` (Step status glyphs), `packages/agent-ui/src/styles/conversation.css` (the jump control's arrow), `packages/agent-ui/src/styles/agent-ui.css` (copy and copied), `packages/agent-ui/src/styles/code-block.css` (wrap) and `packages/agent-ui/src/styles/message.css` (regenerate, edit and the branch arrows), `packages/agent-ui/src/styles/composer.css` (send, attach, token kinds and token removal), `packages/agent-ui/src/styles/attachments.css` (file, error and removal) `packages/agent-ui/src/styles/uploader.css` (drop zone, file, done, error, cancel and retry) `packages/agent-ui/src/styles/feedback.css` (the thumbs) `packages/agent-ui/src/styles/document.css` (the document's kind, download and Show more) and `packages/agent-ui/src/styles/generated-image.css` (download, View full size and the failed image) and `packages/agent-ui/src/styles/file-tree.css` (file, folder and open folder), as CSS mask images; `chevron-right` is also inline SVG in `packages/agent-ui/src/react/file-tree.tsx` and `packages/agent-ui/src/web/file-tree.ts` (File Tree's folder arrow).
+- Changes: Step's check, `x` and `minus` scaled to 62.5% about the center of their viewBox (stroke width 2.1875) so they mask the whole status mark; stroke width set to 3.5 (Step), 2.5 (Conversation), 2.25 and 2.5 (Composer), 3 (Attachments) and 2.25 and 2.5 (Uploader); Feedback adds a filled `thumbs-up` and turns it over for down; the others are unchanged.
+- Licensed under the ISC License; the icons that derive from Feather (all but `wrap-text`, `pencil`, `paperclip`, `square-slash`, `file`, `file-code`, `image-off` and `folder-open`) are also under the MIT License.
+
+## Lobe Icons
+
+- Source: https://github.com/lobehub/lobe-icons, npm `@lobehub/icons-static-svg@1.103.0`, the `anthropic`, `openai`, `microsoft-color`, `gemini-color` and `xai` icons.
+- Used in: `apps/docs/examples/model-selector/logos.tsx` (the Model Selector example and the Human Input showcase) and `packages/agent-ui/tests/fixtures/shared/model-logos.ts`. Not shipped in the package.
+- Changes: path data unchanged; dropped `width`, `height`, `style` and `<title>`, added `aria-hidden`, and renamed Gemini's gradient ids.
+- The logos are trademarks of their owners, used here only to name their models.
+- Copyright (c) 2023 LobeHub. Licensed under the MIT License.
 
 ---
 
@@ -264,6 +272,32 @@ SOFTWARE.
 MIT License
 
 Copyright GitHub, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## Lobe Icons license
+
+MIT License
+
+Copyright (c) 2023 LobeHub
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

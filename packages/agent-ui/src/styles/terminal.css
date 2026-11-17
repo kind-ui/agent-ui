@@ -1,0 +1,301 @@
+/* Terminal (spec §7): the Step base's header with the command, its exit code and duration, over a screen with the
+   prompt and the output in its ANSI colors. The trigger and the panel's motion come from step.css, through
+   `data-step-part`. */
+@layer components {
+  [data-slot="kind-terminal"] {
+    --kind-terminal-max-height: 20rem;
+    --kind-terminal-font-size: 0.8125rem;
+    --kind-terminal-line-height: 1.25rem;
+  }
+
+  [data-slot="kind-terminal-title"] {
+    font-family: var(--kind-font-mono);
+    font-size: var(--kind-terminal-font-size);
+  }
+
+  /* Custom elements on Web Components are inline until styled. */
+  :is(
+    [data-slot="kind-terminal-viewport"],
+    [data-slot="kind-terminal-output"],
+    [data-slot="kind-terminal-line"],
+    [data-slot="kind-terminal-command"]
+  ) {
+    display: block;
+  }
+
+  [data-slot="kind-terminal-exit"] {
+    flex-shrink: 0;
+    padding-inline: 0.375rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.125rem;
+    color: color-mix(in oklab, var(--kind-color-success) 55%, var(--kind-color-fg));
+    background-color: color-mix(in oklab, var(--kind-color-success) 12%, transparent);
+
+    &:where([data-exit="failure"]) {
+      color: color-mix(in oklab, var(--kind-color-danger) 60%, var(--kind-color-fg));
+      background-color: color-mix(in oklab, var(--kind-color-danger) 12%, transparent);
+    }
+  }
+
+  [data-slot="kind-terminal-meta"]:empty {
+    display: none;
+  }
+
+  /* No guide line: the screen sits under the header at full width. */
+  [data-slot="kind-terminal-content"] {
+    margin-inline-start: 0;
+    padding-inline-start: 0;
+    border-inline-start: 0;
+    color: var(--kind-color-fg);
+  }
+
+  [data-terminal-screen] {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--kind-color-border);
+    border-radius: calc(var(--kind-radius) * 2 / 3);
+    background-color: var(--kind-color-hover);
+    font-family: var(--kind-font-mono);
+    font-size: var(--kind-terminal-font-size);
+    line-height: var(--kind-terminal-line-height);
+  }
+
+  [data-terminal-header] {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding-block: 0.5rem 0;
+    padding-inline: 0.75rem 0.375rem;
+  }
+
+  [data-slot="kind-terminal-command"] {
+    flex: 1;
+    min-width: 0;
+    padding-block: 0.25rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-weight: 500;
+
+    &::before {
+      content: "$ ";
+      color: var(--kind-color-muted);
+      user-select: none;
+    }
+  }
+
+  [data-slot="kind-terminal-copy"] {
+    display: inline-grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--kind-radius) / 2);
+    background-color: transparent;
+    color: var(--kind-color-muted);
+    transition:
+      color var(--kind-duration-fast),
+      background-color var(--kind-duration-fast);
+
+    &::before {
+      content: "";
+      width: 0.875rem;
+      height: 0.875rem;
+      background-color: currentColor;
+      mask: var(--kind-icon-copy) center / contain no-repeat;
+    }
+    &:hover {
+      color: var(--kind-color-fg);
+      background-color: color-mix(in oklab, var(--kind-color-fg) 6%, transparent);
+    }
+    &:focus-visible {
+      color: var(--kind-color-fg);
+      outline: 1.5px solid var(--kind-color-ring);
+      outline-offset: -1.5px;
+    }
+    &[data-copied] {
+      color: var(--kind-color-success);
+    }
+    &[data-copied]::before {
+      mask-image: var(--kind-icon-check);
+    }
+  }
+
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    [data-slot="kind-terminal-copy"]::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+  }
+
+  /* Its line height is the virtualizer's guess for every line, so a line that doesn't wrap never moves the ones
+     after it when it's measured. */
+  [data-slot="kind-terminal-viewport"] {
+    max-height: var(--kind-terminal-max-height);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-block-end: 0.5rem;
+    line-height: var(--kind-terminal-line-height);
+    scrollbar-width: thin;
+    scrollbar-color: var(--kind-color-border) transparent;
+
+    &:focus-visible {
+      outline: none;
+    }
+  }
+
+  /* The viewport scrolls under the screen's rounded corners, so the screen draws its ring. */
+  [data-terminal-screen]:where(:has([data-slot="kind-terminal-viewport"]:focus-visible)) {
+    outline: 1.5px solid color-mix(in oklab, var(--kind-color-ring) 50%, transparent);
+    outline-offset: -1.5px;
+  }
+
+  [data-slot="kind-terminal-output"] {
+    position: relative;
+    height: var(--kind-terminal-size);
+  }
+
+  [data-slot="kind-terminal-line"] {
+    position: absolute;
+    inset-inline: 0;
+    top: var(--kind-terminal-line-start, 0px);
+    min-height: var(--kind-terminal-line-height);
+    padding-inline: 0.75rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+
+    & > :where([data-bold]) {
+      font-weight: 700;
+    }
+    & > :where([data-dim]) {
+      opacity: 0.7;
+    }
+    & > :where([data-italic]) {
+      font-style: italic;
+    }
+    & > :where([data-underline]) {
+      text-decoration-line: underline;
+    }
+    & > :where([data-strike]) {
+      text-decoration-line: line-through;
+    }
+    & > :where([data-underline][data-strike]) {
+      text-decoration-line: underline line-through;
+    }
+  }
+
+  /* A cursor after the last line while the command runs. It overhangs into the line's padding, so it never wraps a
+     full line. */
+  [data-slot="kind-terminal-line"]:where(
+    [data-slot="kind-terminal"][data-status="running"] *,
+    [data-last]
+  )::after {
+    content: "";
+    display: inline-block;
+    width: 0.5em;
+    height: 1.1em;
+    margin-inline: 1px calc(-0.5em - 1px);
+    vertical-align: text-bottom;
+    background-color: var(--kind-color-muted);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    [data-slot="kind-terminal-line"]:where([data-slot="kind-terminal-content"][data-motion="auto"] *)::after {
+      animation: kind-terminal-blink 1s steps(1) infinite;
+    }
+  }
+
+  [data-slot="kind-terminal-jump"] {
+    /* Lucide "arrow-down", see THIRD_PARTY_NOTICES.md. */
+    --kind-terminal-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M19 12l-7 7-7-7'/%3E%3C/svg%3E");
+
+    position: absolute;
+    bottom: 0.75rem;
+    left: 50%;
+    translate: -50% 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 1.75rem;
+    padding-inline: 0.625rem 0.75rem;
+    border: 1px solid var(--kind-color-border);
+    border-radius: 9999px;
+    background-color: var(--kind-color-surface);
+    box-shadow:
+      0 1px 2px color-mix(in oklab, var(--kind-color-shadow) 6%, transparent),
+      0 4px 16px -4px color-mix(in oklab, var(--kind-color-shadow) 12%, transparent);
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    color: var(--kind-color-fg);
+    transition:
+      opacity var(--kind-duration-base) var(--kind-ease-out),
+      translate var(--kind-duration-base) var(--kind-ease),
+      background-color var(--kind-duration-fast);
+
+    &:where([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+    }
+    &:where([data-motion="reduced"]) {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+    }
+    &:where([data-motion="none"]) {
+      transition: none;
+    }
+
+    &::before {
+      content: "";
+      width: 12px;
+      height: 12px;
+      background-color: var(--kind-color-muted);
+      mask: var(--kind-terminal-arrow) center / contain no-repeat;
+    }
+    &:hover {
+      background-color: var(--kind-color-hover);
+    }
+    &:focus-visible {
+      outline: 1.5px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  @media (forced-colors: active) {
+    [data-slot="kind-terminal-jump"]::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+  }
+
+  /* Web keeps parts that aren't present in the page, with `hidden`. */
+  :is([data-slot="kind-terminal-jump"], [data-slot="kind-terminal-exit"])[hidden] {
+    display: none;
+  }
+
+  /* Full motion only: reduced motion fades over 120 ms with no move, "none" keeps nothing (spec §6). */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-slot="kind-terminal-jump"]:where([data-motion="auto"]):where(
+        [data-starting-style],
+        [data-ending-style]
+      ) {
+      translate: -50% 0.5rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot="kind-terminal-jump"]:where([data-motion="auto"]) {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+    }
+  }
+}
+
+@keyframes kind-terminal-blink {
+  50% {
+    opacity: 0;
+  }
+}

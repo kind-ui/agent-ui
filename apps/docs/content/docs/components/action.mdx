@@ -1,0 +1,72 @@
+---
+title: Action
+description: Show what an action did with the text a person chose, and what it returned.
+---
+
+import ActionExample from "../../../examples/action/basic";
+
+Use an action for the answer to something a person ran on part of a reply, like **Explain** from a [Selection](./selection.mdx). It quotes the text the action ran on and shows the result below it, in a step that folds away once it's done.
+
+<Example caption="Press Explain, or focus it and press Enter or Space, to show the quote and the result.">
+  <ActionExample />
+
+  <include cwd lang="tsx">./examples/action/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/action
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/action-web
+```
+
+## Composition
+
+```text
+Action
+├── ActionTrigger
+│   ├── ActionIcon
+│   └── ActionTitle
+└── ActionContent
+    ├── ActionQuote
+    └── ActionResult
+```
+
+`Action` renders these parts when you pass no children; any children you pass replace them. The trigger is a native button that shows or hides the content. `ActionTitle` shows the `label`, `ActionQuote` renders `quote` as a block quote, and `ActionResult` renders `result` as [Markdown](./markdown.mdx). The quote and the result are left out while they're empty.
+
+## Usage
+
+### Quote and Result
+
+Pass the action's name as `label`, the text it ran on as `quote`, and what it returned so far as `result`. Set `status` as the work moves along, as a [Step](./step.mdx) does.
+
+```tsx
+<Action label="Explain" quote={text} result={answer} status={isDone ? "complete" : "running"} />
+```
+
+While the status is `running`, the content stays open and `result` renders as streaming Markdown: each chunk parses only the blocks it changed. When the status turns `complete`, the content closes on its own, unless someone opened or closed it in the meantime. An action that goes straight from `pending` to `complete` stays closed.
+
+### Announcements
+
+When the action completes or fails, screen readers hear its title, like "Explain complete" or "Explain failed", once. The streamed result is quiet.
+
+### Motion
+
+The content grows open and shut. Under `prefers-reduced-motion`, or with `motion="reduced"`, it fades over 120 ms instead, and with `motion="none"` it changes at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/action/action.ts" name="ActionOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds an action by its title and reads its `open` and `status`. It can run these actions, and press the trigger like a person would:
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/step/base.ts" name="ActionAgentActions" type='Pick<StepApi, "expand" | "collapse">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-action>`, each prop is a kebab-case attribute, so `autoOpen` is `auto-open`, and `onOpenChange` fires `openchange`. The element fills in its parts when it has no children, writes `quote` into its `<kind-action-quote>`, and writes `result` into a `<kind-markdown>` in its `<kind-action-result>`.
+</Caption>

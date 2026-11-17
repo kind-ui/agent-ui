@@ -2,10 +2,14 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `bb45d49` (Wave 3 Task 11 agent conformance)
+Last reviewed: `cd5d555` (Wave 4 Task 12b Model Selector icons)
 
 ## Settled
 
+- **A `kind-model-selector` element icon is cloned with its ids** (Wave 4 Task 12b): rewriting ids inside each copy would be fragile; the `models` JSDoc says to pass a logo with `defs` as an image URL, and the fixture's Gemini logo is one.
+- **`drawIcon` compares icons by identity** (suspected, Wave 4 Task 12b): a host that builds new elements on every `models` write re-copies its icons, which is harmless.
+- **A hand-written empty `kind-inline-citation-content` stays empty** (Wave 4 Task 3), as React's bare `InlineCitationContent` does: the element fills in only the content it wrote.
+- **`kind-sources`' `api` leaves out `expand` and `collapse`** (Wave 4 Task 2): they are availability getters, and a web root's `api` list copies methods once, as Guardrail Notice's does; `open` and `setOpen` cover them.
 - **Fixtures carry no comments** (Wave 3 Task 11): the agent page builds `kind-model-selector` and `kind-reasoning-effort` with `createElement` because `defaultValue` is a property read when the element connects (AGENTS.md, Wave 3 agent conformance), not because markup was overlooked.
 - **`kind-suggestion` fills in only its own row** (Wave 3 Task 7): a row a page writes is the internal Carousel's markup with its `kind-suggestion-item`s, as a written `kind-reasoning-effort` holds its own Segmented Control; the element's JSDoc says so. There are no `kind-suggestion-viewport`/`-previous`/`-next` tags.
 - **`kind-task` and `kind-plan` look up their parts with `querySelector`,** not Chain of Thought's `own()`: no part of theirs holds arbitrary content, so no nested task or plan sits inside one.
@@ -19,6 +23,17 @@ Last reviewed: `bb45d49` (Wave 3 Task 11 agent conformance)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **`@ui-sdk/web`'s Combobox content `anchor` stringifies an element** (Wave 4 Task 12b): only a selector works, so Model Selector anchors through `data-model-selector-field`; report upstream.
+- **Closing a Step or Guardrail Notice panel inside a shadow root leaves focus on a hidden button** (Wave 4 Task 12): the trigger lookup is now `context.element`, but UI SDK's `bindPanel` asks for it only when `el.contains(document.activeElement)`, which is the shadow host there. Add to the upstream report beside `focus-recovery.js`; a shadow-root test comes with the fix.
+- **Checkpoint's Alert Dialog is named differently by layer in the snapshot:** "Restore checkpoint" in React, "Restore this checkpoint?" on web (Wave 3, seen in Task 12).
+- **The Transcript web fixture has no shadow-root, moved or written-parts case** (Wave 4 Task 10): checked by hand in review, not in the spec, as for Inline Citation and Sources.
+- **Firefox crashes running axe after Playwright's role query on a UI SDK tree row too** (Wave 4 Task 9), not only `ui-radio`/`ui-checkbox`: `test-results.spec.ts` waits with a CSS locator before axe. Add to the upstream report.
+- **macOS WebKit's Tab skips Terminal's Copy button** (Wave 4 Task 7), as it skips buttons without Full Keyboard Access; the keyboard test fails there locally. CI's WebKit runs on Linux, where Tab reaches buttons; not checked there yet.
+
+- **An empty `<kind-generated-image>` takes no height until it upgrades** (Wave 4 Task 5): its frame and `aspect-ratio` come from the element, and a `:not(:defined)` rule can't read `width`/`height`, as with the empty Task, Plan and Document. The fixture has no moved, shadow-root, written-part or `can-download`-toggle case; each was checked by hand in review.
+- **An empty `<kind-document>` shows nothing before upgrade,** then adds its whole card, which moves what's below it; same class as `kind-reasoning` and `kind-streaming-text`. Moving it and a shadow root were checked by hand, not in the spec.
+- **`kind-inline-citation` has no written-item, shadow-root or moved fixture case** (Wave 4 Task 3): a shadow root and items written after connecting were checked by hand (a `MutationObserver` now fills them in), not in the spec. Its index after a move is the core entry on pages the Carousel changes itself.
+- **`kind-sources` has no written-item or shadow-root fixture case** (Wave 4 Task 2): checked by hand (a written item replaces the added one; the trigger lookup now uses `getRootNode()`), not in the spec.
 - **A `kind-notice` written with only its description grows by 40 px when it's defined** (Wave 3 Task 10), as it adds its mark and title; same class as the empty Task, Plan and Checkpoint entries.
 - **An empty `kind-context-meter` moves what's beside it when it's defined** (Wave 3 Task 8), as the empty Task, Plan and Checkpoint do; no shadow-root case in its fixture either (checked by hand).
 - **`ui-carousel-content` is `aria-live="polite"` (UI SDK),** so a suggestion added while the row is in view may be read aloud; not checked with a screen reader.
@@ -38,7 +53,6 @@ Last reviewed: `bb45d49` (Wave 3 Task 11 agent conformance)
 - **`<kind-streaming-text text="…">` and an empty `kind-uploader` show nothing before upgrade.** Writing the text as children avoids it; undocumented.
 - **`kind-step-list-item` misses a button that arrives late or is replaced:** its target is `querySelector("button")`, and UI SDK's retarget observer only watches direct children. Deferred: one element can fill only one primitive's slot, so whichever of list item and trigger wraps the other has a nested target; `@ui-sdk/web`'s own `ui-toolbar-button` (nested `wrappedControl`) has the same gap. Needs an upstream subtree retarget.
 - **Removing a `kind-step` and putting it back forgets a person's toggle:** `createParts` rebuilds the instance from the `state` getters only, so `userToggled` is lost and auto close resumes. Needs a `@ui-sdk/web` hook to carry non-public state across instances. The same drops a pending Plan Accept or Subagent Stop (`pending` isn't carried), so a press after the move calls the host a second time.
-- **The step panel finds its trigger with `ownerDocument.querySelector`**, which misses a trigger inside a user's shadow root.
 - **A `kind-code-block` written with children (pre-upgrade `<pre>`) never fills in its parts.** Documented ("when it has no children"); a hand-written fallback needs a marker the element can replace.
 - **A code block removed and put back after a tick asks for highlighting again** and shows plain text meanwhile: same rebuilt-from-state cause as the Step entry above.
 - **Trigger Menu items show no description on web:** the list renders its own items from data, label only. React renders the description.
@@ -48,6 +62,18 @@ Last reviewed: `bb45d49` (Wave 3 Task 11 agent conformance)
 
 ## Resolved
 
+- **Wave 4 agent conformance** (Wave 4 Task 12): the web `case=wave-4` page draws the same text as React for all eleven Wave 4 components, and its `can-*` attributes add and remove their actions (`agent.spec.ts`).
+- **Selection and Action** (Wave 4 Task 11): empty written `kind-action-quote`, `kind-action-result` and `kind-selection-item` parts are filled in as React's defaults are; a `kind-selection` in a shadow root opens (core reads `getComposedRanges`); web fixtures use the tag map's element types.
+- **A web Transcript shorter than its viewport raised a ResizeObserver loop error** (Wave 4 Task 10): fixed; the viewport has a fixed `--kind-transcript-height`, so measuring segments never resizes it, and the spec fails on any window `error`.
+- **`kind-test-results` missed a filter or tree written later, or written with whitespace inside** (Wave 4 Task 9): `draw` looks both up each time, a `MutationObserver` redraws when parts arrive, and whitespace-only parts count as empty. Pinned in `test-results.spec.ts` (late case).
+- **`kind-stack-trace` (Wave 4 Task 8):** a moved element folded its shown library frames (root `state` now maps `showLibraryFrames`); written empty frames, groups, toggles and frame parts stayed empty (now filled from state, as React's defaults are; `written` fixture case); a new `label` or an equal `frames` copy rebuilt every frame node (the list now redraws only when its rows, entries or `canOpen` change by content).
+- **Terminal (Wave 4 Task 7):** the follow test used a click WebKit doesn't focus with and read `scrollTop` mid smooth scroll in Firefox; it now presses Enter in WebKit and waits for the scroll to rest. A put-back element is tested to redraw its lines and keep `open`.
+
+- **`kind-file-tree` put back after a tick lost its controller and state, and WebKit blurred a row** (Wave 4 Task 6): `render` sets the Tree's `controller` each draw, root `state` maps `value` and `expanded` (new `setValue`/`setExpanded`), and `drawRows` removes rows that left before placing the rest. Pinned in `file-tree.spec.ts` (moved case); `@ui-sdk/web/tree` joins `optimizeDeps`.
+- **Generated Image's axe test crashed Firefox** (Wave 4 Task 5): a locator query right after axe and a DOM change crashes the page; the spec waits for the phase with `waitForFunction` first. Add this trigger to the upstream report beside the `ui-radio` one.
+- **`kind-document` replaced its Downloads on any `downloads` change, added one beside a written Download, and wiped written content text** (Wave 4 Task 4): Downloads it added are kept by `value` and moved with `moveBefore`, a written `kind-document-download` replaces them all, and content is filled only with no element or text in it; the `written` case and a focus-through-change test pin them.
+- **Reordering `kind-inline-citation`'s sources blurred a focused link** (Wave 4 Task 3): slides move with `moveBefore` where the browser has it.
+- **Sources (Wave 4 Task 2):** the axe tests reach the trigger with a CSS locator (Firefox crash), and closing inside a shadow root returns focus to the trigger.
 - **Step-based elements played color transitions on first render (Task, Plan, Chain of Thought, Tool).** Cause: `@ui-sdk/web` gives each part its attributes as it connects, and a part that reads style as it binds (UI SDK `bindPanel`'s `getAnimations()` on a content bound open, Scroll Area's measure in a code block) styles the parts after it, on the page too, bare. Fixed: the step root holds `data-mounting` until its second frame, and `step.css` turns transitions off under it; state changes still animate.
 - **Notice and Guardrail Notice (Wave 3 Task 10):** Dismiss stays the last child when a host adds text or buttons after the element connects (moved with `moveBefore` where the browser has it), so Tab reaches them first; a notice removed and put back neither rises in nor is announced again.
 - **Feedback (Wave 3 Task 9):** a `kind-feedback` removed and put back a tick later couldn't send the comment its textarea kept (the comment text slot binds `bindText`, tested); the docs say `rating` and `defaultRating` are properties only.

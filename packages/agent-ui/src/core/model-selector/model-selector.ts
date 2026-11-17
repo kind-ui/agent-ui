@@ -12,10 +12,11 @@ export type ModelSelectorValueChangeReason = "input-change" | "imperative";
 
 export type ModelSelectorOptions = {
   /**
-   * The models to choose from, grouped by their `group` in the order groups first appear.
+   * The models to choose from, grouped by their `group` in the order groups first appear. The primitive passes each
+   * `icon` through to the render layer untouched.
    * @default []
    */
-  models?: ModelOption[];
+  models?: ModelOption<unknown>[];
   /** The chosen model's id. Passing it controls it: change it in `onValueChange`. */
   value?: string | null;
   /**
@@ -54,7 +55,7 @@ export type ModelSelectorOptions = {
 
 export type ModelSelectorState = {
   /** The `models`. */
-  models: ModelOption[];
+  models: ModelOption<unknown>[];
   /** The chosen model's id. */
   value: string | null;
   /** The `label`, else "Model". */
@@ -90,10 +91,15 @@ export type ModelSelectorComboboxState = {
 };
 
 /** A model as the list shows it: its name split into what the query matched and what it didn't. */
-export type ModelSelectorItem = ModelOption & { segments: MatchSegment[] };
+export type ModelSelectorItem = ModelOption<unknown> & { segments: MatchSegment[] };
 
 /** What the content renders: the matching models by group, best match first. */
 export type ModelSelectorContentState = {
+  /**
+   * The field, as a selector the Combobox content takes as its `anchor`, so the list opens against the whole field
+   * rather than the input its icon pushes along.
+   */
+  anchor: string;
   /** The groups with a match, in the order they first appear, each with its matching models, best first. */
   groups: { group: string | undefined; models: ModelSelectorItem[] }[];
 };
@@ -104,7 +110,7 @@ export type ModelSelectorApi = {
   /** Chooses a model, as a person would. Returns `false` for an unknown or disabled model, or a refused change. */
   setValue: (id: string) => boolean;
   /** The `models`. */
-  getModels: () => ModelOption[];
+  getModels: () => ModelOption<unknown>[];
   /** Reports the model a person chose. Called as the Combobox's `change` bubbles to the root. */
   read: (event: Event) => void;
   /** Filters the list by what a person typed. Called as the search field's `input` bubbles. */
@@ -115,8 +121,8 @@ export type ModelSelectorApi = {
   syncValue: () => void;
   /** Hands the Combobox its props. Called by the root slot. */
   comboboxState: (state: ModelSelectorState) => ModelSelectorComboboxState;
-  /** Hands the content the matching models. Called by the content slot. */
-  contentState: (state: ModelSelectorState) => ModelSelectorContentState;
+  /** Hands the content the matching models and the field's selector. Called by the content slot with its instance's id. */
+  contentState: (state: ModelSelectorState, id: string) => ModelSelectorContentState;
 };
 
 type Slot<Public extends object = Record<never, never>> = SlotDefinition<
@@ -129,6 +135,7 @@ type Slot<Public extends object = Record<never, never>> = SlotDefinition<
 type ModelSelectorSlots = {
   root: Slot<ModelSelectorComboboxState>;
   trigger: Slot<{ group: string; buttonLabel: string }>;
+  icon: Slot<{ icon: unknown }>;
   input: Slot<{ label: string; placeholder: string }>;
   content: Slot<ModelSelectorContentState>;
 };
@@ -138,7 +145,7 @@ export type ModelSelectorPrimitive = ReturnType<
   typeof definePrimitive<ModelSelectorOptions, ModelSelectorState, ModelSelectorApi, ModelSelectorSlots>
 >;
 
-const noModels: ModelOption[] = [];
+const noModels: ModelOption<unknown>[] = [];
 
 const presentation = (options: ModelSelectorOptions) => ({
   models: options.models ?? noModels,
@@ -148,6 +155,9 @@ const presentation = (options: ModelSelectorOptions) => ({
   disabled: options.disabled ?? false,
   motion: options.motion ?? "auto",
 });
+
+// Marks the field with the instance's id in an attribute of our own, since a host may give the field any `id`.
+const fieldSelector = (id: string) => `[data-model-selector-field="${id.replace(/["\\]/g, "\\$&")}"]`;
 
 const modelOf = (state: ModelSelectorState, id: string | null) =>
   state.models.find((model) => model.id === id);
@@ -214,7 +224,8 @@ export const modelSelectorPrimitive: ModelSelectorPrimitive = definePrimitive<
       }),
     );
     const contentState = memo(
-      (models: ModelOption[], query: string): ModelSelectorContentState => ({
+      (models: ModelOption<unknown>[], query: string, id: string): ModelSelectorContentState => ({
+        anchor: fieldSelector(id),
         groups: filterModels(models, query).map(({ group, models: matched }) => ({
           group,
           models: matched.map((model) => ({
@@ -260,7 +271,7 @@ export const modelSelectorPrimitive: ModelSelectorPrimitive = definePrimitive<
       },
       syncValue,
       comboboxState: (state) => comboboxState(state.disabled),
-      contentState: (state) => contentState(state.models, state.query),
+      contentState: (state, id) => contentState(state.models, state.query, id),
     };
   },
   slots: (slot) => ({
@@ -282,10 +293,17 @@ export const modelSelectorPrimitive: ModelSelectorPrimitive = definePrimitive<
         group: modelOf(state, state.value)?.group ?? "",
         buttonLabel: state.openLabel,
       }),
+      attrs: (_state, { id }) => ({ "data-model-selector-field": id }),
       on: {
         keydown: (_event, { api }) => api.follow(),
         click: (_event, { api }) => api.follow(),
       },
+    }),
+    // Drawn from the chosen model, so server markup has it and a new icon replaces the old one.
+    icon: slot<BaseSlotProps, { icon: unknown }>({
+      present: (state) => modelOf(state, state.value)?.icon !== undefined,
+      state: (state) => ({ icon: modelOf(state, state.value)?.icon }),
+      attrs: () => ({ "aria-hidden": "true" }),
     }),
     input: slot<BaseSlotProps, { label: string; placeholder: string }>({
       state: (state) => ({ label: state.label, placeholder: state.placeholder }),
@@ -297,7 +315,7 @@ export const modelSelectorPrimitive: ModelSelectorPrimitive = definePrimitive<
       },
     }),
     content: slot<BaseSlotProps, ModelSelectorContentState>({
-      state: (state, { api }) => api.contentState(state),
+      state: (state, { api, id }) => api.contentState(state, id),
     }),
   }),
   // Models are listed by name, so an agent can name one to `setValue`; an unknown or disabled one is refused.

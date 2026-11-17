@@ -1,0 +1,88 @@
+---
+title: Inline Citation
+description: Mark where a sentence came from, with a card that shows its sources.
+---
+
+import InlineCitationExample from "../../../examples/inline-citation/basic";
+
+Use an inline citation inside a response's text, right after the claim it supports, so readers can check a source without leaving the sentence. It's a small marker that keeps the paragraph's line height, and its card shows each source's host name, title and snippet. Several sources page in one card.
+
+<Example caption="Rest the pointer on 1 or 2, focus one with Tab, or press it, to open its card. In the card for 1, press Next to see the second source. Press Escape to close it.">
+  <InlineCitationExample />
+
+  <include cwd lang="tsx">./examples/inline-citation/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/inline-citation
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/inline-citation-web
+```
+
+## Composition
+
+```text
+InlineCitation
+├── InlineCitationTrigger
+└── InlineCitationContent
+    ├── InlineCitationItem
+    └── InlineCitationCarousel
+        ├── InlineCitationItem
+        │   ├── InlineCitationLink
+        │   │   ├── InlineCitationHost
+        │   │   └── InlineCitationSourceTitle
+        │   └── InlineCitationSnippet
+        ├── InlineCitationPrevious
+        ├── InlineCitationIndex
+        └── InlineCitationNext
+```
+
+`InlineCitationTrigger` is the marker, a native button that shows the `label`. `InlineCitationContent` is the card. With one source it holds that source's `InlineCitationItem`; with more, `InlineCitationCarousel` is UI SDK's Carousel with a slide per source and **Previous**, the page ("1 of 3") and **Next** below. `InlineCitationLink` links to the source's `url` and opens it in a new tab. `InlineCitationHost` shows the host name without `www.`, `InlineCitationSourceTitle` the `title`, up to two lines, and `InlineCitationSnippet` the `snippet`, up to three. Every part renders a `span`, so a citation is valid inside a `p`. To arrange the parts yourself, pass them as children of `InlineCitation`.
+
+## Usage
+
+### Sources
+
+Pass `sources`, each with an `id` and a `title`, and optionally a `url` and `snippet`. Links accept `http`, `https`, `mailto` and relative URLs. A source with any other URL, like `javascript:`, shows as text with no link and no host name.
+
+```tsx
+<p>
+  Retry after a minute <InlineCitation sources={[{ id: "limits", title: "Rate limits", url: "https://docs.github.com/en/rest" }]} label="1" />.
+</p>
+```
+
+### The Marker
+
+Pass `label` to number the marker, like `"1"`. Without it, the marker shows the first source's host name, with "+N" for the others, like "docs.github.com +1". The marker is sized from the text around it and is shorter than its line, so it never changes the paragraph's line height. Screen readers hear its text, then its source, like "1, Source: Retry-After header", or "1, Sources: 2" for more than one.
+
+### Opening
+
+The card opens when the pointer rests on the marker for 600 ms, when keyboard focus rests on it as long, and when it's pressed, by pointer, Enter or Space. It closes on Escape, a press outside or focus leaving the citation, and 300 ms after the pointer leaves both the marker and the card when the pointer opened it. Opening it leaves focus on the marker; Tab moves into the card.
+
+Pass `open` and `onOpenChange` to control it, or `defaultOpen` to start with it open. `onOpenChange` gets UI SDK Popover's reason, like `trigger-hover`, `trigger-press` or `escape-key`, or `trigger-focus` when keyboard focus opened it.
+
+### Paging
+
+With more than one source, **Previous** and **Next** page through them, as do the arrow keys while the slides are focused, and the page below reads "1 of 3". Every source takes the card's full width and the card is as tall as its tallest source, so paging never moves the controls. Swiping and dragging are off, so a scroll inside the card never pages it. The card opens again on the source it last showed.
+
+### Motion
+
+The card rises and fades in. Under `prefers-reduced-motion`, or with `motion="reduced"`, it only fades, over 120 ms, and with `motion="none"` it shows at once. Paging scrolls smoothly unless the reader prefers reduced motion.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/inline-citation/inline-citation.ts" name="InlineCitationOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the citation by the marker's name, like "1, Sources: 2", and reads whether its card is open. `open` is offered while the card is closed and `close` while it's open. While it's open, `next` is offered when a source follows and `previous` when one comes before. Like any component with a button, it also has UI SDK's generic `press`.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/inline-citation/inline-citation.ts" name="InlineCitationAgentActions" type='Pick<InlineCitationApi, "open" | "close" | "next" | "previous">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-inline-citation>`, set `sources` as a property; the other props are kebab-case attributes, and `onOpenChange` is the `openchange` event. The element fills in its marker and card, with one item or a Carousel as the sources need.
+</Caption>

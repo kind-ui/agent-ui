@@ -1,3 +1,10 @@
+export {
+  type ActionOptions,
+  type ActionPrimitive,
+  type ActionState,
+  actionPrimitive,
+} from "./action/index.js";
+export { type AnsiLine, type AnsiLines, type AnsiSpan, createAnsiLines } from "./ansi.js";
 export { approvalKey, approvalLabel, isActionable } from "./approval.js";
 export {
   ATTACHMENT_ERRORS,
@@ -94,6 +101,18 @@ export {
   nextFollowState,
 } from "./conversation/index.js";
 export {
+  type DocumentApi,
+  type DocumentContentState,
+  type DocumentDownload,
+  type DocumentFormat,
+  type DocumentOpenChangeReason,
+  type DocumentOptions,
+  type DocumentPrimitive,
+  type DocumentState,
+  documentPrimitive,
+  documentSize,
+} from "./document/index.js";
+export {
   type FeedbackApi,
   type FeedbackCommentCallback,
   type FeedbackCommentTextState,
@@ -106,6 +125,30 @@ export {
   feedbackPrimitive,
 } from "./feedback/index.js";
 export {
+  type FileTreeApi,
+  type FileTreeChange,
+  type FileTreeExpandedChangeReason,
+  type FileTreeOptions,
+  type FileTreePrimitive,
+  type FileTreeRow,
+  type FileTreeSelectReason,
+  type FileTreeState,
+  type FileTreeTreeState,
+  type FileTreeValueChangeReason,
+  fileTreePrimitive,
+} from "./file-tree/index.js";
+export {
+  type GeneratedImageApi,
+  type GeneratedImageDownloadDetails,
+  type GeneratedImageOptions,
+  type GeneratedImagePhase,
+  type GeneratedImagePrimitive,
+  type GeneratedImageProgressState,
+  type GeneratedImageState,
+  type GeneratedImageStatus,
+  generatedImagePrimitive,
+} from "./generated-image/index.js";
+export {
   type GuardrailNoticeApi,
   type GuardrailNoticeOpenChangeReason,
   type GuardrailNoticeOptions,
@@ -114,6 +157,16 @@ export {
   guardrailNoticePrimitive,
 } from "./guardrail-notice/index.js";
 export type { IndicatorOptions, IndicatorPrimitive, IndicatorState } from "./indicator.js";
+export {
+  type InlineCitationApi,
+  type InlineCitationCarouselState,
+  type InlineCitationOpenChangeReason,
+  type InlineCitationOptions,
+  type InlineCitationPrimitive,
+  type InlineCitationRootState,
+  type InlineCitationState,
+  inlineCitationPrimitive,
+} from "./inline-citation/index.js";
 export {
   type ItemListApi,
   type ItemListOptions,
@@ -238,6 +291,41 @@ export {
   reasoningEffortPrimitive,
 } from "./reasoning-effort/index.js";
 export {
+  type SelectionActionReason,
+  type SelectionActionRun,
+  type SelectionApi,
+  type SelectionDismissReason,
+  type SelectionItemState,
+  type SelectionOptions,
+  type SelectionPrimitive,
+  type SelectionState,
+  type SelectionToolbarState,
+  selectionPrimitive,
+} from "./selection/index.js";
+export {
+  type SourceEntry,
+  type SourcesApi,
+  type SourcesOpenChangeReason,
+  type SourcesOptions,
+  type SourcesPrimitive,
+  type SourcesState,
+  sourcesPrimitive,
+} from "./sources/index.js";
+export { isLibraryFrame, parseStack } from "./stack.js";
+export {
+  type StackTraceApi,
+  type StackTraceCopyReason,
+  type StackTraceFrameEntry,
+  type StackTraceItemPartProps,
+  type StackTraceLibraryChangeReason,
+  type StackTraceOpenFrameReason,
+  type StackTraceOptions,
+  type StackTracePrimitive,
+  type StackTraceRow,
+  type StackTraceState,
+  stackTracePrimitive,
+} from "./stack-trace/index.js";
+export {
   type StatusOptions,
   type StatusPrimitive,
   type StatusState,
@@ -300,6 +388,33 @@ export {
   type TaskState,
   taskPrimitive,
 } from "./task/index.js";
+export {
+  type TerminalApi,
+  type TerminalCopyReason,
+  type TerminalOptions,
+  type TerminalPrimitive,
+  type TerminalState,
+  terminalPrimitive,
+} from "./terminal/index.js";
+export {
+  emptyTestsText,
+  type TestCounts,
+  type TestResultsApi,
+  type TestResultsExpandedChangeReason,
+  type TestResultsFailureState,
+  type TestResultsFilter,
+  type TestResultsFilterChangeReason,
+  type TestResultsFilterState,
+  type TestResultsOptions,
+  type TestResultsPrimitive,
+  type TestResultsRow,
+  type TestResultsState,
+  type TestResultsTreeState,
+  testCounts,
+  testItems,
+  testResultsPrimitive,
+  testValue,
+} from "./test-results/index.js";
 export { thinkingIndicatorPrimitive } from "./thinking-indicator/index.js";
 export {
   type ToolApi,
@@ -312,6 +427,19 @@ export {
   toolStatus,
   toolValue,
 } from "./tool/index.js";
+export { currentAt, searchSegments } from "./transcript/search.js";
+export {
+  type TranscriptApi,
+  type TranscriptItemPartProps,
+  type TranscriptOptions,
+  type TranscriptPrimitive,
+  type TranscriptQueryChangeReason,
+  type TranscriptSearchState,
+  type TranscriptSeekReason,
+  type TranscriptState,
+  transcriptPrimitive,
+} from "./transcript/transcript.js";
+export { pathItems, treeValues } from "./tree.js";
 export { typingIndicatorPrimitive } from "./typing-indicator/index.js";
 export {
   type UploaderApi,

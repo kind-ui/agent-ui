@@ -1,0 +1,307 @@
+/* Transcript (spec §7): a search over speaker-labelled, timed segments, with the segment and word at `currentTime`
+   marked. Segments sit at the virtualizer's offsets inside a list as tall as all of them. */
+@layer components {
+  [data-slot="kind-transcript"] {
+    --kind-transcript-height: 24rem;
+    --kind-transcript-search-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21 21-4.34-4.34'/%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3C/svg%3E");
+    --kind-transcript-clear-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E");
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--kind-color-border);
+    border-radius: var(--kind-radius);
+    background-color: var(--kind-color-surface);
+    color: var(--kind-color-fg);
+  }
+
+  /* Custom elements on Web Components are inline until styled. */
+  :is(
+    [data-slot="kind-transcript-search"],
+    [data-slot="kind-transcript-viewport"],
+    [data-slot="kind-transcript-list"],
+    [data-slot="kind-transcript-segment"],
+    [data-slot="kind-transcript-text"]
+  ) {
+    display: block;
+  }
+
+  [data-slot="kind-transcript-search"] {
+    padding: 0.5rem;
+    border-block-end: 1px solid var(--kind-color-border);
+
+    & :where(ui-input) {
+      display: contents;
+    }
+
+    & [data-slot="input-group"] {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      height: 2rem;
+      padding-inline: 0.5rem 0.25rem;
+      border-radius: calc(var(--kind-radius) * 2 / 3);
+      background-color: var(--kind-color-hover);
+      color: var(--kind-color-muted);
+      transition: box-shadow var(--kind-duration-fast);
+
+      &::before {
+        content: "";
+        flex-shrink: 0;
+        width: 0.875rem;
+        height: 0.875rem;
+        background-color: currentColor;
+        mask: var(--kind-transcript-search-icon) center / contain no-repeat;
+      }
+      &:has(input:focus-visible) {
+        box-shadow: 0 0 0 1.5px var(--kind-color-ring);
+        /* Shows in forced colors, where the shadow doesn't. */
+        outline: 1.5px solid transparent;
+      }
+    }
+
+    & input {
+      flex: 1;
+      min-width: 0;
+      height: 100%;
+      padding: 0 0.25rem;
+      border: 0;
+      background: none;
+      color: var(--kind-color-fg);
+      font: inherit;
+      font-size: 0.875rem;
+      outline: none;
+
+      &::placeholder {
+        color: var(--kind-color-muted);
+      }
+      &::-webkit-search-cancel-button {
+        appearance: none;
+      }
+    }
+
+    & [data-slot="input-clear"] {
+      display: inline-grid;
+      flex-shrink: 0;
+      place-items: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      padding: 0;
+      border: 0;
+      border-radius: calc(var(--kind-radius) / 2);
+      background-color: transparent;
+      color: var(--kind-color-muted);
+
+      &::before {
+        content: "";
+        width: 0.75rem;
+        height: 0.75rem;
+        background-color: currentColor;
+        mask: var(--kind-transcript-clear-icon) center / contain no-repeat;
+      }
+      &:hover {
+        color: var(--kind-color-fg);
+        background-color: color-mix(in oklab, var(--kind-color-fg) 6%, transparent);
+      }
+      &:focus-visible {
+        outline: 1.5px solid var(--kind-color-ring);
+        outline-offset: -1.5px;
+      }
+      &[hidden] {
+        display: none;
+      }
+    }
+  }
+
+  [data-slot="kind-transcript-count"] {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* A fixed height, so a search that leaves fewer segments doesn't move what's below the transcript. */
+  [data-slot="kind-transcript-viewport"] {
+    height: var(--kind-transcript-height);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-block: 0.25rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--kind-color-border) transparent;
+
+    &:focus-visible {
+      outline: 1.5px solid color-mix(in oklab, var(--kind-color-ring) 50%, transparent);
+      outline-offset: -1.5px;
+      border-radius: 0 0 var(--kind-radius) var(--kind-radius);
+    }
+  }
+
+  /* Until the virtualizer has measured them, as in server markup, segments stack in the flow: their heights differ, so
+     no guessed offset fits them all. */
+  [data-slot="kind-transcript-list"] {
+    position: relative;
+
+    &:where([data-measured]) {
+      height: var(--kind-transcript-size);
+    }
+  }
+
+  /* The padding is inside the measured height, so segments sit apart without margins the virtualizer can't see. */
+  [data-slot="kind-transcript-segment"] {
+    position: relative;
+    margin-inline: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: calc(var(--kind-radius) * 2 / 3);
+
+    &:where([data-measured] > *) {
+      position: absolute;
+      inset-inline: 0;
+      top: var(--kind-transcript-segment-start, 0px);
+    }
+    &:where([data-can-seek]) {
+      cursor: pointer;
+    }
+    &:where([data-can-seek]:hover) {
+      background-color: var(--kind-color-hover);
+    }
+    &:where([aria-current]) {
+      background-color: color-mix(in oklab, var(--kind-color-accent) 8%, transparent);
+    }
+
+    /* The playing segment's bar, on the side its text starts. */
+    &::before {
+      content: "";
+      position: absolute;
+      inset-block: 0;
+      inset-inline-start: 0;
+      width: 2px;
+      border-start-start-radius: inherit;
+      border-end-start-radius: inherit;
+      background-color: transparent;
+    }
+    &:where([aria-current])::before {
+      background-color: var(--kind-color-accent);
+    }
+  }
+
+  /* A set height: aligning the speaker's and time's baselines makes the row as tall as the font's metrics say, so
+     segment heights, and how many are in view, would differ by platform. */
+  [data-transcript-header] {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    height: 1.25rem;
+    margin-block-end: 0.125rem;
+    line-height: 1.25rem;
+  }
+
+  [data-slot="kind-transcript-speaker"] {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  [data-slot="kind-transcript-time"] {
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--kind-color-muted);
+  }
+
+  [data-slot="kind-transcript-seek"] {
+    padding: 0 0.25rem;
+    margin-inline: -0.25rem;
+    border: 0;
+    border-radius: calc(var(--kind-radius) / 3);
+    background: none;
+    font: inherit;
+    line-height: 1.25rem;
+    cursor: pointer;
+
+    &:hover [data-slot="kind-transcript-time"] {
+      color: var(--kind-color-fg);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    &:focus-visible {
+      outline: 1.5px solid var(--kind-color-ring);
+      outline-offset: 0;
+    }
+  }
+
+  [data-slot="kind-transcript-text"] {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.5rem;
+    overflow-wrap: anywhere;
+  }
+
+  /* The word playing, and the words still to come in its segment. */
+  [data-slot="kind-transcript-word"] {
+    border-radius: calc(var(--kind-radius) / 3);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+
+    &:where([data-current]) {
+      background-color: color-mix(in oklab, var(--kind-color-accent) 18%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in oklab, var(--kind-color-accent) 18%, transparent);
+    }
+    &:where([aria-current] [data-current] ~ *) {
+      color: var(--kind-color-muted);
+    }
+  }
+
+  :is([data-slot="kind-transcript-speaker"], [data-slot="kind-transcript-word"]) mark {
+    border-radius: 2px;
+    background-color: color-mix(in oklab, var(--kind-color-warning) 35%, transparent);
+    color: var(--kind-color-fg);
+  }
+
+  /* Opacity and translate run only as a segment arrives, since a segment never changes them later: it rises in at full
+     motion, fades in over 120 ms under reduced motion, and shows at once with "none" (spec §6). */
+  :where([data-slot="kind-transcript"]:not([data-motion="none"])) {
+    & [data-slot="kind-transcript-segment"],
+    & [data-slot="kind-transcript-segment"]::before,
+    & [data-slot="kind-transcript-word"] {
+      transition:
+        opacity var(--kind-duration-reduced) var(--kind-ease-out),
+        background-color var(--kind-duration-fast) var(--kind-ease-out),
+        box-shadow var(--kind-duration-fast) var(--kind-ease-out),
+        color var(--kind-duration-fast) var(--kind-ease-out);
+    }
+    & [data-slot="kind-transcript-segment"]:where([data-entering]) {
+      @starting-style {
+        opacity: 0;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :where([data-slot="kind-transcript"][data-motion="auto"]) [data-slot="kind-transcript-segment"] {
+      transition:
+        opacity var(--kind-duration-base) var(--kind-ease-out),
+        translate var(--kind-duration-base) var(--kind-ease),
+        background-color var(--kind-duration-fast) var(--kind-ease-out),
+        color var(--kind-duration-fast) var(--kind-ease-out);
+
+      &:where([data-entering]) {
+        @starting-style {
+          translate: 0 4px;
+        }
+      }
+    }
+  }
+
+  @media (forced-colors: active) {
+    [data-slot="kind-transcript-search"] [data-slot="input-group"]::before,
+    [data-slot="kind-transcript-search"] [data-slot="input-clear"]::before {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+    }
+    [data-slot="kind-transcript-segment"][aria-current],
+    [data-slot="kind-transcript-word"][data-current] {
+      outline: 1px solid Highlight;
+    }
+  }
+}

@@ -2,10 +2,17 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `803ea14` (Wave 3 Task 12 showcase and changeset)
+Last reviewed: `641b56d` (Wave 4 Task 13 showcase and changeset)
 
 ## Settled
 
+- **Model Selector's `icon` is `unknown` in core, so each render layer casts once where core hands it over** (Wave 4 Task 12b): `definePrimitive` can't be generic per instance, and each layer types its own public `models` (`string | ReactElement` in React, `string | Element` on web), so no other value reaches the cast.
+- **Selection's `onDismiss` hears Escape, an outside press and `dismiss`, not a selection collapsing** (Wave 4 Task 11): a collapse is the reader moving on, not a dismissal; the JSDoc says so.
+- **Selection's root is a `group` named by `label`, which names its Toolbar too** (Wave 4 Task 11): the bridge names a component by its root, and a generic `div` can't carry a name; the same name twice is the cost of one "Selection actions" agent entry.
+- **A Test Results suite whose id is `all`, `fail`, `pass` or `skip` shares an agent item value with a filter** (Wave 4 Task 9): the bridge checks one list per component, and `expand("fail")` still opens the suite; hosts use real ids.
+- **Test Results' `failure` part cancels every click inside its Stack Trace** (Wave 4 Task 9, spec §2 row): UI SDK's Tree would otherwise toggle the row; the trace's buttons have already run. A link added inside Stack Trace later would need its default kept.
+- **A double-click on a File Tree file calls `onSelect` twice** (Wave 4 Task 6): each press is an activation, as Suggestion's `onPick` is; a host that opens files dedupes.
+- **Generated Image with `status` `"ready"` and no `src` shows "Loading image"** (Wave 4 Task 5): an error there would flash, and announce, whenever a web host sets `status` before `src`; the `src` JSDoc says to set it with or before `ready`.
 - **The Step root writes `data-mounting` in its `bind`, not through `attrs`** (Wave 3 Task 11): it lasts two frames per element and isn't state, so a store flag would render every React part again to clear it; `wave-3/agent.spec.ts` checks no Step part runs a transition on load. **`imports` in `size-budget.json` is required:** the file is ours, and a missing key fails the check.
 - **A dismissed notice the host never removes stays faded and inert** (Wave 3 Task 10, D10): the host removes it in `onDismiss`; only a rejection brings it back.
 - **A Feedback comment that failed keeps its error and text until the next send** (Wave 3 Task 9), through a close and a rating change: the error belongs to the text it failed to send, which the box still holds.
@@ -31,6 +38,19 @@ Last reviewed: `803ea14` (Wave 3 Task 12 showcase and changeset)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Terminal relies on the virtualizer laying out again when its count changes** (Wave 4 Task 12): a new line sets `rows` and `size` from it instead of calling `refresh()`, which UI SDK's docs ask for after a count change but which reads the viewport twice more per line. `budgets.spec.ts` and `terminal.spec.ts` pin it; ask upstream for a count-only update.
+- **Queue's remove lock isn't in state** (Wave 4 Task 12): a second `remove` of an item already asked returns `false`, and neither the remove control nor the snapshot shows the pending removal. A host declining without `cancel()` passes a new object for the item to allow another try (on `onRemove`).
+- **Stack Trace's library panels still find their toggle with an `[aria-controls]` query over `getRootNode()`**, where Step and Guardrail Notice now use `context.element`; the toggle is keyed per group.
+- **An unnamed `input` entry with `clear` was seen once in the Wave 4 agent snapshot** (Transcript's Input Group with an empty search, Wave 4 Task 12), while other edits were landing on the fixture servers; it didn't reproduce on clean loads, typing or clearing in any project. Recheck if it comes back.
+- **What Firefox and WebKit do with Tab from a selection in Selection's content isn't recorded** (Wave 4 Task 11): Chromium reaches the first toolbar button and keeps the selection; the nightly cross-browser run covers the spec.
+- **A person's Test Results filter press reports `source: "programmatic"`** (Wave 4 Task 9): `createChange` reads the Segmented Control's native `change` as programmatic, as Reasoning Effort's does; the reason is `input-change`. Needs the originating key or pointer event, or an upstream source for `change`.
+- **Focus drops to the page when every Stack Trace frame button leaves at once** (Wave 4 Task 8), as when the host removes `onOpenFrame` or passes a trace with no frames while a frame has focus: `createListFocus`'s recovery finds no item left and has no `focusFallback`. Removing one of several frames recovers to a neighbor.
+- **File Tree hears `onSelect` from bubbled clicks and keyups, not the Tree's `onAction`** (Wave 4 Task 6): web's `action` doesn't bubble, so `read` calls `onSelect` only when the event's row is the selection, the owner took it, and no modifier is held. Needs a spec §2 row or a bubbling UI SDK event.
+- **A Document without `document.css` never overflows** (Wave 4 Task 4): `--kind-document-max-height` doesn't parse, so `overflowing` stays false and Show more never shows. Nothing is clipped without the stylesheet either; undocumented.
+- **Inline Citation's "N of M" doesn't follow a page the Carousel changes on its own** (Wave 4 Task 3), like a host reordering `sources` or a web element put back after paging: the Carousel's page events don't bubble and no render layer may listen, so `syncPage` runs on a click, a keyup and the api's own paging. Needs a spec §2 row or a bubbling UI SDK event.
+- **`treeFromPaths` drops a leading `/` below the top level** (Wave 4 Task 1): `/a/b.ts` becomes a `""` folder holding `a/b.ts`. `pathItems` documents relative paths; report upstream.
+- **`ansi-sequence-parser` applies a sequence's resets before its sets** (Wave 4 Task 1), so `ESC[33;0m` stays yellow where a terminal resets; splitting SGR into one parameter per sequence would fix it.
+- **SGR 8 (concealed) shows as normal text** (Wave 4 Task 1): D2's list leaves it out; a Terminal showing secrets would need it.
 - **A blocking Guardrail Notice added after load may be read twice** (Wave 3 Task 10): it's `role="alert"` and announces its title assertively, both as the plan asks. Not checked with a screen reader.
 - **Notice's `nearestTabStop` misses shadow roots and scrollable regions** (Wave 3 Task 10): it reads `tabIndex` over the light DOM, since UI SDK's `nextTabbable` isn't exported; ask upstream to export it.
 - **A notice that mounts in a background tab before its first paint isn't announced** (Wave 3 Task 10): first contentful paint waits for the tab to show.
@@ -40,14 +60,10 @@ Last reviewed: `803ea14` (Wave 3 Task 12 showcase and changeset)
 - **No test proves Question's `ownQuestion` `selects`** (UI SDK asks each primitive with `selects` to prove it); traced by hand, and Chain of Thought, Task and Plan have none either.
 - **A failed Skip announces "Answers not sent"** (Question), which reads oddly after a skip; wording only.
 - **Confirmation: a microtask between `pending` clearing and `sent` setting** could let an `act` scheduled in a promise callback slip a second decision through. Not reproduced; a press can't land there.
-- **A double press on a Queue item's remove control calls `onRemove` twice** when the host removes the item asynchronously; there's no per-item lock like the uploader's.
-- **Queue's `known` set never forgets ids,** so an item removed and re-added under the same id after its exit gets no entrance (same as Task and Plan).
 - **A plan swapped while Accept is pending keeps the lock** until the old promise settles (Wave 2 Task 6). Clearing it on a new `onAccept` can't key on identity, since React passes a new inline function each render; same open spec §4.1 question as the composer's pending lock.
-- **Task and Plan's `known` set never forgets ids,** so an item removed and re-added under the same id gets no entrance (same as the uploader's `mounted`).
 - **Tool re-serializes its input on every options update** (`toolCode` per streamed chunk). Unmeasured on large inputs; memoize by value if it shows up.
 - **`ComposerApi.setValue` with the draft's own text still fires `onValueChange`** with a new draft object and returns `true`; nothing changes on screen.
 - **Enter held or pressed twice on an uploader Cancel cancels the next row too:** focus recovery moves to the neighbor's Cancel between presses. Spec §7 needs to say whether that's the list-deletion pattern or needs a pause.
-- **Queue's `known` set never forgets ids,** so a Queue item removed and added again under the same id gets no entrance (the uploader and attachments now forget an id when its row is dropped).
 - **An indicator's new `label` is read out,** as its status content changes; documented on the option. Spec §6 should say whether a label change counts as a terminal transition.
 - **Guard comment stripping is regex-based:** a `//` inside a string hides the rest of the line from the forbidden-pattern checks. Use the TypeScript scanner.
 - **Guard rule 1 misses `definePrimitive<…Record<…>>(`** with nested generics.
@@ -60,6 +76,26 @@ Last reviewed: `803ea14` (Wave 3 Task 12 showcase and changeset)
 
 ## Resolved
 
+- **Model Selector's list anchored through the field's `id`** (Wave 4 Task 12b, core, react and web reviews): an author `id` on the trigger, a page element with the same id or a `"` in it broke the anchor; the trigger now writes `data-model-selector-field` and the anchor is an escaped selector for it, and the `logos` case has a trigger with an author `id`.
+- **Queue, Task and Plan forget a removed id** (Wave 4 Task 12), as the uploader and attachments do, so an item added again under the same id enters again; Queue asks `onRemove` once per item until the host passes a new object for it or drops it. Pinned in `queue.spec.ts` and `task.spec.ts`.
+- **Step and Guardrail Notice panels find their trigger through `context.element`** (Wave 4 Task 12), not a document query, so a trigger inside a shadow root is found.
+- **Selection** (Wave 4 Task 11): the same text selected again after Escape or a press outside reopens the toolbar (a root `pointerdown` clears the closed range), `close` tested `element()` against `null` (it returns `undefined`), `actionsById` is cached by array (`cached`), emptying `actions` closes the toolbar, a selection inside a shadow root reads `getComposedRanges`, and Action trims `quote`. Pinned in `selection.spec.ts` and `action.spec.ts`.
+- **Transcript highlights marked letters across the speaker and the text** (Wave 4 Task 10): fixed; the speaker and the words are marked apart, as `searchSegments` scores them.
+- **Transcript `timeOf`, `wordValues` and `highlights` read `Object.prototype` ids** (Wave 4 Task 10): fixed through `segmentOf` (`Object.hasOwn`), and a non-finite `start` formats as 0:00; `tests/core/transcript.test.mjs` pins `seek`, `search` and `timeOf`.
+- **Arrow keys past a Transcript's first or last time scrolled the view** (Wave 4 Task 10): fixed; `move` returns the key it's on.
+- **Test Results trusted host data** (Wave 4 Task 9): an unknown test status reads as `skip` (`testStatus`), an unknown `filter`/`defaultFilter` as `"all"` (`knownFilter`), rows are defined so a `__proto__` id gets its own, durations round before choosing ms or s, open rows whose suite or test is gone close (reason `"auto"`), and the `suites` JSDoc says ids can't hold `/`. Pinned in `test-results.test.mjs`.
+- **Stack Trace (Wave 4 Task 8):** `openFrame` read `""`, `" "` and `"1e0"` as indexes (it now takes a number or digits only); `copy` copied an empty string for a trace with only a `label` (now a getter offered while `copyText` isn't empty, and the button is present only then); `showLibraryFrames`, `StackTraceRow` and `bindLibrary` have JSDoc. `tests/core/stack-trace.test.mjs` pins the message split, the index checks and `copy`.
+- **Terminal (Wave 4 Task 7):** Copy and the agent's `copy` emptied the clipboard before any output; `copy` is now a getter and the button is present only with output (`hasOutput`). An OSC cut short by another escape showed its text; it now ends at the next ESC too. Line parts skip `following`, `jumpExiting`, `hasOutput` and `copied`; output that starts over calls `virtual.reset()`; Jump to latest syncs with `following` as it binds. `terminal.spec.ts` pins `data-last` moving and output replaced whole.
+
+- **`createAnsiLines`' logged costs (Wave 4 Task 1), measured by Terminal's budgets (Task 7):** an unterminated OSC now ends at the next line break instead of holding back every later chunk. The `startsWith` scan and the line array copy stay: both are linear memory work per update, not parsing or rendering, and the 10 and 1,000 line budgets show identical render and DOM counts.
+
+- **File Tree's `onSelect`, cache and folder selection** (Wave 4 Task 6): `read` reads the Tree before reporting and holds `syncTree` meanwhile (a press on a folder lost its selection), opens a file only when the selection the owner took is the event's row with no modifier, caches tree data and rows by object (`cached` in `memo.ts`), so two trees don't rebuild each other's, and `sameFolders` compares sets. Pinned in `file-tree.spec.ts` (refused, folder and Ctrl+Enter cases).
+- **`pathItems` gave a folder and a file the same value for `src` and `src/a.ts`** (Wave 4 Task 1): fixed in Task 6; a file whose path is also a folder of another entry is left out, so the folder holds the other entries (`tree.test.mjs`).
+- **Generated Image's `progress` JSDoc said nothing of its absence** (Wave 4 Task 5 redesign): it now says the preview and grain stay where they start and the corner reads "Creating image".
+- **Generated Image's announcements, `defaultOpen` and input checks** (Wave 4 Task 5): a retry that failed again stayed quiet (announcements now fire on each phase change of an image the instance saw generating); `defaultOpen` opened an empty view (it now waits for the first `loaded`); an unknown `status` reads as `"ready"`; a non-finite `progress`, `width` or `height` falls back; `load`/`error` decide the outcome, `naturalWidth` only in `bind`; `onDownload`'s JSDoc says what a rejection does (`tests/core/generated-image.test.mjs`).
+- **Document's download lock, size and JSDoc** (Wave 4 Task 4): the lock is `pending`, the key the agent bridge reads and waits on (it was `downloading`); `documentSize` switches to MB from 999,950 bytes, not "1,000 kB", and counts a lone surrogate as 3 bytes, as `TextEncoder` does; state and types have JSDoc; `document.test.mjs` pins the one-at-a-time download, the refused id, the first-id default and a controlled `open`.
+- **Inline Citation's arrow keys left "N of M" and `next`/`previous` on the old page** (Wave 4 Task 3): a part's `on` handler skips a cancelled event and the Carousel cancels the keydown it pages on, so the page is read on keyup. `syncPage` ignores the controller's `undefined` before a Carousel attaches, and paging returns a boolean. Entries and ids are cached by object in `WeakMap`s, so citations in one paragraph don't evict each other's (`tests/core/inline-citation.test.mjs`).
+- **Sources (Wave 4 Task 2):** entries are kept by id while a source's fields are equal (a per-object cache went stale when a host edited a source in place), item parts read entries by own key (`Object.hasOwn`; a null prototype broke `@ui-sdk/web`), a protocol-relative `url` gets its host, and the content finds its trigger through `getRootNode()`, so a close inside a shadow root returns focus. An international host shows as punycode, by design (documented on `SourceEntry.host`).
 - **Wave 3 agent conformance (Task 11):** Guardrail Notice spread the notice base's api, which read its `dismiss` getter once, so `dismiss` stayed offered after `onDismiss` went away (web `can-dismiss` removed) or while the notice was leaving; it now delegates the getter (`wave-3/agent.spec.ts`). Chain of Thought's `setStepOpen` reads steps by own key (`Object.hasOwn`), as Suggestion and Question do.
 - **Notice (Wave 3 Task 10):** Dismiss's fallback skips a link without `href` (Chrome reports `tabIndex` 0 for it); `onDismiss` isn't called once the host removed the notice during its exit; Guardrail Notice's options document its own `variant` (`"warning"`) and title defaults; a notice in server markup an app hydrates after `load`, or one a web host puts back, neither rises in nor is announced (roots on the page before core ran, or already shown, are remembered).
 - **Feedback (Wave 3 Task 9):** the comment text slot now binds `bindText`, so a web element put back in the page sends the text its box kept; the box can't start open without **Add a comment**, and closes only when that button leaves, not on every update; `submitComment` with blank text, or while a send is pending, leaves the box's text alone; an invalid `rating` reads as none; focus recovery picks the pressed thumb, else the first.
@@ -99,5 +135,7 @@ Last reviewed: `803ea14` (Wave 3 Task 12 showcase and changeset)
 - **An unknown Status `status` showed a badge with no text (Wave 2 Task 2).** Fixed: it shows as pending.
 
 ## Revisit
+
+- **Terminal lines past the viewport aren't found by find in page** (Wave 4 Task 7): `createVirtualizer`'s `findable` rebuilds every stand-in when the count changes, O(lines) per new line. Ask upstream for incremental stand-ins.
 
 Nothing yet.

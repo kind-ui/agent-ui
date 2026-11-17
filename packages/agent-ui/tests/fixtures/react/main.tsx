@@ -7,7 +7,10 @@ type CaseModule = { cases: Record<string, () => ReactNode>; allow?: (step: Agent
 
 const modules = import.meta.glob<CaseModule>("./cases/*.tsx");
 const params = new URLSearchParams(location.search);
-const load = modules[`./cases/${params.get("c")}.tsx`];
+const path = `./cases/${params.get("c")}.tsx`;
+const load = modules[path];
+if (load)
+  document.head.append(Object.assign(document.createElement("script"), { type: "module", src: path }));
 const fixture = load && (await load());
 const render = fixture?.cases[params.get("case") ?? ""];
 const root = document.getElementById("root");

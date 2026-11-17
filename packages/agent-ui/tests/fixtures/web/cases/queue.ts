@@ -12,7 +12,15 @@ const initial: QueueItem[] = [
 type Call = { type: "reorder" | "remove"; id: string; index?: number; reason: string; source: string };
 
 const queues =
-  ({ editable = true, motion }: { editable?: boolean; motion?: QueueOptions["motion"] } = {}) =>
+  ({
+    editable = true,
+    removeLater = false,
+    motion,
+  }: {
+    editable?: boolean;
+    removeLater?: boolean;
+    motion?: QueueOptions["motion"];
+  } = {}) =>
   (root: HTMLElement) => {
     defineQueue();
     const page = document.createElement("div");
@@ -38,7 +46,7 @@ const queues =
     queue.addEventListener("remove", (event) => {
       const { value: id, reason, source } = event.detail;
       calls.push({ type: "remove", id, reason, source });
-      queue.items = items().filter((item) => item.id !== id);
+      if (!removeLater) queue.items = items().filter((item) => item.id !== id);
     });
     Object.assign(window, {
       kindCalls: calls,
@@ -48,6 +56,12 @@ const queues =
         },
         add: (item: QueueItem) => {
           queue.items = [...items(), item];
+        },
+        refresh: () => {
+          queue.items = [...items()];
+        },
+        renew: (id: string) => {
+          queue.items = items().map((item) => (item.id === id ? { ...item } : item));
         },
         complete: (id: string) => {
           queue.items = items().map((item) =>
@@ -61,6 +75,7 @@ const queues =
 export const cases = {
   all: queues(),
   readonly: queues({ editable: false }),
+  "remove-later": queues({ removeLater: true }),
   reduced: queues({ motion: "reduced" }),
   none: queues({ motion: "none" }),
 };

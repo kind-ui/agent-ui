@@ -1,0 +1,253 @@
+/* Document (spec §7): a card with the title, kind and size, Copy and Download, and a preview that expands. */
+@property --kind-document-max-height {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 320px;
+}
+
+@layer components {
+  [data-slot="kind-document"] {
+    /* Lucide "file-text", "file-code", "download" and "chevron-down", see THIRD_PARTY_NOTICES.md. */
+    --kind-document-text-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z'/%3E%3Cpath d='M14 2v5a1 1 0 0 0 1 1h5'/%3E%3Cpath d='M10 9H8'/%3E%3Cpath d='M16 13H8'/%3E%3Cpath d='M16 17H8'/%3E%3C/svg%3E");
+    --kind-document-code-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z'/%3E%3Cpath d='M14 2v5a1 1 0 0 0 1 1h5'/%3E%3Cpath d='M10 12.5 8 15l2 2.5'/%3E%3Cpath d='m14 12.5 2 2.5-2 2.5'/%3E%3C/svg%3E");
+    --kind-document-download-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 15V3'/%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+    --kind-document-expand-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    --kind-document-icon: var(--kind-document-text-icon);
+    --kind-document-expand-space: 2.75rem;
+
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: clip;
+    border: 1px solid var(--kind-color-border);
+    border-radius: var(--kind-radius);
+    background-color: var(--kind-color-surface);
+    color: var(--kind-color-fg);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+
+    &[data-format="code"] {
+      --kind-document-icon: var(--kind-document-code-icon);
+    }
+  }
+
+  /* The title and meta lines keep their heights, so a streamed size or a long title never moves the body. */
+  [data-slot="kind-document-header"] {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "icon title toolbar" "icon meta toolbar";
+    column-gap: 10px;
+    align-items: center;
+    padding-block: 10px;
+    padding-inline: 10px 8px;
+    border-bottom: 1px solid var(--kind-color-border);
+
+    /* A tile and its glyph, stacked in one cell. */
+    &::before,
+    &::after {
+      content: "";
+      grid-area: icon;
+      place-self: center;
+    }
+    &::before {
+      width: 2rem;
+      height: 2rem;
+      border-radius: calc(var(--kind-radius) * 2 / 3);
+      background-color: var(--kind-color-hover);
+    }
+    &::after {
+      width: 1rem;
+      height: 1rem;
+      background-color: var(--kind-color-muted);
+      mask: var(--kind-document-icon) center / contain no-repeat;
+    }
+  }
+
+  :is([data-slot="kind-document-title"], [data-slot="kind-document-meta"]) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  [data-slot="kind-document-title"] {
+    grid-area: title;
+    font-weight: 600;
+  }
+
+  [data-slot="kind-document-meta"] {
+    grid-area: meta;
+    color: var(--kind-color-muted);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  [data-slot="kind-document-toolbar"] {
+    grid-area: toolbar;
+  }
+
+  :is([data-slot="kind-document-copy"], [data-slot="kind-document-download"]) {
+    --kind-document-action-icon: var(--kind-icon-copy);
+
+    display: contents;
+
+    & button::before {
+      content: "";
+      flex: none;
+      width: 0.875rem;
+      height: 0.875rem;
+      background-color: currentColor;
+      mask: var(--kind-document-action-icon) center / contain no-repeat;
+    }
+  }
+
+  [data-slot="kind-document-copy"][data-copied] {
+    --kind-document-action-icon: var(--kind-icon-check);
+    --kind-toolbar-button-fg: var(--kind-color-success);
+  }
+
+  [data-slot="kind-document-download"] {
+    --kind-document-action-icon: var(--kind-document-download-icon);
+
+    & button {
+      font-size: 0.75rem;
+    }
+    &[data-pending] button {
+      cursor: progress;
+      opacity: 0.6;
+    }
+  }
+
+  [data-slot="kind-document-body"] {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+
+    /* The viewport's mask and the scroll area's overflow clip its own ring, so the body draws it. */
+    &:has([data-slot="scroll-area-viewport"]:not([data-slot="scroll-area-viewport"] *):focus-visible) {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: -2px;
+    }
+  }
+
+  /* The preview's own scroller, not a Code Block's or a table's inside it. Its edges fade while there's more past
+     them. */
+  :where([data-slot="kind-document-body"])
+    [data-slot="scroll-area-viewport"]:where(:not([data-slot="scroll-area-viewport"] *)) {
+    --scroll-area-overflow-y-start: inherit;
+    --scroll-area-overflow-y-end: inherit;
+
+    max-height: var(--kind-document-max-height);
+    border-radius: 0;
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 min(1.5rem, var(--scroll-area-overflow-y-start, 0px)),
+      #000 calc(100% - min(2.5rem, var(--scroll-area-overflow-y-end, 0px))),
+      transparent
+    );
+  }
+
+  /* Expanded, the viewport fits the content and the room under it, so Show less keeps its place over the end. */
+  :where([data-slot="kind-document-body"][data-open][data-overflowing])
+    [data-slot="scroll-area-viewport"]:where(:not([data-slot="scroll-area-viewport"] *)) {
+    max-height: calc(var(--kind-document-content-height) + var(--kind-document-expand-space));
+  }
+
+  :where([data-slot="kind-document-body"][data-overflowing])
+    [data-slot="scroll-area-content"]:where(:not([data-slot="scroll-area-content"] *))::after {
+    content: "";
+    display: block;
+    height: var(--kind-document-expand-space);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :where([data-slot="kind-document-body"][data-motion="auto"]:not([data-streaming]))
+      [data-slot="scroll-area-viewport"]:where(:not([data-slot="scroll-area-viewport"] *)) {
+      transition: max-height var(--kind-duration-panel) var(--kind-ease);
+    }
+  }
+
+  [data-slot="kind-document-content"] {
+    display: block;
+    padding: 12px 14px;
+
+    &[data-format="code"] {
+      padding: 0;
+    }
+
+    & [data-slot="kind-code-block"] {
+      --kind-code-block-max-height: none;
+
+      border: 0;
+      border-radius: 0;
+    }
+
+    & > pre {
+      margin: 0;
+      font-family: var(--kind-font-mono);
+      font-size: 0.8125rem;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  [data-slot="kind-document-expand"] {
+    position: absolute;
+    inset-block-end: 10px;
+    left: 50%;
+    translate: -50% 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 1.75rem;
+    padding-inline: 10px 8px;
+    border: 1px solid var(--kind-color-border);
+    border-radius: 999px;
+    background-color: var(--kind-color-surface);
+    box-shadow: 0 1px 2px color-mix(in oklab, var(--kind-color-shadow) 8%, transparent);
+    color: var(--kind-color-muted);
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      color var(--kind-duration-fast),
+      background-color var(--kind-duration-fast);
+
+    &::after {
+      content: "";
+      width: 0.875rem;
+      height: 0.875rem;
+      background-color: currentColor;
+      mask: var(--kind-document-expand-icon) center / contain no-repeat;
+    }
+    &:hover {
+      color: var(--kind-color-fg);
+      background-color: var(--kind-color-hover);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+
+    &[data-open]::after {
+      rotate: 180deg;
+    }
+  }
+
+  [data-slot^="kind-document"][hidden] {
+    display: none;
+  }
+
+  @media (forced-colors: active) {
+    [data-slot="kind-document-header"]::after,
+    :is([data-slot="kind-document-copy"], [data-slot="kind-document-download"]) button::before,
+    [data-slot="kind-document-expand"]::after {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+  }
+}

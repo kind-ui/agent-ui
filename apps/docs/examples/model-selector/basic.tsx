@@ -3,17 +3,54 @@ import { useState } from "react";
 import { Composer, ComposerInput, ComposerSubmit } from "@/components/ui/composer";
 import { ModelSelector } from "@/components/ui/model-selector";
 import { ReasoningEffort } from "@/components/ui/reasoning-effort";
+import { AnthropicLogo, GeminiLogo, MicrosoftLogo, OpenAILogo, XAILogo } from "./logos";
 
 const models = [
-  { id: "gpt-5", name: "GPT-5", group: "OpenAI", description: "Deep reasoning" },
-  { id: "gpt-5-mini", name: "GPT-5 mini", group: "OpenAI", description: "Fast and affordable" },
-  { id: "sonnet-4", name: "Sonnet 4", group: "Anthropic", description: "Balanced for everyday work" },
-  { id: "opus-4", name: "Opus 4", group: "Anthropic", description: "Not on your plan", disabled: true },
-  { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro", group: "Google", description: "Long context" },
+  {
+    id: "claude-opus-5.5",
+    name: "Claude Opus 5.5",
+    group: "Anthropic",
+    description: "Not on your plan",
+    disabled: true,
+    icon: <AnthropicLogo />,
+  },
+  { id: "claude-sonnet-5.5", name: "Claude Sonnet 5.5", group: "Anthropic", icon: <AnthropicLogo /> },
+  {
+    id: "gpt-6.1-sol",
+    name: "GPT-6.1 Sol",
+    group: "OpenAI",
+    description: "Deep reasoning",
+    icon: <OpenAILogo />,
+  },
+  { id: "gpt-6-astra", name: "GPT-6 Astra", group: "OpenAI", icon: <OpenAILogo /> },
+  { id: "gpt-5.6-sol", name: "GPT-5.6 Sol", group: "OpenAI", icon: <OpenAILogo /> },
+  {
+    id: "gpt-6.1-terra",
+    name: "GPT-6.1 Terra",
+    group: "OpenAI",
+    description: "Fast and affordable",
+    icon: <OpenAILogo />,
+  },
+  {
+    id: "mai-code-2",
+    name: "MAI Code 2",
+    group: "Microsoft",
+    description: "Built for code",
+    icon: <MicrosoftLogo />,
+  },
+  {
+    id: "gemini-4-argon",
+    name: "Gemini 4 Argon",
+    group: "Google",
+    description: "Long context",
+    icon: <GeminiLogo />,
+  },
+  { id: "gemini-3.8-flash", name: "Gemini 3.8 Flash", group: "Google", icon: <GeminiLogo /> },
+  { id: "grok-4.7", name: "Grok 4.7", group: "xAI", icon: <XAILogo /> },
 ];
 
 export default function ModelSelectorExample() {
-  const [model, setModel] = useState<string | null>("sonnet-4");
+  const [model, setModel] = useState<string | null>("claude-sonnet-5.5");
   const [effort, setEffort] = useState<string | null>("medium");
   return (
     <Composer aria-label="Message" className="w-full max-w-xl" onSubmit={() => undefined}>

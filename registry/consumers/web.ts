@@ -1,4 +1,5 @@
 // The Web Components registry consumer's entry: every component, as `shadcn add` copies it, one section each.
+import { defineAction } from "./components/ui/web/action.js";
 import { defineAttachments } from "./components/ui/web/attachments.js";
 import { defineChainOfThought } from "./components/ui/web/chain-of-thought.js";
 import { defineCheckpoint } from "./components/ui/web/checkpoint.js";
@@ -7,8 +8,12 @@ import { defineComposer } from "./components/ui/web/composer.js";
 import { defineConfirmation } from "./components/ui/web/confirmation.js";
 import { defineContextMeter } from "./components/ui/web/context-meter.js";
 import { defineConversation } from "./components/ui/web/conversation.js";
+import { defineDocument } from "./components/ui/web/document.js";
 import { defineFeedback } from "./components/ui/web/feedback.js";
+import { defineFileTree } from "./components/ui/web/file-tree.js";
+import { defineGeneratedImage } from "./components/ui/web/generated-image.js";
 import { defineGuardrailNotice } from "./components/ui/web/guardrail-notice.js";
+import { defineInlineCitation } from "./components/ui/web/inline-citation.js";
 import { defineInternalToolbar } from "./components/ui/web/internal/toolbar.js";
 import { defineLoader } from "./components/ui/web/loader.js";
 import { defineMarkdown } from "./components/ui/web/markdown.js";
@@ -21,14 +26,20 @@ import { defineQuestion } from "./components/ui/web/question.js";
 import { defineQueue } from "./components/ui/web/queue.js";
 import { defineReasoning } from "./components/ui/web/reasoning.js";
 import { defineReasoningEffort } from "./components/ui/web/reasoning-effort.js";
+import { defineSelection } from "./components/ui/web/selection.js";
+import { defineSources } from "./components/ui/web/sources.js";
+import { defineStackTrace } from "./components/ui/web/stack-trace.js";
 import { defineStatus } from "./components/ui/web/status.js";
 import { defineStep } from "./components/ui/web/step.js";
 import { defineStreamingText } from "./components/ui/web/streaming-text.js";
 import { defineSubagent } from "./components/ui/web/subagent.js";
 import { defineSuggestion } from "./components/ui/web/suggestion.js";
 import { defineTask } from "./components/ui/web/task.js";
+import { defineTerminal } from "./components/ui/web/terminal.js";
+import { defineTestResults } from "./components/ui/web/test-results.js";
 import { defineThinkingIndicator } from "./components/ui/web/thinking-indicator.js";
 import { defineTool } from "./components/ui/web/tool.js";
+import { defineTranscript } from "./components/ui/web/transcript.js";
 import { defineTypingIndicator } from "./components/ui/web/typing-indicator.js";
 import { defineUploader } from "./components/ui/web/uploader.js";
 import "./index.css";
@@ -53,6 +64,17 @@ for (const define of [
   defineFeedback,
   defineNotice,
   defineGuardrailNotice,
+  defineSources,
+  defineInlineCitation,
+  defineDocument,
+  defineGeneratedImage,
+  defineFileTree,
+  defineTerminal,
+  defineStackTrace,
+  defineTestResults,
+  defineTranscript,
+  defineSelection,
+  defineAction,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -95,6 +117,18 @@ const items = {
   feedback: `<kind-feedback can-comment></kind-feedback>`,
   notice: `<kind-notice variant="warning" label="Rate limited" can-dismiss><kind-notice-description>Responses are slower for the next few minutes.</kind-notice-description></kind-notice>`,
   "guardrail-notice": `<kind-guardrail-notice blocking label="Model output withheld" reason="The response included personal data." detail="Policy."></kind-guardrail-notice>`,
+  sources: `<kind-sources></kind-sources>`,
+  "inline-citation": `<p>Back off on a limit <kind-inline-citation></kind-inline-citation></p>`,
+  document: `<kind-document label="README.md" content="Back off on a 429."></kind-document>`,
+  "generated-image": `<kind-generated-image alt="A lighthouse at dusk" status="generating" progress="40" width="768" height="512"></kind-generated-image>`,
+  "file-tree": `<kind-file-tree></kind-file-tree>`,
+  "stack-trace": `<kind-stack-trace can-open-frame stack="TypeError: x is undefined
+    at main (/app/src/index.ts:7:1)"></kind-stack-trace>`,
+  "test-results": `<kind-test-results default-open></kind-test-results>`,
+  transcript: `<kind-transcript can-seek current-time="1"></kind-transcript>`,
+  selection: `<kind-selection can-run><kind-selection-content><p>Retry with backoff.</p></kind-selection-content></kind-selection>`,
+  action: `<kind-action label="Explain" quote="Retry with backoff." result="Wait, then try again." status="complete"></kind-action>`,
+  terminal: `<kind-terminal command="npm test" exit-code="0" default-open></kind-terminal>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
         <kind-conversation-content>
@@ -175,6 +209,25 @@ Object.assign(main.querySelector("kind-chain-of-thought") as HTMLElement, {
 });
 Object.assign(main.querySelector("kind-task") as HTMLElement, {
   items: [{ id: "schema", status: "complete", title: "Read the schema", files: ["db/schema.sql"] }],
+});
+Object.assign(main.querySelector("kind-sources") as HTMLElement, {
+  sources: [{ id: "docs", title: "Rate limits", url: "https://docs.github.com/en/rest" }],
+});
+Object.assign(main.querySelector("kind-terminal") as HTMLElement, { output: "\x1b[32m✓\x1b[0m 22 passed" });
+Object.assign(main.querySelector("kind-test-results") as HTMLElement, {
+  suites: [{ id: "math", name: "math", tests: [{ id: "sum", name: "adds", status: "pass", durationMs: 2 }] }],
+});
+Object.assign(main.querySelector("kind-transcript") as HTMLElement, {
+  segments: [{ id: "1", speaker: "Priya", start: 0, end: 4, text: "Let's start with the checklist." }],
+});
+Object.assign(main.querySelector("kind-selection") as HTMLElement, {
+  actions: [{ id: "ask", label: "Ask" }],
+});
+Object.assign(main.querySelector("kind-file-tree") as HTMLElement, {
+  entries: [{ path: "src/index.ts", change: "modified", additions: 2 }],
+});
+Object.assign(main.querySelector("kind-inline-citation") as HTMLElement, {
+  sources: [{ id: "docs", title: "Rate limits", url: "https://docs.github.com/en/rest" }],
 });
 Object.assign(main.querySelector("kind-plan") as HTMLElement, {
   items: [{ id: "audit", status: "complete", title: "Audit the current schema" }],

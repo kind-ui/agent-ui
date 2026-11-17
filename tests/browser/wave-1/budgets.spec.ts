@@ -8,6 +8,15 @@ const BUDGETS = {
   conversationFollow: { layoutReads: 12 },
   markdownStream: { parses: 1, writes: 4, renders: 6, notified: 3 },
   toolStream: { writes: 14, renders: 25, notified: 17 },
+  terminalChunk: { writes: 6, renders: 7, notified: 4, layoutReads: 17 },
+  // A new line in a full viewport reads layout 16 times (17 under StrictMode, which binds the new line twice). The
+  // line that first fills the 10-line case's viewport both grows and scrolls it, which the virtualizer reads twice more.
+  terminalLine: { writes: 8, renders: 9, notified: 5, layoutReads: 19 },
+  // The fixture's segments fit on one line and their header has a set height, so how many are in view doesn't depend
+  // on the platform's fonts.
+  transcriptWord: { writes: 3, renders: 3, notified: 3, layoutReads: 4 },
+  transcriptSegment: { writes: 32, renders: 32, notified: 35, layoutReads: 9 },
+  transcriptSearch: { writes: 72, renders: 201, notified: 140, layoutReads: 2 },
   remount: { nodes: 0, listeners: 0 },
 };
 const SIZES = [10, 500];
@@ -18,6 +27,8 @@ type Fixture = {
   kindConversation: { append(n?: number): void; stream(chunk: string): void };
   kindMarkdown: { records: { parses: number }[]; append(chunk: string): void };
   kindRemount(): void;
+  kindTerminal: { append(id: string, text: string): void };
+  kindTranscript: { set(id: string, next: Record<string, unknown>): void };
 };
 type Fiber = {
   tag: number;
@@ -190,6 +201,82 @@ for (const size of SIZES) {
     expect(counts.writes).toBeLessThanOrEqual(BUDGETS.toolStream.writes);
     expect(counts.renders).toBeLessThanOrEqual(BUDGETS.toolStream.renders);
     expect(counts.notified).toBeLessThanOrEqual(BUDGETS.toolStream.notified);
+  });
+}
+
+// A chunk that lengthens the last line, and one that starts a new line, cost the same at 10 lines as at 1,000: only
+// the line parts the chunk changed render, and the lines in view are drawn, not the output.
+for (const lines of [10, 1000]) {
+  const openTerminal = async (page: Page) => {
+    await page.goto(`/?c=terminal&case=stream-${lines}`);
+    await expect(page.locator('[data-slot="kind-terminal-viewport"]')).toHaveAttribute("data-following", "");
+    await expect(page.locator("[data-mounting]")).toHaveCount(0);
+  };
+
+  test(`a chunk on the last of ${lines} terminal lines`, async ({ page }) => {
+    await openTerminal(page);
+    const counts = await most(page, 20, 'kindTerminal.append("stream", " \\x1b[32mok\\x1b[0m")');
+    expect(counts.writes).toBeLessThanOrEqual(BUDGETS.terminalChunk.writes);
+    expect(counts.renders).toBeLessThanOrEqual(BUDGETS.terminalChunk.renders);
+    expect(counts.notified).toBeLessThanOrEqual(BUDGETS.terminalChunk.notified);
+    expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS.terminalChunk.layoutReads);
+  });
+
+  test(`a new line after ${lines} terminal lines`, async ({ page }) => {
+    await openTerminal(page);
+    const counts = await most(page, 20, 'kindTerminal.append("stream", "\\nnext line")');
+    expect(counts.writes).toBeLessThanOrEqual(BUDGETS.terminalLine.writes);
+    expect(counts.renders).toBeLessThanOrEqual(BUDGETS.terminalLine.renders);
+    expect(counts.notified).toBeLessThanOrEqual(BUDGETS.terminalLine.notified);
+    expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS.terminalLine.layoutReads);
+  });
+}
+
+// Playback that moves to the next word or segment, and a search, cost the same at 100 segments as at 5,000: playback
+// writes its marks without a render, following it mounts the one segment it scrolls into view, and a search renders
+// only the segments in view.
+for (const segments of [100, 5000]) {
+  const openTranscript = async (page: Page) => {
+    await page.goto(`/?c=transcript&case=many-${segments}`);
+    await expect(page.locator('[data-slot="kind-transcript-segment"]').first()).toBeVisible();
+    await expect(page.locator("[data-mounting]")).toHaveCount(0);
+  };
+  const budget = (counts: Counts, limit: Counts) => {
+    expect(counts.writes).toBeLessThanOrEqual(limit.writes);
+    expect(counts.renders).toBeLessThanOrEqual(limit.renders);
+    expect(counts.notified).toBeLessThanOrEqual(limit.notified);
+    expect(counts.layoutReads).toBeLessThanOrEqual(limit.layoutReads);
+  };
+
+  test(`playback moving to the next word among ${segments} segments`, async ({ page }) => {
+    await openTranscript(page);
+    // Each segment's words run from its start for about 6 s, a word every 0.7 s or so.
+    const counts = await most(
+      page,
+      20,
+      'kindTranscript.set("many", { currentTime: 20 + ((window.kindStep = (window.kindStep ?? 0) + 1) % 8) * 0.7 })',
+    );
+    budget(counts, BUDGETS.transcriptWord);
+  });
+
+  test(`playback moving to the next of ${segments} segments`, async ({ page }) => {
+    await openTranscript(page);
+    const counts = await most(
+      page,
+      20,
+      'kindTranscript.set("many", { currentTime: (window.kindStep = (window.kindStep ?? 0) + 1) * 10 + 0.1 })',
+    );
+    budget(counts, BUDGETS.transcriptSegment);
+  });
+
+  test(`a search over ${segments} segments`, async ({ page }) => {
+    await openTranscript(page);
+    const counts = await most(
+      page,
+      20,
+      'kindTranscript.set("many", { query: ["rollout", "agenda", "follow", ""][(window.kindStep = (window.kindStep ?? 0) + 1) % 4] })',
+    );
+    budget(counts, BUDGETS.transcriptSearch);
   });
 }
 

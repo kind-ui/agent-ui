@@ -1,5 +1,6 @@
 // The React registry consumer's entry: every component, as `shadcn add` copies it, one section each.
 import { createRoot } from "react-dom/client";
+import { Action } from "./components/ui/action.js";
 import { Attachments } from "./components/ui/attachments.js";
 import { ChainOfThought } from "./components/ui/chain-of-thought.js";
 import { Checkpoint } from "./components/ui/checkpoint.js";
@@ -14,8 +15,12 @@ import {
   ConversationRow,
   ConversationViewport,
 } from "./components/ui/conversation.js";
+import { Document } from "./components/ui/document.js";
 import { Feedback } from "./components/ui/feedback.js";
+import { FileTree } from "./components/ui/file-tree.js";
+import { GeneratedImage } from "./components/ui/generated-image.js";
 import { GuardrailNotice } from "./components/ui/guardrail-notice.js";
+import { InlineCitation } from "./components/ui/inline-citation.js";
 import { KindToolbar, KindToolbarButton } from "./components/ui/internal/toolbar.js";
 import { Loader } from "./components/ui/loader.js";
 import { Markdown } from "./components/ui/markdown.js";
@@ -28,14 +33,20 @@ import { Question } from "./components/ui/question.js";
 import { Queue } from "./components/ui/queue.js";
 import { Reasoning } from "./components/ui/reasoning.js";
 import { ReasoningEffort } from "./components/ui/reasoning-effort.js";
+import { Selection } from "./components/ui/selection.js";
+import { Sources } from "./components/ui/sources.js";
+import { StackTrace } from "./components/ui/stack-trace.js";
 import { Status } from "./components/ui/status.js";
 import { Step, StepContent, StepIcon, StepTitle, StepTrigger } from "./components/ui/step.js";
 import { StreamingText } from "./components/ui/streaming-text.js";
 import { Subagent } from "./components/ui/subagent.js";
 import { Suggestion } from "./components/ui/suggestion.js";
 import { Task } from "./components/ui/task.js";
+import { Terminal } from "./components/ui/terminal.js";
+import { TestResults } from "./components/ui/test-results.js";
 import { ThinkingIndicator } from "./components/ui/thinking-indicator.js";
 import { Tool } from "./components/ui/tool.js";
+import { Transcript } from "./components/ui/transcript.js";
 import { TypingIndicator } from "./components/ui/typing-indicator.js";
 import { Uploader } from "./components/ui/uploader.js";
 import "./index.css";
@@ -145,6 +156,59 @@ const items = {
       detail="Policy."
     />
   ),
+  sources: (
+    <Sources sources={[{ id: "docs", title: "Rate limits", url: "https://docs.github.com/en/rest" }]} />
+  ),
+  "inline-citation": (
+    <p>
+      Back off on a limit{" "}
+      <InlineCitation
+        sources={[{ id: "docs", title: "Rate limits", url: "https://docs.github.com/en/rest" }]}
+      />
+    </p>
+  ),
+  document: <Document label="README.md" content={"# Rate limits\n\nBack off on a 429."} />,
+  "generated-image": (
+    <GeneratedImage alt="A lighthouse at dusk" status="generating" progress={40} width={768} height={512} />
+  ),
+  "file-tree": <FileTree entries={[{ path: "src/index.ts", change: "modified", additions: 2 }]} />,
+  "stack-trace": (
+    <StackTrace
+      stack={"TypeError: x is undefined\n    at main (/app/src/index.ts:7:1)"}
+      onOpenFrame={() => {}}
+    />
+  ),
+  "test-results": (
+    <TestResults
+      defaultOpen
+      suites={[
+        {
+          id: "math",
+          name: "math",
+          tests: [
+            { id: "sum", name: "adds", status: "pass", durationMs: 2 },
+            { id: "div", name: "divides", status: "fail", error: { message: "Error: divided by zero" } },
+          ],
+        },
+      ]}
+    />
+  ),
+  transcript: (
+    <Transcript
+      segments={[{ id: "1", speaker: "Priya", start: 0, end: 4, text: "Let's start with the checklist." }]}
+      currentTime={1}
+      onSeek={() => {}}
+    />
+  ),
+  selection: (
+    <Selection actions={[{ id: "ask", label: "Ask" }]} onAction={() => {}}>
+      <p>Retry with backoff.</p>
+    </Selection>
+  ),
+  action: (
+    <Action label="Explain" quote="Retry with backoff." result="Wait, then try again." status="complete" />
+  ),
+  terminal: <Terminal command="npm test" output={"\x1b[32m✓\x1b[0m 22 passed"} exitCode={0} defaultOpen />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
       <ConversationViewport>

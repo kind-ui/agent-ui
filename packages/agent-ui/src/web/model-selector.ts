@@ -15,13 +15,17 @@ import { defineInternalCombobox } from "./internal/combobox.js";
 const CHEVRON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
-const DEFAULT_PARTS = `<kind-internal-combobox><ui-combobox><kind-model-selector-trigger><kind-model-selector-input><ui-combobox-input><input data-agent-hidden></ui-combobox-input></kind-model-selector-input><span data-model-selector-group></span><ui-combobox-trigger><button>${CHEVRON}</button></ui-combobox-trigger></kind-model-selector-trigger><kind-model-selector-content><ui-combobox-content hidden side-offset="6" align="start"><ui-combobox-empty>No models found.</ui-combobox-empty><ui-combobox-list></ui-combobox-list></ui-combobox-content></kind-model-selector-content></ui-combobox></kind-internal-combobox>`;
+const DEFAULT_PARTS = `<kind-internal-combobox><ui-combobox><kind-model-selector-trigger><kind-model-selector-icon></kind-model-selector-icon><kind-model-selector-input><ui-combobox-input><input data-agent-hidden></ui-combobox-input></kind-model-selector-input><span data-model-selector-group></span><ui-combobox-trigger><button>${CHEVRON}</button></ui-combobox-trigger></kind-model-selector-trigger><kind-model-selector-content><ui-combobox-content hidden side-offset="6" align="start"><ui-combobox-empty>No models found.</ui-combobox-empty><ui-combobox-list></ui-combobox-list></ui-combobox-content></kind-model-selector-content></ui-combobox></kind-internal-combobox>`;
 
 // Fields and lists this element filled in, and so writes. A part someone wrote keeps its own, as React's children do.
 // Kept across instances, because UI SDK rebuilds one when the element returns to the page.
 const owned = new WeakSet<Element>();
 // The content each list was last drawn from, so a redraw for another part's change leaves it alone.
 const drawn = new WeakMap<Element, ModelSelectorContentState>();
+
+type ModelIcon = string | Element;
+// The icon each item icon was drawn from, so an unchanged one isn't drawn again.
+const drawnIcons = new WeakMap<Element, ModelIcon | undefined>();
 
 const write = <Target extends object, Key extends keyof Target>(
   target: Target | null,
@@ -51,6 +55,33 @@ const itemText = (document: Document, model: ModelSelectorItem) => {
   if (model.description)
     text.append(element(document, "span", { "data-model-selector-description": "" }, model.description));
   return text;
+};
+
+/** A model's icon as nodes: a string is an image URL, an element is copied. */
+const iconNodes = (document: Document, icon: ModelIcon | undefined): Node[] =>
+  typeof icon === "string"
+    ? [element(document, "img", { alt: "", src: icon })]
+    : icon
+      ? [icon.cloneNode(true)]
+      : [];
+
+/** Draws a model's icon before its text, only when it changed. */
+const drawItemIcon = (item: Element, icon: ModelIcon | undefined) => {
+  const current = item.querySelector(":scope > ui-combobox-item-icon");
+  if (current && drawnIcons.get(current) === icon) return;
+  current?.remove();
+  if (icon === undefined) return;
+  const el = element(item.ownerDocument, "ui-combobox-item-icon");
+  el.append(...iconNodes(item.ownerDocument, icon));
+  drawnIcons.set(el, icon);
+  item.prepend(el);
+};
+
+/** Draws the chosen model's icon into the field's icon part, only when it changed. */
+const drawFieldIcon = (part: Element, icon: ModelIcon | undefined) => {
+  if (drawnIcons.has(part) && drawnIcons.get(part) === icon) return;
+  drawnIcons.set(part, icon);
+  part.replaceChildren(...iconNodes(part.ownerDocument, icon));
 };
 
 type Movable = Element & { moveBefore?: (node: Node, child: Node | null) => void };
@@ -93,6 +124,7 @@ const drawList = (list: Element, content: ModelSelectorContentState) => {
       const text = item.querySelector(":scope > [data-model-selector-item-text]");
       if (text) text.replaceWith(itemText(document, model));
       else item.prepend(itemText(document, model));
+      drawItemIcon(item, model.icon as ModelIcon | undefined);
       place(groupEl, item, previous ? previous.nextElementSibling : groupEl.firstElementChild);
       previous = item;
     }
@@ -148,11 +180,14 @@ export function defineModelSelector(): void {
             const selected = state.models.find((model) => model.id === state.value);
             if (group && group.textContent !== (selected?.group ?? ""))
               group.textContent = selected?.group ?? "";
+            const icon = trigger.querySelector("kind-model-selector-icon");
+            if (icon) drawFieldIcon(icon, selected?.icon as ModelIcon | undefined);
           }
           const list = el.querySelector("kind-model-selector-content ui-combobox-list");
-          const content = api.contentState(state);
+          const content = api.contentState(state, instance.id);
           if (list && owned.has(list) && drawn.get(list) !== content) {
             drawn.set(list, content);
+            list.closest("ui-combobox-content")?.setAttribute("anchor", content.anchor);
             drawList(list, content);
           }
           api.syncValue();
@@ -163,6 +198,7 @@ export function defineModelSelector(): void {
       },
     },
     trigger: "kind-model-selector-trigger",
+    icon: "kind-model-selector-icon",
     input: { tag: "kind-model-selector-input", display: "contents" },
     content: { tag: "kind-model-selector-content", display: "contents" },
   });
@@ -175,7 +211,11 @@ export type KindModelSelectorEvents = {
 export interface KindModelSelectorElement
   extends UiElement<KindModelSelectorEvents>,
     AttributeProperties<typeof modelSelectorPrimitive, "api" | "models" | "value" | "defaultValue"> {
-  models?: ModelSelectorOptions["models"];
+  /**
+   * A model's `icon` is an image URL, or an element (such as an `svg`) copied into its row and the field. A copy keeps
+   * the element's ids, so pass a logo that uses `defs` (gradients, masks) as an image URL.
+   */
+  models?: (Omit<NonNullable<ModelSelectorOptions["models"]>[number], "icon"> & { icon?: ModelIcon })[];
   get value(): string | null;
   set value(id: string);
   defaultValue?: string | null;
@@ -186,6 +226,7 @@ declare global {
   interface HTMLElementTagNameMap {
     "kind-model-selector": KindModelSelectorElement;
     "kind-model-selector-trigger": HTMLElement;
+    "kind-model-selector-icon": HTMLElement;
     "kind-model-selector-input": HTMLElement;
     "kind-model-selector-content": HTMLElement;
   }

@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { layerOf } from "../layer.js";
+import { watchAnimations } from "../leaving.js";
 
 type Fixture = {
   kindHost: {
@@ -29,19 +30,6 @@ const settled = (page: Page) =>
   );
 const afterFrames = (page: Page) =>
   page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-// The properties of every animation running on the notice, read before it finishes.
-const animated = (page: Page, name: string) =>
-  notice(page, name).evaluate((el) => [
-    ...new Set(
-      el
-        .getAnimations()
-        .flatMap((animation) =>
-          (animation.effect as KeyframeEffect).getKeyframes().flatMap((frame) => Object.keys(frame)),
-        )
-        .filter((key) => !["offset", "easing", "composite", "computedOffset"].includes(key)),
-    ),
-  ]);
-
 const open = async (page: Page, name = "all") => {
   // Records each text UI SDK's live regions are given.
   await page.addInitScript(() => {
@@ -84,9 +72,10 @@ test("a notice on the page as it loads isn't announced; one added later is, once
   await afterFrames(page);
   expect(await announced(page)).toEqual([]);
   const top = await page.locator("#above").evaluate((el) => el.getBoundingClientRect().top);
+  const entrance = await watchAnimations(page, "#notice-added");
   await host(page, "add");
+  expect(await entrance()).toEqual(expect.arrayContaining(["opacity", "transform"]));
   await expect(notice(page, "Saved")).toBeVisible();
-  expect(await animated(page, "Saved")).toEqual(expect.arrayContaining(["opacity", "transform"]));
   await expect.poll(() => announced(page)).toEqual(["Saved"]);
   await host(page, "escalate");
   await expect.poll(() => announced(page)).toEqual(["Saved", "Indexing your files"]);
@@ -97,12 +86,24 @@ test("Dismiss moves focus to the next control, fades the notice out, then calls 
   page,
 }) => {
   await open(page);
+  // Records the notice's opacity as the host is asked to remove it, which a later round trip would read too late.
+  await page.evaluate(() => {
+    const { dismisses } = (window as unknown as Fixture).kindHost;
+    const push = dismisses.push.bind(dismisses);
+    dismisses.push = (...ids) => {
+      Object.assign(window, {
+        kindOpacity: getComputedStyle(document.getElementById("notice-warning") as HTMLElement).opacity,
+      });
+      return push(...ids);
+    };
+  });
   await dismissButton(page, "Rate limited").focus();
+  const exit = await watchAnimations(page, "#notice-warning");
   await page.keyboard.press("Enter");
   await expect(page.getByRole("button", { name: "Retry" })).toBeFocused();
-  expect(await dismisses(page)).toEqual([]);
-  expect(await animated(page, "Rate limited")).toEqual(["opacity"]);
+  expect(await exit()).toEqual(["opacity"]);
   await expect.poll(() => dismisses(page)).toEqual(["warning"]);
+  expect(await page.evaluate(() => (window as unknown as { kindOpacity: string }).kindOpacity)).toBe("0");
   await expect(notice(page, "Rate limited")).toHaveCount(0);
 });
 
@@ -152,6 +153,7 @@ test("a notice put back on the page neither comes in nor is announced again", as
   test.skip(layerOf(testInfo) !== "web", "React puts back a new element, which is a new notice");
   await open(page);
   await afterFrames(page);
+  const entrance = await watchAnimations(page, "#notice-warning");
   await page.locator("#notice-warning").evaluate(async (el) => {
     const parent = el.parentElement as HTMLElement;
     const next = el.nextSibling;
@@ -159,8 +161,7 @@ test("a notice put back on the page neither comes in nor is announced again", as
     await new Promise((resolve) => setTimeout(resolve, 50));
     parent.insertBefore(el, next);
   });
-  await afterFrames(page);
-  expect(await animated(page, "Rate limited")).toEqual([]);
+  expect(await entrance()).toEqual([]);
   expect(await announced(page)).toEqual([]);
 });
 
@@ -186,8 +187,9 @@ test("a host that rejects the dismiss gets the notice back", async ({ page }) =>
 test("with reduced motion a new notice only fades in", async ({ page }) => {
   await open(page, "reduced");
   await afterFrames(page);
+  const entrance = await watchAnimations(page, "#notice-added");
   await host(page, "add");
-  expect(await animated(page, "Saved")).toEqual(["opacity"]);
+  expect(await entrance()).toEqual(["opacity"]);
 });
 
 test("agents dismiss a notice that offers it, once", async ({ page }) => {

@@ -1,0 +1,7 @@
+.row [data-status-mark] {
+  --kind-status-mark-size: 14px;
+}
+
+.row .icon {
+  width: 14px;
+}

@@ -3,7 +3,7 @@ title: Get Started
 description: Add AI chat components that people and agents can both use, in React or Web Components.
 ---
 
-Agent UI has the pieces of an AI interface: a conversation, messages, streaming markdown, a composer, uploads and status indicators; steps that show an agent's work as it happens: reasoning, tool calls, plans, tasks, subagents and a queue of what's next; and the places a person answers the agent: approvals, questions, checkpoints, model and effort pickers, suggestions, a context meter, feedback and notices. Each one is built on [UI SDK](https://ui-sdk.dev/docs), so focus, keys and screen reader announcements work the way UI SDK's own components do, and an agent connected with `createAgent` can read and use the same component a person sees. To see them work together in one run, open the [Agent Activity](./showcase/agent-activity.mdx) and [Human Input](./showcase/human-input.mdx) showcases.
+Agent UI has the pieces of an AI interface: a conversation, messages, streaming markdown, a composer, uploads and status indicators; steps that show an agent's work as it happens: reasoning, tool calls, plans, tasks, subagents and a queue of what's next; the places a person answers the agent: approvals, questions, checkpoints, model and effort pickers, suggestions, a context meter, feedback and notices; and the output an agent hands back: sources and citations, documents, generated images, file trees, terminal output, stack traces, test results, transcripts and actions on selected text. Each one is built on [UI SDK](https://ui-sdk.dev/docs), so focus, keys and screen reader announcements work the way UI SDK's own components do, and an agent connected with `createAgent` can read and use the same component a person sees. To see them work together in one run, open the [Agent Activity](./showcase/agent-activity.mdx), [Human Input](./showcase/human-input.mdx) and [Developer Output](./showcase/developer-output.mdx) showcases.
 
 You copy the styled components into your project with the shadcn CLI, and they import their behavior from the `@kind-ui/agent-ui` package.
 
@@ -72,7 +72,7 @@ npm install @kind-ui/agent-ui @ui-sdk/core
 
 ## Theme
 
-The colors are `--kind-color-*` tokens. Each is a `light-dark()` pair, so dark mode follows the page's `color-scheme`: set `color-scheme: light dark` to follow the system, or `color-scheme: dark` on the root of a class-based dark theme. To change a token, set it in your own `@theme` or `:root`:
+The colors are `--kind-color-*` tokens. Each is a `light-dark()` pair, so dark mode follows the page's `color-scheme`: set `color-scheme: light dark` to follow the system, or `color-scheme: dark` on the root of a class-based dark theme. Terminal's 16 ANSI colors are `--kind-ansi-*` tokens (`--kind-ansi-red`, `--kind-ansi-bright-red`, …), and `--kind-status-mark-size` resizes the status mark (16px by default, even pixels only). To change a token, set it in your own `@theme` or `:root`:
 
 ```css
 :root {

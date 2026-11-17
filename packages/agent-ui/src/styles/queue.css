@@ -109,7 +109,7 @@
 
     /* Centered on the first line. */
     & > [data-slot="kind-queue-item-icon"] {
-      margin-block: calc(0.5lh - 8px);
+      margin-block: calc(0.5lh - var(--kind-status-mark-size, 16px) / 2);
     }
     & > [data-text] {
       display: flex;
@@ -166,6 +166,14 @@
     &:hover {
       color: var(--kind-color-fg);
       background-color: color-mix(in oklab, var(--kind-color-muted) 16%, transparent);
+    }
+  }
+
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    [data-slot="kind-queue-item-remove"]::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
     }
   }
 

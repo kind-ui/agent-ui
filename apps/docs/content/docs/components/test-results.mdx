@@ -1,0 +1,89 @@
+---
+title: Test Results
+description: Show a test run's counts and a filterable tree of suites, with each failure open to its stack trace.
+---
+
+import TestResultsExample from "../../../examples/test-results/basic";
+
+Use test results when the agent runs a test suite, so readers see how many tests passed, failed and were skipped, and why a test failed. It's a step: a header with the counts and the run's duration, over a filter and a tree of suites and tests, in which a failed test opens to its message and a [Stack Trace](./stack-trace.mdx).
+
+<Example caption="Choose Failed to show only the failing tests. Focus a row and use the arrow keys to move between rows, Right Arrow and Left Arrow to open and close one, then press Tab to reach the stack trace inside a failure.">
+  <TestResultsExample />
+
+  <include cwd lang="tsx">./examples/test-results/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/test-results
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/test-results-web
+```
+
+## Composition
+
+```text
+TestResults
+├── TestResultsTrigger
+│   ├── TestResultsIcon
+│   ├── TestResultsTitle
+│   └── TestResultsMeta
+└── TestResultsContent
+    └── div[data-test-results-panel]
+        ├── TestResultsFilter
+        ├── TestResultsTree
+        │   └── TestResultsRows
+        │       ├── TestResultsItem
+        │       │   └── TestResultsItemStatus
+        │       └── TestResultsFailure
+        └── TestResultsEmpty
+```
+
+`TestResultsTrigger` opens and closes the run, with its status mark in `TestResultsIcon`, the `label` in `TestResultsTitle`, and the counts and duration in `TestResultsMeta`. `TestResultsContent` holds the panel, a `div` with `data-test-results-panel`. In it, `TestResultsFilter` renders a UI SDK Segmented Control, and `TestResultsTree` a UI SDK Tree whose rows `TestResultsRows` draws. Each row's `TestResultsItem` shows its name, its status mark in `TestResultsItemStatus` and its duration. A failed test holds a `TestResultsFailure`, which renders a Stack Trace. `TestResultsEmpty` shows when the filter lets no test through.
+
+## Usage
+
+### Suites and Tests
+
+Pass `suites`, each with an `id`, a `name` and its `tests`. A test has an `id`, a `name`, a `status` of `"pass"`, `"fail"` or `"skip"`, an optional `durationMs`, and for a failure an `error` with its `message` and `stack`. The header counts each status and shows the run's duration: `durationSeconds` if you pass it, else the tests' total.
+
+```tsx
+<TestResults
+  suites={[{ id: "math", name: "math.test.ts", tests: [{ id: "sum", name: "adds", status: "pass", durationMs: 2 }] }]}
+/>
+```
+
+Rows are kept by object, so a test you don't replace doesn't render again.
+
+### Status and a Live Run
+
+The status is `error` once a test failed, else `complete`, or `pending` with no tests. While tests run, pass `status="running"` and new `suites` as each test finishes: the step opens, rows come in where they belong, and the header keeps its place. When you pass `complete`, the step closes to its header; an `error` keeps it open. Either outcome is announced with the counts, like "Tests failed, 12 passed, 1 failed, 0 skipped".
+
+### Failures
+
+A failed test is a row that opens to its error, shown as a Stack Trace with the message as its title and the frames of its `stack`, library frames folded. Failing suites and their failed tests start open, and a suite or test that starts failing during a run opens too. Pass `defaultExpanded` with suite ids and `suiteId/testId` values to choose what starts open, or control it with `expanded` and `onExpandedChange`.
+
+### Filtering
+
+**All**, **Failed**, **Passed** and **Skipped** show every test or only those with that status. A suite with no test to show is left out, and "No failed tests" or the like shows when none is left. Pass `defaultFilter` to start on one, or control it with `filter` and `onFilterChange`.
+
+### Keyboard and Motion
+
+The filter and the tree are one Tab stop each. In the filter, the arrow keys choose a status. In the tree, Up Arrow and Down Arrow move between rows, Right Arrow and Left Arrow open and close a suite or failure, Home and End go to the first and last row, and typing a name moves to it. Tab from an open failure's row reaches its stack trace, whose keys stay its own. Rows fade in as they arrive and suites open by height; under `prefers-reduced-motion`, or with `motion="reduced"`, they fade over 120 ms and the filter's mark stops sliding, and with `motion="none"` nothing moves.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/test-results/test-results.ts" name="TestResultsOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the run by its title and reads `open`, `status`, `filter` and `expanded`. It can `setFilter` to `"all"`, `"fail"`, `"pass"` or `"skip"`, and `expand` or `collapse` a suite or failed test by its value or name; without one, they open and close the run. A suite or test that isn't there is refused.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/test-results/test-results.ts" name="TestResultsAgentActions" type='Pick<TestResultsApi, "setFilter" | "expand" | "collapse">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-test-results>`, set `suites` as a property; the other props are kebab-case attributes. `onOpenChange` is the `openchange` event, `onFilterChange` is `filterchange` and `onExpandedChange` is `expandchange`.
+</Caption>

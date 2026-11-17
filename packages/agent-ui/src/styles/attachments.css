@@ -95,6 +95,14 @@
     }
   }
 
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    [data-slot="kind-attachments-item"] > [data-icon]::before {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+    }
+  }
+
   [data-slot="kind-attachments-remove"] {
     position: absolute;
     top: -0.4375rem;
@@ -126,6 +134,13 @@
       content: "";
       position: absolute;
       inset: -0.25rem;
+    }
+  }
+
+  @media (forced-colors: active) {
+    [data-slot="kind-attachments-remove"]::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
     }
   }
 

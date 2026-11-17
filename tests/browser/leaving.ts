@@ -109,3 +109,37 @@ export const addBack = (
     },
     { root, row, name, host, id, text },
   );
+
+/**
+ * Watches the element `selector` matches, every frame from now, and returns a function that resolves with the
+ * properties its animations moved: call it once whatever starts them has run. Reading each frame catches a reduced
+ * fade (120 ms), which can end before a later round trip to the page reads it. Resolves once they end, or with none
+ * if nothing plays within 30 frames of the call.
+ */
+export const watchAnimations = async (page: Page, selector: string) => {
+  const watch = await page.evaluateHandle((selector) => {
+    const watch = { called: false, done: Promise.resolve<string[]>([]) };
+    watch.done = (async () => {
+      const moved = new Set<string>();
+      let idle = 0;
+      while (idle < 30) {
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+        const animations = document.querySelector(selector)?.getAnimations() ?? [];
+        for (const animation of animations)
+          for (const keyframe of (animation.effect as KeyframeEffect).getKeyframes())
+            for (const property of Object.keys(keyframe)) moved.add(property);
+        if (moved.size > 0 && animations.length === 0) break;
+        if (watch.called && animations.length === 0) idle++;
+      }
+      return [...moved].filter(
+        (property) => !["offset", "easing", "composite", "computedOffset"].includes(property),
+      );
+    })();
+    return watch;
+  }, selector);
+  return () =>
+    page.evaluate((watch) => {
+      watch.called = true;
+      return watch.done;
+    }, watch);
+};

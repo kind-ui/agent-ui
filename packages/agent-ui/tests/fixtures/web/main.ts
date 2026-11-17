@@ -8,7 +8,10 @@ type CaseModule = {
 
 const modules = import.meta.glob<CaseModule>("./cases/*.ts");
 const params = new URLSearchParams(location.search);
-const load = modules[`./cases/${params.get("c")}.ts`];
+const path = `./cases/${params.get("c")}.ts`;
+const load = modules[path];
+if (load)
+  document.head.append(Object.assign(document.createElement("script"), { type: "module", src: path }));
 const fixture = load && (await load());
 const render = fixture?.cases[params.get("case") ?? ""];
 const root = document.getElementById("root");

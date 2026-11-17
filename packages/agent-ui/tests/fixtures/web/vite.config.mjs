@@ -32,6 +32,7 @@ export default defineConfig({
       "@ui-sdk/web/token-input",
       "@ui-sdk/web/toolbar",
       "@ui-sdk/web/tooltip",
+      "@ui-sdk/web/tree",
       "@ui-sdk/web/trigger-menu",
     ],
   },

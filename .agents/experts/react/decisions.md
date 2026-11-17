@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `bb45d49` (Wave 3 Task 11 agent conformance)
+Last reviewed: `cd5d555` (Wave 4 Task 12b Model Selector icons)
 
 ## Settled
 
+- **Fixture `main` files carry no comment for the case `<script type="module">`** (Wave 4 Task 12): fixtures hold no comments; the reason is in AGENTS.md "Fixture servers".
 - **A streamed Reasoning chunk renders its step parts once each** (`text` lives in step state): a fixed cost per chunk that doesn't grow with the text, so `budgets.spec.ts` has no Reasoning case. The default parts are one shared element tree.
 - **Count budgets render counting** (`budgets.spec.ts`) follows DevTools: a render that bails out on equal state isn't counted, and a compare-`memo` wrapper (tag 14) is left out so its component counts once.
 - Everything in AGENTS.md "UI SDK API notes".
@@ -14,6 +15,11 @@ Last reviewed: `bb45d49` (Wave 3 Task 11 agent conformance)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **UI SDK's `ComboboxValueIcon` has no server markup and keeps an icon copied before its content changed in place** (Wave 4 Task 12b): Model Selector draws its field icon from data instead (its own `icon` part); report upstream.
+- **A streamed Test Results update renders every row's UI SDK Tree parts and item parts** (Wave 4 Task 9): the known options-change cost (as Chain of Thought, Task and Sources). Our `TestResultsRow` components skip suites the host kept, since core caches tree items per suite.
+- **File Tree: the root `group` and the Tree are both named "Files"** (Wave 4 Task 6), so a screen reader may say it twice; and a function `className` on the root gets the Tree's props. Not checked with a screen reader.
+- **A server-rendered ready Generated Image shows "Loading image" and a shimmer until it hydrates** (Wave 4 Task 5): the phase comes from the `<img>`'s `load`, which only the client hears; the frame keeps its size. Each progress tick renders every part (UI SDK options change), as Chain of Thought's steps do.
+- **Sources re-renders every item's parts on any `sources` change** (Wave 4 Task 2), once per update, not per token: the same UI SDK options-change behavior as Chain of Thought, Task and Plan items despite `selects`.
 - **A Context Meter root `className` or `render` function gets `{}`,** as Status's root does (Wave 3 Task 8): style by `data-level`. The docs should say this covers every root.
 - **Renaming the chosen model leaves its old name in Model Selector's field** (Wave 3 Task 6): UI SDK's Combobox keeps the label it showed when `itemToLabel` or the item's label changes, even a bare `<Combobox>`; report upstream. The group beside it updates.
 - **Question's radio and checkbox groups have no name of their own:** the item's group, named by its prompt, names them, as UI SDK Field's "Groups in a Field Set" says; Radio's own docs point the group at the legend too. Not checked with a screen reader.
@@ -41,6 +47,22 @@ Last reviewed: `bb45d49` (Wave 3 Task 11 agent conformance)
 
 ## Resolved
 
+- **Model Selector's field icon went stale and was missing from server markup** (Wave 4 Task 12b): `ComboboxValueIcon` was replaced by the primitive's `icon` part, drawn from the chosen model, and `keepMounted` is gone.
+- **`ModelSelectorItem`'s `model.icon` was `unknown`** (Wave 4 Task 12b): `ModelSelectorListItem` types it `string | ReactElement`, as `ModelSelectorModel` does.
+- **The `logos` fixture camelCased `aria-hidden`** (Wave 4 Task 12b): `logo()` keeps `aria-*` and `data-*` names.
+- **Wave 4 agent conformance** (Wave 4 Task 12): the `wave-4` page passes the same props and callbacks as web's, uncontrolled so a refusing host's `cancel()` keeps the state; Queue's remove lock holds across a host re-render with a new `items` array (per item, `queue.spec.ts`).
+- **Selection and Action** (Wave 4 Task 11): fixtures gained a refused case (both callbacks cancelled), a case without `onAction` (disabled buttons, no `run`), the description `title`, and an Action whose host owns `open` through a stream.
+- **Server-rendered Transcript segments overlapped at a 72px guess and moved on hydration** (Wave 4 Task 10): fixed; until the viewport connects (`measured`), segments stack in the flow, then sit at the measured offsets.
+- **No Transcript case with an owner refusing the search** (Wave 4 Task 10): fixed; `refused` in both fixtures and its spec.
+- **Test Results rows all re-rendered per streamed test, and no owner refused** (Wave 4 Task 9): tree items are cached per suite and `TestResultsRow` is memoized by item; the `refused` case pins the filter and open-row write-back.
+- **Stack Trace had no accepting owner or find-in-page case (Wave 4 Task 8):** the `owned` fixture gained `accepted` (`onShowLibraryFramesChange` sets `showLibraryFrames`), and the spec checks the `library-press` and `find-in-page` reasons and a `beforematch` reveal.
+- **Terminal server markup had no lines (Wave 4 Task 7),** so the screen grew ~312px on hydration: `state` now seeds the first 16 lines at the 20px guess (`firstRows`), which the virtualizer replaces once it connects. Owner-held `open` and a cancelled `onCopy` have an `owned` case; the docs' composition tree shows the `data-terminal-screen` and `data-terminal-header` wrappers the stylesheet styles.
+
+- **File Tree's row parts couldn't be composed and no owner refused** (Wave 4 Task 6): `FileTree` takes `children` inside the Tree and exports `FileTreeRows`; `refused` fixture cases pin the write-back.
+- **Generated Image's fixture had no pending download or progress tick** (Wave 4 Task 5): `onDownload` returns a promise the host settles (pending, the agent's `download` withdrawn, rejection and "Download failed"), and a tick updates `aria-valuenow`. A controlled `open` an owner keeps through a regeneration shows the image that last loaded (`full-image` reads `loadedSrc`), not a blank view.
+- **Document had no owner-refusal, pending-download or cancelled-copy case, and its shared-tree comment overclaimed** (Wave 4 Task 4): the `refused` case and spec cover a refused `open`, `data-pending` with `download` leaving the agent actions, a rejection clearing it, and `onCopy` cancelling; the comment says only the viewport and scrollbar skip a chunk's render (the rest is the known options-change cost).
+- **Inline Citation re-rendered every slide on each page, and its card took the marker's name** (Wave 4 Task 3): `carouselState` is memoized on the ids alone with `defaultPage` a getter read at mount, and the content drops UI SDK's `aria-labelledby` for the summary. The fixture gained a `refused` case.
+- **Sources (Wave 4 Task 2):** a refusing-owner case (`refused`) and favicon, host and snippet assertions joined `wave-4/sources.spec.ts`.
 - **Guardrail Notice (Wave 3 Task 10):** hydrating server-rendered notices after `load` no longer plays their entrance or announces them; a refusing `open` owner is tested (`refused` case); `GuardrailNotice` takes `children` into its description, as the web element does.
 - **Feedback (Wave 3 Task 9):** the agent spec settles `onComment` instead of waiting out the bridge's timeout; a refusing host has a fixture case and a spec in both layers; the thumbs part is `FeedbackThumbs`, so it doesn't clash with the `FeedbackRating` type.
 - **Context Meter text hydrated in the server's locale (Wave 3 Task 8).** Fixed: it formats in English until the root binds and reads the page's language, as UI SDK Meter does.

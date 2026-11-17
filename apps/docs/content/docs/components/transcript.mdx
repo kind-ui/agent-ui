@@ -1,0 +1,87 @@
+---
+title: Transcript
+description: Show a recording's words by speaker and time, follow playback, and search what was said.
+---
+
+import TranscriptExample from "../../../examples/transcript/basic";
+
+Use a transcript when the agent works with a call, a meeting or a voice note, so readers can follow along as it plays, jump to a moment, and find what someone said. Each segment shows its speaker, its start time and its words, and the segment and word playing at `currentTime` are marked.
+
+<Example caption="Press Play to follow the recording, or press a segment to jump to it. Type billing in the search field to show only the segments that mention it.">
+  <TranscriptExample />
+
+  <include cwd lang="tsx">./examples/transcript/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/transcript
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/transcript-web
+```
+
+## Composition
+
+```text
+Transcript
+├── TranscriptSearch
+│   └── TranscriptCount
+└── TranscriptViewport
+    └── TranscriptList
+        └── TranscriptSegment
+            ├── div[data-transcript-header]
+            │   ├── TranscriptSpeaker
+            │   └── TranscriptSeek
+            │       └── TranscriptTime
+            └── TranscriptText
+                └── TranscriptWord
+```
+
+`TranscriptSearch` renders a UI SDK Input with a clear button, and `TranscriptCount` beside it says how many segments match. `TranscriptViewport` scrolls the segments, and `TranscriptList` renders a `TranscriptSegment` for each one in view. A segment's header holds `TranscriptSpeaker` and its start in `TranscriptTime`, inside a `TranscriptSeek` button while `onSeek` is set. `TranscriptText` holds a `TranscriptWord` for each word, or one for the whole text when the segment has no words.
+
+## Usage
+
+### Segments
+
+Pass `segments` in time order. Each has an `id`, a `speaker`, a `start` and `end` in seconds, and its `text`. Give it `words`, each with its `text`, `start` and `end`, to mark the word playing; without them, the transcript marks the whole segment. Only the segments in view are rendered, so a long recording costs the same as a short one. The view is 24rem tall, whatever the search leaves in it; set `--kind-transcript-height` to change it.
+
+```tsx
+<Transcript
+  segments={[{ id: "1", speaker: "Priya", start: 0, end: 4.5, text: "Let's start with the release checklist." }]}
+/>
+```
+
+A segment added later fades in once; the ones already there stay where they are.
+
+### Playback
+
+Pass `currentTime` as the recording plays. The segment at that time gets `aria-current` and its word `data-current`, and the words still to come in it are dimmed; in a gap between segments, nothing is marked. While focus is outside the transcript, a new segment scrolls to the middle of the view. Once someone focuses a time or types a search, the view stays where they put it. Pass `follow={false}` to never scroll.
+
+### Seeking
+
+Pass `onSeek` to make each time a **Seek to 0:05** button. A press on the time or anywhere on its segment calls `onSeek` with the segment's `start` in seconds, unless the press selected some of its text. Set your player's position there and pass the new `currentTime`.
+
+### Search
+
+Type in the search field to show only the segments whose text or speaker matches, with what matched marked. The count, like "2 matches", is announced. Clearing the search shows every segment again, and the segment that held focus keeps it. Pass `defaultQuery` to start with a search, or control it with `query` and `onQueryChange`.
+
+### Keyboard and Motion
+
+The search field, the scrolling view and the times are a Tab stop each. Among the times, Up Arrow and Down Arrow move between segments and Home and End go to the first and last, bringing segments that aren't rendered into view; Enter or Space seeks. Times are written in `locale`, else the page's language. Following playback scrolls smoothly; under `prefers-reduced-motion`, or with `motion="reduced"`, it jumps and new segments fade in over 120 ms, and with `motion="none"` nothing moves.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/transcript/transcript.ts" name="TranscriptOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the transcript by its `label` and reads `query`. It can `search` with any text, which filters the segments as typing does, and while `onSeek` is set it can `seek` to a segment by its id; the segments are listed by speaker and time, and an id that isn't there is refused.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/transcript/transcript.ts" name="TranscriptAgentActions" type='Pick<TranscriptApi, "search" | "seek">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-transcript>`, set `segments` as a property; the other props are kebab-case attributes. Add `can-seek` for the times to seek: `onSeek` is the `seek` event, and `onQueryChange` is `querychange`.
+</Caption>

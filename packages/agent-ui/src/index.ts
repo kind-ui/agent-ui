@@ -1,6 +1,7 @@
 export type {
   Answers,
   Approval,
+  FileTreeEntry,
   Message,
   MessageStatus,
   ModelOption,
@@ -10,7 +11,9 @@ export type {
   QuestionOption,
   QueueItem,
   Role,
+  SelectionActionItem,
   Source,
+  StackFrame,
   Step,
   StepBase,
   StepStatus,
@@ -20,6 +23,8 @@ export type {
   TestSuite,
   TokenUsage,
   ToolCall,
+  TranscriptSegment,
+  TranscriptWord,
 } from "./types/index.js";
 export {
   hasOutput,

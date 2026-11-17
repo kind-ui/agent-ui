@@ -2,6 +2,7 @@ import type { Answers, QueueItem } from "@kind-ui/agent-ui";
 import type { AttachmentItem, UploadItem } from "@kind-ui/agent-ui/core";
 import type { AgentAction } from "@ui-sdk/react/agent";
 import { useEffect, useState } from "react";
+import { Action } from "../../../../src/react/action.js";
 import { Attachments } from "../../../../src/react/attachments.js";
 import { ChainOfThought } from "../../../../src/react/chain-of-thought.js";
 import { Checkpoint } from "../../../../src/react/checkpoint.js";
@@ -23,8 +24,12 @@ import {
   ConversationRow,
   ConversationViewport,
 } from "../../../../src/react/conversation.js";
+import { Document } from "../../../../src/react/document.js";
 import { Feedback } from "../../../../src/react/feedback.js";
+import { FileTree } from "../../../../src/react/file-tree.js";
+import { GeneratedImage } from "../../../../src/react/generated-image.js";
 import { GuardrailNotice } from "../../../../src/react/guardrail-notice.js";
+import { InlineCitation } from "../../../../src/react/inline-citation.js";
 import { KindToolbar, KindToolbarButton } from "../../../../src/react/internal/toolbar.js";
 import { Loader } from "../../../../src/react/loader.js";
 import { Markdown } from "../../../../src/react/markdown.js";
@@ -48,6 +53,9 @@ import { Question as QuestionForm } from "../../../../src/react/question.js";
 import { Queue } from "../../../../src/react/queue.js";
 import { Reasoning } from "../../../../src/react/reasoning.js";
 import { ReasoningEffort } from "../../../../src/react/reasoning-effort.js";
+import { Selection } from "../../../../src/react/selection.js";
+import { Sources } from "../../../../src/react/sources.js";
+import { StackTrace } from "../../../../src/react/stack-trace.js";
 import { Status } from "../../../../src/react/status.js";
 import {
   Step,
@@ -62,8 +70,11 @@ import { StreamingText } from "../../../../src/react/streaming-text.js";
 import { Subagent } from "../../../../src/react/subagent.js";
 import { Suggestion } from "../../../../src/react/suggestion.js";
 import { Task } from "../../../../src/react/task.js";
+import { Terminal } from "../../../../src/react/terminal.js";
+import { TestResults } from "../../../../src/react/test-results.js";
 import { ThinkingIndicator } from "../../../../src/react/thinking-indicator.js";
 import { Tool } from "../../../../src/react/tool.js";
+import { Transcript } from "../../../../src/react/transcript.js";
 import { TypingIndicator } from "../../../../src/react/typing-indicator.js";
 import { Uploader } from "../../../../src/react/uploader.js";
 import {
@@ -77,6 +88,7 @@ import {
   question,
   queueItems,
   replies,
+  selectionActions,
   steps,
   taskItems,
   thoughts,
@@ -84,11 +96,19 @@ import {
 } from "../../shared/agent.js";
 import { commands, mentions } from "../../shared/composer.js";
 import { context } from "../../shared/context-meter.js";
+import { downloads, readme } from "../../shared/document.js";
+import { entries } from "../../shared/file-tree.js";
+import { lighthouse, size } from "../../shared/generated-image.js";
 import { answer } from "../../shared/markdown.js";
 import { levels, models } from "../../shared/model-selector.js";
 import { guardrails, type NoticeData, notices } from "../../shared/notice.js";
 import { deployQuestions } from "../../shared/question.js";
+import { sources } from "../../shared/sources.js";
+import { typeErrorStack } from "../../shared/stack-trace.js";
 import { suggestions } from "../../shared/suggestion.js";
+import { installRun } from "../../shared/terminal.js";
+import { suites } from "../../shared/test-results.js";
+import { standup } from "../../shared/transcript.js";
 import { uploads } from "../../shared/uploader.js";
 
 const host = agentHost();
@@ -438,7 +458,124 @@ function HumanInput({ confirm }: { confirm: boolean }) {
   );
 }
 
-function Confirmable({ wave }: { wave: 2 | 3 }) {
+function Artifacts() {
+  return (
+    <div className="flex w-[40rem] flex-col gap-8 p-6">
+      <section data-case="sources">
+        <Sources
+          id="sources"
+          sources={sources}
+          onOpenChange={(_open, details) => host.change("sources", details)}
+        />
+      </section>
+      <section data-case="inline-citation">
+        <p>
+          Back off when you hit a limit{" "}
+          <InlineCitation
+            id="citation"
+            sources={sources}
+            onOpenChange={(_open, details) => host.change("citation", details)}
+          />
+          .
+        </p>
+      </section>
+      <section data-case="document">
+        <Document
+          id="document"
+          label="README.md"
+          content={readme}
+          downloads={downloads}
+          onOpenChange={(_open, details) => host.change("document", details)}
+          onCopy={host.decide("copy")}
+          onDownload={host.decide("download")}
+        />
+      </section>
+      <section data-case="generated-image">
+        <GeneratedImage
+          id="image"
+          alt="A lighthouse at dusk"
+          src={lighthouse}
+          {...size}
+          onOpenChange={(_open, details) => host.change("image", details)}
+          onDownload={host.decide("download")}
+        />
+      </section>
+      <section data-case="file-tree">
+        <FileTree
+          id="file-tree"
+          entries={entries}
+          defaultExpanded={["src"]}
+          onValueChange={(_value, details) => host.change("file-tree", details)}
+          onExpandedChange={(_expanded, details) => host.change("file-tree", details)}
+          onSelect={host.decide("select")}
+        />
+      </section>
+      <section data-case="terminal">
+        <Terminal
+          id="terminal"
+          command="npm install"
+          output={installRun}
+          exitCode={0}
+          durationSeconds={3}
+          onOpenChange={(_open, details) => host.change("terminal", details)}
+          onCopy={host.decide("copy")}
+        />
+      </section>
+      <section data-case="stack-trace">
+        <StackTrace
+          id="stack-trace"
+          stack={typeErrorStack}
+          onOpenChange={(_open, details) => host.change("stack-trace", details)}
+          onShowLibraryFramesChange={(_show, details) => host.change("stack-trace", details)}
+          onCopy={host.decide("copy")}
+          onOpenFrame={host.decide("openFrame")}
+        />
+      </section>
+      <section data-case="test-results">
+        <TestResults
+          id="test-results"
+          suites={suites}
+          defaultOpen
+          onOpenChange={(_open, details) => host.change("test-results", details)}
+          onFilterChange={(_filter, details) => host.change("test-results", details)}
+          onExpandedChange={(_expanded, details) => host.change("test-results", details)}
+        />
+      </section>
+      <section data-case="transcript">
+        <Transcript
+          id="transcript"
+          segments={standup}
+          onQueryChange={(_query, details) => host.change("transcript", details)}
+          onSeek={host.decide("seek")}
+        />
+      </section>
+      <section data-case="selection">
+        <Selection
+          id="selection"
+          actions={selectionActions}
+          onAction={host.decide("run")}
+          onDismiss={host.decide("dismiss")}
+        >
+          <p id="selection-text">
+            Rate limits reset every hour. Each response carries the remaining count in its headers.
+          </p>
+        </Selection>
+      </section>
+      <section data-case="action">
+        <Action
+          id="action"
+          label="Explain"
+          status="running"
+          quote="Rate limits reset every hour."
+          result="The limit resets on the hour."
+          onOpenChange={(_open, details) => host.change("action", details)}
+        />
+      </section>
+    </div>
+  );
+}
+
+function Confirmable({ wave }: { wave: 2 | 3 | 4 }) {
   const [confirm, setConfirm] = useState(true);
   useEffect(() => {
     host.confirm = setConfirm;
@@ -446,12 +583,13 @@ function Confirmable({ wave }: { wave: 2 | 3 }) {
   return (
     <>
       <Activity confirm={confirm} />
-      {wave === 3 ? <HumanInput confirm={confirm} /> : null}
+      {wave >= 3 ? <HumanInput confirm={confirm} /> : null}
+      {wave === 4 ? <Artifacts /> : null}
     </>
   );
 }
 
-function Page({ wave }: { wave: 2 | 3 }) {
+function Page({ wave }: { wave: 2 | 3 | 4 }) {
   return (
     <>
       <Foundation />
@@ -464,4 +602,5 @@ export const cases = {
   all: () => <Foundation />,
   "wave-2": () => <Page wave={2} />,
   "wave-3": () => <Page wave={3} />,
+  "wave-4": () => <Page wave={4} />,
 };

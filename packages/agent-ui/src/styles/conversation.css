@@ -162,6 +162,14 @@
     }
   }
 
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    [data-slot="kind-conversation-jump"]::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+  }
+
   /* Web keeps parts that aren't present in the page, with `hidden`. */
   :is([data-slot="kind-conversation-jump"], [data-slot="kind-conversation-empty"])[hidden] {
     display: none;

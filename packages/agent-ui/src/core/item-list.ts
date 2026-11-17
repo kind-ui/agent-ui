@@ -147,7 +147,8 @@ export const itemList = <
       let prevItems = store.get().items;
       let prevStatus = store.get().status;
       // Web hosts can only set `items` once the element exists, so items in the first frame count as known: they
-      // don't play the entrance, and neither they nor the status they add up to announce.
+      // don't play the entrance, and neither they nor the status they add up to announce. A removed item's id is
+      // forgotten, so an item added again enters again.
       let mounting = true;
       const known = new Set(prevItems.map((item) => item.id));
 
@@ -157,6 +158,8 @@ export const itemList = <
         if (items !== prevItems) {
           const statuses = new Map(prevItems.map((item) => [item.id, item.status]));
           prevItems = items;
+          const ids = new Set(items.map((item) => item.id));
+          for (const id of known) if (!ids.has(id)) known.delete(id);
           for (const item of items) {
             if (mounting || !item.title || item.status === (statuses.get(item.id) ?? "pending")) continue;
             const text = stepAnnouncement(item.status as StepStatus, item.title);

@@ -43,7 +43,10 @@ export type QueueOptions = {
    * @default ["pending"]
    */
   defaultOpenSections?: QueueSection[];
-  /** Called with an item's `id` when someone removes it. While it's set, items can be removed. */
+  /**
+   * Called with an item's `id` when someone removes it. While it's set, items can be removed. An item is asked for
+   * once: a host that keeps it, say after a failed removal, passes a new object for it to allow another try.
+   */
   onRemove?: (id: string, details: ChangeDetails<"remove-press" | "imperative">) => void;
   /**
    * `"auto"` follows `prefers-reduced-motion`. A removed item fades out before the items after it move up; under
@@ -91,8 +94,8 @@ export type QueueApi = ListFocus<QueueState, ItemProps> & {
    */
   readonly reorder: ((id: string, index: number) => boolean) | undefined;
   /**
-   * Removes an item by its `id`, through `onRemove`. Returns whether it was asked. Offered only while `onRemove` is
-   * set and there are items.
+   * Removes an item by its `id`, through `onRemove`. Returns whether it was asked; an item already asked isn't asked
+   * again until the host passes a new object for it. Offered only while `onRemove` is set and there are items.
    */
   readonly remove: ((id: string, event?: Event) => boolean) | undefined;
   /** The `items` option. */
@@ -264,18 +267,28 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       },
     });
 
+    // Web hosts can only set `items` once the element exists, so items in the first frame don't play the entrance.
+    // An id is forgotten once its row is dropped, so an item added again enters again.
+    let mounting = true;
+    const known = new Set(store.get().items.map((item) => item.id));
+    const setRows = (rows: LeavingRow<QueueItem>[]) => {
+      const ids = new Set(rows.map((row) => row.item.id));
+      for (const id of known) if (!ids.has(id)) known.delete(id);
+      store.set({ rows, rowsById: byId(rows) });
+    };
+
+    // Each item asked to be removed, as it was then: asked again only once the host passes it changed.
+    const removing = new Map<string, QueueItem>();
     let lastItems = store.get().items;
     context.onOptions((options) => {
       const items = options.items ?? NO_ITEMS;
       if (items === lastItems) return;
       lastItems = items;
-      const rows = leavingRows(store.get().rows, items, options.motion);
-      store.set({ rows, rowsById: byId(rows) });
+      const current = new Map(items.map((item) => [item.id, item]));
+      for (const [id, item] of removing) if (current.get(id) !== item) removing.delete(id);
+      setRows(leavingRows(store.get().rows, items, options.motion));
     });
 
-    // Web hosts can only set `items` once the element exists, so items in the first frame don't play the entrance.
-    let mounting = true;
-    const known = new Set(store.get().items.map((item) => item.id));
     const rowElements = new Map<string, HTMLElement>();
     const sectionElements = new Set<HTMLElement>();
 
@@ -298,14 +311,18 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       ];
       store.set({ openSections, exitingSections });
     };
-    const remove = (id: string, event?: Event) =>
-      store.get().items.some((item) => item.id === id) &&
-      !dispatch(
+    const remove = (id: string, event?: Event) => {
+      const item = store.get().items.find((each) => each.id === id);
+      if (!item || removing.has(id)) return false;
+      const asked = !dispatch(
         context,
         "onRemove",
         id,
         event ? { reason: "remove-press", event } : { reason: "imperative" },
       );
+      if (asked) removing.set(id, item);
+      return asked;
+    };
 
     return {
       ...listFocus,
@@ -366,10 +383,7 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
               for (const unjoin of joined) unjoin();
             };
           },
-          drop: () => {
-            const rows = dropRow(store.get().rows, key);
-            store.set({ rows, rowsById: byId(rows) });
-          },
+          drop: () => setRows(dropRow(store.get().rows, key)),
         });
         return () => {
           unbind();
