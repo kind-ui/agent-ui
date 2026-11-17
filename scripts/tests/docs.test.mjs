@@ -41,7 +41,7 @@ test("the sidebar has a Showcase section with one live example per page", () => 
   for (const [name, component] of Object.entries(showcases)) {
     const source = readFileSync(new URL(`showcase/${name}.mdx`, content), "utf8");
     assert.match(source, /^---\ntitle: .+\ndescription: .+\n---\n/, name);
-    assert.ok(source.includes(`import ${component} from "@/examples/showcase/${name}";`), name);
+    assert.ok(source.includes(`import ${component} from "../../../examples/showcase/${name}";`), name);
     assert.equal(source.match(/<Example /g)?.length, 1, name);
     assert.match(
       source,
@@ -57,5 +57,14 @@ test("no page mentions an internal registry item", () => {
   for (const file of readdirSync(content, { recursive: true })) {
     if (!file.endsWith(".mdx")) continue;
     assert.doesNotMatch(readFileSync(new URL(file, content), "utf8"), /internal-/, file);
+  }
+});
+
+test("pages import examples and link pages by relative path", () => {
+  for (const file of readdirSync(content, { recursive: true })) {
+    if (!file.endsWith(".mdx")) continue;
+    const source = readFileSync(new URL(file, content), "utf8");
+    assert.doesNotMatch(source, /from "@\//, file);
+    assert.doesNotMatch(source, /\]\(\/docs/, file);
   }
 });

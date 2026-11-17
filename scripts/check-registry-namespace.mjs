@@ -16,6 +16,13 @@ export function findCollisions(live, previous, ours) {
   return ours.filter((name) => theirs.has(name));
 }
 
+/** The live catalog, empty while kindui.dev serves none (404). */
+export async function liveCatalog(response) {
+  if (response.status === 404) return { items: [] };
+  if (!response.ok) throw new Error(`${LIVE_CATALOG}: ${response.status}`);
+  return response.json();
+}
+
 /** Item names in the latest GitHub release's site asset, or none before the first release with one. */
 function previousNames() {
   const gh = (args) => execFileSync("gh", args, { encoding: "utf8" });
@@ -40,9 +47,8 @@ function previousNames() {
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const response = await fetch(LIVE_CATALOG, { signal: AbortSignal.timeout(30_000) });
-  if (!response.ok) throw new Error(`${LIVE_CATALOG}: ${response.status}`);
   const collisions = findCollisions(
-    await response.json(),
+    await liveCatalog(response),
     previousNames(),
     catalog.items.map(({ name }) => name),
   );

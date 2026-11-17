@@ -3,9 +3,9 @@ title: Agent Activity
 description: Watch one agent run go from thinking to a finished plan, built from the step components.
 ---
 
-import AgentActivityShowcase from "@/examples/showcase/agent-activity";
+import AgentActivityShowcase from "../../../examples/showcase/agent-activity";
 
-This run puts the step components together the way a host app would. The agent thinks with [Reasoning](/docs/components/reasoning), calls two [Tools](/docs/components/tool) at once, proposes a [Plan](/docs/components/plan), hands the work to a [Subagent](/docs/components/subagent) and keeps follow-up prompts in a [Queue](/docs/components/queue). A [Status](/docs/components/status) badge shows where the whole run stands.
+This run puts the step components together the way a host app would. The agent thinks with [Reasoning](../components/reasoning.mdx), calls two [Tools](../components/tool.mdx) at once, proposes a [Plan](../components/plan.mdx), hands the work to a [Subagent](../components/subagent.mdx) and keeps follow-up prompts in a [Queue](../components/queue.mdx). A [Status](../components/status.mdx) badge shows where the whole run stands.
 
 <Example caption="The run streams its thinking, waits on the delete_branch approval, then stops on the plan. Press Accept to let the subagent do the work, or Replay to start over. Drag a follow-up to reorder it, or press Delete to remove the focused one.">
   <AgentActivityShowcase />
@@ -21,7 +21,7 @@ This run puts the step components together the way a host app would. The agent t
 - **Subagent:** its own tool calls nest inside it, and its result shows once it's done.
 - **Queue:** the follow-ups wait their turn. Drag one to reorder it, or focus it and press Space to pick it up, the arrow keys to move it and Space to drop it. Delete removes it.
 
-Each component gets its state from the host as plain data, here a timer stepping through a script. In an app, the same data comes from your model's stream, for example through the [AI SDK adapter](/docs/adapters/ai-sdk).
+Each component gets its state from the host as plain data, here a timer stepping through a script. In an app, the same data comes from your model's stream, for example through the [AI SDK adapter](../adapters/ai-sdk.mdx).
 
 <Caption>
   Every component here runs in React and Web Components. The example is React.

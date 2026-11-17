@@ -3,7 +3,7 @@ title: Plan
 description: Show the steps an agent plans to take, how far it's got, and let people accept it.
 ---
 
-import PlanExample from "@/examples/plan/basic";
+import PlanExample from "../../../examples/plan/basic";
 
 Use a plan when an agent lays out its steps before it starts, and to follow them as it works. It shows each step with its status, a progress bar of the steps done, and an Accept button while you offer one.
 
@@ -57,7 +57,7 @@ Pass `onAccept` to show **Accept plan**. Return a promise to keep the button pen
 
 ### Opening and Closing
 
-The plan opens and closes like a [Step](/docs/components/step): it opens while it runs or waits for input and closes when it completes, until someone opens or closes it. Pass `open` with `onOpenChange` to control it.
+The plan opens and closes like a [Step](./step.mdx): it opens while it runs or waits for input and closes when it completes, until someone opens or closes it. Pass `open` with `onOpenChange` to control it.
 
 ### Keyboard
 
