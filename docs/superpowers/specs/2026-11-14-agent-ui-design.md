@@ -495,7 +495,7 @@ Behavior requirements:
 | **Confirmation** | Button, Textarea, `announce` | `approve`, `deny(reason?)` | confirmation |
 | **Question** | Radio, Checkbox, Textarea, `createRovingFocus` | `select(questionId, value)`, `setText(questionId, text)`, `submit`, `skip` | question |
 | **Checkpoint** | Button, Tooltip, Alert Dialog | `restore` | checkpoint |
-| **Model Selector** | Combobox, `fuzzyScore`, `matchSegments` | `setValue` | model-selector |
+| **Model Selector** | Combobox, `fuzzyScore`, `matchSegments` (Picker from Wave 5) | `setValue` | model-selector |
 | **Reasoning Effort** | Segmented Control | `setValue` | kind-ui/charts#253 |
 | **Suggestion** | Carousel, Button | `pick(id)` | suggestion |
 | **Context Meter** | Meter, Popover (opens on hover, focus, and press) | `open`, `close` | context |

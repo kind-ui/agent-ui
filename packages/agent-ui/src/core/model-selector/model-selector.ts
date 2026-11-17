@@ -1,144 +1,51 @@
-import { type ChangeDetails, createChange, definePrimitive, type SlotDefinition } from "@ui-sdk/core";
-import { type ComboboxController, createComboboxController } from "@ui-sdk/core/combobox";
-import type { BaseSlotProps } from "@ui-sdk/core/renderer";
-import { type MatchSegment, matchRanges, matchSegments } from "@ui-sdk/core/text-match";
-import type { ModelOption } from "../../types/index.js";
-import { memo } from "../memo.js";
-import type { MotionMode } from "../motion/index.js";
-import { filterModels } from "./filter.js";
+import { definePrimitive } from "@ui-sdk/core";
+import type { ModelOption, PickerItem } from "../../types/index.js";
+import { cached } from "../memo.js";
+import {
+  type PickerBaseApi,
+  type PickerBaseOptions,
+  type PickerBaseSlots,
+  type PickerBaseState,
+  type PickerValueChangeReason,
+  pickerBase,
+} from "../picker/base.js";
 
-/** `"input-change"`: a person chose a model in the list. `"imperative"`: an `api` call, like an agent's `setValue`. */
-export type ModelSelectorValueChangeReason = "input-change" | "imperative";
+/** `"item-press"`: a person chose a model in the list. `"imperative"`: an `api` call, like an agent's `setValue`. */
+export type ModelSelectorValueChangeReason = PickerValueChangeReason;
 
-export type ModelSelectorOptions = {
+export type ModelSelectorOptions = Omit<PickerBaseOptions, "label" | "placeholder" | "emptyText"> & {
   /**
    * The models to choose from, grouped by their `group` in the order groups first appear. The primitive passes each
    * `icon` through to the render layer untouched.
    * @default []
    */
   models?: ModelOption<unknown>[];
-  /** The chosen model's id. Passing it controls it: change it in `onValueChange`. */
-  value?: string | null;
   /**
-   * The chosen model's id at first, when `value` isn't passed.
-   * @default null
+   * `"groups"` lists each `group` as a row that opens a page of its models, shown with its first model's icon.
+   * `"flat"` lists every model under its group's label.
+   * @default "flat"
    */
-  defaultValue?: string | null;
-  /** Called when a person or `setValue` chooses a model, with why. */
-  onValueChange?: (value: string | null, details: ChangeDetails<ModelSelectorValueChangeReason>) => void;
+  pages?: "flat" | "groups";
   /**
-   * Names the picker and its search field.
+   * Names the trigger, with the chosen model's name after it, and the search field.
    * @default "Model"
    */
   label?: string;
   /**
-   * Shown in the search field while no model is chosen.
+   * Shown in the empty search field.
    * @default "Search models"
    */
   placeholder?: string;
   /**
-   * Names the button that opens the list.
-   * @default "Show models"
+   * Shown while no model matches the search.
+   * @default "No models found"
    */
-  openLabel?: string;
-  /**
-   * Whether the picker can't be focused or changed.
-   * @default false
-   */
-  disabled?: boolean;
-  /**
-   * How the list opens and closes. `"auto"` follows `prefers-reduced-motion`.
-   * @default "auto"
-   */
-  motion?: MotionMode;
+  emptyText?: string;
 };
 
-export type ModelSelectorState = {
-  /** The `models`. */
-  models: ModelOption<unknown>[];
-  /** The chosen model's id. */
-  value: string | null;
-  /** The `label`, else "Model". */
-  label: string;
-  /** The `placeholder`, else "Search models". */
-  placeholder: string;
-  /** The `openLabel`, else "Show models". */
-  openLabel: string;
-  /** The `disabled` option. */
-  disabled: boolean;
-  /** The `motion` option. */
-  motion: MotionMode;
-  /** What a person typed since the list opened. */
-  query: string;
-  /** Whether the list is open. */
-  open: boolean;
-};
-
-/** What the root hands the Combobox: pass every key to it. */
-export type ModelSelectorComboboxState = {
-  /** The primitive's own, which it reads and writes the chosen model through. */
-  controller: ComboboxController;
-  /** The chosen model when the Combobox mounted. */
-  defaultValue: string | null;
-  /** A model's name from its id, for a chosen model the filter hides. */
-  itemToLabel: (id: string) => string;
-  /** The primitive filters and ranks the list itself. */
-  filter: false;
-  /** Highlights the best match as a person types, so Enter chooses it. */
-  autoHighlight: true;
-  /** The `disabled` option. */
-  disabled: boolean;
-};
-
-/** A model as the list shows it: its name split into what the query matched and what it didn't. */
-export type ModelSelectorItem = ModelOption<unknown> & { segments: MatchSegment[] };
-
-/** What the content renders: the matching models by group, best match first. */
-export type ModelSelectorContentState = {
-  /**
-   * The field, as a selector the Combobox content takes as its `anchor`, so the list opens against the whole field
-   * rather than the input its icon pushes along.
-   */
-  anchor: string;
-  /** The groups with a match, in the order they first appear, each with its matching models, best first. */
-  groups: { group: string | undefined; models: ModelSelectorItem[] }[];
-};
-
-export type ModelSelectorApi = {
-  /** The chosen model's id. */
-  getValue: () => string | null;
-  /** Chooses a model, as a person would. Returns `false` for an unknown or disabled model, or a refused change. */
-  setValue: (id: string) => boolean;
-  /** The `models`. */
-  getModels: () => ModelOption<unknown>[];
-  /** Reports the model a person chose. Called as the Combobox's `change` bubbles to the root. */
-  read: (event: Event) => void;
-  /** Filters the list by what a person typed. Called as the search field's `input` bubbles. */
-  search: () => void;
-  /** Follows the list the Combobox opened, so the query resets when it closes. Called as keys and presses bubble. */
-  follow: () => void;
-  /** Writes the chosen model into the Combobox once it has attached the controller. */
-  syncValue: () => void;
-  /** Hands the Combobox its props. Called by the root slot. */
-  comboboxState: (state: ModelSelectorState) => ModelSelectorComboboxState;
-  /** Hands the content the matching models and the field's selector. Called by the content slot with its instance's id. */
-  contentState: (state: ModelSelectorState, id: string) => ModelSelectorContentState;
-};
-
-type Slot<Public extends object = Record<never, never>> = SlotDefinition<
-  ModelSelectorState,
-  ModelSelectorApi,
-  BaseSlotProps,
-  Public
->;
-
-type ModelSelectorSlots = {
-  root: Slot<ModelSelectorComboboxState>;
-  trigger: Slot<{ group: string; buttonLabel: string }>;
-  icon: Slot<{ icon: unknown }>;
-  input: Slot<{ label: string; placeholder: string }>;
-  content: Slot<ModelSelectorContentState>;
-};
+export type ModelSelectorState = PickerBaseState;
+export type ModelSelectorApi = PickerBaseApi;
+type ModelSelectorSlots = PickerBaseSlots<ModelSelectorState, ModelSelectorApi>;
 
 // Named explicitly because the inferred type references UI SDK types that no public entry exports (TS2742).
 export type ModelSelectorPrimitive = ReturnType<
@@ -147,21 +54,64 @@ export type ModelSelectorPrimitive = ReturnType<
 
 const noModels: ModelOption<unknown>[] = [];
 
-const presentation = (options: ModelSelectorOptions) => ({
-  models: options.models ?? noModels,
-  label: options.label ?? "Model",
-  placeholder: options.placeholder ?? "Search models",
-  openLabel: options.openLabel ?? "Show models",
-  disabled: options.disabled ?? false,
-  motion: options.motion ?? "auto",
+// A provider row's value, apart from model ids, since rows and pages share one set of values.
+const groupValue = (group: string) => `group:${group}`;
+
+const itemOf = (
+  { id, name, group, description, icon, disabled }: ModelOption<unknown>,
+  inGroup: boolean,
+): PickerItem<unknown> => ({
+  value: id,
+  label: name,
+  ...(description === undefined ? {} : { description }),
+  ...(icon === undefined ? {} : { icon }),
+  ...(disabled === undefined ? {} : { disabled }),
+  // A search for the provider finds its models.
+  ...(group === undefined ? {} : { keywords: [group], ...(inGroup ? { group } : {}) }),
 });
 
-// Marks the field with the instance's id in an attribute of our own, since a host may give the field any `id`.
-const fieldSelector = (id: string) => `[data-model-selector-field="${id.replace(/["\\]/g, "\\$&")}"]`;
+const flat = new WeakMap<ModelOption<unknown>[], PickerItem<unknown>[]>();
+const grouped = new WeakMap<ModelOption<unknown>[], PickerItem<unknown>[]>();
 
-const modelOf = (state: ModelSelectorState, id: string | null) =>
-  state.models.find((model) => model.id === id);
+/** Each group as a row that opens a page of its models; models without a group stay on the first page. */
+const groupItems = (models: ModelOption<unknown>[]) => {
+  const items: PickerItem<unknown>[] = [];
+  const groups = new Map<string, PickerItem<unknown> & { items: PickerItem<unknown>[] }>();
+  for (const model of models) {
+    if (model.group === undefined) {
+      items.push(itemOf(model, false));
+      continue;
+    }
+    let row = groups.get(model.group);
+    if (!row) {
+      row = { value: groupValue(model.group), label: model.group, items: [] };
+      groups.set(model.group, row);
+      items.push(row);
+    }
+    row.icon ??= model.icon;
+    row.items.push(itemOf(model, false));
+  }
+  return items;
+};
 
+/** The models as picker items, kept while the host keeps its `models` array. */
+const toItems = (models: ModelOption<unknown>[], pages: "flat" | "groups") =>
+  pages === "groups"
+    ? cached(grouped, models, groupItems)
+    : cached(flat, models, (all) => all.map((model) => itemOf(model, true)));
+
+const base = pickerBase<ModelSelectorOptions>({
+  kind: "model-selector",
+  label: "Model",
+  placeholder: "Search models",
+  emptyText: "No models found",
+  toItems: (options) => toItems(options.models ?? noModels, options.pages ?? "flat"),
+});
+
+/**
+ * A button that shows the chosen model and opens a searchable list of models grouped by provider, built on Picker:
+ * the search sits in the popup, and `actions` add footer rows like "More models".
+ */
 export const modelSelectorPrimitive: ModelSelectorPrimitive = definePrimitive<
   ModelSelectorOptions,
   ModelSelectorState,
@@ -169,160 +119,11 @@ export const modelSelectorPrimitive: ModelSelectorPrimitive = definePrimitive<
   ModelSelectorSlots
 >({
   name: "kind-model-selector",
-  options: {
-    models: "value",
-    value: "value",
-    defaultValue: "value",
-    onValueChange: "callback",
-    label: "string",
-    placeholder: "string",
-    openLabel: "string",
-    disabled: "boolean",
-    motion: "string",
-  },
-  state: (options) => ({
-    ...presentation(options),
-    value: options.value ?? options.defaultValue ?? null,
-    query: "",
-    open: false,
-  }),
-  sync: (options) => ({
-    ...presentation(options),
-    ...(options.value === undefined ? {} : { value: options.value }),
-  }),
-  controlled: ["value"],
-  api: (context) => {
-    const { store } = context;
-    const change = createChange(context);
-    const controller = createComboboxController();
-    const initial = store.get().value;
-    let watching = false;
-    let destroyed = false;
-    let resync = 0;
-    context.onDestroy(() => {
-      destroyed = true;
-      cancelAnimationFrame(resync);
-    });
-
-    const syncValue = () => {
-      const { value } = store.get();
-      // The controller reads `undefined` until the Combobox attaches it.
-      const shown = controller.getValue();
-      if (shown !== undefined && shown !== value) controller.setValue(value);
-    };
-    store.subscribe(syncValue);
-
-    const itemToLabel = (id: string) => modelOf(store.get(), id)?.name ?? id;
-    const comboboxState = memo(
-      (disabled: boolean): ModelSelectorComboboxState => ({
-        controller,
-        defaultValue: initial,
-        itemToLabel,
-        filter: false,
-        autoHighlight: true,
-        disabled,
-      }),
-    );
-    const contentState = memo(
-      (models: ModelOption<unknown>[], query: string, id: string): ModelSelectorContentState => ({
-        anchor: fieldSelector(id),
-        groups: filterModels(models, query).map(({ group, models: matched }) => ({
-          group,
-          models: matched.map((model) => ({
-            ...model,
-            segments: matchSegments(model.name, matchRanges(model.name, query, "fuzzy")),
-          })),
-        })),
-      }),
-    );
-
-    return {
-      getValue: () => store.get().value,
-      setValue: (id) => {
-        const state = store.get();
-        const model = modelOf(state, id);
-        if (!model || model.disabled || state.disabled) return false;
-        return id === state.value || change("value", id, { reason: "imperative" });
-      },
-      getModels: () => store.get().models,
-      read: (event) => {
-        const next = controller.getValue() ?? null;
-        if (next === store.get().value) return;
-        // A change the owner cancels is written back, and so is one a controlling owner didn't take by the next
-        // frame: the Combobox holds its own value.
-        if (!change("value", next, { reason: "input-change", event })) syncValue();
-        else if (context.options().value !== undefined) {
-          cancelAnimationFrame(resync);
-          resync = requestAnimationFrame(syncValue);
-        }
-      },
-      search: () => {
-        if (controller.isOpen()) store.set({ query: controller.getQuery() });
-      },
-      // `open` resolves on the list's next close, whatever causes it, and the Combobox puts the chosen name back.
-      follow: () => {
-        if (watching || !controller.isOpen()) return;
-        watching = true;
-        store.set({ open: true });
-        void controller.open().then(() => {
-          watching = false;
-          if (!destroyed) store.set({ open: false, query: "" });
-        });
-      },
-      syncValue,
-      comboboxState: (state) => comboboxState(state.disabled),
-      contentState: (state, id) => contentState(state.models, state.query, id),
-    };
-  },
-  slots: (slot) => ({
-    root: slot<BaseSlotProps, ModelSelectorComboboxState>({
-      role: "group",
-      state: (state, { api }) => api.comboboxState(state),
-      attrs: (state) => ({
-        "aria-label": state.label,
-        "data-open": state.open ? "" : undefined,
-        "data-disabled": state.disabled ? "" : undefined,
-        "data-motion": state.motion,
-      }),
-      // UI SDK's Combobox fires a native `change` that bubbles, as a native select does.
-      on: { change: (event, { api }) => api.read(event) },
-      bind: (_el, { api }) => api.syncValue(),
-    }),
-    trigger: slot<BaseSlotProps, { group: string; buttonLabel: string }>({
-      state: (state) => ({
-        group: modelOf(state, state.value)?.group ?? "",
-        buttonLabel: state.openLabel,
-      }),
-      attrs: (_state, { id }) => ({ "data-model-selector-field": id }),
-      on: {
-        keydown: (_event, { api }) => api.follow(),
-        click: (_event, { api }) => api.follow(),
-      },
-    }),
-    // Drawn from the chosen model, so server markup has it and a new icon replaces the old one.
-    icon: slot<BaseSlotProps, { icon: unknown }>({
-      present: (state) => modelOf(state, state.value)?.icon !== undefined,
-      state: (state) => ({ icon: modelOf(state, state.value)?.icon }),
-      attrs: () => ({ "aria-hidden": "true" }),
-    }),
-    input: slot<BaseSlotProps, { label: string; placeholder: string }>({
-      state: (state) => ({ label: state.label, placeholder: state.placeholder }),
-      on: {
-        input: (_event, { api }) => {
-          api.follow();
-          api.search();
-        },
-      },
-    }),
-    content: slot<BaseSlotProps, ModelSelectorContentState>({
-      state: (state, { api, id }) => api.contentState(state, id),
-    }),
-  }),
-  // Models are listed by name, so an agent can name one to `setValue`; an unknown or disabled one is refused.
-  agent: {
-    actions: ["setValue"],
-    items: (api: ModelSelectorApi) =>
-      api.getModels().map(({ id, name, disabled }) => ({ value: id, label: name, disabled })),
-    closed: true,
-  },
+  options: { ...base.options, models: "value", pages: "string" },
+  state: base.state,
+  sync: base.sync,
+  controlled: base.controlled,
+  api: base.api,
+  slots: (slot) => base.slots(slot),
+  agent: base.agent,
 });

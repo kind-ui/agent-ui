@@ -1,8 +1,9 @@
 /* Picker (spec §7): a button that shows the chosen item, and a popover holding a search field over a list of
-   two-line rows, grouped, with pages and footer actions. Rows keep one height whether or not they have a
+   two-line rows, grouped, with pages and footer actions. Keyed on `data-picker-part`, so every component that
+   spreads `pickerBase` (Model Selector, …) draws the same. Rows keep one height whether or not they have a
    description, so the list doesn't jump as a search marks one. */
 @layer components {
-  [data-slot="kind-picker"] {
+  [data-picker-part="root"] {
     --kind-picker-row-height: 2.75rem;
     /* Read by the internal Command, whose Tailwind utilities a component layer can't override. */
     --kind-command-input-height: 2.5rem;
@@ -20,7 +21,7 @@
   }
 
   /* One width whatever the chosen item's label, so choosing another moves nothing beside it. */
-  [data-slot="kind-picker-trigger"] {
+  [data-picker-part="trigger"] {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -65,7 +66,7 @@
     }
   }
 
-  :where([data-slot="kind-picker"]) :is([data-picker-icon], [data-slot="command-item-icon"]) {
+  :where([data-picker-part="root"]) :is([data-picker-icon], [data-slot="command-item-icon"]) {
     display: inline-flex;
     flex-shrink: 0;
     align-items: center;
@@ -81,7 +82,7 @@
     }
   }
 
-  [data-slot="kind-picker-content"] {
+  [data-picker-part="content"] {
     width: var(--kind-picker-content-width, 20rem);
     max-width: calc(100vw - 16px);
     padding: 0;
@@ -105,15 +106,15 @@
     }
   }
 
-  [data-slot="kind-picker-command"] {
+  [data-picker-part="command"] {
     display: contents;
   }
 
-  :where([data-slot="kind-picker"]) {
+  :where([data-picker-part="root"]) {
     & [data-slot="command-item"] {
       height: var(--kind-picker-row-height);
     }
-    & [data-slot="kind-picker-item"] {
+    & [data-picker-part="item"] {
       display: flex;
       flex: 1;
       align-items: center;
@@ -189,11 +190,11 @@
 
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
-    [data-slot="kind-picker"] [data-picker-chevron] {
+    [data-picker-part="root"] [data-picker-chevron] {
       forced-color-adjust: none;
       background-color: ButtonText;
     }
-    [data-slot="kind-picker"] :is([data-chosen], [data-opens], [data-row="back"]) [data-picker-mark] {
+    [data-picker-part="root"] :is([data-chosen], [data-opens], [data-row="back"]) [data-picker-mark] {
       forced-color-adjust: none;
       background-color: CanvasText;
     }
@@ -201,7 +202,7 @@
 
   /* Motion: the list rises and fades in from the button. Reduced motion only fades, in 120 ms; `none` doesn't
      animate. A sheet is UI SDK's, which slides whatever the motion settings. */
-  [data-slot="kind-picker-content"]:where(:not([data-presentation="sheet"])) {
+  [data-picker-part="content"]:where(:not([data-presentation="sheet"])) {
     transition:
       opacity var(--kind-duration-fast) var(--kind-ease-out),
       translate var(--kind-duration-base) var(--kind-ease),
@@ -218,7 +219,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    [data-slot="kind-picker-content"][data-motion="auto"] {
+    [data-picker-part="content"][data-motion="auto"] {
       transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
 
       &:is([data-starting-style], [data-ending-style]) {
@@ -228,7 +229,7 @@
     }
   }
 
-  [data-slot="kind-picker-content"][data-motion="reduced"] {
+  [data-picker-part="content"][data-motion="reduced"] {
     transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
 
     &:is([data-starting-style], [data-ending-style]) {
@@ -238,8 +239,8 @@
   }
 
   :is(
-    [data-slot="kind-picker-content"][data-motion="none"],
-    [data-slot="kind-picker"][data-motion="none"] [data-slot="kind-picker-trigger"]
+    [data-picker-part="content"][data-motion="none"],
+    [data-picker-part="root"][data-motion="none"] [data-picker-part="trigger"]
   ) {
     transition: none;
   }

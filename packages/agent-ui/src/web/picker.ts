@@ -1,20 +1,23 @@
 import {
   type PickerApi,
+  type PickerBaseApi,
+  type PickerBaseState,
   type PickerCommandState,
   type PickerItemState,
   type PickerOpenChangeReason,
   type PickerOptions,
   type PickerPage,
   type PickerRow,
-  type PickerState,
   type PickerValueChangeReason,
   pickerPrimitive,
 } from "@kind-ui/agent-ui/core";
-import { createParts, wrappedButton } from "@ui-sdk/web";
+import type { OptionsOf, Primitive } from "@ui-sdk/core";
+import { createParts, type PartOptions, type RootOptions, wrappedButton } from "@ui-sdk/web";
 import type { AttributeProperties, UiChangeEvent, UiElement } from "@ui-sdk/web/events";
 import { defineInternalCommand } from "./internal/command.js";
 
-const DEFAULT_PARTS = `<kind-picker-trigger><button></button></kind-picker-trigger><kind-picker-content hidden><kind-picker-command><kind-internal-command><ui-command><ui-command-input><input data-agent-hidden></ui-command-input><ui-command-empty></ui-command-empty><ui-command-list></ui-command-list></ui-command></kind-internal-command></kind-picker-command></kind-picker-content>`;
+const defaultParts = (tag: string) =>
+  `<${tag}-trigger><button></button></${tag}-trigger><${tag}-content hidden><${tag}-command><kind-internal-command><ui-command><ui-command-input><input data-agent-hidden></ui-command-input><ui-command-empty></ui-command-empty><ui-command-list></ui-command-list></ui-command></kind-internal-command></${tag}-command></${tag}-content>`;
 
 type PickerIcon = string | Element;
 
@@ -113,13 +116,13 @@ const place = (parent: Movable, child: Element, before: Element | null) => {
 
 type CommandItemElement = HTMLElement & { keywords: string[] | undefined };
 
-const drawRow = (document: Document, items: Map<string, Element>, row: PickerRow) => {
+const drawRow = (document: Document, items: Map<string, Element>, row: PickerRow, itemTag: string) => {
   const { value, label, keywords, disabled, page } = row.option;
   let item = items.get(value) as CommandItemElement | undefined;
   items.delete(value);
   if (!item) {
     item = element(document, "ui-command-item", { value }) as CommandItemElement;
-    const part = element(document, "kind-picker-item", { value });
+    const part = element(document, itemTag, { value });
     owned.add(part);
     item.append(part);
   }
@@ -133,7 +136,7 @@ const drawRow = (document: Document, items: Map<string, Element>, row: PickerRow
 };
 
 /** Draws every page, group and row into the list, reusing their elements. */
-const drawList = (list: Element, pages: PickerPage[]) => {
+const drawList = (list: Element, pages: PickerPage[], itemTag: string) => {
   const document = list.ownerDocument;
   const pageEls = new Map<string, Element>();
   for (const page of list.querySelectorAll(":scope > ui-command-page"))
@@ -166,7 +169,7 @@ const drawList = (list: Element, pages: PickerPage[]) => {
       }
       let last = group.querySelector(":scope > ui-command-group-label");
       for (const row of section.rows) {
-        const item = drawRow(document, items, row);
+        const item = drawRow(document, items, row, itemTag);
         place(group, item, last ? last.nextElementSibling : group.firstElementChild);
         last = item;
       }
@@ -182,42 +185,51 @@ const drawList = (list: Element, pages: PickerPage[]) => {
   for (const page of pageEls.values()) page.remove();
 };
 
+/** The element a picker's root is: its `can-run` attribute, read into the options. */
+type PickerRootElement = HTMLElement & { canRun?: boolean };
+
 /**
- * `<kind-picker label="Work in">` fills in its trigger and list when it has no children. Set `items`, `actions` and
- * `value` as properties; choosing an item fires `pickerchange` with its `value` as `detail.value`, and with `can-run`,
- * an action fires `pickeraction` with its `id`.
+ * The `createParts` map of a picker whose root is `tag` and whose parts are `<tag>-trigger`, `<tag>-content` and so
+ * on: Picker's, or that of a component that spreads `pickerBase`, like Model Selector, which renames the change and
+ * action events. The root fills in its trigger and list when it has no children.
  */
-export function definePicker(): void {
-  if (customElements.get("kind-picker")) return;
-  defineInternalCommand();
-  createParts(pickerPrimitive, {
+export function pickerElements<P extends Primitive>(
+  tag: string,
+  events: { onValueChange: string; onAction: string },
+): { root: RootOptions<P> } & Record<
+  "trigger" | "content" | "viewport" | "command" | "item",
+  string | PartOptions<P>
+> {
+  return {
     root: {
-      tag: "kind-picker",
+      tag,
       kinds: { canRun: "boolean" },
       // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
-      options: (el) => ((el as KindPickerElement).canRun ? {} : { onAction: undefined }),
+      options: (el) =>
+        ((el as PickerRootElement).canRun ? {} : { onAction: undefined }) as Partial<OptionsOf<P>>,
       state: {
         open: {
-          get: (api) => api.isOpen(),
-          set: (api, open) => api.setOpen(!!open),
+          get: (api) => (api as PickerBaseApi).isOpen(),
+          set: (api, open) => (api as PickerBaseApi).setOpen(!!open),
         },
         value: {
-          get: (api) => api.getValue(),
-          set: (api, value) => api.setValue?.(String(value)),
+          get: (api) => (api as PickerBaseApi).getValue(),
+          set: (api, value) => (api as PickerBaseApi).setValue?.(String(value)),
         },
       },
       // The inner Command fires `valuechange` and `action` of its own, and its items a `select`.
-      events: { onValueChange: "pickerchange", onAction: "pickeraction" },
+      events,
       // `setValue` is offered only while enabled, so it isn't copied onto `api`.
-      api: ["isOpen", "setOpen", "getValue"],
+      api: ["isOpen", "setOpen", "getValue"] as RootOptions<P>["api"],
       // A sheet sits in a full-screen viewport, which the content moves into while it presents as one.
       portal: {
         slots: ["content"],
         container: (el) => {
-          if ((instances.get(el)?.get() as PickerState | undefined)?.presentation !== "sheet") return null;
+          if ((instances.get(el)?.get() as PickerBaseState | undefined)?.presentation !== "sheet")
+            return null;
           let viewport = viewports.get(el);
           if (!viewport) {
-            const created = el.ownerDocument.createElement("kind-picker-viewport");
+            const created = el.ownerDocument.createElement(`${tag}-viewport`);
             // It leaves once the content has moved back in place.
             new MutationObserver(() => created.hasChildNodes() || created.remove()).observe(created, {
               childList: true,
@@ -232,23 +244,23 @@ export function definePicker(): void {
       render: (el, instance) => {
         instances.set(el, instance);
         if (!el.firstElementChild) {
-          el.innerHTML = DEFAULT_PARTS;
-          for (const part of el.querySelectorAll("kind-picker-trigger > button, kind-picker-command"))
-            owned.add(part);
+          el.innerHTML = defaultParts(tag);
+          for (const part of el.querySelectorAll(`${tag}-trigger > button, ${tag}-command`)) owned.add(part);
+          const content = el.querySelector(`${tag}-content`);
           // Focus moves to the search field as the list opens.
-          el.querySelector("kind-picker-content")?.setAttribute("initial-focus", "input");
-          el.querySelector("kind-picker-content")?.setAttribute("side-offset", "6");
-          el.querySelector("kind-picker-content")?.setAttribute("align", "start");
+          content?.setAttribute("initial-focus", "input");
+          content?.setAttribute("side-offset", "6");
+          content?.setAttribute("align", "start");
         }
-        const api = instance.api as PickerApi;
+        const api = instance.api as PickerBaseApi;
         const draw = () => {
-          const state = instance.get() as PickerState;
-          const button = el.querySelector("kind-picker-trigger > button");
+          const state = instance.get() as PickerBaseState;
+          const button = el.querySelector(`${tag}-trigger > button`);
           if (button && owned.has(button)) {
             const { text, icon } = api.triggerState(state);
             drawTrigger(button, text, icon);
           }
-          const command = el.querySelector("kind-picker-command");
+          const command = el.querySelector(`${tag}-command`);
           const commandState: PickerCommandState = api.commandState(state);
           if (command && owned.has(command) && drawn.get(command) !== commandState) {
             drawn.set(command, commandState);
@@ -261,9 +273,9 @@ export function definePicker(): void {
             if (empty && empty.textContent !== commandState.emptyText)
               empty.textContent = commandState.emptyText;
             const list = command.querySelector("ui-command-list");
-            if (list) drawList(list, commandState.pages);
+            if (list) drawList(list, commandState.pages, `${tag}-item`);
           }
-          for (const part of el.querySelectorAll("kind-picker-command kind-picker-item")) {
+          for (const part of el.querySelectorAll(`${tag}-command ${tag}-item`)) {
             // An item written empty fills itself in, as React's bare `PickerItem` does.
             if (!owned.has(part) && part.firstChild) continue;
             owned.add(part);
@@ -276,12 +288,29 @@ export function definePicker(): void {
         return unsubscribe;
       },
     },
-    trigger: { tag: "kind-picker-trigger", target: wrappedButton, display: "contents" },
-    content: "kind-picker-content",
-    viewport: "kind-picker-viewport",
-    command: { tag: "kind-picker-command", display: "contents" },
-    item: "kind-picker-item",
-  });
+    trigger: { tag: `${tag}-trigger`, target: wrappedButton, display: "contents" },
+    content: `${tag}-content`,
+    viewport: `${tag}-viewport`,
+    command: { tag: `${tag}-command`, display: "contents" },
+    item: `${tag}-item`,
+  };
+}
+
+/**
+ * `<kind-picker label="Work in">` fills in its trigger and list when it has no children. Set `items`, `actions` and
+ * `value` as properties; choosing an item fires `pickerchange` with its `value` as `detail.value`, and with `can-run`,
+ * an action fires `pickeraction` with its `id`.
+ */
+export function definePicker(): void {
+  if (customElements.get("kind-picker")) return;
+  defineInternalCommand();
+  createParts(
+    pickerPrimitive,
+    pickerElements<typeof pickerPrimitive>("kind-picker", {
+      onValueChange: "pickerchange",
+      onAction: "pickeraction",
+    }),
+  );
 }
 
 export type KindPickerEvents = {

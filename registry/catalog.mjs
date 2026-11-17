@@ -62,8 +62,9 @@ const components = {
   },
   "model-selector": {
     title: "Model Selector",
-    description: "A searchable list of models grouped by provider, with the matching letters marked.",
-    uses: ["internal-combobox"],
+    description:
+      "A button that opens a searchable list of models grouped by provider, with their logos and footer actions.",
+    uses: ["picker"],
   },
   "reasoning-effort": {
     title: "Reasoning Effort",
@@ -220,7 +221,6 @@ const internals = [
   "carousel",
   "checkbox",
   "collapsible",
-  "combobox",
   "command",
   "file-input",
   "menu",

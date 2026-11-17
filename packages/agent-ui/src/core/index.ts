@@ -225,12 +225,7 @@ export {
   messagePrimitive,
 } from "./message/index.js";
 export {
-  filterModels,
-  type ModelGroup,
   type ModelSelectorApi,
-  type ModelSelectorComboboxState,
-  type ModelSelectorContentState,
-  type ModelSelectorItem,
   type ModelSelectorOptions,
   type ModelSelectorPrimitive,
   type ModelSelectorState,

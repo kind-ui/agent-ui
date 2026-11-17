@@ -226,6 +226,16 @@ export type PickerBaseConfig<Options extends PickerBaseOptions> = {
   /** The `label` when the options have none. */
   label: string;
   /**
+   * The `placeholder` when the options have none.
+   * @default "Search"
+   */
+  placeholder?: string;
+  /**
+   * The `emptyText` when the options have none.
+   * @default "No matches"
+   */
+  emptyText?: string;
+  /**
    * Whether the chosen item shows a check.
    * @default true
    */
@@ -246,8 +256,8 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
     items: config.toItems(options),
     actions: options.actions ?? noActions,
     label: options.label ?? config.label,
-    placeholder: options.placeholder ?? "Search",
-    emptyText: options.emptyText ?? "No matches",
+    placeholder: options.placeholder ?? config.placeholder ?? "Search",
+    emptyText: options.emptyText ?? config.emptyText ?? "No matches",
     backLabel: options.backLabel ?? "Back",
     canRun: typeof options.onAction === "function",
     disabled: options.disabled ?? false,
@@ -480,6 +490,7 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
           attrs: (state, { api }) => ({
             "aria-label": api.name(state),
             "data-kind": config.kind,
+            "data-picker-part": "root",
             "data-open": state.open ? "" : undefined,
             "data-disabled": state.disabled ? "" : undefined,
             "data-motion": state.motion,
