@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `7aa718e` (Wave 5 Task 1 groundwork)
+Last reviewed: `fcaa6f4` (Wave 5 Task 2 Picker)
 
 ## Settled
 
