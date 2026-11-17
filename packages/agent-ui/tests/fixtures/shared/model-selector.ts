@@ -31,6 +31,8 @@ export const iconModels = <Icon>(toIcon: (markup: string) => Icon): ModelOption<
   { id: "local", name: "Local model", group: "Other" },
 ];
 
+export const modelActions = [{ id: "more", label: "More models" }];
+
 export const levels = [
   { value: "low", label: "Low" },
   { value: "medium", label: "Medium" },

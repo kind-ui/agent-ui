@@ -1,12 +1,22 @@
 import type { MotionMode } from "@kind-ui/agent-ui/core";
 import { defineModelSelector } from "../../../../src/web/model-selector.js";
 import { defineReasoningEffort } from "../../../../src/web/reasoning-effort.js";
-import { iconModels, levels, models, selectionHost } from "../../shared/model-selector.js";
+import { iconModels, levels, modelActions, models, selectionHost } from "../../shared/model-selector.js";
 
 const { host, record } = selectionHost();
 
 const toolbar =
-  (motion?: MotionMode, refusing = false) =>
+  ({
+    motion,
+    refusing = false,
+    plain = false,
+    pages,
+  }: {
+    motion?: MotionMode;
+    refusing?: boolean;
+    plain?: boolean;
+    pages?: "groups";
+  } = {}) =>
   (root: HTMLElement) => {
     defineModelSelector();
     defineReasoningEffort();
@@ -21,9 +31,18 @@ const toolbar =
     model.id = "model";
     model.models = models;
     model.defaultValue = "gpt-5";
+    if (pages) model.pages = pages;
     if (motion) model.motion = motion;
+    if (!plain) {
+      model.actions = modelActions;
+      model.canRun = true;
+    }
     model.addEventListener("modelchange", (event) => {
       record("model")(event.detail.value, event.detail);
+      if (refusing) event.preventDefault();
+    });
+    model.addEventListener("modelaction", (event) => {
+      record("action")(event.detail.value, event.detail);
       if (refusing) event.preventDefault();
     });
     const effort = document.createElement("kind-reasoning-effort");
@@ -70,7 +89,9 @@ const logos = (root: HTMLElement) => {
 
 export const cases = {
   all: toolbar(),
-  reduced: toolbar("reduced"),
-  refusing: toolbar(undefined, true),
+  plain: toolbar({ plain: true }),
+  groups: toolbar({ pages: "groups" }),
+  reduced: toolbar({ motion: "reduced" }),
+  refusing: toolbar({ refusing: true }),
   logos,
 };

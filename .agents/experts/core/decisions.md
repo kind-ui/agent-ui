@@ -17,7 +17,6 @@ Last reviewed: `fcaa6f4` (Wave 5 Task 2 Picker)
 - **A dismissed notice the host never removes stays faded and inert** (Wave 3 Task 10, D10): the host removes it in `onDismiss`; only a rejection brings it back.
 - **A Feedback comment that failed keeps its error and text until the next send** (Wave 3 Task 9), through a close and a rating change: the error belongs to the text it failed to send, which the box still holds.
 - **Suggestion's `pick` has no lock** (Wave 3 Task 7): `onPick` is a `callback`, as the plan says, so a double press calls it twice. A host whose pick sends a prompt drops a repeat itself, as it would for a double-clicked send.
-- **Model Selector marks matches only in the name** (Wave 3 Task 6): a model the query found through its group or description shows no mark. Spec §7 asks for match highlighting on the options, which are named by the model; marking descriptions would add a second highlighted line per row.
 - **Checkpoint `defaultOpen` logs UI SDK's dev warning that `agent.actions` lists `restore`** (Wave 3 Task 5): `restore` is a getter that returns `undefined` while the dialog is open, as the other Wave 3 actions do.
 - **Checkpoint's `restored` isn't in `controlled`** (Wave 3 Task 5): on web a boolean attribute turned off reads `undefined`, which made UI SDK warn that it stopped controlling it. An agent sees Restore gone and "Restored" instead.
 - **A denial in a Tool is announced twice, "Denied" then "<name> denied" (Wave 3 Task 3):** spec §4.1 keeps the recorded response and the resulting execution state apart; Confirmation announces the first and Tool its outcome, and a host sets them in separate updates.
@@ -78,6 +77,7 @@ Last reviewed: `fcaa6f4` (Wave 5 Task 2 Picker)
 
 ## Resolved
 
+- **Model Selector marked matches only in the name** (Wave 5 Task 3): on Picker it marks a description too, only when the name didn't match, as Picker does.
 - **Model Selector's list anchored through the field's `id`** (Wave 4 Task 12b, core, react and web reviews): an author `id` on the trigger, a page element with the same id or a `"` in it broke the anchor; the trigger now writes `data-model-selector-field` and the anchor is an escaped selector for it, and the `logos` case has a trigger with an author `id`.
 - **Queue, Task and Plan forget a removed id** (Wave 4 Task 12), as the uploader and attachments do, so an item added again under the same id enters again; Queue asks `onRemove` once per item until the host passes a new object for it or drops it. Pinned in `queue.spec.ts` and `task.spec.ts`.
 - **Step and Guardrail Notice panels find their trigger through `context.element`** (Wave 4 Task 12), not a document query, so a trigger inside a shadow root is found.

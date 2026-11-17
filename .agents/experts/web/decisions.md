@@ -25,7 +25,6 @@ Last reviewed: `fcaa6f4` (Wave 5 Task 2 Picker)
 
 - **A `kind-picker` removed while open and put back stays `open` with its popover hidden (Wave 5 Task 2):** it takes two clicks to reopen; a bare `ui-popover` does the same, so it's UI SDK's to report. An empty `kind-picker` also draws its trigger only once upgraded, the layout shift already listed for other elements.
 - **`hearComposed` doesn't tell nested components apart (Wave 5 Task 1):** an outer root hears the `ui-*` events of a component nested in its content, and `menuBase` filters by tag only. Fix (skip targets whose nearest Kind root isn't `el`'s) with a nested-roots test before Model Control (Task 9) nests Effort Slider. Picker (Wave 5 Task 2) nests no Kind component and hears only `ui-command` targets, so it isn't affected.
-- **`@ui-sdk/web`'s Combobox content `anchor` stringifies an element** (Wave 4 Task 12b): only a selector works, so Model Selector anchors through `data-model-selector-field`; report upstream.
 - **Closing a Step or Guardrail Notice panel inside a shadow root leaves focus on a hidden button** (Wave 4 Task 12): the trigger lookup is now `context.element`, but UI SDK's `bindPanel` asks for it only when `el.contains(document.activeElement)`, which is the shadow host there. Add to the upstream report beside `focus-recovery.js`; a shadow-root test comes with the fix.
 - **Checkpoint's Alert Dialog is named differently by layer in the snapshot:** "Restore checkpoint" in React, "Restore this checkpoint?" on web (Wave 3, seen in Task 12).
 - **The Transcript web fixture has no shadow-root, moved or written-parts case** (Wave 4 Task 10): checked by hand in review, not in the spec, as for Inline Citation and Sources.
@@ -64,6 +63,7 @@ Last reviewed: `fcaa6f4` (Wave 5 Task 2 Picker)
 
 ## Resolved
 
+- **Model Selector's Combobox `anchor` through `data-model-selector-field`** (Wave 5 Task 3): Model Selector moved onto Picker, whose popup anchors to its own trigger; the field and its anchor are gone.
 - **Wave 4 agent conformance** (Wave 4 Task 12): the web `case=wave-4` page draws the same text as React for all eleven Wave 4 components, and its `can-*` attributes add and remove their actions (`agent.spec.ts`).
 - **Selection and Action** (Wave 4 Task 11): empty written `kind-action-quote`, `kind-action-result` and `kind-selection-item` parts are filled in as React's defaults are; a `kind-selection` in a shadow root opens (core reads `getComposedRanges`); web fixtures use the tag map's element types.
 - **A web Transcript shorter than its viewport raised a ResizeObserver loop error** (Wave 4 Task 10): fixed; the viewport has a fixed `--kind-transcript-height`, so measuring segments never resizes it, and the spec fails on any window `error`.

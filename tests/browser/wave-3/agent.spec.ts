@@ -26,7 +26,7 @@ const confirmation = { component: "kind-confirmation", label: "Run the migration
 const toolApproval = { component: "kind-confirmation", label: "Run delete_file?", id: "delete_file" };
 const question = { component: "kind-question", label: "Deploy questions", id: "question" };
 const checkpoint = { component: "kind-checkpoint", label: "Checkpoint", id: "checkpoint" };
-const model = { component: "kind-model-selector", label: "Model", id: "model" };
+const model = { component: "kind-model-selector", label: "Model, GPT-5", id: "model" };
 const effort = { component: "kind-reasoning-effort", label: "Reasoning effort", id: "effort" };
 const context = { component: "kind-context-meter", label: "Context", id: "context" };
 const suggestion = { component: "kind-suggestion", label: "Suggestions", id: "suggestion" };
@@ -97,10 +97,13 @@ const conformance: Conformance[] = [
     target: model,
     action: "setValue",
     args: ["sonnet-4"],
-    ignore: '[data-slot="combobox-content"]',
+    ignore: '[data-slot="kind-model-selector-content"]',
     pointer: async (page) => {
-      await byId("model")(page).locator('[data-slot="combobox-trigger"]').click();
-      await page.getByRole("listbox").getByRole("option", { name: "Sonnet 4" }).click();
+      await byId("model")(page).locator('[data-slot="kind-model-selector-trigger"]').click();
+      await page
+        .locator('[data-slot="kind-model-selector-content"]')
+        .getByRole("option", { name: /^Sonnet 4/ })
+        .click();
     },
   },
   {
@@ -168,7 +171,7 @@ test("one snapshot lists every Wave 1, 2 and 3 component, each Wave 3 one by nam
     'kind-context-meter "Context": open press',
     'kind-feedback "Feedback": press rate',
     'kind-guardrail-notice "Model output withheld": collapse dismiss expand press',
-    'kind-model-selector "Model": setValue',
+    'kind-model-selector "Model, GPT-5": open setValue',
     'kind-notice "Rate limited": dismiss',
     'kind-question "Deploy questions": select setText skip',
     'kind-reasoning-effort "Reasoning effort": setValue',

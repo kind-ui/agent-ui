@@ -16,13 +16,11 @@ Last reviewed: `fcaa6f4` (Wave 5 Task 2 Picker)
 ## Known and open (don't report again, check whether fixed)
 
 - **UI SDK `CommandGroup` renders `hidden` without `aria-labelledby` on the server (Wave 5 Task 1):** a server-rendered Kind Command shows an empty group until hydration. UI SDK's; matters once Command renders outside a closed popup. Picker (Wave 5 Task 2) renders Command only while its list is open, so needs no workaround.
-- **UI SDK's `ComboboxValueIcon` has no server markup and keeps an icon copied before its content changed in place** (Wave 4 Task 12b): Model Selector draws its field icon from data instead (its own `icon` part); report upstream.
 - **A streamed Test Results update renders every row's UI SDK Tree parts and item parts** (Wave 4 Task 9): the known options-change cost (as Chain of Thought, Task and Sources). Our `TestResultsRow` components skip suites the host kept, since core caches tree items per suite.
 - **File Tree: the root `group` and the Tree are both named "Files"** (Wave 4 Task 6), so a screen reader may say it twice; and a function `className` on the root gets the Tree's props. Not checked with a screen reader.
 - **A server-rendered ready Generated Image shows "Loading image" and a shimmer until it hydrates** (Wave 4 Task 5): the phase comes from the `<img>`'s `load`, which only the client hears; the frame keeps its size. Each progress tick renders every part (UI SDK options change), as Chain of Thought's steps do.
 - **Sources re-renders every item's parts on any `sources` change** (Wave 4 Task 2), once per update, not per token: the same UI SDK options-change behavior as Chain of Thought, Task and Plan items despite `selects`.
 - **A Context Meter root `className` or `render` function gets `{}`,** as Status's root does (Wave 3 Task 8): style by `data-level`. The docs should say this covers every root.
-- **Renaming the chosen model leaves its old name in Model Selector's field** (Wave 3 Task 6): UI SDK's Combobox keeps the label it showed when `itemToLabel` or the item's label changes, even a bare `<Combobox>`; report upstream. The group beside it updates.
 - **Question's radio and checkbox groups have no name of their own:** the item's group, named by its prompt, names them, as UI SDK Field's "Groups in a Field Set" says; Radio's own docs point the group at the legend too. Not checked with a screen reader.
 - **A custom `QuestionItem` without `QuestionPrompt` has a dangling `aria-labelledby`,** as Step's group does without `StepTitle`.
 - **Two calls of the same tool share their copy-button and code-block names** ("search_docs input"): names come from the title, and a `toolCallId` isn't a name a person can read. A host can tell them apart with `label`.
@@ -48,6 +46,7 @@ Last reviewed: `fcaa6f4` (Wave 5 Task 2 Picker)
 
 ## Resolved
 
+- **Model Selector's Combobox field (`ComboboxValueIcon` without server markup, an old name kept after a rename)** (Wave 5 Task 3): Model Selector moved onto Picker; its trigger draws the chosen model's icon and name from data.
 - **Model Selector's field icon went stale and was missing from server markup** (Wave 4 Task 12b): `ComboboxValueIcon` was replaced by the primitive's `icon` part, drawn from the chosen model, and `keepMounted` is gone.
 - **`ModelSelectorItem`'s `model.icon` was `unknown`** (Wave 4 Task 12b): `ModelSelectorListItem` types it `string | ReactElement`, as `ModelSelectorModel` does.
 - **The `logos` fixture camelCased `aria-hidden`** (Wave 4 Task 12b): `logo()` keeps `aria-*` and `data-*` names.
