@@ -53,7 +53,7 @@ test("toggle and setValue change one setting each, refusing unknown ids and valu
   ]);
 });
 
-test("a person's toggle the owner cancels is cancelled in the menu too", () => {
+test("a person's change the owner cancels is cancelled in the menu, and one it takes isn't", () => {
   const { instance } = menu({ values: { style: "concise" } });
   const { onCheckedChange, onValueChange } = instance.api.partState.menu(instance.get());
   const cancelled = (call) => {
@@ -82,4 +82,31 @@ test("toggle and setValue are offered only while enabled and holding a setting o
   const toggles = menu({ settings: [settings[0]] }).instance.api;
   assert.equal(typeof toggles.toggle, "function");
   assert.equal(toggles.setValue, undefined);
+});
+
+test("setValues changes each setting once, each change building on the last, while values are controlled", () => {
+  const { instance, calls } = menu({ values: {} });
+  assert.equal(instance.api.setValues({ search: true, style: "concise", unknown: true }), false);
+  assert.deepEqual(calls, [
+    ["search", true, "imperative"],
+    ["style", "concise", "imperative"],
+  ]);
+  const seen = [];
+  settingsMenuPrimitive({
+    settings,
+    values: {},
+    onValuesChange: (values) => seen.push(values),
+  }).api.setValues({
+    search: true,
+    style: "concise",
+  });
+  assert.deepEqual(seen.at(-1), { search: true, style: "concise" });
+});
+
+test("a setting named like an Object.prototype member reads only its own value", () => {
+  const { instance } = menu({ settings: [{ type: "toggle", id: "constructor", label: "Odd" }] });
+  assert.equal(settingsMenuRows(instance.get().entries, {})[0].checked, false);
+  assert.equal(instance.api.toggle("constructor"), true);
+  assert.deepEqual(instance.get().values, { constructor: true });
+  assert.equal(instance.api.setValues({ toString: true }), false);
 });

@@ -12,9 +12,11 @@
     display: contents;
   }
 
-  /* A trigger holding only `[data-menu-trigger-icon]` is a square icon button; the menu sets
+  /* The icon button menus' trigger, whatever icon it holds; `[data-menu-trigger-icon]` draws the menu's
      `--kind-menu-trigger-icon`. */
-  :where([data-menu-part="trigger"]) [data-slot="menu-trigger"]:where(:has(> [data-menu-trigger-icon])) {
+  :where([data-kind="add-menu"], [data-kind="settings-menu"])
+    :where([data-menu-part="trigger"])
+    [data-slot="menu-trigger"] {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -38,6 +40,10 @@
     }
     &:is(:disabled, [data-disabled]) {
       opacity: 0.5;
+    }
+    & > :is(svg, img) {
+      width: 16px;
+      height: 16px;
     }
   }
 
@@ -120,7 +126,8 @@
     }
     [data-menu-part="root"] [data-menu-switch] {
       forced-color-adjust: none;
-      border: 1px solid CanvasText;
+      outline: 1px solid CanvasText;
+      outline-offset: -1px;
       background-color: Canvas;
 
       &[data-checked] {
@@ -176,13 +183,15 @@
     }
   }
 
-  /* A switch slides only at full motion. */
+  /* A switch moves and fades only at full motion. */
   @media (prefers-reduced-motion: reduce) {
-    :where([data-menu-part="root"][data-motion="auto"]) [data-menu-switch] > [data-menu-switch-thumb] {
+    :where([data-menu-part="root"][data-motion="auto"])
+      :is([data-menu-switch], [data-menu-switch] > [data-menu-switch-thumb]) {
       transition: none;
     }
   }
-  :where([data-menu-part="root"][data-motion="reduced"]) [data-menu-switch] > [data-menu-switch-thumb] {
+  :where([data-menu-part="root"]:is([data-motion="reduced"], [data-motion="none"]))
+    :is([data-menu-switch], [data-menu-switch] > [data-menu-switch-thumb]) {
     transition: none;
   }
 

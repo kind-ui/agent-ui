@@ -20,7 +20,7 @@ type Movable = Element & { moveBefore?: (node: Node, child: Node | null) => void
  * reconnect, where the browser has it.
  */
 export const placeMenuChild = (parent: Movable, child: Element, before: Element | null): void => {
-  if (child.parentElement === parent && child.nextElementSibling === before) return;
+  if (child.parentElement === parent && (child === before || child.nextElementSibling === before)) return;
   if (parent.moveBefore && child.isConnected && parent.isConnected) parent.moveBefore(child, before);
   else parent.insertBefore(child, before);
 };

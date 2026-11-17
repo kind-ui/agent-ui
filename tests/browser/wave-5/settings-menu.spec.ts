@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Fixture = {
   kindHost: { changes: { id: string; value: boolean | string; reason: string; source?: string }[] };
@@ -135,6 +136,34 @@ for (const scheme of ["light", "dark"] as const)
     expect(results.violations).toEqual([]);
   });
 
+test("a value change or an equal settings copy redraws no row, and focus stays", async ({
+  page,
+}, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "React keys its rows; web redraws them");
+  await load(page);
+  await trigger(page).click();
+  await choice(page).press("ArrowRight");
+  await page.keyboard.press("ArrowDown");
+  await expect(option(page, "Balanced")).toBeFocused();
+  const removed = await page.evaluate(async () => {
+    const menu = document.querySelector("kind-settings-menu");
+    if (!menu) return -1;
+    let count = 0;
+    const observer = new MutationObserver((records) => {
+      for (const record of records) count += record.removedNodes.length;
+    });
+    observer.observe(menu, { childList: true, subtree: true });
+    menu.values = { ...menu.values, search: true };
+    menu.settings = structuredClone(menu.settings);
+    await new Promise(requestAnimationFrame);
+    observer.disconnect();
+    return count;
+  });
+  expect(removed).toBe(0);
+  await expect(option(page, "Balanced")).toBeFocused();
+  await expect(toggle(page, /^Web search/)).toHaveAttribute("aria-checked", "true");
+});
+
 test("with reduced motion the menu only fades and the switch doesn't slide", async ({ page }) => {
   await load(page, "reduced");
   await trigger(page).click();
@@ -147,9 +176,15 @@ test("with reduced motion the menu only fades and the switch doesn't slide", asy
       const closing = getComputedStyle(el).transitionDuration;
       el.removeAttribute("data-ending-style");
       const thumb = el.querySelector("[data-menu-switch-thumb]");
-      return { open, closing, thumb: thumb && getComputedStyle(thumb).transitionProperty };
+      const track = el.querySelector("[data-menu-switch]");
+      return {
+        open,
+        closing,
+        thumb: thumb && getComputedStyle(thumb).transitionProperty,
+        track: track && getComputedStyle(track).transitionProperty,
+      };
     });
-  expect(transition).toEqual({ open: "opacity", closing: "0.12s", thumb: "none" });
+  expect(transition).toEqual({ open: "opacity", closing: "0.12s", thumb: "none", track: "none" });
 });
 
 test.describe("on a small touch screen", () => {

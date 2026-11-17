@@ -24,6 +24,7 @@ export type SettingsMenuChangeReason = "item-press" | "imperative";
 /** A change's details, with the `id` of the setting that changed. */
 export type SettingsMenuChangeDetails = ChangeDetails<SettingsMenuChangeReason> & { id: string };
 
+/** A Settings Menu's options: the menu's, plus its settings and their values. */
 export type SettingsMenuOptions = MenuBaseOptions & {
   /**
    * The rows, in order: a `toggle` is a switch that keeps the menu open, a `choice` a submenu of its `options` showing
@@ -50,22 +51,28 @@ export type SettingsMenuOptions = MenuBaseOptions & {
 /** A switch row. */
 export type SettingsMenuToggleRow = {
   type: "toggle";
+  /** The setting's `id`, which the checkbox item takes as its `value`. */
   id: string;
+  /** The first line, and the text typeahead matches. */
   label: string;
   /** The second line, under the label. */
   description: string | undefined;
   /** Passed through untouched, for the render layer to draw. */
   icon: unknown;
+  /** Whether the toggle is on: its value is `true`. */
   checked: boolean;
 };
 
 /** A row that opens a submenu of options, one of them chosen. */
 export type SettingsMenuChoiceRow = {
   type: "choice";
+  /** The setting's `id`, which names its radio group. */
   id: string;
+  /** The submenu trigger's text before the value, and the text typeahead matches. */
   label: string;
   /** Passed through untouched, for the render layer to draw. */
   icon: unknown;
+  /** The submenu's radio items, in order. */
   options: SettingsOption[];
   /** The chosen option's `value`, or `undefined` while none is. */
   value: string | undefined;
@@ -79,6 +86,7 @@ export type SettingsMenuContentState = { rows: SettingsMenuRow[] };
 export type SettingsMenuState = MenuBaseState & {
   /** The host's `settings` as passed, icons included. */
   entries: SettingsEntry<unknown>[];
+  /** The values by setting `id`, which the agent snapshot shows. */
   values: SettingsValues;
 };
 
@@ -118,13 +126,16 @@ export type SettingsMenuPrimitive = ReturnType<
 const NO_SETTINGS: SettingsEntry<unknown>[] = [];
 const NO_VALUES: SettingsValues = {};
 
+// Own keys only, so a setting named like an `Object.prototype` member reads no inherited value.
+const ownValue = (values: SettingsValues, id: string) => (Object.hasOwn(values, id) ? values[id] : undefined);
+
 /** The rows the settings and values draw. A choice whose value isn't one of its options shows none. */
 export const settingsMenuRows = (
   settings: SettingsEntry<unknown>[],
   values: SettingsValues,
 ): SettingsMenuRow[] =>
   settings.map((setting) => {
-    const value = values[setting.id];
+    const value = ownValue(values, setting.id);
     if (setting.type === "toggle")
       return {
         type: "toggle",
@@ -219,13 +230,14 @@ export const settingsMenuPrimitive: SettingsMenuPrimitive = definePrimitive<
     const menu = base.api(context);
     const changeValues = createChange(context);
     const find = (id: string) => store.get().entries.find((setting) => setting.id === id);
-    const current = (id: string) =>
-      store.get().values[id] ?? (find(id)?.type === "toggle" ? false : undefined);
+    const current = (id: string, values = store.get().values) =>
+      ownValue(values, id) ?? (find(id)?.type === "toggle" ? false : undefined);
 
-    const change = (id: string, value: boolean | string, cause: Cause) => {
+    // `values` is what the change builds on: a controlled store keeps the owner's until it passes new ones.
+    const change = (id: string, value: boolean | string, cause: Cause, values = store.get().values) => {
       if (store.get().disabled || !fits(find(id), value)) return false;
-      if (current(id) === value) return true;
-      return changeValues("values", { ...store.get().values, [id]: value }, { ...cause, id });
+      if (current(id, values) === value) return true;
+      return changeValues("values", { ...values, [id]: value }, { ...cause, id });
     };
     changes.set(context, change);
 
@@ -258,10 +270,15 @@ export const settingsMenuPrimitive: SettingsMenuPrimitive = definePrimitive<
       partState: menu.partState,
       composedEvents: menu.composedEvents,
       getValues: () => store.get().values,
-      setValues: (values) =>
-        Object.entries(values)
-          .map(([id, value]) => current(id) === value || change(id, value, { reason: "imperative" }))
-          .every(Boolean),
+      setValues: (values) => {
+        let next = store.get().values;
+        let accepted = true;
+        for (const [id, value] of Object.entries(values)) {
+          if (change(id, value, { reason: "imperative" }, next)) next = { ...next, [id]: value };
+          else accepted = false;
+        }
+        return accepted;
+      },
       getSettings: () => (store.get().disabled ? NO_SETTINGS : store.get().entries),
       get toggle() {
         return offers("toggle") ? toggle : undefined;

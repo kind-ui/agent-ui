@@ -1,6 +1,7 @@
 import {
   type SettingsMenuApi,
   type SettingsMenuChangeReason,
+  type SettingsMenuChoiceRow,
   type SettingsMenuContentState,
   type SettingsMenuOptions,
   type SettingsMenuRow,
@@ -23,7 +24,7 @@ const DEFAULT_PARTS = `<kind-internal-menu><ui-menu><kind-settings-menu-trigger>
 // children do. Kept across instances, because UI SDK rebuilds one when the element returns to the page.
 const owned = new WeakSet<Element>();
 const drawn = new WeakMap<Element, SettingsMenuContentState>();
-const drawnChoices = new WeakMap<Element, SettingsMenuRow & { type: "choice" }>();
+const drawnOptions = new WeakMap<Element, SettingsMenuChoiceRow["options"]>();
 
 type Checkable = HTMLElement & { checked: boolean };
 type Selectable = HTMLElement & { value: string | null };
@@ -50,6 +51,40 @@ const drawToggle = (
   return item;
 };
 
+/** The value's labels and the radio items, each reused by its option's `value`, so a focused option keeps focus. */
+const drawOptions = (
+  document: Document,
+  value: Element,
+  group: Element,
+  options: SettingsMenuChoiceRow["options"],
+) => {
+  const labels = new Map([...value.children].map((el) => [el.getAttribute("data-value"), el]));
+  const items = new Map([...group.children].map((el) => [el.getAttribute("value"), el]));
+  let previousLabel: Element | null = null;
+  let previousItem: Element | null = null;
+  for (const option of options) {
+    const label = labels.get(option.value) ?? element(document, "span", { "data-value": option.value });
+    labels.delete(option.value);
+    if (label.textContent !== option.label) label.textContent = option.label;
+    place(value, label, previousLabel ? previousLabel.nextElementSibling : value.firstElementChild);
+    previousLabel = label;
+    let item = items.get(option.value);
+    items.delete(option.value);
+    if (!item) {
+      item = element(document, "ui-menu-radio-item", { value: option.value });
+      const indicator = element(document, "ui-menu-item-indicator", { "keep-mounted": "" });
+      indicator.append(element(document, "span", { "data-menu-check": "", "aria-hidden": "true" }));
+      item.append(indicator, element(document, "span"));
+    }
+    item.setAttribute("label", option.label);
+    const text = item.lastElementChild;
+    if (text && text.textContent !== option.label) text.textContent = option.label;
+    place(group, item, previousItem ? previousItem.nextElementSibling : group.firstElementChild);
+    previousItem = item;
+  }
+  for (const el of [...labels.values(), ...items.values()]) el.remove();
+};
+
 const drawChoice = (
   document: Document,
   el: Element | undefined,
@@ -72,20 +107,7 @@ const drawChoice = (
     trigger.querySelector(":scope > [data-menu-chevron]") ??
     element(document, "span", { "data-menu-chevron": "" });
   drawMenuItemContent(trigger, row, [value, chevron]);
-  const last = drawnChoices.get(sub);
-  if (last?.options !== row.options) {
-    value.replaceChildren(...row.options.map((option) => element(document, "span", {}, option.label)));
-    group.replaceChildren(
-      ...row.options.map((option) => {
-        const item = element(document, "ui-menu-radio-item", { value: option.value, label: option.label });
-        const indicator = element(document, "ui-menu-item-indicator", { "keep-mounted": "" });
-        indicator.append(element(document, "span", { "data-menu-check": "", "aria-hidden": "true" }));
-        item.append(indicator, element(document, "span", {}, option.label));
-        return item;
-      }),
-    );
-  }
-  drawnChoices.set(sub, row);
+  if (drawnOptions.get(sub) !== row.options) drawOptions(document, value, group, row.options);
   for (const [index, label] of [...value.children].entries())
     label.toggleAttribute("data-current", row.options[index]?.value === row.value);
   if (group.value !== (row.value ?? null)) group.value = row.value ?? null;
