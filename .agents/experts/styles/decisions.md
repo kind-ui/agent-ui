@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `67cb9d1` (Wave 5 Task 3 Model Selector on Picker)
+Last reviewed: `a272144` (Wave 5 Task 4 Add Menu)
 
 ## Settled
 
@@ -55,6 +55,7 @@ Last reviewed: `67cb9d1` (Wave 5 Task 3 Model Selector on Picker)
 
 ## Resolved
 
+- **Menu exit ran 150 ms under reduced motion, and the Add Menu trigger rule was two attributes deep (Wave 5 Task 4):** the base exit rule and the trigger's context moved into `:where()`; the spec checks the 120 ms exit.
 - **Model Selector's field icon rules** (Wave 5 Task 3): Model Selector moved onto Picker and is styled by `picker.css` through `data-picker-part`; the field and its icon rules are gone.
 - **Model Selector's icon selectors outranked a consumer class** (Wave 4 Task 12b): the row spacer's context is in `:where()`, and the field icon is a single-attribute selector on its own part.
 - **Mask-drawn icons vanish in forced colors** (Wave 4 Task 12): every mask icon has a `forced-color-adjust: none` rule (`ButtonText` in buttons, `CanvasText` elsewhere), the Context Meter ring is redrawn in system colors, disabled Send reads `GrayText` and a pressed Wrap `SelectedItem`. Pinned in `forced-colors.spec.ts`.

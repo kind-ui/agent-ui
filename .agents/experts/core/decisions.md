@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `67cb9d1` (Wave 5 Task 3 Model Selector on Picker)
+Last reviewed: `a272144` (Wave 5 Task 4 Add Menu)
 
 ## Settled
 
@@ -37,6 +37,7 @@ Last reviewed: `67cb9d1` (Wave 5 Task 3 Model Selector on Picker)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **`MenuRun.keepOpen` with a returned promise (Wave 5 Task 4):** untested, and no menu does both; a later close after the promise settles would be refused. Settle it when a `menuBase` menu first returns a promise.
 - **Every `pickerBase` component warns at mount that `agent.actions` lists `close`** (Wave 5 Task 2): the getter is `undefined` while the list is closed; UI SDK's development check, harmless, as AGENTS.md says for Message.
 - **A `pickerBase` item part with a key no row has gets `undefined` as its state (Wave 5 Task 2):** both layers render keys from `pages`, so none does today; a custom list that renders a stale key would throw reading `row`.
 - **`hearComposed` doesn't tell nested components apart (Wave 5 Task 1):** an outer root hears the `ui-*` events of a component nested in its content, and `menuBase` filters by tag only. Fix (skip targets whose nearest Kind root isn't `el`'s) with a nested-roots test before Model Control (Task 9) nests Effort Slider. Picker (Wave 5 Task 2) nests no Kind component and hears only `ui-command` targets, so it isn't affected.
@@ -78,6 +79,7 @@ Last reviewed: `67cb9d1` (Wave 5 Task 3 Model Selector on Picker)
 
 ## Resolved
 
+- **`menuBase`'s data cache was shared by every instance (Wave 5 Task 4):** two Add Menus updating in turn re-notified; `toData` now returns one array per input (Add Menu caches it per sections) and the cache checks identity first. Unit test with two instances.
 - **Model Selector marked matches only in the name** (Wave 5 Task 3): on Picker it marks a description too, only when the name didn't match, as Picker does.
 - **Model Selector's list anchored through the field's `id`** (Wave 4 Task 12b, core, react and web reviews): an author `id` on the trigger, a page element with the same id or a `"` in it broke the anchor; the trigger now writes `data-model-selector-field` and the anchor is an escaped selector for it, and the `logos` case has a trigger with an author `id`.
 - **Queue, Task and Plan forget a removed id** (Wave 4 Task 12), as the uploader and attachments do, so an item added again under the same id enters again; Queue asks `onRemove` once per item until the host passes a new object for it or drops it. Pinned in `queue.spec.ts` and `task.spec.ts`.

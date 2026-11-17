@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `67cb9d1` (Wave 5 Task 3 Model Selector on Picker)
+Last reviewed: `a272144` (Wave 5 Task 4 Add Menu)
 
 ## Settled
 
@@ -23,6 +23,8 @@ Last reviewed: `67cb9d1` (Wave 5 Task 3 Model Selector on Picker)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **An `addaction` (and `pickeraction`) listener can't keep an item pending (Wave 5 Task 4):** `onAction` is a `"callback"`, so no `waitUntil`; decide `"action"` for Picker and Add Menu together.
+- **The `open` attribute of `kind-add-menu` and `kind-picker` neither reflects nor controls the popup (Wave 5 Task 4):** the docs say to set the property; reflect it or stop observing it with Picker's root state.
 - **`kind-model-selector` has no moved or shadow-root fixture case** (Wave 5 Task 3): both paths were checked by hand in review (a moved element redraws and keeps working; in a shadow root focus, `aria-controls` and `modelchange` behave); add cases when Picker gains its own.
 - **A `kind-picker` removed while open and put back stays `open` with its popover hidden (Wave 5 Task 2):** it takes two clicks to reopen; a bare `ui-popover` does the same, so it's UI SDK's to report. An empty `kind-picker` also draws its trigger only once upgraded, the layout shift already listed for other elements.
 - **`hearComposed` doesn't tell nested components apart (Wave 5 Task 1):** an outer root hears the `ui-*` events of a component nested in its content, and `menuBase` filters by tag only. Fix (skip targets whose nearest Kind root isn't `el`'s) with a nested-roots test before Model Control (Task 9) nests Effort Slider. Picker (Wave 5 Task 2) nests no Kind component and hears only `ui-command` targets, so it isn't affected.
@@ -64,6 +66,7 @@ Last reviewed: `67cb9d1` (Wave 5 Task 3 Model Selector on Picker)
 
 ## Resolved
 
+- **`kind-add-menu` rebuilt every row on an `items` change, dropping focus (Wave 5 Task 4):** rows are now drawn by `id` and moved only when out of place; a written empty `ui-menu-content` fills itself in. Spec covers both.
 - **Model Selector's Combobox `anchor` through `data-model-selector-field`** (Wave 5 Task 3): Model Selector moved onto Picker, whose popup anchors to its own trigger; the field and its anchor are gone.
 - **Wave 4 agent conformance** (Wave 4 Task 12): the web `case=wave-4` page draws the same text as React for all eleven Wave 4 components, and its `can-*` attributes add and remove their actions (`agent.spec.ts`).
 - **Selection and Action** (Wave 4 Task 11): empty written `kind-action-quote`, `kind-action-result` and `kind-selection-item` parts are filled in as React's defaults are; a `kind-selection` in a shadow root opens (core reads `getComposedRanges`); web fixtures use the tag map's element types.
