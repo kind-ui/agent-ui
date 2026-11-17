@@ -194,7 +194,7 @@ const components = {
   message: {
     title: "Message",
     description: "A chat message with copy, regenerate, edit and branch controls.",
-    uses: ["internal-toolbar"],
+    uses: ["internal-toolbar", "internal-menu"],
   },
   markdown: {
     title: "Markdown",

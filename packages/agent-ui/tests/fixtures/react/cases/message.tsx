@@ -1,4 +1,5 @@
 import type { MessageStatus } from "@kind-ui/agent-ui";
+import type { MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
 import { type ReactNode, useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 import {
@@ -25,6 +26,7 @@ import {
   MessageToolbar,
 } from "../../../../src/react/message.js";
 import { answer } from "../../shared/markdown.js";
+import { regenerateOptions } from "../../shared/message.js";
 
 const replies = [
   "Retry with exponential backoff, and cap the number of attempts.",
@@ -79,6 +81,29 @@ function Assistant({ callbacks }: { callbacks: boolean }) {
           <MessageBranchLabel />
           <MessageBranchNext />
         </MessageBranch>
+        <Actions>
+          <MessageRegenerate>
+            <KindToolbarButton aria-label="Regenerate" />
+          </MessageRegenerate>
+        </Actions>
+      </MessageToolbar>
+    </Message>
+  );
+}
+
+function WithOptions({ refusing }: { refusing?: boolean }) {
+  return (
+    <Message
+      aria-label="Assistant message"
+      text={replies[0]}
+      regenerateOptions={regenerateOptions}
+      onRegenerate={(_text: string, details: MessageRegenerateDetails) => {
+        calls.push(`regenerate:${details.optionId ?? ""}:${details.reason}:${details.source}`);
+        if (refusing) details.cancel();
+      }}
+    >
+      <MessageContent>{replies[0]}</MessageContent>
+      <MessageToolbar>
         <Actions>
           <MessageRegenerate>
             <KindToolbarButton aria-label="Regenerate" />
@@ -180,4 +205,14 @@ export const cases = {
     </div>
   ),
   chat: () => <Chat />,
+  options: () => (
+    <div className="m-4 w-[36rem]">
+      <WithOptions />
+    </div>
+  ),
+  refusing: () => (
+    <div className="m-4 w-[36rem]">
+      <WithOptions refusing />
+    </div>
+  ),
 };

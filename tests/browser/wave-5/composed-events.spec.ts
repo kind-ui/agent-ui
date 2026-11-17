@@ -52,6 +52,19 @@ test("an event from a kind-* element, a cancelled one, or one after unbinding is
   await expect(lines(page)).toHaveText("action first programmatic\n");
 });
 
+test("an event of a component nested in the root's content reaches only that component", async ({ page }) => {
+  await page.evaluate(async () => {
+    const inner = document.createElement("kind-test-menu");
+    inner.innerHTML = "<ui-menu><ui-menu-content></ui-menu-content></ui-menu>";
+    document.querySelector("kind-test-menu")?.append(inner);
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    inner
+      .querySelector("ui-menu")
+      ?.dispatchEvent(new CustomEvent("action", { detail: { value: "inner" }, cancelable: true }));
+  });
+  await expect(lines(page)).toHaveText("action inner programmatic\n");
+});
+
 test("a disabled menu doesn't open, and closes when disabled while open", async ({ page }) => {
   const root = page.locator("kind-test-menu");
   const trigger = page.getByRole("button", { name: "Edit" });

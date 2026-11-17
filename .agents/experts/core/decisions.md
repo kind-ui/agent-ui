@@ -41,7 +41,6 @@ Last reviewed: `780e148` (Wave 5 Task 6 Approval Mode)
 - **`MenuRun.keepOpen` with a returned promise (Wave 5 Task 4):** untested, and no menu does both; a later close after the promise settles would be refused. Settle it when a `menuBase` menu first returns a promise.
 - **Every `pickerBase` component warns at mount that `agent.actions` lists `close`** (Wave 5 Task 2): the getter is `undefined` while the list is closed; UI SDK's development check, harmless, as AGENTS.md says for Message.
 - **A `pickerBase` item part with a key no row has gets `undefined` as its state (Wave 5 Task 2):** both layers render keys from `pages`, so none does today; a custom list that renders a stale key would throw reading `row`.
-- **`hearComposed` doesn't tell nested components apart (Wave 5 Task 1):** an outer root hears the `ui-*` events of a component nested in its content, and `menuBase` filters by tag only. Fix (skip targets whose nearest Kind root isn't `el`'s) with a nested-roots test before Model Control (Task 9) nests Effort Slider. Picker (Wave 5 Task 2) nests no Kind component and hears only `ui-command` targets, so it isn't affected.
 - **Terminal relies on the virtualizer laying out again when its count changes** (Wave 4 Task 12): a new line sets `rows` and `size` from it instead of calling `refresh()`, which UI SDK's docs ask for after a count change but which reads the viewport twice more per line. `budgets.spec.ts` and `terminal.spec.ts` pin it; ask upstream for a count-only update.
 - **Queue's remove lock isn't in state** (Wave 4 Task 12): a second `remove` of an item already asked returns `false`, and neither the remove control nor the snapshot shows the pending removal. A host declining without `cancel()` passes a new object for the item to allow another try (on `onRemove`).
 - **Stack Trace's library panels still find their toggle with an `[aria-controls]` query over `getRootNode()`**, where Step and Guardrail Notice now use `context.element`; the toggle is keyed per group.
@@ -80,6 +79,7 @@ Last reviewed: `780e148` (Wave 5 Task 6 Approval Mode)
 
 ## Resolved
 
+- **`hearComposed` didn't tell nested components apart (Wave 5 Task 1, fixed in Task 7):** an element nearer the event's target that hears the same event name now takes it, so an outer root no longer hears a nested component's `ui-*` events; `composed-events.spec.ts` nests one `kind-test-menu` in another and fails without the fix.
 - **Settings Menu `setValues` lost changes while controlled, and read inherited values (Wave 5 Task 5):** each change builds on the one before, and values are read by own key; unit tests pin both.
 - **`menuBase`'s data cache was shared by every instance (Wave 5 Task 4):** two Add Menus updating in turn re-notified; `toData` now returns one array per input (Add Menu caches it per sections) and the cache checks identity first. Unit test with two instances.
 - **Model Selector marked matches only in the name** (Wave 5 Task 3): on Picker it marks a description too, only when the name didn't match, as Picker does.

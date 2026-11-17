@@ -144,3 +144,77 @@ test("has no axe violations", async ({ page }) => {
   const { violations } = await new AxeBuilder({ page }).include("#root").analyze();
   expect(violations).toEqual([]);
 });
+
+const regenerate = (page: Page) => assistant(page).getByRole("button", { name: "Regenerate" });
+const row = (page: Page, name: string | RegExp) => page.getByRole("menuitem", { name });
+
+test.describe("with regenerate options", () => {
+  test("Regenerate opens a menu in the toolbar's arrow-key order, and each row regenerates with its option", async ({
+    page,
+  }) => {
+    await open(page, "options");
+    await assistant(page).getByRole("button", { name: "Copy" }).focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(regenerate(page)).toBeFocused();
+    await expect(regenerate(page)).toHaveAttribute("aria-haspopup", "menu");
+    await page.keyboard.press("Enter");
+    await expect(row(page, "Try again")).toBeFocused();
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("ArrowDown");
+    await expect(row(page, /^More concise/)).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("menu")).toBeHidden();
+    await expect(regenerate(page)).toBeFocused();
+
+    await regenerate(page).click();
+    await row(page, "Try again").click();
+    await regenerate(page).click();
+    await row(page, "Try with another model").press("ArrowRight");
+    await expect(row(page, "GPT-5")).toBeFocused();
+    await page.keyboard.press("Enter");
+    expect(await calls(page)).toEqual([
+      "regenerate:concise:item-press:keyboard",
+      "regenerate::item-press:mouse",
+      "regenerate:gpt-5:item-press:keyboard",
+    ]);
+  });
+
+  test("a regenerate the host cancels keeps the menu open", async ({ page }) => {
+    await open(page, "refusing");
+    await regenerate(page).click();
+    await row(page, "Add details").click();
+    await expect(page.getByRole("menu")).toBeVisible();
+    expect(await calls(page)).toEqual(["regenerate:details:item-press:mouse"]);
+  });
+
+  test("agents regenerate with an option by id or label, and an unknown one is refused", async ({ page }) => {
+    await open(page, "options");
+    await expectAgentActions(page, "Assistant message", ["copy", "regenerate"]);
+    await act(page, [{ ref: "Assistant message", action: "regenerate", args: ["concise"] }]);
+    await act(page, [{ ref: "Assistant message", action: "regenerate", args: ["Claude Sonnet"] }]);
+    await act(page, [{ ref: "Assistant message", action: "regenerate" }]);
+    const refused = await act(page, [{ ref: "Assistant message", action: "regenerate", args: ["nope"] }]);
+    expect(JSON.stringify(refused)).toContain("nope");
+    expect(await calls(page)).toEqual([
+      "regenerate:concise:imperative:agent",
+      "regenerate:claude-sonnet:imperative:agent",
+      "regenerate::imperative:agent",
+    ]);
+  });
+
+  for (const scheme of ["light", "dark"] as const)
+    test(`has no axe violations with the menu open, ${scheme}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await open(page, "options");
+      await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
+      await regenerate(page).click();
+      await expect(row(page, "Try again")).toBeVisible();
+      await page.waitForFunction(
+        () =>
+          !document.querySelector("[data-starting-style]") &&
+          document.getAnimations().every((animation) => animation.playState !== "running"),
+      );
+      const { violations } = await new AxeBuilder({ page }).include("#root").analyze();
+      expect(violations).toEqual([]);
+    });
+});
