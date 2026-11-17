@@ -3,7 +3,7 @@ title: Document
 description: Show a document the agent wrote as a card, with its kind and size, Copy, Download and a preview that expands.
 ---
 
-import DocumentExample from "@/examples/document/basic";
+import DocumentExample from "../../../examples/document/basic";
 
 Use a document when the agent hands over a file, like a README, a script or notes, rather than a reply. It shows the title with what the document is and its size, Copy and Download in a toolbar, and the content in a preview that expands to show it all.
 
@@ -44,7 +44,7 @@ Document
 
 ### Formats
 
-Pass the source as `content` and say how it shows with `format`. `"markdown"`, the default, renders through [Markdown](/docs/components/markdown), `"code"` through a [Code Block](/docs/components/code-block) without its header, and `"text"` as plain text that wraps. Give code its `language`, which shows beside the title and goes to `highlight`, as Code Block's does.
+Pass the source as `content` and say how it shows with `format`. `"markdown"`, the default, renders through [Markdown](./markdown.mdx), `"code"` through a [Code Block](./code-block.mdx) without its header, and `"text"` as plain text that wraps. Give code its `language`, which shows beside the title and goes to `highlight`, as Code Block's does.
 
 ```tsx
 <Document label="backoff.ts" format="code" language="ts" content={source} />

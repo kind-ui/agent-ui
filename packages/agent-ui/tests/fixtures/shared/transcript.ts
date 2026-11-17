@@ -55,6 +55,6 @@ export const manySegments = (count: number): TranscriptSegment[] =>
       index % 2 ? "Marco" : "Priya",
       index * 10,
       index * 10 + 9,
-      `Point ${index + 1} on the agenda covers the rollout plan and who owns the follow up.`,
+      `Point ${index + 1}: the agenda, the rollout, the follow up.`,
     ),
   );
