@@ -134,3 +134,79 @@ export interface SelectionActionItem {
   label: string;
   description?: string;
 }
+
+/** A row of a picker. `Icon` is what each render layer takes as an icon. A row with `items` opens a page of them. */
+export interface PickerItem<Icon = unknown> {
+  value: string;
+  label: string;
+  /** A second line under the label. */
+  description?: string;
+  /** Trailing text, like a branch's ahead and behind counts. */
+  meta?: string;
+  icon?: Icon;
+  /** More words the search matches. */
+  keywords?: string[];
+  group?: string;
+  disabled?: boolean;
+  items?: PickerItem<Icon>[];
+}
+
+/** A footer row of a picker, like "More models". */
+export interface PickerAction<Icon = unknown> {
+  id: string;
+  label: string;
+  description?: string;
+  icon?: Icon;
+}
+
+/** An entry of a menu. One with `items` opens a submenu of them. */
+export interface MenuEntry<Icon = unknown> {
+  id: string;
+  label: string;
+  description?: string;
+  icon?: Icon;
+  group?: string;
+  disabled?: boolean;
+  items?: MenuEntry<Icon>[];
+}
+
+/** A mode of an approval mode menu. A `danger` mode lets the agent do more without asking. */
+export interface ApprovalModeOption {
+  value: string;
+  label: string;
+  description?: string;
+  danger?: boolean;
+}
+
+/** A level of an effort slider, in order from least to most effort. */
+export interface EffortLevel {
+  value: string;
+  label: string;
+}
+
+/** A file, selection or other context attached to the next message. */
+export interface ContextChip<Icon = unknown> {
+  id: string;
+  label: string;
+  /** What the context is, like `"file"`, written as `data-kind`. */
+  kind?: string;
+  icon?: Icon;
+}
+
+/** A saved prompt to insert into the composer. */
+export interface PromptTemplate {
+  id: string;
+  title: string;
+  body: string;
+  description?: string;
+  group?: string;
+}
+
+/** A way to regenerate a message, like "More concise". One with `items` opens a submenu of them. */
+export interface RegenerateOption<Icon = unknown> {
+  id: string;
+  label: string;
+  description?: string;
+  icon?: Icon;
+  items?: RegenerateOption<Icon>[];
+}

@@ -17,6 +17,7 @@
     "testResultsPrimitive": 12000,
     "transcriptPrimitive": 19000,
     "selectionPrimitive": 12500,
-    "actionPrimitive": 8000
+    "actionPrimitive": 8000,
+    "menuBase": 4000
   }
 }

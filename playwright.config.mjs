@@ -6,7 +6,7 @@ const fixture = (name, port, mode = "development") => ({
   reuseExistingServer: !process.env.CI,
 });
 
-const waves = ["wave-1", "wave-2", "wave-3", "wave-4"];
+const waves = ["wave-1", "wave-2", "wave-3", "wave-4", "wave-5"];
 const layers = waves.flatMap((wave) => [
   { name: `${wave}-react`, wave, baseURL: "http://localhost:4310" },
   { name: `${wave}-web`, wave, baseURL: "http://localhost:4311" },

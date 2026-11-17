@@ -1,4 +1,5 @@
 {
-  "src/core/file-input-events.ts": "Composed UI SDK component events on Web Components",
+  "src/core/composed-events.ts": "Composed UI SDK component events on Web Components",
+  "src/core/dictation.ts": "Dictation audio and speech",
   "src/core/motion/index.ts": "Motion helper presets (§6)"
 }

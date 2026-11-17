@@ -47,6 +47,7 @@ export {
   type Highlight,
   type Token,
 } from "./code-block/index.js";
+export { type ComposedHandler, hearComposed } from "./composed-events.js";
 export {
   type ComposerApi,
   type ComposerAttachment,
@@ -100,6 +101,12 @@ export {
   type FollowState,
   nextFollowState,
 } from "./conversation/index.js";
+export {
+  createSpeechDictation,
+  type DictationEvent,
+  type DictationSource,
+  type SpeechDictationOptions,
+} from "./dictation.js";
 export {
   type DocumentApi,
   type DocumentContentState,
@@ -196,6 +203,18 @@ export {
   type MarkdownViewPrimitive,
   markdownViewPrimitive,
 } from "./markdown-view/index.js";
+export {
+  type MenuBaseApi,
+  type MenuBaseConfig,
+  type MenuBaseOptions,
+  type MenuBaseState,
+  type MenuChoice,
+  type MenuPartState,
+  type MenuPresentation,
+  type MenuRun,
+  menuBase,
+  menuItems,
+} from "./menu-base.js";
 export {
   branchLabel,
   type MessageApi,

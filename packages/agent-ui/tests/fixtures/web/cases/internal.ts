@@ -1,10 +1,13 @@
 import { defineInternalAvatar } from "../../../../src/web/internal/avatar.js";
 import { defineInternalButton } from "../../../../src/web/internal/button.js";
 import { defineInternalCollapsible } from "../../../../src/web/internal/collapsible.js";
+import { defineInternalCommand } from "../../../../src/web/internal/command.js";
 import { defineInternalFileInput } from "../../../../src/web/internal/file-input.js";
 import { defineInternalMenu } from "../../../../src/web/internal/menu.js";
 import { defineInternalProgress } from "../../../../src/web/internal/progress.js";
 import { defineInternalScrollArea } from "../../../../src/web/internal/scroll-area.js";
+import { defineInternalSlider } from "../../../../src/web/internal/slider.js";
+import { defineInternalSwitch } from "../../../../src/web/internal/switch.js";
 import { defineInternalToggle } from "../../../../src/web/internal/toggle.js";
 import { defineInternalTokenInput } from "../../../../src/web/internal/token-input.js";
 import { defineInternalToolbar } from "../../../../src/web/internal/toolbar.js";
@@ -155,6 +158,89 @@ export const cases = {
           <ui-progress-track><ui-progress-indicator></ui-progress-indicator></ui-progress-track>
         </ui-progress>
       </kind-internal-progress>
+    `;
+  },
+  command: (root: HTMLElement) => {
+    defineInternalCommand();
+    root.innerHTML = `
+      <kind-internal-command>
+        <ui-command>
+          <ui-command-input><input aria-label="Search commands" placeholder="Search" /></ui-command-input>
+          <ui-command-empty>No commands found</ui-command-empty>
+          <ui-command-list>
+            <ui-command-group>
+              <ui-command-group-label>Files</ui-command-group-label>
+              <ui-command-item value="new-file">
+                <ui-command-item-icon>+</ui-command-item-icon>
+                <ui-command-item-text>New file</ui-command-item-text>
+              </ui-command-item>
+              <ui-command-item value="open-recent"><ui-command-item-text>Open recent</ui-command-item-text></ui-command-item>
+              <ui-command-item value="rename"><ui-command-item-text>Rename</ui-command-item-text></ui-command-item>
+            </ui-command-group>
+          </ui-command-list>
+        </ui-command>
+      </kind-internal-command>
+    `;
+  },
+  slider: (root: HTMLElement) => {
+    defineInternalSlider();
+    root.innerHTML = `
+      <kind-internal-slider>
+        <ui-slider default-value="40">
+          <ui-slider-value></ui-slider-value>
+          <ui-slider-control>
+            <ui-slider-track>
+              <ui-slider-indicator></ui-slider-indicator>
+              <ui-slider-thumb aria-label="Volume"></ui-slider-thumb>
+            </ui-slider-track>
+          </ui-slider-control>
+        </ui-slider>
+      </kind-internal-slider>
+    `;
+  },
+  switch: (root: HTMLElement) => {
+    defineInternalSwitch();
+    root.innerHTML = `
+      <kind-internal-switch>
+        <ui-switch aria-label="Notifications"><ui-switch-thumb></ui-switch-thumb></ui-switch>
+      </kind-internal-switch>
+    `;
+  },
+  "menu-data": (root: HTMLElement) => {
+    defineInternalMenu();
+    root.innerHTML = `
+      <kind-internal-menu>
+        <ui-menu>
+          <ui-menu-trigger><button>Settings</button></ui-menu-trigger>
+          <ui-menu-content>
+            <ui-menu-group>
+              <ui-menu-group-label>View</ui-menu-group-label>
+              <ui-menu-item value="archive">
+                <ui-menu-item-icon>▣</ui-menu-item-icon>
+                <span data-menu-text><span>Archive</span><span data-menu-description>Hide it from the list</span></span>
+              </ui-menu-item>
+              <ui-menu-checkbox-item value="wrap">
+                <ui-menu-item-indicator keep-mounted>✓</ui-menu-item-indicator>
+                Word wrap
+              </ui-menu-checkbox-item>
+            </ui-menu-group>
+            <ui-menu-separator></ui-menu-separator>
+            <ui-menu-radio-group default-value="comfortable">
+              <ui-menu-group-label>Density</ui-menu-group-label>
+              <ui-menu-radio-item value="compact"><ui-menu-item-indicator keep-mounted>•</ui-menu-item-indicator>Compact</ui-menu-radio-item>
+              <ui-menu-radio-item value="comfortable"><ui-menu-item-indicator keep-mounted>•</ui-menu-item-indicator>Comfortable</ui-menu-radio-item>
+            </ui-menu-radio-group>
+            <ui-menu-separator></ui-menu-separator>
+            <ui-menu-sub>
+              <ui-menu-sub-trigger>Move to</ui-menu-sub-trigger>
+              <ui-menu-sub-content>
+                <ui-menu-item value="inbox">Inbox</ui-menu-item>
+              </ui-menu-sub-content>
+            </ui-menu-sub>
+            <ui-menu-item value="delete" destructive>Delete</ui-menu-item>
+          </ui-menu-content>
+        </ui-menu>
+      </kind-internal-menu>
     `;
   },
 };

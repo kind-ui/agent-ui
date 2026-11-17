@@ -14,6 +14,10 @@ const rootSlots = {
   "trigger-menu": "trigger-menu-input",
   "file-input": "file-input",
   progress: "progress",
+  command: "command",
+  slider: "slider",
+  switch: "switch",
+  "menu-data": "menu-trigger",
 };
 
 const open = async (page: Page, name: string) => {
@@ -132,4 +136,47 @@ test("file input: chosen files are listed", async ({ page }) => {
 test("progress: exposes its value", async ({ page }) => {
   await open(page, "progress");
   await expect(page.getByRole("progressbar", { name: "Uploading" })).toHaveAttribute("aria-valuenow", "40");
+});
+
+test("command: typing filters the list, ArrowDown highlights a command", async ({ page }) => {
+  await open(page, "command");
+  const items = page.locator('#root [data-slot="command-item"]');
+  await page.getByRole("combobox", { name: "Search commands" }).focus();
+  await page.keyboard.type("re");
+  await expect(items.filter({ hasText: "New file" })).toBeHidden();
+  await expect(items.filter({ visible: true })).toHaveCount(2);
+  await page.keyboard.press("ArrowDown");
+  await expect(items.and(page.locator("[data-highlighted]"))).toHaveCount(1);
+});
+
+test("slider: ArrowRight raises the value", async ({ page }) => {
+  await open(page, "slider");
+  const thumb = page.getByRole("slider", { name: "Volume" });
+  await expect(thumb).toHaveValue("40");
+  await thumb.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(thumb).toHaveValue("41");
+});
+
+test("switch: Space toggles aria-checked", async ({ page }) => {
+  await open(page, "switch");
+  const control = page.getByRole("switch", { name: "Notifications" });
+  await expect(control).toHaveAttribute("aria-checked", "false");
+  await control.focus();
+  await page.keyboard.press("Space");
+  await expect(control).toHaveAttribute("aria-checked", "true");
+});
+
+test("menu data: Space toggles a checkbox item and keeps the menu open", async ({ page }) => {
+  await open(page, "menu-data");
+  await page.getByRole("button", { name: "Settings" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("menuitem", { name: "Archive" })).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  const wrap = page.getByRole("menuitemcheckbox", { name: "Word wrap" });
+  await expect(wrap).toBeFocused();
+  await expect(wrap).toHaveAttribute("aria-checked", "false");
+  await page.keyboard.press("Space");
+  await expect(wrap).toHaveAttribute("aria-checked", "true");
+  await expect(wrap).toBeVisible();
 });

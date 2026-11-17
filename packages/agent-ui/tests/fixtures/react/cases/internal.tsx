@@ -7,6 +7,17 @@ import {
   KindCollapsibleTrigger,
 } from "../../../../src/react/internal/collapsible.js";
 import {
+  KindCommand,
+  KindCommandEmpty,
+  KindCommandGroup,
+  KindCommandGroupLabel,
+  KindCommandInput,
+  KindCommandItem,
+  KindCommandItemIcon,
+  KindCommandItemText,
+  KindCommandList,
+} from "../../../../src/react/internal/command.js";
+import {
   KindFileInput,
   KindFileInputDropzone,
   KindFileInputItem,
@@ -16,9 +27,19 @@ import {
 } from "../../../../src/react/internal/file-input.js";
 import {
   KindMenu,
+  KindMenuCheckboxItem,
   KindMenuContent,
+  KindMenuGroup,
+  KindMenuGroupLabel,
   KindMenuItem,
+  KindMenuItemIcon,
+  KindMenuItemIndicator,
+  KindMenuRadioGroup,
+  KindMenuRadioItem,
   KindMenuSeparator,
+  KindMenuSub,
+  KindMenuSubContent,
+  KindMenuSubTrigger,
   KindMenuTrigger,
 } from "../../../../src/react/internal/menu.js";
 import {
@@ -35,6 +56,15 @@ import {
   KindScrollAreaThumb,
   KindScrollAreaViewport,
 } from "../../../../src/react/internal/scroll-area.js";
+import {
+  KindSlider,
+  KindSliderControl,
+  KindSliderIndicator,
+  KindSliderThumb,
+  KindSliderTrack,
+  KindSliderValue,
+} from "../../../../src/react/internal/slider.js";
+import { KindSwitch, KindSwitchThumb } from "../../../../src/react/internal/switch.js";
 import { KindToggle } from "../../../../src/react/internal/toggle.js";
 import {
   KindTokenInput,
@@ -187,5 +217,85 @@ export const cases = {
         <KindProgressIndicator />
       </KindProgressTrack>
     </KindProgress>
+  ),
+  command: () => (
+    <KindCommand>
+      <KindCommandInput aria-label="Search commands" placeholder="Search" />
+      <KindCommandEmpty>No commands found</KindCommandEmpty>
+      <KindCommandList>
+        <KindCommandGroup>
+          <KindCommandGroupLabel>Files</KindCommandGroupLabel>
+          <KindCommandItem value="new-file">
+            <KindCommandItemIcon>+</KindCommandItemIcon>
+            <KindCommandItemText>New file</KindCommandItemText>
+          </KindCommandItem>
+          <KindCommandItem value="open-recent">
+            <KindCommandItemText>Open recent</KindCommandItemText>
+          </KindCommandItem>
+          <KindCommandItem value="rename">
+            <KindCommandItemText>Rename</KindCommandItemText>
+          </KindCommandItem>
+        </KindCommandGroup>
+      </KindCommandList>
+    </KindCommand>
+  ),
+  slider: () => (
+    <KindSlider defaultValue={40}>
+      <KindSliderValue />
+      <KindSliderControl>
+        <KindSliderTrack>
+          <KindSliderIndicator />
+          <KindSliderThumb aria-label="Volume" />
+        </KindSliderTrack>
+      </KindSliderControl>
+    </KindSlider>
+  ),
+  switch: () => (
+    <KindSwitch aria-label="Notifications">
+      <KindSwitchThumb />
+    </KindSwitch>
+  ),
+  "menu-data": () => (
+    <KindMenu>
+      <KindMenuTrigger>Settings</KindMenuTrigger>
+      <KindMenuContent>
+        <KindMenuGroup>
+          <KindMenuGroupLabel>View</KindMenuGroupLabel>
+          <KindMenuItem value="archive">
+            <KindMenuItemIcon>▣</KindMenuItemIcon>
+            <span data-menu-text>
+              <span>Archive</span>
+              <span data-menu-description>Hide it from the list</span>
+            </span>
+          </KindMenuItem>
+          <KindMenuCheckboxItem value="wrap">
+            <KindMenuItemIndicator keepMounted>✓</KindMenuItemIndicator>
+            Word wrap
+          </KindMenuCheckboxItem>
+        </KindMenuGroup>
+        <KindMenuSeparator />
+        <KindMenuRadioGroup defaultValue="comfortable">
+          <KindMenuGroupLabel>Density</KindMenuGroupLabel>
+          <KindMenuRadioItem value="compact">
+            <KindMenuItemIndicator keepMounted>•</KindMenuItemIndicator>
+            Compact
+          </KindMenuRadioItem>
+          <KindMenuRadioItem value="comfortable">
+            <KindMenuItemIndicator keepMounted>•</KindMenuItemIndicator>
+            Comfortable
+          </KindMenuRadioItem>
+        </KindMenuRadioGroup>
+        <KindMenuSeparator />
+        <KindMenuSub>
+          <KindMenuSubTrigger>Move to</KindMenuSubTrigger>
+          <KindMenuSubContent>
+            <KindMenuItem value="inbox">Inbox</KindMenuItem>
+          </KindMenuSubContent>
+        </KindMenuSub>
+        <KindMenuItem value="delete" destructive>
+          Delete
+        </KindMenuItem>
+      </KindMenuContent>
+    </KindMenu>
   ),
 };
