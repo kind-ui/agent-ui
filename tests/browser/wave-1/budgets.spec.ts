@@ -12,9 +12,10 @@ const BUDGETS = {
   // A new line in a full viewport reads layout 16 times (17 under StrictMode, which binds the new line twice). The
   // line that first fills the 10-line case's viewport both grows and scrolls it, which the virtualizer reads twice more.
   terminalLine: { writes: 8, renders: 9, notified: 5, layoutReads: 19 },
-  transcriptWord: { writes: 3, renders: 3, notified: 3, layoutReads: 6 },
-  transcriptSegment: { writes: 38, renders: 44, notified: 47, layoutReads: 9 },
-  transcriptSearch: { writes: 44, renders: 221, notified: 170, layoutReads: 2 },
+  // Segments in the fixture fit on one line, so how many are in view doesn't depend on the platform's fonts.
+  transcriptWord: { writes: 3, renders: 3, notified: 3, layoutReads: 4 },
+  transcriptSegment: { writes: 32, renders: 32, notified: 35, layoutReads: 9 },
+  transcriptSearch: { writes: 66, renders: 184, notified: 128, layoutReads: 2 },
   remount: { nodes: 0, listeners: 0 },
 };
 const SIZES = [10, 500];
