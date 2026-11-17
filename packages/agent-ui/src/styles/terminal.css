@@ -125,6 +125,14 @@
     }
   }
 
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    [data-slot="kind-terminal-copy"]::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+  }
+
   /* Its line height is the virtualizer's guess for every line, so a line that doesn't wrap never moves the ones
      after it when it's measured. */
   [data-slot="kind-terminal-viewport"] {
@@ -254,6 +262,13 @@
     &:focus-visible {
       outline: 1.5px solid var(--kind-color-ring);
       outline-offset: 2px;
+    }
+  }
+
+  @media (forced-colors: active) {
+    [data-slot="kind-terminal-jump"]::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
     }
   }
 

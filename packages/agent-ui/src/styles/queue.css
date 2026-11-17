@@ -169,6 +169,14 @@
     }
   }
 
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    [data-slot="kind-queue-item-remove"]::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+  }
+
   [data-slot="kind-queue-item"]:is(:hover, :focus-visible) > [data-slot="kind-queue-item-remove"] {
     opacity: 1;
   }

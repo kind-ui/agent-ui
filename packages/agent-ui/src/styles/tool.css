@@ -83,6 +83,14 @@
     }
   }
 
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    :is([data-slot="kind-tool-input-copy"], [data-slot="kind-tool-output-copy"])::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+  }
+
   [data-slot="kind-tool-output"][data-kind="markdown"] {
     --kind-markdown-font-size: 0.875rem;
     --kind-markdown-color: var(--kind-color-fg);

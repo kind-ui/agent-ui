@@ -330,7 +330,9 @@ export const stepBase = <
             motion: () => store.get().motion,
             reveal: (event) => api.setOpen(true, { reason: "find-in-page", event }),
             trigger: () =>
-              el.ownerDocument.querySelector<HTMLElement>(`[aria-controls="${id}-content"]`) ?? undefined,
+              (el.getRootNode() as Document | ShadowRoot).querySelector<HTMLElement>(
+                `[aria-controls="${id}-content"]`,
+              ) ?? undefined,
             subscribe: store.subscribe,
             // TypeScript can't relate a StepState key to a `State` that only extends it.
             exited: () => store.set({ exiting: false } as Partial<State>),

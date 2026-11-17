@@ -12,7 +12,15 @@ const initial: QueueItem[] = [
 
 type Call = { type: "reorder" | "remove"; id: string; index?: number; reason: string; source: string };
 
-function Queues({ editable = true, motion }: { editable?: boolean; motion?: QueueOptions["motion"] }) {
+function Queues({
+  editable = true,
+  removeLater = false,
+  motion,
+}: {
+  editable?: boolean;
+  removeLater?: boolean;
+  motion?: QueueOptions["motion"];
+}) {
   const [items, setItems] = useState(initial);
   useEffect(() => {
     Object.assign(window, {
@@ -39,7 +47,7 @@ function Queues({ editable = true, motion }: { editable?: boolean; motion?: Queu
     },
     onRemove: (id, { reason, source }) => {
       log({ type: "remove", id, reason, source });
-      setItems((all) => all.filter((item) => item.id !== id));
+      if (!removeLater) setItems((all) => all.filter((item) => item.id !== id));
     },
   };
   return (
@@ -52,6 +60,7 @@ function Queues({ editable = true, motion }: { editable?: boolean; motion?: Queu
 export const cases = {
   all: () => <Queues />,
   readonly: () => <Queues editable={false} />,
+  "remove-later": () => <Queues removeLater />,
   reduced: () => <Queues motion="reduced" />,
   none: () => <Queues motion="none" />,
 };

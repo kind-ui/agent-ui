@@ -166,6 +166,14 @@
     }
   }
 
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    :where([data-slot="kind-composer"]) [data-slot="token-input-token"]::before {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+    }
+  }
+
   :where([data-slot="kind-composer"]) [data-slot="token-input-token-remove"] {
     display: inline-grid;
     place-items: center;
@@ -186,6 +194,13 @@
 
     &:hover {
       opacity: 1;
+    }
+  }
+
+  @media (forced-colors: active) {
+    :where([data-slot="kind-composer"]) [data-slot="token-input-token-remove"]::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
     }
   }
 
@@ -280,6 +295,15 @@
     height: 0.625rem;
     border-radius: 2px;
     mask: none;
+  }
+
+  @media (forced-colors: active) {
+    [data-slot="kind-composer"] [data-slot="file-input-trigger"]::before,
+    [data-slot="kind-composer-submit"]:not([data-pending])::before,
+    [data-slot="kind-composer-stop"]::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
   }
 
   /* Reduced motion: no scale, a short fade. `none`: no transition at all. */

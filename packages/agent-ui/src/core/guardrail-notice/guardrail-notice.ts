@@ -223,7 +223,9 @@ export const guardrailNoticePrimitive: GuardrailNoticePrimitive = definePrimitiv
             motion: () => store.get().motion,
             reveal: api.reveal,
             trigger: () =>
-              el.ownerDocument.querySelector<HTMLElement>(`[aria-controls="${id}-detail"]`) ?? undefined,
+              (el.getRootNode() as Document | ShadowRoot).querySelector<HTMLElement>(
+                `[aria-controls="${id}-detail"]`,
+              ) ?? undefined,
             subscribe: store.subscribe,
             exited: () => store.set({ exiting: false }),
           }),

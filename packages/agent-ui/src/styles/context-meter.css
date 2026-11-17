@@ -92,6 +92,19 @@
     background-color: var(--kind-context-color);
   }
 
+  /* Forced colors replace a background, which is all a mask draws, and drop the ring's gradient. */
+  @media (forced-colors: active) {
+    :where([data-slot="kind-context-meter"]) [data-slot="meter-track"]::before {
+      forced-color-adjust: none;
+      background: conic-gradient(ButtonText var(--meter-value), GrayText 0);
+    }
+    :where([data-slot="kind-context-meter"]:is([data-level="high"], [data-level="full"]))
+      [data-slot="meter-track"]::after {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+  }
+
   /* As wide as "100 %", the widest a locale writes it, so a new value never moves what's beside the meter. */
   :where([data-slot="kind-context-meter"]) [data-slot="meter-value"] {
     min-width: calc(4ch + 1em);

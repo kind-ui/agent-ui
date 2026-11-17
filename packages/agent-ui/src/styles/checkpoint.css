@@ -72,6 +72,14 @@
     }
   }
 
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    :where([data-slot="kind-checkpoint"]) [data-checkpoint-trigger]::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+  }
+
   [data-slot="kind-checkpoint-restored"] {
     --kind-status-mark-size: 14px;
     display: inline-flex;

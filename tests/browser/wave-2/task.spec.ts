@@ -102,6 +102,28 @@ test("only an item that arrives after the first frame plays its entrance", async
   expect(animated).toEqual([false, false, false, true]);
 });
 
+test("an item removed and added again under the same id plays its entrance", async ({ page }) => {
+  await open(page);
+  await page.evaluate(() => (window as unknown as Fixture).kindItems.remove("tests"));
+  await expect(task(page).getByRole("listitem")).toHaveCount(2);
+  // Reads the rows in the frame the item comes back, before a slow round trip could outlast its entrance.
+  const animated = await page.evaluate(async () => {
+    (window as unknown as Fixture).kindItems.append({
+      id: "tests",
+      status: "pending",
+      title: "Run the tests",
+    });
+    for (let frame = 0; frame < 30; frame++) {
+      const items = [...document.querySelectorAll<HTMLElement>('#task [data-slot="kind-task-item"]')];
+      if (items.some((el) => el.textContent?.includes("Run the tests")))
+        return items.map((el) => el.getAnimations().length > 0);
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    }
+    return [];
+  });
+  expect(animated).toEqual([false, false, true]);
+});
+
 test("a status change doesn't move the rows", async ({ page }) => {
   await open(page);
   const boxes = () =>

@@ -262,6 +262,38 @@ test("only an item that arrives after the first frame plays its entrance", async
   expect(animated).toEqual([false, false, false, true]);
 });
 
+test("an item removed and added again under the same id plays its entrance", async ({ page }) => {
+  await open(page);
+  await hostRemove(page, "b");
+  await expect(queue(page).locator('[data-slot="kind-queue-item"]')).toHaveCount(3);
+  await expect(queue(page).locator("[data-leaving]")).toHaveCount(0);
+  // Reads the rows in the frame the item comes back, before a slow round trip could outlast its entrance.
+  const animated = await page.evaluate(async () => {
+    (window as unknown as Fixture).kindQueue.add({ id: "b", status: "pending", title: "Update the docs" });
+    for (let frame = 0; frame < 30; frame++) {
+      const rows = [
+        ...document.querySelectorAll<HTMLElement>(
+          '#queue [data-slot="kind-queue-list"][data-section="pending"] [data-slot="kind-queue-item"]',
+        ),
+      ];
+      if (rows.some((el) => el.textContent?.includes("Update the docs")))
+        return rows.map((el) => el.getAnimations().some((each) => !(each instanceof CSSTransition)));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    }
+    return [];
+  });
+  expect(animated).toEqual([false, false, true]);
+});
+
+test("an item already asked to be removed isn't asked again before the host removes it", async ({ page }) => {
+  await open(page, "remove-later");
+  await act(page, "remove", ["b"]);
+  await act(page, "remove", ["b"]);
+  expect(await calls(page)).toEqual([{ type: "remove", id: "b", reason: "imperative", source: "agent" }]);
+  await hostRemove(page, "b");
+  await expect(queue(page).locator('[data-slot="kind-queue-item"]')).toHaveCount(3);
+});
+
 test("agents can reorder and remove items", async ({ page }) => {
   await open(page);
   await expectAgentActions(page, "Queue", ["remove", "reorder"]);
