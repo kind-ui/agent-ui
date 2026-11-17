@@ -21,8 +21,9 @@ export type ModelSelectorOptions = Omit<PickerBaseOptions, "label" | "placeholde
    */
   models?: ModelOption<unknown>[];
   /**
-   * `"groups"` lists each `group` as a row that opens a page of its models, shown with its first model's icon.
-   * `"flat"` lists every model under its group's label.
+   * `"groups"` lists each `group` as a row that opens a page of its models, shown with the first icon among them and
+   * found by their names, so a model `id` mustn't start with `group:`. `"flat"` lists every model under its group's
+   * label.
    * @default "flat"
    */
   pages?: "flat" | "groups";
@@ -59,7 +60,7 @@ const groupValue = (group: string) => `group:${group}`;
 
 const itemOf = (
   { id, name, group, description, icon, disabled }: ModelOption<unknown>,
-  inGroup: boolean,
+  flat: boolean,
 ): PickerItem<unknown> => ({
   value: id,
   label: name,
@@ -67,7 +68,7 @@ const itemOf = (
   ...(icon === undefined ? {} : { icon }),
   ...(disabled === undefined ? {} : { disabled }),
   // A search for the provider finds its models.
-  ...(group === undefined ? {} : { keywords: [group], ...(inGroup ? { group } : {}) }),
+  ...(flat && group !== undefined ? { group, keywords: [group] } : {}),
 });
 
 const flat = new WeakMap<ModelOption<unknown>[], PickerItem<unknown>[]>();
@@ -76,7 +77,10 @@ const grouped = new WeakMap<ModelOption<unknown>[], PickerItem<unknown>[]>();
 /** Each group as a row that opens a page of its models; models without a group stay on the first page. */
 const groupItems = (models: ModelOption<unknown>[]) => {
   const items: PickerItem<unknown>[] = [];
-  const groups = new Map<string, PickerItem<unknown> & { items: PickerItem<unknown>[] }>();
+  const groups = new Map<
+    string,
+    PickerItem<unknown> & { items: PickerItem<unknown>[]; keywords: string[] }
+  >();
   for (const model of models) {
     if (model.group === undefined) {
       items.push(itemOf(model, false));
@@ -84,12 +88,14 @@ const groupItems = (models: ModelOption<unknown>[]) => {
     }
     let row = groups.get(model.group);
     if (!row) {
-      row = { value: groupValue(model.group), label: model.group, items: [] };
+      row = { value: groupValue(model.group), label: model.group, items: [], keywords: [] };
       groups.set(model.group, row);
       items.push(row);
     }
     row.icon ??= model.icon;
     row.items.push(itemOf(model, false));
+    // Command searches only the open page, so a provider row is found by its models' names.
+    row.keywords.push(model.name, ...(model.description ? [model.description] : []));
   }
   return items;
 };

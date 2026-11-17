@@ -52,6 +52,9 @@ const moreModels = [
   { id: "grok-4.7", name: "Grok 4.7", group: "xAI", icon: <XAILogo /> },
 ];
 
+const allModels = [...models, ...moreModels];
+const actions = [{ id: "more", label: "More models" }];
+
 export default function ModelSelectorExample() {
   const [model, setModel] = useState<string | null>("claude-sonnet-5.5");
   const [effort, setEffort] = useState<string | null>("medium");
@@ -61,11 +64,11 @@ export default function ModelSelectorExample() {
       <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
       <div className="flex items-center gap-2" style={{ gridArea: "attach" }}>
         <ModelSelector
-          models={showAll ? [...models, ...moreModels] : models}
+          models={showAll ? allModels : models}
           value={model}
           onValueChange={setModel}
-          actions={showAll ? [] : [{ id: "more", label: "More models" }]}
-          onAction={() => setShowAll(true)}
+          actions={showAll ? undefined : actions}
+          onAction={showAll ? undefined : () => setShowAll(true)}
         />
         <ReasoningEffort value={effort} onValueChange={setEffort} />
       </div>

@@ -3,7 +3,16 @@
 import { type ModelSelectorOptions, modelSelectorPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/react/primitive";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
-import { type PickerFooterAction, pickerParts } from "./picker.js";
+import {
+  type PickerContentProps,
+  type PickerFooterAction,
+  type PickerItemProps,
+  type PickerListProps,
+  type PickerRowItemProps,
+  type PickerSectionRowsProps,
+  type PickerTriggerProps,
+  pickerParts,
+} from "./picker.js";
 
 const parts = createParts(modelSelectorPrimitive, {
   root: "div",
@@ -14,7 +23,7 @@ const parts = createParts(modelSelectorPrimitive, {
   item: "span",
 });
 
-const picker = pickerParts(parts);
+const picker = pickerParts(parts, "ModelSelector");
 
 /** A model, whose `icon` is an image URL or an element such as an inline `svg`. */
 export type ModelSelectorModel = Omit<NonNullable<ModelSelectorOptions["models"]>[number], "icon"> & {
@@ -38,6 +47,13 @@ export type ModelSelectorProps = Omit<
 export function ModelSelector({ children = picker.Default, ...props }: ModelSelectorProps) {
   return <parts.Root {...props}>{children}</parts.Root>;
 }
+
+export type ModelSelectorTriggerProps = PickerTriggerProps;
+export type ModelSelectorContentProps = PickerContentProps;
+export type ModelSelectorListProps = PickerListProps;
+export type ModelSelectorSectionRowsProps = PickerSectionRowsProps;
+export type ModelSelectorRowItemProps = PickerRowItemProps;
+export type ModelSelectorItemProps = PickerItemProps;
 
 /** Opens the list. Shows the chosen model's icon and name, or the `label` while none is chosen, unless you pass children. */
 export const ModelSelectorTrigger = picker.Trigger;

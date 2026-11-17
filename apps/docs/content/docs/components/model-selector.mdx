@@ -86,7 +86,7 @@ Pass `actions`, each with an `id` and a `label`, for footer rows after the model
 
 ### Pages by Provider
 
-Pass `pages="groups"` to list each provider as a row, shown with its first model's icon, that opens a page of its models. Models without a `group` stay on the first page. Backspace in the empty search field, or the **Back** row (`backLabel`), returns to the providers. `setValue` reaches a model on any page.
+Pass `pages="groups"` to list each provider as a row, shown with the first icon among its models, that opens a page of its models. Typing a model's name on the first page finds its provider. A model `id` mustn't start with `group:`, which provider rows use. Models without a `group` stay on the first page. Backspace in the empty search field, or the **Back** row (`backLabel`), returns to the providers. `setValue` reaches a model on any page.
 
 <Example caption="Press Model, choose OpenAI to see its models, then press Backspace to go back.">
   <ModelSelectorGroupsExample />
@@ -110,11 +110,13 @@ The list opens as a popover below the button. With `presentation="auto"`, the de
 
 Model Selector is now built on Picker, so the search moved from a field beside the button into the list. If you used 0.4:
 
-- The parts are `ModelSelectorTrigger`, `ModelSelectorContent`, `ModelSelectorList`, `ModelSelectorSectionRows`, `ModelSelectorRowItem` and `ModelSelectorItem`. `ModelSelectorIcon`, `ModelSelectorInput`, `ModelSelectorGroup` and `ModelSelectorEmpty` are gone.
+- The parts are `ModelSelectorTrigger`, `ModelSelectorContent`, `ModelSelectorList`, `ModelSelectorSectionRows`, `ModelSelectorRowItem` and `ModelSelectorItem`. `ModelSelectorIcon`, `ModelSelectorInput`, `ModelSelectorGroup`, `ModelSelectorEmpty` and the `ModelSelectorListItem` type are gone. `ModelSelectorItem` is now a row's content and takes the row's `value`, not a `model`.
+- On Web Components, `kind-model-selector-trigger` holds a `button`, `kind-model-selector-content` is the popover, and `kind-model-selector-command`, `kind-model-selector-item` and `kind-model-selector-viewport` are new, as on `kind-picker`. `kind-model-selector-icon` and `kind-model-selector-input` are gone.
 - Styles hook onto Picker's `data-picker-*` attributes and `--kind-picker-*` variables; `data-model-selector-field` is gone. `--kind-model-selector-width` still sets the button's width.
 - A person's choice reaches `onValueChange` with the reason `item-press`, not `input-change`.
 - `openLabel` is gone, and the empty text is the `emptyText` option.
 - On Web Components, set `el.value` instead of calling `el.api.setValue`.
+- From `@kind-ui/agent-ui/core`, `filterModels`, `ModelGroup`, `ModelSelectorComboboxState`, `ModelSelectorContentState` and `ModelSelectorItem` are gone, and so are the api's `getModels`, `read`, `search`, `follow`, `syncValue`, `comboboxState` and `contentState`. The state's `models` is now `items`, as Picker's is.
 
 `models`, their icons, `value`, `defaultValue`, `onValueChange`, `label`, `placeholder`, `disabled`, `motion` and `modelchange` work as before.
 

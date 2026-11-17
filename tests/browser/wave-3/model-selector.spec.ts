@@ -119,6 +119,30 @@ test("a host that refuses keeps the chosen model and the list open", async ({ pa
   await expect(content(page)).toBeVisible();
   await expect(trigger(page)).toHaveAccessibleName("Model, GPT-5");
   expect(await changes(page)).toEqual([{ component: "model", value: "sonnet-4", reason: "item-press" }]);
+  await option(page, "More models").click();
+  await expect(content(page)).toBeVisible();
+  expect((await changes(page)).at(-1)).toEqual({ component: "action", value: "more", reason: "item-press" });
+});
+
+test("a web host moving a model into a new group or switching pages redraws the open list", async ({
+  page,
+}, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "draws the list in the web layer");
+  await load(page);
+  await openList(page);
+  await page.evaluate(() => {
+    const el = document.querySelector("kind-model-selector");
+    if (el?.models)
+      el.models = el.models.map((model) => (model.id === "gpt-5" ? { ...model, group: "Azure" } : model));
+  });
+  await expect(content(page).getByRole("group", { name: "Azure" }).getByRole("option")).toHaveText([
+    /^GPT-5/,
+  ]);
+  await page.evaluate(() => {
+    const el = document.querySelector("kind-model-selector");
+    if (el) el.pages = "groups";
+  });
+  await expect(options(page)).toHaveText([/^Azure/, /^OpenAI/, /^Anthropic/, /^Google/, "More models"]);
 });
 
 test("the trigger keeps its width when a longer name is chosen", async ({ page }) => {
@@ -160,6 +184,15 @@ test('pages "groups" lists providers, each opening a page of its models, and Bac
   await option(page, /^Sonnet 4/).click();
   await expect(content(page)).toHaveCount(0);
   await expect(trigger(page)).toHaveAccessibleName("Model, Sonnet 4");
+});
+
+test('pages "groups" finds a provider by its models\' names from the first page', async ({ page }) => {
+  await load(page, "groups");
+  await openList(page);
+  await search(page).fill("sonnet");
+  await expect(options(page)).toHaveText([/^Anthropic/]);
+  await page.keyboard.press("Enter");
+  await expect(options(page)).toHaveText([/^Sonnet 4/, /^Opus 4/, /Back/]);
 });
 
 test("an agent sees open, setValue and run, chooses a listed model and is refused an unknown one", async ({

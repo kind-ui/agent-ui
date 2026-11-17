@@ -37,6 +37,7 @@ Last reviewed: `fcaa6f4` (Wave 5 Task 2 Picker)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Every `pickerBase` component warns at mount that `agent.actions` lists `close`** (Wave 5 Task 2): the getter is `undefined` while the list is closed; UI SDK's development check, harmless, as AGENTS.md says for Message.
 - **A `pickerBase` item part with a key no row has gets `undefined` as its state (Wave 5 Task 2):** both layers render keys from `pages`, so none does today; a custom list that renders a stale key would throw reading `row`.
 - **`hearComposed` doesn't tell nested components apart (Wave 5 Task 1):** an outer root hears the `ui-*` events of a component nested in its content, and `menuBase` filters by tag only. Fix (skip targets whose nearest Kind root isn't `el`'s) with a nested-roots test before Model Control (Task 9) nests Effort Slider. Picker (Wave 5 Task 2) nests no Kind component and hears only `ui-command` targets, so it isn't affected.
 - **Terminal relies on the virtualizer laying out again when its count changes** (Wave 4 Task 12): a new line sets `rows` and `size` from it instead of calling `refresh()`, which UI SDK's docs ask for after a count change but which reads the viewport twice more per line. `budgets.spec.ts` and `terminal.spec.ts` pin it; ask upstream for a count-only update.

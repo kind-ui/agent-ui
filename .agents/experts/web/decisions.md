@@ -23,6 +23,7 @@ Last reviewed: `fcaa6f4` (Wave 5 Task 2 Picker)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **`kind-model-selector` has no moved or shadow-root fixture case** (Wave 5 Task 3): both paths were checked by hand in review (a moved element redraws and keeps working; in a shadow root focus, `aria-controls` and `modelchange` behave); add cases when Picker gains its own.
 - **A `kind-picker` removed while open and put back stays `open` with its popover hidden (Wave 5 Task 2):** it takes two clicks to reopen; a bare `ui-popover` does the same, so it's UI SDK's to report. An empty `kind-picker` also draws its trigger only once upgraded, the layout shift already listed for other elements.
 - **`hearComposed` doesn't tell nested components apart (Wave 5 Task 1):** an outer root hears the `ui-*` events of a component nested in its content, and `menuBase` filters by tag only. Fix (skip targets whose nearest Kind root isn't `el`'s) with a nested-roots test before Model Control (Task 9) nests Effort Slider. Picker (Wave 5 Task 2) nests no Kind component and hears only `ui-command` targets, so it isn't affected.
 - **Closing a Step or Guardrail Notice panel inside a shadow root leaves focus on a hidden button** (Wave 4 Task 12): the trigger lookup is now `context.element`, but UI SDK's `bindPanel` asks for it only when `el.contains(document.activeElement)`, which is the shadow host there. Add to the upstream report beside `focus-recovery.js`; a shadow-root test comes with the fix.

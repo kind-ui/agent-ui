@@ -114,9 +114,9 @@ export type PickerBaseState = PopupState & {
   value: string | null;
   /** The `label`, else the component's. */
   label: string;
-  /** The `placeholder`, else "Search". */
+  /** The `placeholder`, else the component's (Picker: "Search"). */
   placeholder: string;
-  /** The `emptyText`, else "No matches". */
+  /** The `emptyText`, else the component's (Picker: "No matches"). */
   emptyText: string;
   /** The `backLabel`, else "Back". */
   backLabel: string;

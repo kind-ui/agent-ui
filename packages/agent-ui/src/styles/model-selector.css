@@ -1,6 +1,7 @@
-/* Model Selector (spec §7) is a Picker (`picker.css`); only its trigger's width has a name of its own. */
+/* Model Selector (spec §7) is a Picker (`picker.css`); only its trigger's width has a name of its own, read on the
+   trigger so it can be set there too, as in 0.4. */
 @layer components {
-  [data-slot="kind-model-selector"] {
+  [data-slot="kind-model-selector-trigger"] {
     --kind-picker-trigger-width: var(--kind-model-selector-width, 14rem);
   }
 }

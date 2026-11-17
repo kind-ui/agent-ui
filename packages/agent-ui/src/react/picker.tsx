@@ -77,9 +77,10 @@ export type PickerParts = Pick<typeof parts, "Trigger" | "Content" | "Viewport" 
 
 /**
  * The trigger, popover, list and rows of a picker, rendered through `parts`, for Model Selector and the other
- * components that spread `pickerBase` to share Picker's markup. `Default` is the trigger and the popover.
+ * components that spread `pickerBase` to share Picker's markup, each part named `<name><Part>` in React's tools.
+ * `Default` is the trigger and the popover.
  */
-export function pickerParts(parts: PickerParts) {
+export function pickerParts(parts: PickerParts, name: string) {
   function Trigger({
     children = ({ text, icon }) => (
       <>
@@ -196,10 +197,13 @@ export function pickerParts(parts: PickerParts) {
     </>
   );
 
-  return { Trigger, Content, List, SectionRows, RowItem, Item, Default };
+  const named = { Trigger, Content, List, SectionRows, RowItem, Item };
+  for (const [part, component] of Object.entries(named))
+    (component as { displayName?: string }).displayName = `${name}${part}`;
+  return { ...named, Default };
 }
 
-const picker = pickerParts(parts);
+const picker = pickerParts(parts, "Picker");
 
 /**
  * A button that shows the chosen item and opens a searchable list of them, with groups, two-line rows, pages and

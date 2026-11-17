@@ -110,7 +110,7 @@ type Movable = Element & { moveBefore?: (node: Node, child: Node | null) => void
 // reconnect, where the browser has it.
 const place = (parent: Movable, child: Element, before: Element | null) => {
   if (child.parentElement === parent && child.nextElementSibling === before) return;
-  if (parent.moveBefore && child.isConnected) parent.moveBefore(child, before);
+  if (parent.moveBefore && child.isConnected && parent.isConnected) parent.moveBefore(child, before);
   else parent.insertBefore(child, before);
 };
 
@@ -149,6 +149,8 @@ const drawList = (list: Element, pages: PickerPage[], itemTag: string) => {
     let pageEl = pageEls.get(page ?? "");
     pageEls.delete(page ?? "");
     if (!pageEl) pageEl = element(document, "ui-command-page", page ? { value: page } : {});
+    // Placed before its rows move in, since `moveBefore` refuses a parent that isn't in the page.
+    place(list, pageEl, previousPage ? previousPage.nextElementSibling : list.firstElementChild);
     const kept = new Set<Element>();
     let previous: Element | null = null;
     for (const [index, section] of sections.entries()) {
@@ -167,18 +169,17 @@ const drawList = (list: Element, pages: PickerPage[], itemTag: string) => {
         group = element(document, "ui-command-group", { "data-section": key });
         if (section.label) group.append(element(document, "ui-command-group-label", {}, section.label));
       }
+      place(pageEl, group, previous ? previous.nextElementSibling : pageEl.firstElementChild);
       let last = group.querySelector(":scope > ui-command-group-label");
       for (const row of section.rows) {
         const item = drawRow(document, items, row, itemTag);
         place(group, item, last ? last.nextElementSibling : group.firstElementChild);
         last = item;
       }
-      place(pageEl, group, previous ? previous.nextElementSibling : pageEl.firstElementChild);
       kept.add(group);
       previous = group;
     }
     for (const child of [...pageEl.children]) if (!kept.has(child)) child.remove();
-    place(list, pageEl, previousPage ? previousPage.nextElementSibling : list.firstElementChild);
     previousPage = pageEl;
   }
   for (const item of items.values()) item.remove();

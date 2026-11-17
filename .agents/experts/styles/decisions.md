@@ -27,6 +27,7 @@ Last reviewed: `fcaa6f4` (Wave 5 Task 2 Picker)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **`--kind-picker-trigger-width` set on an ancestor doesn't reach Model Selector** (Wave 5 Task 3): its trigger maps `--kind-model-selector-width` (default 14rem) onto it, so 0.4's variable works on the trigger too; no CSS keeps both names working at every level. `picker.mdx` doesn't document the variable yet.
 - **UI SDK's scroll-snap sheet slides in at full motion under reduced motion (Wave 5 Task 2):** its `open()` doesn't check `reducedMotion()` (its `nudge()` does), and a component's `motion` option never reaches it, so a Picker sheet slides about 446px whatever the settings. UI SDK's; report upstream.
 - **A selected composer token and Checkpoint's open Restore lose their state in forced colors** (suspected, Wave 4 Task 12): both are drawn by a background forced colors replaces; no fixture renders a token.
 - **`forced-colors.spec.ts` doesn't reach the Queue remove badge on web.**
