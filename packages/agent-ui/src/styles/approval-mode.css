@@ -8,7 +8,7 @@
   }
 
   /* The trigger shows the mode, so it's as wide as its text. */
-  [data-kind="approval-mode"] [data-menu-part="trigger"] [data-slot="menu-trigger"] {
+  :where([data-kind="approval-mode"] [data-menu-part="trigger"]) [data-slot="menu-trigger"] {
     gap: 0.375rem;
     width: auto;
     padding-inline: 0.625rem;
@@ -16,7 +16,7 @@
     font-weight: 500;
     white-space: nowrap;
   }
-  [data-kind="approval-mode"] [data-menu-part="trigger"][data-danger] [data-slot="menu-trigger"] {
+  :where([data-kind="approval-mode"] [data-menu-part="trigger"][data-danger]) [data-slot="menu-trigger"] {
     color: var(--kind-color-danger);
   }
 
@@ -26,19 +26,17 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-
-    & > [data-slot="menu-item"] {
-      padding-block: 0.25rem;
-      color: var(--kind-color-accent);
-      font-size: 0.75rem;
-      text-decoration: none;
-    }
+  }
+  /* On web the link is inside `ui-menu-item as-child`, so the item isn't the header's child. */
+  :where([data-approval-mode-header]) [data-slot="menu-item"] {
+    color: var(--kind-color-accent);
+    font-size: 0.75rem;
+    text-decoration: none;
   }
 
-  [data-kind="approval-mode"] [data-slot="menu-radio-item"][data-danger] {
-    & [data-menu-text] > :first-child {
-      color: var(--kind-color-danger);
-    }
+  :where([data-kind="approval-mode"] [data-slot="menu-radio-item"][data-danger] [data-menu-text])
+    > :first-child {
+    color: var(--kind-color-danger);
   }
 
   [data-approval-mode-risk] {

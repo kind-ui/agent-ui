@@ -24,7 +24,7 @@ const DEFAULT_PARTS = `<kind-internal-menu><ui-menu><kind-approval-mode-trigger>
 // Buttons and contents this element filled in, and so draws. Ones someone wrote keep theirs, as React's children do.
 // Kept across instances, because UI SDK rebuilds one when the element returns to the page.
 const owned = new WeakSet<Element>();
-const drawnTrigger = new WeakMap<Element, ApprovalModeRow | null>();
+const drawnTrigger = new WeakMap<Element, string>();
 const drawnContent = new WeakMap<Element, ApprovalModeContentState>();
 
 type Selectable = HTMLElement & { value: string | null };
@@ -169,9 +169,11 @@ export function defineApprovalMode(): void {
           if (button) {
             if (button.ariaLabel !== props["aria-label"]) button.ariaLabel = props["aria-label"];
             if (!button.firstChild) owned.add(button);
-            const mode = props.mode ?? null;
-            if (owned.has(button) && drawnTrigger.get(button) !== mode) {
-              drawnTrigger.set(button, mode);
+            // By content, since every new `modes` array makes new rows.
+            const { mode } = props;
+            const key = mode ? `${mode.danger}:${mode.label}` : "";
+            if (owned.has(button) && drawnTrigger.get(button) !== key) {
+              drawnTrigger.set(button, key);
               drawTrigger(button, props.mode);
             }
           }
@@ -202,8 +204,9 @@ export interface KindApprovalModeElement
   extends UiElement<KindApprovalModeEvents>,
     AttributeProperties<typeof approvalModePrimitive, "api" | "modes" | "value" | "open"> {
   modes?: NonNullable<ApprovalModeOptions["modes"]>;
-  /** The chosen mode's `value`. Setting it chooses that mode, firing `modechange`. */
-  value: string | undefined;
+  /** The chosen mode's `value`. Setting it chooses that mode without firing `modechange`. */
+  get value(): string | undefined;
+  set value(value: string);
   open: boolean;
   /** Whether the menu offers Learn more without a `learn-more-href`, which fires `learnmore`. */
   canLearnMore: boolean;

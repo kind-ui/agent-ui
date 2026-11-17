@@ -12,9 +12,12 @@ export const learnMoreHref = "#approvals-help";
 
 export function approvalModeHost() {
   const changes: { value: string; reason: string; source?: string }[] = [];
+  const learned: { href: string | undefined; source?: string }[] = [];
   return {
-    host: { changes },
+    host: { changes, learned },
     change: (value: string, details: { reason: string; source?: string }) =>
       changes.push({ value, reason: details.reason, source: details.source }),
+    learn: (href: string | undefined, details: { source?: string }) =>
+      learned.push({ href, source: details.source }),
   };
 }

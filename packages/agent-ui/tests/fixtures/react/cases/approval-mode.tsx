@@ -3,16 +3,18 @@ import { useEffect, useState } from "react";
 import { ApprovalMode } from "../../../../src/react/approval-mode.js";
 import { approvalModeHost, initialValue, learnMoreHref, modes } from "../../shared/approval-mode.js";
 
-const { host, change } = approvalModeHost();
+const { host, change, learn } = approvalModeHost();
 
 function Page({
   motion,
   refusing,
   agentConfirm,
+  learning,
 }: {
   motion?: MotionMode;
   refusing?: boolean;
   agentConfirm?: boolean;
+  learning?: boolean;
 }) {
   const [value, setValue] = useState(initialValue);
   useEffect(() => {
@@ -21,10 +23,9 @@ function Page({
   return (
     <div className="p-6">
       <ApprovalMode
-        id="approvals"
         modes={modes}
         value={value}
-        learnMoreHref={learnMoreHref}
+        {...(learning ? { onLearnMore: learn } : { learnMoreHref })}
         onValueChange={(next, details) => {
           change(next, details);
           if (refusing) details.cancel();
@@ -42,4 +43,5 @@ export const cases = {
   reduced: () => <Page motion="reduced" />,
   refusing: () => <Page refusing />,
   unconfirmed: () => <Page agentConfirm={false} />,
+  learning: () => <Page learning />,
 };

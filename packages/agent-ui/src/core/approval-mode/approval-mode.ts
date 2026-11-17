@@ -31,9 +31,12 @@ export type ApprovalModeOptions = MenuBaseOptions & {
    * @default []
    */
   modes?: ApprovalModeOption[];
-  /** The chosen mode's `value`. Passing it controls it: change it in `onValueChange`. */
+  /**
+   * The chosen mode's `value`. Passing it controls it: change it in `onValueChange`. A value that isn't one of the
+   * `modes` chooses none, and the trigger shows only the `label`.
+   */
   value?: string;
-  /** The mode chosen at first, when `value` isn't passed. */
+  /** The mode chosen at first, when `value` isn't passed. Without either, none is. */
   defaultValue?: string;
   /** Called when a person or an `api` call chooses another mode. Cancel it to keep the mode, or to ask first. */
   onValueChange?: (value: string, details: ChangeDetails<ApprovalModeChangeReason>) => void;
@@ -44,7 +47,10 @@ export type ApprovalModeOptions = MenuBaseOptions & {
   label?: string;
   /** Where the menu's Learn more link goes. Without it or `onLearnMore`, the menu has no Learn more item. */
   learnMoreHref?: string;
-  /** Called when a person chooses Learn more, with the `learnMoreHref` if there is one. */
+  /**
+   * Called when a person chooses Learn more, with the `learnMoreHref` if there is one. The link opens whatever it
+   * does: call `details.event?.preventDefault()` to route it yourself.
+   */
   onLearnMore?: (href: string | undefined, details: ChangeDetails<"item-press">) => void;
   /**
    * Whether an agent needs a person before it acts on the menu, since changing the mode widens or narrows what it may
@@ -74,6 +80,7 @@ export type ApprovalModeContentState = {
   learnMore: boolean;
   /** The Learn more item's link, if any. */
   learnMoreHref: string | undefined;
+  /** The modes' radio items, in order. */
   rows: ApprovalModeRow[];
   /** The chosen mode's `value`, or `null` while none is. */
   value: string | null;
@@ -86,12 +93,15 @@ export type ApprovalModeTriggerState = MenuTriggerState & {
 };
 
 export type ApprovalModeState = MenuBaseState & {
+  /** The host's `modes`, as passed. */
   modes: ApprovalModeOption[];
-  /** The chosen mode's `value`, which the agent snapshot shows. */
+  /** The chosen mode's `value`, which the agent snapshot shows: always one of the `modes`, or `undefined`. */
   value: string | undefined;
+  /** The `learnMoreHref`, `undefined` when empty. */
   learnMoreHref: string | undefined;
   /** Whether `onLearnMore` is set. */
   canLearnMore: boolean;
+  /** The `agentConfirm` option. */
   agentConfirm: boolean;
 };
 
@@ -181,6 +191,9 @@ const base = menuBase<ApprovalModeOptions>({
   },
 });
 
+const known = (modes: ApprovalModeOption[], value: string | undefined) =>
+  value !== undefined && modes.some((mode) => mode.value === value) ? value : undefined;
+
 const own = (options: ApprovalModeOptions) => ({
   modes: options.modes ?? NO_MODES,
   learnMoreHref: options.learnMoreHref || undefined,
@@ -208,18 +221,23 @@ export const approvalModePrimitive: ApprovalModePrimitive = definePrimitive<
   state: (options) => ({
     ...base.state(options),
     ...own(options),
-    value: options.value ?? options.defaultValue,
+    value: known(options.modes ?? NO_MODES, options.value ?? options.defaultValue),
   }),
   sync: (options) => ({
     ...base.sync(options),
     ...own(options),
-    ...(options.value === undefined ? {} : { value: options.value }),
+    ...(options.value === undefined ? {} : { value: known(options.modes ?? NO_MODES, options.value) }),
   }),
   controlled: [...base.controlled, "value"],
   api: (context) => {
     const { store } = context;
     const menu = base.api(context);
     const changeValue = createChange(context);
+    // A host that drops the chosen mode from `modes` leaves an uncontrolled menu with none chosen.
+    context.onOptions(() => {
+      const { modes, value } = store.get();
+      if (value !== undefined && known(modes, value) === undefined) store.set({ value: undefined });
+    });
 
     const change = (value: string, cause: Cause) => {
       const { disabled, modes, value: current } = store.get();

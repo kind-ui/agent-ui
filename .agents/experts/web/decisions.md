@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `9113c72` (Wave 5 Task 5 Settings Menu)
+Last reviewed: `780e148` (Wave 5 Task 6 Approval Mode)
 
 ## Settled
 
@@ -24,7 +24,7 @@ Last reviewed: `9113c72` (Wave 5 Task 5 Settings Menu)
 ## Known and open (don't report again, check whether fixed)
 
 - **An `addaction` (and `pickeraction`) listener can't keep an item pending (Wave 5 Task 4):** `onAction` is a `"callback"`, so no `waitUntil`; decide `"action"` for Picker and Add Menu together.
-- **The `open` attribute of `kind-add-menu` and `kind-picker` neither reflects nor controls the popup (Wave 5 Task 4):** the docs say to set the property; reflect it or stop observing it with Picker's root state.
+- **The `open` attribute of `kind-picker` and every `menuBase` element doesn't reflect (Wave 5 Task 4; Task 6 adds `kind-approval-mode`, where it does control the menu):** the docs say to set the property; reflect it or stop observing it with Picker's root state.
 - **`kind-model-selector` has no moved or shadow-root fixture case** (Wave 5 Task 3): both paths were checked by hand in review (a moved element redraws and keeps working; in a shadow root focus, `aria-controls` and `modelchange` behave); add cases when Picker gains its own.
 - **A `kind-picker` removed while open and put back stays `open` with its popover hidden (Wave 5 Task 2):** it takes two clicks to reopen; a bare `ui-popover` does the same, so it's UI SDK's to report. An empty `kind-picker` also draws its trigger only once upgraded, the layout shift already listed for other elements.
 - **`hearComposed` doesn't tell nested components apart (Wave 5 Task 1):** an outer root hears the `ui-*` events of a component nested in its content, and `menuBase` filters by tag only. Fix (skip targets whose nearest Kind root isn't `el`'s) with a nested-roots test before Model Control (Task 9) nests Effort Slider. Picker (Wave 5 Task 2) nests no Kind component and hears only `ui-command` targets, so it isn't affected.
@@ -113,6 +113,7 @@ Last reviewed: `9113c72` (Wave 5 Task 5 Settings Menu)
 - **Updating an attachment in place left a stale chip.** Fixed: `kind-attachments` refills an item whenever its item object or preview changes.
 - **`kind-step` and `kind-composer` exposed no `api` or live state.** Fixed: `state: { open }` / `state: { value }` and `api` lists, as `@ui-sdk/web` roots do (`StepApi.isOpen`, `ComposerApi.getValue`). A host write to `open` (property or `setOpen`) doesn't count as a toggle (spec §5: a person or agent); `expand`/`collapse` and the trigger do.
 - **`kind-status` overwrote text written into its `<kind-status-label>`, and missed a label added later (Wave 2 Task 2).** Fixed: it writes only into a label that was empty, and redraws when parts arrive.
+- **Approval Mode (Wave 5 Task 6):** the `value` JSDoc claimed a `modechange` and typed a setter that took `undefined`; the trigger redrew on every new `modes` array (now keyed by content); `approval-mode.spec.ts` gained a zero-removal redraw test and a `learnmore` case.
 
 ## Revisit
 

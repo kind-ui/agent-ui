@@ -1,9 +1,13 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Fixture = {
-  kindHost: { changes: { value: string; reason: string; source?: string }[] };
+  kindHost: {
+    changes: { value: string; reason: string; source?: string }[];
+    learned: { href: string | undefined; source?: string }[];
+  };
   agent: { act(input: unknown): Promise<unknown> };
 };
 
@@ -88,6 +92,41 @@ test("the header link is reached by the arrows and follows its href", async ({ p
   await expect(learnMore(page)).toBeFocused();
   await page.keyboard.press("Enter");
   await expect.poll(() => page.evaluate(() => location.hash)).toBe("#approvals-help");
+});
+
+test("without a link, Learn more calls onLearnMore once and closes the menu", async ({ page }) => {
+  await load(page, "learning");
+  await trigger(page).click();
+  await learnMore(page).click();
+  await expect(menu(page)).toBeHidden();
+  expect(await page.evaluate(() => (window as unknown as Fixture).kindHost.learned)).toEqual([
+    { href: undefined, source: "mouse" },
+  ]);
+});
+
+test("a value change or an equal modes copy redraws nothing, and focus stays", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "React keys its rows; web redraws them");
+  await load(page);
+  await trigger(page).focus();
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await expect(mode(page, /^Allow edits/)).toBeFocused();
+  const removed = await page.evaluate(async () => {
+    const menu = document.querySelector("kind-approval-mode");
+    if (!menu?.modes) return -1;
+    let count = 0;
+    const observer = new MutationObserver((records) => {
+      for (const record of records) count += record.removedNodes.length;
+    });
+    observer.observe(menu, { childList: true, subtree: true });
+    menu.modes = structuredClone(menu.modes);
+    await new Promise(requestAnimationFrame);
+    observer.disconnect();
+    return count;
+  });
+  expect(removed).toBe(0);
+  await expect(mode(page, /^Allow edits/)).toBeFocused();
 });
 
 test("an agent's setValue needs a person while agentConfirm is on", async ({ page }) => {

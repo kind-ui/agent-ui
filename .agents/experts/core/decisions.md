@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `9113c72` (Wave 5 Task 5 Settings Menu)
+Last reviewed: `780e148` (Wave 5 Task 6 Approval Mode)
 
 ## Settled
 
@@ -140,6 +140,7 @@ Last reviewed: `9113c72` (Wave 5 Task 5 Settings Menu)
 - **A host `setOpen` turned off auto close.** Fixed: only the trigger, find in page and `expand`/`collapse` set `userToggled` (spec §5).
 - **Composer `disabled` is now exposed on the submit part** (`aria-disabled`), and a disabled composer offers the agent no actions.
 - **An unknown Status `status` showed a badge with no text (Wave 2 Task 2).** Fixed: it shows as pending.
+- **Approval Mode `value` outside `modes` (Wave 5 Task 6):** the snapshot showed a mode the trigger didn't; `state`/`sync` keep only a known value and `onOptions` drops an uncontrolled one whose mode left. `tests/core/approval-mode.test.mjs` pins it with `setValue`'s refusals.
 
 ## Revisit
 

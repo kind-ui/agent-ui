@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `9113c72` (Wave 5 Task 5 Settings Menu)
+Last reviewed: `780e148` (Wave 5 Task 6 Approval Mode)
 
 ## Settled
 
@@ -24,6 +24,7 @@ Last reviewed: `9113c72` (Wave 5 Task 5 Settings Menu)
 - **Inline code's radius is `calc(var(--kind-radius) / 2)` in rem, not `0.375em`:** CSS can't divide by a unit, and following `--kind-radius` (0 squares it) matters more than scaling with heading size.
 - **Radii scale from `--kind-radius` by `/ 3`, `/ 2`, `* 2 / 3`, `1` and `* 1.5`;** pills and 1–2 px detail radii stay fixed. Nested corners subtract the inset, floored at 0.
 - **A Status badge's width follows its label;** its height doesn't change, and the docs say to put it at the end of a row.
+- **Approval Mode's trigger width follows its mode (Wave 5 Task 6):** only a person's choice or the host changes it, and choosing closes the menu, so nothing moves while it's open; stacking every label as Settings Menu does would widen a composer row to the longest mode.
 
 ## Known and open (don't report again, check whether fixed)
 
@@ -104,6 +105,7 @@ Last reviewed: `9113c72` (Wave 5 Task 5 Settings Menu)
 - **An interrupted run left stray inline styles** (motion's `stop()` commits a frame later). Fixed: runs are cancelled with values held inline, and a finished run resolves in motion's render step.
 - **`expand` snapped for bordered elements.** Fixed: it starts from the computed `height` and ends at the `height` that `box-sizing` needs, for `border-box` and `content-box`.
 - **The Status mark sat 1px off-center in its pill (Wave 2 Task 2).** Fixed: the start padding is worked out from the pill's height.
+- **Approval Mode styles (Wave 5 Task 6):** web's Learn more missed its rule (`as-child` puts the link a level down), the selectors were 3–4 attributes deep (now `:where()`), and light `--kind-color-danger` was 4.34:1 on `--kind-color-hover`; it is now `oklch(0.55 0.21 27)`.
 
 ## Revisit
 
