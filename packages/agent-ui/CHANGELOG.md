@@ -1,5 +1,11 @@
 # @kind-ui/agent-ui
 
+## 0.3.1
+
+### Patch Changes
+
+- 34c8f20: The docs link between pages and import their examples with relative paths, so kindui.dev can render them from the release tag, and the release's namespace check treats a kindui.dev registry that isn't served yet as empty.
+
 ## 0.3.0
 
 ### Minor Changes
