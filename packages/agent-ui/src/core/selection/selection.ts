@@ -12,7 +12,7 @@ import {
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { SelectionActionItem } from "../../types/index.js";
-import { memo } from "../memo.js";
+import { cached } from "../memo.js";
 import type { MotionMode } from "../motion/index.js";
 
 /** `"item-press"`: a person pressed an action. `"imperative"`: an `api` call, like an agent's `run`. */
@@ -86,6 +86,8 @@ export type SelectionApi = {
   readonly dismiss: (() => boolean) | undefined;
   /** Reads the page's selection after a press or a key. Called by the root slot. */
   read: (event: Event) => void;
+  /** Starts a press outside the toolbar, after which the selection it closed on opens it again. Called by the root slot. */
+  pointerDown: (event: Event) => void;
   /** Chooses an action a person pressed. Called by the item slot. */
   press: (actionId: string, event: Event) => void;
   /** Places, layers and animates the toolbar while it's present. Called by the toolbar slot. */
@@ -129,9 +131,10 @@ export type SelectionPrimitive = ReturnType<
 
 const NO_ACTIONS: SelectionActionItem[] = [];
 
-const byId = memo((actions: SelectionActionItem[]) =>
-  Object.fromEntries(actions.map((action) => [action.id, action])),
-);
+// By array, so the Selections around each reply on a page don't rebuild each other's.
+const byIdCache = new WeakMap<SelectionActionItem[], Record<string, SelectionActionItem>>();
+const byId = (actions: SelectionActionItem[]) =>
+  cached(byIdCache, actions, () => Object.fromEntries(actions.map((action) => [action.id, action])));
 const actionOf = (state: SelectionState, id: string) =>
   Object.hasOwn(state.actionsById, id) ? state.actionsById[id] : undefined;
 
@@ -146,14 +149,22 @@ const presentation = ({ actions = NO_ACTIONS, label, onAction, motion }: Selecti
 /** The page's selection when it's one range lying wholly inside `content` and holds more than whitespace. */
 const selectionIn = (content: Element): { range: Range; text: string } | undefined => {
   const selection = content.ownerDocument.getSelection();
-  if (!selection || selection.isCollapsed || selection.rangeCount !== 1) return undefined;
-  const range = selection.getRangeAt(0);
-  const text = selection.toString();
-  if (!text.trim() || !content.contains(range.startContainer) || !content.contains(range.endContainer)) {
+  if (selection?.rangeCount !== 1) return undefined;
+  const root = content.getRootNode();
+  // Inside a shadow root, Chromium and WebKit retarget `getRangeAt` to the host; `getComposedRanges` keeps its nodes.
+  const [selected] =
+    root instanceof ShadowRoot && "getComposedRanges" in selection
+      ? selection.getComposedRanges({ shadowRoots: [root] })
+      : [selection.getRangeAt(0)];
+  if (!selected || selected.collapsed) return undefined;
+  if (!content.contains(selected.startContainer) || !content.contains(selected.endContainer))
     return undefined;
-  }
-  // A copy, which keeps following its text as the page scrolls or the selection moves on.
-  return { range: range.cloneRange(), text };
+  // A live copy, which keeps following its text as the page scrolls or the selection moves on.
+  const range = content.ownerDocument.createRange();
+  range.setStart(selected.startContainer, selected.startOffset);
+  range.setEnd(selected.endContainer, selected.endOffset);
+  const text = range.toString();
+  return text.trim() ? { range, text } : undefined;
 };
 
 const sameRange = (a: Range, b: Range) =>
@@ -187,7 +198,7 @@ export const selectionPrimitive: SelectionPrimitive = definePrimitive<
 
     const close = () => {
       settled = range;
-      store.set({ open: false, exiting: context.element("toolbar") !== null });
+      store.set({ open: false, exiting: context.element("toolbar") !== undefined });
     };
 
     const dismiss = (reason: SelectionDismissReason, event?: Event) => {
@@ -212,6 +223,13 @@ export const selectionPrimitive: SelectionPrimitive = definePrimitive<
       return true;
     };
 
+    const inToolbar = (event: Event) =>
+      event.target instanceof Node && !!context.element("toolbar")?.contains(event.target);
+
+    context.onOptions((options) => {
+      if (store.get().open && !options.actions?.length) close();
+    });
+
     const recovery = createFocusRecovery({ fallback: () => context.element("content") });
 
     return {
@@ -225,12 +243,7 @@ export const selectionPrimitive: SelectionPrimitive = definePrimitive<
       },
       read: (event) => {
         const content = context.element("content");
-        if (
-          !content ||
-          (event.target instanceof Node && context.element("toolbar")?.contains(event.target))
-        ) {
-          return;
-        }
+        if (!content || inToolbar(event)) return;
         const selected = selectionIn(content);
         if (!selected) {
           settled = undefined;
@@ -242,6 +255,9 @@ export const selectionPrimitive: SelectionPrimitive = definePrimitive<
         range = selected.range;
         if (store.get().actions.length > 0) store.set({ open: true, text: selected.text, exiting: false });
       },
+      pointerDown: (event) => {
+        if (!inToolbar(event)) settled = undefined;
+      },
       press: (actionId, event) => void run(actionId, event),
       bindToolbar: (el, part) => {
         const unbindLayer = bindLayer(el, {
@@ -252,7 +268,12 @@ export const selectionPrimitive: SelectionPrimitive = definePrimitive<
             if (reason !== "window-blur") dismiss(reason, event);
           },
         });
-        const placement = position(() => range, el, { side: "top", sideOffset: 8, collisionPadding: 8 });
+        const placement = position(() => range, el, {
+          side: "top",
+          align: "center",
+          sideOffset: 8,
+          collisionPadding: 8,
+        });
         // Unbound as it starts leaving, while it still holds focus, so focus moves to the content before the exit
         // makes it inert.
         let unbindRecovery = recovery.bind(el, part);
@@ -290,6 +311,7 @@ export const selectionPrimitive: SelectionPrimitive = definePrimitive<
       role: "group",
       attrs: (state) => ({ "aria-label": state.label, "data-motion": state.motion }),
       on: {
+        pointerdown: (event, { api }) => api.pointerDown(event),
         pointerup: (event, { api }) => api.read(event),
         keyup: (event, { api }) => api.read(event),
       },

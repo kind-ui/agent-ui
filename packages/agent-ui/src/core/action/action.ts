@@ -17,7 +17,7 @@ export type ActionOptions = Omit<StepOptions, "label"> & {
 export type ActionState = StepState & {
   /** The `label`, else "Action". */
   title: string;
-  /** The `quote`, else empty. */
+  /** The `quote` without the whitespace around it, else empty. */
   quote: string;
   /** The `result`, else empty. */
   result: string;
@@ -49,7 +49,8 @@ const base = stepBase<ActionState>({ kind: "action" });
 
 const presentation = (options: ActionOptions) => ({
   title: options.label ?? "Action",
-  quote: options.quote ?? "",
+  // A triple-clicked paragraph ends in line breaks the quote would show.
+  quote: options.quote?.trim() ?? "",
   result: options.result ?? "",
 });
 
