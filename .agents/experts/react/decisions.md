@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `101e10f` (Wave 4 Task 12 agent conformance)
+Last reviewed: `cd5d555` (Wave 4 Task 12b Model Selector icons)
 
 ## Settled
 
@@ -15,6 +15,7 @@ Last reviewed: `101e10f` (Wave 4 Task 12 agent conformance)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **UI SDK's `ComboboxValueIcon` has no server markup and keeps an icon copied before its content changed in place** (Wave 4 Task 12b): Model Selector draws its field icon from data instead (its own `icon` part); report upstream.
 - **A streamed Test Results update renders every row's UI SDK Tree parts and item parts** (Wave 4 Task 9): the known options-change cost (as Chain of Thought, Task and Sources). Our `TestResultsRow` components skip suites the host kept, since core caches tree items per suite.
 - **File Tree: the root `group` and the Tree are both named "Files"** (Wave 4 Task 6), so a screen reader may say it twice; and a function `className` on the root gets the Tree's props. Not checked with a screen reader.
 - **A server-rendered ready Generated Image shows "Loading image" and a shimmer until it hydrates** (Wave 4 Task 5): the phase comes from the `<img>`'s `load`, which only the client hears; the frame keeps its size. Each progress tick renders every part (UI SDK options change), as Chain of Thought's steps do.
@@ -46,6 +47,9 @@ Last reviewed: `101e10f` (Wave 4 Task 12 agent conformance)
 
 ## Resolved
 
+- **Model Selector's field icon went stale and was missing from server markup** (Wave 4 Task 12b): `ComboboxValueIcon` was replaced by the primitive's `icon` part, drawn from the chosen model, and `keepMounted` is gone.
+- **`ModelSelectorItem`'s `model.icon` was `unknown`** (Wave 4 Task 12b): `ModelSelectorListItem` types it `string | ReactElement`, as `ModelSelectorModel` does.
+- **The `logos` fixture camelCased `aria-hidden`** (Wave 4 Task 12b): `logo()` keeps `aria-*` and `data-*` names.
 - **Wave 4 agent conformance** (Wave 4 Task 12): the `wave-4` page passes the same props and callbacks as web's, uncontrolled so a refusing host's `cancel()` keeps the state; Queue's remove lock holds across a host re-render with a new `items` array (per item, `queue.spec.ts`).
 - **Selection and Action** (Wave 4 Task 11): fixtures gained a refused case (both callbacks cancelled), a case without `onAction` (disabled buttons, no `run`), the description `title`, and an Action whose host owns `open` through a stream.
 - **Server-rendered Transcript segments overlapped at a 72px guess and moved on hydration** (Wave 4 Task 10): fixed; until the viewport connects (`measured`), segments stack in the flow, then sit at the measured offsets.

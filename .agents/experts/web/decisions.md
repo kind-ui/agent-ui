@@ -2,10 +2,12 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `101e10f` (Wave 4 Task 12 agent conformance)
+Last reviewed: `cd5d555` (Wave 4 Task 12b Model Selector icons)
 
 ## Settled
 
+- **A `kind-model-selector` element icon is cloned with its ids** (Wave 4 Task 12b): rewriting ids inside each copy would be fragile; the `models` JSDoc says to pass a logo with `defs` as an image URL, and the fixture's Gemini logo is one.
+- **`drawIcon` compares icons by identity** (suspected, Wave 4 Task 12b): a host that builds new elements on every `models` write re-copies its icons, which is harmless.
 - **A hand-written empty `kind-inline-citation-content` stays empty** (Wave 4 Task 3), as React's bare `InlineCitationContent` does: the element fills in only the content it wrote.
 - **`kind-sources`' `api` leaves out `expand` and `collapse`** (Wave 4 Task 2): they are availability getters, and a web root's `api` list copies methods once, as Guardrail Notice's does; `open` and `setOpen` cover them.
 - **Fixtures carry no comments** (Wave 3 Task 11): the agent page builds `kind-model-selector` and `kind-reasoning-effort` with `createElement` because `defaultValue` is a property read when the element connects (AGENTS.md, Wave 3 agent conformance), not because markup was overlooked.
@@ -21,6 +23,7 @@ Last reviewed: `101e10f` (Wave 4 Task 12 agent conformance)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **`@ui-sdk/web`'s Combobox content `anchor` stringifies an element** (Wave 4 Task 12b): only a selector works, so Model Selector anchors through `data-model-selector-field`; report upstream.
 - **Closing a Step or Guardrail Notice panel inside a shadow root leaves focus on a hidden button** (Wave 4 Task 12): the trigger lookup is now `context.element`, but UI SDK's `bindPanel` asks for it only when `el.contains(document.activeElement)`, which is the shadow host there. Add to the upstream report beside `focus-recovery.js`; a shadow-root test comes with the fix.
 - **Checkpoint's Alert Dialog is named differently by layer in the snapshot:** "Restore checkpoint" in React, "Restore this checkpoint?" on web (Wave 3, seen in Task 12).
 - **The Transcript web fixture has no shadow-root, moved or written-parts case** (Wave 4 Task 10): checked by hand in review, not in the spec, as for Inline Citation and Sources.

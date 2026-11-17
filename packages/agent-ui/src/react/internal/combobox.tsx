@@ -12,7 +12,6 @@ import {
   ComboboxItemIndicator,
   ComboboxList,
   ComboboxTrigger,
-  ComboboxValueIcon,
 } from "@ui-sdk/react/combobox";
 import { withKindClass } from "./kind-class.js";
 
@@ -52,11 +51,6 @@ export const KindComboboxItemIcon = withKindClass(
   ComboboxItemIcon,
   "inline-flex size-4 shrink-0 items-center justify-center",
   "KindComboboxItemIcon",
-);
-export const KindComboboxValueIcon = withKindClass(
-  ComboboxValueIcon,
-  "inline-flex size-4 shrink-0 items-center justify-center",
-  "KindComboboxValueIcon",
 );
 export const KindComboboxItemIndicator = withKindClass(
   ComboboxItemIndicator,

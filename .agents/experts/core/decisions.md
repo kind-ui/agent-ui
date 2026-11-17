@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `101e10f` (Wave 4 Task 12 agent conformance)
+Last reviewed: `cd5d555` (Wave 4 Task 12b Model Selector icons)
 
 ## Settled
 
+- **Model Selector's `icon` is `unknown` in core, so each render layer casts once where core hands it over** (Wave 4 Task 12b): `definePrimitive` can't be generic per instance, and each layer types its own public `models` (`string | ReactElement` in React, `string | Element` on web), so no other value reaches the cast.
 - **Selection's `onDismiss` hears Escape, an outside press and `dismiss`, not a selection collapsing** (Wave 4 Task 11): a collapse is the reader moving on, not a dismissal; the JSDoc says so.
 - **Selection's root is a `group` named by `label`, which names its Toolbar too** (Wave 4 Task 11): the bridge names a component by its root, and a generic `div` can't carry a name; the same name twice is the cost of one "Selection actions" agent entry.
 - **A Test Results suite whose id is `all`, `fail`, `pass` or `skip` shares an agent item value with a filter** (Wave 4 Task 9): the bridge checks one list per component, and `expand("fail")` still opens the suite; hosts use real ids.
@@ -75,6 +76,7 @@ Last reviewed: `101e10f` (Wave 4 Task 12 agent conformance)
 
 ## Resolved
 
+- **Model Selector's list anchored through the field's `id`** (Wave 4 Task 12b, core, react and web reviews): an author `id` on the trigger, a page element with the same id or a `"` in it broke the anchor; the trigger now writes `data-model-selector-field` and the anchor is an escaped selector for it, and the `logos` case has a trigger with an author `id`.
 - **Queue, Task and Plan forget a removed id** (Wave 4 Task 12), as the uploader and attachments do, so an item added again under the same id enters again; Queue asks `onRemove` once per item until the host passes a new object for it or drops it. Pinned in `queue.spec.ts` and `task.spec.ts`.
 - **Step and Guardrail Notice panels find their trigger through `context.element`** (Wave 4 Task 12), not a document query, so a trigger inside a shadow root is found.
 - **Selection** (Wave 4 Task 11): the same text selected again after Escape or a press outside reopens the toolbar (a root `pointerdown` clears the closed range), `close` tested `element()` against `null` (it returns `undefined`), `actionsById` is cached by array (`cached`), emptying `actions` closes the toolbar, a selection inside a shadow root reads `getComposedRanges`, and Action trims `quote`. Pinned in `selection.spec.ts` and `action.spec.ts`.

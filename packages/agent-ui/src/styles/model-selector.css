@@ -48,8 +48,16 @@
   }
 
   /* The chosen model's icon, as far from the field's edge and its name as in its row. */
-  [data-slot="kind-model-selector-trigger"] > [data-slot="combobox-value-icon"] {
+  [data-slot="kind-model-selector-icon"] {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
     margin-inline: 8px -4px;
+
+    &[hidden] {
+      display: none;
+    }
   }
 
   /* Hidden, not removed, while the list is open, so the search field keeps its width as a person types. */
@@ -100,7 +108,7 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    & :is([data-slot="combobox-item-icon"], [data-slot="combobox-value-icon"]) {
+    & :is([data-slot="combobox-item-icon"], [data-slot="kind-model-selector-icon"]) {
       width: 16px;
       height: 16px;
       color: var(--kind-color-fg);
@@ -112,7 +120,7 @@
       }
     }
     /* A model without an icon keeps its place, so names line up. */
-    & [data-has-icons] [data-slot="combobox-item"]:not([data-has-icon])::before {
+    & :where([data-has-icons]) [data-slot="combobox-item"]:where(:not([data-has-icon]))::before {
       content: "";
       flex-shrink: 0;
       width: 16px;

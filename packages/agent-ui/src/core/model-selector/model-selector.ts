@@ -95,7 +95,10 @@ export type ModelSelectorItem = ModelOption<unknown> & { segments: MatchSegment[
 
 /** What the content renders: the matching models by group, best match first. */
 export type ModelSelectorContentState = {
-  /** The field, as a selector the Combobox content takes as its `anchor`, so the list opens against the whole field. */
+  /**
+   * The field, as a selector the Combobox content takes as its `anchor`, so the list opens against the whole field
+   * rather than the input its icon pushes along.
+   */
   anchor: string;
   /** The groups with a match, in the order they first appear, each with its matching models, best first. */
   groups: { group: string | undefined; models: ModelSelectorItem[] }[];
@@ -132,6 +135,7 @@ type Slot<Public extends object = Record<never, never>> = SlotDefinition<
 type ModelSelectorSlots = {
   root: Slot<ModelSelectorComboboxState>;
   trigger: Slot<{ group: string; buttonLabel: string }>;
+  icon: Slot<{ icon: unknown }>;
   input: Slot<{ label: string; placeholder: string }>;
   content: Slot<ModelSelectorContentState>;
 };
@@ -152,7 +156,8 @@ const presentation = (options: ModelSelectorOptions) => ({
   motion: options.motion ?? "auto",
 });
 
-const fieldId = (id: string) => `${id}-field`;
+// Marks the field with the instance's id in an attribute of our own, since a host may give the field any `id`.
+const fieldSelector = (id: string) => `[data-model-selector-field="${id.replace(/["\\]/g, "\\$&")}"]`;
 
 const modelOf = (state: ModelSelectorState, id: string | null) =>
   state.models.find((model) => model.id === id);
@@ -220,7 +225,7 @@ export const modelSelectorPrimitive: ModelSelectorPrimitive = definePrimitive<
     );
     const contentState = memo(
       (models: ModelOption<unknown>[], query: string, id: string): ModelSelectorContentState => ({
-        anchor: `[id="${fieldId(id)}"]`,
+        anchor: fieldSelector(id),
         groups: filterModels(models, query).map(({ group, models: matched }) => ({
           group,
           models: matched.map((model) => ({
@@ -288,11 +293,17 @@ export const modelSelectorPrimitive: ModelSelectorPrimitive = definePrimitive<
         group: modelOf(state, state.value)?.group ?? "",
         buttonLabel: state.openLabel,
       }),
-      attrs: (_state, { id }) => ({ id: fieldId(id) }),
+      attrs: (_state, { id }) => ({ "data-model-selector-field": id }),
       on: {
         keydown: (_event, { api }) => api.follow(),
         click: (_event, { api }) => api.follow(),
       },
+    }),
+    // Drawn from the chosen model, so server markup has it and a new icon replaces the old one.
+    icon: slot<BaseSlotProps, { icon: unknown }>({
+      present: (state) => modelOf(state, state.value)?.icon !== undefined,
+      state: (state) => ({ icon: modelOf(state, state.value)?.icon }),
+      attrs: () => ({ "aria-hidden": "true" }),
     }),
     input: slot<BaseSlotProps, { label: string; placeholder: string }>({
       state: (state) => ({ label: state.label, placeholder: state.placeholder }),

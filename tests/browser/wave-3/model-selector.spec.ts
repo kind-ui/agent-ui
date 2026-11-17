@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Fixture = {
   kindHost: { changes: { component: string; value: string | null; reason: string }[] };
@@ -175,7 +176,8 @@ for (const colorScheme of ["light", "dark"] as const) {
 }
 
 const field = (page: Page, id = "model") => page.locator(`#${id} [data-slot="kind-model-selector-trigger"]`);
-const valueIcon = (page: Page, id = "model") => field(page, id).locator('[data-slot="combobox-value-icon"]');
+const valueIcon = (page: Page, id = "model") =>
+  field(page, id).locator('[data-slot="kind-model-selector-icon"]');
 const openList = (page: Page) => page.locator('[data-slot="combobox-content"]:visible');
 const ANTHROPIC = /^M13\.827/;
 const OPENAI = /^M9\.205/;
@@ -214,7 +216,7 @@ test("the field shows the chosen model's icon before the list first opens, and f
   // An image URL icon shows as an image, before the input.
   await expect(valueIcon(page, "second").locator("img")).toHaveAttribute("src", /^data:image\/svg\+xml,/);
   const order = await field(page, "second").evaluate((el) => {
-    const icon = el.querySelector('[data-slot="combobox-value-icon"]');
+    const icon = el.querySelector('[data-slot="kind-model-selector-icon"]');
     const text = el.querySelector("input");
     return icon && text ? icon.compareDocumentPosition(text) & Node.DOCUMENT_POSITION_FOLLOWING : 0;
   });
@@ -292,9 +294,10 @@ test("a search marks only the name, never the icon", async ({ page }) => {
   await expect(input(page)).toHaveValue("Claude Sonnet 5.5");
 });
 
-test("each list opens 6px below its own field, aligned to its start", async ({ page }) => {
+test("each list opens 6px below its own field, aligned to its start", async ({ page }, testInfo) => {
   await openLogos(page);
-  for (const id of ["model", "second"]) {
+  // React's third field has an author `id`.
+  for (const id of layerOf(testInfo) === "react" ? ["model", "second", "third"] : ["model", "second"]) {
     await page.locator(`#${id} [data-slot="combobox-trigger"]`).click();
     await expect(openList(page)).toHaveCount(1);
     await settled(page);

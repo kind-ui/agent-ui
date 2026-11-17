@@ -19,12 +19,12 @@ import {
   KindComboboxItemIndicator,
   KindComboboxList,
   KindComboboxTrigger,
-  KindComboboxValueIcon,
 } from "./internal/combobox.js";
 
 const parts = createParts(modelSelectorPrimitive, {
   root: "div",
   trigger: "div",
+  icon: "span",
   input: "span",
   content: "div",
 });
@@ -45,6 +45,11 @@ const CHECK = (
 export type ModelSelectorModel = Omit<NonNullable<ModelSelectorOptions["models"]>[number], "icon"> & {
   icon?: string | ReactElement;
 };
+
+/** A model in the list, with its name split into what the query matched and what it didn't. */
+export type ModelSelectorListItem = Omit<Item, "icon"> & Pick<ModelSelectorModel, "icon">;
+
+const iconOf = (icon: string | ReactElement) => (typeof icon === "string" ? <img src={icon} alt="" /> : icon);
 
 export type ModelSelectorProps = Omit<ComponentProps<typeof parts.Root>, "children" | "models"> & {
   models?: ModelSelectorModel[];
@@ -70,7 +75,7 @@ export type ModelSelectorTriggerProps = ComponentProps<typeof parts.Trigger>;
 export function ModelSelectorTrigger({
   children = ({ group, buttonLabel }) => (
     <>
-      <KindComboboxValueIcon />
+      <ModelSelectorIcon />
       <ModelSelectorInput />
       <span data-model-selector-group="">{group}</span>
       <KindComboboxTrigger aria-label={buttonLabel}>{CHEVRON}</KindComboboxTrigger>
@@ -79,6 +84,16 @@ export function ModelSelectorTrigger({
   ...props
 }: ModelSelectorTriggerProps) {
   return <parts.Trigger {...props}>{children}</parts.Trigger>;
+}
+
+export type ModelSelectorIconProps = ComponentProps<typeof parts.Icon>;
+
+/** The chosen model's icon, shown before the search field while that model has one, unless you pass children. */
+export function ModelSelectorIcon({
+  children = ({ icon }) => iconOf(icon as string | ReactElement),
+  ...props
+}: ModelSelectorIconProps) {
+  return <parts.Icon {...props}>{children}</parts.Icon>;
 }
 
 export type ModelSelectorInputProps = ComponentProps<typeof parts.Input>;
@@ -96,19 +111,16 @@ export function ModelSelectorInput({
 
 export type ModelSelectorContentProps = ComponentProps<typeof parts.Content>;
 
-/**
- * The list, the matching models by group, best match first, unless you pass children. It opens against the field and
- * stays in the page while closed, so the field shows the chosen model's icon before the list first opens.
- */
+/** The list, the matching models by group, best match first, unless you pass children. It opens against the field. */
 export function ModelSelectorContent({
   children = ({ anchor, groups }) => (
-    <KindComboboxContent anchor={anchor} sideOffset={6} align="start" keepMounted>
+    <KindComboboxContent anchor={anchor} sideOffset={6} align="start">
       <ModelSelectorEmpty />
       <KindComboboxList>
         {groups.map(({ group, models }) => (
           <ModelSelectorGroup key={group ?? ""} label={group}>
             {models.map((model) => (
-              <ModelSelectorItem key={model.id} model={model} />
+              <ModelSelectorItem key={model.id} model={model as ModelSelectorListItem} />
             ))}
           </ModelSelectorGroup>
         ))}
@@ -138,7 +150,7 @@ export function ModelSelectorGroup({ label, children, ...props }: ModelSelectorG
 export type ModelSelectorItemProps = Omit<
   ComponentProps<typeof KindComboboxItem>,
   "value" | "label" | "disabled" | "children"
-> & { model: Item };
+> & { model: ModelSelectorListItem };
 
 /**
  * A model in the list: its icon, its name with what the query matched marked, its description and a check when
@@ -148,11 +160,7 @@ export function ModelSelectorItem({ model, ...props }: ModelSelectorItemProps) {
   const { icon } = model;
   return (
     <KindComboboxItem {...props} value={model.id} label={model.name} disabled={model.disabled}>
-      {icon ? (
-        <KindComboboxItemIcon>
-          {typeof icon === "string" ? <img src={icon} alt="" /> : (icon as ReactElement)}
-        </KindComboboxItemIcon>
-      ) : null}
+      {icon ? <KindComboboxItemIcon>{iconOf(icon)}</KindComboboxItemIcon> : null}
       <span data-model-selector-item-text="">
         <span data-model-selector-name="">
           {model.segments.map((segment, index) =>

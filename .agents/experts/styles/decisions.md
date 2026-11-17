@@ -2,10 +2,12 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `101e10f` (Wave 4 Task 12 agent conformance)
+Last reviewed: `cd5d555` (Wave 4 Task 12b Model Selector icons)
 
 ## Settled
 
+- **Choosing a Model Selector model without an icon moves the field's text toward the start** (suspected, Wave 4 Task 12b): the field keeps its width, so nothing outside it moves.
+- **The Model Selector icon rule must stay after the trigger's `& svg` rule** (Wave 4 Task 12b): both are one attribute and one element, so the later 16px rule wins over 14px.
 - **The Transcript match count changes width as you type** (Wave 4 Task 10): it sits inside the search field after the input, which only shrinks; nothing outside the field moves.
 - **Switching the Test Results filter plays the rows' entrance again** (Wave 4 Task 9): the filter mounts the rows it lets through, which is a mount; reduced motion keeps it to a 120 ms fade.
 - **Terminal's Copy hover fade runs under every `motion`** (Wave 4 Task 7), as the Step trigger's and Tool's copy buttons' do: a 150 ms color change on hover isn't movement.
@@ -52,6 +54,7 @@ Last reviewed: `101e10f` (Wave 4 Task 12 agent conformance)
 
 ## Resolved
 
+- **Model Selector's icon selectors outranked a consumer class** (Wave 4 Task 12b): the row spacer's context is in `:where()`, and the field icon is a single-attribute selector on its own part.
 - **Mask-drawn icons vanish in forced colors** (Wave 4 Task 12): every mask icon has a `forced-color-adjust: none` rule (`ButtonText` in buttons, `CanvasText` elsewhere), the Context Meter ring is redrawn in system colors, disabled Send reads `GrayText` and a pressed Wrap `SelectedItem`. Pinned in `forced-colors.spec.ts`.
 - **Selection toolbar** (Wave 4 Task 11): state and motion rules sit at one attribute with their context in `:where()`, so a consumer's class wins; a triple-clicked quote no longer ends in an empty line (core trims `quote`); `selection.spec.ts` pins full, reduced and no motion.
 - **The status mark's ✕ sat off center, again** (Wave 4 Task 10, user report on Test Results): root cause was each glyph masked at a fixed pixel `mask-size` (10px, 16px, and Test Results' 9px) inside a box other stylesheets resized, so (box − mask) / 2 landed on half pixels that round differently per DPR. Fixed for good: glyphs are drawn centered in their 24×24 viewBox and masked `center / 100% 100%` over the whole border box, the mark is sized only through `--kind-status-mark-size` (Test Results and Checkpoint set 14px), `check-ui-sdk-usage.mjs` fails any other stylesheet that sets `mask*`, `width` or `height` on a mark, and `tests/browser/wave-1/status-mark.spec.ts` checks every consumer's size and the glyph centroid for each status and size at 1x and 2x.

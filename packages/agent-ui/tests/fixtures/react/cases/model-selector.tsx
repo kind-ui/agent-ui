@@ -1,6 +1,10 @@
 import type { MotionMode } from "@kind-ui/agent-ui/core";
 import { type ReactElement, useEffect } from "react";
-import { ModelSelector } from "../../../../src/react/model-selector.js";
+import {
+  ModelSelector,
+  ModelSelectorContent,
+  ModelSelectorTrigger,
+} from "../../../../src/react/model-selector.js";
 import { ReasoningEffort } from "../../../../src/react/reasoning-effort.js";
 import { iconModels, levels, models, selectionHost } from "../../shared/model-selector.js";
 
@@ -39,7 +43,9 @@ const logo = (markup: string): ReactElement => {
   const [, attributes = "", contents = ""] = /^<svg([^>]*)>(.*)<\/svg>$/s.exec(markup) ?? [];
   const props: Record<string, string> = {};
   for (const [, name = "", value = ""] of attributes.matchAll(/([\w:-]+)="([^"]*)"/g))
-    props[name.replace(/-(\w)/g, (_, letter: string) => letter.toUpperCase())] = value;
+    props[
+      /^(aria|data)-/.test(name) ? name : name.replace(/-(\w)/g, (_, letter: string) => letter.toUpperCase())
+    ] = value;
   return <svg {...props} dangerouslySetInnerHTML={{ __html: contents }} />;
 };
 
@@ -64,6 +70,12 @@ function Logos() {
           defaultValue="mai-code-2"
           onValueChange={record("second")}
         />
+      </div>
+      <div className="ps-64">
+        <ModelSelector id="third" models={logoModels} defaultValue="gpt-6-astra">
+          <ModelSelectorTrigger id="mine" />
+          <ModelSelectorContent />
+        </ModelSelector>
       </div>
     </div>
   );

@@ -13,9 +13,9 @@ export const models: ModelOption[] = [
 export const logoUrl = (markup: string) => `data:image/svg+xml,${encodeURIComponent(markup)}`;
 
 /**
- * Models with logos, each made into an element by `toIcon`, but for Microsoft's, an image URL (its colors are its own,
- * since an image can't take `currentColor`), and one model without an icon. None has a description, so every row is
- * one line.
+ * Models with logos, each made into an element by `toIcon`, but for Microsoft's and Gemini's, image URLs (their colors
+ * are their own, since an image can't take `currentColor`, and Gemini's gradient ids would repeat in every copy), and
+ * one model without an icon. None has a description, so every row is one line.
  */
 export const iconModels = <Icon>(toIcon: (markup: string) => Icon): ModelOption<Icon | string>[] => [
   { id: "claude-opus-5.5", name: "Claude Opus 5.5", group: "Anthropic", icon: toIcon(logos.anthropic) },
@@ -25,8 +25,8 @@ export const iconModels = <Icon>(toIcon: (markup: string) => Icon): ModelOption<
   { id: "gpt-5.6-sol", name: "GPT-5.6 Sol", group: "OpenAI", icon: toIcon(logos.openai) },
   { id: "gpt-6.1-terra", name: "GPT-6.1 Terra", group: "OpenAI", icon: toIcon(logos.openai) },
   { id: "mai-code-2", name: "MAI Code 2", group: "Microsoft", icon: logoUrl(logos.microsoft) },
-  { id: "gemini-4-argon", name: "Gemini 4 Argon", group: "Google", icon: toIcon(logos.gemini) },
-  { id: "gemini-3.8-flash", name: "Gemini 3.8 Flash", group: "Google", icon: toIcon(logos.gemini) },
+  { id: "gemini-4-argon", name: "Gemini 4 Argon", group: "Google", icon: logoUrl(logos.gemini) },
+  { id: "gemini-3.8-flash", name: "Gemini 3.8 Flash", group: "Google", icon: logoUrl(logos.gemini) },
   { id: "grok-4.7", name: "Grok 4.7", group: "xAI", icon: toIcon(logos.xai) },
   { id: "local", name: "Local model", group: "Other" },
 ];
