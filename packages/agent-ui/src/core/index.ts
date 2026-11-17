@@ -4,6 +4,18 @@ export {
   type ActionState,
   actionPrimitive,
 } from "./action/index.js";
+export {
+  type AddMenuActionReason,
+  type AddMenuApi,
+  type AddMenuContentState,
+  type AddMenuOptions,
+  type AddMenuPrimitive,
+  type AddMenuRow,
+  type AddMenuSection,
+  type AddMenuState,
+  addMenuPrimitive,
+  addMenuSections,
+} from "./add-menu/index.js";
 export { type AnsiLine, type AnsiLines, type AnsiSpan, createAnsiLines } from "./ansi.js";
 export { approvalKey, approvalLabel, isActionable } from "./approval.js";
 export {
@@ -207,11 +219,13 @@ export {
   type MenuBaseApi,
   type MenuBaseConfig,
   type MenuBaseOptions,
+  type MenuBaseSlots,
   type MenuBaseState,
   type MenuChoice,
   type MenuPartState,
   type MenuPresentation,
   type MenuRun,
+  type MenuTriggerState,
   menuBase,
   menuItems,
 } from "./menu-base.js";

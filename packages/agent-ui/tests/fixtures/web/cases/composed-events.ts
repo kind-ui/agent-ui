@@ -8,6 +8,7 @@ const log = (line: string) => output?.append(`${line}\n`);
 
 const base = menuBase<MenuBaseOptions>({
   kind: "test",
+  label: "Edit",
   toData: () => [],
   onAction: (value, { source }) => log(`action ${value} ${source}`),
   onChecked: (value, checked, { source }) => log(`checked ${value} ${checked} ${source}`),

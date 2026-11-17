@@ -22,6 +22,8 @@
 @import "./checkpoint.css";
 @import "./model-selector.css";
 @import "./picker.css";
+@import "./menu.css";
+@import "./add-menu.css";
 @import "./selection.css";
 @import "./suggestion.css";
 @import "./tool.css";

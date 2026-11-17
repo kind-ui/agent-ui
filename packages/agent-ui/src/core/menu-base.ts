@@ -3,6 +3,7 @@ import {
   type ChangeSource,
   createChange,
   type PrimitiveContext,
+  type SlotDefinition,
   type SlotFactory,
 } from "@ui-sdk/core";
 import {
@@ -14,6 +15,7 @@ import {
   type MenuOpenChangeReason,
   type MenuValueChangeDetails,
 } from "@ui-sdk/core/menu";
+import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { actionSource } from "./action-source.js";
 import { type ComposedHandler, hearComposed } from "./composed-events.js";
 import { memo } from "./memo.js";
@@ -23,6 +25,8 @@ import type { MotionMode } from "./motion/index.js";
 export type MenuPresentation = "auto" | "popover" | "sheet";
 
 export type MenuBaseOptions = {
+  /** Names the trigger. Each menu has its own default. */
+  label?: string;
   /** Whether the menu is open. Passing it controls it: change it in `onOpenChange`. */
   open?: boolean;
   /**
@@ -51,6 +55,8 @@ export type MenuBaseOptions = {
 
 export type MenuBaseState = {
   open: boolean;
+  /** The `label`, or the menu's default. */
+  label: string;
   /** The menu as UI SDK Menu data, from the component's `toData`. */
   items: MenuData;
   presentation: MenuPresentation;
@@ -58,11 +64,13 @@ export type MenuBaseState = {
   motion: MotionMode;
 };
 
-/** What the root hands UI SDK Menu: pass every key to it. On Web Components, write them onto the `ui-menu`. */
+/**
+ * What the root hands UI SDK Menu: pass every key to it. On Web Components, write them onto the `ui-menu`. The menu
+ * gets no `items`: each component draws its own rows, since Menu's data has no icons or descriptions.
+ */
 export type MenuPartState = {
   /** The primitive's own. */
   controller: MenuController;
-  items: MenuData;
   presentation: MenuPresentation;
   open: boolean;
   onOpenChange: (open: boolean, details: ChangeDetails<MenuOpenChangeReason>) => void;
@@ -71,8 +79,11 @@ export type MenuPartState = {
   onValueChange: (value: string, details: MenuValueChangeDetails) => void;
 };
 
-/** What ran a plain item: the click or key press, and who. */
-export type MenuRun = { event?: Event | undefined; source: ChangeSource };
+/** What the trigger slot hands UI SDK's `MenuTrigger`: pass every key to it. */
+export type MenuTriggerState = { "aria-label": string; disabled: boolean };
+
+/** What ran a plain item: the click or key press, and who, and `keepOpen`, which refuses the close that follows. */
+export type MenuRun = { event?: Event | undefined; source: ChangeSource; keepOpen: () => void };
 
 /** How a person chose in the menu: the reason, the event, who, and a `cancel` that keeps a checkbox or radio as it was. */
 export type MenuChoice = {
@@ -85,23 +96,45 @@ export type MenuChoice = {
 export type MenuBaseApi = {
   /** The controller UI SDK Menu is driven through. */
   controller: MenuController;
+  /** Whether the menu is open. */
+  isOpen: () => boolean;
+  /** Opens or closes the menu, as the web root's `open` property does. Returns whether the change was accepted. */
+  setOpen: (open: boolean) => boolean;
   /** Opens the menu. Offered only while it's closed and enabled. Returns whether the change was accepted. */
   readonly open: (() => boolean) | undefined;
   /** Closes the menu. Offered only while it's open. Returns whether the change was accepted. */
   readonly close: (() => boolean) | undefined;
   /** The menu's data, or none while disabled. */
   getItems: () => MenuData;
-  /** Props for composed UI SDK components, memoized. `menu` is called by the root slot. */
-  partState: { menu: (state: MenuBaseState) => MenuPartState };
+  /** Props for composed UI SDK components, memoized: `menu` for the root slot, `trigger` for the trigger slot. */
+  partState: {
+    menu: (state: MenuBaseState) => MenuPartState;
+    trigger: (state: MenuBaseState) => MenuTriggerState;
+  };
   /** UI SDK Menu's events on Web Components, heard by the root slot through `hearComposed`. */
   composedEvents: Record<string, ComposedHandler>;
 };
 
 type Context<Options> = PrimitiveContext<Options, MenuBaseState, string>;
 
+type Slot<
+  State extends MenuBaseState,
+  Api extends MenuBaseApi,
+  Public extends object = Record<never, never>,
+> = SlotDefinition<State, Api, BaseSlotProps, Public>;
+
+/** The slots `menuBase` gives: the root around UI SDK Menu, and wrappers around its trigger and content. */
+export type MenuBaseSlots<State extends MenuBaseState, Api extends MenuBaseApi> = {
+  root: Slot<State, Api, MenuPartState>;
+  trigger: Slot<State, Api, MenuTriggerState>;
+  content: Slot<State, Api>;
+};
+
 export type MenuBaseConfig<Options extends MenuBaseOptions> = {
   /** Written as the root's `data-kind`. */
   kind: string;
+  /** The `label` when the options have none. */
+  label: string;
   /** The menu as UI SDK Menu data, read whenever the options change. */
   toData: (options: Options) => MenuData;
   /** A plain item ran. A returned promise keeps the item pending and the menu open until it settles. */
@@ -156,6 +189,7 @@ export const menuBase = <Options extends MenuBaseOptions>(config: MenuBaseConfig
     return last.items;
   };
   const presentation = (options: Options) => ({
+    label: options.label ?? config.label,
     items: data(options),
     presentation: options.presentation ?? "auto",
     disabled: options.disabled ?? false,
@@ -163,6 +197,7 @@ export const menuBase = <Options extends MenuBaseOptions>(config: MenuBaseConfig
   });
   return {
     options: {
+      label: "string",
       open: "boolean",
       defaultOpen: "boolean",
       onOpenChange: "callback",
@@ -188,28 +223,43 @@ export const menuBase = <Options extends MenuBaseOptions>(config: MenuBaseConfig
         if (options.disabled && store.get().open) change("open", false, { reason: "imperative" });
       });
 
+      // Menu closes right after it runs an item, so an item that asked to keep it open refuses that close.
+      let keep = false;
       const onOpenChange = (open: boolean, details: ChangeDetails<MenuOpenChangeReason>) => {
         const { reason, event, source } = details;
         if (open && store.get().disabled) return details.cancel();
+        if (!open && keep && reason === "item-press") {
+          keep = false;
+          return details.cancel();
+        }
         if (!change("open", open, event ? { reason, event, source } : { reason, source })) details.cancel();
       };
-      const onAction = (value: string, { event }: MenuActionDetails) =>
-        config.onAction?.(value, { event, source: actionSource(event, "item-press") }, context);
+      const onAction = (value: string, { event }: MenuActionDetails) => {
+        keep = false;
+        const source = actionSource(event, "item-press");
+        return config.onAction?.(value, { event, source, keepOpen: () => (keep = true) }, context);
+      };
       const onCheckedChange = (checked: boolean, details: MenuCheckedChangeDetails) =>
         config.onChecked?.(details.value, checked, details, context);
       const onValueChange = (value: string, details: MenuValueChangeDetails) =>
         config.onValue?.(details.group, value, details, context);
 
       const menu = memo(
-        (items: MenuData, shown: MenuPresentation, open: boolean): MenuPartState => ({
+        (shown: MenuPresentation, open: boolean): MenuPartState => ({
           controller,
-          items,
           presentation: shown,
           open,
           onOpenChange,
           onAction,
           onCheckedChange,
           onValueChange,
+        }),
+      );
+
+      const trigger = memo(
+        (label: string, disabled: boolean): MenuTriggerState => ({
+          "aria-label": label,
+          disabled,
         }),
       );
 
@@ -258,32 +308,50 @@ export const menuBase = <Options extends MenuBaseOptions>(config: MenuBaseConfig
         },
       };
 
+      const setOpen = (open: boolean) => {
+        if (open === store.get().open) return true;
+        if (open && store.get().disabled) return false;
+        return change("open", open, { reason: "imperative" });
+      };
+
       return {
         controller,
+        isOpen: () => store.get().open,
+        setOpen,
         get open() {
           const { open, disabled } = store.get();
-          return open || disabled ? undefined : () => change("open", true, { reason: "imperative" });
+          return open || disabled ? undefined : () => setOpen(true);
         },
         get close() {
-          return store.get().open ? () => change("open", false, { reason: "imperative" }) : undefined;
+          return store.get().open ? () => setOpen(false) : undefined;
         },
         getItems: () => (store.get().disabled ? [] : store.get().items),
-        partState: { menu: (state) => menu(state.items, state.presentation, state.open) },
+        partState: {
+          menu: (state) => menu(state.presentation, state.open),
+          trigger: (state) => trigger(state.label, state.disabled),
+        },
         composedEvents,
       };
     },
-    slots: <State extends MenuBaseState, Api extends MenuBaseApi>(slot: SlotFactory<State, Api>) => ({
-      root: slot<object, MenuPartState>({
+    slots: <State extends MenuBaseState, Api extends MenuBaseApi>(
+      slot: SlotFactory<State, Api>,
+    ): MenuBaseSlots<State, Api> => ({
+      // A group named by the `label`, since the agent bridge names a component by its root.
+      root: slot<BaseSlotProps, MenuPartState>({
+        role: "group",
         state: (state, { api }) => api.partState.menu(state),
         attrs: (state) => ({
+          "aria-label": state.label,
           "data-kind": config.kind,
+          "data-menu-part": "root",
           "data-open": state.open ? "" : undefined,
           "data-disabled": state.disabled ? "" : undefined,
           "data-motion": state.motion,
         }),
         bind: (el, { api }) => hearComposed(el, api.composedEvents),
       }),
-      trigger: slot({
+      trigger: slot<BaseSlotProps, MenuTriggerState>({
+        state: (state, { api }) => api.partState.trigger(state),
         attrs: (state) => ({
           "data-menu-part": "trigger",
           "data-open": state.open ? "" : undefined,
