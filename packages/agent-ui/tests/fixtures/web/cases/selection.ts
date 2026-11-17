@@ -13,7 +13,6 @@ export const cases = {
   all: (root: HTMLElement) => {
     defineSelection();
     const host = { actions: [] as unknown[][], dismissals: [] as unknown[][] };
-    // Room above for the toolbar after the page scrolls, and below so the page can scroll.
     root.innerHTML = `
       <div class="flex w-[32rem] flex-col gap-4 px-6 pt-60 pb-[150vh]">
         <p id="before">Text before the reply, outside the selection root.</p>
