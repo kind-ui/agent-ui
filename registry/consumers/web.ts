@@ -1,5 +1,6 @@
 // The Web Components registry consumer's entry: every component, as `shadcn add` copies it, one section each.
 import { defineAction } from "./components/ui/web/action.js";
+import { defineAddMenu } from "./components/ui/web/add-menu.js";
 import { defineAttachments } from "./components/ui/web/attachments.js";
 import { defineChainOfThought } from "./components/ui/web/chain-of-thought.js";
 import { defineCheckpoint } from "./components/ui/web/checkpoint.js";
@@ -77,6 +78,7 @@ for (const define of [
   defineSelection,
   defineAction,
   definePicker,
+  defineAddMenu,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -131,6 +133,7 @@ const items = {
   selection: `<kind-selection can-run><kind-selection-content><p>Retry with backoff.</p></kind-selection-content></kind-selection>`,
   action: `<kind-action label="Explain" quote="Retry with backoff." result="Wait, then try again." status="complete"></kind-action>`,
   picker: `<kind-picker label="Work in"></kind-picker>`,
+  "add-menu": `<kind-add-menu can-run></kind-add-menu>`,
   terminal: `<kind-terminal command="npm test" exit-code="0" default-open></kind-terminal>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
@@ -229,6 +232,9 @@ Object.assign(main.querySelector("kind-selection") as HTMLElement, {
 Object.assign(main.querySelector("kind-picker") as HTMLElement, {
   items: [{ value: "agent-ui", label: "agent-ui", description: "~/code/agent-ui" }],
   value: "agent-ui",
+});
+Object.assign(main.querySelector("kind-add-menu") as HTMLElement, {
+  items: [{ id: "upload", label: "Upload file" }],
 });
 Object.assign(main.querySelector("kind-file-tree") as HTMLElement, {
   entries: [{ path: "src/index.ts", change: "modified", additions: 2 }],

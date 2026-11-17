@@ -1,6 +1,7 @@
 // The React registry consumer's entry: every component, as `shadcn add` copies it, one section each.
 import { createRoot } from "react-dom/client";
 import { Action } from "./components/ui/action.js";
+import { AddMenu } from "./components/ui/add-menu.js";
 import { Attachments } from "./components/ui/attachments.js";
 import { ChainOfThought } from "./components/ui/chain-of-thought.js";
 import { Checkpoint } from "./components/ui/checkpoint.js";
@@ -216,6 +217,7 @@ const items = {
       defaultValue="agent-ui"
     />
   ),
+  "add-menu": <AddMenu items={[{ id: "upload", label: "Upload file" }]} onAction={() => {}} />,
   terminal: <Terminal command="npm test" output={"\x1b[32m✓\x1b[0m 22 passed"} exitCode={0} defaultOpen />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
