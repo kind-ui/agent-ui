@@ -70,11 +70,12 @@ test("pages import examples and link pages by relative path", () => {
   for (const file of readdirSync(content, { recursive: true })) {
     if (!file.endsWith(".mdx")) continue;
     const source = readFileSync(new URL(file, content), "utf8");
-    assert.doesNotMatch(source, /from "@\//, file);
-    assert.doesNotMatch(source, /\]\(\/|(?:href|src)=["']\//, file);
+    assert.doesNotMatch(source, /from ["']@\//, file);
+    assert.doesNotMatch(source, /\]\(\/|^\[[^\]]+\]:\s*\/|(?:href|src)=\{?["'`]\//m, file);
     assert.doesNotMatch(source, /kindui\.dev(?!\/r\/)|localhost/, file);
-    for (const [, path] of source.matchAll(/<include cwd[^>]*>([^<]+)<\/include>/g)) {
-      assert.ok(new URL(path, docs).href.startsWith(examples.href), `${file}: ${path}`);
+    for (const [, cwd, path] of source.matchAll(/<include( cwd)?[^>]*>([^<]+)<\/include>/g)) {
+      const from = cwd ? docs : new URL(file, content);
+      assert.ok(new URL(path, from).href.startsWith(examples.href), `${file}: ${path}`);
     }
   }
 });
@@ -87,7 +88,9 @@ test("examples import only React, the package, ui components and other examples"
     for (const [, specifier] of source.matchAll(/(?:\bfrom|\bimport)\s*\(?\s*["']([^"']+)["']/g)) {
       const allowed = specifier.startsWith(".")
         ? new URL(specifier, url).href.startsWith(examples.href)
-        : /^(?:react|@kind-ui\/agent-ui(?:\/.+)?|@\/components\/ui\/.+)$/.test(specifier);
+        : /^(?:react|@kind-ui\/agent-ui(?:\/(?:core|adapters\/ai-sdk|styles\.css))?|@\/components\/ui\/.+)$/.test(
+            specifier,
+          );
       assert.ok(allowed, `${file}: ${specifier}`);
     }
   }
