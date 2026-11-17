@@ -22,6 +22,8 @@ export type {
   TestSuite,
   TokenUsage,
   ToolCall,
+  TranscriptSegment,
+  TranscriptWord,
 } from "./types/index.js";
 export {
   hasOutput,

@@ -1,4 +1,9 @@
-import { createFocusRecovery, createRovingFocus, type PrimitiveContext } from "@ui-sdk/core";
+import {
+  createFocusRecovery,
+  createRovingFocus,
+  type PrimitiveContext,
+  type RovingFocusOptions,
+} from "@ui-sdk/core";
 
 /** What `createListFocus` returns, kept on a list primitive's api for its item slot. */
 export type ListFocus<State extends { focused: string | null }, Props extends object> = {
@@ -12,7 +17,16 @@ export type ListFocus<State extends { focused: string | null }, Props extends ob
  */
 export const createListFocus = <State extends { focused: string | null }, Props extends object>(
   context: Pick<PrimitiveContext<unknown, State, string>, "store" | "onDestroy">,
-  { slot, focusable }: { slot: string; focusable?: (item: { key: string }) => boolean },
+  {
+    slot,
+    focusable,
+    move,
+  }: {
+    slot: string;
+    focusable?: (item: { key: string }) => boolean;
+    /** Replaces the arrow keys, Home and End, as `createRovingFocus`'s `move` does: for items that aren't rendered. */
+    move?: RovingFocusOptions<State, Props>["move"];
+  },
 ): ListFocus<State, Props> => {
   // Recovery runs after the removed item has left `roving.items()`, so keep the order from before.
   let current: string[] = [];
@@ -21,6 +35,7 @@ export const createListFocus = <State extends { focused: string | null }, Props 
     slot,
     key: "focused",
     ...(focusable && { focusable }),
+    ...(move && { move }),
     onItemsChange: () => {
       previous = current;
       current = roving.items().map((item) => item.key);

@@ -10,6 +10,9 @@ const BUDGETS = {
   toolStream: { writes: 14, renders: 25, notified: 17 },
   terminalChunk: { writes: 6, renders: 7, notified: 4, layoutReads: 17 },
   terminalLine: { writes: 8, renders: 9, notified: 5, layoutReads: 21 },
+  transcriptWord: { writes: 3, renders: 3, notified: 3, layoutReads: 6 },
+  transcriptSegment: { writes: 38, renders: 44, notified: 47, layoutReads: 9 },
+  transcriptSearch: { writes: 44, renders: 221, notified: 170, layoutReads: 2 },
   remount: { nodes: 0, listeners: 0 },
 };
 const SIZES = [10, 500];
@@ -21,6 +24,7 @@ type Fixture = {
   kindMarkdown: { records: { parses: number }[]; append(chunk: string): void };
   kindRemount(): void;
   kindTerminal: { append(id: string, text: string): void };
+  kindTranscript: { set(id: string, next: Record<string, unknown>): void };
 };
 type Fiber = {
   tag: number;
@@ -221,6 +225,54 @@ for (const lines of [10, 1000]) {
     expect(counts.renders).toBeLessThanOrEqual(BUDGETS.terminalLine.renders);
     expect(counts.notified).toBeLessThanOrEqual(BUDGETS.terminalLine.notified);
     expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS.terminalLine.layoutReads);
+  });
+}
+
+// Playback that moves to the next word or segment, and a search, cost the same at 100 segments as at 5,000: playback
+// writes its marks without a render, following it mounts the one segment it scrolls into view, and a search renders
+// only the segments in view.
+for (const segments of [100, 5000]) {
+  const openTranscript = async (page: Page) => {
+    await page.goto(`/?c=transcript&case=many-${segments}`);
+    await expect(page.locator('[data-slot="kind-transcript-segment"]').first()).toBeVisible();
+    await expect(page.locator("[data-mounting]")).toHaveCount(0);
+  };
+  const budget = (counts: Counts, limit: Counts) => {
+    expect(counts.writes).toBeLessThanOrEqual(limit.writes);
+    expect(counts.renders).toBeLessThanOrEqual(limit.renders);
+    expect(counts.notified).toBeLessThanOrEqual(limit.notified);
+    expect(counts.layoutReads).toBeLessThanOrEqual(limit.layoutReads);
+  };
+
+  test(`playback moving to the next word among ${segments} segments`, async ({ page }) => {
+    await openTranscript(page);
+    // Each segment's words run from its start for about 6 s, a word every 0.7 s or so.
+    const counts = await most(
+      page,
+      20,
+      'kindTranscript.set("many", { currentTime: 20 + ((window.kindStep = (window.kindStep ?? 0) + 1) % 8) * 0.7 })',
+    );
+    budget(counts, BUDGETS.transcriptWord);
+  });
+
+  test(`playback moving to the next of ${segments} segments`, async ({ page }) => {
+    await openTranscript(page);
+    const counts = await most(
+      page,
+      20,
+      'kindTranscript.set("many", { currentTime: (window.kindStep = (window.kindStep ?? 0) + 1) * 10 + 0.1 })',
+    );
+    budget(counts, BUDGETS.transcriptSegment);
+  });
+
+  test(`a search over ${segments} segments`, async ({ page }) => {
+    await openTranscript(page);
+    const counts = await most(
+      page,
+      20,
+      'kindTranscript.set("many", { query: ["rollout", "agenda", "follow", ""][(window.kindStep = (window.kindStep ?? 0) + 1) % 4] })',
+    );
+    budget(counts, BUDGETS.transcriptSearch);
   });
 }
 

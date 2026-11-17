@@ -28,6 +28,7 @@
     "terminal",
     "stack-trace",
     "test-results",
+    "transcript",
     "conversation",
     "message",
     "markdown",

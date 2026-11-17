@@ -409,6 +409,18 @@ export {
   toolStatus,
   toolValue,
 } from "./tool/index.js";
+export { currentAt, searchSegments } from "./transcript/search.js";
+export {
+  type TranscriptApi,
+  type TranscriptItemPartProps,
+  type TranscriptOptions,
+  type TranscriptPrimitive,
+  type TranscriptQueryChangeReason,
+  type TranscriptSearchState,
+  type TranscriptSeekReason,
+  type TranscriptState,
+  transcriptPrimitive,
+} from "./transcript/transcript.js";
 export { pathItems, treeValues } from "./tree.js";
 export { typingIndicatorPrimitive } from "./typing-indicator/index.js";
 export {

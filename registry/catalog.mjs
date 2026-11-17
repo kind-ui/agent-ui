@@ -145,6 +145,12 @@ const components = {
       "A test run's pass, fail and skip counts over a filterable tree of suites, each failure open to its stack trace.",
     uses: ["stack-trace", "internal-tree", "internal-segmented-control"],
   },
+  transcript: {
+    title: "Transcript",
+    description:
+      "Speaker-labelled, timed segments with search, marking the segment and word playing and seeking on a press.",
+    uses: [],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

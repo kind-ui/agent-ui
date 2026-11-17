@@ -16,6 +16,7 @@
 @import "./terminal.css";
 @import "./stack-trace.css";
 @import "./test-results.css";
+@import "./transcript.css";
 @import "./question.css";
 @import "./checkpoint.css";
 @import "./model-selector.css";
