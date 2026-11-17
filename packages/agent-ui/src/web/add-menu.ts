@@ -17,7 +17,6 @@ const DEFAULT_PARTS = `<kind-internal-menu><ui-menu><kind-add-menu-trigger><ui-m
 // Contents this element filled in, and so draws the rows of. A content someone wrote keeps its rows, as React's
 // children do. Kept across instances, because UI SDK rebuilds one when the element returns to the page.
 const owned = new WeakSet<Element>();
-// The sections each content was last drawn from.
 const drawn = new WeakMap<Element, AddMenuContentState>();
 
 type AddMenuIcon = string | Element;
