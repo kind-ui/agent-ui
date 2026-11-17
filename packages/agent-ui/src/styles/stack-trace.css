@@ -37,8 +37,10 @@
     color: var(--kind-color-fg);
   }
 
+  /* Tall enough for Copy when the panel holds nothing else. */
   [data-stack-trace-panel] {
     position: relative;
+    min-height: 2.5rem;
     border: 1px solid var(--kind-color-border);
     border-radius: calc(var(--kind-radius) * 2 / 3);
     background-color: var(--kind-color-hover);
@@ -50,7 +52,8 @@
 
   /* Rows leave room for Copy at the panel's corner, so nothing runs under it. */
   [data-slot="kind-stack-trace-message"] {
-    padding: 0.25rem 2.75rem 0.5rem 0.75rem;
+    padding-block: 0.25rem 0.5rem;
+    padding-inline: 0.75rem 2.75rem;
     margin-block-end: 0.25rem;
     border-block-end: 1px solid var(--kind-color-border);
     white-space: pre-wrap;
@@ -79,7 +82,7 @@
   }
 
   /* The button fills its frame, so the frame's own padding moves onto it. */
-  [data-slot="kind-stack-trace-frame"]:has([data-slot="kind-stack-trace-frame-open"]) {
+  [data-slot="kind-stack-trace-frame"]:where(:has([data-slot="kind-stack-trace-frame-open"])) {
     display: block;
     padding: 0;
   }
@@ -122,11 +125,9 @@
     }
   }
 
-  [data-slot="kind-stack-trace-frame"][data-library] {
-    & [data-slot="kind-stack-trace-frame-function"] {
-      font-weight: 400;
-      color: var(--kind-color-muted);
-    }
+  :where([data-slot="kind-stack-trace-frame"][data-library]) [data-slot="kind-stack-trace-frame-function"] {
+    font-weight: 400;
+    color: var(--kind-color-muted);
   }
 
   [data-slot="kind-stack-trace-library"] {
@@ -177,7 +178,7 @@
       outline: 1.5px solid color-mix(in oklab, var(--kind-color-ring) 50%, transparent);
       outline-offset: -1.5px;
     }
-    &:where([data-motion="none"])::before {
+    &:where([data-motion="reduced"], [data-motion="none"])::before {
       transition: none;
     }
   }
@@ -199,13 +200,16 @@
     &[data-motion="none"] {
       transition: none;
     }
-    & [data-slot="kind-stack-trace-frame"],
-    & [data-slot="kind-stack-trace-frame-open"] {
-      padding-inline-start: 0.625rem;
-    }
-    & [data-slot="kind-stack-trace-frame"]:has([data-slot="kind-stack-trace-frame-open"]) {
-      padding-inline-start: 0;
-    }
+  }
+
+  :where([data-slot="kind-stack-trace-library-frames"])
+    :is([data-slot="kind-stack-trace-frame"], [data-slot="kind-stack-trace-frame-open"]) {
+    padding-inline-start: 0.625rem;
+  }
+
+  :where([data-slot="kind-stack-trace-library-frames"])
+    [data-slot="kind-stack-trace-frame"]:where(:has([data-slot="kind-stack-trace-frame-open"])) {
+    padding-inline-start: 0;
   }
 
   [data-slot="kind-stack-trace-copy"] {

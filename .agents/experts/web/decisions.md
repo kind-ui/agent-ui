@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `5d56e76` (Wave 4 Task 7 Terminal)
+Last reviewed: `26eef6b` (Wave 4 Task 8 Stack Trace)
 
 ## Settled
 
@@ -56,6 +56,7 @@ Last reviewed: `5d56e76` (Wave 4 Task 7 Terminal)
 
 ## Resolved
 
+- **`kind-stack-trace` (Wave 4 Task 8):** a moved element folded its shown library frames (root `state` now maps `showLibraryFrames`); written empty frames, groups, toggles and frame parts stayed empty (now filled from state, as React's defaults are; `written` fixture case); a new `label` or an equal `frames` copy rebuilt every frame node (the list now redraws only when its rows, entries or `canOpen` change by content).
 - **Terminal (Wave 4 Task 7):** the follow test used a click WebKit doesn't focus with and read `scrollTop` mid smooth scroll in Firefox; it now presses Enter in WebKit and waits for the scroll to rest. A put-back element is tested to redraw its lines and keep `open`.
 
 - **`kind-file-tree` put back after a tick lost its controller and state, and WebKit blurred a row** (Wave 4 Task 6): `render` sets the Tree's `controller` each draw, root `state` maps `value` and `expanded` (new `setValue`/`setExpanded`), and `drawRows` removes rows that left before placing the rest. Pinned in `file-tree.spec.ts` (moved case); `@ui-sdk/web/tree` joins `optimizeDeps`.

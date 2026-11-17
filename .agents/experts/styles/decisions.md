@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `5d56e76` (Wave 4 Task 7 Terminal)
+Last reviewed: `26eef6b` (Wave 4 Task 8 Stack Trace)
 
 ## Settled
 
@@ -48,6 +48,7 @@ Last reviewed: `5d56e76` (Wave 4 Task 7 Terminal)
 
 ## Resolved
 
+- **Stack Trace (Wave 4 Task 8):** the library chevron turned under `motion="reduced"` (now off for `reduced` and `none`, as Step's trigger); the message ran under Copy in right-to-left text (logical `padding-inline`); library-frame and frame-button context selectors are in `:where()`, so a consumer class wins; the panel has a `min-height` for Copy when it holds nothing else.
 - **Terminal (Wave 4 Task 7):** the cursor blinked under `prefers-reduced-motion` (a 4-attribute base rule beat the media override) and wrapped a full last line; it now blinks only inside `no-preference` at `motion="auto"` and overhangs into the line's padding. Jump to latest moved 8px under reduced motion; its offset is now full motion only. Extra attributes sit in `:where()`, and the header's padding is logical.
 
 - **File Tree in forced colors, specificity, `motion="none"` and the warning dot** (Wave 4 Task 6): a selected row is `SelectedItem`, qualifiers sit in `:where()`, the start opacity skips `motion="none"`, and the dot mixes toward the text color for 3:1.

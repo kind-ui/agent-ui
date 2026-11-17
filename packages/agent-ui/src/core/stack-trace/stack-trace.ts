@@ -73,7 +73,9 @@ export type StackTraceFrameEntry = {
 
 /** A row of the list: an app frame, or consecutive library frames folded into one. */
 export type StackTraceRow =
+  /** `index` is the frame's among the frames, counted from 0. */
   | { type: "frame"; index: number }
+  /** `indexes` are its frames' among the frames, counted from 0; `start`, the first, is the group's `value`. */
   | { type: "library"; start: number; indexes: number[] };
 
 export type StackTraceState = StepState & {
@@ -83,8 +85,8 @@ export type StackTraceState = StepState & {
   name: string;
   /** The title after its name. */
   summary: string;
-  /** The whole message, which Copy copies. */
-  errorMessage: string;
+  /** The message and the frames' raw lines, which Copy copies, or empty when there's neither. */
+  copyText: string;
   /** The message's lines after its first, or empty. */
   details: string;
   /** The frames, from `frames` or read from `stack`. */
@@ -93,6 +95,7 @@ export type StackTraceState = StepState & {
   entries: StackTraceFrameEntry[];
   /** The rows of the list, in order. */
   rows: StackTraceRow[];
+  /** Whether library frames show. */
   showLibraryFrames: boolean;
   /** Whether folding library frames still show while they close. */
   libraryExiting: boolean;
@@ -110,8 +113,11 @@ export type StackTraceItemPartProps = { value?: string };
 
 export type StackTraceApi = StepApi &
   ListFocus<StackTraceState, StackTraceItemPartProps> & {
-    /** Copies the message and the raw frames, and resolves with whether the clipboard write went through. */
-    copy: (event?: Event) => Promise<boolean>;
+    /**
+     * Copies the message and the raw frames, and resolves with whether the clipboard write went through. Only while
+     * there's either.
+     */
+    readonly copy: ((event?: Event) => Promise<boolean>) | undefined;
     /**
      * Shows folded library frames, or folds them. Returns whether the change was accepted. Only while there are
      * library frames.
@@ -124,7 +130,11 @@ export type StackTraceApi = StepApi &
     readonly openFrame: ((index: number | string, event?: Event) => boolean) | undefined;
     /** The frames, from `frames` or read from `stack`. */
     getFrames: () => StackFrame[];
-    /** Opens and closes a library group's frames with `showLibraryFrames`. Called by the slot. */
+    /** Whether library frames show; the owner's `showLibraryFrames` when controlled. */
+    getShowLibraryFrames: () => boolean;
+    /** Shows or folds library frames. Returns whether the change was accepted. */
+    setShowLibraryFrames: (show: boolean) => boolean;
+    /** Opens and closes a library group's frames with `showLibraryFrames`. For the render layers' slot only. */
     bindLibrary: (el: HTMLElement, key: string, trigger: () => HTMLElement | undefined) => () => void;
   };
 
@@ -213,7 +223,7 @@ const readError = ({ message, frames, stack, label }: StackTraceOptions) => {
     title,
     name,
     summary,
-    errorMessage: errorMessage ?? "",
+    copyText: [errorMessage, ...shown.map((frame) => frame.raw)].filter(Boolean).join("\n"),
     details: rest.join("\n").trim(),
     frames: shown,
     entries,
@@ -312,12 +322,16 @@ export const stackTracePrimitive: StackTracePrimitive = definePrimitive<
         // A folded library frame never holds the Tab stop.
         focusable: ({ key }) => store.get().showLibraryFrames || !store.get().entries[Number(key)]?.library,
       }),
-      copy: async (event?: Event) => {
-        const { errorMessage, frames } = store.get();
-        const text = [errorMessage, ...frames.map((frame) => frame.raw)].filter(Boolean).join("\n");
-        const details = event ? { reason: "copy-press" as const, event } : { reason: "imperative" as const };
-        if (dispatch(context, "onCopy", text, details)) return false;
-        return copy(text);
+      get copy() {
+        if (!store.get().copyText) return undefined;
+        return async (event?: Event) => {
+          const text = store.get().copyText;
+          const details = event
+            ? { reason: "copy-press" as const, event }
+            : { reason: "imperative" as const };
+          if (dispatch(context, "onCopy", text, details)) return false;
+          return copy(text);
+        };
       },
       get toggleLibraryFrames() {
         if (!store.get().rows.some((row) => row.type === "library")) return undefined;
@@ -327,7 +341,7 @@ export const stackTracePrimitive: StackTracePrimitive = definePrimitive<
       get openFrame() {
         if (!store.get().canOpen) return undefined;
         return (index: number | string, event?: Event) => {
-          const at = Number(index);
+          const at = typeof index === "number" ? index : /^\d+$/.test(index) ? Number(index) : Number.NaN;
           const frame = Number.isInteger(at) ? store.get().frames[at] : undefined;
           if (!frame) return false;
           const details = event
@@ -338,6 +352,8 @@ export const stackTracePrimitive: StackTracePrimitive = definePrimitive<
         };
       },
       getFrames: () => store.get().frames,
+      getShowLibraryFrames: () => store.get().showLibraryFrames,
+      setShowLibraryFrames: (show) => setShown(show, "imperative"),
       bindLibrary: (el, key, trigger) => {
         panels.add(key);
         const unbind = bindStepPanel(el, {
@@ -378,7 +394,8 @@ export const stackTracePrimitive: StackTracePrimitive = definePrimitive<
       copy: slot({
         role: "button",
         focus: "native",
-        press: ({ api }, event) => void api.copy(event),
+        present: (state) => state.copyText !== "",
+        press: ({ api }, event) => void api.copy?.(event),
         attrs: (state) => ({
           type: "button",
           "aria-label": "Copy stack trace",

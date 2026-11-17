@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `5d56e76` (Wave 4 Task 7 Terminal)
+Last reviewed: `26eef6b` (Wave 4 Task 8 Stack Trace)
 
 ## Settled
 
@@ -44,6 +44,7 @@ Last reviewed: `5d56e76` (Wave 4 Task 7 Terminal)
 
 ## Resolved
 
+- **Stack Trace had no accepting owner or find-in-page case (Wave 4 Task 8):** the `owned` fixture gained `accepted` (`onShowLibraryFramesChange` sets `showLibraryFrames`), and the spec checks the `library-press` and `find-in-page` reasons and a `beforematch` reveal.
 - **Terminal server markup had no lines (Wave 4 Task 7),** so the screen grew ~312px on hydration: `state` now seeds the first 16 lines at the 20px guess (`firstRows`), which the virtualizer replaces once it connects. Owner-held `open` and a cancelled `onCopy` have an `owned` case; the docs' composition tree shows the `data-terminal-screen` and `data-terminal-header` wrappers the stylesheet styles.
 
 - **File Tree's row parts couldn't be composed and no owner refused** (Wave 4 Task 6): `FileTree` takes `children` inside the Tree and exports `FileTreeRows`; `refused` fixture cases pin the write-back.

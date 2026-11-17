@@ -73,7 +73,7 @@ Pass `onOpenFrame` and each frame becomes a button. Pressing one, or Enter on a 
 
 ### Status and Copying
 
-The status is `error` unless you pass `status`, and the trace starts open; pass `defaultOpen={false}` to show just its header. **Copy stack trace** copies the message and the frames' raw lines and shows a check for 2 seconds. Pass `onCopy` to hear about it; cancel its `details` to copy something else yourself.
+The status is `error` unless you pass `status`, and the trace starts open; pass `defaultOpen={false}` to show just its header. **Copy stack trace** shows once there's a message or a frame, copies the message and the frames' raw lines, and shows a check for 2 seconds. Pass `onCopy` to hear about it; cancel its `details` to copy something else yourself.
 
 ### Keyboard and Motion
 
@@ -85,7 +85,7 @@ Tab reaches the header, each "N library frames" row and **Copy stack trace**. Wh
 
 ### Agent
 
-An agent connected with `createAgent` finds the trace by its title and reads `open`, `status` and `showLibraryFrames`. It can `expand` and `collapse` the trace, `copy` it, which calls `onCopy` too, and, while there are library frames, `toggleLibraryFrames`. While you pass `onOpenFrame`, it can `openFrame` by index or by a frame's function and location, and a frame that isn't there is refused.
+An agent connected with `createAgent` finds the trace by its title and reads `open`, `status` and `showLibraryFrames`. It can `expand` and `collapse` the trace, `copy` it while there's something to copy, which calls `onCopy` too, and, while there are library frames, `toggleLibraryFrames`. While you pass `onOpenFrame`, it can `openFrame` by index or by a frame's function and location, and a frame that isn't there is refused.
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/stack-trace/stack-trace.ts" name="StackTraceAgentActions" type='Pick<StackTraceApi, "expand" | "collapse" | "copy" | "toggleLibraryFrames" | "openFrame">' />
 

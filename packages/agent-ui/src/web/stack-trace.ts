@@ -46,54 +46,80 @@ const element = (doc: Document, tag: string, value?: number) => {
   return el;
 };
 
-const frameElement = (doc: Document, index: number, state: StackTraceState) => {
-  const entry = state.entries[index];
-  const fn = element(doc, "kind-stack-trace-frame-function");
-  fn.textContent = entry?.fn ?? "";
-  const location = element(doc, "kind-stack-trace-frame-location");
-  location.textContent = entry?.location ?? "";
-  const frame = element(doc, "kind-stack-trace-frame", index);
-  if (!state.canOpen) {
-    frame.append(fn, location);
-    return frame;
+const libraryText = (count: number) => `${count} library ${count === 1 ? "frame" : "frames"}`;
+
+/** Gives an empty frame its function and location, in a button while frames open, and fills them in. */
+const fillFrame = (frame: Element, state: StackTraceState) => {
+  const doc = frame.ownerDocument;
+  const entry = state.entries[Number(frame.getAttribute("value"))];
+  if (!frame.firstChild) {
+    const text = [
+      element(doc, "kind-stack-trace-frame-function"),
+      element(doc, "kind-stack-trace-frame-location"),
+    ];
+    if (state.canOpen) {
+      const button = doc.createElement("button");
+      button.append(...text);
+      const open = element(doc, "kind-stack-trace-frame-open");
+      open.append(button);
+      frame.append(open);
+    } else {
+      frame.append(...text);
+    }
   }
-  const button = doc.createElement("button");
-  button.append(fn, location);
-  const open = element(doc, "kind-stack-trace-frame-open");
-  open.append(button);
-  frame.append(open);
-  return frame;
+  fill(frame.querySelector("kind-stack-trace-frame-function"), entry?.fn ?? "");
+  fill(frame.querySelector("kind-stack-trace-frame-location"), entry?.location ?? "");
 };
 
-// What each list was last drawn from, so a redraw rebuilds it only when its frames or their buttons change.
-const drawn = new WeakMap<Element, { rows: StackTraceState["rows"]; canOpen: boolean }>();
+/** Gives an empty group its toggle and frames, and names the toggle. */
+const fillGroup = (group: Element, state: StackTraceState) => {
+  const doc = group.ownerDocument;
+  const start = Number(group.getAttribute("value"));
+  const row = state.rows.find((each) => each.type === "library" && each.start === start);
+  const indexes = row?.type === "library" ? row.indexes : [];
+  if (!group.firstChild) {
+    group.append(element(doc, "kind-stack-trace-library"), element(doc, "kind-stack-trace-library-frames"));
+  }
+  const library = group.querySelector("kind-stack-trace-library");
+  if (library && !library.firstChild) library.append(doc.createElement("button"));
+  fill(library?.querySelector("button") ?? null, libraryText(indexes.length));
+  const frames = group.querySelector("kind-stack-trace-library-frames");
+  if (frames && !frames.firstChild) {
+    frames.append(...indexes.map((index) => element(doc, "kind-stack-trace-frame", index)));
+  }
+};
 
+// The rows each list was last drawn from, as text, so a new `label` or equal `frames` rebuild nothing.
+const drawn = new WeakMap<Element, string>();
+
+/**
+ * Draws a frame for each app frame and a group for each run of library frames into a list this element owns, and
+ * fills in the empty parts of frames and groups someone wrote.
+ */
 const drawList = (list: Element, state: StackTraceState) => {
-  const last = drawn.get(list);
-  if (last?.rows === state.rows && last.canOpen === state.canOpen) return;
-  if (!last && !ownedOrEmpty(list)) return;
-  drawn.set(list, { rows: state.rows, canOpen: state.canOpen });
-  const doc = list.ownerDocument;
-  list.replaceChildren(
-    ...state.rows.map((row) => {
-      if (row.type === "frame") return frameElement(doc, row.index, state);
-      const library = element(doc, "kind-stack-trace-library");
-      const toggle = doc.createElement("button");
-      const count = row.indexes.length;
-      toggle.textContent = `${count} library ${count === 1 ? "frame" : "frames"}`;
-      library.append(toggle);
-      const frames = element(doc, "kind-stack-trace-library-frames");
-      frames.append(...row.indexes.map((index) => frameElement(doc, index, state)));
-      const group = element(doc, "kind-stack-trace-group", row.start);
-      group.append(library, frames);
-      return group;
-    }),
-  );
+  if (ownedOrEmpty(list)) {
+    const shape = JSON.stringify([state.rows, state.entries, state.canOpen]);
+    if (drawn.get(list) !== shape) {
+      drawn.set(list, shape);
+      const doc = list.ownerDocument;
+      list.replaceChildren(
+        ...state.rows.map((row) =>
+          row.type === "frame"
+            ? element(doc, "kind-stack-trace-frame", row.index)
+            : element(doc, "kind-stack-trace-group", row.start),
+        ),
+      );
+    }
+  }
+  for (const group of list.querySelectorAll("kind-stack-trace-group")) fillGroup(group, state);
+  for (const frame of list.querySelectorAll("kind-stack-trace-frame")) fillFrame(frame, state);
 };
 
 /**
  * `<kind-stack-trace>` fills in its parts when it has no children. Set `stack` as text, or `frames` as a property;
- * its list gets a frame for each app frame and a folded group for each run of library frames. The `can-open-frame`
+ * its list gets a frame for each app frame and a folded group for each run of library frames. Write
+ * `<kind-stack-trace-frame value="…">` and `<kind-stack-trace-group value="…">` in the list to arrange them yourself;
+ * their empty parts are filled in. The `can-open-frame`
  * attribute makes each frame a button that fires `openframe`, with the frame as `detail.value` and its index as
  * `detail.index`. Copy fires `stackcopy` first.
  */
@@ -114,8 +140,22 @@ export function defineStackTrace(): void {
           get: (api) => api.isOpen(),
           set: (api, open) => api.setOpen(!!open),
         },
+        showLibraryFrames: {
+          get: (api) => api.getShowLibraryFrames(),
+          set: (api, show) => api.setShowLibraryFrames(!!show),
+        },
       },
-      api: ["isOpen", "setOpen", "expand", "collapse", "toggle", "copy", "getFrames"],
+      // `copy` is a getter, offered only with something to copy, which a copied list of methods would freeze.
+      api: [
+        "isOpen",
+        "setOpen",
+        "expand",
+        "collapse",
+        "toggle",
+        "getFrames",
+        "getShowLibraryFrames",
+        "setShowLibraryFrames",
+      ],
       render: (el, instance) => {
         if (!el.firstElementChild) el.innerHTML = DEFAULT_PARTS;
         const draw = () => {
@@ -155,12 +195,23 @@ export type KindStackTraceEvents = {
 
 export interface KindStackTraceElement
   extends UiElement<KindStackTraceEvents>,
-    AttributeProperties<typeof stackTracePrimitive, "api" | "open" | "frames"> {
+    AttributeProperties<typeof stackTracePrimitive, "api" | "open" | "showLibraryFrames" | "frames"> {
   open: boolean;
+  showLibraryFrames: boolean;
   frames?: StackFrame[];
   /** Makes each frame a button that fires `openframe`. Reflects `can-open-frame`. */
   canOpenFrame: boolean;
-  api: Pick<StackTraceApi, "isOpen" | "setOpen" | "expand" | "collapse" | "toggle" | "copy" | "getFrames">;
+  api: Pick<
+    StackTraceApi,
+    | "isOpen"
+    | "setOpen"
+    | "expand"
+    | "collapse"
+    | "toggle"
+    | "getFrames"
+    | "getShowLibraryFrames"
+    | "setShowLibraryFrames"
+  >;
 }
 
 declare global {

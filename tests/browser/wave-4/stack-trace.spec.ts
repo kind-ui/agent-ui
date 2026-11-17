@@ -6,7 +6,7 @@ import { layerOf } from "../layer.js";
 
 type Fixture = {
   kindStackTrace: { set(id: string, next: Record<string, unknown>): void };
-  kindHost: { copies: [string, string][]; opened: [number, string, string][] };
+  kindHost: { copies: [string, string][]; opened: [number, string, string][]; shown: [boolean, string][] };
   agent: { act(input: unknown): Promise<unknown> };
 };
 
@@ -151,6 +151,25 @@ test("copy copies the message and raw frames, and an owner keeps what it holds",
   await expect(part(page, "held", "library").first()).toHaveAttribute("aria-expanded", "false");
 });
 
+test("an owner that takes the change shows library frames, and find in page reveals them", async ({
+  page,
+}) => {
+  await open(page, "owned");
+  const frames = part(page, "accepted", "library-frames");
+  await part(page, "accepted", "library").last().click();
+  await expect(frames.first()).toBeVisible();
+  await expect(part(page, "accepted", "library").first()).toHaveAttribute("aria-expanded", "true");
+  await part(page, "accepted", "library").first().click();
+  await expect(frames.first()).toHaveAttribute("hidden", "until-found");
+  await frames.first().evaluate((el) => el.dispatchEvent(new Event("beforematch", { bubbles: true })));
+  await expect(frames.first()).toBeVisible();
+  expect((await host(page)).shown).toEqual([
+    [true, "library-press"],
+    [false, "library-press"],
+    [true, "find-in-page"],
+  ]);
+});
+
 test("new frames replace the list", async ({ page }) => {
   await open(page);
   await set(page, "frames", {
@@ -209,6 +228,7 @@ test("kind-stack-trace takes can-open-frame and keeps its list when put back", a
   test.skip(layerOf(testInfo) !== "web", "web elements only");
   await open(page);
   const frames = trace(page, "frames");
+  await part(page, "frames", "library").first().click();
   await frames.evaluate((el) => el.setAttribute("can-open-frame", ""));
   await expect(part(page, "frames", "frame-open")).toHaveCount(7);
   await frames.evaluate(async (el) => {
@@ -218,6 +238,26 @@ test("kind-stack-trace takes can-open-frame and keeps its list when put back", a
     parent.append(el);
   });
   await expect(frames).toHaveAttribute("data-open", "");
+  await expect(part(page, "frames", "library").first()).toHaveAttribute("aria-expanded", "true");
+  const before = await part(page, "frames", "frame").first().elementHandle();
+  await frames.evaluate((el: HTMLElementTagNameMap["kind-stack-trace"]) => {
+    el.label = "Renamed";
+    el.frames = [...(el.frames ?? [])];
+  });
+  await expect(part(page, "frames", "title")).toHaveText("Renamed");
+  expect(await before?.evaluate((el) => el.isConnected)).toBe(true);
   await part(page, "frames", "frame-open").first().click();
   await expect.poll(async () => (await host(page)).opened.at(-1)?.[1]).toBe("readConfig");
+});
+
+test("kind-stack-trace fills in the empty parts someone wrote", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await open(page, "written");
+  await expect(part(page, "written", "frame").first()).toHaveText("readConfigconfig/read.ts:12:9");
+  await expect(part(page, "written", "library")).toHaveAccessibleName("2 library frames");
+  await part(page, "written", "library").click();
+  await expect(
+    part(page, "written", "library-frames").locator('[data-slot="kind-stack-trace-frame"]'),
+  ).toHaveText(["loadPluginsdist/index.js:88:14", "PluginHost.startdist/host.js:31:5"]);
+  await expect(part(page, "written", "frame").last()).toHaveText("Minesrc/server.ts:41:3");
 });

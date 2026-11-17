@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `5d56e76` (Wave 4 Task 7 Terminal)
+Last reviewed: `26eef6b` (Wave 4 Task 8 Stack Trace)
 
 ## Settled
 
@@ -33,6 +33,7 @@ Last reviewed: `5d56e76` (Wave 4 Task 7 Terminal)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Focus drops to the page when every Stack Trace frame button leaves at once** (Wave 4 Task 8), as when the host removes `onOpenFrame` or passes a trace with no frames while a frame has focus: `createListFocus`'s recovery finds no item left and has no `focusFallback`. Removing one of several frames recovers to a neighbor.
 - **File Tree hears `onSelect` from bubbled clicks and keyups, not the Tree's `onAction`** (Wave 4 Task 6): web's `action` doesn't bubble, so `read` calls `onSelect` only when the event's row is the selection, the owner took it, and no modifier is held. Needs a spec §2 row or a bubbling UI SDK event.
 - **A Document without `document.css` never overflows** (Wave 4 Task 4): `--kind-document-max-height` doesn't parse, so `overflowing` stays false and Show more never shows. Nothing is clipped without the stylesheet either; undocumented.
 - **Inline Citation's "N of M" doesn't follow a page the Carousel changes on its own** (Wave 4 Task 3), like a host reordering `sources` or a web element put back after paging: the Carousel's page events don't bubble and no render layer may listen, so `syncPage` runs on a click, a keyup and the api's own paging. Needs a spec §2 row or a bubbling UI SDK event.
@@ -68,6 +69,7 @@ Last reviewed: `5d56e76` (Wave 4 Task 7 Terminal)
 
 ## Resolved
 
+- **Stack Trace (Wave 4 Task 8):** `openFrame` read `""`, `" "` and `"1e0"` as indexes (it now takes a number or digits only); `copy` copied an empty string for a trace with only a `label` (now a getter offered while `copyText` isn't empty, and the button is present only then); `showLibraryFrames`, `StackTraceRow` and `bindLibrary` have JSDoc. `tests/core/stack-trace.test.mjs` pins the message split, the index checks and `copy`.
 - **Terminal (Wave 4 Task 7):** Copy and the agent's `copy` emptied the clipboard before any output; `copy` is now a getter and the button is present only with output (`hasOutput`). An OSC cut short by another escape showed its text; it now ends at the next ESC too. Line parts skip `following`, `jumpExiting`, `hasOutput` and `copied`; output that starts over calls `virtual.reset()`; Jump to latest syncs with `following` as it binds. `terminal.spec.ts` pins `data-last` moving and output replaced whole.
 
 - **`createAnsiLines`' logged costs (Wave 4 Task 1), measured by Terminal's budgets (Task 7):** an unterminated OSC now ends at the next line break instead of holding back every later chunk. The `startsWith` scan and the line array copy stay: both are linear memory work per update, not parsing or rendering, and the 10 and 1,000 line budgets show identical render and DOM counts.
