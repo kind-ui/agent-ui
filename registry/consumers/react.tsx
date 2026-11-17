@@ -2,6 +2,7 @@
 import { createRoot } from "react-dom/client";
 import { Action } from "./components/ui/action.js";
 import { AddMenu } from "./components/ui/add-menu.js";
+import { ApprovalMode } from "./components/ui/approval-mode.js";
 import { Attachments } from "./components/ui/attachments.js";
 import { ChainOfThought } from "./components/ui/chain-of-thought.js";
 import { Checkpoint } from "./components/ui/checkpoint.js";
@@ -225,6 +226,7 @@ const items = {
       defaultValues={{ search: true }}
     />
   ),
+  "approval-mode": <ApprovalMode modes={[{ value: "ask", label: "Ask every time" }]} defaultValue="ask" />,
   terminal: <Terminal command="npm test" output={"\x1b[32m✓\x1b[0m 22 passed"} exitCode={0} defaultOpen />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">

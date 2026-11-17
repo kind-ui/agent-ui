@@ -1,6 +1,7 @@
 // The Web Components registry consumer's entry: every component, as `shadcn add` copies it, one section each.
 import { defineAction } from "./components/ui/web/action.js";
 import { defineAddMenu } from "./components/ui/web/add-menu.js";
+import { defineApprovalMode } from "./components/ui/web/approval-mode.js";
 import { defineAttachments } from "./components/ui/web/attachments.js";
 import { defineChainOfThought } from "./components/ui/web/chain-of-thought.js";
 import { defineCheckpoint } from "./components/ui/web/checkpoint.js";
@@ -81,6 +82,7 @@ for (const define of [
   definePicker,
   defineAddMenu,
   defineSettingsMenu,
+  defineApprovalMode,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -137,6 +139,7 @@ const items = {
   picker: `<kind-picker label="Work in"></kind-picker>`,
   "add-menu": `<kind-add-menu can-run></kind-add-menu>`,
   "settings-menu": `<kind-settings-menu></kind-settings-menu>`,
+  "approval-mode": `<kind-approval-mode></kind-approval-mode>`,
   terminal: `<kind-terminal command="npm test" exit-code="0" default-open></kind-terminal>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
@@ -242,6 +245,10 @@ Object.assign(main.querySelector("kind-add-menu") as HTMLElement, {
 Object.assign(main.querySelector("kind-settings-menu") as HTMLElement, {
   settings: [{ type: "toggle", id: "search", label: "Web search" }],
   values: { search: true },
+});
+Object.assign(main.querySelector("kind-approval-mode") as HTMLElement, {
+  modes: [{ value: "ask", label: "Ask every time" }],
+  value: "ask",
 });
 Object.assign(main.querySelector("kind-file-tree") as HTMLElement, {
   entries: [{ path: "src/index.ts", change: "modified", additions: 2 }],

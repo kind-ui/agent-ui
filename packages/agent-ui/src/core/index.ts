@@ -19,6 +19,21 @@ export {
 export { type AnsiLine, type AnsiLines, type AnsiSpan, createAnsiLines } from "./ansi.js";
 export { approvalKey, approvalLabel, isActionable } from "./approval.js";
 export {
+  APPROVAL_MODE_GROUP,
+  APPROVAL_MODE_LEARN_MORE,
+  type ApprovalModeApi,
+  type ApprovalModeChangeReason,
+  type ApprovalModeContentState,
+  type ApprovalModeOptions,
+  type ApprovalModePrimitive,
+  type ApprovalModeRow,
+  type ApprovalModeState,
+  type ApprovalModeTriggerState,
+  approvalModeName,
+  approvalModePrimitive,
+  approvalModeRows,
+} from "./approval-mode/index.js";
+export {
   ATTACHMENT_ERRORS,
   type AttachmentItem,
   type AttachmentState,

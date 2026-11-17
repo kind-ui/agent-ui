@@ -180,6 +180,12 @@ const components = {
       "An icon button that opens a menu of settings: toggles drawn as switches, and choices in submenus showing their value.",
     uses: ["internal-menu"],
   },
+  "approval-mode": {
+    title: "Approval Mode",
+    description:
+      "A button showing how much the agent may do without asking, opening a menu of modes with a risky one marked.",
+    uses: ["internal-menu"],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",
