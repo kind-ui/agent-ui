@@ -182,8 +182,11 @@
     }
   }
 
-  /* Rows in a suite that opens for the first time come in with it, not on their own. */
-  [data-test-results-part="tree"] [data-slot="tree-group"][data-starting-style] [data-slot="tree-label"] {
+  /* Rows in a suite that opens for the first time come in with it, not on their own. A closed suite's rows can take
+     their first style after the page loads, so they don't rise in then either. */
+  [data-test-results-part="tree"]
+    [data-slot="tree-group"]:is([data-starting-style], [hidden])
+    [data-slot="tree-label"] {
     @starting-style {
       opacity: 1;
       translate: none;
