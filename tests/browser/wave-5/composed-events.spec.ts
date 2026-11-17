@@ -44,10 +44,22 @@ test("an event from a kind-* element, a cancelled one, or one after unbinding is
     document.addEventListener("action", cancel, true);
     fire(menu, "cancelled");
     document.removeEventListener("action", cancel, true);
-    // UI SDK unbinds a removed element once it hasn't come back by the next frames.
+    // UI SDK unbinds a removed element a microtask after it leaves, unless it's back by then.
     root.remove();
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     fire(menu, "unbound");
   });
   await expect(lines(page)).toHaveText("action first programmatic\n");
+});
+
+test("a disabled menu doesn't open, and closes when disabled while open", async ({ page }) => {
+  const root = page.locator("kind-test-menu");
+  const trigger = page.getByRole("button", { name: "Edit" });
+  await trigger.click();
+  await expect(root).toHaveAttribute("data-open", "");
+  await root.evaluate((el) => el.setAttribute("disabled", ""));
+  await expect(root).not.toHaveAttribute("data-open");
+  await trigger.click();
+  await expect(page.getByRole("menuitem", { name: "Rename" })).toBeHidden();
+  await expect(root).not.toHaveAttribute("data-open");
 });

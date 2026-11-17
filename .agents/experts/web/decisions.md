@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `cd5d555` (Wave 4 Task 12b Model Selector icons)
+Last reviewed: `HEAD_PLACEHOLDER` (Wave 5 Task 1 groundwork)
 
 ## Settled
 
@@ -23,6 +23,7 @@ Last reviewed: `cd5d555` (Wave 4 Task 12b Model Selector icons)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **`hearComposed` doesn't tell nested components apart (Wave 5 Task 1):** an outer root hears the `ui-*` events of a component nested in its content, and `menuBase` filters by tag only. Fix (skip targets whose nearest Kind root isn't `el`'s) with a nested-roots test before Model Control (Task 9) nests Effort Slider.
 - **`@ui-sdk/web`'s Combobox content `anchor` stringifies an element** (Wave 4 Task 12b): only a selector works, so Model Selector anchors through `data-model-selector-field`; report upstream.
 - **Closing a Step or Guardrail Notice panel inside a shadow root leaves focus on a hidden button** (Wave 4 Task 12): the trigger lookup is now `context.element`, but UI SDK's `bindPanel` asks for it only when `el.contains(document.activeElement)`, which is the shadow host there. Add to the upstream report beside `focus-recovery.js`; a shadow-root test comes with the fix.
 - **Checkpoint's Alert Dialog is named differently by layer in the snapshot:** "Restore checkpoint" in React, "Restore this checkpoint?" on web (Wave 3, seen in Task 12).

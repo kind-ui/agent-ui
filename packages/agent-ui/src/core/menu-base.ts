@@ -89,7 +89,7 @@ export type MenuBaseApi = {
   readonly open: (() => boolean) | undefined;
   /** Closes the menu. Offered only while it's open. Returns whether the change was accepted. */
   readonly close: (() => boolean) | undefined;
-  /** The menu's data. */
+  /** The menu's data, or none while disabled. */
   getItems: () => MenuData;
   /** Props for composed UI SDK components, memoized. `menu` is called by the root slot. */
   partState: { menu: (state: MenuBaseState) => MenuPartState };
@@ -108,7 +108,7 @@ export type MenuBaseConfig<Options extends MenuBaseOptions> = {
   onAction?: (value: string, details: MenuRun, context: Context<Options>) => unknown;
   /** A checkbox item, by its value, wants to toggle. */
   onChecked?: (value: string, checked: boolean, choice: MenuChoice, context: Context<Options>) => void;
-  /** A radio group, by its name, wants to change. */
+  /** A radio group, by its `name`, wants to change. `toData` names every radio group, so both layers report the same one. */
   onValue?: (group: string, value: string, choice: MenuChoice, context: Context<Options>) => void;
 };
 
@@ -147,8 +147,16 @@ type Detail = {
  * `open`; choices reach the component through `config`, from React's props or, on Web Components, the menu's events.
  */
 export const menuBase = <Options extends MenuBaseOptions>(config: MenuBaseConfig<Options>) => {
+  // Menu data is plain, so equal data keeps its array: a new one makes `ui-menu` render every item again.
+  let last: { key: string; items: MenuData } | undefined;
+  const data = (options: Options) => {
+    const items = config.toData(options);
+    const key = JSON.stringify(items);
+    if (last?.key !== key) last = { key, items };
+    return last.items;
+  };
   const presentation = (options: Options) => ({
-    items: config.toData(options),
+    items: data(options),
     presentation: options.presentation ?? "auto",
     disabled: options.disabled ?? false,
     motion: options.motion ?? "auto",
@@ -176,9 +184,13 @@ export const menuBase = <Options extends MenuBaseOptions>(config: MenuBaseConfig
       // `createChange` reads open change reasons from the options type, which a generic `Options` hides.
       const change = createChange(context as PrimitiveContext<MenuBaseOptions, MenuBaseState, string>);
       const controller = createMenuController();
+      context.onOptions((options) => {
+        if (options.disabled && store.get().open) change("open", false, { reason: "imperative" });
+      });
 
       const onOpenChange = (open: boolean, details: ChangeDetails<MenuOpenChangeReason>) => {
         const { reason, event, source } = details;
+        if (open && store.get().disabled) return details.cancel();
         if (!change("open", open, event ? { reason, event, source } : { reason, source })) details.cancel();
       };
       const onAction = (value: string, { event }: MenuActionDetails) =>
@@ -255,7 +267,7 @@ export const menuBase = <Options extends MenuBaseOptions>(config: MenuBaseConfig
         get close() {
           return store.get().open ? () => change("open", false, { reason: "imperative" }) : undefined;
         },
-        getItems: () => store.get().items,
+        getItems: () => (store.get().disabled ? [] : store.get().items),
         partState: { menu: (state) => menu(state.items, state.presentation, state.open) },
         composedEvents,
       };

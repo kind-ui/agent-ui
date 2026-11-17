@@ -71,7 +71,13 @@ test("createSpeechDictation turns results into text events and stops on abort", 
   await new Promise((resolve) => setTimeout(resolve));
   assert.equal(fake.recognizer.lang, "en-US");
   assert.ok(fake.recognizer.started);
-  fake.recognizer.onresult({ resultIndex: 0, results: [{ isFinal: false, 0: { transcript: "hello" } }] });
+  fake.recognizer.onresult({
+    resultIndex: 0,
+    results: [
+      { isFinal: false, 0: { transcript: "hel" } },
+      { isFinal: false, 0: { transcript: "lo" } },
+    ],
+  });
   controller.abort();
   await done;
   assert.deepEqual(events, [

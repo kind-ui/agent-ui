@@ -180,3 +180,19 @@ test("menu data: Space toggles a checkbox item and keeps the menu open", async (
   await expect(wrap).toHaveAttribute("aria-checked", "true");
   await expect(wrap).toBeVisible();
 });
+
+test("menu data: open, the rows pass axe, a radio item checks and a submenu opens", async ({ page }) => {
+  await open(page, "menu-data");
+  await page.getByRole("button", { name: "Settings" }).click();
+  await expect(page.getByRole("menuitem", { name: "Archive" })).toBeVisible();
+  const { violations } = await new AxeBuilder({ page }).include("#root").analyze();
+  expect(violations).toEqual([]);
+  const compact = page.getByRole("menuitemradio", { name: "Compact" });
+  await compact.click();
+  await expect(compact).toHaveAttribute("aria-checked", "true");
+  const move = page.getByRole("menuitem", { name: "Move to" });
+  await move.focus();
+  await expect(move).toHaveCSS("border-top-width", "0px");
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("menuitem", { name: "Inbox" })).toBeFocused();
+});

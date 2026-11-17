@@ -33,7 +33,7 @@ const defineTestMenu = () => {
       render: (el, instance) => {
         const draw = () => {
           const { controller, presentation, open } = instance.api.partState.menu(instance.get());
-          const menu = el.querySelector("ui-menu") as (Element & Record<string, unknown>) | null;
+          const menu = el.querySelector("ui-menu");
           if (!menu) return;
           if (menu.controller !== controller) menu.controller = controller;
           if (menu.presentation !== presentation) menu.presentation = presentation;

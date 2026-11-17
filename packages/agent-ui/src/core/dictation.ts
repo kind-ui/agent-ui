@@ -1,6 +1,6 @@
 /**
- * What a dictation source reports: the microphone's level (0 to 1, for a waveform), recognized text (interim until
- * `final`), or why it stopped. `"denied"`: the person or the browser refused the microphone; `"unsupported"`: the
+ * What a dictation source reports: the microphone's level (0 to 1, for a waveform), recognized text, or why it
+ * stopped. Final texts follow each other; an interim text replaces the interim text before it. `"denied"`: the person or the browser refused the microphone; `"unsupported"`: the
  * browser has no speech recognition.
  */
 export type DictationEvent =
@@ -117,11 +117,15 @@ async function* listen(signal: AbortSignal, lang: string | undefined): AsyncGene
   recognition.continuous = true;
   recognition.interimResults = true;
   if (lang) recognition.lang = lang;
+  // Finals in order, then every result still changing as one interim text.
   recognition.onresult = ({ resultIndex, results }) => {
+    let interim = "";
     for (let i = resultIndex; i < results.length; i++) {
       const result = results[i] as SpeechResult;
-      events.push({ text: result[0].transcript, final: result.isFinal });
+      if (result.isFinal) events.push({ text: result[0].transcript, final: true });
+      else interim += result[0].transcript;
     }
+    if (interim) events.push({ text: interim, final: false });
   };
   recognition.onerror = ({ error }) => {
     const reported = error in ERRORS ? ERRORS[error] : error;
