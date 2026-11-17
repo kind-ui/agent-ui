@@ -139,6 +139,12 @@ const components = {
       "An error's name, message and frames, with library frames folded and each frame able to open its file.",
     uses: [],
   },
+  "test-results": {
+    title: "Test Results",
+    description:
+      "A test run's pass, fail and skip counts over a filterable tree of suites, each failure open to its stack trace.",
+    uses: ["stack-trace", "internal-tree", "internal-segmented-control"],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

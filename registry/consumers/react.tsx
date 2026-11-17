@@ -41,6 +41,7 @@ import { Subagent } from "./components/ui/subagent.js";
 import { Suggestion } from "./components/ui/suggestion.js";
 import { Task } from "./components/ui/task.js";
 import { Terminal } from "./components/ui/terminal.js";
+import { TestResults } from "./components/ui/test-results.js";
 import { ThinkingIndicator } from "./components/ui/thinking-indicator.js";
 import { Tool } from "./components/ui/tool.js";
 import { TypingIndicator } from "./components/ui/typing-indicator.js";
@@ -172,6 +173,21 @@ const items = {
     <StackTrace
       stack={"TypeError: x is undefined\n    at main (/app/src/index.ts:7:1)"}
       onOpenFrame={() => {}}
+    />
+  ),
+  "test-results": (
+    <TestResults
+      defaultOpen
+      suites={[
+        {
+          id: "math",
+          name: "math",
+          tests: [
+            { id: "sum", name: "adds", status: "pass", durationMs: 2 },
+            { id: "div", name: "divides", status: "fail", error: { message: "Error: divided by zero" } },
+          ],
+        },
+      ]}
     />
   ),
   terminal: <Terminal command="npm test" output={"\x1b[32m✓\x1b[0m 22 passed"} exitCode={0} defaultOpen />,

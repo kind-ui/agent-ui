@@ -27,6 +27,7 @@
     "file-tree",
     "terminal",
     "stack-trace",
+    "test-results",
     "conversation",
     "message",
     "markdown",

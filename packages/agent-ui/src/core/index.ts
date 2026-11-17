@@ -378,6 +378,25 @@ export {
   type TerminalState,
   terminalPrimitive,
 } from "./terminal/index.js";
+export {
+  emptyTestsText,
+  type TestCounts,
+  type TestResultsApi,
+  type TestResultsExpandedChangeReason,
+  type TestResultsFailureState,
+  type TestResultsFilter,
+  type TestResultsFilterChangeReason,
+  type TestResultsFilterState,
+  type TestResultsOptions,
+  type TestResultsPrimitive,
+  type TestResultsRow,
+  type TestResultsState,
+  type TestResultsTreeState,
+  testCounts,
+  testItems,
+  testResultsPrimitive,
+  testValue,
+} from "./test-results/index.js";
 export { thinkingIndicatorPrimitive } from "./thinking-indicator/index.js";
 export {
   type ToolApi,

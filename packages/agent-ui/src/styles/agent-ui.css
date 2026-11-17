@@ -15,6 +15,7 @@
 @import "./file-tree.css";
 @import "./terminal.css";
 @import "./stack-trace.css";
+@import "./test-results.css";
 @import "./question.css";
 @import "./checkpoint.css";
 @import "./model-selector.css";

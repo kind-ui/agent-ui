@@ -1,0 +1,327 @@
+import {
+  emptyTestsText,
+  type StepOpenChangeReason,
+  type TestResultsApi,
+  type TestResultsExpandedChangeReason,
+  type TestResultsFilter,
+  type TestResultsFilterChangeReason,
+  type TestResultsOptions,
+  type TestResultsRow,
+  type TestResultsState,
+  testResultsPrimitive,
+} from "@kind-ui/agent-ui/core";
+import type { TreeItemData } from "@ui-sdk/core";
+import { createParts, wrappedButton } from "@ui-sdk/web";
+import type { AttributeProperties, UiChangeEvent, UiElement, UiTreeElement } from "@ui-sdk/web/events";
+import { defineInternalSegmentedControl } from "./internal/segmented-control.js";
+import { defineInternalTree } from "./internal/tree.js";
+import { defineStackTrace } from "./stack-trace.js";
+
+const DEFAULT_PARTS = `<kind-test-results-trigger><button><kind-test-results-icon></kind-test-results-icon><kind-test-results-title></kind-test-results-title><kind-test-results-meta></kind-test-results-meta></button></kind-test-results-trigger><kind-test-results-content><div data-test-results-panel><kind-test-results-filter></kind-test-results-filter><kind-test-results-tree></kind-test-results-tree><kind-test-results-empty></kind-test-results-empty></div></kind-test-results-content>`;
+
+// Lucide "chevron-right", see THIRD_PARTY_NOTICES.md.
+const CHEVRON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+// Parts this element wrote into. A part someone wrote into keeps what they wrote, as React's children do. Kept
+// across instances, because UI SDK rebuilds one when the element returns to the page.
+const owned = new WeakSet<Element>();
+
+const ownedOrEmpty = (part: Element | null): part is Element => {
+  if (!part || !(owned.has(part) || !part.firstChild)) return false;
+  owned.add(part);
+  return true;
+};
+
+const fill = (part: Element | null, text: string) => {
+  if (ownedOrEmpty(part) && part.textContent !== text) part.textContent = text;
+};
+
+const element = (document: Document, tag: string, attributes: Record<string, string> = {}, text?: string) => {
+  const el = document.createElement(tag);
+  for (const [name, value] of Object.entries(attributes)) el.setAttribute(name, value);
+  if (text !== undefined) el.textContent = text;
+  return el;
+};
+
+const fillMeta = (part: Element | null, { counts, duration }: TestResultsState) => {
+  if (!ownedOrEmpty(part)) return;
+  const text = `${counts.pass} passed ${counts.fail} failed ${counts.skip} skipped${duration ? ` ${duration}` : ""}`;
+  if (part.textContent === text) return;
+  const document = part.ownerDocument;
+  const count = (status: "pass" | "fail" | "skip", words: string) =>
+    element(
+      document,
+      "span",
+      { "data-test-results-count": status, ...(counts[status] === 0 ? { "data-zero": "" } : {}) },
+      `${counts[status]} ${words}`,
+    );
+  part.replaceChildren(
+    count("pass", "passed"),
+    " ",
+    count("fail", "failed"),
+    " ",
+    count("skip", "skipped"),
+    ...(duration ? [element(document, "span", { "data-test-results-duration": "" }, ` ${duration}`)] : []),
+  );
+};
+
+/** Gives an empty filter its Segmented Control, set up before it connects, since it reads its default as it does. */
+const fillFilter = (part: Element | null, api: TestResultsApi, state: TestResultsState) => {
+  if (!part || part.firstChild) return;
+  const document = part.ownerDocument;
+  const { levels, "aria-label": label, ...props } = api.filterState(state);
+  // Hidden from agents, which use the Test Results' own `setFilter`.
+  const control = element(document, "ui-segmented-control", { "data-agent-hidden": "" });
+  control.append(
+    element(document, "ui-segmented-control-indicator"),
+    ...levels.map((level) =>
+      element(document, "ui-segmented-control-item", { value: level.value }, level.label),
+    ),
+  );
+  Object.assign(control, props, { ariaLabel: label });
+  const host = element(document, "kind-internal-segmented-control");
+  host.append(control);
+  part.append(host);
+};
+
+// The row each element was last drawn from, so a redraw writes only rows that changed.
+const drawn = new WeakMap<Element, TestResultsRow>();
+
+// Every row has an indicator, a passed or skipped test's an empty spacer that lines its name up with the others. It's
+// hidden from agents, which hides UI SDK's Tree from them while the rows stay the Test Results'.
+const newRow = (document: Document, value: string) => {
+  const row = element(document, "ui-tree-item", { value });
+  const label = element(document, "ui-tree-item-label");
+  const item = element(document, "kind-test-results-item", { value });
+  // A space keeps the name and the status's words apart in the row's accessible name.
+  item.append(
+    element(document, "span", { "data-test-results-name": "" }),
+    " ",
+    element(document, "kind-test-results-item-status"),
+  );
+  label.append(element(document, "ui-tree-item-indicator", { "data-agent-hidden": "" }), item);
+  row.append(label);
+  return row;
+};
+
+/** Writes a row's name, as text so no name is parsed as markup, and a failure's error into its Stack Trace. */
+const drawRow = (row: Element, shown: TestResultsRow, motion: TestResultsState["motion"]) => {
+  const name = row.querySelector(
+    ":scope > ui-tree-item-label > kind-test-results-item > [data-test-results-name]",
+  );
+  if (name && name.textContent !== shown.name) name.textContent = shown.name;
+  const trace = row.querySelector<HTMLElementTagNameMap["kind-stack-trace"]>(
+    ":scope > ui-tree-group > kind-test-results-failure > kind-stack-trace",
+  );
+  if (!trace) return;
+  if (drawn.get(trace) !== shown) {
+    drawn.set(trace, shown);
+    Object.assign(trace, { message: shown.message || undefined, stack: shown.stack });
+  }
+  if (trace.motion !== motion) trace.motion = motion;
+};
+
+type Movable = Element & { moveBefore?: (node: Node, child: Node | null) => void };
+
+// `moveBefore` keeps a focused row focused where the browser has it; `insertBefore` blurs it.
+const place = (parent: Movable, child: Element, before: Element | null) => {
+  if (before === child || (child.parentElement === parent && child.nextElementSibling === before)) return;
+  if (parent.moveBefore && child.isConnected) parent.moveBefore(child, before);
+  else parent.insertBefore(child, before);
+};
+
+/** Draws the rows into a tree or a suite's group, reusing each value's element so focus and open rows stay. */
+const drawRows = (parent: Element, items: TreeItemData[], state: TestResultsState) => {
+  const document = parent.ownerDocument;
+  const existing = new Map<string, Element>();
+  const wanted = new Set(items.map((data) => data.value));
+  // Rows that left go first, so the rest are already in place and keep focus where the browser has no `moveBefore`.
+  for (const row of parent.querySelectorAll(":scope > ui-tree-item")) {
+    const value = row.getAttribute("value") ?? "";
+    if (wanted.has(value)) existing.set(value, row);
+    else row.remove();
+  }
+  let previous: Element | null = null;
+  for (const data of items) {
+    const row = existing.get(data.value) ?? newRow(document, data.value);
+    existing.delete(data.value);
+    const indicator = row.querySelector(":scope > ui-tree-item-label > ui-tree-item-indicator");
+    let group = row.querySelector(":scope > ui-tree-group");
+    if (data.children) {
+      if (indicator && !indicator.firstElementChild) indicator.innerHTML = CHEVRON;
+      if (!group) {
+        group = element(document, "ui-tree-group");
+        row.append(group);
+      }
+      if (data.children.length > 0) drawRows(group, data.children, state);
+      else if (!group.firstElementChild) {
+        const failure = element(document, "kind-test-results-failure", { value: data.value });
+        const trace = element(document, "kind-stack-trace", { "auto-open": "never" });
+        failure.append(trace);
+        group.append(failure);
+      }
+    } else {
+      indicator?.replaceChildren();
+      group?.remove();
+    }
+    const shown = Object.hasOwn(state.rows, data.value) ? state.rows[data.value] : undefined;
+    if (shown) drawRow(row, shown, state.motion);
+    place(parent, row, previous ? previous.nextElementSibling : parent.firstElementChild);
+    previous = row;
+  }
+};
+
+/**
+ * `<kind-test-results>` fills in its parts when it has no children. Set `suites` as a property; its tree gets a row
+ * for each suite and test, and a failed test opens to a `<kind-stack-trace>`. Choosing a filter fires `filterchange`,
+ * and opening or closing rows fires `expandchange`, each with the filter or the open rows as `detail.value`.
+ */
+export function defineTestResults(): void {
+  if (customElements.get("kind-test-results")) return;
+  defineInternalSegmentedControl();
+  defineInternalTree();
+  defineStackTrace();
+  createParts(testResultsPrimitive, {
+    root: {
+      tag: "kind-test-results",
+      state: {
+        open: { get: (api) => api.isOpen(), set: (api, open) => api.setOpen(!!open) },
+        filter: {
+          get: (api) => api.getFilter(),
+          set: (api, filter) => api.setFilter(filter as TestResultsFilter),
+        },
+        expanded: {
+          get: (api) => api.getExpanded(),
+          set: (api, values) => api.setExpanded(values as string[]),
+        },
+      },
+      // The inner Segmented Control and Tree fire `valuechange` and `expandedchange` of their own, which a capture
+      // listener would hear first.
+      events: { onFilterChange: "filterchange", onExpandedChange: "expandchange" },
+      api: [
+        "isOpen",
+        "setOpen",
+        "toggle",
+        "expand",
+        "collapse",
+        "getSuites",
+        "getFilter",
+        "setFilter",
+        "getExpanded",
+        "setExpanded",
+      ],
+      render: (el, instance) => {
+        if (!el.firstElementChild) el.innerHTML = DEFAULT_PARTS;
+        const api = instance.api as TestResultsApi;
+        const filter = el.querySelector("kind-test-results-filter");
+        fillFilter(filter, api, instance.get() as TestResultsState);
+        const treePart = el.querySelector("kind-test-results-tree");
+        // The Tree reads its defaults as it connects, and draws bare rows of its own from `items` when it has none,
+        // so it gets both, and our rows, before it connects.
+        const tree =
+          treePart?.querySelector<UiTreeElement>(":scope > kind-internal-tree > ui-tree") ??
+          el.ownerDocument.createElement("ui-tree");
+        if (treePart && !tree.isConnected) {
+          const state = instance.get() as TestResultsState;
+          const { "aria-label": label, ...props } = api.treeState(state);
+          drawRows(tree, props.items, state);
+          Object.assign(tree, props);
+          tree.ariaLabel = label;
+          const host = el.ownerDocument.createElement("kind-internal-tree");
+          host.append(tree);
+          treePart.replaceChildren(host);
+        }
+        let drawnItems: TreeItemData[] | undefined;
+        let drawnRows: TestResultsState["rows"] | undefined;
+        let drawnMotion: TestResultsState["motion"] | undefined;
+        const draw = () => {
+          const state = instance.get() as TestResultsState;
+          fill(el.querySelector("kind-test-results-title"), state.title);
+          fillMeta(el.querySelector("kind-test-results-meta"), state);
+          fill(el.querySelector("kind-test-results-empty"), emptyTestsText(state.filter));
+          const control = filter?.querySelector<Element & Record<string, unknown>>("ui-segmented-control");
+          // UI SDK builds a new instance, with a new controller, when the element returns to the page.
+          const { controller } = api.filterState(state);
+          if (control && control.controller !== controller) control.controller = controller;
+          api.syncFilter();
+          if (!tree.isConnected) return;
+          const { "aria-label": label, items, controller: treeController } = api.treeState(state);
+          if (items !== drawnItems || state.rows !== drawnRows || state.motion !== drawnMotion) {
+            drawnItems = items;
+            drawnRows = state.rows;
+            drawnMotion = state.motion;
+            drawRows(tree, items, state);
+          }
+          if (tree.controller !== treeController) tree.controller = treeController;
+          if (tree.items !== items) tree.items = items;
+          if (tree.ariaLabel !== label) tree.ariaLabel = label;
+          api.syncTree();
+        };
+        draw();
+        return instance.subscribe(draw);
+      },
+    },
+    trigger: { tag: "kind-test-results-trigger", target: wrappedButton, display: "contents" },
+    icon: "kind-test-results-icon",
+    title: "kind-test-results-title",
+    meta: "kind-test-results-meta",
+    content: "kind-test-results-content",
+    filter: "kind-test-results-filter",
+    tree: "kind-test-results-tree",
+    item: "kind-test-results-item",
+    "item-status": "kind-test-results-item-status",
+    failure: "kind-test-results-failure",
+    empty: "kind-test-results-empty",
+  });
+}
+
+export type KindTestResultsEvents = {
+  openchange: UiChangeEvent<boolean, StepOpenChangeReason>;
+  filterchange: UiChangeEvent<TestResultsFilter, TestResultsFilterChangeReason>;
+  expandchange: UiChangeEvent<string[], TestResultsExpandedChangeReason>;
+};
+
+export interface KindTestResultsElement
+  extends UiElement<KindTestResultsEvents>,
+    AttributeProperties<
+      typeof testResultsPrimitive,
+      "api" | "open" | "suites" | "filter" | "expanded" | "defaultExpanded"
+    > {
+  open: boolean;
+  suites?: TestResultsOptions["suites"];
+  get filter(): TestResultsFilter;
+  set filter(filter: TestResultsFilter);
+  get expanded(): string[];
+  set expanded(values: string[]);
+  defaultExpanded?: string[];
+  api: Pick<
+    TestResultsApi,
+    | "isOpen"
+    | "setOpen"
+    | "toggle"
+    | "expand"
+    | "collapse"
+    | "getSuites"
+    | "getFilter"
+    | "setFilter"
+    | "getExpanded"
+    | "setExpanded"
+  >;
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kind-test-results": KindTestResultsElement;
+    "kind-test-results-trigger": HTMLElement;
+    "kind-test-results-icon": HTMLElement;
+    "kind-test-results-title": HTMLElement;
+    "kind-test-results-meta": HTMLElement;
+    "kind-test-results-content": HTMLElement;
+    "kind-test-results-filter": HTMLElement;
+    "kind-test-results-tree": HTMLElement;
+    "kind-test-results-item": HTMLElement;
+    "kind-test-results-item-status": HTMLElement;
+    "kind-test-results-failure": HTMLElement;
+    "kind-test-results-empty": HTMLElement;
+  }
+}

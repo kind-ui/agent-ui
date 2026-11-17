@@ -1,0 +1,246 @@
+/* Test Results (spec §7): the Step base's header with the run's counts and duration, over a filter and a tree of
+   suites and tests in which a failed test opens to its Stack Trace. The trigger comes from step.css, through
+   `data-step-part`; rows are UI SDK Tree rows, styled by the internal Tree. */
+@layer components {
+  /* Custom elements on Web Components are inline until styled. */
+  :is(
+    [data-slot="kind-test-results-filter"],
+    [data-slot="kind-test-results-tree"],
+    [data-slot="kind-test-results-failure"],
+    [data-slot="kind-test-results-empty"]
+  ) {
+    display: block;
+  }
+
+  /* An empty tree and a hidden empty part leave no room. */
+  :is([data-slot="kind-test-results-tree"], [data-slot="kind-test-results-empty"])[hidden] {
+    display: none;
+  }
+
+  /* The counts sit at the header's end, so a count that grows a digit takes room from the title, not the rows. */
+  [data-slot="kind-test-results-meta"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  [data-test-results-count] {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+
+    /* A mark per count, in its status's color, quiet at zero. */
+    &::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 9999px;
+      background-color: var(--kind-test-results-count, var(--kind-color-muted));
+      transition: background-color var(--kind-duration-base);
+    }
+    &[data-test-results-count="pass"] {
+      --kind-test-results-count: var(--kind-color-success);
+    }
+    &[data-test-results-count="fail"] {
+      --kind-test-results-count: var(--kind-color-danger);
+    }
+    &[data-zero]::before {
+      background-color: color-mix(in oklab, var(--kind-color-muted) 45%, transparent);
+    }
+    &:where([data-test-results-count="fail"]:not([data-zero])) {
+      color: color-mix(in oklab, var(--kind-color-danger) 70%, var(--kind-color-fg));
+    }
+  }
+
+  [data-test-results-duration] {
+    white-space: nowrap;
+  }
+
+  [data-test-results-panel] {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--kind-color-fg);
+  }
+
+  /* The filter: a mark slides to the chosen one at full motion; reduced motion fills it in place in 120 ms. */
+  [data-slot="kind-test-results-filter"] ui-segmented-control {
+    display: inline-flex;
+  }
+
+  :where([data-slot="kind-test-results-filter"]) {
+    & [data-slot="segmented-control-indicator"] {
+      transition-property: translate, width;
+      transition-duration: var(--kind-duration-base);
+      transition-timing-function: var(--kind-ease);
+    }
+    & [data-slot="segmented-control-item"] {
+      transition:
+        color var(--kind-duration-fast) var(--kind-ease-out),
+        background-color var(--kind-duration-reduced) var(--kind-ease-out),
+        box-shadow var(--kind-duration-reduced) var(--kind-ease-out);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-slot="kind-test-results-filter"][data-motion="auto"]) {
+      & [data-slot="segmented-control-indicator"] {
+        display: none;
+      }
+      & [data-slot="segmented-control-item"][data-checked] {
+        background-color: var(--kind-color-surface);
+        box-shadow: inset 0 0 0 1px var(--kind-color-border);
+      }
+    }
+  }
+
+  :where([data-slot="kind-test-results-filter"]:is([data-motion="reduced"], [data-motion="none"])) {
+    & [data-slot="segmented-control-indicator"] {
+      display: none;
+    }
+    & [data-slot="segmented-control-item"][data-checked] {
+      background-color: var(--kind-color-surface);
+      box-shadow: inset 0 0 0 1px var(--kind-color-border);
+    }
+  }
+
+  :where([data-slot="kind-test-results-filter"][data-motion="none"]) [data-slot="segmented-control-item"] {
+    transition: none;
+  }
+
+  /* A press on the arrow lands on its row, which the tree part hears: UI SDK's indicator cancels its own click. */
+  :where([data-test-results-part="tree"]) [data-slot="tree-indicator"] {
+    pointer-events: none;
+
+    & svg {
+      transition: rotate var(--kind-duration-base) var(--kind-ease);
+    }
+  }
+
+  [data-test-results-part="item"] {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+    gap: 8px;
+
+    /* The duration, after the name and the mark's words in the row's name. */
+    &::after {
+      content: attr(data-duration);
+      flex-shrink: 0;
+      font-size: 0.75rem;
+      font-variant-numeric: tabular-nums;
+      color: var(--kind-color-muted);
+    }
+  }
+
+  [data-test-results-name] {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &:where([data-kind="suite"] > *) {
+      font-weight: 500;
+    }
+    &:where([data-kind="test"][data-status="skip"] > *) {
+      color: var(--kind-color-muted);
+    }
+  }
+
+  /* After the name in the page, before it on screen. */
+  [data-test-results-part="status"] {
+    order: -1;
+    width: 14px;
+    height: 14px;
+
+    &::after {
+      mask-size: 9px;
+    }
+  }
+
+  /* A failed test's Stack Trace, lined up with its name. `--tree-level` is the test's. */
+  [data-slot="kind-test-results-failure"] {
+    padding-block: 2px 8px;
+    padding-inline: calc((var(--tree-level) - 1) * 1rem + 1.625rem) 0.25rem;
+  }
+
+  [data-slot="kind-test-results-empty"] {
+    margin: 0;
+    padding: 6px 0.25rem;
+    color: var(--kind-color-muted);
+  }
+
+  /* Rows come in once, as they mount: a test that finishes rises in, and the rest stay still. */
+  :where([data-test-results-part="tree"]:not([data-motion="none"])) [data-slot="tree-label"] {
+    transition:
+      opacity var(--kind-duration-base) var(--kind-ease-out),
+      translate var(--kind-duration-base) var(--kind-ease);
+
+    @starting-style {
+      opacity: 0;
+    }
+  }
+
+  /* Suites and failures open and close by height at full motion, fade under reduced motion, and switch at once with
+     "none". */
+  :where([data-test-results-part="tree"]) [data-slot="tree-group"] {
+    height: var(--tree-group-height);
+    overflow: hidden;
+    transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+  }
+  :where([data-test-results-part="tree"]:not([data-motion="none"]))
+    [data-slot="tree-group"]:is([data-starting-style], [data-ending-style]) {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    [data-test-results-part="tree"][data-motion="auto"] {
+      & [data-slot="tree-group"] {
+        transition:
+          height var(--kind-duration-panel) var(--kind-ease),
+          opacity var(--kind-duration-base) var(--kind-ease-out);
+
+        &:is([data-starting-style], [data-ending-style]) {
+          height: 0;
+        }
+      }
+      & [data-slot="tree-label"] {
+        @starting-style {
+          translate: 0 4px;
+        }
+      }
+    }
+  }
+
+  [data-test-results-part="tree"][data-motion="reduced"]
+    :is([data-slot="tree-group"], [data-slot="tree-label"]) {
+    transition-duration: var(--kind-duration-reduced);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-test-results-part="tree"] :is([data-slot="tree-group"], [data-slot="tree-label"]) {
+      transition-duration: var(--kind-duration-reduced);
+    }
+    [data-test-results-part="tree"] [data-slot="tree-indicator"] svg {
+      transition: none;
+    }
+  }
+
+  [data-test-results-part="tree"]:is([data-motion="reduced"], [data-motion="none"])
+    [data-slot="tree-indicator"]
+    svg,
+  [data-test-results-part="tree"][data-motion="none"] [data-slot="tree-group"] {
+    transition: none;
+  }
+
+  /* Forced colors replace a background, which is all a count's mark draws. */
+  @media (forced-colors: active) {
+    [data-test-results-count]::before {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+    }
+  }
+}
