@@ -23,8 +23,7 @@ const DEFAULT_PARTS = `<kind-internal-menu><ui-menu><kind-settings-menu-trigger>
 // children do. Kept across instances, because UI SDK rebuilds one when the element returns to the page.
 const owned = new WeakSet<Element>();
 const drawn = new WeakMap<Element, SettingsMenuContentState>();
-// The options each choice's radio items were drawn from.
-const drawnOptions = new WeakMap<Element, SettingsMenuRow & { type: "choice" }>();
+const drawnChoices = new WeakMap<Element, SettingsMenuRow & { type: "choice" }>();
 
 type Checkable = HTMLElement & { checked: boolean };
 type Selectable = HTMLElement & { value: string | null };
@@ -73,7 +72,7 @@ const drawChoice = (
     trigger.querySelector(":scope > [data-menu-chevron]") ??
     element(document, "span", { "data-menu-chevron": "" });
   drawMenuItemContent(trigger, row, [value, chevron]);
-  const last = drawnOptions.get(sub);
+  const last = drawnChoices.get(sub);
   if (last?.options !== row.options) {
     value.replaceChildren(...row.options.map((option) => element(document, "span", {}, option.label)));
     group.replaceChildren(
@@ -86,7 +85,7 @@ const drawChoice = (
       }),
     );
   }
-  drawnOptions.set(sub, row);
+  drawnChoices.set(sub, row);
   for (const [index, label] of [...value.children].entries())
     label.toggleAttribute("data-current", row.options[index]?.value === row.value);
   if (group.value !== (row.value ?? null)) group.value = row.value ?? null;

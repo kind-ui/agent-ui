@@ -83,7 +83,7 @@ export type SettingsMenuState = MenuBaseState & {
 };
 
 export type SettingsMenuApi = MenuBaseApi & {
-  /** The values by setting `id`. */
+  /** The values by setting `id`: the `values` passed, or what changed since `defaultValues`. */
   getValues: () => SettingsValues;
   /**
    * Changes each setting whose value differs in `values`, one change each, as the web root's `values` property does.
