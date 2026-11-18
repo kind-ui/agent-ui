@@ -18,6 +18,7 @@ import {
   ConversationRow,
   ConversationViewport,
 } from "./components/ui/conversation.js";
+import { Dictation } from "./components/ui/dictation.js";
 import { Document } from "./components/ui/document.js";
 import { Feedback } from "./components/ui/feedback.js";
 import { FileTree } from "./components/ui/file-tree.js";
@@ -237,6 +238,7 @@ const items = {
     />
   ),
   "context-bar": <ContextBar chips={[{ id: "readme", label: "README.md", kind: "file" }]} />,
+  dictation: <Dictation source={{ async *start() {} }} />,
   terminal: <Terminal command="npm test" output={"\x1b[32m✓\x1b[0m 22 passed"} exitCode={0} defaultOpen />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">

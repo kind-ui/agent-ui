@@ -42,7 +42,11 @@ const fakeSpeech = () => {
       this.onresult({ resultIndex: 1, results: [{}, { isFinal: true, 0: { transcript: "hello world" } }] });
       this.onend();
     }
-    abort() {}
+    abort() {
+      if (this.aborted) return;
+      this.aborted = true;
+      this.onend?.();
+    }
   };
   globalThis.AudioContext = class {
     createAnalyser = () => ({ fftSize: 32, getByteTimeDomainData: () => {} });
@@ -95,4 +99,16 @@ test("createSpeechDictation reports a refused microphone as denied", async () =>
   };
   const events = await read(createSpeechDictation().start(new AbortController().signal));
   assert.deepEqual(events, [{ error: "denied" }]);
+});
+
+test("createSpeechDictation drops what it heard when canceled", async () => {
+  const fake = fakeSpeech();
+  const controller = new AbortController();
+  const done = read(createSpeechDictation().start(controller.signal));
+  await new Promise((resolve) => setTimeout(resolve));
+  controller.abort("cancel");
+  assert.deepEqual(await done, []);
+  assert.ok(fake.recognizer.aborted);
+  assert.equal(fake.recognizer.stopped, undefined);
+  assert.ok(fake.tracks[0].stopped);
 });

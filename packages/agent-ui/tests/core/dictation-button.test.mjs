@@ -68,6 +68,7 @@ test("Cancel sends nothing, even once the source reports more", async () => {
   await tick();
   instance.api.cancel();
   assert.equal(instance.get().phase, "idle");
+  assert.equal(fake.signal.reason, "cancel");
   fake.push({ text: "late", final: true });
   fake.end();
   await tick();

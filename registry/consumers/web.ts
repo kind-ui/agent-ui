@@ -11,6 +11,7 @@ import { defineConfirmation } from "./components/ui/web/confirmation.js";
 import { defineContextBar } from "./components/ui/web/context-bar.js";
 import { defineContextMeter } from "./components/ui/web/context-meter.js";
 import { defineConversation } from "./components/ui/web/conversation.js";
+import { defineDictation } from "./components/ui/web/dictation.js";
 import { defineDocument } from "./components/ui/web/document.js";
 import { defineFeedback } from "./components/ui/web/feedback.js";
 import { defineFileTree } from "./components/ui/web/file-tree.js";
@@ -87,6 +88,7 @@ for (const define of [
   defineApprovalMode,
   defineModelControl,
   defineContextBar,
+  defineDictation,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -146,6 +148,7 @@ const items = {
   "approval-mode": `<kind-approval-mode></kind-approval-mode>`,
   "model-control": `<kind-model-control></kind-model-control>`,
   "context-bar": `<kind-context-bar></kind-context-bar>`,
+  dictation: `<kind-dictation></kind-dictation>`,
   terminal: `<kind-terminal command="npm test" exit-code="0" default-open></kind-terminal>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>

@@ -8,6 +8,7 @@ import {
   dispatch,
   live,
   type SlotDefinition,
+  sourceOf,
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { actionSource } from "../action-source.js";
@@ -41,7 +42,7 @@ export type DictationOptions = {
   label?: string;
   /**
    * How many bars the waveform has.
-   * @default 24
+   * @default 16
    */
   bars?: number;
   /**
@@ -134,7 +135,7 @@ export const joinFinals = (finals: readonly string[]): string =>
     .filter(Boolean)
     .join(" ");
 
-const barCount = (options: DictationOptions) => Math.max(1, Math.floor(options.bars ?? 24));
+const barCount = (options: DictationOptions) => Math.max(1, Math.floor(options.bars ?? 16));
 const silence = (bars: number) => Array<number>(bars).fill(0);
 
 const presentation = (options: DictationOptions) => ({
@@ -187,13 +188,15 @@ export const dictationButtonPrimitive: DictationPrimitive = definePrimitive<
     const { store } = context;
     // A run that's no longer current, because it was canceled or another started, writes nothing.
     let run: Run | undefined;
+    // Starts UI SDK's input tracking, which nothing else here does, so Stop's first keyboard press reads as one.
+    sourceOf();
 
     context.onOptions((options) => {
       const bars = barCount(options);
       if (store.get().levels.length !== bars) store.set({ levels: silence(bars) });
     });
     context.onDestroy(() => {
-      run?.controller.abort();
+      run?.controller.abort("cancel");
       run = undefined;
     });
 
@@ -259,7 +262,7 @@ export const dictationButtonPrimitive: DictationPrimitive = definePrimitive<
 
     const cancel = () => {
       if (!run) return false;
-      run.controller.abort();
+      run.controller.abort("cancel");
       finish({ phase: "idle" });
       return true;
     };

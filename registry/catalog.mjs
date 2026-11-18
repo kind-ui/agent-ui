@@ -198,6 +198,12 @@ const components = {
       "A row of removable context chips, the ones that don't fit behind a +N button that lists them.",
     uses: [],
   },
+  dictation: {
+    title: "Dictation",
+    description:
+      "A mic button that turns speech into text through a source the host chooses, with a live waveform.",
+    uses: [],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

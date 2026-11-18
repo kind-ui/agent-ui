@@ -9,7 +9,8 @@ export type DictationEvent =
   | { error: "unsupported" | "denied" | "no-speech" | "network" | (string & {}) };
 
 /**
- * Turns speech into text. `start` listens until `signal` aborts, then reports the text still to come and ends.
+ * Turns speech into text. `start` listens until `signal` aborts, then reports the text still to come and ends. A
+ * signal aborted with the reason `"cancel"` means nothing more is read, so the source can drop what it heard.
  * Dictation never has a source of its own: the host passes one, so it decides where audio goes.
  */
 export interface DictationSource {
@@ -141,10 +142,11 @@ async function* listen(signal: AbortSignal, lang: string | undefined): AsyncGene
     stopMeter();
     for (const track of stream.getTracks()) track.stop();
   };
-  // `stop`, not `abort`: recognition still reports the final text of what was said before it ends.
+  // `stop`, not `abort`: recognition still reports the final text of what was said before it ends, unless canceled.
   const stop = () => {
     release();
-    recognition.stop();
+    if (signal.reason === "cancel") recognition.abort();
+    else recognition.stop();
   };
   signal.addEventListener("abort", stop, { once: true });
   try {
