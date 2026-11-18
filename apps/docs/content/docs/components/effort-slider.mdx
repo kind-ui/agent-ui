@@ -7,7 +7,7 @@ import EffortSliderExample from "../../../examples/effort-slider/basic";
 
 Use an effort slider in a [composer](./composer.mdx)'s controls when the model can trade speed for more thinking and the row has no room for every level. It's a button that shows the chosen level and opens a popover holding UI SDK's Slider, with one step per level, a Reset and an optional line naming the model.
 
-<Example caption="Press Effort, High, then press the Right Arrow key or drag the thumb to Max. The flame grows as you go, and Reset returns it to Medium.">
+<Example caption="Press Effort, High, then press the Right Arrow key or drag the thumb to Max. The bolt and the fill warm up as you go, and Reset returns it to Medium.">
   <EffortSliderExample />
 
   <include cwd lang="tsx">./examples/effort-slider/basic.tsx</include>
@@ -29,20 +29,20 @@ npx shadcn@latest add @kind-ui/effort-slider-web
 EffortSlider
 ├── EffortSliderTrigger
 └── EffortSliderContent
-    ├── EffortSliderSlider
-    │   └── EffortSliderTitle
-    ├── EffortSliderStops
-    ├── EffortSliderModel
-    └── EffortSliderReset
+    └── EffortSliderSlider
+        ├── EffortSliderTitle
+        ├── EffortSliderModel
+        ├── EffortSliderReset
+        └── EffortSliderStops
 ```
 
-`EffortSlider` is a group named by its `label` and the chosen level. `EffortSliderTrigger` is the button that opens the popover and shows the chosen level's label, unless you pass children. `EffortSliderContent` is the popover. `EffortSliderSlider` is UI SDK's Slider, with `EffortSliderTitle` and the chosen level's label above the track. `EffortSliderStops` draws a tick and label under the track for each level. `EffortSliderModel` is the line naming the model, and `EffortSliderReset` returns to the default level. `EffortSlider` renders the trigger and content, and the content its parts, when you pass no children.
+`EffortSlider` is a group named by its `label` and the chosen level. `EffortSliderTrigger` is the button that opens the popover and shows the chosen level's label, unless you pass children. `EffortSliderContent` is the popover, which opens above the button. `EffortSliderSlider` is UI SDK's Slider: above its track, the level the thumb is on, `EffortSliderModel` naming the model under it and `EffortSliderReset`, and `EffortSliderTitle`, which names the popover for assistive technology only. `EffortSliderStops` draws a dot on the track for each level. `EffortSlider` renders the trigger and content, and the content its parts, when you pass no children.
 
 ## Usage
 
 ### Levels
 
-Pass `levels`, from least to most effort, each with the `value` your app receives and the `label` a person reads. Without them, the levels are Low, Medium and High. A flame beside the level grows and warms with effort, on the button and above the track, and the fill warms as it grows. Under the track, the level under the thumb lights up the moment a drag reaches it, before it's reported.
+Pass `levels`, from least to most effort, each with the `value` your app receives and the `label` a person reads. Without them, the levels are Low, Medium and High. A bolt beside the level warms with effort, on the button and in the popover, and the fill carries drifting particles that thicken as it grows. The level above the track changes the moment a drag reaches it, before it's reported.
 
 The button is named by the `label` and the chosen level, like "Effort, High". The `label` is "Effort" by default and also titles the popover and names the slider's thumb, whose value text is the level's label.
 
@@ -60,11 +60,11 @@ Pass `value` and `onValueChange` to control the chosen level, or `defaultValue` 
 
 ### Reset
 
-**Reset** returns to `defaultLevel`, which is the middle level unless you name one by its `value`. It's present only while another level is chosen, and it shares a row with the model line, so it comes and goes without moving the slider. When it leaves while focused, focus moves to the thumb.
+**Reset** returns to `defaultLevel`, which is the middle level unless you name one by its `value`. It's an icon in the popover's corner, present only while another level is chosen, and its place is kept, so it comes and goes without moving anything. When it leaves while focused, focus moves to the thumb.
 
 ### Model
 
-Pass `modelLabel` to add a line under the slider, like "Effort for GPT-5", that tells people which model the effort applies to. Add `modelHref` to make it a link, like to the model's settings, or `onModelPress` to make it a button; `onModelPress` gets the `modelLabel` and the reason `model-press`. With both, the line is a link.
+Pass `modelLabel`, like "GPT-5", to show which model the effort applies to, under the level. Add `modelHref` to make it a link, like to the model's settings, or `onModelPress` to make it a button, for example to open a model picker; `onModelPress` gets the `modelLabel` and the reason `model-press`. With both, it's a link.
 
 ### Opening
 

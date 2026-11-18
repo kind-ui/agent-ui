@@ -14,7 +14,7 @@ import { defineInternalSlider } from "./internal/slider.js";
 
 // The Slider reads `default-value` as it connects, which it does as this markup is written.
 const defaultParts = (defaultValue: number) =>
-  `<kind-effort-slider-trigger><button></button></kind-effort-slider-trigger><kind-effort-slider-content hidden><kind-effort-slider-slider><kind-internal-slider><ui-slider default-value="${defaultValue}"><div data-effort-slider-header=""><kind-effort-slider-title><h2></h2></kind-effort-slider-title><span data-effort-slider-reading=""><ui-slider-value></ui-slider-value><span data-effort-slider-glyph=""></span></span></div><ui-slider-control><ui-slider-track><ui-slider-indicator></ui-slider-indicator><ui-slider-thumb></ui-slider-thumb></ui-slider-track></ui-slider-control></ui-slider></kind-internal-slider></kind-effort-slider-slider><kind-effort-slider-stops></kind-effort-slider-stops><div data-effort-slider-footer=""><kind-effort-slider-model><p></p></kind-effort-slider-model><kind-effort-slider-reset><button>Reset</button></kind-effort-slider-reset></div></kind-effort-slider-content>`;
+  `<kind-effort-slider-trigger><button></button></kind-effort-slider-trigger><kind-effort-slider-content hidden><kind-effort-slider-slider><kind-internal-slider><ui-slider default-value="${defaultValue}"><div data-effort-slider-header=""><span data-effort-slider-glyph=""></span><div data-effort-slider-heading=""><kind-effort-slider-title><h2></h2></kind-effort-slider-title><ui-slider-value></ui-slider-value><kind-effort-slider-model><p></p></kind-effort-slider-model></div><kind-effort-slider-reset><button><span data-effort-slider-reset-text="">Reset</span></button></kind-effort-slider-reset></div><ui-slider-control><ui-slider-track><kind-effort-slider-stops></kind-effort-slider-stops><ui-slider-indicator></ui-slider-indicator><ui-slider-thumb></ui-slider-thumb></ui-slider-track></ui-slider-control></ui-slider></kind-internal-slider></kind-effort-slider-slider></kind-effort-slider-content>`;
 
 // Parts this element filled in, and so writes. A part someone wrote keeps its own, as React's children do. Kept across
 // instances, because UI SDK rebuilds one when the element returns to the page.
@@ -69,7 +69,7 @@ const drawTrigger = (button: Element, levels: EffortSliderState["levels"], index
 const sameStop = (a: EffortSliderStop | undefined, b: EffortSliderStop) =>
   a?.value === b.value && a.label === b.label && a.position === b.position && a.top === b.top;
 
-/** A tick and label for each stop, built again only when the levels change. */
+/** A dot for each stop, built again only when the levels change. */
 const drawStops = (part: Element, stops: EffortSliderStop[]) => {
   const previous = drawn.get(part) as EffortSliderStop[] | undefined;
   if (previous === stops) return;
@@ -79,7 +79,6 @@ const drawStops = (part: Element, stops: EffortSliderStop[]) => {
     part.replaceChildren(
       ...stops.map((stop) => {
         const span = element(document, "span", { "data-effort-slider-stop": "" });
-        span.append(stop.label);
         span.toggleAttribute("data-top", stop.top);
         span.style.setProperty("--kind-effort-slider-stop", String(stop.position));
         return span;
@@ -159,8 +158,8 @@ export function defineEffortSlider(): void {
         const content = el.querySelector("kind-effort-slider-content");
         for (const [name, value] of [
           ["initial-focus", EFFORT_SLIDER_THUMB],
-          ["side-offset", "6"],
-          ["align", "start"],
+          ["side", "top"],
+          ["side-offset", "8"],
         ] as const)
           if (content && !content.hasAttribute(name)) content.setAttribute(name, value);
         const draw = () => {

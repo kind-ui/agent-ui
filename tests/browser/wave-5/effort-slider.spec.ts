@@ -128,7 +128,7 @@ test("a host that refuses keeps the level, and the slider goes back", async ({ p
   ]);
 });
 
-test("each level's stop sits under the thumb, and the trigger keeps its width", async ({ page }) => {
+test("each level's dot sits under the thumb, and the trigger keeps its width", async ({ page }) => {
   await load(page);
   const beside = () => page.locator("#beside").evaluate((el) => el.getBoundingClientRect().x);
   const before = await beside();
@@ -162,13 +162,14 @@ test("a popup someone wrote is placed as the filled-in one is", async ({ page },
   test.skip(layerOf(testInfo) !== "web", "React's parts take their placement as props");
   await load(page, "written");
   await open(page);
-  await expect(content(page)).toHaveAttribute("data-align", "start");
+  await expect(page.locator("kind-effort-slider-content")).toHaveAttribute("side", "top");
+  await expect(page.locator("kind-effort-slider-content")).toHaveAttribute("initial-focus", /slider-thumb/);
 });
 
-test("the model line is a button that reports the model", async ({ page }) => {
+test("the model under the level is a button that reports the model", async ({ page }) => {
   await load(page);
   await open(page);
-  await content(page).getByRole("button", { name: "Effort for GPT-5" }).click();
+  await content(page).getByRole("button", { name: "GPT-5" }).click();
   expect(await changes(page)).toEqual([
     { component: "model", value: "GPT-5", reason: "model-press", source: "mouse" },
   ]);
@@ -232,7 +233,8 @@ test("a drag lights up each level it crosses before the level is reported", asyn
   await page.mouse.move((box?.x ?? 0) + (box?.width ?? 0) / 3, y);
   await page.mouse.down();
   await page.mouse.move((box?.x ?? 0) + (box?.width ?? 0), y, { steps: 6 });
-  await expect(content(page).locator("[data-effort-slider-stop][data-current]")).toHaveText("Max");
+  await expect(content(page).locator('[data-slot="slider-value"]')).toHaveText("Max");
+  await expect(content(page).locator("[data-effort-slider-stop][data-current][data-top]")).toHaveCount(1);
   await expect(trigger(page)).toHaveAccessibleName("Effort, Medium");
   expect(await changes(page)).toEqual([]);
   await page.mouse.up();
@@ -302,7 +304,7 @@ test("in forced colors the flames and the chevron keep a system color", async ({
     };
     return {
       chevron: color("[data-effort-slider-chevron]"),
-      flame: color("[data-effort-slider-reading] [data-effort-slider-glyph]"),
+      flame: color("[data-effort-slider-header] [data-effort-slider-glyph]"),
       triggerFlame: color('[data-effort-slider-part="trigger"] [data-effort-slider-glyph]'),
       canvas: color('[data-slot="kind-effort-slider-content"]'),
     };

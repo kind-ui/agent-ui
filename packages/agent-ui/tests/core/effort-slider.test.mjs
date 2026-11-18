@@ -35,7 +35,6 @@ test("dropping the chosen level moves an uncontrolled slider to the default leve
 test("an empty label reads as Effort", () => {
   const instance = effortSliderPrimitive({ levels, label: "", modelLabel: "GPT-5" });
   assert.equal(instance.api.name(instance.get()), "Effort, Medium");
-  assert.equal(instance.api.modelState(instance.get()).text, "Effort for GPT-5");
   instance.destroy();
 });
 

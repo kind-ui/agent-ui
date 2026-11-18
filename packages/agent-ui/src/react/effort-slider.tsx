@@ -54,12 +54,12 @@ const triggerContent = ({ levels, index }: EffortSliderTriggerState) => (
   </>
 );
 
-/** Opens the popup. Shows the chosen level's label beside a flame that grows with it, unless you pass children. */
+/** Opens the popup. Shows the chosen level's label beside a bolt that grows with it, unless you pass children. */
 export function EffortSliderTrigger({ children = triggerContent, ...props }: EffortSliderTriggerProps) {
   return <parts.Trigger {...props}>{children}</parts.Trigger>;
 }
 
-/** The popup: the title, the slider, its stops, the model line and Reset, unless you pass children. Focus moves to the thumb. */
+/** The popup above the button: the level, the model, Reset and the slider, unless you pass children. Focus moves to the thumb. */
 export function EffortSliderContent({
   children = DEFAULT_PANEL,
   render,
@@ -68,8 +68,8 @@ export function EffortSliderContent({
   return (
     <parts.Content
       initialFocus={EFFORT_SLIDER_THUMB}
-      sideOffset={6}
-      align="start"
+      side="top"
+      sideOffset={8}
       {...props}
       // A sheet sits in a full-screen viewport, which renders only while the content presents as one.
       render={(content, state) => {
@@ -82,17 +82,20 @@ export function EffortSliderContent({
   );
 }
 
-/** Names the popup: the `label`, unless you pass children. */
+/** Names the popup: the `label`, unless you pass children. The styles keep it for assistive technology only. */
 export function EffortSliderTitle({ children = ({ label }) => label, ...props }: EffortSliderTitleProps) {
   return <parts.Title {...props}>{children}</parts.Title>;
 }
 
-/** UI SDK Slider, a step per level, with the title and the chosen level's label above the track. */
+/**
+ * UI SDK Slider, a step per level: the level the thumb is on, the model and Reset above a track holding a dot per
+ * level.
+ */
 export function EffortSliderSlider({
   children,
   ...props
 }: Omit<EffortSliderSliderProps, "children"> & {
-  /** What sits above the track: the title and the chosen level's label by default. */
+  /** What sits above the track: the glyph, the title, the level, the model and Reset by default. */
   children?: ReactNode;
 }) {
   return (
@@ -102,16 +105,19 @@ export function EffortSliderSlider({
           <div data-effort-slider-header="">
             {children ?? (
               <>
-                <EffortSliderTitle />
-                <span data-effort-slider-reading="">
+                <span data-effort-slider-glyph="" />
+                <div data-effort-slider-heading="">
+                  <EffortSliderTitle />
                   <KindSliderValue />
-                  <span data-effort-slider-glyph="" />
-                </span>
+                  <EffortSliderModel />
+                </div>
+                <EffortSliderReset />
               </>
             )}
           </div>
           <KindSliderControl>
             <KindSliderTrack>
+              <EffortSliderStops />
               <KindSliderIndicator />
               <KindSliderThumb aria-label={state.thumbLabel} />
             </KindSliderTrack>
@@ -130,41 +136,32 @@ const stopsContent = ({ stops }: { stops: EffortSliderStop[] }) =>
       data-current={stop.current ? "" : undefined}
       data-top={stop.top ? "" : undefined}
       style={{ "--kind-effort-slider-stop": stop.position } as CSSProperties}
-    >
-      {stop.label}
-    </span>
+    />
   ));
 
-/** A tick and label under the track for each level, hidden from assistive technology, which hears the thumb's. */
+/** A dot on the track for each level, hidden from assistive technology, which hears the thumb's level. */
 export function EffortSliderStops({ children = stopsContent, ...props }: EffortSliderStopsProps) {
   return <parts.Stops {...props}>{children}</parts.Stops>;
 }
 
-/** Returns to the `defaultLevel`. Present only while another level is chosen. */
-export function EffortSliderReset({ children = "Reset", ...props }: EffortSliderResetProps) {
+/** Returns to the `defaultLevel`, drawn as an icon. Present only while another level is chosen. */
+export function EffortSliderReset({
+  children = <span data-effort-slider-reset-text="">Reset</span>,
+  ...props
+}: EffortSliderResetProps) {
   return <parts.Reset {...props}>{children}</parts.Reset>;
 }
 
 const modelContent = ({ text, href, pressable }: EffortSliderModelState) =>
   href ? <a href={href}>{text}</a> : pressable ? <button type="button">{text}</button> : text;
 
-/** "Effort for GPT-5": a link with `modelHref`, a button with `onModelPress`, else text. Present only with a `modelLabel`. */
+/** The model, under the level: a link with `modelHref`, a button with `onModelPress`, else text. Present only with a `modelLabel`. */
 export function EffortSliderModel({ children = modelContent, ...props }: EffortSliderModelProps) {
   return <parts.Model {...props}>{children}</parts.Model>;
 }
 
 // Shared, so an update doesn't render the default parts' wrappers again.
-const DEFAULT_PANEL = (
-  <>
-    <EffortSliderSlider />
-    <EffortSliderStops />
-    {/* The model line and Reset share one row of one height, so Reset comes and goes without moving anything. */}
-    <div data-effort-slider-footer="">
-      <EffortSliderModel />
-      <EffortSliderReset />
-    </div>
-  </>
-);
+const DEFAULT_PANEL = <EffortSliderSlider />;
 const DEFAULT_PARTS = (
   <>
     <EffortSliderTrigger />

@@ -72,7 +72,7 @@ export type EffortSliderOptions = {
    * @default "Effort"
    */
   label?: string;
-  /** The model the effort is for, which adds a line under the slider: "Effort for GPT-5". */
+  /** The model the effort is for, shown under the level, like "GPT-5". */
   modelLabel?: string;
   /** Makes the model line a link to this URL, like the model's settings. */
   modelHref?: string;
@@ -165,7 +165,7 @@ export type EffortSliderSliderState = {
   thumbLabel: string;
 };
 
-/** A level's tick and label under the track. */
+/** A level's dot on the track. */
 export type EffortSliderStop = {
   /** The level's `value`. */
   value: string;
@@ -181,7 +181,7 @@ export type EffortSliderStop = {
 
 /** What the `model` part shows, and whether it's a link (`href`), a button (`pressable`) or text. */
 export type EffortSliderModelState = {
-  /** "<label> for <modelLabel>", like "Effort for GPT-5". */
+  /** The `modelLabel`. */
   text: string;
   /** The `modelHref`: render the text as a link to it. */
   href: string | undefined;
@@ -213,7 +213,7 @@ export type EffortSliderApi = Omit<Popup, "open" | "close"> & {
   triggerState: (state: EffortSliderState) => Omit<EffortSliderTriggerState, keyof PopupTriggerState>;
   /** Hands UI SDK Slider its props. Called by the slider slot. */
   sliderState: (state: EffortSliderState) => EffortSliderSliderState;
-  /** Hands the stops their ticks and labels. Called by the stops slot. */
+  /** Hands the stops their dots. Called by the stops slot. */
   stopsState: (state: EffortSliderState) => { stops: EffortSliderStop[] };
   /** Hands the model line its text and kind. Called by the model slot. */
   modelState: (state: EffortSliderState) => EffortSliderModelState;
@@ -448,13 +448,8 @@ export const effortSliderPrimitive: EffortSliderPrimitive = definePrimitive<
     }));
 
     const modelState = memo(
-      (
-        label: string,
-        model: string,
-        href: string | undefined,
-        canPress: boolean,
-      ): EffortSliderModelState => ({
-        text: `${label} for ${model}`,
+      (model: string, href: string | undefined, canPress: boolean): EffortSliderModelState => ({
+        text: model,
         href,
         pressable: !href && canPress,
       }),
@@ -486,8 +481,7 @@ export const effortSliderPrimitive: EffortSliderPrimitive = definePrimitive<
       triggerState: (state) => triggerState(state.levels, indexOf(state)),
       sliderState: (state) => sliderState(state.levels, indexOf(state), state.disabled, state.label),
       stopsState: (state) => stopsState(state.levels, state.live),
-      modelState: (state) =>
-        modelState(state.label, state.modelLabel ?? "", state.modelHref, state.canPressModel),
+      modelState: (state) => modelState(state.modelLabel ?? "", state.modelHref, state.canPressModel),
       syncValue,
       pressReset: (event) => {
         if (offersReset(store.get()))

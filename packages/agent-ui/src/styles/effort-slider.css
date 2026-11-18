@@ -1,34 +1,47 @@
-/* Effort Slider (spec §7): a button showing the chosen effort level, and a popover holding a slider with a stop per
-   level, the model the effort applies to and Reset. Keyed on `data-effort-slider-part`, so both render layers draw
-   the same. The trigger's labels share one grid cell, and the footer keeps one height, so a change of level moves
-   nothing. */
-/* Two identical bumps, so `data-tick` flipping between them replays the snap. */
+/* Effort Slider (spec §7): a soft pill showing the chosen effort level, and a popup above it holding the level, the
+   model and Reset over a thick pill slider with a dot per level. Keyed on `data-effort-slider-part`, so both render
+   layers draw the same. The trigger's labels share one grid cell, and the header reserves Reset's column, so a change
+   of level moves nothing. */
+/* Two identical bumps (and drifts), so `data-tick` flipping between them replays the snap. */
 @keyframes kind-effort-slider-bump-0 {
   50% {
-    scale: 1.08;
+    scale: 1.06;
   }
 }
 
 @keyframes kind-effort-slider-bump-1 {
   50% {
-    scale: 1.08;
+    scale: 1.06;
+  }
+}
+
+/* One tile of particles toward the thumb, which looks the same as where it started. */
+@keyframes kind-effort-slider-drift-0 {
+  to {
+    translate: calc(var(--kind-effort-slider-tile) * var(--kind-effort-slider-direction)) 0;
+  }
+}
+
+@keyframes kind-effort-slider-drift-1 {
+  to {
+    translate: calc(var(--kind-effort-slider-tile) * var(--kind-effort-slider-direction)) 0;
   }
 }
 
 @keyframes kind-effort-slider-glow {
   from {
-    opacity: 0.55;
+    opacity: 0.6;
     scale: 1;
   }
   to {
     opacity: 0;
-    scale: 2.2;
+    scale: 1.45;
   }
 }
 
 @keyframes kind-effort-slider-flare {
   40% {
-    scale: 1.15;
+    scale: 1.2;
   }
 }
 
@@ -36,10 +49,16 @@
   /* The content too, which can sit outside the root in a sheet's viewport. */
   [data-effort-slider-part="root"],
   [data-effort-slider-part="content"] {
-    /* Lucide "flame", see THIRD_PARTY_NOTICES.md. */
-    --kind-effort-slider-icon-flame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4'/%3E%3C/svg%3E");
+    /* Lucide "zap", filled, see THIRD_PARTY_NOTICES.md. */
+    --kind-effort-slider-icon-zap: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z'/%3E%3C/svg%3E");
     /* Lucide "chevron-down", see THIRD_PARTY_NOTICES.md. */
     --kind-effort-slider-icon-chevron-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    /* Lucide "chevron-right", see THIRD_PARTY_NOTICES.md. */
+    --kind-effort-slider-icon-chevron-right: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E");
+    /* Lucide "rotate-ccw", see THIRD_PARTY_NOTICES.md. */
+    --kind-effort-slider-icon-reset: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8'/%3E%3Cpath d='M3 3v5h5'/%3E%3C/svg%3E");
+    /* The thumb and the fill's particles: white in light and near white in dark. */
+    --kind-effort-slider-light: light-dark(var(--kind-color-surface), var(--kind-color-fg));
   }
 
   [data-effort-slider-part="root"] {
@@ -53,20 +72,19 @@
     align-items: center;
     gap: 6px;
     height: 2rem;
-    padding-inline: 8px 6px;
-    border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: var(--kind-color-surface);
+    padding-inline: 12px 10px;
+    /* Transparent, so forced colors still draw the pill. */
+    border: 1px solid transparent;
+    border-radius: 9999px;
+    background-color: var(--kind-color-hover);
     color: var(--kind-color-fg);
     font: inherit;
     white-space: nowrap;
     cursor: default;
-    transition:
-      border-color var(--kind-duration-fast) var(--kind-ease-out),
-      background-color var(--kind-duration-fast) var(--kind-ease-out);
+    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
 
     &:hover {
-      background-color: var(--kind-color-hover);
+      background-color: color-mix(in oklab, var(--kind-color-hover), var(--kind-color-fg) 6%);
     }
     &:focus-visible {
       outline: 2px solid var(--kind-color-ring);
@@ -107,38 +125,29 @@
     translate: 0 3px;
   }
 
-  /* A flame that wakes up with the level: small and muted at the lowest, larger and warmer as it rises, deepening
-     toward danger at the top. The trigger's follows the chosen level, the header's the one the Slider shows. */
+  /* The trigger's bolt brightens from muted to the accent as the chosen level rises. */
   [data-effort-slider-glyph] {
-    --kind-effort-slider-heat: var(--kind-effort-slider-level, 1);
-    display: inline-block;
     flex-shrink: 0;
     width: 14px;
     height: 14px;
     background-color: color-mix(
       in oklab,
-      color-mix(
-        in oklab,
-        var(--kind-color-muted),
-        var(--kind-color-warning) calc(var(--kind-effort-slider-heat) * 100%)
-      ),
-      var(--kind-color-danger) calc(clamp(0, var(--kind-effort-slider-heat) - 0.6, 0.4) * 100%)
+      var(--kind-color-muted),
+      var(--kind-color-accent) calc(var(--kind-effort-slider-level, 1) * 100%)
     );
-    mask: var(--kind-effort-slider-icon-flame) center / contain no-repeat;
-    scale: calc(0.7 + var(--kind-effort-slider-heat) * 0.3);
+    mask: var(--kind-effort-slider-icon-zap) center / contain no-repeat;
   }
 
   [data-effort-slider-part="content"] {
-    width: var(--kind-effort-slider-content-width, 16rem);
+    width: var(--kind-effort-slider-content-width, 20rem);
     max-width: calc(100vw - 16px);
-    /* Wider inline, so the thumb's focus ring at either end stays clear of the border. */
-    padding: 12px 16px;
+    padding: 12px;
     border: 1px solid var(--kind-color-border);
-    border-radius: var(--kind-radius);
+    border-radius: calc(var(--kind-radius) * 1.5);
     background-color: var(--kind-color-surface);
     color: var(--kind-color-fg);
     font-size: 0.875rem;
-    box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 25%, transparent);
+    box-shadow: 0 12px 32px -12px color-mix(in oklab, var(--kind-color-shadow) 30%, transparent);
 
     &:where([data-presentation="sheet"]) {
       width: 100%;
@@ -148,146 +157,158 @@
     }
   }
 
-  /* The title on the start side and the chosen level's label on the end side. */
+  [data-effort-slider-part="slider"] {
+    --kind-effort-slider-pill: 3rem;
+    --kind-effort-slider-inset: 4px;
+    /* Inside the pill's 1px border, with the inset on each side. */
+    --kind-slider-thumb-size: calc(
+      var(--kind-effort-slider-pill) -
+      2px -
+      var(--kind-effort-slider-inset) *
+      2
+    );
+    --kind-slider-control-height: var(--kind-effort-slider-pill);
+    --kind-slider-track-height: 100%;
+    --kind-slider-track-color: transparent;
+    --kind-slider-indicator-color: var(--kind-color-accent);
+    --kind-slider-thumb-color: var(--kind-effort-slider-light);
+    --kind-slider-thumb-border: transparent;
+    /* The accent reads at 5:1 on the surface in light mode and 6:1 in dark. */
+    --kind-slider-value-color: var(--kind-color-accent);
+    --kind-slider-value-font-size: 1.125rem;
+    --kind-slider-value-line-height: 1.5rem;
+  }
+
+  /* The bolt's tile, Reset's column and the reading between them: both side columns stay reserved, so Reset coming
+     and going moves nothing and the level stays centered. */
   [data-effort-slider-header] {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr) 2.25rem;
+    align-items: start;
     gap: 8px;
+    margin-block-end: 4px;
   }
 
-  /* Baseline-aligned, so the value text sets the header's baseline and the empty flame centers beside it. */
-  [data-effort-slider-reading] {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 4px;
+  :where([data-effort-slider-header]) > [data-effort-slider-glyph] {
+    display: grid;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: calc(var(--kind-radius) * 2 / 3);
+    background-color: var(--kind-color-hover);
+    mask: none;
+
+    &::before {
+      content: "";
+      place-self: center;
+      width: 1.125rem;
+      height: 1.125rem;
+      background-color: var(--kind-slider-value-color);
+      mask: var(--kind-effort-slider-icon-zap) center / contain no-repeat;
+      /* Grows a little with the live level. */
+      scale: calc(0.85 + var(--kind-effort-slider-level, 1) * 0.2);
+    }
   }
 
-  :where([data-effort-slider-reading]) > [data-effort-slider-glyph] {
-    align-self: center;
+  [data-effort-slider-heading] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+    text-align: center;
   }
 
+  /* Names the dialog for assistive technology; the level under it says it on screen. */
   [data-effort-slider-part="title"] {
-    margin: 0;
-    font-size: 0.875rem;
-    font-weight: 600;
-    line-height: 1.25rem;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   [data-effort-slider-part="slider"] [data-slot="slider-value"] {
-    color: var(--kind-color-muted);
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* As wide as the track, so each stop's tick sits under the thumb's center at its level. The first and last labels
-     align to the edges, so they stay inside the popup. */
-  [data-effort-slider-part="stops"] {
-    display: block;
-    position: relative;
-    height: 1.25rem;
-    font-size: 0.75rem;
-    line-height: 1rem;
-    color: var(--kind-color-muted);
-    white-space: nowrap;
-  }
-
-  [data-effort-slider-stop] {
-    position: absolute;
-    inset-block-end: 0;
-    inset-inline-start: calc(var(--kind-effort-slider-stop) * 100%);
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    translate: -50% 0;
-
-    &:dir(rtl) {
-      translate: 50% 0;
-    }
-    &:first-child {
-      translate: none;
-    }
-    &:last-child {
-      inset-inline-start: auto;
-      inset-inline-end: 0;
-      translate: none;
-    }
-    /* Color only: a bolder label would widen and move as a drag crosses it. */
-    &:where([data-current]) {
-      color: var(--kind-color-fg);
-    }
-    &::before {
-      content: "";
-      position: absolute;
-      inset-block-start: -4px;
-      inset-inline-start: calc(50% - 0.5px);
-      width: 1px;
-      height: 4px;
-      background-color: var(--kind-color-border);
-    }
-    &:first-child::before {
-      inset-inline-start: 0;
-    }
-    &:last-child::before {
-      inset-inline-start: auto;
-      inset-inline-end: 0;
-    }
-  }
-
-  /* One height whether or not Reset shows, so its arrival moves nothing. */
-  [data-effort-slider-footer] {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    height: 1.75rem;
-    margin-block-start: 6px;
+    font-weight: 500;
   }
 
   [data-effort-slider-part="model"] {
-    min-width: 0;
+    display: flex;
+    justify-content: center;
+    max-width: 100%;
     margin: 0;
     overflow: hidden;
-    font-size: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
     color: var(--kind-color-muted);
-    text-overflow: ellipsis;
     white-space: nowrap;
 
     & :is(a, button) {
-      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      min-width: 0;
+      padding: 0 0 0 2px;
       border: 0;
-      border-radius: 2px;
+      border-radius: calc(var(--kind-radius) / 3);
       background: none;
       color: inherit;
       font: inherit;
       text-decoration: none;
       cursor: pointer;
+      transition: color var(--kind-duration-fast) var(--kind-ease-out);
 
+      &::after {
+        content: "";
+        flex-shrink: 0;
+        width: 14px;
+        height: 14px;
+        background-color: currentColor;
+        mask: var(--kind-effort-slider-icon-chevron-right) center / contain no-repeat;
+      }
+      &:where(:dir(rtl))::after {
+        scale: -1 1;
+      }
       &:hover {
         color: var(--kind-color-fg);
-        text-decoration: underline;
       }
       &:focus-visible {
         outline: 2px solid var(--kind-color-ring);
         outline-offset: 2px;
       }
+      :where([data-effort-slider-part="content"][data-motion="none"]) & {
+        transition: none;
+      }
     }
   }
 
   [data-effort-slider-part="reset"] {
-    flex-shrink: 0;
-    height: 1.5rem;
-    margin-inline-start: auto;
-    padding-inline: 6px;
+    grid-column: 3;
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
     border: 0;
-    border-radius: calc(var(--kind-radius) / 3);
+    border-radius: calc(var(--kind-radius) * 2 / 3);
     background: none;
-    color: var(--kind-color-fg);
-    font: inherit;
-    font-size: 0.75rem;
+    color: var(--kind-color-muted);
     cursor: default;
-    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+    transition:
+      color var(--kind-duration-fast) var(--kind-ease-out),
+      background-color var(--kind-duration-fast) var(--kind-ease-out);
 
+    &::before {
+      content: "";
+      width: 18px;
+      height: 18px;
+      background-color: currentColor;
+      mask: var(--kind-effort-slider-icon-reset) center / contain no-repeat;
+    }
     &:hover {
       background-color: var(--kind-color-hover);
+      color: var(--kind-color-fg);
     }
     &:focus-visible {
       outline: 2px solid var(--kind-color-ring);
@@ -295,34 +316,99 @@
     }
   }
 
-  /* The fill warms with effort as it grows, following UI SDK's `--slider-indicator-size` through a drag. It's a layer
-     over the indicator, whose background is the internal Slider's utility. */
-  :where([data-effort-slider-part="slider"]) [data-slot="slider-indicator"]::before {
-    content: "";
+  [data-effort-slider-reset-text] {
     position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background-image: linear-gradient(
-      to right in oklch,
-      var(--kind-color-accent) max(0%, 100% - 64px),
-      color-mix(
-        in oklch,
-        var(--kind-color-accent),
-        var(--kind-color-warning) var(--slider-indicator-size, 0%)
-      )
-    );
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
-  :where([data-effort-slider-part="slider"]) [data-slot="slider-indicator"]:where(:dir(rtl))::before {
-    background-image: linear-gradient(
-      to left in oklch,
-      var(--kind-color-accent) max(0%, 100% - 64px),
-      color-mix(
-        in oklch,
-        var(--kind-color-accent),
-        var(--kind-color-warning) var(--slider-indicator-size, 0%)
-      )
-    );
+  /* The pill is the control. The track inside it is inset by half the thumb plus the gap, so UI SDK's 0% and 100%
+     put the thumb inside the pill's ends. Transparent border, so forced colors draw it. */
+  :where([data-effort-slider-part="slider"]) [data-slot="slider-control"] {
+    border: 1px solid transparent;
+    border-radius: 9999px;
+    background-color: var(--kind-color-hover);
+  }
+
+  :where([data-effort-slider-part="slider"]) [data-slot="slider-track"] {
+    margin-inline: calc(var(--kind-slider-thumb-size) / 2 + var(--kind-effort-slider-inset));
+  }
+
+  [data-effort-slider-part="stops"] {
+    display: block;
+    position: absolute;
+    inset: 0;
+  }
+
+  [data-effort-slider-stop] {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: calc(var(--kind-effort-slider-stop) * 100%);
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background-color: var(--kind-color-muted);
+    opacity: 0.6;
+    translate: -50% -50%;
+
+    &:where(:dir(rtl)) {
+      translate: 50% -50%;
+    }
+  }
+
+  /* The fill reaches back under the pill's start: content-box, so the inline width UI SDK writes still ends at the
+     thumb's center, and the start padding covers the inset. Its particles drift on two layers of different tile
+     widths clipped to it, so their pattern doesn't read as a repeat. */
+  :where([data-effort-slider-part="slider"]) [data-slot="slider-indicator"] {
+    --kind-effort-slider-reach: calc(var(--kind-slider-thumb-size) / 2 + var(--kind-effort-slider-inset));
+    --kind-effort-slider-direction: 1;
+    box-sizing: content-box;
+    margin-inline-start: calc(var(--kind-effort-slider-reach) * -1);
+    padding-inline-start: var(--kind-effort-slider-reach);
+    overflow: hidden;
+
+    &:where(:dir(rtl)) {
+      --kind-effort-slider-direction: -1;
+    }
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      inset-block: 0;
+      /* A tile wider at the start, so a drift by one tile never uncovers the fill. */
+      inset-inline: calc(var(--kind-effort-slider-tile) * -1) 0;
+      background-size: var(--kind-effort-slider-tile) 100%;
+      pointer-events: none;
+    }
+    &::before {
+      --kind-effort-slider-tile: 96px;
+      background-image:
+        radial-gradient(circle at 14px 30%, var(--kind-effort-slider-light) 1.25px, transparent 1.75px),
+        radial-gradient(circle at 41px 62%, var(--kind-effort-slider-light) 1px, transparent 1.5px),
+        radial-gradient(circle at 63px 24%, var(--kind-effort-slider-light) 1.5px, transparent 2px),
+        radial-gradient(circle at 82px 70%, var(--kind-effort-slider-light) 1px, transparent 1.5px);
+      opacity: calc(0.4 + var(--kind-effort-slider-level, 1) * 0.5);
+    }
+    /* A fainter second layer that thickens toward the top levels. */
+    &::after {
+      --kind-effort-slider-tile: 136px;
+      background-image:
+        radial-gradient(circle at 21px 78%, var(--kind-effort-slider-light) 0.75px, transparent 1.25px),
+        radial-gradient(circle at 58px 42%, var(--kind-effort-slider-light) 1px, transparent 1.5px),
+        radial-gradient(circle at 93px 58%, var(--kind-effort-slider-light) 0.75px, transparent 1.25px),
+        radial-gradient(circle at 121px 20%, var(--kind-effort-slider-light) 0.75px, transparent 1.25px);
+      opacity: calc(clamp(0, var(--kind-effort-slider-level, 1) - 0.3, 0.7) * 0.8);
+    }
+  }
+
+  /* At the top level the fill runs past the thumb to the pill's end. */
+  :where([data-effort-slider-part="slider"][data-top]) [data-slot="slider-indicator"] {
+    padding-inline-end: var(--kind-effort-slider-reach);
   }
 
   /* Forced colors replace a background, which is all a mask draws. */
@@ -331,17 +417,45 @@
       forced-color-adjust: none;
       background-color: ButtonText;
     }
-    [data-effort-slider-part="content"] [data-effort-slider-glyph] {
+    /* The bolt without its tile, which forced colors would paint as the canvas. */
+    :where([data-effort-slider-header]) > [data-effort-slider-glyph] {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+      mask: var(--kind-effort-slider-icon-zap) center / 1.125rem no-repeat;
+
+      &::before {
+        content: none;
+      }
+    }
+    :where([data-effort-slider-part="model"]) :is(a, button)::after,
+    [data-effort-slider-part="reset"]::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+    [data-effort-slider-stop] {
       forced-color-adjust: none;
       background-color: CanvasText;
     }
-    :where([data-effort-slider-part="slider"]) [data-slot="slider-indicator"]::before {
-      content: none;
+    /* Through the internal Slider's variables, since its utilities outrank this layer. */
+    [data-effort-slider-part="slider"] {
+      --kind-slider-indicator-color: Highlight;
+      --kind-slider-thumb-color: Canvas;
+      --kind-slider-thumb-border: CanvasText;
+    }
+    :where([data-effort-slider-part="slider"])
+      :is([data-slot="slider-indicator"], [data-slot="slider-thumb"]) {
+      forced-color-adjust: none;
+    }
+    :where([data-effort-slider-part="slider"]) [data-slot="slider-indicator"] {
+      &::before,
+      &::after {
+        content: none;
+      }
     }
   }
 
-  /* Motion: the popup rises and fades in from the button. Reduced motion only fades, in 120 ms; `none` doesn't
-     animate. A sheet is UI SDK's, which slides whatever the motion settings. */
+  /* Motion: the popup rises and fades in toward the button below it. Reduced motion only fades, in 120 ms; `none`
+     doesn't animate. A sheet is UI SDK's, which slides whatever the motion settings. */
   [data-effort-slider-part="content"]:where(:not([data-presentation="sheet"])) {
     transition:
       opacity var(--kind-duration-fast) var(--kind-ease-out),
@@ -350,7 +464,7 @@
 
     &:where([data-starting-style], [data-ending-style]) {
       opacity: 0;
-      translate: 0 -4px;
+      translate: 0 4px;
       scale: 0.98;
     }
     &:where([data-ending-style]) {
@@ -391,9 +505,6 @@
     & [data-effort-slider-glyph] {
       transition: background-color var(--kind-duration-base) var(--kind-ease-out);
     }
-    & [data-effort-slider-stop] {
-      transition: color var(--kind-duration-fast) var(--kind-ease-out);
-    }
     & :where([data-effort-slider-value]) > * {
       transition:
         opacity var(--kind-duration-reduced) var(--kind-ease-out),
@@ -401,17 +512,13 @@
     }
   }
 
-  /* Full motion only: the label rolls, the flame grows, and the thumb squishes while dragged, bumps on each level it
-     crosses and sends out one warm ring when it reaches the top. Reduced motion and `none` swap at once. */
+  /* Full motion only: the label rolls, the bolt grows, the thumb squishes while dragged and bumps on each level it
+     crosses, the particles surge toward it, and it sends out one ring at the top. Reduced motion and `none` swap at
+     once, and the particles hold still. */
   @media (prefers-reduced-motion: no-preference) {
     :where([data-effort-slider-part="root"], [data-effort-slider-part="content"]):where(
         [data-motion="auto"]
       ) {
-      & [data-effort-slider-glyph] {
-        transition:
-          background-color var(--kind-duration-base) var(--kind-ease-out),
-          scale var(--kind-duration-panel) var(--kind-ease-spring);
-      }
       & :where([data-effort-slider-value]) > * {
         transition:
           opacity var(--kind-duration-fast) var(--kind-ease-out),
@@ -421,11 +528,16 @@
     }
 
     :where([data-effort-slider-part="content"][data-motion="auto"]) {
+      & :where([data-effort-slider-header]) > [data-effort-slider-glyph]::before {
+        transition:
+          background-color var(--kind-duration-base) var(--kind-ease-out),
+          scale var(--kind-duration-panel) var(--kind-ease-spring);
+      }
       & [data-slot="slider-thumb"] {
         transition: scale var(--kind-duration-panel) var(--kind-ease-spring);
       }
       & [data-slot="slider-thumb"]:where([data-dragging]) {
-        scale: 1.12 0.92;
+        scale: 1.06 0.94;
         transition-duration: var(--kind-duration-fast);
       }
       & :where([data-effort-slider-part="slider"][data-tick="0"]) [data-slot="slider-thumb"] {
@@ -434,16 +546,28 @@
       & :where([data-effort-slider-part="slider"][data-tick="1"]) [data-slot="slider-thumb"] {
         animation: kind-effort-slider-bump-1 var(--kind-duration-fast) var(--kind-ease-out);
       }
+      & :where([data-effort-slider-part="slider"][data-tick="0"]) [data-slot="slider-indicator"]::before {
+        animation: kind-effort-slider-drift-0 calc(var(--kind-duration-panel) * 4) var(--kind-ease-out);
+      }
+      & :where([data-effort-slider-part="slider"][data-tick="1"]) [data-slot="slider-indicator"]::before {
+        animation: kind-effort-slider-drift-1 calc(var(--kind-duration-panel) * 4) var(--kind-ease-out);
+      }
+      & :where([data-effort-slider-part="slider"][data-tick="0"]) [data-slot="slider-indicator"]::after {
+        animation: kind-effort-slider-drift-0 calc(var(--kind-duration-panel) * 6) var(--kind-ease-out);
+      }
+      & :where([data-effort-slider-part="slider"][data-tick="1"]) [data-slot="slider-indicator"]::after {
+        animation: kind-effort-slider-drift-1 calc(var(--kind-duration-panel) * 6) var(--kind-ease-out);
+      }
       & :where([data-effort-slider-part="slider"][data-top][data-tick]) [data-slot="slider-thumb"]::after {
         content: "";
         position: absolute;
         inset: -1px;
         border-radius: inherit;
-        box-shadow: 0 0 0 3px color-mix(in oklab, var(--kind-color-warning) 70%, transparent);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--kind-color-accent) 60%, transparent);
         pointer-events: none;
         animation: kind-effort-slider-glow calc(var(--kind-duration-panel) * 2.5) var(--kind-ease-out) both;
       }
-      & :where([data-effort-slider-part="slider"][data-top][data-tick]) [data-effort-slider-glyph] {
+      & :where([data-effort-slider-part="slider"][data-top][data-tick]) [data-effort-slider-glyph]::before {
         animation: kind-effort-slider-flare calc(var(--kind-duration-panel) * 1.5) var(--kind-ease-out);
       }
     }
