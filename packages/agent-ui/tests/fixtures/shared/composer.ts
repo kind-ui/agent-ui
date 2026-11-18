@@ -65,10 +65,6 @@ export function attachmentsHost(update: (change: (items: AttachmentItem[]) => At
   });
 }
 
-/**
- * `draft` gives the composer a draft storage: localStorage under `kind-drafts`, whose calls `kindDrafts.calls`
- * records, or with `draft=throws` one whose writes throw. `draftKey` names the key (default `chat-1`).
- */
 export function draftOptions(params: URLSearchParams): Pick<ComposerOptions, "draftKey" | "draftStorage"> {
   if (!params.has("draft")) return {};
   const local = createLocalStorage("kind-drafts");

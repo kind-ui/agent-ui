@@ -537,18 +537,13 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       get discardDraft() {
         const { restored, disabled } = store.get();
         if (!restored || disabled) return undefined;
-        return (event?: Event) => {
-          if (
-            !change(
-              "value",
-              emptyDraft(),
-              event ? { reason: "discard-press", event } : { reason: "imperative" },
-            )
-          )
-            return;
-          const saved = draftStore();
-          if (saved) saveDraft(saved.storage, saved.key, emptyDraft());
-        };
+        // Saving an empty draft removes it from storage.
+        return (event?: Event) =>
+          void change(
+            "value",
+            emptyDraft(),
+            event ? { reason: "discard-press", event } : { reason: "imperative" },
+          );
       },
       bindDraft,
       tokenInput,
@@ -676,7 +671,6 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       on: { mousedown: (event) => event.preventDefault() },
       bind: (el, part) => part.api.recovery.bind(el, part),
     }),
-    // Sits in the actions row's free middle, so neither its arrival nor its leaving moves the editor.
     restored: slot({
       role: "status",
       present: (state) => state.restored,
