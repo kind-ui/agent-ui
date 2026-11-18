@@ -22,14 +22,21 @@ async function probe(port, identity) {
   }
 }
 
+const ports = (base) =>
+  Promise.all(servers.map(({ name, mode }, index) => probe(base + index, fixtureIdentity(name, mode))));
+const ours = (found) => !process.env.CI && found.every((state) => state === "ours");
+
 async function pickBase() {
   const fixed = process.env.KIND_FIXTURE_PORT_BASE;
-  for (let base = Number(fixed ?? 4310); base < 4310 + 1000; base += 10) {
-    const found = await Promise.all(
-      servers.map(({ name, mode }, index) => probe(base + index, fixtureIdentity(name, mode))),
-    );
-    const reuse = !process.env.CI && found.every((state) => state === "ours");
-    if (fixed || reuse || found.every((state) => state === "free")) return { base, reuse };
+  if (fixed !== undefined) {
+    const base = Number(fixed);
+    if (!Number.isInteger(base) || base < 1 || base > 65533)
+      throw new Error(`KIND_FIXTURE_PORT_BASE must be a port number, got "${fixed}"`);
+    return { base, reuse: ours(await ports(base)) };
+  }
+  for (let base = 4310; base < 4310 + 1000; base += 10) {
+    const found = await ports(base);
+    if (ours(found) || found.every((state) => state === "free")) return { base, reuse: ours(found) };
   }
   throw new Error("no free fixture ports between 4310 and 5310; set KIND_FIXTURE_PORT_BASE");
 }

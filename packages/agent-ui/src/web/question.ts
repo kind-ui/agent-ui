@@ -21,6 +21,8 @@ const CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 // someone wrote stays, as React's children do. Kept across instances, because UI SDK rebuilds one when the element
 // returns to the page.
 const owned = new WeakSet<Element>();
+// Radio groups the element named, so a page's own name stays.
+const named = new WeakSet<Element>();
 // The question each item this element fills was drawn from, so a changed question is drawn again.
 const drawn = new WeakMap<Element, Question>();
 
@@ -229,7 +231,18 @@ export function defineQuestion(): void {
               );
               write(group, "controller", choices.controller);
               write(group, "readOnly", choices.readOnly);
-              if (choices.kind === "single") write(group, "ariaLabel", choices.label);
+              // Named by its prompt's text (a render file can't write `aria-labelledby`), unless the page named a
+              // group it wrote.
+              if (
+                group &&
+                prompt &&
+                choices.kind === "single" &&
+                (named.has(group) ||
+                  (!group.hasAttribute("aria-label") && !group.hasAttribute("aria-labelledby")))
+              ) {
+                named.add(group);
+                write(group, "ariaLabel", prompt.textContent?.trim() ?? "");
+              }
             }
             const text = api.textState(id, state);
             if (text) {

@@ -249,6 +249,16 @@ test("every component primitive has a server case", () => {
   );
 });
 
+test("every keyed slot has keys, so the server markup holds it", () => {
+  const missing = primitives.flatMap((name) => {
+    const { keys = {} } = cases[name.slice(0, -"Primitive".length)] ?? {};
+    return Object.entries(core[name].slots ?? {})
+      .filter(([slot, definition]) => keyOf(definition.props ?? {}) && !keys[slot]?.length)
+      .map(([slot]) => `${name}.${slot}`);
+  });
+  assert.deepEqual(missing, []);
+});
+
 for (const name of primitives) {
   const { options, keys } = cases[name.slice(0, -"Primitive".length)] ?? {};
   test(`${name} renders on a server`, () => {

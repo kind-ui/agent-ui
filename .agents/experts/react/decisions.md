@@ -27,7 +27,7 @@ Last reviewed: `cdf3734` (Wave 5 Task 14 Composer on narrow screens)
 - **A server-rendered ready Generated Image shows "Loading image" and a shimmer until it hydrates** (Wave 4 Task 5): the phase comes from the `<img>`'s `load`, which only the client hears; the frame keeps its size. Each progress tick renders every part (UI SDK options change), as Chain of Thought's steps do.
 - **Sources re-renders every item's parts on any `sources` change** (Wave 4 Task 2), once per update, not per token: the same UI SDK options-change behavior as Chain of Thought, Task and Plan items despite `selects`.
 - **A Context Meter root `className` or `render` function gets `{}`,** as Status's root does (Wave 3 Task 8): style by `data-level`. The docs should say this covers every root.
-- **Question's radio and checkbox groups have no name of their own:** the item's group, named by its prompt, names them, as UI SDK Field's "Groups in a Field Set" says; Radio's own docs point the group at the legend too. Not checked with a screen reader.
+- **Question's checkbox groups have no name of their own:** the item's group, named by its prompt, names them, as UI SDK Field's "Groups in a Field Set" says. A radio group points `aria-labelledby` at the prompt (Wave 5 Task 15), since `checkPattern` requires its name. Not checked with a screen reader.
 - **A custom `QuestionItem` without `QuestionPrompt` has a dangling `aria-labelledby`,** as Step's group does without `StepTitle`.
 - **Two calls of the same tool share their copy-button and code-block names** ("search_docs input"): names come from the title, and a `toolCallId` isn't a name a person can read. A host can tell them apart with `label`.
 - **A keyboard move in a React Queue blurs and refocuses the picked-up row on each step:** React moves the keyed `li` with `insertBefore`, and UI SDK's reorder focuses it again (web uses `moveBefore`). It follows UI SDK's documented React pattern, so it belongs upstream.
@@ -106,4 +106,4 @@ Last reviewed: `cdf3734` (Wave 5 Task 14 Composer on narrow screens)
 
 ## Revisit
 
-Nothing yet.
+- **`MessageRegenerateContent` is `keepMounted` (Wave 5 Task 15)** so a closed Menu stays inside `data-agent-hidden`: server markup for a Message with three options grows from 707 to 4,474 bytes, per message. Marking the `regenerate` part `data-agent-hidden` while there are options would avoid mounting the rows, once checked that the bridge still offers the Message's `regenerate`.

@@ -267,6 +267,20 @@ test("a written item replaces the one the element added, and one written empty i
   await expect(form(page).getByRole("group", { name: "Where should it deploy? Required" })).toBeVisible();
 });
 
+test("a written item's radio group keeps the name the page gave it", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await open(page);
+  await page.evaluate(() => {
+    const env = document.createElement("kind-question-item");
+    env.setAttribute("value", "env");
+    env.innerHTML = `<kind-question-prompt>Where?</kind-question-prompt><kind-question-choices><kind-internal-radio>
+      <ui-radio-group aria-label="Deploy target"><label><ui-radio value="prod"><ui-radio-indicator></ui-radio-indicator></ui-radio>Production</label></ui-radio-group>
+    </kind-internal-radio></kind-question-choices>`;
+    document.querySelector("kind-question form")?.prepend(env);
+  });
+  await expect(form(page).getByRole("radiogroup", { name: "Deploy target" })).toBeVisible();
+});
+
 for (const colorScheme of ["light", "dark"] as const) {
   test(`axe reports no violations in ${colorScheme} mode`, async ({ page }) => {
     await page.emulateMedia({ colorScheme, reducedMotion: "reduce" });

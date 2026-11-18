@@ -133,6 +133,8 @@ import { suites } from "../../shared/test-results.js";
 import { standup } from "../../shared/transcript.js";
 import { uploads } from "../../shared/uploader.js";
 
+// Saved once per page load, outside render.
+const drafts = agentDrafts();
 const host = agentHost();
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
@@ -608,7 +610,6 @@ function Composing({ confirm }: { confirm: boolean }) {
   useEffect(() => {
     Object.assign(window, { kindDictation: dictation.host });
   }, []);
-  const [drafts] = useState(agentDrafts);
   return (
     <div className="flex w-[40rem] flex-col gap-8 p-6">
       <section id="picker" data-case="picker">
