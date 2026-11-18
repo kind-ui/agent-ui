@@ -1,5 +1,5 @@
 export {
-  CONTEXT_BAR_ITEM_STOP,
+  CONTEXT_BAR_FIRST_ITEM,
   type ContextBarApi,
   type ContextBarChipState,
   type ContextBarListState,

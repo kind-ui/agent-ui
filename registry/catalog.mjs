@@ -192,6 +192,12 @@ const components = {
       "A button showing the model and its effort, opening a settings menu with Model and Effort submenus.",
     uses: ["settings-menu", "internal-menu"],
   },
+  "context-bar": {
+    title: "Context Bar",
+    description:
+      "A row of removable context chips, the ones that don't fit behind a +N button that lists them.",
+    uses: [],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

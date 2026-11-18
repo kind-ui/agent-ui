@@ -88,7 +88,7 @@ export function bindLeavingRow(
 
 /**
  * Slides rows into place after a change moves them, so the rows after a dropped one close its gap. Call `measure`
- * with the rows before and after, just before they change: when the order differs, each row then slides from where
+ * with the rows before and after, just before they change: when a row moved, each row then slides from where
  * it was once the change reaches the page, on the first DOM change inside the bound element (before it paints),
  * else in the next frame. Only at full motion.
  */
@@ -104,8 +104,8 @@ export function createRowSlide(rows: ReadonlyMap<string, HTMLElement>, motion: (
       };
     },
     measure: <T extends { id: string }>(from: readonly LeavingRow<T>[], to: readonly LeavingRow<T>[]) => {
-      const reordered =
-        from.length !== to.length || from.some((row, index) => row.item.id !== to[index]?.item.id);
+      // Rows added or dropped at the end move none of the others.
+      const reordered = from.some((row, index) => index < to.length && row.item.id !== to[index]?.item.id);
       if (!reordered || !root || pending || resolvedMotion(motion()) !== "full") return;
       const before = new Map([...rows.values()].map((el) => [el, el.getBoundingClientRect()]));
       const slide = () => {

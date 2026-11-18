@@ -75,7 +75,6 @@ export type ContextBarOptions = {
 };
 
 export type ContextBarState = PopupState & {
-  chips: readonly ContextChip[];
   /** The chips to render: every chip, plus each removed one while it fades out. */
   rows: LeavingRow<ContextChip>[];
   /** How many of the `rows` fit in the bar, measured; the rest go behind the "+N" button. */
@@ -151,6 +150,7 @@ type ContextBarSlots = {
   list: Slot<BaseSlotProps, ContextBarListState>;
   chip: Slot<ChipProps & BaseSlotProps, ContextBarChipState>;
   remove: Slot<ChipProps & BaseSlotProps>;
+  "item-remove": Slot<ChipProps & BaseSlotProps>;
   overflow: Slot<PopupTriggerProps & BaseSlotProps, ContextBarOverflowState>;
   content: Slot<PopupContentProps & BaseSlotProps, PopupContentState>;
   viewport: Slot;
@@ -164,13 +164,12 @@ export type ContextBarPrimitive = ReturnType<
   typeof definePrimitive<ContextBarOptions, ContextBarState, ContextBarApi, ContextBarSlots>
 >;
 
-/** The row of the list of the rest with the Tab stop, which takes focus as it opens. */
-export const CONTEXT_BAR_ITEM_STOP = '[data-context-bar-part="item"][tabindex="0"]';
+/** The first row of the list of the rest, which takes focus as it opens. */
+export const CONTEXT_BAR_FIRST_ITEM = '[data-context-bar-part="item"]';
 
 const NO_CHIPS: readonly ContextChip[] = [];
 
 const presentation = (options: ContextBarOptions) => ({
-  chips: options.chips ?? NO_CHIPS,
   label: options.label || "Context",
   canRemove: typeof options.onRemove === "function",
   motion: options.motion ?? "auto",
@@ -200,7 +199,8 @@ const ownRow = {
   },
 };
 
-const outsidePopup = {
+// What no row reads.
+const unread = {
   open: [],
   mounted: [],
   trigger: [],
@@ -209,14 +209,13 @@ const outsidePopup = {
   described: [],
   modal: [],
   presentation: [],
-  chips: [],
   visibleCount: [],
   overflowCount: [],
   label: [],
 } as const;
 
 const ownChip = selects<ContextBarState, ContextBarApi, ChipProps>({
-  ...outsidePopup,
+  ...unread,
   rows: ownRow,
   overflowed: ({ key }) => [key],
   focused: ({ key }) => [key],
@@ -224,11 +223,29 @@ const ownChip = selects<ContextBarState, ContextBarApi, ChipProps>({
 });
 
 const ownItem = selects<ContextBarState, ContextBarApi, ChipProps>({
-  ...outsidePopup,
+  ...unread,
   rows: ownRow,
   overflowed: ({ key }) => [key],
   focused: [],
   overflowFocused: ({ key }) => [key],
+});
+
+// A remove control reads only `canRemove`.
+const ownRemove = selects<ContextBarState, ContextBarApi, ChipProps>({
+  ...unread,
+  rows: [],
+  overflowed: [],
+  focused: [],
+  overflowFocused: [],
+});
+
+const removeSlot = (row: "chip" | "item") => ({
+  selects: ownRemove,
+  props: { value: { kind: "string" as const, from: row } },
+  present: (state: ContextBarState) => state.canRemove,
+  press: ({ api, props }: { api: ContextBarApi; props: ChipProps }, event?: Event) =>
+    api.pressRemove(props.value, event),
+  attrs: () => ({ "aria-hidden": "true", "data-context-bar-part": "remove" }),
 });
 
 const removeKey = (event: Event) => {
@@ -259,9 +276,9 @@ export const contextBarPrimitive: ContextBarPrimitive = definePrimitive<
     return {
       ...popupState(options),
       ...shown,
-      rows: shown.chips.map((item) => ({ item, leaving: false })),
+      rows: (options.chips ?? NO_CHIPS).map((item) => ({ item, leaving: false })),
       // Every chip, until the bar is measured in the browser.
-      visibleCount: shown.chips.length,
+      visibleCount: options.chips?.length ?? 0,
       overflowed: [],
       overflowCount: 0,
       focused: null,
@@ -281,7 +298,11 @@ export const contextBarPrimitive: ContextBarPrimitive = definePrimitive<
     );
 
     const isShown = (item: { key: string }) => !store.get().overflowed.includes(item.key);
-    const lastShown = () => chipFocus.roving.items().filter(isShown).at(-1)?.el;
+    const lastShown = () => {
+      const { rows, visibleCount } = store.get();
+      const row = rows.slice(0, visibleCount).findLast((row) => !row.leaving && elements.has(row.item.id));
+      return row && elements.get(row.item.id);
+    };
     const chipFocus = createListFocus<ContextBarState, ChipProps>(context, {
       slot: "chip",
       orientation: () => "horizontal",
@@ -345,13 +366,14 @@ export const contextBarPrimitive: ContextBarPrimitive = definePrimitive<
         overflowed: sameIds(overflowed, state.overflowed) ? state.overflowed : overflowed,
         overflowCount,
       });
-      if (overflowCount === 0 && store.get().open) popup.setOpen(false, { reason: "imperative" });
     };
 
     // Ids whose chip has entered, forgotten once it's dropped, so a chip added again enters again.
-    const mounted = new Set(store.get().chips.map((chip) => chip.id));
+    const mounted = new Set(store.get().rows.map((row) => row.item.id));
     const elements = new Map<string, HTMLElement>();
     const items = new Map<string, HTMLElement>();
+    let closing = 0;
+    context.onDestroy(() => cancelAnimationFrame(closing));
     const slide = createRowSlide(elements, () => store.get().motion);
     // A leaving row with no element to play its exit is dropped at once.
     const setRows = (next: LeavingRow<ContextChip>[]) => {
@@ -360,7 +382,7 @@ export const contextBarPrimitive: ContextBarPrimitive = definePrimitive<
       for (const id of mounted) if (!rows.some((row) => row.item.id === id)) mounted.delete(id);
       show(rows);
     };
-    let lastChips = store.get().chips;
+    let lastChips = context.options().chips ?? NO_CHIPS;
     context.onOptions((options) => {
       const chips = options.chips ?? NO_CHIPS;
       if (chips === lastChips) return;
@@ -369,7 +391,7 @@ export const contextBarPrimitive: ContextBarPrimitive = definePrimitive<
     });
 
     const remove = (id: string, event?: Event) =>
-      store.get().chips.some((chip) => chip.id === id) &&
+      store.get().rows.some((row) => !row.leaving && row.item.id === id) &&
       !dispatch(
         context,
         "onRemove",
@@ -424,7 +446,7 @@ export const contextBarPrimitive: ContextBarPrimitive = definePrimitive<
       get close() {
         return store.get().open ? () => popup.setOpen(false) : undefined;
       },
-      getChips: () => store.get().chips,
+      getChips: () => context.options().chips ?? NO_CHIPS,
       chipFocus,
       overflowFocus,
       overflowRecovery,
@@ -458,7 +480,21 @@ export const contextBarPrimitive: ContextBarPrimitive = definePrimitive<
           unbind();
         };
       },
-      bindItem: (el, part) => bindRow(el, part, items, overflowFocus),
+      bindItem: (el, part) => {
+        const unbind = bindRow(el, part, items, overflowFocus);
+        return () => {
+          unbind();
+          // The list closes once its last row has gone, in the next frame, once focus recovery has moved that row's
+          // focus to the bar: closing with focus inside would send it to the "+N" button, which has left too.
+          if (items.size > 0 || closing) return;
+          closing = requestAnimationFrame(() => {
+            closing = 0;
+            const { open, overflowCount } = store.get();
+            if (open && overflowCount === 0 && items.size === 0)
+              popup.setOpen(false, { reason: "imperative" });
+          });
+        };
+      },
     };
   },
   slots: (slot) => {
@@ -518,12 +554,7 @@ export const contextBarPrimitive: ContextBarPrimitive = definePrimitive<
         bind: (el, part) => part.api.bindChip(el, part),
       }),
       // Pointer only, like Attachments': keyboard users press Delete on the chip.
-      remove: slot<ChipProps>({
-        props: { value: "string" },
-        present: (state) => state.canRemove,
-        press: ({ api, props }, event) => api.pressRemove(props.value, event),
-        attrs: () => ({ "aria-hidden": "true", "data-context-bar-part": "remove" }),
-      }),
+      remove: slot<ChipProps>(removeSlot("chip")),
       overflow: slot<PopupTriggerProps & BaseSlotProps, ContextBarOverflowState>({
         ...trigger,
         present: (state) => state.overflowCount > 0,
@@ -591,6 +622,7 @@ export const contextBarPrimitive: ContextBarPrimitive = definePrimitive<
         },
         bind: (el, part) => part.api.bindItem(el, part),
       }),
+      "item-remove": slot<ChipProps>(removeSlot("item")),
     };
   },
   agent: {

@@ -76,7 +76,7 @@ test("component names have no product prefix", () => {
 test("every component ships in both layers", () => {
   const names = catalog.items.map((each) => each.name);
   const react = catalog.items.filter((each) => each.layer === "react" && !each.hidden);
-  assert.equal(react.length, 47);
+  assert.equal(react.length, 48);
   for (const { name } of react) assert.ok(names.includes(`${name}-web`), name);
 });
 

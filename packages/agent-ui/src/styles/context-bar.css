@@ -1,0 +1,322 @@
+/* Context Bar (spec §7, D11): one row of chips with a "+N" button that opens a popover of the rest. Keyed on
+   `data-context-bar-part`, so both render layers draw the same. Core measures the root's content box, its
+   `column-gap`, `--kind-context-bar-more-width` and each chip's border box, so the row's sizes live here: the root
+   keeps one height whatever the chips, and a chip past the fit is laid out (so it keeps its width) but takes no room.
+   Chips enter and leave through the motion helper, not CSS. */
+@property --kind-context-bar-more-width {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 40px;
+}
+
+@layer components {
+  /* The content too, which can sit outside the root in a sheet's viewport. */
+  [data-context-bar-part="root"],
+  [data-context-bar-part="content"] {
+    /* Lucide "x", see THIRD_PARTY_NOTICES.md. */
+    --kind-context-bar-icon-remove: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E");
+    color: var(--kind-color-fg);
+  }
+
+  [data-context-bar-part="root"] {
+    --kind-context-chip-max-width: 12rem;
+    --kind-context-chip-height: 1.75rem;
+    --kind-context-bar-gap: 0.375rem;
+    /* Registered as a `<length>`, so core reads it in pixels. */
+    --kind-context-bar-more-width: 2.5rem;
+    display: flex;
+    align-items: center;
+    column-gap: var(--kind-context-bar-gap);
+    box-sizing: border-box;
+    inline-size: 100%;
+    min-inline-size: 0;
+    block-size: var(--kind-context-chip-height);
+    margin: 0;
+    padding: 0;
+    /* Chips past the fit stay laid out; clipping keeps them from widening the page, and the margin keeps focus
+       rings. */
+    overflow: clip;
+    overflow-clip-margin: 4px;
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
+  [data-context-bar-part="list"] {
+    position: relative;
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    column-gap: var(--kind-context-bar-gap);
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  [data-context-bar-part="chip"] {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.25rem;
+    box-sizing: border-box;
+    max-inline-size: var(--kind-context-chip-max-width, 12rem);
+    block-size: var(--kind-context-chip-height, 1.75rem);
+    padding-inline: 0.5rem;
+    border: 1px solid var(--kind-color-border);
+    border-radius: calc(var(--kind-radius) / 2);
+    background-color: var(--kind-color-surface);
+    color: var(--kind-color-fg);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    white-space: nowrap;
+
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+    /* Laid out so core keeps its width, but takes no room and can't be reached. */
+    &:where([data-overflow]) {
+      position: absolute;
+      inset-inline-start: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+  }
+
+  /* The remove control's place at the end, so the label's end padding comes from it. */
+  :where([data-context-bar-part="chip"]):has([data-context-bar-part="remove"]) {
+    padding-inline-end: 0.125rem;
+  }
+
+  :where([data-context-bar-part="chip"], [data-context-bar-part="item"]):where([data-leaving]) {
+    pointer-events: none;
+  }
+
+  :where([data-context-bar-part="chip"], [data-context-bar-part="item"]) [data-context-bar-icon] {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    inline-size: 14px;
+    block-size: 14px;
+    color: var(--kind-color-muted);
+
+    & > :is(img, svg) {
+      inline-size: 100%;
+      block-size: 100%;
+      object-fit: contain;
+    }
+  }
+
+  :where([data-context-bar-part="chip"], [data-context-bar-part="item"]) [data-context-bar-label] {
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Pointer only: 16px drawn, 24px to press. */
+  [data-context-bar-part="remove"] {
+    position: relative;
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    inline-size: 1rem;
+    block-size: 1rem;
+    margin-inline-start: auto;
+    border-radius: 999px;
+    color: var(--kind-color-muted);
+    cursor: pointer;
+    transition:
+      color var(--kind-duration-fast) var(--kind-ease-out),
+      background-color var(--kind-duration-fast) var(--kind-ease-out);
+
+    &::before {
+      content: "";
+      inline-size: 0.625rem;
+      block-size: 0.625rem;
+      background-color: currentColor;
+      mask: var(--kind-context-bar-icon-remove) center / contain no-repeat;
+    }
+    &::after {
+      content: "";
+      position: absolute;
+      inset: -0.25rem;
+    }
+    &:hover {
+      background-color: var(--kind-color-hover);
+      color: var(--kind-color-fg);
+    }
+  }
+
+  /* One width whatever the count, which core reserves before it fits the chips. */
+  [data-context-bar-part="overflow"] {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    inline-size: var(--kind-context-bar-more-width);
+    block-size: var(--kind-context-chip-height, 1.75rem);
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--kind-color-border);
+    border-radius: calc(var(--kind-radius) / 2);
+    background-color: var(--kind-color-surface);
+    color: var(--kind-color-fg);
+    font: inherit;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    cursor: default;
+    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+
+    &:hover,
+    &:where([data-open]) {
+      background-color: var(--kind-color-hover);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  [data-context-bar-part="content"] {
+    box-sizing: border-box;
+    inline-size: var(--kind-context-bar-content-width, 16rem);
+    max-inline-size: calc(100vw - 16px);
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--kind-color-border);
+    border-radius: var(--kind-radius);
+    background-color: var(--kind-color-surface);
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 25%, transparent);
+
+    &:where([data-presentation="sheet"]) {
+      inline-size: 100%;
+      max-inline-size: none;
+      padding-block-end: env(safe-area-inset-bottom, 0px);
+      border-radius: var(--kind-radius) var(--kind-radius) 0 0;
+    }
+  }
+
+  /* Names the popover for assistive technology; the rows say what it holds on screen. */
+  [data-context-bar-part="title"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  [data-context-bar-part="overflow-list"] {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    max-block-size: var(--kind-context-bar-list-max-height, 16rem);
+    margin: 0;
+    padding: 4px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    list-style: none;
+  }
+
+  [data-context-bar-part="item"] {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.5rem;
+    box-sizing: border-box;
+    inline-size: 100%;
+    block-size: 2rem;
+    padding-inline: 0.5rem 0.25rem;
+    border-radius: max(0px, calc(var(--kind-radius) - 4px));
+    color: var(--kind-color-fg);
+    white-space: nowrap;
+    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+
+    &:hover,
+    &:focus-visible {
+      background-color: var(--kind-color-hover);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: -2px;
+    }
+  }
+
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    [data-context-bar-part="remove"]::before {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+    }
+  }
+
+  /* Motion: the popover rises and fades in from the button. Reduced motion only fades, in 120 ms; `none` doesn't
+     animate. A sheet is UI SDK's, which slides whatever the motion settings. */
+  [data-context-bar-part="content"]:where(:not([data-presentation="sheet"])) {
+    transition:
+      opacity var(--kind-duration-fast) var(--kind-ease-out),
+      translate var(--kind-duration-base) var(--kind-ease),
+      scale var(--kind-duration-base) var(--kind-ease);
+
+    &:where([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+      translate: 0 -4px;
+      scale: 0.98;
+    }
+    &:where([data-starting-style], [data-ending-style]):where([data-side="top"]) {
+      translate: 0 4px;
+    }
+    &:where([data-starting-style], [data-ending-style]):where([data-side="right"]) {
+      translate: -4px 0;
+    }
+    &:where([data-starting-style], [data-ending-style]):where([data-side="left"]) {
+      translate: 4px 0;
+    }
+    &:where([data-ending-style]) {
+      transition-duration: var(--kind-duration-fast);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-context-bar-part="content"]:where([data-motion="auto"]) {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+      &:where([data-starting-style], [data-ending-style]) {
+        translate: none;
+        scale: none;
+      }
+    }
+  }
+
+  [data-context-bar-part="content"]:where([data-motion="reduced"]) {
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+    &:where([data-starting-style], [data-ending-style]) {
+      translate: none;
+      scale: none;
+    }
+  }
+
+  [data-context-bar-part="content"]:where([data-motion="none"]),
+  :where([data-context-bar-part="root"][data-motion="none"])
+    :is([data-context-bar-part="overflow"], [data-context-bar-part="remove"]),
+  :where([data-context-bar-part="content"][data-motion="none"])
+    :is([data-context-bar-part="item"], [data-context-bar-part="remove"]) {
+    transition: none;
+  }
+
+  /* Web keeps parts that aren't present in the page, with `hidden`; the popup content is UI SDK's to show
+     and hide. */
+  [data-context-bar-part]:where([hidden]):where(:not([data-context-bar-part="content"])) {
+    display: none;
+  }
+}

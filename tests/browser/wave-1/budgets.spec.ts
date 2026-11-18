@@ -17,6 +17,9 @@ const BUDGETS = {
   transcriptWord: { writes: 3, renders: 3, notified: 3, layoutReads: 4 },
   transcriptSegment: { writes: 32, renders: 32, notified: 35, layoutReads: 9 },
   transcriptSearch: { writes: 72, renders: 201, notified: 140, layoutReads: 2 },
+  // The fixture's chips are all 120px wide, whatever the fonts, so the same two show at 10 and 200.
+  // Widths come from a ResizeObserver's entries, so fitting the chips reads no layout.
+  contextChip: { writes: 27, renders: 8, notified: 9, layoutReads: 0 },
   remount: { nodes: 0, listeners: 0 },
 };
 const SIZES = [10, 500];
@@ -29,6 +32,7 @@ type Fixture = {
   kindRemount(): void;
   kindTerminal: { append(id: string, text: string): void };
   kindTranscript: { set(id: string, next: Record<string, unknown>): void };
+  kindContext: { add(): void };
 };
 type Fiber = {
   tag: number;
@@ -277,6 +281,19 @@ for (const segments of [100, 5000]) {
       'kindTranscript.set("many", { query: ["rollout", "agenda", "follow", ""][(window.kindStep = (window.kindStep ?? 0) + 1) % 4] })',
     );
     budget(counts, BUDGETS.transcriptSearch);
+  });
+}
+
+// Adding a chip renders the new chip and the parts around the list, not every chip: at 10 chips as at 200.
+for (const chips of [10, 200]) {
+  test(`adding a chip among ${chips}`, async ({ page }) => {
+    await page.goto(`/?c=context-bar&case=many-${chips}`);
+    await expect(page.locator('[data-context-bar-part="overflow"]')).toHaveText(`+${chips - 2}`);
+    const counts = await most(page, 5, "kindContext.add()");
+    expect(counts.writes).toBeLessThanOrEqual(BUDGETS.contextChip.writes);
+    expect(counts.renders).toBeLessThanOrEqual(BUDGETS.contextChip.renders);
+    expect(counts.notified).toBeLessThanOrEqual(BUDGETS.contextChip.notified);
+    expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS.contextChip.layoutReads);
   });
 }
 
