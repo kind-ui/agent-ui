@@ -1,0 +1,293 @@
+/* Effort Slider (spec §7): a button showing the chosen effort level, and a popover holding a slider with a stop per
+   level, the model the effort applies to and Reset. Keyed on `data-effort-slider-part`, so both render layers draw
+   the same. The trigger's labels share one grid cell, and the footer keeps one height, so a change of level moves
+   nothing. */
+@layer components {
+  [data-effort-slider-part="root"] {
+    /* Lucide "sparkles", see THIRD_PARTY_NOTICES.md. */
+    --kind-effort-slider-icon-sparkle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z'/%3E%3Cpath d='M20 2v4'/%3E%3Cpath d='M22 4h-4'/%3E%3Ccircle cx='4' cy='20' r='2'/%3E%3C/svg%3E");
+    /* Lucide "chevron-down", see THIRD_PARTY_NOTICES.md. */
+    --kind-effort-slider-icon-chevron-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    display: inline-flex;
+    font-size: 0.875rem;
+    color: var(--kind-color-fg);
+  }
+
+  [data-effort-slider-part="trigger"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 2rem;
+    padding-inline: 8px 6px;
+    border: 1px solid var(--kind-color-border);
+    border-radius: calc(var(--kind-radius) / 2);
+    background-color: var(--kind-color-surface);
+    color: var(--kind-color-fg);
+    font: inherit;
+    white-space: nowrap;
+    cursor: default;
+    transition:
+      border-color var(--kind-duration-fast) var(--kind-ease-out),
+      background-color var(--kind-duration-fast) var(--kind-ease-out);
+
+    &:hover {
+      background-color: var(--kind-color-hover);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+    &:disabled,
+    &[aria-disabled="true"] {
+      opacity: 0.5;
+    }
+    & [data-effort-slider-chevron] {
+      flex-shrink: 0;
+      width: 14px;
+      height: 14px;
+      background-color: var(--kind-color-muted);
+      mask: var(--kind-effort-slider-icon-chevron-down) center / contain no-repeat;
+    }
+  }
+
+  /* Every level's label shares one grid cell and only the chosen one shows, so the trigger keeps its width. */
+  [data-effort-slider-value] {
+    display: grid;
+
+    & > * {
+      display: inline-flex;
+      grid-area: 1 / 1;
+      align-items: center;
+      gap: 4px;
+    }
+    & > :not([data-current]) {
+      visibility: hidden;
+    }
+  }
+
+  :where([data-effort-slider-part="root"], [data-effort-slider-part="content"]) [data-effort-slider-sparkle] {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    background-color: var(--kind-color-accent);
+    mask: var(--kind-effort-slider-icon-sparkle) center / contain no-repeat;
+  }
+
+  [data-effort-slider-part="content"] {
+    width: var(--kind-effort-slider-content-width, 16rem);
+    max-width: calc(100vw - 16px);
+    /* Wider inline, so the thumb's focus ring at either end stays clear of the border. */
+    padding: 12px 16px;
+    border: 1px solid var(--kind-color-border);
+    border-radius: var(--kind-radius);
+    background-color: var(--kind-color-surface);
+    color: var(--kind-color-fg);
+    font-size: 0.875rem;
+    box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 25%, transparent);
+
+    &[data-presentation="sheet"] {
+      width: 100%;
+      max-width: none;
+      padding-block-end: calc(16px + env(safe-area-inset-bottom, 0px));
+      border-radius: var(--kind-radius) var(--kind-radius) 0 0;
+    }
+  }
+
+  /* The title on the start side and the chosen level's label on the end side. */
+  [data-effort-slider-header] {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  [data-effort-slider-part="title"] {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+  }
+
+  [data-effort-slider-part="slider"] [data-slot="slider-value"] {
+    color: var(--kind-color-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* As wide as the track, so each stop's tick sits under the thumb's center at its level. The first and last labels
+     align to the edges, so they stay inside the popup. */
+  [data-effort-slider-part="stops"] {
+    position: relative;
+    height: 1.25rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--kind-color-muted);
+    white-space: nowrap;
+  }
+
+  [data-effort-slider-stop] {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline-start: calc(var(--kind-effort-slider-stop) * 100%);
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    translate: -50% 0;
+
+    &:dir(rtl) {
+      translate: 50% 0;
+    }
+    &:first-child {
+      translate: none;
+    }
+    &:last-child {
+      inset-inline-start: auto;
+      inset-inline-end: 0;
+      translate: none;
+    }
+    &[data-current] {
+      color: var(--kind-color-fg);
+      font-weight: 500;
+    }
+    &::before {
+      content: "";
+      position: absolute;
+      inset-block-start: -4px;
+      inset-inline-start: calc(50% - 0.5px);
+      width: 1px;
+      height: 4px;
+      background-color: var(--kind-color-border);
+    }
+    &:first-child::before {
+      inset-inline-start: 0;
+    }
+    &:last-child::before {
+      inset-inline-start: auto;
+      inset-inline-end: 0;
+    }
+    & [data-effort-slider-sparkle] {
+      width: 12px;
+      height: 12px;
+    }
+  }
+
+  /* One height whether or not Reset shows, so its arrival moves nothing. */
+  [data-effort-slider-footer] {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 1.75rem;
+    margin-block-start: 6px;
+  }
+
+  [data-effort-slider-part="model"] {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    font-size: 0.75rem;
+    color: var(--kind-color-muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    & :is(a, button) {
+      padding: 0;
+      border: 0;
+      border-radius: 2px;
+      background: none;
+      color: inherit;
+      font: inherit;
+      text-decoration: none;
+      cursor: pointer;
+
+      &:hover {
+        color: var(--kind-color-fg);
+        text-decoration: underline;
+      }
+      &:focus-visible {
+        outline: 2px solid var(--kind-color-ring);
+        outline-offset: 2px;
+      }
+    }
+  }
+
+  [data-effort-slider-part="reset"] {
+    flex-shrink: 0;
+    height: 1.5rem;
+    margin-inline-start: auto;
+    padding-inline: 6px;
+    border: 0;
+    border-radius: calc(var(--kind-radius) / 3);
+    background: none;
+    color: var(--kind-color-fg);
+    font: inherit;
+    font-size: 0.75rem;
+    cursor: default;
+    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+
+    &:hover {
+      background-color: var(--kind-color-hover);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    [data-effort-slider-part="trigger"] :is([data-effort-slider-chevron], [data-effort-slider-sparkle]) {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+    [data-effort-slider-part="content"] [data-effort-slider-sparkle] {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+    }
+  }
+
+  /* Motion: the popup rises and fades in from the button. Reduced motion only fades, in 120 ms; `none` doesn't
+     animate. A sheet is UI SDK's, which slides whatever the motion settings. */
+  [data-effort-slider-part="content"]:where(:not([data-presentation="sheet"])) {
+    transition:
+      opacity var(--kind-duration-fast) var(--kind-ease-out),
+      translate var(--kind-duration-base) var(--kind-ease),
+      scale var(--kind-duration-base) var(--kind-ease);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+      translate: 0 -4px;
+      scale: 0.98;
+    }
+    &[data-ending-style] {
+      transition-duration: var(--kind-duration-fast);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-effort-slider-part="content"][data-motion="auto"] {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+      &:is([data-starting-style], [data-ending-style]) {
+        translate: none;
+        scale: none;
+      }
+    }
+  }
+
+  [data-effort-slider-part="content"][data-motion="reduced"] {
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      translate: none;
+      scale: none;
+    }
+  }
+
+  :is(
+    [data-effort-slider-part="content"][data-motion="none"],
+    [data-effort-slider-part="root"][data-motion="none"] [data-effort-slider-part="trigger"],
+    [data-effort-slider-part="content"][data-motion="none"] [data-effort-slider-part="reset"]
+  ) {
+    transition: none;
+  }
+}

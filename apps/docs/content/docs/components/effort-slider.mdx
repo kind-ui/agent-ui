@@ -1,0 +1,95 @@
+---
+title: Effort Slider
+description: Let people choose how hard the model thinks, from a button that opens a slider of effort levels.
+---
+
+import EffortSliderExample from "../../../examples/effort-slider/basic";
+
+Use an effort slider in a [composer](./composer.mdx)'s controls when the model can trade speed for more thinking and the row has no room for every level. It's a button that shows the chosen level and opens a popover holding UI SDK's Slider, with one step per level, a Reset and an optional line naming the model.
+
+<Example caption="Press Effort, High, then press the Right Arrow key or drag the thumb to Max. The button shows Max with a sparkle, and Reset returns it to Medium.">
+  <EffortSliderExample />
+
+  <include cwd lang="tsx">./examples/effort-slider/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/effort-slider
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/effort-slider-web
+```
+
+## Composition
+
+```text
+EffortSlider
+├── EffortSliderTrigger
+└── EffortSliderContent
+    ├── EffortSliderSlider
+    │   └── EffortSliderTitle
+    ├── EffortSliderStops
+    ├── EffortSliderModel
+    └── EffortSliderReset
+```
+
+`EffortSlider` is a group named by its `label` and the chosen level. `EffortSliderTrigger` is the button that opens the popover and shows the chosen level's label, unless you pass children. `EffortSliderContent` is the popover. `EffortSliderSlider` is UI SDK's Slider, with `EffortSliderTitle` and the chosen level's label above the track. `EffortSliderStops` draws a tick and label under the track for each level. `EffortSliderModel` is the line naming the model, and `EffortSliderReset` returns to the default level. `EffortSlider` renders the trigger and content, and the content its parts, when you pass no children.
+
+## Usage
+
+### Levels
+
+Pass `levels`, from least to most effort, each with the `value` your app receives and the `label` a person reads. Without them, the levels are Low, Medium and High. The last level shows a sparkle beside its label, on the button and under the track.
+
+The button is named by the `label` and the chosen level, like "Effort, High". The `label` is "Effort" by default and also titles the popover and names the slider's thumb, whose value text is the level's label.
+
+### Value
+
+Pass `value` and `onValueChange` to control the chosen level, or `defaultValue` to start with one. `onValueChange` gets the level's `value` once a person settles on it: a drag reports once, when it ends, not at every level it passes. The reason is `drag`, `step-key` or `track-press` from UI SDK Slider, `reset-press` from Reset, or `imperative` from `setValue`. Call `details.cancel()` to keep the old level. Pass `disabled` while the model can't change its effort; the button then doesn't open the popover.
+
+```tsx
+<EffortSlider
+  levels={levels}
+  value={effort}
+  onValueChange={(next) => setEffort(next)}
+/>
+```
+
+### Reset
+
+**Reset** returns to `defaultLevel`, which is the middle level unless you name one by its `value`. It's present only while another level is chosen, and it shares a row with the model line, so it comes and goes without moving the slider. When it leaves while focused, focus moves to the thumb.
+
+### Model
+
+Pass `modelLabel` to add a line under the slider, like "Effort for GPT-5", that tells people which model the effort applies to. Add `modelHref` to make it a link, like to the model's settings, or `onModelPress` to make it a button; `onModelPress` gets the `modelLabel` and the reason `model-press`. With both, the line is a link.
+
+### Opening
+
+Pass `open` and `onOpenChange` to control whether the popover is open, or `defaultOpen` to start open. `onOpenChange` gets UI SDK Popover's reason, like `trigger-press` or `escape-key`.
+
+### Keyboard
+
+The button is one Tab stop. Enter or Space opens the popover with focus on the thumb. The arrow keys move one level, and Home and End move to the first and last. Each key reports the level it lands on. Escape closes the popover, with focus back on the button.
+
+### Presentation and Motion
+
+The popover opens below the button. With `presentation="auto"`, the default, it's a bottom sheet on small touch screens instead; pass `"popover"` or `"sheet"` to choose one. `motion` sets how it opens and closes: `"auto"`, the default, follows `prefers-reduced-motion`, `"reduced"` keeps motion small and `"none"` turns it off.
+
+For an inline row of levels with no popover, use [Reasoning Effort](./reasoning-effort.mdx).
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/effort-slider/effort-slider.ts" name="EffortSliderOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the effort slider by its name, like "Effort, High", and reads `open` and `value`. It lists every level by `value` and label. `setValue` takes a level and refuses one that isn't listed; it's offered while the slider is enabled, and it changes the level whether the popover is open or closed. `reset` is offered only while another level than the default is chosen. `open` is offered while the popover is closed and enabled, and `close` while it's open. None needs a person to confirm.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/effort-slider/effort-slider.ts" name="EffortSliderAgentActions" type='Pick<EffortSliderApi, "open" | "close" | "setValue" | "reset">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-effort-slider>`, set `levels` and `defaultValue` as properties and `value`, `default-level`, `label`, `model-label`, `model-href` and `presentation` as attributes, and listen for `effortchange`, with the level's `value` as `event.detail.value`, and `openchange`. Add the `can-press-model` attribute to listen for `modelpress`. The element fills in its button and popover when it has no children.
+</Caption>

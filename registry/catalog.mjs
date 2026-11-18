@@ -186,6 +186,12 @@ const components = {
       "A button showing how much the agent may do without asking, opening a menu of modes with a risky one marked.",
     uses: ["internal-menu"],
   },
+  "effort-slider": {
+    title: "Effort Slider",
+    description:
+      "A button showing the effort level, opening a popover with a slider that stops at each level.",
+    uses: ["internal-slider"],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",
