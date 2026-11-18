@@ -259,6 +259,19 @@ export {
   messagePrimitive,
 } from "./message/index.js";
 export {
+  MODEL_CONTROL_EFFORT,
+  MODEL_CONTROL_MODEL,
+  type ModelControlApi,
+  type ModelControlChangeReason,
+  type ModelControlEffortChangeReason,
+  type ModelControlOptions,
+  type ModelControlPrimitive,
+  type ModelControlState,
+  type ModelControlTriggerState,
+  modelControlPrimitive,
+  modelEffort,
+} from "./model-control/index.js";
+export {
   type ModelSelectorApi,
   type ModelSelectorOptions,
   type ModelSelectorPrimitive,
@@ -376,16 +389,27 @@ export {
   selectionPrimitive,
 } from "./selection/index.js";
 export {
+  type SettingsBaseApi,
+  type SettingsBaseConfig,
+  type SettingsBaseOptions,
+  type SettingsBaseSlots,
+  type SettingsBaseState,
+  type SettingsCause,
+  type SettingsMenuAction,
   type SettingsMenuApi,
   type SettingsMenuChangeDetails,
   type SettingsMenuChangeReason,
   type SettingsMenuChoiceRow,
   type SettingsMenuContentState,
+  type SettingsMenuOptionGroup,
   type SettingsMenuOptions,
   type SettingsMenuPrimitive,
   type SettingsMenuRow,
   type SettingsMenuState,
   type SettingsMenuToggleRow,
+  settingsBase,
+  settingsChoiceRow,
+  settingsData,
   settingsMenuPrimitive,
   settingsMenuRows,
 } from "./settings-menu/index.js";

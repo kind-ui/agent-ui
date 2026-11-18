@@ -186,6 +186,12 @@ const components = {
       "A button showing how much the agent may do without asking, opening a menu of modes with a risky one marked.",
     uses: ["internal-menu"],
   },
+  "model-control": {
+    title: "Model Control",
+    description:
+      "A button showing the model and its effort, opening a settings menu with Model and Effort submenus.",
+    uses: ["settings-menu", "internal-menu"],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",

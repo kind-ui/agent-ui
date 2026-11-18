@@ -24,7 +24,7 @@ const DEFAULT_PARTS = `<kind-internal-menu><ui-menu><kind-settings-menu-trigger>
 // children do. Kept across instances, because UI SDK rebuilds one when the element returns to the page.
 const owned = new WeakSet<Element>();
 const drawn = new WeakMap<Element, SettingsMenuContentState>();
-const drawnOptions = new WeakMap<Element, SettingsMenuChoiceRow["options"]>();
+const drawnRows = new WeakMap<Element, SettingsMenuChoiceRow>();
 
 type Checkable = HTMLElement & { checked: boolean };
 type Selectable = HTMLElement & { value: string | null };
@@ -51,38 +51,88 @@ const drawToggle = (
   return item;
 };
 
-/** The value's labels and the radio items, each reused by its option's `value`, so a focused option keeps focus. */
-const drawOptions = (
-  document: Document,
-  value: Element,
-  group: Element,
-  options: SettingsMenuChoiceRow["options"],
-) => {
+/** The value's labels, one per option, reused by `value` so the row keeps its width as the value changes. */
+const drawLabels = (document: Document, value: Element, options: SettingsMenuChoiceRow["options"]) => {
   const labels = new Map([...value.children].map((el) => [el.getAttribute("data-value"), el]));
-  const items = new Map([...group.children].map((el) => [el.getAttribute("value"), el]));
-  let previousLabel: Element | null = null;
-  let previousItem: Element | null = null;
+  let previous: Element | null = null;
   for (const option of options) {
     const label = labels.get(option.value) ?? element(document, "span", { "data-value": option.value });
     labels.delete(option.value);
     if (label.textContent !== option.label) label.textContent = option.label;
-    place(value, label, previousLabel ? previousLabel.nextElementSibling : value.firstElementChild);
-    previousLabel = label;
-    let item = items.get(option.value);
-    items.delete(option.value);
-    if (!item) {
-      item = element(document, "ui-menu-radio-item", { value: option.value });
-      const indicator = element(document, "ui-menu-item-indicator", { "keep-mounted": "" });
-      indicator.append(element(document, "span", { "data-menu-check": "", "aria-hidden": "true" }));
-      item.append(indicator, element(document, "span"));
-    }
-    item.setAttribute("label", option.label);
-    const text = item.lastElementChild;
-    if (text && text.textContent !== option.label) text.textContent = option.label;
-    place(group, item, previousItem ? previousItem.nextElementSibling : group.firstElementChild);
-    previousItem = item;
+    place(value, label, previous ? previous.nextElementSibling : value.firstElementChild);
+    previous = label;
   }
-  for (const el of [...labels.values(), ...items.values()]) el.remove();
+  for (const el of labels.values()) el.remove();
+};
+
+/**
+ * The submenu's radio group, holding a labelled group per option `group`, then a separator and the actions. Radio
+ * items and actions are reused by `value`, so a focused one keeps focus.
+ */
+const drawSubmenu = (document: Document, content: Element, row: SettingsMenuChoiceRow) => {
+  const items = new Map<string, Element>();
+  for (const item of content.querySelectorAll("ui-menu-radio-item, :scope > ui-menu-item"))
+    items.set(item.getAttribute("value") ?? "", item);
+  let radios = content.querySelector<Selectable>(":scope > ui-menu-radio-group");
+  if (!radios) {
+    radios = element(document, "ui-menu-radio-group", { name: row.id }) as Selectable;
+    content.prepend(radios);
+  }
+  const groups = new Map<string, Element>();
+  for (const group of radios.querySelectorAll(":scope > ui-menu-group"))
+    groups.set(group.getAttribute("data-group") ?? "", group);
+  let previous: Element | null = null;
+  const next = (parent: Element, child: Element, after: Element | null) => {
+    place(parent, child, after ? after.nextElementSibling : parent.firstElementChild);
+    return child;
+  };
+  for (const { label, options } of row.groups) {
+    let parent: Element = radios;
+    if (label !== undefined) {
+      let group = groups.get(label);
+      groups.delete(label);
+      if (!group) {
+        group = element(document, "ui-menu-group", { "data-group": label });
+        group.append(element(document, "ui-menu-group-label", {}, label));
+      }
+      previous = next(radios, group, previous);
+      parent = group;
+    }
+    let last: Element | null = parent === radios ? previous : parent.firstElementChild;
+    for (const option of options) {
+      let item = items.get(option.value);
+      items.delete(option.value);
+      item ??= element(document, "ui-menu-radio-item", { value: option.value });
+      let indicator = item.querySelector(":scope > ui-menu-item-indicator");
+      if (!indicator) {
+        indicator = element(document, "ui-menu-item-indicator", { "keep-mounted": "" });
+        indicator.append(element(document, "span", { "data-menu-check": "", "aria-hidden": "true" }));
+      }
+      item.setAttribute("label", option.label);
+      item.toggleAttribute("disabled", option.disabled ?? false);
+      drawMenuItemContent(item, option, [indicator]);
+      // The check comes first, as React's radio item draws it.
+      if (item.firstElementChild !== indicator) item.prepend(indicator);
+      last = next(parent, item, last);
+    }
+    if (parent === radios) previous = last;
+  }
+  if (radios.value !== (row.value ?? null)) radios.value = row.value ?? null;
+  let after: Element | null = radios;
+  let separator = content.querySelector(":scope > ui-menu-separator");
+  if (row.actions.length) {
+    separator ??= element(document, "ui-menu-separator");
+    after = next(content, separator, after);
+  } else separator?.remove();
+  for (const action of row.actions) {
+    let item = items.get(action.value);
+    items.delete(action.value);
+    item ??= element(document, "ui-menu-item", { value: action.value });
+    item.setAttribute("label", action.label);
+    drawMenuItemContent(item, action);
+    after = next(content, item, after);
+  }
+  for (const el of [...items.values(), ...groups.values()]) el.remove();
 };
 
 const drawChoice = (
@@ -93,13 +143,11 @@ const drawChoice = (
   let sub = el;
   if (!sub) {
     sub = element(document, "ui-menu-sub", { "data-row": row.id });
-    const content = element(document, "ui-menu-sub-content");
-    content.append(element(document, "ui-menu-radio-group", { name: row.id }));
-    sub.append(element(document, "ui-menu-sub-trigger"), content);
+    sub.append(element(document, "ui-menu-sub-trigger"), element(document, "ui-menu-sub-content"));
   }
   const trigger = sub.querySelector(":scope > ui-menu-sub-trigger");
-  const group = sub.querySelector<Selectable>(":scope > ui-menu-sub-content > ui-menu-radio-group");
-  if (!trigger || !group) return sub;
+  const content = sub.querySelector(":scope > ui-menu-sub-content");
+  if (!trigger || !content) return sub;
   const value =
     trigger.querySelector(":scope > [data-settings-menu-value]") ??
     element(document, "span", { "data-settings-menu-value": "" });
@@ -107,18 +155,22 @@ const drawChoice = (
     trigger.querySelector(":scope > [data-menu-chevron]") ??
     element(document, "span", { "data-menu-chevron": "" });
   drawMenuItemContent(trigger, row, [value, chevron]);
-  if (drawnOptions.get(sub) !== row.options) drawOptions(document, value, group, row.options);
+  if (drawnRows.get(sub) !== row) {
+    drawnRows.set(sub, row);
+    drawLabels(document, value, row.options);
+    drawSubmenu(document, content, row);
+  }
   for (const [index, label] of [...value.children].entries())
     label.toggleAttribute("data-current", row.options[index]?.value === row.value);
-  if (group.value !== (row.value ?? null)) group.value = row.value ?? null;
   return sub;
 };
 
 /**
  * Draws the rows into `parent`, reusing each row's element by its `id` and moving only what is out of place, so a
- * person's focus and highlight survive a change of `settings` or `values` while the menu is open.
+ * person's focus and highlight survive a change of `settings` or `values` while the menu is open. Model Control draws
+ * its rows with it too.
  */
-const drawRows = (parent: Element, rows: SettingsMenuRow[]) => {
+export const drawSettingsRows = (parent: Element, rows: SettingsMenuRow[]) => {
   const document = parent.ownerDocument;
   const existing = new Map<string, Element>();
   for (const row of parent.querySelectorAll(":scope > [data-row]"))
@@ -185,7 +237,7 @@ export function defineSettingsMenu(): void {
           if (content && !content.firstChild) owned.add(content);
           if (content && owned.has(content) && drawn.get(content) !== rows) {
             drawn.set(content, rows);
-            drawRows(content, rows.rows);
+            drawSettingsRows(content, rows.rows);
           }
         };
         draw();

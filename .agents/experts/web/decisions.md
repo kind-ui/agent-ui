@@ -6,6 +6,7 @@ Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
 
 ## Settled
 
+- **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.
 - **A `kind-model-selector` element icon is cloned with its ids** (Wave 4 Task 12b): rewriting ids inside each copy would be fragile; the `models` JSDoc says to pass a logo with `defs` as an image URL, and the fixture's Gemini logo is one.
 - **`drawIcon` compares icons by identity** (suspected, Wave 4 Task 12b): a host that builds new elements on every `models` write re-copies its icons, which is harmless.
 - **A hand-written empty `kind-inline-citation-content` stays empty** (Wave 4 Task 3), as React's bare `InlineCitationContent` does: the element fills in only the content it wrote.

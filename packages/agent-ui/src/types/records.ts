@@ -70,6 +70,11 @@ export interface ModelOption<Icon = string> {
   /** Shown before the name, in the list and in the field. Decorative: the name stays the model's label. */
   icon?: Icon;
   disabled?: boolean;
+  /**
+   * The `value`s of the effort levels the model supports, for Model Control. Leave it out for every level; `[]` for
+   * a model without effort levels.
+   */
+  efforts?: string[];
 }
 
 export interface SuggestionItem {
@@ -179,10 +184,14 @@ export interface SettingsToggle<Icon = unknown> {
   icon?: Icon;
 }
 
-/** A value a choice setting can take. */
-export interface SettingsOption {
+/** A value a choice setting can take. Options with a `group` are listed under its label, in first-seen order. */
+export interface SettingsOption<Icon = unknown> {
   value: string;
   label: string;
+  icon?: Icon;
+  group?: string;
+  /** Shown dimmed: it can be focused but not chosen. Defaults to `false`. */
+  disabled?: boolean;
 }
 
 /** A setting with one value of several, chosen in a submenu of its own. */
@@ -191,7 +200,7 @@ export interface SettingsChoice<Icon = unknown> {
   id: string;
   label: string;
   icon?: Icon;
-  options: SettingsOption[];
+  options: SettingsOption<Icon>[];
 }
 
 /** A row of a settings menu. */

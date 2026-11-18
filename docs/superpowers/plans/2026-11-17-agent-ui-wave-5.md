@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Each task is one session and one stacked PR: Task 1 stacks on this plan's PR, and each later task stacks on the one before.
 
-**Goal:** Ship Wave 5, "composer controls": Picker, Add Menu, Settings Menu, Approval Mode, Effort Slider, Model Control, Context Bar, Dictation and Prompt Library, plus Model Selector rebuilt on Picker, Message's regenerate-with menu, and the Composer's draft restore and narrow-screen layout, in React and Web Components, with registry items, docs pages and the 0.5.0 changeset.
+**Goal:** Ship Wave 5, "composer controls": Picker, Add Menu, Settings Menu, Approval Mode, Model Control, Context Bar, Dictation and Prompt Library, plus Model Selector rebuilt on Picker, Message's regenerate-with menu, and the Composer's draft restore and narrow-screen layout, in React and Web Components, with registry items, docs pages and the 0.5.0 changeset.
 
-**Architecture:** Every Wave 5 component is one `definePrimitive` that composes UI SDK as Waves 1–4 do. Popups are the primitive's own through `createPopup`, as Context Meter's are, so `open`/`onOpenChange` reach a web host; what sits inside them is a ready-made UI SDK component (Command, Menu, Slider) driven through a controller the primitive owns. One new core module hears those components' web events (D1), so no component needs the "wrap ours" seam to learn what a person chose. The four menus share one `menuBase` over UI SDK Menu, as the Step-based components share `stepBase`. Picker is a public base the way `stepPrimitive` is: Model Selector, Model Control and Prompt Library spread `pickerBase`.
+**Architecture:** Every Wave 5 component is one `definePrimitive` that composes UI SDK as Waves 1–4 do. Popups are the primitive's own through `createPopup`, as Context Meter's are, so `open`/`onOpenChange` reach a web host; what sits inside them is a ready-made UI SDK component (Command, Menu) driven through a controller the primitive owns. One new core module hears those components' web events (D1), so no component needs the "wrap ours" seam to learn what a person chose. The four menus share one `menuBase` over UI SDK Menu, as the Step-based components share `stepBase`. Picker is a public base the way `stepPrimitive` is: Model Selector and Prompt Library spread `pickerBase`, and Model Control spreads Settings Menu's `settingsBase`.
 
 **Tech Stack:** `@ui-sdk/core`, `@ui-sdk/react` and `@ui-sdk/web` stay at `0.1.0-beta.1`, `motion` at `14.14.0`. No new runtime dependency: dictation uses the browser's Web Speech API, `getUserMedia` and Web Audio's `AnalyserNode` (D10), and draft restore uses UI SDK's `createLocalStorage` (D12).
 
@@ -23,8 +23,7 @@ Proposed 2026-11-17. **Open** marks a decision that needs the user's answer befo
 - **D5. The menus compose UI SDK Menu through one `menuBase`.** Add Menu, Settings Menu, Approval Mode and Message's regenerate-with menu render the internal Menu from data the primitive builds (`MenuData`: items, groups, checkbox items, radio groups and submenus), with a `createMenuController()` the primitive owns. Choices reach the primitive through `onAction`, `onCheckedChange` and `onValueChange` (React props, web through D1). `menuBase` (`core/menu-base.ts`) holds `open`, the item lookup, `agent.items` and the action getters, as `stepBase` does. Submenu pointer safety, typeahead, Escape-closes-one-level and the sheet presentation are Menu's.
 - **D6. Settings toggle rows are switch-styled checkbox items (Open).** A UI SDK Switch can't sit inside a menu item: a `menuitem` holds no interactive child, and the menu's arrow keys would skip it. Settings Menu renders each toggle as Menu's checkbox item (`menuitemcheckbox`, Space toggles and keeps the menu open through `closeOnSelect: false`) and draws its indicator with UI SDK Switch's look (`internal-switch` styles over a `SwitchThumb`-shaped `aria-hidden` mark), so a screen reader hears "checked" and sighted people see a switch. Value rows are submenus holding a radio group, showing the current value as trailing text.
 - **D7. Approval Mode asks a person before an agent changes it (Open).** Approval Mode is a radio group in a menu: each mode has a label and a description, a mode marked `danger` is drawn in `--kind-color-danger` with a warning mark and the word "Risky" for assistive technology, and a header link ("Learn more") is a menu item rendered as `<a>` (Menu's "Links"), so it stays in the arrow-key order. Changing the mode widens or narrows what the agent may do without asking, so `setValue` renders `data-agent-confirm` while `agentConfirm` is on (default), as the composer does, and spec §6 lists `approvalMode.setValue`. Choosing a danger mode needs no second step from a person; a host that wants one confirms in `onValueChange` and cancels.
-- **D8. Effort Slider is a popover holding UI SDK Slider.** The primitive owns its popup (`createPopup`, `popoverPreset`) and composes the internal Slider through a `createSliderController()`: `levels` (ordered `{ value, label }`) map to slider steps 0…n−1, so the stops are the levels; `aria-valuetext` is the level's label through Slider's `format`. Stops are `aria-hidden` ticks (Slider's "Step and Bounds"). A Reset button returns to `defaultLevel` and is present only while the value differs. An optional `modelLabel` with `onModelPress` (or `modelHref`) adds a link line ("Effort for GPT-5"). The top level shows Lucide's `sparkles` glyph beside its label, as a CSS mask. Reasoning Effort (Segmented Control) stays as it is.
-- **D9. Model Control: one trigger, a nested popover for effort (Open: component or recipe).** The combined trigger reads "GPT-5 · High". It spreads `pickerBase` for the models and adds a footer row, "Effort · High ›", that is the trigger of a nested Effort Slider popover beside the picker (UI SDK nested popups: both stay open, Escape closes only the inner one and returns focus to the row). This is the "nested trigger popover"; Settings Menu's value rows are its menu form. Recommended as a component, since it owns two values and their shared trigger text.
+- **D9. Model Control is a Settings Menu with Model and Effort rows (decided 2026-11-17).** The user scrapped the Effort Slider (D8 and Task 8 are gone) and chose a simple popup. The trigger reads "GPT-5 · High" and opens a menu: the host's toggles, then "Model › GPT-5" and "Effort › High", each a submenu of radio items with a check on the chosen one, then the host's choices (like "Context window › 1M"). It spreads `settingsBase` (Settings Menu's base over `menuBase`), so its rows are Settings Menu's rows. The Model submenu lists models under their group with their icons and "More models" as an action row; the Effort submenu dims levels the model doesn't support (`ModelOption.efforts`), and the effort falls back to the highest supported level at or below it.
 - **D10. Dictation: a host-chosen source, a built-in Web Speech one (Open).** `core/dictation.ts` defines `DictationSource { start(signal): AsyncIterable<DictationEvent> }`, where an event is `{ level }` (0–1, for the waveform), `{ text, final }` or `{ error }`. `createSpeechDictation({ lang })` is the one built-in source: `SpeechRecognition` (prefixed in WebKit) for text, `getUserMedia` with an `AnalyserNode` for levels. Chrome's recognition sends audio to a speech service, so the component never has a source by default: the host passes one, and the docs show both the built-in source and a server one over `MediaRecorder`. States: `idle` (mic button), `listening` (waveform from `level`, Stop and Cancel), `transcribing` (after Stop, until the last final text), then `idle` with `onText(text)` called once. Without `SpeechRecognition`, `createSpeechDictation` reports `{ error: "unsupported" }` and the button shows its text. The capture listeners need a spec §2 row ("Dictation audio and speech"). `start` renders `data-agent-confirm`: an agent never opens the microphone without a person.
 - **D11. Context Bar overflow is measured, not guessed.** Chips (`ContextChip { id, label, kind?, icon? }`) sit in one row; the `list` slot's `bind` measures it with a `ResizeObserver`, as Document measures its content, into `visibleCount`, and the rest go behind a "+N" button that opens a popover (`createPopup`) listing them, each removable. Chips are one roving Tab stop (`createListFocus`); Delete and Backspace remove the focused chip through the Attachments spec §2 row, which this task extends to Context Bar. Chip width is capped by `--kind-context-chip-max-width`, so the count depends on that cap, not on font metrics, in the budgets fixture.
 - **D12. Draft restore is a Composer option over UI SDK storage.** `draftKey` (a conversation id) and `draftStorage` (UI SDK's `createLocalStorage`, `createSessionStorage` or a host `ValueStorage`) save the uncontrolled draft's text and tokens on each change and restore them when a composer mounts with that key and an empty draft. Attachments aren't saved (files don't serialize). A controlled draft is never written: the host owns it (spec §4.1). A restored draft shows a "Draft restored" status with Discard, which leaves on the next edit; submitting clears the saved draft once the submission resolves, by the same snapshot rule §4.1 sets for the field. Storage that throws (quota, private mode) is ignored.
@@ -48,7 +47,7 @@ Proposed 2026-11-17. **Open** marks a decision that needs the user's answer befo
 - **Agent actions (spec §6):** listed only while available, through api getters that return `undefined` otherwise; same code paths as pointer and keyboard. Callbacks report who caused them through `actionSource`, `dispatch` or `createChange`, so an agent's call has `details.source === "agent"`. Actions that take an id refuse an unknown one and list them through `agent.items` (`closed: true`). Composed UI SDK parts carry `data-agent-hidden`, so each component is one snapshot entry. `data-agent-confirm` only where D7 and D10 say.
 - **Accessibility (spec §8):** every root and trigger is named; a trigger that shows a value is named by its role and the value ("Model, GPT-5"); `announce` is polite and fires on outcomes only (a dictation that failed, a draft restored); every status has a mark and text; a danger option has words, not only a color.
 - **Motion:** every animated primitive takes `motion: "auto" | "reduced" | "none"`; durations and easings from `src/core/motion/tokens.ts` and `--kind-duration-*`/`--kind-ease*`; `"reduced"` is at most a 120 ms opacity fade, `"none"` is instant. Popups and sheets animate in CSS from UI SDK's `data-starting-style`/`data-ending-style`; the waveform is CSS heights from a `--kind-dictation-level-<i>` variable per bar, held still under reduced motion.
-- **Design bar:** light and dark through `--kind-color-*` tokens only. A part that comes and goes has a reserved place or replaces a part of the same size: a trigger's width doesn't follow its value while the popup is open, and the dictation button, waveform and status share one box. Every component PR has light and dark screenshots, nothing focused unless they show focus, plus one with its popup or sheet open. New glyphs are Lucide's (`plus`, `settings-2`, `shield`, `sparkles`, `mic`, `square`, `book-open`, `check`, `chevron-right`), drawn as CSS masks with a `forced-colors` rule and added to the Lucide entry in `THIRD_PARTY_NOTICES.md`.
+- **Design bar:** light and dark through `--kind-color-*` tokens only. A part that comes and goes has a reserved place or replaces a part of the same size: a trigger's width doesn't follow its value while the popup is open, and the dictation button, waveform and status share one box. Every component PR has light and dark screenshots, nothing focused unless they show focus, plus one with its popup or sheet open. New glyphs are Lucide's (`plus`, `settings-2`, `shield`, `mic`, `square`, `book-open`, `check`, `chevron-right`), drawn as CSS masks with a `forced-colors` rule and added to the Lucide entry in `THIRD_PARTY_NOTICES.md`.
 - **Tests stay lean and never slow implementation:** build first, then test. Per component: core unit tests only for pure helpers, and one browser spec per layer with an `expectAgentActions` snapshot and a smoke test (renders, the keyboard path, axe in light and dark, with the popup open). Fixtures and explicitly resolved deferred promises only: dictation runs on a fake `DictationSource`, never a microphone. Budgets match Linux CI: fix chip widths and row heights in fixtures, and count nothing that depends on font metrics.
 - **Session routine:** freeze the core primitive's options, state, slots and api first; then React, web, CSS, docs and specs go to parallel subagents, and the owner writes shared files (`core/index.ts`, `registry/catalog.mjs`, `size-budget.json`, `AGENTS.md`, `meta.json`) once. `npm run check` runs alone, through one subagent, never beside another Playwright run.
 - **Size:** each task adds its primitive to `imports` in `size-budget.json` at its measured gzip size rounded up to the next 500 bytes, and raises the `./core` limit by the measured growth, rounded up to the next 1,000 bytes.
@@ -73,7 +72,7 @@ Proposed 2026-11-17. **Open** marks a decision that needs the user's answer befo
 packages/agent-ui/src/types/records.ts                 (+ PickerItem, PickerAction, MenuEntry, ApprovalModeOption, EffortLevel, ContextChip, PromptTemplate, RegenerateOption)
 packages/agent-ui/src/core/{composed-events,dictation,menu-base}.ts
 packages/agent-ui/src/core/picker/{picker,base,index}.ts
-packages/agent-ui/src/core/{add-menu,settings-menu,approval-mode,effort-slider,model-control,context-bar,dictation-button,prompt-library}/{<name>,index}.ts
+packages/agent-ui/src/core/{add-menu,settings-menu,approval-mode,model-control,context-bar,dictation-button,prompt-library}/{<name>,index}.ts
 packages/agent-ui/src/core/{model-selector,message,composer}/…                (Tasks 3, 7, 13, 14)
 packages/agent-ui/src/react/<name>.tsx    packages/agent-ui/src/web/<name>.ts
 packages/agent-ui/src/{react,web}/internal/{command,slider,switch}.*         (Task 1)
@@ -292,53 +291,29 @@ Spec §7 Wave 1 "Message" and Wave 5; D5, D15.
 
 ---
 
-### Task 8: Effort Slider
-
-Spec §7 Wave 5 "Effort Slider"; D8.
-
-**UI SDK:** `createPopup` with `popoverPreset`; Slider (`docs/components/slider.md`: "Step and Bounds", "Format and Locale", "Controller", "Saving on Commit") through `internal-slider`.
-
-**Files:**
-- Create: `packages/agent-ui/src/core/effort-slider/{effort-slider,index}.ts`, `src/react/effort-slider.tsx`, `src/web/effort-slider.ts`, `src/styles/effort-slider.css`
-- Test: `tests/browser/wave-5/effort-slider.spec.ts`
-
-**Interfaces:**
-- Produces `effortSliderPrimitive` (`kind-effort-slider`):
-  - Options: `levels: EffortLevel[]`; `value`/`defaultValue`/`onValueChange` (a level's `value`, reported on Slider's commit, so a drag reports once); `defaultLevel?` (Reset's target, default the middle level); `label` (default "Effort"); `modelLabel?` with `modelHref?` or `onModelPress?`; `open`/`defaultOpen`/`onOpenChange`; `presentation?`; `motion`.
-  - Slots: `root`, `trigger` (named "Effort, <level>", showing the sparkle at the top level), `content`, `title`, `slider` (handed `controller`, `min: 0`, `max: levels.length - 1`, `step: 1`, `format` giving the level's label), `stops` (`aria-hidden` ticks with the labels under them), `reset` (`role: "button"`, present while the value isn't `defaultLevel`'s; focus recovery moves to the slider when it leaves), `model` (a link or button).
-  - API: base `open`/`close`, `setValue(level)`, getter `reset` (while it'd change something). `controlled`: `open`, `value`. Agent actions: `open`, `close`, `setValue`, `reset`.
-- React: `EffortSlider`. Web: `defineEffortSlider()`, event `effortchange`.
-
-- [ ] **Step 1: Write the failing browser test**, both layers: the popup opens with focus on the thumb; arrow keys move one level and `aria-valuetext` reads its label; Home and End reach the ends and the top shows the sparkle; Reset appears and leaves without moving the slider; a drag reports one change; axe open, light and dark; `expectAgentActions(page, "Effort, Medium", ["open", "setValue"])`, then with a changed value `["open", "setValue", "reset"]`.
-- [ ] **Step 2: Run** `npx playwright test tests/browser/wave-5/effort-slider.spec.ts`. Expected: FAIL.
-- [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run** the same, plus `npm run lint`. Expected: PASS.
-- [ ] **Step 5: Component task routine** (`uses: ["internal-slider"]`). Commit `feat(effort-slider): add Effort Slider`.
-
----
-
 ### Task 9: Model Control
 
-Spec §7 Wave 5 "Model Control"; D9.
+Spec §7 Wave 5 "Model Control"; D5, D6, D9. (Task 8, Effort Slider, was scrapped.)
 
-**UI SDK:** nested popups (`docs/components/popover.md` "Nested popovers"), `pickerBase`, the Effort Slider primitive as the nested popup.
+**UI SDK:** Menu (`docs/components/menu.md`: "Radio Group", "Submenus", "Icons") through `internal-menu`; `settingsBase`.
 
 **Files:**
-- Create: `packages/agent-ui/src/core/model-control/{model-control,index}.ts`, `src/react/model-control.tsx`, `src/web/model-control.ts`, `src/styles/model-control.css`
-- Test: `tests/browser/wave-5/model-control.spec.ts`
+- Create: `packages/agent-ui/src/core/settings-menu/base.ts` (Settings Menu's api, slots and rows, moved into `settingsBase`), `packages/agent-ui/src/core/model-control/{model-control,index}.ts`, `src/react/model-control.tsx`, `src/web/model-control.ts`, `src/styles/model-control.css`
+- Modify: Settings Menu's core, render files and rows (option icons, groups, disabled options, actions after the options)
+- Test: `packages/agent-ui/tests/core/model-control.test.mjs`, `tests/browser/wave-5/model-control.spec.ts`
 
 **Interfaces:**
-- Produces `modelControlPrimitive` (`kind-model-control`), spreading `pickerBase`:
-  - Options: Model Selector's `models`, `value`/`defaultValue`/`onValueChange`, `actions?`/`onAction?`; `levels?: EffortLevel[]` with `effort`/`defaultEffort`/`onEffortChange` (no levels, no effort row); `label` (default "Model"); `open`/`defaultOpen`/`onOpenChange`; `presentation?`; `motion`.
-  - The trigger reads "<model> · <effort>" and is named "Model, <model>, effort <effort>". The effort row is the last row before the actions; ArrowRight or Enter on it opens a nested Effort Slider popover beside the picker (a sheet stacks it as the next level), Escape closes only it and returns focus to the row.
-  - API: Picker's getters plus `setEffort(level)`. Agent actions: Picker's plus `setEffort`; the nested Effort Slider is its own snapshot entry while open.
-- React: `ModelControl`. Web: `defineModelControl()`, events `modelchange`, `effortchange`, `modelaction`.
+- Produces `modelControlPrimitive` (`kind-model-control`), spreading `settingsBase`:
+  - Options: Settings Menu's (`settings`, `values`, …); `models: ModelOption[]` (with `efforts?: string[]`); `model`/`defaultModel`/`onModelChange`; `levels?: EffortLevel[]` with `effort`/`defaultEffort`/`onEffortChange` (no levels, no Effort row); `actions?`/`onAction?` ("More models"); `label` (default "Model"), `modelLabel`, `effortLabel`; `open`/`defaultOpen`/`onOpenChange`; `presentation?`; `motion`.
+  - The trigger reads "<model> · <effort>" and is named "Model, <model>, <effort> effort". Rows: the host's toggles, Model, Effort, the host's choices. Levels a model doesn't support are disabled; the effort falls back to the highest supported level at or below it, reported as `model-change`.
+  - API: Settings Menu's plus `setModel(id)`, `setEffort(level)` and `run(actionId)`. Agent actions: `open`, `close`, `toggle`, `setValue`, `setModel`, `setEffort`, `run`.
+- React: `ModelControl`, `ModelControlTrigger`, `ModelControlContent`. Web: `defineModelControl()`, events `modelchange`, `effortchange`, `valueschange`, `modelaction` (`can-run`).
 
-- [ ] **Step 1: Write the failing browser test**, both layers: choosing a model closes the picker and updates the trigger text; the effort row opens the nested popover and both stay open; Escape closes the inner one, then the outer; the trigger's width doesn't change while the popup is open; axe with both open, light and dark; `expectAgentActions(page, "Model, GPT-5, effort High", ["open", "setValue", "setEffort"])`.
+- [ ] **Step 1: Write the failing browser test**, both layers: the trigger's text and name; the menu's rows in order; the Model submenu's groups, icons and check; a model change falls back to a supported effort; an unsupported level is dimmed and can't be chosen; a model without levels has no Effort row; More models runs; refusals keep the old value; axe with a submenu open, light and dark; `expectAgentActions(page, "Model, Claude Opus 5.5, Medium effort", ["open", "toggle", "setValue", "setModel", "setEffort", "run"])`.
 - [ ] **Step 2: Run** `npx playwright test tests/browser/wave-5/model-control.spec.ts`. Expected: FAIL.
 - [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run** the same, plus `npm run lint`. Expected: PASS.
-- [ ] **Step 5: Component task routine** (`uses: ["picker", "effort-slider", "internal-command", "internal-slider"]`). Commit `feat(model-control): add Model Control`.
+- [ ] **Step 4: Run** the same, plus `npm run lint` and `tests/browser/wave-5/settings-menu.spec.ts`. Expected: PASS.
+- [ ] **Step 5: Component task routine** (`uses: ["settings-menu", "internal-menu"]`). Commit `feat(model-control): add Model Control`.
 
 ---
 
@@ -511,10 +486,9 @@ Spec §9.1, §9.5; D16, D17.
 | Requirement | Where |
 | --- | --- |
 | One `definePrimitive` per component, `createParts` per render file | Guard in `npm run lint`, every task |
-| Search, pages and ranked matches are UI SDK Command | Picker, Model Selector, Model Control, Prompt Library (Tasks 2, 3, 9, 12) |
-| Menus, submenus, checkbox and radio items are UI SDK Menu | `menuBase` (Task 1), Tasks 4–7 |
-| Levels are UI SDK Slider | Effort Slider, Model Control (Tasks 8, 9) |
-| Popups, nested popups and sheets come from `createPopup` and `presentation` | Tasks 2, 8–12, 14 |
+| Search, pages and ranked matches are UI SDK Command | Picker, Model Selector, Prompt Library (Tasks 2, 3, 12) |
+| Menus, submenus, checkbox and radio items are UI SDK Menu | `menuBase` (Task 1), Tasks 4–7, 9 |
+| Popups and sheets come from `createPopup`, Menu and `presentation` | Tasks 2, 4–7, 9–12, 14 |
 | Roving chips, focus recovery and leaving rows reuse Waves 1–2 | Context Bar (Task 10) |
 | Saved drafts use UI SDK storage | Composer (Task 13) |
 | Composed components are heard on web through one spec §2 row | `hearComposed` (Task 1, D1) |
@@ -523,7 +497,7 @@ Spec §9.1, §9.5; D16, D17.
 
 ## Self-Review Notes
 
-- **Scope coverage:** searchable Picker with icons, check mark, two-line rows, sections, page rows and footer actions (Task 2), Model Selector on it with logos and "More models" (Task 3), Work in/project/branch pickers (Task 2's page, D3); Add menu (Task 4); Settings menu (Task 5); Approval mode menu (Task 6); Effort slider popover (Task 8) and the combined trigger with a nested popover (Task 9); context bar (Task 10); dictation (Task 11); prompt library (Task 12); draft restore (Task 13); mobile composer (Task 14); regenerate-with menu (Task 7).
+- **Scope coverage:** searchable Picker with icons, check mark, two-line rows, sections, page rows and footer actions (Task 2), Model Selector on it with logos and "More models" (Task 3), Work in/project/branch pickers (Task 2's page, D3); Add menu (Task 4); Settings menu (Task 5); Approval mode menu (Task 6); the combined model and effort menu (Task 9); context bar (Task 10); dictation (Task 11); prompt library (Task 12); draft restore (Task 13); mobile composer (Task 14); regenerate-with menu (Task 7).
 - **Spec coverage:** §2 rows and internal table: Task 1, Task 10, Task 11. §4.1: Task 13. §6 agent confirm list: Tasks 6, 11, 15. §7 Wave 5 rows and behavior lines: Tasks 2–14. §8: axe, keyboard and announcement checks per task. §9.1, §9.5: Task 16 and each page.
 - **Follow-ups D1 opens, not in Wave 5:** File Tree's `onSelect` and Inline Citation's page count can move onto `hearComposed` and leave `decisions.md`'s open list; each is its own fix PR.
 - **Out of scope:** prompt variables and editing (D14); saving attachments with a draft (D12); a speech engine of our own (D10); a showcase (D16).

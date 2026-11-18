@@ -41,9 +41,11 @@ SettingsMenu
 Pass `settings`, the rows in order. Each has a `type`, an `id` and a `label`, and every `id` must be unique.
 
 - A `toggle` is a switch, with an optional `description` (a second line under the label). A screen reader hears it as a menu item that's checked or not.
-- A `choice` has `options`, each a `value` and a `label`. Its row shows the chosen option's label after its own, and opens a submenu of the options, one of them checked.
+- A `choice` has `options`, each a `value` and a `label`. Its row shows the chosen option's label after its own, and opens a submenu of the options, one of them checked. An option can also have an `icon`, a `group`, under whose label it's listed, and `disabled`, which shows it dimmed: it can still be focused but not chosen.
 
 Either can have an `icon`. In React, it's an image URL or an element, like an inline `<svg>`. Icons are hidden from assistive technology, so the label names the row. The `label` names the button, "Settings" by default.
+
+To pick the model and its effort from the same kind of menu, use [Model Control](./model-control.mdx), a Settings Menu with Model and Effort rows of its own.
 
 ### Values
 

@@ -93,10 +93,10 @@ AI components need general controls. These are UI SDK components or `@ui-sdk/cor
 | --- | --- | --- |
 | Button | Button | almost all |
 | Collapsible | Collapsible, `bindPanel`, `bindFindable` | Step and every Step-based component, Sources, Queue |
-| Popover, Tooltip | Popover (`createPopup`; Context Meter and Inline Citation add hover and focus opening; Wave 5 popups take `presentation`), Tooltip | Feedback, Checkpoint, Context Meter, Inline Citation, Picker, Effort Slider, Model Control, Context Bar, Prompt Library |
-| Menu | Menu (checkbox and radio items, submenus, `presentation`) | Message, Add Menu, Settings Menu, Approval Mode |
-| Command | Command | Picker, Model Selector, Model Control, Prompt Library |
-| Slider, Switch | Slider; Switch's look for Settings Menu's checkbox items | Effort Slider, Model Control, Settings Menu |
+| Popover, Tooltip | Popover (`createPopup`; Context Meter and Inline Citation add hover and focus opening; Wave 5 popups take `presentation`), Tooltip | Feedback, Checkpoint, Context Meter, Inline Citation, Picker, Context Bar, Prompt Library |
+| Menu | Menu (checkbox and radio items, submenus, `presentation`) | Message, Add Menu, Settings Menu, Approval Mode, Model Control |
+| Command | Command | Picker, Model Selector, Prompt Library |
+| Slider, Switch | Slider; Switch's look for Settings Menu's checkbox items | Settings Menu, Model Control |
 | Alert Dialog, Dialog | Alert Dialog, Dialog (`createPopup` with `dialogPreset` for Generated Image) | Checkpoint, Generated Image |
 | Scroll Area | Scroll Area, `createStickToBottom` | Conversation, Terminal, Code Block, Markdown Table, Document |
 | Token Input, Trigger Menu | Token Input, Trigger Menu | Composer |
@@ -548,8 +548,7 @@ Behavior requirements:
 | **Add Menu** | Menu | `open`, `close`, `run(id)` | (new) |
 | **Settings Menu** | Menu, Switch's look | `open`, `close`, `toggle(id, on?)`, `setValue(id, value)` | (new) |
 | **Approval Mode** | Menu | `open`, `close`, `setValue(mode)` | (new) |
-| **Effort Slider** | Popover (`createPopup`), Slider | `open`, `close`, `setValue(level)`, `reset` | (new) |
-| **Model Control** | Picker, Effort Slider (nested popover) | `open`, `close`, `setValue(value)`, `setEffort(level)`, `run(actionId)` | (new) |
+| **Model Control** | Settings Menu (`settingsBase`), Menu | `open`, `close`, `toggle(id, on?)`, `setValue(id, value)`, `setModel(id)`, `setEffort(level)`, `run(actionId)` | (new) |
 | **Context Bar** | `createRovingFocus`, `createFocusRecovery`, Popover (`createPopup`) | `remove(id)`, `open`, `close` | (new) |
 | **Dictation** | `announce`, `createFocusRecovery`, `core/dictation.ts` | `start`, `stop`, `cancel` | (new) |
 | **Prompt Library** | Picker | `open`, `close`, `insert(id)`, `run(actionId)` | (new) |
@@ -564,8 +563,7 @@ Behavior requirements:
 - **Add Menu:** a Menu of grouped entries with icons and descriptions; an entry with `items` is a submenu, as a plugin's commands are. `run` calls `onAction`.
 - **Settings Menu:** toggle rows are Menu checkbox items drawn as switches that keep the menu open; value rows are submenus holding a radio group, showing the current value. Changes report the row's id.
 - **Approval Mode:** a Menu radio group of modes with descriptions; a `danger` mode has a warning mark and words, not only a color; an optional header link is a menu item. `setValue` needs a person while `agentConfirm` is on (default).
-- **Effort Slider:** a popover holding UI SDK Slider whose steps are the host's `levels`, with stop marks, the level's label as its value text, a Reset to `defaultLevel` present only while it would change something, an optional line naming the model, and a sparkle at the top level. A drag reports one change, on commit.
-- **Model Control:** one trigger, "<model> · <effort>", opening a Picker of models whose effort row opens a nested Effort Slider popover beside it; Escape closes only the inner popover.
+- **Model Control:** one trigger, "<model> · <effort>", opening a Settings Menu whose Model and Effort rows are submenus of radio items with a check on the chosen one, between the host's toggles and its choices. The Model submenu lists models under their group with their icons and footer actions like "More models"; levels a model doesn't support (`ModelOption.efforts`) are dimmed and can't be chosen, and the effort falls back to the highest supported level at or below it.
 - **Context Bar:** chips in one row, one Tab stop with arrow keys, removable by Delete/Backspace or their pointer control; chips past the row's width go behind a "+N" button whose popover lists them. Adding or removing a chip never moves content below the bar.
 - **Dictation:** a mic button starts a host-supplied `DictationSource`; while listening it shows a waveform from the source's levels with Stop and Cancel; Stop inserts the final text once through `onText`, never interim text; Cancel inserts nothing; errors (unsupported, microphone blocked) show their words and are announced. No source ships enabled: `createSpeechDictation` (Web Speech API, which may send audio to the browser's speech service) is opt-in.
 - **Prompt Library:** Picker of the host's prompts, searching title, description and body, with no check mark; a choice calls `onInsert`.

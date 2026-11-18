@@ -1,0 +1,36 @@
+/* Model Control (spec §7): a button reading "GPT-5 · High" that opens a Settings Menu (`settings-menu.css`) whose
+   Model and Effort rows are its own. The trigger, check, switch and menu are `menu.css`'s. Every effort label shares
+   one grid cell and only the chosen one shows, so the trigger keeps its width when the effort changes. */
+@layer components {
+  /* The trigger shows the model and effort, so it's as wide as its text. */
+  :where([data-kind="model-control"] [data-menu-part="trigger"]) [data-slot="menu-trigger"] {
+    gap: 0.375rem;
+    width: auto;
+    padding-inline: 0.625rem 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  :where([data-kind="model-control"] [data-menu-part="trigger"]) [data-menu-chevron] {
+    margin-inline-start: 0.125rem;
+    rotate: 90deg;
+  }
+
+  [data-model-control-separator],
+  [data-model-control-effort] {
+    color: var(--kind-color-muted);
+  }
+
+  [data-model-control-effort] {
+    display: grid;
+  }
+
+  :where([data-model-control-effort]) > * {
+    grid-area: 1 / 1;
+  }
+
+  :where([data-model-control-effort]) > :not([data-current]) {
+    visibility: hidden;
+  }
+}

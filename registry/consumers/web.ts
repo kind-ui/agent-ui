@@ -21,6 +21,7 @@ import { defineLoader } from "./components/ui/web/loader.js";
 import { defineMarkdown } from "./components/ui/web/markdown.js";
 import { defineMarkdownTable } from "./components/ui/web/markdown-table.js";
 import { defineMessage } from "./components/ui/web/message.js";
+import { defineModelControl } from "./components/ui/web/model-control.js";
 import { defineModelSelector } from "./components/ui/web/model-selector.js";
 import { defineNotice } from "./components/ui/web/notice.js";
 import { definePicker } from "./components/ui/web/picker.js";
@@ -83,6 +84,7 @@ for (const define of [
   defineAddMenu,
   defineSettingsMenu,
   defineApprovalMode,
+  defineModelControl,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -140,6 +142,7 @@ const items = {
   "add-menu": `<kind-add-menu can-run></kind-add-menu>`,
   "settings-menu": `<kind-settings-menu></kind-settings-menu>`,
   "approval-mode": `<kind-approval-mode></kind-approval-mode>`,
+  "model-control": `<kind-model-control></kind-model-control>`,
   terminal: `<kind-terminal command="npm test" exit-code="0" default-open></kind-terminal>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>

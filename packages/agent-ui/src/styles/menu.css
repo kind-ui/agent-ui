@@ -14,7 +14,12 @@
 
   /* The menus' own trigger, an icon button whatever icon it holds; `[data-menu-trigger-icon]` draws the menu's
      `--kind-menu-trigger-icon`. A menu whose trigger shows text widens it in its own stylesheet. */
-  :where([data-kind="add-menu"], [data-kind="settings-menu"], [data-kind="approval-mode"])
+  :where(
+      [data-kind="add-menu"],
+      [data-kind="settings-menu"],
+      [data-kind="approval-mode"],
+      [data-kind="model-control"]
+    )
     :where([data-menu-part="trigger"])
     [data-slot="menu-trigger"] {
     display: inline-flex;

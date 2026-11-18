@@ -6,6 +6,7 @@ Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
 
 ## Settled
 
+- **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.
 - **Model Selector's `icon` is `unknown` in core, so each render layer casts once where core hands it over** (Wave 4 Task 12b): `definePrimitive` can't be generic per instance, and each layer types its own public `models` (`string | ReactElement` in React, `string | Element` on web), so no other value reaches the cast.
 - **Selection's `onDismiss` hears Escape, an outside press and `dismiss`, not a selection collapsing** (Wave 4 Task 11): a collapse is the reader moving on, not a dismissal; the JSDoc says so.
 - **Selection's root is a `group` named by `label`, which names its Toolbar too** (Wave 4 Task 11): the bridge names a component by its root, and a generic `div` can't carry a name; the same name twice is the cost of one "Selection actions" agent entry.

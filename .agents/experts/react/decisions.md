@@ -6,6 +6,7 @@ Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
 
 ## Settled
 
+- **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.
 - **Fixture `main` files carry no comment for the case `<script type="module">`** (Wave 4 Task 12): fixtures hold no comments; the reason is in AGENTS.md "Fixture servers".
 - **A streamed Reasoning chunk renders its step parts once each** (`text` lives in step state): a fixed cost per chunk that doesn't grow with the text, so `budgets.spec.ts` has no Reasoning case. The default parts are one shared element tree.
 - **Count budgets render counting** (`budgets.spec.ts`) follows DevTools: a render that bails out on equal state isn't counted, and a compare-`memo` wrapper (tag 14) is left out so its component counts once.

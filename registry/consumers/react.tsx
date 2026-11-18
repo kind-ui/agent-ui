@@ -28,6 +28,7 @@ import { Loader } from "./components/ui/loader.js";
 import { Markdown } from "./components/ui/markdown.js";
 import { MarkdownTable } from "./components/ui/markdown-table.js";
 import { Message, MessageContent, MessageCopy, MessageToolbar } from "./components/ui/message.js";
+import { ModelControl } from "./components/ui/model-control.js";
 import { ModelSelector } from "./components/ui/model-selector.js";
 import { Notice } from "./components/ui/notice.js";
 import { Picker } from "./components/ui/picker.js";
@@ -227,6 +228,13 @@ const items = {
     />
   ),
   "approval-mode": <ApprovalMode modes={[{ value: "ask", label: "Ask every time" }]} defaultValue="ask" />,
+  "model-control": (
+    <ModelControl
+      models={[{ id: "gpt-5", name: "GPT-5" }]}
+      levels={[{ value: "high", label: "High" }]}
+      defaultModel="gpt-5"
+    />
+  ),
   terminal: <Terminal command="npm test" output={"\x1b[32m✓\x1b[0m 22 passed"} exitCode={0} defaultOpen />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
