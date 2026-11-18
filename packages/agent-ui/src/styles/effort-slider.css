@@ -86,7 +86,7 @@
     font-size: 0.875rem;
     box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 25%, transparent);
 
-    &[data-presentation="sheet"] {
+    &:where([data-presentation="sheet"]) {
       width: 100%;
       max-width: none;
       padding-block-end: calc(16px + env(safe-area-inset-bottom, 0px));
@@ -117,6 +117,7 @@
   /* As wide as the track, so each stop's tick sits under the thumb's center at its level. The first and last labels
      align to the edges, so they stay inside the popup. */
   [data-effort-slider-part="stops"] {
+    display: block;
     position: relative;
     height: 1.25rem;
     font-size: 0.75rem;
@@ -145,7 +146,7 @@
       inset-inline-end: 0;
       translate: none;
     }
-    &[data-current] {
+    &:where([data-current]) {
       color: var(--kind-color-fg);
       font-weight: 500;
     }
@@ -253,41 +254,39 @@
       translate var(--kind-duration-base) var(--kind-ease),
       scale var(--kind-duration-base) var(--kind-ease);
 
-    &:is([data-starting-style], [data-ending-style]) {
+    &:where([data-starting-style], [data-ending-style]) {
       opacity: 0;
       translate: 0 -4px;
       scale: 0.98;
     }
-    &[data-ending-style] {
+    &:where([data-ending-style]) {
       transition-duration: var(--kind-duration-fast);
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    [data-effort-slider-part="content"][data-motion="auto"] {
+    [data-effort-slider-part="content"]:where([data-motion="auto"]) {
       transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
 
-      &:is([data-starting-style], [data-ending-style]) {
+      &:where([data-starting-style], [data-ending-style]) {
         translate: none;
         scale: none;
       }
     }
   }
 
-  [data-effort-slider-part="content"][data-motion="reduced"] {
+  [data-effort-slider-part="content"]:where([data-motion="reduced"]) {
     transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
 
-    &:is([data-starting-style], [data-ending-style]) {
+    &:where([data-starting-style], [data-ending-style]) {
       translate: none;
       scale: none;
     }
   }
 
-  :is(
-    [data-effort-slider-part="content"][data-motion="none"],
-    [data-effort-slider-part="root"][data-motion="none"] [data-effort-slider-part="trigger"],
-    [data-effort-slider-part="content"][data-motion="none"] [data-effort-slider-part="reset"]
-  ) {
+  [data-effort-slider-part="content"]:where([data-motion="none"]),
+  :where([data-effort-slider-part="root"][data-motion="none"]) [data-effort-slider-part="trigger"],
+  :where([data-effort-slider-part="content"][data-motion="none"]) [data-effort-slider-part="reset"] {
     transition: none;
   }
 }

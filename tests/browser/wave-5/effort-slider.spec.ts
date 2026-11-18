@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Change = { component: string; value: string | null; reason: string; source?: string };
 type Fixture = {
@@ -125,6 +126,43 @@ test("a host that refuses keeps the level, and the slider goes back", async ({ p
   expect(await changes(page)).toEqual([
     { component: "value", value: "high", reason: "step-key", source: "keyboard" },
   ]);
+});
+
+test("each level's stop sits under the thumb, and the trigger keeps its width", async ({ page }) => {
+  await load(page);
+  const beside = () => page.locator("#beside").evaluate((el) => el.getBoundingClientRect().x);
+  const before = await beside();
+  await open(page);
+  await settled(page);
+  for (const key of ["ArrowRight", "ArrowLeft"]) {
+    const [stop, center] = await page.evaluate(() => {
+      const box = (el: Element | null) => el?.getBoundingClientRect() ?? new DOMRect();
+      const current = box(document.querySelector("[data-effort-slider-stop][data-current]"));
+      const thumb = box(document.querySelector('[data-slot="slider-thumb"]'));
+      return [current.x + current.width / 2, thumb.x + thumb.width / 2];
+    });
+    expect(Math.abs(stop - center)).toBeLessThanOrEqual(1);
+    await page.keyboard.press(key);
+  }
+  await page.keyboard.press("End");
+  await expect(trigger(page)).toHaveAccessibleName("Effort, Max");
+  expect(await beside()).toBe(before);
+});
+
+test("a value the host sets moves the open slider", async ({ page }) => {
+  await load(page, "controlled");
+  await open(page);
+  await page.evaluate(() => document.querySelector<HTMLElement>("#set-low")?.click());
+  await expect(thumb(page)).toHaveAttribute("aria-valuetext", "Low");
+  await expect(trigger(page)).toHaveAccessibleName("Effort, Low");
+  await expect(content(page)).toBeVisible();
+});
+
+test("a popup someone wrote is placed as the filled-in one is", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "React's parts take their placement as props");
+  await load(page, "written");
+  await open(page);
+  await expect(content(page)).toHaveAttribute("data-align", "start");
 });
 
 test("the model line is a button that reports the model", async ({ page }) => {

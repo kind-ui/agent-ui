@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
+Last reviewed: `f2a2539` (Wave 5 Task 8 Effort Slider)
 
 ## Settled
 
@@ -15,6 +15,7 @@ Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A server-rendered open Effort Slider is named by its trigger until hydration (Wave 5 Task 8):** UI SDK's `popupContent` points `aria-labelledby` at the trigger until the title registers. Upstream; matters only when rendered open.
 - **Adding or removing `regenerateOptions` while mounted remounts Message's Regenerate button and drops its focus** (Wave 5 Task 7): the button sits inside `KindMenu` only while there are options. Keeping the menu mounted would make a plain button a menu trigger.
 - **A Settings Menu choice row's typeahead text includes every option label (Wave 5 Task 5):** `MenuSubTrigger` takes no `label`, so it matches its text; typing from the row's label still finds it.
 - **Add Menu sheet: re-entering a submenu right after going back sometimes closes the sheet (Wave 5 Task 4):** reason `swipe` from UI SDK's sheet swipe-to-dismiss, React only, about 1 in 200; the spec no longer re-enters. Report upstream.
@@ -50,6 +51,7 @@ Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
 
 ## Resolved
 
+- **Effort Slider's `refusing` case couldn't prove `cancel()` (Wave 5 Task 8):** it's uncontrolled now, and a `controlled` case pins a host value moving the open slider; the spec also checks each stop under the thumb and the trigger's width.
 - **`MessageRegenerate` cloned its child and had no way to replace the rows (Wave 5 Task 7):** the child is now `MenuTrigger`'s `render` (its own `render` kept), `menuContent` replaces `MessageRegenerateContent`, and `Message` types `regenerateOptions` icons as `string | ReactElement`; `custom-rows` case in `message.spec.ts`.
 - **`<AddMenuContent>{null}</AddMenuContent>` still drew the rows (Wave 5 Task 4):** children now default to a function of the content's state, as `sources.tsx` does. Fixtures dropped the unused sheet case and added `inert`.
 - **Model Selector's Combobox field (`ComboboxValueIcon` without server markup, an old name kept after a rename)** (Wave 5 Task 3): Model Selector moved onto Picker; its trigger draws the chosen model's icon and name from data.

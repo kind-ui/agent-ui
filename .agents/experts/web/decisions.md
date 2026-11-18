@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
+Last reviewed: `f2a2539` (Wave 5 Task 8 Effort Slider)
 
 ## Settled
 
@@ -23,6 +23,7 @@ Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Effort Slider has no moved or shadow-root fixture case (Wave 5 Task 8):** both checked by hand in review. Redrawing the model line on a `label` or `modelLabel` change replaces its button, which would drop focus held there (suspected, not reproduced).
 - **An `addaction` (and `pickeraction`) listener can't keep an item pending (Wave 5 Task 4):** `onAction` is a `"callback"`, so no `waitUntil`; decide `"action"` for Picker and Add Menu together.
 - **The `open` attribute of `kind-picker` and every `menuBase` element doesn't reflect (Wave 5 Task 4; Task 6 adds `kind-approval-mode`, where it does control the menu):** the docs say to set the property; reflect it or stop observing it with Picker's root state.
 - **`kind-model-selector` has no moved or shadow-root fixture case** (Wave 5 Task 3): both paths were checked by hand in review (a moved element redraws and keeps working; in a shadow root focus, `aria-controls` and `modelchange` behave); add cases when Picker gains its own.
@@ -65,6 +66,7 @@ Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
 
 ## Resolved
 
+- **A written `kind-effort-slider-content` opened centered, and the thumb's label was written on every draw (Wave 5 Task 8):** the root sets `initial-focus`, `side-offset` and `align` on any content missing them (`written` case), and keeps the last thumb label in `drawn`, since the thumb moves `aria-label` onto its input.
 - **A `kind-message` written with menu markup and no `regenerateOptions` both regenerated and opened a menu of "Try again" (Wave 5 Task 7):** the root now always controls its `ui-menu`, which refuses to open without options, and empties a content it owns; `message.spec.ts` has a `no-options` case.
 - **`hearComposed` didn't tell nested components apart (Wave 5 Task 1, fixed in Task 7):** an element nearer the event's target that hears the same event name now takes it, so an outer root no longer hears a nested component's `ui-*` events; `composed-events.spec.ts` nests one `kind-test-menu` in another and fails without the fix.
 - **`placeMenuChild` re-added every row on each redraw (Wave 5 Task 5):** a row already in place was moved before itself, which in WebKit (no `moveBefore`) dropped focus and closed a submenu; Task 4's Add Menu fix only held in Chromium. It now leaves the row, and Settings Menu draws a choice's options by value; `settings-menu.spec.ts` counts zero removals on a value change and an equal `settings` copy.

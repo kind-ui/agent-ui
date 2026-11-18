@@ -157,11 +157,15 @@ export function defineEffortSlider(): void {
           el.innerHTML = defaultParts(
             api.sliderState(instance.get() as EffortSliderState).props.defaultValue,
           );
-          const content = el.querySelector("kind-effort-slider-content");
-          content?.setAttribute("initial-focus", EFFORT_SLIDER_THUMB);
-          content?.setAttribute("side-offset", "6");
-          content?.setAttribute("align", "start");
         }
+        // As React's `EffortSliderContent` places it, unless the author wrote their own.
+        const content = el.querySelector("kind-effort-slider-content");
+        for (const [name, value] of [
+          ["initial-focus", EFFORT_SLIDER_THUMB],
+          ["side-offset", "6"],
+          ["align", "start"],
+        ] as const)
+          if (content && !content.hasAttribute(name)) content.setAttribute(name, value);
         const draw = () => {
           const state = instance.get() as EffortSliderState;
           const button = el.querySelector("kind-effort-slider-trigger > button");
@@ -176,7 +180,12 @@ export function defineEffortSlider(): void {
           // `onValueCommit` stays out: the slider part hears `valuecommit` itself.
           for (const key of ["controller", "min", "max", "step", "format", "disabled"] as const)
             write(slider, key, props[key]);
-          write(el.querySelector("kind-effort-slider-slider ui-slider-thumb"), "ariaLabel", thumbLabel);
+          // The thumb moves its `aria-label` onto its input, so the label last written is kept here.
+          const thumb = el.querySelector("kind-effort-slider-slider ui-slider-thumb");
+          if (thumb && drawn.get(thumb) !== thumbLabel) {
+            drawn.set(thumb, thumbLabel);
+            thumb.ariaLabel = thumbLabel;
+          }
           api.syncValue();
           const stops = el.querySelector("kind-effort-slider-stops");
           if (owns(stops)) drawStops(stops, api.stopsState(state).stops);

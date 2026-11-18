@@ -44,11 +44,14 @@ export type EffortSliderPresentation = "auto" | "popover" | "sheet";
 
 export type EffortSliderOptions = {
   /**
-   * The levels, from least to most effort. The last one shows a sparkle.
+   * The levels, from least to most effort. The last one shows a sparkle. Empty reads as the default.
    * @default Low, Medium and High
    */
   levels?: EffortLevel[];
-  /** The chosen level's `value`. Passing it controls it: change it in `onValueChange`. */
+  /**
+   * The chosen level's `value`. Passing it controls it: change it in `onValueChange`. One that names no level reads
+   * as the `defaultLevel`.
+   */
   value?: string;
   /**
    * The chosen level's `value` at first, when `value` isn't passed.
@@ -124,6 +127,7 @@ export type EffortSliderState = PopupState & {
 
 /** What the trigger shows: every level's label, so it keeps the widest one's width, and which one is chosen. */
 export type EffortSliderTriggerState = PopupTriggerState & {
+  /** Every level, in order: render each label in one cell. */
   levels: EffortLevel[];
   /** The chosen level's index in `levels`. */
   index: number;
@@ -138,9 +142,11 @@ export type EffortSliderSliderState = {
     controller: SliderController<number>;
     /** The chosen level's index when the Slider mounted. */
     defaultValue: number;
+    /** The first level's index. */
     min: 0;
     /** The last level's index. */
     max: number;
+    /** One level per step. */
     step: 1;
     /** Reads each index as its level's label, for `aria-valuetext` and the Slider's value part. */
     format: (index: number) => string;
@@ -154,7 +160,9 @@ export type EffortSliderSliderState = {
 
 /** A level's tick and label under the track. */
 export type EffortSliderStop = {
+  /** The level's `value`. */
   value: string;
+  /** The level's `label`, shown under its tick. */
   label: string;
   /** Where it sits along the track, from 0 to 1. */
   position: number;
@@ -166,8 +174,11 @@ export type EffortSliderStop = {
 
 /** What the `model` part shows, and whether it's a link (`href`), a button (`pressable`) or text. */
 export type EffortSliderModelState = {
+  /** "<label> for <modelLabel>", like "Effort for GPT-5". */
   text: string;
+  /** The `modelHref`: render the text as a link to it. */
   href: string | undefined;
+  /** Whether `onModelPress` is set and there's no `href`: render the text as a button. */
   pressable: boolean;
 };
 
@@ -251,7 +262,7 @@ const presentation = (options: EffortSliderOptions) => {
       options.defaultLevel !== undefined && levels.some((level) => level.value === options.defaultLevel)
         ? options.defaultLevel
         : middle.value,
-    label: options.label ?? "Effort",
+    label: options.label || "Effort",
     modelLabel: options.modelLabel || undefined,
     modelHref: options.modelHref || undefined,
     canPressModel: typeof options.onModelPress === "function",
@@ -260,11 +271,13 @@ const presentation = (options: EffortSliderOptions) => {
   };
 };
 
-/** The chosen level's index; the `defaultLevel`'s while the value names none. */
-const indexOf = ({ levels, value, defaultLevel }: EffortSliderState) => {
-  const index = levels.findIndex((level) => level.value === value);
-  return index >= 0 ? index : levels.findIndex((level) => level.value === defaultLevel);
-};
+/** A value that names no level reads as the `defaultLevel`, so the snapshot, the trigger and Reset agree. */
+const known = (
+  { levels, defaultLevel }: Pick<EffortSliderState, "levels" | "defaultLevel">,
+  value: string | undefined,
+) => (value !== undefined && levels.some((level) => level.value === value) ? value : defaultLevel);
+
+const indexOf = ({ levels, value }: EffortSliderState) => levels.findIndex((level) => level.value === value);
 
 const offersReset = (state: EffortSliderState) => !state.disabled && state.value !== state.defaultLevel;
 
@@ -294,17 +307,16 @@ export const effortSliderPrimitive: EffortSliderPrimitive = definePrimitive<
   },
   state: (options) => {
     const shown = presentation(options);
+    return { ...popupState(options), ...shown, value: known(shown, options.value ?? options.defaultValue) };
+  },
+  sync: (options) => {
+    const shown = presentation(options);
     return {
-      ...popupState(options),
       ...shown,
-      value: options.value ?? options.defaultValue ?? shown.defaultLevel,
+      ...(options.open === undefined ? {} : { open: options.open }),
+      ...(options.value === undefined ? {} : { value: known(shown, options.value) }),
     };
   },
-  sync: (options) => ({
-    ...presentation(options),
-    ...(options.open === undefined ? {} : { open: options.open }),
-    ...(options.value === undefined ? {} : { value: options.value }),
-  }),
   controlled: ["open", "value"],
   api: (context) => {
     const { store } = context;
@@ -323,7 +335,17 @@ export const effortSliderPrimitive: EffortSliderPrimitive = definePrimitive<
     const change = createChange(context);
     const controller = createSliderController<number>();
     let resync = 0;
-    context.onDestroy(() => cancelAnimationFrame(resync));
+    context.onDestroy(() => {
+      if (resync) cancelAnimationFrame(resync);
+    });
+    // A host that drops the chosen level from `levels` leaves an uncontrolled slider on the `defaultLevel`.
+    // Listeners run before the store takes the new options, so the levels are read from them.
+    context.onOptions((options) => {
+      const shown = presentation(options);
+      const { value } = store.get();
+      if (options.value === undefined && known(shown, value) !== value)
+        store.set({ value: shown.defaultLevel });
+    });
 
     const syncValue = () => {
       // The controller reads `undefined` until a Slider attaches it.

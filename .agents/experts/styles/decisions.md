@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `780e148` (Wave 5 Task 6 Approval Mode)
+Last reviewed: `f2a2539` (Wave 5 Task 8 Effort Slider)
 
 ## Settled
 
@@ -57,6 +57,7 @@ Last reviewed: `780e148` (Wave 5 Task 6 Approval Mode)
 
 ## Resolved
 
+- **Effort Slider's web stops collapsed to an inline box, and state rules were two attributes deep (Wave 5 Task 8):** the stops part is `display: block`, and `data-current`, `data-motion` and starting/ending style sit in `:where()`; the spec checks each stop under the thumb on both layers.
 - **Settings Menu switch and icon trigger (Wave 5 Task 5):** the switch had a transition under `motion="none"` and its track faded under reduced motion; the icon trigger lost its look with custom children, as Add Menu's did. Both fixed; the spec checks the reduced track and thumb.
 - **Menu exit ran 150 ms under reduced motion, and the Add Menu trigger rule was two attributes deep (Wave 5 Task 4):** the base exit rule and the trigger's context moved into `:where()`; the spec checks the 120 ms exit.
 - **Model Selector's field icon rules** (Wave 5 Task 3): Model Selector moved onto Picker and is styled by `picker.css` through `data-picker-part`; the field and its icon rules are gone.

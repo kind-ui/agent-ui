@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
+Last reviewed: `f2a2539` (Wave 5 Task 8 Effort Slider)
 
 ## Settled
 
+- **Effort Slider's model line hears its button's click bubble (Wave 5 Task 8):** the line is an `a`, a `button` or text by its options, so no single `role: "button"` slot can own it; the `model` part checks `closest("button")` before calling `onModelPress`.
 - **Model Selector's `icon` is `unknown` in core, so each render layer casts once where core hands it over** (Wave 4 Task 12b): `definePrimitive` can't be generic per instance, and each layer types its own public `models` (`string | ReactElement` in React, `string | Element` on web), so no other value reaches the cast.
 - **Selection's `onDismiss` hears Escape, an outside press and `dismiss`, not a selection collapsing** (Wave 4 Task 11): a collapse is the reader moving on, not a dismissal; the JSDoc says so.
 - **Selection's root is a `group` named by `label`, which names its Toolbar too** (Wave 4 Task 11): the bridge names a component by its root, and a generic `div` can't carry a name; the same name twice is the cost of one "Selection actions" agent entry.
@@ -37,6 +38,8 @@ Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A drag on Effort Slider reports `source: "virtual"` under Playwright (Wave 5 Task 8):** UI SDK reads a `pointerup` without pressure as a virtual pointer, and the Slider's commit carries that source; the spec checks the reason only. Upstream.
+- **Effort Slider stays open when `disabled` turns on while open (Wave 5 Task 8):** `open`/`close` follow `createPopup`; the spec doesn't say a disabled control closes its popup.
 - **`hearComposed` gives an event to the nearest element hearing its name, whatever tag that element's handler accepts** (Wave 5 Task 7): a `ui-file-input` inside a `menuBase` menu wouldn't reach an outer Composer, since every menu hears `valuechange`. Nothing nests one that way; a per-call tag filter would fix it.
 - **Two agent calls on a controlled Settings Menu with no render between them (Wave 5 Task 5):** the second builds on the owner's `values`, which haven't come back yet, so `onValuesChange={setValues}` keeps only the second; `setValues` carries values between its own changes. Not reproduced through the bridge.
 - **`MenuRun.keepOpen` with a returned promise (Wave 5 Task 4):** untested, and no menu does both; a later close after the promise settles would be refused. Settle it when a `menuBase` menu first returns a promise.
@@ -80,6 +83,7 @@ Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
 
 ## Resolved
 
+- **Effort Slider kept a `value` that named no level (Wave 5 Task 8):** `known` reads it as the `defaultLevel` in `state` and `sync`, an uncontrolled slider whose level leaves `levels` moves to it, an empty `label` reads as "Effort", and `destroy()` cancels only a requested frame; `tests/core/effort-slider.test.mjs`.
 - **Message's regenerate menu stayed open after the toolbar left or an agent regenerated (Wave 5 Task 7):** `menuBase` gained `canOpen`; the menu closes when there are no options, no `onRegenerate` or an unsettled message, and after an agent's `regenerate`; pinned in `message.spec.ts`.
 - **`hearComposed` didn't tell nested components apart (Wave 5 Task 1, fixed in Task 7):** an element nearer the event's target that hears the same event name now takes it, so an outer root no longer hears a nested component's `ui-*` events; `composed-events.spec.ts` nests one `kind-test-menu` in another and fails without the fix.
 - **Settings Menu `setValues` lost changes while controlled, and read inherited values (Wave 5 Task 5):** each change builds on the one before, and values are read by own key; unit tests pin both.
