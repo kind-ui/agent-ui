@@ -5,9 +5,9 @@ description: Turn speech into text with a mic button, a live waveform and the wo
 
 import DictationExample from "../../../examples/dictation/basic";
 
-Use dictation beside a [composer](./composer.mdx) to let people speak a prompt instead of typing it. It never picks where the audio goes: you pass a `source` that turns speech into text, like the browser's speech recognition or your own transcription endpoint, and Dictation shows the microphone's level, the words heard so far, and hands you the final text.
+Use dictation inside a [composer](./composer.mdx) to let people speak a prompt instead of typing it. It never picks where the audio goes: you pass a `source` that turns speech into text, like the browser's speech recognition or your own transcription endpoint, and Dictation shows the microphone's level and the words heard so far. Inside a composer, it adds the final text to the draft. Anywhere else, it hands the text to you.
 
-<Example caption="Press the mic button to start. Watch the words arrive, then press Stop to put them in the prompt, or Cancel to drop them. This example plays back a recording, so it never opens your microphone.">
+<Example caption="Press the mic button beside Send to start. The waveform takes the prompt's place while the words arrive. Press Stop to add them to the prompt, or Cancel to drop them. This example plays back a recording, so it never opens your microphone.">
   <DictationExample />
 
   <include cwd lang="tsx">./examples/dictation/basic.tsx</include>
@@ -51,7 +51,11 @@ import { createSpeechDictation } from "@kind-ui/agent-ui/core";
 
 const speech = createSpeechDictation({ lang: "en-US" });
 
-<Dictation source={speech} onText={insert} />;
+<Composer aria-label="Message">
+  <ComposerInput aria-label="Prompt" />
+  <Dictation source={speech} />
+  <ComposerSubmit />
+</Composer>;
 ```
 
 To keep audio on your own servers, write a source. This one records with `MediaRecorder` and posts the recording to your endpoint once Stop is pressed, but not after Cancel:
@@ -96,21 +100,21 @@ It reports no levels, so its waveform stays flat; yield `{ level }` from Web Aud
 
 ### Inserting the Text
 
-Pass `onText`. It's called once when a dictation ends, with its final texts joined, and never for one that was canceled, failed or heard nothing. The reason is `stop-press` from Stop, `imperative` from the api, like an agent's `stop`, or `source-end` when the source ended on its own. The example adds the text to a controlled composer's draft:
+Place Dictation as a direct child of a `Composer`, beside `ComposerInput`, and it adds its final text to the end of the draft, after a space, with no code of your own. The composer reports the change to `onValueChange` with the reason `dictation`, and a disabled composer takes nothing. The composer's api does the same through `appendText(text)`.
+
+`onText` is called first, once when a dictation ends, with its final texts joined, and never for one that was canceled, failed or heard nothing. The reason is `stop-press` from Stop, `imperative` from the api, like an agent's `stop`, or `source-end` when the source ended on its own. Call `details.cancel()` to keep the text out of the draft and handle it yourself.
+
+Outside a composer, Dictation inserts nothing, so pass `onText` and put the text where it belongs:
 
 ```tsx
-const [draft, setDraft] = useState<ComposerDraft>({ text: "", tokens: [], attachments: [] });
-
-<Composer value={draft} onValueChange={setDraft}>…</Composer>
-<Dictation
-  source={source}
-  onText={(text) => setDraft((current) => ({ ...current, text: `${current.text} ${text}`.trim() }))}
-/>
+<Dictation source={source} onText={(text) => setNote((note) => `${note} ${text}`.trim())} />
 ```
 
 ### Phases
 
-The mic button starts listening. While listening, the waveform follows the levels, the status shows the words heard so far, and Cancel and Stop take the button's place. Stop moves to transcribing, which shows "Transcribing" until the source reports its last text, then Dictation goes back to the mic button and calls `onText`. Cancel goes straight back and inserts nothing.
+The mic button starts listening. While listening, the waveform follows the levels, the status shows the words heard so far, and Cancel and Stop take the button's place. Stop moves to transcribing, which shows "Transcribing", with the waveform holding its last levels, until the source reports its last text. Then Dictation goes back to the mic button and inserts the text. Cancel goes straight back and inserts nothing.
+
+Inside a composer, the mic button is a round icon just before Send. While listening and transcribing, Dictation takes over the composer: the waveform fills the place of the prompt, Cancel takes the place of the controls at the start of the actions row, the status sits in the middle of the row, and Stop sits beside Send. The composer keeps its size, so nothing around it moves.
 
 When a source fails, the mic button comes back with the reason beside it, like "Microphone blocked", "No speech heard" or "Speech service unreachable", and the reason is announced. The words heard while listening aren't announced.
 
@@ -120,7 +124,7 @@ The mic button, Cancel and Stop are buttons, so Enter or Space presses them. Whe
 
 ### Size and Motion
 
-Dictation keeps one size in every phase, so nothing beside it moves: `--kind-dictation-width` (16rem by default) and `--kind-dictation-height` (2rem). Set either on the component. `bars` sets how many bars the waveform has (16 by default). `motion` sets how the waveform moves: `"auto"`, the default, follows `prefers-reduced-motion`; under reduced motion and `"none"` the waveform holds still.
+On its own, Dictation keeps one size in every phase, so nothing beside it moves: `--kind-dictation-width` (16rem by default) and `--kind-dictation-height` (2rem). Set either on the component. Inside a composer, it takes the composer's size instead. The waveform draws one bar per level, the newest at the end, so the bars flow toward the start. `bars` sets how many levels it keeps, from 1 to 256 (128 by default), and bars that don't fit are cut at the start. `motion` sets how the waveform moves: `"auto"`, the default, follows `prefers-reduced-motion`; under reduced motion and `"none"` the waveform holds still.
 
 ## API Reference
 
@@ -133,5 +137,5 @@ An agent connected with `createAgent` finds Dictation by its `label`, "Dictate" 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/dictation-button/dictation-button.ts" name="DictationAgentActions" type='Pick<DictationApi, "start" | "stop" | "cancel">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-dictation>`, set `source` as a property and `label`, `bars`, `agent-confirm` and `motion` as attributes, and listen for `dictationtext`, with the text as `event.detail.value`. The element fills in its parts when it has no children.
+  Runs in React and Web Components. On `<kind-dictation>`, set `source` as a property and `label`, `bars`, `agent-confirm` and `motion` as attributes, and listen for `dictationtext`, with the text as `event.detail.value`. Inside a `<kind-composer>`, the text goes into the draft. The element fills in its parts when it has no children.
 </Caption>

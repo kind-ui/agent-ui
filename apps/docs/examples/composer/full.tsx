@@ -1,6 +1,6 @@
 "use client";
 import type { EffortLevel, ModelOption, SettingsEntry, SettingsValues } from "@kind-ui/agent-ui";
-import type { ComposerDraft, DictationEvent, DictationSource } from "@kind-ui/agent-ui/core";
+import type { DictationEvent, DictationSource } from "@kind-ui/agent-ui/core";
 import { type ReactElement, useRef, useState } from "react";
 import { AddMenu } from "@/components/ui/add-menu";
 import { ApprovalMode } from "@/components/ui/approval-mode";
@@ -72,7 +72,6 @@ const demoSource: DictationSource = {
 };
 
 export default function FullComposerExample() {
-  const [draft, setDraft] = useState<ComposerDraft>({ text: "", tokens: [], attachments: [] });
   const [chips, setChips] = useState(context);
   const [model, setModel] = useState<string | null>("claude-sonnet-5.5");
   const [effort, setEffort] = useState("medium");
@@ -80,19 +79,8 @@ export default function FullComposerExample() {
   const [values, setValues] = useState<SettingsValues>({ search: true, memory: false });
   const editor = useRef<HTMLDivElement>(null);
 
-  const append = (text: string) =>
-    setDraft((current) => ({
-      ...current,
-      text: current.text.trim() ? `${current.text.trimEnd()} ${text}` : text,
-    }));
-
   return (
-    <Composer
-      aria-label="Message"
-      value={draft}
-      onValueChange={setDraft}
-      onSubmit={() => new Promise<void>((resolve) => setTimeout(resolve, 1000))}
-    >
+    <Composer aria-label="Message" onSubmit={() => new Promise<void>((resolve) => setTimeout(resolve, 1000))}>
       <ContextBar
         chips={chips}
         onRemove={(id) => setChips((current) => current.filter((chip) => chip.id !== id))}
@@ -119,7 +107,7 @@ export default function FullComposerExample() {
         <ApprovalMode modes={modes} value={mode} onValueChange={setMode} />
         <SettingsMenu settings={settings} values={values} onValuesChange={setValues} />
       </div>
-      <Dictation source={demoSource} onText={append} />
+      <Dictation source={demoSource} />
       <ComposerSubmit />
     </Composer>
   );

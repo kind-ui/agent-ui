@@ -1,4 +1,5 @@
 import type { MotionMode } from "@kind-ui/agent-ui/core";
+import { defineComposer } from "../../../../src/web/composer.js";
 import { defineDictation } from "../../../../src/web/dictation.js";
 import { dictationHost } from "../../shared/dictation.js";
 
@@ -19,9 +20,45 @@ const page =
     Object.assign(window, { kindDictation: host });
   };
 
+// Without a `dictationtext` listener the Dictation hands its text to the composer; with `takeOver` the host cancels that.
+const inComposer =
+  ({ takeOver = false } = {}) =>
+  (root: HTMLElement) => {
+    defineComposer();
+    defineDictation();
+    root.innerHTML = `
+      <div class="p-4" style="width: 480px">
+        <kind-composer>
+          <form aria-label="Message">
+            <ui-file-input>
+              <ui-file-input-dropzone>
+                <kind-composer-input>
+                  <ui-token-input>
+                    <ui-token-input-editor aria-label="Prompt" placeholder="Ask anything"></ui-token-input-editor>
+                  </ui-token-input>
+                </kind-composer-input>
+                <kind-composer-submit><button></button></kind-composer-submit>
+              </ui-file-input-dropzone>
+            </ui-file-input>
+          </form>
+        </kind-composer>
+      </div>`;
+    const dictation = document.createElement("kind-dictation");
+    dictation.source = source;
+    if (takeOver)
+      dictation.addEventListener("dictationtext", (event) => {
+        event.preventDefault();
+        record(event.detail.value, event.detail);
+      });
+    root.querySelector("kind-composer-submit")?.before(dictation);
+    Object.assign(window, { kindDictation: host });
+  };
+
 export const cases = {
   default: page(),
   reduced: page({ motion: "reduced" }),
   none: page({ motion: "none" }),
   "no-source": page({ withSource: false }),
+  composer: inComposer(),
+  "composer-cancel": inComposer({ takeOver: true }),
 };

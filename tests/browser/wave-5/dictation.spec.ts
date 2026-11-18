@@ -185,3 +185,110 @@ for (const scheme of ["light", "dark"] as const)
     await expect(status(page)).toHaveText("Microphone blocked");
     await check();
   });
+
+test.describe("inside a Composer", () => {
+  const composer = (page: Page) => page.locator('[data-slot="kind-composer"]');
+  const editor = (page: Page) => page.getByRole("textbox", { name: "Prompt" });
+  const send = (page: Page) => page.locator('button[data-slot="kind-composer-submit"]');
+  const box = async (locator: ReturnType<Page["locator"]>) => {
+    const rect = await locator.boundingBox();
+    if (!rect) throw new Error("not rendered");
+    return rect;
+  };
+
+  test("the idle mic sits in the actions row, left of Send", async ({ page }) => {
+    await load(page, "composer");
+    const [frame, button, sendBox] = await Promise.all([
+      box(composer(page)),
+      box(mic(page)),
+      box(send(page)),
+    ]);
+    expect(button.x).toBeGreaterThanOrEqual(frame.x);
+    expect(button.y + button.height).toBeLessThanOrEqual(frame.y + frame.height);
+    expect(button.x + button.width).toBeLessThanOrEqual(sendBox.x);
+    expect(button.y + button.height / 2).toBeCloseTo(sendBox.y + sendBox.height / 2, 0);
+  });
+
+  test("listening covers the editor's row and the actions row, and the box never changes size", async ({
+    page,
+  }) => {
+    await load(page, "composer");
+    const idle = {
+      frame: await box(composer(page)),
+      send: await box(send(page)),
+      input: await box(editor(page)),
+    };
+    const unmoved = async () => {
+      expect(await box(composer(page))).toEqual(idle.frame);
+      expect(await box(send(page))).toEqual(idle.send);
+    };
+    await listen(page);
+    await push(
+      page,
+      { level: 0.6 },
+      { text: "a long run of words that will not fit in the row at all", final: false },
+    );
+    await expect(editor(page)).toBeHidden();
+    await unmoved();
+    const [wave, cancelBox, stopBox] = await Promise.all([
+      box(page.locator('[data-dictation-part="waveform"]')),
+      box(cancel(page)),
+      box(stop(page)),
+    ]);
+    const waveMiddle = wave.y + wave.height / 2;
+    expect(waveMiddle).toBeGreaterThanOrEqual(idle.input.y);
+    expect(waveMiddle).toBeLessThanOrEqual(idle.input.y + idle.input.height);
+    expect(wave.y + wave.height).toBeLessThanOrEqual(idle.send.y);
+    const padding = await page
+      .locator('[data-slot="file-input-dropzone"]')
+      .evaluate((el) => Number.parseFloat(getComputedStyle(el).paddingLeft));
+    expect(cancelBox.x).toBeCloseTo(idle.frame.x + 1 + padding, 0);
+    expect(cancelBox.y + cancelBox.height / 2).toBeCloseTo(idle.send.y + idle.send.height / 2, 0);
+    expect(stopBox.x + stopBox.width).toBeLessThanOrEqual(idle.send.x);
+    expect(stopBox.y + stopBox.height / 2).toBeCloseTo(idle.send.y + idle.send.height / 2, 0);
+    await stop(page).click();
+    await expect(root(page)).toHaveAttribute("data-phase", "transcribing");
+    await expect(page.locator('[data-dictation-part="waveform"]')).toBeVisible();
+    await unmoved();
+    await end(page);
+    await expect(root(page)).toHaveAttribute("data-phase", "idle");
+    await expect(editor(page)).toBeVisible();
+    await unmoved();
+  });
+
+  test("Stop adds the final text to the draft after a space, and the mic comes back", async ({ page }) => {
+    await load(page, "composer");
+    await editor(page).click();
+    await page.keyboard.type("Fix the bug");
+    await listen(page);
+    await push(page, { text: "and add a test", final: true }, { text: "plea", final: false });
+    await stop(page).click();
+    await end(page);
+    await expect(root(page)).toHaveAttribute("data-phase", "idle");
+    await expect(editor(page)).toHaveText("Fix the bug and add a test");
+    await expect(editor(page)).toBeVisible();
+    await expect(mic(page)).toBeVisible();
+    await expect(cancel(page)).toHaveCount(0);
+  });
+
+  test("Cancel adds nothing", async ({ page }) => {
+    await load(page, "composer");
+    await listen(page);
+    await push(page, { text: "Hello", final: true });
+    await cancel(page).click();
+    await end(page);
+    await expect(root(page)).toHaveAttribute("data-phase", "idle");
+    await expect(editor(page)).toHaveText("");
+  });
+
+  test("a host that cancels onText takes the text, and the draft stays empty", async ({ page }) => {
+    await load(page, "composer-cancel");
+    await listen(page);
+    await push(page, { text: "Hello", final: true });
+    await stop(page).click();
+    await end(page);
+    await expect(root(page)).toHaveAttribute("data-phase", "idle");
+    expect(await texts(page)).toEqual([{ text: "Hello", reason: "stop-press", source: "mouse" }]);
+    await expect(editor(page)).toHaveText("");
+  });
+});

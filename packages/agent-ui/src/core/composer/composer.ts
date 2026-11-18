@@ -23,6 +23,7 @@ import type { AttachmentsOptions } from "../attachments/index.js";
 import { type FileIntake, forwardFileInputEvents } from "../file-input-events.js";
 import { memo } from "../memo.js";
 import { cancel, enter, exit, type MotionMode } from "../motion/index.js";
+import { bindTextTarget } from "../text-target.js";
 import {
   type ComposerAttachment,
   type ComposerDraft,
@@ -40,7 +41,7 @@ import {
  * back an earlier prompt. `"picker"`, `"drop"`, `"paste"`, `"reset"`: File Input attached files.
  * `"remove-press"`: an attachment was removed. `"submit"`: a resolved submission cleared the draft.
  * `"restore"`: the draft saved under `draftKey` came back. `"discard-press"`: Discard emptied it.
- * `"imperative"`: an `api` call without an event.
+ * `"dictation"`: a Dictation inside the composer added its text. `"imperative"`: an `api` call without an event.
  */
 export type ComposerValueChangeReason =
   | "input-change"
@@ -48,7 +49,8 @@ export type ComposerValueChangeReason =
   | FileInputValueChangeReason
   | "submit"
   | "restore"
-  | "discard-press";
+  | "discard-press"
+  | "dictation";
 
 export type ComposerOptions = {
   /** The draft. Passing it controls it: change it in `onValueChange`. Don't pass it with `defaultValue`. */
@@ -136,6 +138,11 @@ export type ComposerApi = {
   getValue: () => ComposerDraft;
   /** Replaces the draft. A string replaces only the text and keeps the attachments. Returns whether the change was accepted. */
   setValue: (value: ComposerDraft | string, event?: Event) => boolean;
+  /**
+   * Adds text at the end of the draft, after a space, as a Dictation inside the composer does with what it heard.
+   * Returns whether the change was accepted.
+   */
+  appendText: (text: string) => boolean;
   /** Inserts a mention or command at the caret. Returns whether it was inserted. */
   insertToken: (token: TokenToInsert) => boolean;
   /** Removes an attachment from the draft by its `id`. Returns whether the change was accepted. */
@@ -303,6 +310,18 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
           ? { text: value, tokens: tokensOf(fromText(value)), attachments: store.get().value.attachments }
           : value;
       return change("value", next, event ? { reason: "input-change", event } : { reason: "imperative" });
+    };
+
+    const appendText = (text: string) => {
+      const { value, disabled } = store.get();
+      const words = text.trim();
+      if (disabled || !words) return false;
+      const joined = value.text.trim() ? `${value.text.trimEnd()} ${words}` : words;
+      return change(
+        "value",
+        { ...value, text: joined, tokens: tokensOf(fromText(joined)) },
+        { reason: "dictation" },
+      );
     };
 
     let nextAttachment = 0;
@@ -522,6 +541,7 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
     return {
       getValue: () => store.get().value,
       setValue,
+      appendText,
       insertToken: ({ kind, value, label }) => tokenInput.insert({ type: kind, value, label }) === true,
       removeAttachment,
       submit: () => {
@@ -624,9 +644,11 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       bind: (el, { api }) => {
         const stopForwarding = forwardFileInputEvents(el, api.intake);
         const unbindDraft = api.bindDraft();
+        const unbindText = bindTextTarget(el, api.appendText);
         return () => {
           stopForwarding();
           unbindDraft();
+          unbindText();
         };
       },
     }),

@@ -1,6 +1,5 @@
 "use client";
-import type { ComposerDraft, DictationEvent, DictationSource } from "@kind-ui/agent-ui/core";
-import { useState } from "react";
+import type { DictationEvent, DictationSource } from "@kind-ui/agent-ui/core";
 import { Composer, ComposerInput, ComposerSubmit } from "@/components/ui/composer";
 import { Dictation } from "@/components/ui/dictation";
 
@@ -27,21 +26,13 @@ const demoSource: DictationSource = {
 };
 
 export default function DictationExample() {
-  const [draft, setDraft] = useState<ComposerDraft>({ text: "", tokens: [], attachments: [] });
-
-  const insert = (text: string) =>
-    setDraft((current) => ({
-      ...current,
-      text: current.text.trim() ? `${current.text.trimEnd()} ${text}` : text,
-    }));
-
   return (
-    <div className="flex w-full max-w-md flex-col gap-2">
-      <Composer aria-label="Message" value={draft} onValueChange={setDraft}>
+    <div className="w-full max-w-md">
+      <Composer aria-label="Message">
         <ComposerInput aria-label="Prompt" placeholder="Type or dictate a prompt" />
+        <Dictation source={demoSource} />
         <ComposerSubmit />
       </Composer>
-      <Dictation className="self-end" source={demoSource} onText={insert} />
     </div>
   );
 }

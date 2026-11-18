@@ -14,6 +14,7 @@ import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { actionSource } from "../action-source.js";
 import type { DictationSource } from "../dictation.js";
 import type { MotionMode } from "../motion/index.js";
+import { insertText } from "../text-target.js";
 
 /**
  * `"idle"`: the mic button. `"listening"`: the waveform, Stop and Cancel. `"transcribing"`: after Stop, until the
@@ -33,7 +34,10 @@ export type DictationOptions = {
    * decides where audio goes. `createSpeechDictation` is the browser's.
    */
   source?: DictationSource;
-  /** Called once when a dictation ends, with its final text. Never for a canceled or failed one, or without text. */
+  /**
+   * Called once when a dictation ends, with its final text. Never for a canceled or failed one, or without text.
+   * Inside a Composer the text then goes into the draft, unless you cancel `details`.
+   */
   onText?: (text: string, details: ChangeDetails<DictationTextReason>) => void;
   /**
    * Names the mic button and the component.
@@ -41,8 +45,9 @@ export type DictationOptions = {
    */
   label?: string;
   /**
-   * How many bars the waveform has, a whole number from 1 to 64.
-   * @default 16
+   * How many levels the waveform keeps, a whole number from 1 to 256: one bar each, the newest at the end. Bars
+   * that don't fit are cut at the start.
+   * @default 128
    */
   bars?: number;
   /**
@@ -141,9 +146,10 @@ const joinFinals = (finals: readonly string[]): string =>
     .filter(Boolean)
     .join(" ");
 
-const MAX_BARS = 64;
-const barCount = ({ bars = 16 }: DictationOptions) =>
-  Number.isFinite(bars) ? Math.min(MAX_BARS, Math.max(1, Math.floor(bars))) : 16;
+const MAX_BARS = 256;
+const DEFAULT_BARS = 128;
+const barCount = ({ bars = DEFAULT_BARS }: DictationOptions) =>
+  Number.isFinite(bars) ? Math.min(MAX_BARS, Math.max(1, Math.floor(bars))) : DEFAULT_BARS;
 const silence = (bars: number) => Array<number>(bars).fill(0);
 
 const presentation = (options: DictationOptions) => ({
@@ -250,7 +256,8 @@ export const dictationButtonPrimitive: DictationPrimitive = definePrimitive<
       finish({ phase: "idle" });
       const text = joinFinals(finals);
       const { reason, source: who } = current.stopped ?? { reason: "source-end", source: "programmatic" };
-      if (text) dispatch(context, "onText", text, { reason, source: who });
+      if (text && !dispatch(context, "onText", text, { reason, source: who }))
+        insertText(context.element("root"), text);
     };
 
     const start = () => {
@@ -272,7 +279,8 @@ export const dictationButtonPrimitive: DictationPrimitive = definePrimitive<
     const stop = (reason: DictationTextReason, event?: Event) => {
       if (!run || store.get().phase !== "listening") return false;
       run.stopped = { reason, source: actionSource(event, reason) };
-      store.set({ phase: "transcribing", levels: silence(store.get().levels.length) });
+      // The waveform holds its last levels until the text arrives.
+      store.set({ phase: "transcribing" });
       run.controller.abort();
       return true;
     };
@@ -335,7 +343,7 @@ export const dictationButtonPrimitive: DictationPrimitive = definePrimitive<
       bind: (el, part) => part.api.recovery.bind(el, part),
     }),
     waveform: slot<BaseSlotProps, DictationWaveformState>({
-      present: (state) => state.phase === "listening",
+      present: (state) => isActive(state.phase),
       state: (state) => ({ bars: state.levels.length }),
       attrs: (state) => ({
         "aria-hidden": "true",

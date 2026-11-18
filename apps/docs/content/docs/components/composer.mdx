@@ -100,7 +100,7 @@ A submission that resolves removes the saved draft, unless someone kept typing i
 
 ### Controls and Narrow Screens
 
-Put the controls a prompt needs in the composer's actions row: wrap them in one element placed in its `attach` area, as `style={{ gridArea: "attach" }}`, and let it wrap. A [Context Bar](./context-bar.mdx) inside the composer sits above the prompt, and a [Dictation](./dictation.mdx) takes the free space before Send, so it grows into it while listening and nothing else moves.
+Put the controls a prompt needs in the composer's actions row: wrap them in one element placed in its `attach` area, as `style={{ gridArea: "attach" }}`, and let it wrap. A [Context Bar](./context-bar.mdx) inside the composer sits above the prompt, and a [Dictation](./dictation.mdx) inside it is a mic button just before Send. While it listens, its waveform takes the prompt's place and its Cancel, status and Stop take the actions row, and the composer keeps its size. When it stops, it adds what it heard to the end of the draft, with the reason `dictation`. Call `appendText(text)` on the composer's api to do the same.
 
 <Example caption="Press the model, the shield or the settings button to open its menu. Press the mic to dictate a prompt.">
   <FullComposerExample />

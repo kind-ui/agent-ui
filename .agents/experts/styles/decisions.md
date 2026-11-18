@@ -6,7 +6,8 @@ Last reviewed: `cdf3734` (Wave 5 Task 14 Composer on narrow screens)
 
 ## Settled
 
-- **Dictation's idle box keeps its full width (Wave 5 Task 11):** the mic button, waveform and status share one box so nothing beside it moves (plan Design bar); hosts size it with `--kind-dictation-width`.
+- **Dictation's idle box keeps its full width (Wave 5 Task 11):** the mic button, waveform and status share one box so nothing beside it moves (plan Design bar); hosts size it with `--kind-dictation-width`. Inside a Composer (Task 17) the box gives way to the composer's grid instead: idle is just the mic, and an active Dictation is a subgrid over the editor and actions rows.
+- **An active Dictation in a Composer hides what it covers with `visibility` (Task 17):** the editor and controls keep their tracks so the box keeps its size; Send stays shown and pressable under the root (`pointer-events: none`, parts `auto`).
 - **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.
 - **A Transcript segment's header has a set `height: 1.25rem`** (Wave 4 Task 13): baseline alignment of the speaker and time made it as tall as the font's metrics (22px on macOS), so segment heights and the Transcript budgets differed on Linux CI. The search budget rose to 72 writes, 201 renders and 140 re-reads because 62px segments put one more in view, the count Linux CI already measured.
 - **The Transcript match count changes width as you type** (Wave 4 Task 10): it sits inside the search field after the input, which only shrinks; nothing outside the field moves.

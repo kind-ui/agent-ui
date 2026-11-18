@@ -45,15 +45,18 @@ test("Stop sends the final text once, after the source ends, and never the inter
   await tick();
   fake.push({ text: " Hello", final: true });
   fake.push({ text: "wor", final: false });
+  fake.push({ level: 0.5 });
   await tick();
   assert.equal(instance.get().interim, "wor");
   instance.api.stop();
   assert.equal(instance.get().phase, "transcribing");
+  assert.equal(instance.get().levels.at(-1), 0.5, "the waveform holds its levels while transcribing");
   assert.equal(fake.signal.aborted, true);
   fake.push({ text: " world", final: true });
   fake.end();
   await tick();
   assert.equal(instance.get().phase, "idle");
+  assert.equal(instance.get().levels.at(-1), 0);
   assert.deepEqual(
     texts.map(([text, details]) => [text, details.reason]),
     [["Hello world", "imperative"]],
@@ -112,7 +115,7 @@ test("dropping the source while listening cancels it", async () => {
 test("a bar count that isn't finite falls back to the default", () => {
   for (const bars of [Number.NaN, Number.POSITIVE_INFINITY]) {
     const instance = dictationButtonPrimitive({ bars });
-    assert.equal(instance.get().levels.length, 16);
+    assert.equal(instance.get().levels.length, 128);
     instance.destroy();
   }
 });

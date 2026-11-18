@@ -132,6 +132,7 @@ test("Discard, the mic and Send share the row; dictating hides Draft restored an
     mic: await rect('[data-dictation-part="start"]'),
     send: await rect('button[data-slot="kind-composer-submit"]'),
     controls: await rect('[data-menu-part="root"]'),
+    composer: await page.locator('[data-slot="kind-composer"]').boundingBox(),
   };
   expect(before.discard.right).toBeLessThanOrEqual(before.mic.left);
   expect(before.mic.right).toBeLessThanOrEqual(before.send.left);
@@ -140,6 +141,8 @@ test("Discard, the mic and Send share the row; dictating hides Draft restored an
   await expect(page.locator('[data-slot="kind-composer-restored"]')).toHaveCSS("visibility", "hidden");
   expect(await rect('button[data-slot="kind-composer-submit"]')).toEqual(before.send);
   expect(await rect('[data-menu-part="root"]')).toEqual(before.controls);
+  expect(await page.locator('[data-slot="kind-composer"]').boundingBox()).toEqual(before.composer);
+  expect((await rect('[data-dictation-part="stop"]')).right).toBeLessThanOrEqual(before.send.left);
   expect(await overflow(page)).toEqual({ page: 0, composer: 0 });
 });
 

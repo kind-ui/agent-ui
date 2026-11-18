@@ -1,7 +1,8 @@
 /* Dictation (spec §7, D10): a mic button that becomes a waveform, the words heard so far, Cancel and Stop. Keyed on
    `data-dictation-part`, so both render layers draw the same. The root keeps one size whatever the phase, so nothing
    beside it moves. Each bar's height is its `--kind-dictation-bar`, which reads the level core writes onto the
-   waveform as `--kind-dictation-level-<i>`. */
+   waveform as `--kind-dictation-level-<i>`. Levels arrive newest last, so the waveform rolls from end to start over
+   a dotted baseline. Inside a Composer, `composer.css` lays the parts out over the composer's own rows. */
 @layer components {
   [data-dictation-part="root"] {
     /* Lucide "mic", "square" and "x", see THIRD_PARTY_NOTICES.md. */
@@ -86,15 +87,21 @@
     }
   }
 
+  /* The newest bar sits at the end; older ones that don't fit are cut at the start. The baseline is dots on the
+     bars' own 4px pitch, so it carries on where the bars run out. */
   [data-dictation-part="waveform"] {
     display: inline-flex;
-    flex: 0 1 auto;
+    flex: 0 1 6rem;
+    justify-content: flex-end;
     min-inline-size: 0;
     overflow: hidden;
     align-items: center;
     gap: 2px;
+    box-sizing: border-box;
     block-size: 1.25rem;
-    color: var(--kind-color-accent);
+    color: var(--kind-color-muted);
+    background:
+      linear-gradient(to right, transparent 2px, currentColor 2px) right center / 4px 2px repeat-x content-box;
   }
 
   [data-dictation-part="bar"] {
@@ -103,8 +110,8 @@
     block-size: 100%;
     border-radius: 1px;
     background-color: currentColor;
-    /* A bar never disappears, so silence still reads as a waveform. */
-    scale: 1 max(0.15, var(--kind-dictation-bar, 0));
+    /* Silence draws a dot on the baseline. */
+    scale: 1 max(0.1, var(--kind-dictation-bar, 0));
     transition: scale var(--kind-dictation-bar-smoothing) linear;
   }
 
@@ -158,9 +165,9 @@
       forced-color-adjust: none;
       background-color: ButtonText;
     }
-    [data-dictation-part="bar"] {
+    [data-dictation-part="waveform"] {
       forced-color-adjust: none;
-      background-color: CanvasText;
+      color: CanvasText;
     }
     [data-dictation-part="stop"]:where([data-pending])::before {
       background-color: GrayText;
