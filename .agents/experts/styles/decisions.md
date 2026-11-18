@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `780e148` (Wave 5 Task 6 Approval Mode)
+Last reviewed: `784d503` (Wave 5 Task 9 Model Control on Settings Menu)
 
 ## Settled
 
@@ -107,6 +107,7 @@ Last reviewed: `780e148` (Wave 5 Task 6 Approval Mode)
 - **`expand` snapped for bordered elements.** Fixed: it starts from the computed `height` and ends at the `height` that `box-sizing` needs, for `border-box` and `content-box`.
 - **The Status mark sat 1px off-center in its pill (Wave 2 Task 2).** Fixed: the start padding is worked out from the pill's height.
 - **Approval Mode styles (Wave 5 Task 6):** web's Learn more missed its rule (`as-child` puts the link a level down), the selectors were 3–4 attributes deep (now `:where()`), and light `--kind-color-danger` was 4.34:1 on `--kind-color-hover`; it is now `oklch(0.55 0.21 27)`.
+- **Model Control's trigger chevron pointed up in right-to-left text (Wave 5 Task 9):** its rotation turns off `menu.css`'s mirror; a menu trigger's chevron reads `ButtonText` in forced colors.
 
 ## Revisit
 

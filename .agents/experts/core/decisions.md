@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
+Last reviewed: `784d503` (Wave 5 Task 9 Model Control on Settings Menu)
 
 ## Settled
 
@@ -35,6 +35,8 @@ Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
 - **`validateCatalog` forwarding UI SDK guard errors has no unit test:** a failing render file would have to sit in `src/`, where the guard's own tests and `npm run lint` already fail it.
 - **Status keeps `controlled: ["status"]`** so agents read its status. Clearing `status` resets it to pending while UI SDK's dev warning says it keeps its last value, as with Step's `status`.
 - **A Status with a fixed `label` announces that label** on terminal transitions, as the Wave 2 plan says: a host that names its own label names the outcome in it.
+- **Model Control's `effortLabel` is lowercased in the trigger's name** ("High effort"), as English reads; a host with another language passes a `label`/`effortLabel` that suits it (Wave 5 Task 9).
+- **A controlled `effort` the model doesn't support isn't reported at mount:** reporting from the api's construction would update the owner during React's render. The trigger and `getEffort` show the fallback, and choosing it reports it (`stored`) (Wave 5 Task 9).
 
 ## Known and open (don't report again, check whether fixed)
 
@@ -144,6 +146,7 @@ Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
 - **Composer `disabled` is now exposed on the submit part** (`aria-disabled`), and a disabled composer offers the agent no actions.
 - **An unknown Status `status` showed a badge with no text (Wave 2 Task 2).** Fixed: it shows as pending.
 - **Approval Mode `value` outside `modes` (Wave 5 Task 6):** the snapshot showed a mode the trigger didn't; `state`/`sync` keep only a known value and `onOptions` drops an uncontrolled one whose mode left. `tests/core/approval-mode.test.mjs` pins it with `setValue`'s refusals.
+- **Model Control (Wave 5 Task 9):** `setValues` keeps Model and Effort out of the host's `values` (`owned`); host settings with the ids `model`/`effort` are left out; `getItems` reads the rows; a controlled effort's fallback is chosen against the stored value; model lookups are cached per `models` array. `tests/core/model-control.test.mjs` pins them.
 
 ## Revisit
 

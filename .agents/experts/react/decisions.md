@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
+Last reviewed: `784d503` (Wave 5 Task 9 Model Control on Settings Menu)
 
 ## Settled
 
@@ -48,6 +48,7 @@ Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
 - **An attachment chip plays its entrance twice under StrictMode** (its bind runs twice); it ends in place, so only a click during it is affected.
 - **Chain of Thought: a host `steps` update renders every step's parts (Wave 2 Task 5),** 609 renders for one status change among 100 steps; `memo` on the items doesn't help, as the parts re-render from UI SDK's options change. A press reaches one step. Report to UI SDK; no budget, since it's per step, not per token.
 - **UI SDK Menu rendered open on the server leaves its radio group unnamed (Wave 5 Task 6):** `role="group"` has no `aria-labelledby` though its label is in the markup, like the known `CommandGroup` one; the client names it. UI SDK's; report upstream.
+- **Model Control's trigger repeats `KindMenuItemContent`'s string-or-element icon code** (Wave 5 Task 9); one internal icon helper would serve both.
 
 ## Resolved
 
@@ -97,6 +98,7 @@ Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
 - **Two Kind wrappers composed through `render` stacked both base class lists.** Fixed: `withKindClass` renders a Kind `render` target as its bare UI SDK part, so the outer base applies once, for element and function `render` targets and nested targets alike.
 - **`<Status>{false}</Status>` and `<Status>{null}</Status>` differed (Wave 2 Task 2).** Fixed: any `children` replace the default parts.
 - **Approval Mode fixtures (Wave 5 Task 6):** `onLearnMore` had no case and the fixtures carried an unused `id`; a `learning` case and spec test cover it, and the `id` is gone.
+- **A choice option's `icon` was `unknown` in React's `settings` props (Wave 5 Task 9):** `SettingsMenuSetting` narrows the options' icons too, and Model Control's `settings` use it.
 
 ## Revisit
 

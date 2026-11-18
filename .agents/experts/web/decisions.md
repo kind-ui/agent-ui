@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
+Last reviewed: `784d503` (Wave 5 Task 9 Model Control on Settings Menu)
 
 ## Settled
 
@@ -21,6 +21,7 @@ Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
 - **WebKit presses Uploader's Cancel and Retry with Enter in `uploader.spec.ts`:** WebKit doesn't focus a button on click, so focus recovery can only be checked from the keyboard there; Chromium and Firefox cover the click.
 - **Internal host classes stay per file.** A shared `defineHost` helper in `src/web/internal/` would be a render file that neither calls `createParts` nor wraps a component, which the guard rejects.
 - **A status change while a `kind-status` is out of the document isn't announced when it returns:** nobody could see the change.
+- **`kind-model-control`'s `model` and `effort` setters refuse while disabled, and `effort` while the model has no levels,** as Settings Menu's `values` refuses while disabled (Wave 5 Task 9).
 
 ## Known and open (don't report again, check whether fixed)
 
@@ -63,6 +64,7 @@ Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
 - **Inside a shadow root, Enter with the Trigger Menu open submits the form** instead of choosing the item (UI SDK; report upstream).
 - **An unknown `motion` attribute matches no `data-motion` rule,** so reduced motion stops applying. Every animated component shares it; validate `motion` once for all of them.
 - **An empty `<kind-chain-of-thought>` inserts its parts on upgrade** (same class as `kind-reasoning`), which can shift layout before the element is defined.
+- **No moved or shadow-root fixture case for `kind-model-control`;** checked by hand in review (Wave 5 Task 9), as Model Selector's gap.
 
 ## Resolved
 
@@ -116,6 +118,7 @@ Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
 - **`kind-step` and `kind-composer` exposed no `api` or live state.** Fixed: `state: { open }` / `state: { value }` and `api` lists, as `@ui-sdk/web` roots do (`StepApi.isOpen`, `ComposerApi.getValue`). A host write to `open` (property or `setOpen`) doesn't count as a toggle (spec §5: a person or agent); `expand`/`collapse` and the trigger do.
 - **`kind-status` overwrote text written into its `<kind-status-label>`, and missed a label added later (Wave 2 Task 2).** Fixed: it writes only into a label that was empty, and redraws when parts arrive.
 - **Approval Mode (Wave 5 Task 6):** the `value` JSDoc claimed a `modechange` and typed a setter that took `undefined`; the trigger redrew on every new `modes` array (now keyed by content); `approval-mode.spec.ts` gained a zero-removal redraw test and a `learnmore` case.
+- **Model Control's `effort` reflected to a stale attribute (Wave 5 Task 9):** it is a property-only `value` option now, as `model` is; the property JSDoc says setting fires no event.
 
 ## Revisit
 
