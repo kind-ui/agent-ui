@@ -2,7 +2,7 @@
    model and Reset over a thick pill slider with a dot per level. Keyed on `data-effort-slider-part`, so both render
    layers draw the same. The trigger's labels share one grid cell, and the header reserves Reset's column, so a change
    of level moves nothing. */
-/* Two identical bumps (and drifts), so `data-tick` flipping between them replays the snap. */
+/* Two identical copies of each, so `data-tick` flipping between them replays it. */
 @keyframes kind-effort-slider-bump-0 {
   50% {
     scale: 1.06;
@@ -15,16 +15,38 @@
   }
 }
 
-/* One tile of particles toward the thumb, which looks the same as where it started. */
-@keyframes kind-effort-slider-drift-0 {
-  to {
-    translate: calc(var(--kind-effort-slider-tile) * var(--kind-effort-slider-direction)) 0;
+/* The lines slide toward the thumb by whole periods, so they end where a still pattern would be. */
+@keyframes kind-effort-slider-surge-0 {
+  from {
+    translate: calc(var(--kind-effort-slider-surge) * var(--kind-effort-slider-direction) * -1) 0;
   }
 }
 
-@keyframes kind-effort-slider-drift-1 {
+@keyframes kind-effort-slider-surge-1 {
+  from {
+    translate: calc(var(--kind-effort-slider-surge) * var(--kind-effort-slider-direction) * -1) 0;
+  }
+}
+
+@keyframes kind-effort-slider-ripple-0 {
+  from {
+    opacity: 0.7;
+    scale: 1;
+  }
   to {
-    translate: calc(var(--kind-effort-slider-tile) * var(--kind-effort-slider-direction)) 0;
+    opacity: 0;
+    scale: 1.14;
+  }
+}
+
+@keyframes kind-effort-slider-ripple-1 {
+  from {
+    opacity: 0.7;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+    scale: 1.14;
   }
 }
 
@@ -35,7 +57,7 @@
   }
   to {
     opacity: 0;
-    scale: 1.45;
+    scale: 1.6;
   }
 }
 
@@ -57,7 +79,7 @@
     --kind-effort-slider-icon-chevron-right: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E");
     /* Lucide "rotate-ccw", see THIRD_PARTY_NOTICES.md. */
     --kind-effort-slider-icon-reset: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8'/%3E%3Cpath d='M3 3v5h5'/%3E%3C/svg%3E");
-    /* The thumb and the fill's particles: white in light and near white in dark. */
+    /* The thumb and the fill's lines: white in light and near white in dark. */
     --kind-effort-slider-light: light-dark(var(--kind-color-surface), var(--kind-color-fg));
   }
 
@@ -361,11 +383,17 @@
   }
 
   /* The fill reaches back under the pill's start: content-box, so the inline width UI SDK writes still ends at the
-     thumb's center, and the start padding covers the inset. Its particles drift on two layers of different tile
-     widths clipped to it, so their pattern doesn't read as a repeat. */
+     thumb's center, and the start padding covers the inset. Over it, a gradient that deepens toward the thumb as
+     the level rises, then fine diagonal lines that tighten and brighten with it: sparse at the lowest level, dense
+     at the top. */
   :where([data-effort-slider-part="slider"]) [data-slot="slider-indicator"] {
     --kind-effort-slider-reach: calc(var(--kind-slider-thumb-size) / 2 + var(--kind-effort-slider-inset));
     --kind-effort-slider-direction: 1;
+    --kind-effort-slider-toward: to right;
+    /* The lines' spacing across them, and along the fill, where a 45° line repeats every spacing × √2. */
+    --kind-effort-slider-spacing: calc(14px - var(--kind-effort-slider-level, 1) * 7px);
+    --kind-effort-slider-period: calc(var(--kind-effort-slider-spacing) * 1.4142);
+    --kind-effort-slider-surge: calc(var(--kind-effort-slider-period) * 3);
     box-sizing: content-box;
     margin-inline-start: calc(var(--kind-effort-slider-reach) * -1);
     padding-inline-start: var(--kind-effort-slider-reach);
@@ -373,6 +401,7 @@
 
     &:where(:dir(rtl)) {
       --kind-effort-slider-direction: -1;
+      --kind-effort-slider-toward: to left;
     }
 
     &::before,
@@ -380,29 +409,37 @@
       content: "";
       position: absolute;
       inset-block: 0;
-      /* A tile wider at the start, so a drift by one tile never uncovers the fill. */
-      inset-inline: calc(var(--kind-effort-slider-tile) * -1) 0;
-      background-size: var(--kind-effort-slider-tile) 100%;
+      inset-inline: 0;
       pointer-events: none;
     }
     &::before {
-      --kind-effort-slider-tile: 96px;
-      background-image:
-        radial-gradient(circle at 14px 30%, var(--kind-effort-slider-light) 1.25px, transparent 1.75px),
-        radial-gradient(circle at 41px 62%, var(--kind-effort-slider-light) 1px, transparent 1.5px),
-        radial-gradient(circle at 63px 24%, var(--kind-effort-slider-light) 1.5px, transparent 2px),
-        radial-gradient(circle at 82px 70%, var(--kind-effort-slider-light) 1px, transparent 1.5px);
-      opacity: calc(0.4 + var(--kind-effort-slider-level, 1) * 0.5);
+      background-image: linear-gradient(
+        var(--kind-effort-slider-toward) in oklab,
+        color-mix(in oklab, var(--kind-color-accent), var(--kind-effort-slider-light) 18%),
+        var(--kind-color-accent) 55%,
+        color-mix(
+          in oklab,
+          var(--kind-color-accent),
+          var(--kind-color-shadow) calc(var(--kind-effort-slider-level, 1) * 20%)
+        )
+      );
     }
-    /* A fainter second layer that thickens toward the top levels. */
     &::after {
-      --kind-effort-slider-tile: 136px;
-      background-image:
-        radial-gradient(circle at 21px 78%, var(--kind-effort-slider-light) 0.75px, transparent 1.25px),
-        radial-gradient(circle at 58px 42%, var(--kind-effort-slider-light) 1px, transparent 1.5px),
-        radial-gradient(circle at 93px 58%, var(--kind-effort-slider-light) 0.75px, transparent 1.25px),
-        radial-gradient(circle at 121px 20%, var(--kind-effort-slider-light) 0.75px, transparent 1.25px);
-      opacity: calc(clamp(0, var(--kind-effort-slider-level, 1) - 0.3, 0.7) * 0.8);
+      /* Starts the slide's length before the fill, so sliding never uncovers it. */
+      inset-inline-start: calc(var(--kind-effort-slider-surge) * -1);
+      background-image: repeating-linear-gradient(
+        135deg,
+        var(--kind-effort-slider-light) 0 1px,
+        transparent 1px var(--kind-effort-slider-spacing)
+      );
+      opacity: calc(0.08 + var(--kind-effort-slider-level, 1) * 0.16);
+    }
+    &:where(:dir(rtl))::after {
+      background-image: repeating-linear-gradient(
+        -135deg,
+        var(--kind-effort-slider-light) 0 1px,
+        transparent 1px var(--kind-effort-slider-spacing)
+      );
     }
   }
 
@@ -512,9 +549,9 @@
     }
   }
 
-  /* Full motion only: the label rolls, the bolt grows, the thumb squishes while dragged and bumps on each level it
-     crosses, the particles surge toward it, and it sends out one ring at the top. Reduced motion and `none` swap at
-     once, and the particles hold still. */
+  /* Full motion only: the label rolls, the bolt grows, and the thumb squishes while dragged. On each level it lands
+     on, the thumb bumps and sends one ripple through the pill while the lines surge toward it; at the top a larger,
+     warmer ring goes out too. Reduced motion and `none` swap at once, and nothing runs at rest. */
   @media (prefers-reduced-motion: no-preference) {
     :where([data-effort-slider-part="root"], [data-effort-slider-part="content"]):where(
         [data-motion="auto"]
@@ -546,24 +583,35 @@
       & :where([data-effort-slider-part="slider"][data-tick="1"]) [data-slot="slider-thumb"] {
         animation: kind-effort-slider-bump-1 var(--kind-duration-fast) var(--kind-ease-out);
       }
-      & :where([data-effort-slider-part="slider"][data-tick="0"]) [data-slot="slider-indicator"]::before {
-        animation: kind-effort-slider-drift-0 calc(var(--kind-duration-panel) * 4) var(--kind-ease-out);
-      }
-      & :where([data-effort-slider-part="slider"][data-tick="1"]) [data-slot="slider-indicator"]::before {
-        animation: kind-effort-slider-drift-1 calc(var(--kind-duration-panel) * 4) var(--kind-ease-out);
-      }
       & :where([data-effort-slider-part="slider"][data-tick="0"]) [data-slot="slider-indicator"]::after {
-        animation: kind-effort-slider-drift-0 calc(var(--kind-duration-panel) * 6) var(--kind-ease-out);
+        animation: kind-effort-slider-surge-0 400ms var(--kind-ease-out);
       }
       & :where([data-effort-slider-part="slider"][data-tick="1"]) [data-slot="slider-indicator"]::after {
-        animation: kind-effort-slider-drift-1 calc(var(--kind-duration-panel) * 6) var(--kind-ease-out);
+        animation: kind-effort-slider-surge-1 400ms var(--kind-ease-out);
+      }
+      & :where([data-effort-slider-part="slider"][data-tick]) [data-slot="slider-thumb"]::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        /* Stays inside the pill: 38px × 1.14 plus the ring. */
+        box-shadow:
+          0 0 0 2px color-mix(in oklab, var(--kind-effort-slider-light) 75%, transparent),
+          0 0 6px 1px color-mix(in oklab, var(--kind-color-accent) 40%, transparent);
+        pointer-events: none;
+      }
+      & :where([data-effort-slider-part="slider"][data-tick="0"]) [data-slot="slider-thumb"]::before {
+        animation: kind-effort-slider-ripple-0 400ms var(--kind-ease-out) both;
+      }
+      & :where([data-effort-slider-part="slider"][data-tick="1"]) [data-slot="slider-thumb"]::before {
+        animation: kind-effort-slider-ripple-1 400ms var(--kind-ease-out) both;
       }
       & :where([data-effort-slider-part="slider"][data-top][data-tick]) [data-slot="slider-thumb"]::after {
         content: "";
         position: absolute;
         inset: -1px;
         border-radius: inherit;
-        box-shadow: 0 0 0 3px color-mix(in oklab, var(--kind-color-accent) 60%, transparent);
+        box-shadow: 0 0 0 4px color-mix(in oklab, var(--kind-color-warning) 70%, transparent);
         pointer-events: none;
         animation: kind-effort-slider-glow calc(var(--kind-duration-panel) * 2.5) var(--kind-ease-out) both;
       }
