@@ -90,6 +90,7 @@ export function QuestionChoices({
     ));
     return state.kind === "single" ? (
       <KindRadioGroup
+        aria-label={state.label}
         controller={state.controller}
         defaultValue={state.defaultValue}
         readOnly={state.readOnly}

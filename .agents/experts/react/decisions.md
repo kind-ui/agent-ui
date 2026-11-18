@@ -16,6 +16,7 @@ Last reviewed: `cdf3734` (Wave 5 Task 14 Composer on narrow screens)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **checkPattern counts React's hidden form radios** (`@ui-sdk/core/testing`): React Radio group and Segmented Control keep an `aria-hidden` native radio per item for forms, which `checkPattern("radio-group")` counts as radios (it skips `aria-hidden` options in a listbox, not radios in a radio group), so it reports two checked radios and arrows that "skip" an input. Web has none. `wave-5/aria-patterns.spec.ts` accepts those problems; report to UI SDK.
 - **Context Bar server markup shows every chip until the bar measures** (Wave 5 Task 10): widths exist only in the browser, so hydration swaps the chip clipped at the edge for "+N" (nothing below moves; the root has a fixed height), and the server markup exposes every chip to assistive technology until then.
 - **Adding or removing `regenerateOptions` while mounted remounts Message's Regenerate button and drops its focus** (Wave 5 Task 7): the button sits inside `KindMenu` only while there are options. Keeping the menu mounted would make a plain button a menu trigger.
 - **A Settings Menu choice row's typeahead text includes every option label (Wave 5 Task 5):** `MenuSubTrigger` takes no `label`, so it matches its text; typing from the row's label still finds it.

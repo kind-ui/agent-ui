@@ -63,8 +63,11 @@ export type DictationState = {
   levels: number[];
   /** The text recognized so far that may still change. Shown while listening, never sent. */
   interim: string;
-  /** Why the last dictation failed, in words, while `phase` is `"error"`. */
-  error: string;
+  /**
+   * Why the last dictation failed, in words, while `phase` is `"error"`. Otherwise `undefined`, since the agent bridge
+   * reads any `error` in state as a failed action.
+   */
+  error: string | undefined;
   /** The `label`, else "Dictate". */
   label: string;
   /** Whether a `source` is set, so the mic button shows. */
@@ -156,7 +159,7 @@ const statusState = (state: DictationState): DictationStatusState => ({
       ? state.interim || "Listening"
       : state.phase === "transcribing"
         ? "Transcribing"
-        : state.error,
+        : (state.error ?? ""),
 });
 
 const isActive = (phase: DictationPhase) => phase === "listening" || phase === "transcribing";
@@ -186,7 +189,7 @@ export const dictationButtonPrimitive: DictationPrimitive = definePrimitive<
     phase: "idle",
     levels: silence(barCount(options)),
     interim: "",
-    error: "",
+    error: undefined,
   }),
   sync: presentation,
   // A level or an interim text arrives many times a second; only the parts that show them hear it.
@@ -196,8 +199,6 @@ export const dictationButtonPrimitive: DictationPrimitive = definePrimitive<
     const { store } = context;
     // A run that's no longer current, because it was canceled or another started, writes nothing.
     let run: Run | undefined;
-    // Starts UI SDK's input tracking, which nothing else here does, so Stop's first keyboard press reads as one.
-    sourceOf();
 
     context.onOptions((options) => {
       // A host that drops its source takes the microphone away. A new source object, like one written inline in
@@ -257,7 +258,7 @@ export const dictationButtonPrimitive: DictationPrimitive = definePrimitive<
       if (!source || isActive(store.get().phase)) return false;
       const current: Run = { controller: new AbortController() };
       run = current;
-      store.set({ phase: "listening", error: "", interim: "" });
+      store.set({ phase: "listening", error: undefined, interim: "" });
       // An error `onText` throws reaches the host as one thrown from an event, not as an unhandled rejection.
       listen(source, current).catch((error) =>
         queueMicrotask(() => {
@@ -314,6 +315,11 @@ export const dictationButtonPrimitive: DictationPrimitive = definePrimitive<
         "data-agent-confirm":
           state.agentConfirm && !isActive(state.phase) ? "Opens the microphone for dictation" : undefined,
       }),
+      // Starts UI SDK's input tracking, which nothing else here does, so Stop's first keyboard press reads as one.
+      // Here rather than at creation, which a server runs too and where it reads `document`.
+      bind: () => {
+        sourceOf();
+      },
     }),
     start: slot({
       role: "button",

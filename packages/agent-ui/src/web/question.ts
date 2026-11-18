@@ -229,6 +229,7 @@ export function defineQuestion(): void {
               );
               write(group, "controller", choices.controller);
               write(group, "readOnly", choices.readOnly);
+              if (choices.kind === "single") write(group, "ariaLabel", choices.label);
             }
             const text = api.textState(id, state);
             if (text) {

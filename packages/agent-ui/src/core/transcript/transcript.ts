@@ -391,8 +391,8 @@ export const transcriptPrimitive: TranscriptPrimitive = definePrimitive<
     let clearEntering = 0;
     context.onDestroy(() => {
       destroyed = true;
-      cancelAnimationFrame(resync);
-      cancelAnimationFrame(clearEntering);
+      if (resync) cancelAnimationFrame(resync);
+      if (clearEntering) cancelAnimationFrame(clearEntering);
     });
 
     const indexes = memo(

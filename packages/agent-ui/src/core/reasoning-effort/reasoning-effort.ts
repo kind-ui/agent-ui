@@ -146,7 +146,9 @@ export const reasoningEffortPrimitive: ReasoningEffortPrimitive = definePrimitiv
     const controller = createSegmentedControlController();
     const initial = store.get().value;
     let resync = 0;
-    context.onDestroy(() => cancelAnimationFrame(resync));
+    context.onDestroy(() => {
+      if (resync) cancelAnimationFrame(resync);
+    });
 
     const syncValue = () => {
       const { value } = store.get();

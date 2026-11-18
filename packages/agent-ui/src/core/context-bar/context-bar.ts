@@ -381,7 +381,9 @@ export const contextBarPrimitive: ContextBarPrimitive = definePrimitive<
     const elements = new Map<string, HTMLElement>();
     const items = new Map<string, HTMLElement>();
     let closing = 0;
-    context.onDestroy(() => cancelAnimationFrame(closing));
+    context.onDestroy(() => {
+      if (closing) cancelAnimationFrame(closing);
+    });
     const slide = createRowSlide(elements, () => store.get().motion);
     // A leaving row with no element to play its exit is dropped at once.
     const setRows = (next: LeavingRow<ContextChip>[]) => {
