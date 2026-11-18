@@ -40,6 +40,7 @@ Last reviewed: `784d503` (Wave 5 Task 9 Model Control on Settings Menu)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Context Bar: Delete on the only chip shown sends focus to "+N"** (Wave 5 Task 10), the documented fallback, since the chip that slides in is still overflowed while the removed one leaves. Each overflowed chip with an inline `svg` icon is rendered twice while the list is open (bar and list), so ids in it repeat.
 - **`hearComposed` gives an event to the nearest element hearing its name, whatever tag that element's handler accepts** (Wave 5 Task 7): a `ui-file-input` inside a `menuBase` menu wouldn't reach an outer Composer, since every menu hears `valuechange`. Nothing nests one that way; a per-call tag filter would fix it.
 - **Two agent calls on a controlled Settings Menu with no render between them (Wave 5 Task 5):** the second builds on the owner's `values`, which haven't come back yet, so `onValuesChange={setValues}` keeps only the second; `setValues` carries values between its own changes. Not reproduced through the bridge.
 - **`MenuRun.keepOpen` with a returned promise (Wave 5 Task 4):** untested, and no menu does both; a later close after the promise settles would be refused. Settle it when a `menuBase` menu first returns a promise.
@@ -83,6 +84,7 @@ Last reviewed: `784d503` (Wave 5 Task 9 Model Control on Settings Menu)
 
 ## Resolved
 
+- **Context Bar (Wave 5 Task 10):** a focused chip pushed behind "+N" (a resize, a chip added in front) went `inert` and dropped focus to the page; `show` now hands focus to the last chip shown with `roving.focus` (the guard accepts `roving.focus(`), tested by narrowing the bar. The chip and row slots declare their `keys`. `createListFocus`'s recovery filter was dropped: `roving.items()` already returns only focusable items.
 - **Message's regenerate menu stayed open after the toolbar left or an agent regenerated (Wave 5 Task 7):** `menuBase` gained `canOpen`; the menu closes when there are no options, no `onRegenerate` or an unsettled message, and after an agent's `regenerate`; pinned in `message.spec.ts`.
 - **`hearComposed` didn't tell nested components apart (Wave 5 Task 1, fixed in Task 7):** an element nearer the event's target that hears the same event name now takes it, so an outer root no longer hears a nested component's `ui-*` events; `composed-events.spec.ts` nests one `kind-test-menu` in another and fails without the fix.
 - **Settings Menu `setValues` lost changes while controlled, and read inherited values (Wave 5 Task 5):** each change builds on the one before, and values are read by own key; unit tests pin both.

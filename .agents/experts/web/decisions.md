@@ -68,6 +68,7 @@ Last reviewed: `784d503` (Wave 5 Task 9 Model Control on Settings Menu)
 
 ## Resolved
 
+- **Context Bar (Wave 5 Task 10):** a list written with only whitespace inside is filled in; new chip objects with the same content keep their rows; the content's `initial-focus`, `side-offset` and `align` are set on every draw, so content added later opens as React's does (`written` case).
 - **A `kind-message` written with menu markup and no `regenerateOptions` both regenerated and opened a menu of "Try again" (Wave 5 Task 7):** the root now always controls its `ui-menu`, which refuses to open without options, and empties a content it owns; `message.spec.ts` has a `no-options` case.
 - **`hearComposed` didn't tell nested components apart (Wave 5 Task 1, fixed in Task 7):** an element nearer the event's target that hears the same event name now takes it, so an outer root no longer hears a nested component's `ui-*` events; `composed-events.spec.ts` nests one `kind-test-menu` in another and fails without the fix.
 - **`placeMenuChild` re-added every row on each redraw (Wave 5 Task 5):** a row already in place was moved before itself, which in WebKit (no `moveBefore`) dropped focus and closed a submenu; Task 4's Add Menu fix only held in Chromium. It now leaves the row, and Settings Menu draws a choice's options by value; `settings-menu.spec.ts` counts zero removals on a value change and an equal `settings` copy.
