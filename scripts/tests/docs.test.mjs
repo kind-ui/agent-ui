@@ -44,8 +44,8 @@ test("the docs index links every composer control page", () => {
     "context-bar",
     "dictation",
   ]) {
-    assert.ok(meta.pages.includes(name), name);
-    assert.ok(index.includes(`](./components/${name}.mdx)`), name);
+    assert.ok(meta.pages.includes(name), `${name} is missing from components/meta.json`);
+    assert.ok(index.includes(`](./components/${name}.mdx)`), `index.mdx doesn't link components/${name}.mdx`);
   }
 });
 
