@@ -20,6 +20,22 @@
     color: var(--kind-color-danger);
   }
 
+  /* In a narrow composer the trigger shows only its shield; its name still says the mode. */
+  @container kind-composer (width < 28rem) {
+    :where([data-kind="approval-mode"] [data-menu-part="trigger"]) [data-slot="menu-trigger"] {
+      width: 2rem;
+      padding-inline: 0;
+    }
+    /* A risky mode keeps room for its warning mark beside the shield. */
+    :where([data-kind="approval-mode"] [data-menu-part="trigger"][data-danger]) [data-slot="menu-trigger"] {
+      width: auto;
+      padding-inline: 0.5rem;
+    }
+    [data-approval-mode-value] {
+      display: none;
+    }
+  }
+
   /* The header: the label, and Learn more at its end. */
   [data-approval-mode-header] {
     display: flex;

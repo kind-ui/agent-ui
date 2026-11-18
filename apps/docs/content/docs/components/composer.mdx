@@ -4,6 +4,7 @@ description: Let people write to the agent, with mentions, commands and files.
 ---
 
 import ComposerExample from "../../../examples/composer/basic";
+import FullComposerExample from "../../../examples/composer/full";
 
 Use a composer where someone writes a prompt. It holds the text, the mentions and commands typed into it, and the attached files, and sends them together as one draft.
 
@@ -96,6 +97,28 @@ The text and tokens are saved as they change. Attachments aren't, since files ca
 When a draft comes back, screen readers hear "Draft restored", and `ComposerRestored` shows **Draft restored** with a **Discard** button between Attach and Send, so the prompt doesn't move. The next edit hides it. **Discard** empties the draft, removes it from storage and moves focus to the prompt.
 
 A submission that resolves removes the saved draft, unless someone kept typing in the meantime; then the newer text stays saved. A controlled `value` is never saved or restored, since the host owns it. If storage fails or is full, the composer ignores it and typing keeps working.
+
+### Controls and Narrow Screens
+
+Put the controls a prompt needs in the composer's actions row: wrap them in one element placed in its `attach` area, as `style={{ gridArea: "attach" }}`, and let it wrap. A [Context Bar](./context-bar.mdx) inside the composer sits above the prompt, and a [Dictation](./dictation.mdx) takes the free space before Send, so it grows into it while listening and nothing else moves.
+
+<Example caption="Press the model, the shield or the settings button to open its menu. Press the mic to dictate a prompt.">
+  <FullComposerExample />
+
+  <include cwd lang="tsx">./examples/composer/full.tsx</include>
+</Example>
+
+The composer is a CSS container named `kind-composer`. Below 28rem, [Model Control](./model-control.mdx) and [Approval Mode](./approval-mode.mdx) show only their icon and keep their names for screen readers, and **Draft restored** shows only **Discard**. On a small touch screen, every menu opens as a sheet. The same composer at 20rem:
+
+<Example caption="The same composer, narrow. The controls show their icons, and Send keeps the end of the row.">
+  <div className="mx-auto max-w-80">
+    <FullComposerExample />
+  </div>
+
+  <include cwd lang="tsx">./examples/composer/full.tsx</include>
+</Example>
+
+The composer measures its own width, not the screen's, so give it one when it sits in a row or a centered flex column: a container's content doesn't size it.
 
 ## API Reference
 

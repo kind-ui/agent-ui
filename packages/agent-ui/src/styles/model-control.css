@@ -36,4 +36,22 @@
   :where([data-model-control-effort]) > :not([data-current]) {
     visibility: hidden;
   }
+
+  /* In a narrow composer the trigger shows only the model's icon; its name still says the model and effort. A model
+     without an icon keeps its name. */
+  @container kind-composer (width < 28rem) {
+    :where([data-kind="model-control"] [data-menu-part="trigger"])
+      [data-slot="menu-trigger"]:where(:has([data-slot="menu-item-icon"])) {
+      width: 2rem;
+      padding-inline: 0;
+
+      & > :not([data-slot="menu-item-icon"]) {
+        display: none;
+      }
+    }
+    :where([data-kind="model-control"] [data-menu-part="trigger"])
+      :is([data-model-control-separator], [data-model-control-effort], [data-menu-chevron]) {
+      display: none;
+    }
+  }
 }
