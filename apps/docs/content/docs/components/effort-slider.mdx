@@ -7,7 +7,7 @@ import EffortSliderExample from "../../../examples/effort-slider/basic";
 
 Use an effort slider in a [composer](./composer.mdx)'s controls when the model can trade speed for more thinking and the row has no room for every level. It's a button that shows the chosen level and opens a popover holding UI SDK's Slider, with one step per level, a Reset and an optional line naming the model.
 
-<Example caption="Press Effort, High, then press the Right Arrow key or drag the thumb to Max. The button shows Max with a sparkle, and Reset returns it to Medium.">
+<Example caption="Press Effort, High, then press the Right Arrow key or drag the thumb to Max. The flame grows as you go, and Reset returns it to Medium.">
   <EffortSliderExample />
 
   <include cwd lang="tsx">./examples/effort-slider/basic.tsx</include>
@@ -42,7 +42,7 @@ EffortSlider
 
 ### Levels
 
-Pass `levels`, from least to most effort, each with the `value` your app receives and the `label` a person reads. Without them, the levels are Low, Medium and High. The last level shows a sparkle beside its label, on the button and under the track.
+Pass `levels`, from least to most effort, each with the `value` your app receives and the `label` a person reads. Without them, the levels are Low, Medium and High. A flame beside the level grows and warms with effort, on the button and above the track, and the fill warms as it grows. Under the track, the level under the thumb lights up the moment a drag reaches it, before it's reported.
 
 The button is named by the `label` and the chosen level, like "Effort, High". The `label` is "Effort" by default and also titles the popover and names the slider's thumb, whose value text is the level's label.
 
@@ -76,7 +76,7 @@ The button is one Tab stop. Enter or Space opens the popover with focus on the t
 
 ### Presentation and Motion
 
-The popover opens below the button. With `presentation="auto"`, the default, it's a bottom sheet on small touch screens instead; pass `"popover"` or `"sheet"` to choose one. `motion` sets how it opens and closes: `"auto"`, the default, follows `prefers-reduced-motion`, `"reduced"` keeps motion small and `"none"` turns it off.
+The popover opens below the button. With `presentation="auto"`, the default, it's a bottom sheet on small touch screens instead; pass `"popover"` or `"sheet"` to choose one. `motion` sets how it opens and closes and how the thumb answers: at full motion it squishes as you drag, bumps as it lands on a level and glows once at the last. `"auto"`, the default, follows `prefers-reduced-motion`; `"reduced"` only fades the popover and swaps levels at once, and `"none"` moves nothing.
 
 For an inline row of levels with no popover, use [Reasoning Effort](./reasoning-effort.mdx).
 

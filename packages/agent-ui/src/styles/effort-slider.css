@@ -2,12 +2,47 @@
    level, the model the effort applies to and Reset. Keyed on `data-effort-slider-part`, so both render layers draw
    the same. The trigger's labels share one grid cell, and the footer keeps one height, so a change of level moves
    nothing. */
+/* Two identical bumps, so `data-tick` flipping between them replays the snap. */
+@keyframes kind-effort-slider-bump-0 {
+  50% {
+    scale: 1.08;
+  }
+}
+
+@keyframes kind-effort-slider-bump-1 {
+  50% {
+    scale: 1.08;
+  }
+}
+
+@keyframes kind-effort-slider-glow {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--kind-color-warning) 55%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 10px color-mix(in oklab, var(--kind-color-warning) 0%, transparent);
+  }
+}
+
+@keyframes kind-effort-slider-flare {
+  40% {
+    scale: 1.15;
+  }
+}
+
 @layer components {
-  [data-effort-slider-part="root"] {
-    /* Lucide "sparkles", see THIRD_PARTY_NOTICES.md. */
-    --kind-effort-slider-icon-sparkle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z'/%3E%3Cpath d='M20 2v4'/%3E%3Cpath d='M22 4h-4'/%3E%3Ccircle cx='4' cy='20' r='2'/%3E%3C/svg%3E");
+  /* The content too, which can sit outside the root in a sheet's viewport. */
+  [data-effort-slider-part="root"],
+  [data-effort-slider-part="content"] {
+    /* Lucide "flame", see THIRD_PARTY_NOTICES.md. */
+    --kind-effort-slider-icon-flame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4'/%3E%3C/svg%3E");
+    /* Overshoots a little and settles: the thumb's and flame's spring. No motion token overshoots. */
+    --kind-effort-slider-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     /* Lucide "chevron-down", see THIRD_PARTY_NOTICES.md. */
     --kind-effort-slider-icon-chevron-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  }
+
+  [data-effort-slider-part="root"] {
     display: inline-flex;
     font-size: 0.875rem;
     color: var(--kind-color-fg);
@@ -50,28 +85,47 @@
     }
   }
 
-  /* Every level's label shares one grid cell and only the chosen one shows, so the trigger keeps its width. */
+  /* Every level's label shares one grid cell and only the chosen one shows, so the trigger keeps its width. A label
+     after the chosen one waits below it and one before waits above, so a change of level rolls the way it went. */
   [data-effort-slider-value] {
     display: grid;
-
-    & > * {
-      display: inline-flex;
-      grid-area: 1 / 1;
-      align-items: center;
-      gap: 4px;
-    }
-    & > :not([data-current]) {
-      visibility: hidden;
-    }
   }
 
-  :where([data-effort-slider-part="root"], [data-effort-slider-part="content"]) [data-effort-slider-sparkle] {
+  :where([data-effort-slider-value]) > * {
+    display: inline-flex;
+    grid-area: 1 / 1;
+    align-items: center;
+  }
+
+  :where([data-effort-slider-value]) > :not([data-current]) {
+    visibility: hidden;
+    opacity: 0;
+    translate: 0 -3px;
+  }
+
+  :where([data-effort-slider-value] > [data-current]) ~ :not([data-current]) {
+    translate: 0 3px;
+  }
+
+  /* A flame that wakes up with the level: small and muted at the lowest, larger and warmer as it rises, deepening
+     toward danger at the top. The trigger's follows the chosen level, the header's the one the Slider shows. */
+  [data-effort-slider-glyph] {
+    --kind-effort-slider-heat: var(--kind-effort-slider-level, 1);
     display: inline-block;
     flex-shrink: 0;
     width: 14px;
     height: 14px;
-    background-color: var(--kind-color-accent);
-    mask: var(--kind-effort-slider-icon-sparkle) center / contain no-repeat;
+    background-color: color-mix(
+      in oklab,
+      color-mix(
+        in oklab,
+        var(--kind-color-muted),
+        var(--kind-color-warning) calc(var(--kind-effort-slider-heat) * 100%)
+      ),
+      var(--kind-color-danger) calc(clamp(0, var(--kind-effort-slider-heat) - 0.6, 0.4) * 100%)
+    );
+    mask: var(--kind-effort-slider-icon-flame) center / contain no-repeat;
+    scale: calc(0.7 + var(--kind-effort-slider-heat) * 0.3);
   }
 
   [data-effort-slider-part="content"] {
@@ -100,6 +154,17 @@
     align-items: baseline;
     justify-content: space-between;
     gap: 8px;
+  }
+
+  /* Baseline-aligned, so the value text sets the header's baseline and the empty flame centers beside it. */
+  [data-effort-slider-reading] {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  :where([data-effort-slider-reading]) > [data-effort-slider-glyph] {
+    align-self: center;
   }
 
   [data-effort-slider-part="title"] {
@@ -166,10 +231,6 @@
       inset-inline-start: auto;
       inset-inline-end: 0;
     }
-    & [data-effort-slider-sparkle] {
-      width: 12px;
-      height: 12px;
-    }
   }
 
   /* One height whether or not Reset shows, so its arrival moves nothing. */
@@ -234,15 +295,48 @@
     }
   }
 
+  /* The fill warms with effort as it grows, following UI SDK's `--slider-indicator-size` through a drag. It's a layer
+     over the indicator, whose background is the internal Slider's utility. */
+  :where([data-effort-slider-part="slider"]) [data-slot="slider-indicator"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: linear-gradient(
+      to right in oklch,
+      var(--kind-color-accent) max(0%, 100% - 64px),
+      color-mix(
+        in oklch,
+        var(--kind-color-accent),
+        var(--kind-color-warning) var(--slider-indicator-size, 0%)
+      )
+    );
+  }
+
+  :where([data-effort-slider-part="slider"]) [data-slot="slider-indicator"]:dir(rtl)::before {
+    background-image: linear-gradient(
+      to left in oklch,
+      var(--kind-color-accent) max(0%, 100% - 64px),
+      color-mix(
+        in oklch,
+        var(--kind-color-accent),
+        var(--kind-color-warning) var(--slider-indicator-size, 0%)
+      )
+    );
+  }
+
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
-    [data-effort-slider-part="trigger"] :is([data-effort-slider-chevron], [data-effort-slider-sparkle]) {
+    [data-effort-slider-part="trigger"] :is([data-effort-slider-chevron], [data-effort-slider-glyph]) {
       forced-color-adjust: none;
       background-color: ButtonText;
     }
-    [data-effort-slider-part="content"] [data-effort-slider-sparkle] {
+    [data-effort-slider-part="content"] [data-effort-slider-glyph] {
       forced-color-adjust: none;
       background-color: CanvasText;
+    }
+    :where([data-effort-slider-part="slider"]) [data-slot="slider-indicator"]::before {
+      content: none;
     }
   }
 
@@ -288,5 +382,69 @@
   :where([data-effort-slider-part="root"][data-motion="none"]) [data-effort-slider-part="trigger"],
   :where([data-effort-slider-part="content"][data-motion="none"]) [data-effort-slider-part="reset"] {
     transition: none;
+  }
+
+  /* Color changes fade unless nothing may animate. */
+  :where([data-effort-slider-part="root"], [data-effort-slider-part="content"]):where(
+    :not([data-motion="none"])
+  ) {
+    & [data-effort-slider-glyph] {
+      transition: background-color var(--kind-duration-base) var(--kind-ease-out);
+    }
+    & [data-effort-slider-stop] {
+      transition: color var(--kind-duration-fast) var(--kind-ease-out);
+    }
+    & :where([data-effort-slider-value]) > * {
+      transition:
+        opacity var(--kind-duration-reduced) var(--kind-ease-out),
+        visibility var(--kind-duration-reduced);
+    }
+  }
+
+  /* Full motion only: the label rolls, the flame grows, and the thumb squishes while dragged, bumps on each level it
+     crosses and sends out one warm ring when it reaches the top. Reduced motion and `none` swap at once. */
+  @media (prefers-reduced-motion: no-preference) {
+    :where([data-effort-slider-part="root"], [data-effort-slider-part="content"]):where(
+        [data-motion="auto"]
+      ) {
+      & [data-effort-slider-glyph] {
+        transition:
+          background-color var(--kind-duration-base) var(--kind-ease-out),
+          scale var(--kind-duration-panel) var(--kind-effort-slider-ease-spring);
+      }
+      & :where([data-effort-slider-value]) > * {
+        transition:
+          opacity var(--kind-duration-fast) var(--kind-ease-out),
+          translate var(--kind-duration-fast) var(--kind-ease-out),
+          visibility var(--kind-duration-fast);
+      }
+    }
+
+    :where([data-effort-slider-part="content"][data-motion="auto"]) {
+      & [data-slot="slider-thumb"] {
+        transition: scale var(--kind-duration-panel) var(--kind-effort-slider-ease-spring);
+      }
+      & [data-slot="slider-thumb"]:where([data-dragging]) {
+        scale: 1.12 0.92;
+        transition-duration: var(--kind-duration-fast);
+      }
+      & :where([data-effort-slider-part="slider"][data-tick="0"]) [data-slot="slider-thumb"] {
+        animation: kind-effort-slider-bump-0 var(--kind-duration-fast) var(--kind-ease-out);
+      }
+      & :where([data-effort-slider-part="slider"][data-tick="1"]) [data-slot="slider-thumb"] {
+        animation: kind-effort-slider-bump-1 var(--kind-duration-fast) var(--kind-ease-out);
+      }
+      & :where([data-effort-slider-part="slider"][data-top][data-tick]) [data-slot="slider-thumb"]::after {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        border-radius: inherit;
+        pointer-events: none;
+        animation: kind-effort-slider-glow calc(var(--kind-duration-panel) * 2.5) var(--kind-ease-out) both;
+      }
+      & :where([data-effort-slider-part="slider"][data-top][data-tick]) [data-effort-slider-glyph] {
+        animation: kind-effort-slider-flare calc(var(--kind-duration-panel) * 1.5) var(--kind-ease-out);
+      }
+    }
   }
 }

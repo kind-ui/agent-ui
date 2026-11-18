@@ -44,7 +44,7 @@ export type EffortSliderPresentation = "auto" | "popover" | "sheet";
 
 export type EffortSliderOptions = {
   /**
-   * The levels, from least to most effort. The last one shows a sparkle. Empty reads as the default.
+   * The levels, from least to most effort. Empty reads as the default.
    * @default Low, Medium and High
    */
   levels?: EffortLevel[];
@@ -98,7 +98,8 @@ export type EffortSliderOptions = {
    */
   disabled?: boolean;
   /**
-   * How the popup opens and closes. `"auto"` follows `prefers-reduced-motion`.
+   * How the popup opens and closes, and whether the thumb squishes, bumps on each level and glows at the last.
+   * `"auto"` follows `prefers-reduced-motion`; reduced motion only fades the popup.
    * @default "auto"
    */
   motion?: MotionMode;
@@ -123,6 +124,10 @@ export type EffortSliderState = PopupState & {
   disabled: boolean;
   /** The `motion` option. */
   motion: MotionMode;
+  /** The level the Slider shows now, by index: it follows a drag or a key before the level is reported. */
+  live: number;
+  /** How many times `live` changed, which replays the snap on each change. */
+  ticks: number;
 };
 
 /** What the trigger shows: every level's label, so it keeps the widest one's width, and which one is chosen. */
@@ -131,7 +136,7 @@ export type EffortSliderTriggerState = PopupTriggerState & {
   levels: EffortLevel[];
   /** The chosen level's index in `levels`. */
   index: number;
-  /** Whether the chosen level is the last, which shows the sparkle. */
+  /** Whether the chosen level is the last. */
   top: boolean;
 };
 
@@ -151,6 +156,8 @@ export type EffortSliderSliderState = {
     /** Reads each index as its level's label, for `aria-valuetext` and the Slider's value part. */
     format: (index: number) => string;
     disabled: boolean;
+    /** Follows the level the Slider shows, before it's reported. */
+    onValueChange: (index: number) => void;
     /** Reports the level a person settled on. */
     onValueCommit: (index: number, details: SliderValueCommitDetails) => void;
   };
@@ -168,7 +175,7 @@ export type EffortSliderStop = {
   position: number;
   /** Whether it's the chosen level. */
   current: boolean;
-  /** Whether it's the last level, which shows the sparkle. */
+  /** Whether it's the last level. */
   top: boolean;
 };
 
@@ -279,6 +286,10 @@ const known = (
 
 const indexOf = ({ levels, value }: EffortSliderState) => levels.findIndex((level) => level.value === value);
 
+/** `--kind-effort-slider-level`: how far a level sits along the levels, from 0 to 1, which the styles warm up with. */
+const levelStyle = (levels: EffortLevel[], index: number) =>
+  `--kind-effort-slider-level: ${levels.length > 1 ? Math.max(index, 0) / (levels.length - 1) : 1}`;
+
 const offersReset = (state: EffortSliderState) => !state.disabled && state.value !== state.defaultLevel;
 
 export const effortSliderPrimitive: EffortSliderPrimitive = definePrimitive<
@@ -307,7 +318,9 @@ export const effortSliderPrimitive: EffortSliderPrimitive = definePrimitive<
   },
   state: (options) => {
     const shown = presentation(options);
-    return { ...popupState(options), ...shown, value: known(shown, options.value ?? options.defaultValue) };
+    const value = known(shown, options.value ?? options.defaultValue);
+    const live = shown.levels.findIndex((level) => level.value === value);
+    return { ...popupState(options), ...shown, value, live, ticks: 0 };
   },
   sync: (options) => {
     const shown = presentation(options);
@@ -354,6 +367,25 @@ export const effortSliderPrimitive: EffortSliderPrimitive = definePrimitive<
       if (shown !== undefined && shown !== index) controller.setValue(index);
     };
     store.subscribe(syncValue);
+    // A level chosen anywhere but the Slider (a host, an agent, Reset) moves what it shows too.
+    let committed = store.get().value;
+    // Each opening starts without a snap, so the bump and the glow play only for a level reached while it's open.
+    let wasOpen = store.get().open;
+    store.subscribe(() => {
+      const state = store.get();
+      if (state.open !== wasOpen) {
+        wasOpen = state.open;
+        if (state.open && state.ticks) store.set({ ticks: 0 });
+      }
+      if (state.value === committed) return;
+      committed = state.value;
+      const index = indexOf(state);
+      if (index !== state.live) store.set({ live: index });
+    });
+    const follow = (index: number) => {
+      const { live, ticks } = store.get();
+      if (index !== live) store.set({ live: index, ticks: ticks + 1 });
+    };
 
     const choose = (
       value: string,
@@ -396,6 +428,7 @@ export const effortSliderPrimitive: EffortSliderPrimitive = definePrimitive<
           step: 1,
           format: (at) => levels[at]?.label ?? "",
           disabled,
+          onValueChange: follow,
           onValueCommit: commit,
         },
         thumbLabel: label,
@@ -450,7 +483,7 @@ export const effortSliderPrimitive: EffortSliderPrimitive = definePrimitive<
       },
       triggerState: (state) => triggerState(state.levels, indexOf(state)),
       sliderState: (state) => sliderState(state.levels, indexOf(state), state.disabled, state.label),
-      stopsState: (state) => stopsState(state.levels, indexOf(state)),
+      stopsState: (state) => stopsState(state.levels, state.live),
       modelState: (state) =>
         modelState(state.label, state.modelLabel ?? "", state.modelHref, state.canPressModel),
       syncValue,
@@ -468,6 +501,10 @@ export const effortSliderPrimitive: EffortSliderPrimitive = definePrimitive<
           dispatch(context, "onModelPress", modelLabel, { reason: "model-press", event });
       },
       composedEvents: {
+        valuechange: (detail, event) => {
+          if ((event.target as Element).localName === "ui-slider")
+            follow((detail as { value: number }).value);
+        },
         valuecommit: (detail, event) => {
           if ((event.target as Element).localName !== "ui-slider") return;
           const { value, ...details } = detail as { value: number } & SliderValueCommitDetails;
@@ -506,6 +543,7 @@ export const effortSliderPrimitive: EffortSliderPrimitive = definePrimitive<
           "aria-label": part.api.name(state),
           "data-effort-slider-part": "trigger",
           "data-top": part.api.triggerState(state).top ? "" : undefined,
+          style: levelStyle(state.levels, indexOf(state)),
         }),
       }),
       content: slot<PopupContentProps & BaseSlotProps, PopupContentState>({
@@ -525,7 +563,13 @@ export const effortSliderPrimitive: EffortSliderPrimitive = definePrimitive<
       }),
       slider: slot<BaseSlotProps, EffortSliderSliderState>({
         state: (state, { api }) => api.sliderState(state),
-        attrs: () => ({ "data-effort-slider-part": "slider" }),
+        // `data-tick` flips with each level the Slider lands on, so the styles replay the snap.
+        attrs: (state) => ({
+          "data-effort-slider-part": "slider",
+          "data-top": state.live === state.levels.length - 1 ? "" : undefined,
+          "data-tick": state.ticks ? String(state.ticks % 2) : undefined,
+          style: levelStyle(state.levels, state.live),
+        }),
         bind: (el, { api }) => {
           api.syncValue();
           return hearComposed(el, api.composedEvents);

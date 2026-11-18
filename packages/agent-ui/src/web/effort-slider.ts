@@ -14,7 +14,7 @@ import { defineInternalSlider } from "./internal/slider.js";
 
 // The Slider reads `default-value` as it connects, which it does as this markup is written.
 const defaultParts = (defaultValue: number) =>
-  `<kind-effort-slider-trigger><button></button></kind-effort-slider-trigger><kind-effort-slider-content hidden><kind-effort-slider-slider><kind-internal-slider><ui-slider default-value="${defaultValue}"><div data-effort-slider-header=""><kind-effort-slider-title><h2></h2></kind-effort-slider-title><ui-slider-value></ui-slider-value></div><ui-slider-control><ui-slider-track><ui-slider-indicator></ui-slider-indicator><ui-slider-thumb></ui-slider-thumb></ui-slider-track></ui-slider-control></ui-slider></kind-internal-slider></kind-effort-slider-slider><kind-effort-slider-stops></kind-effort-slider-stops><div data-effort-slider-footer=""><kind-effort-slider-model><p></p></kind-effort-slider-model><kind-effort-slider-reset><button>Reset</button></kind-effort-slider-reset></div></kind-effort-slider-content>`;
+  `<kind-effort-slider-trigger><button></button></kind-effort-slider-trigger><kind-effort-slider-content hidden><kind-effort-slider-slider><kind-internal-slider><ui-slider default-value="${defaultValue}"><div data-effort-slider-header=""><kind-effort-slider-title><h2></h2></kind-effort-slider-title><span data-effort-slider-reading=""><span data-effort-slider-glyph=""></span><ui-slider-value></ui-slider-value></span></div><ui-slider-control><ui-slider-track><ui-slider-indicator></ui-slider-indicator><ui-slider-thumb></ui-slider-thumb></ui-slider-track></ui-slider-control></ui-slider></kind-internal-slider></kind-effort-slider-slider><kind-effort-slider-stops></kind-effort-slider-stops><div data-effort-slider-footer=""><kind-effort-slider-model><p></p></kind-effort-slider-model><kind-effort-slider-reset><button>Reset</button></kind-effort-slider-reset></div></kind-effort-slider-content>`;
 
 // Parts this element filled in, and so writes. A part someone wrote keeps its own, as React's children do. Kept across
 // instances, because UI SDK rebuilds one when the element returns to the page.
@@ -47,25 +47,22 @@ const element = (document: Document, tag: string, attributes: Record<string, str
   return el;
 };
 
-const sparkle = (document: Document) => element(document, "span", { "data-effort-slider-sparkle": "" });
-
-/** Every level's label in one cell, only the chosen one shown, so the trigger keeps its width; then the chevron. */
+/** The flame, every level's label in one cell (only the chosen one shown, so the width holds), then the chevron. */
 const drawTrigger = (button: Element, levels: EffortSliderState["levels"], index: number) => {
   const document = button.ownerDocument;
   if (drawn.get(button) !== levels) {
     drawn.set(button, levels);
     const value = element(document, "span", { "data-effort-slider-value": "" });
-    value.append(
-      ...levels.map((level, at) => {
-        const span = element(document, "span");
-        if (at === levels.length - 1) span.append(sparkle(document));
-        span.append(level.label);
-        return span;
-      }),
+    value.append(...levels.map((level) => element(document, "span", {}, level.label)));
+    button.replaceChildren(
+      element(document, "span", { "data-effort-slider-glyph": "" }),
+      value,
+      element(document, "span", { "data-effort-slider-chevron": "" }),
     );
-    button.replaceChildren(value, element(document, "span", { "data-effort-slider-chevron": "" }));
   }
-  for (const [at, span] of [...(button.firstElementChild?.children ?? [])].entries())
+  for (const [at, span] of [
+    ...(button.querySelector("[data-effort-slider-value]")?.children ?? []),
+  ].entries())
     span.toggleAttribute("data-current", at === index);
 };
 
@@ -82,7 +79,7 @@ const drawStops = (part: Element, stops: EffortSliderStop[]) => {
     part.replaceChildren(
       ...stops.map((stop) => {
         const span = element(document, "span", { "data-effort-slider-stop": "" });
-        span.append(...(stop.top ? [sparkle(document)] : []), stop.label);
+        span.append(stop.label);
         span.toggleAttribute("data-top", stop.top);
         span.style.setProperty("--kind-effort-slider-stop", String(stop.position));
         return span;

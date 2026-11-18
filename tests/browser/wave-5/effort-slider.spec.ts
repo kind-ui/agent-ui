@@ -64,7 +64,7 @@ test("the arrow keys move one level, read its label and report each once; Home a
   await page.keyboard.press("End");
   await expect(thumb(page)).toHaveAttribute("aria-valuetext", "Max");
   await expect(trigger(page)).toHaveAttribute("data-top", "");
-  await expect(trigger(page).locator("[data-current] [data-effort-slider-sparkle]")).toHaveCount(1);
+  await expect(page.locator('[data-effort-slider-part="slider"]')).toHaveAttribute("data-top", "");
   await page.keyboard.press("Home");
   await expect(thumb(page)).toHaveAttribute("aria-valuetext", "Low");
   await expect(trigger(page)).not.toHaveAttribute("data-top", "");
@@ -224,6 +224,48 @@ for (const [name, fixture, reducedMotion] of [
   });
 }
 
+test("a drag lights up each level it crosses before the level is reported", async ({ page }) => {
+  await load(page);
+  await open(page);
+  const box = await page.locator('[data-slot="slider-track"]').boundingBox();
+  const y = (box?.y ?? 0) + 2;
+  await page.mouse.move((box?.x ?? 0) + (box?.width ?? 0) / 3, y);
+  await page.mouse.down();
+  await page.mouse.move((box?.x ?? 0) + (box?.width ?? 0), y, { steps: 6 });
+  await expect(content(page).locator("[data-effort-slider-stop][data-current]")).toHaveText("Max");
+  await expect(trigger(page)).toHaveAccessibleName("Effort, Medium");
+  expect(await changes(page)).toEqual([]);
+  await page.mouse.up();
+  await expect(trigger(page)).toHaveAccessibleName("Effort, Max");
+});
+
+for (const [name, fixture, reducedMotion] of [
+  ["the motion option", "reduced", null],
+  ["prefers-reduced-motion", "all", "reduce"],
+] as const) {
+  test(`with reduced motion through ${name} the thumb neither bumps, squishes nor glows`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion });
+    await load(page, fixture);
+    await open(page);
+    await page.keyboard.press("End");
+    await expect(page.locator('[data-effort-slider-part="slider"]')).toHaveAttribute("data-top", "");
+    const thumbStyle = await page.locator('[data-slot="slider-thumb"]').evaluate((el) => {
+      const style = getComputedStyle(el);
+      const after = getComputedStyle(el, "::after");
+      return {
+        animation: style.animationName,
+        glow: after.animationName,
+        transition: style.transitionProperty,
+      };
+    });
+    expect(thumbStyle.animation).toBe("none");
+    expect(thumbStyle.glow).toBe("none");
+    expect(thumbStyle.transition).not.toMatch(/scale|transform/);
+  });
+}
+
 for (const colorScheme of ["light", "dark"] as const) {
   test(`axe reports no violations with the popup open in ${colorScheme} mode`, async ({ page }) => {
     await page.emulateMedia({ colorScheme });
@@ -239,7 +281,7 @@ for (const colorScheme of ["light", "dark"] as const) {
   });
 }
 
-test("in forced colors the sparkle and the chevron keep a system color", async ({ page }) => {
+test("in forced colors the flames and the chevron keep a system color", async ({ page }) => {
   await page.emulateMedia({ forcedColors: "active", colorScheme: "dark" });
   await load(page);
   await open(page);
@@ -250,10 +292,12 @@ test("in forced colors the sparkle and the chevron keep a system color", async (
     };
     return {
       chevron: color("[data-effort-slider-chevron]"),
-      sparkle: color("[data-effort-slider-stop] [data-effort-slider-sparkle]"),
+      flame: color("[data-effort-slider-reading] [data-effort-slider-glyph]"),
+      triggerFlame: color('[data-effort-slider-part="trigger"] [data-effort-slider-glyph]'),
       canvas: color('[data-slot="kind-effort-slider-content"]'),
     };
   });
   expect(colors.chevron).not.toBe(colors.canvas);
-  expect(colors.sparkle).not.toBe(colors.canvas);
+  expect(colors.flame).not.toBe(colors.canvas);
+  expect(colors.triggerFlame).not.toBe(colors.canvas);
 });

@@ -41,11 +41,11 @@ export type EffortSliderModelProps = ComponentProps<typeof parts.Model>;
 
 const triggerContent = ({ levels, index }: EffortSliderTriggerState) => (
   <>
+    <span data-effort-slider-glyph="" />
     {/* Every label shares one cell and only the chosen one shows, so the trigger keeps its width. */}
     <span data-effort-slider-value="">
       {levels.map((level, at) => (
         <span key={level.value} data-current={at === index ? "" : undefined}>
-          {at === levels.length - 1 ? <span data-effort-slider-sparkle="" /> : null}
           {level.label}
         </span>
       ))}
@@ -54,7 +54,7 @@ const triggerContent = ({ levels, index }: EffortSliderTriggerState) => (
   </>
 );
 
-/** Opens the popup. Shows the chosen level's label, with a sparkle at the top level, unless you pass children. */
+/** Opens the popup. Shows the chosen level's label beside a flame that grows with it, unless you pass children. */
 export function EffortSliderTrigger({ children = triggerContent, ...props }: EffortSliderTriggerProps) {
   return <parts.Trigger {...props}>{children}</parts.Trigger>;
 }
@@ -103,7 +103,10 @@ export function EffortSliderSlider({
             {children ?? (
               <>
                 <EffortSliderTitle />
-                <KindSliderValue />
+                <span data-effort-slider-reading="">
+                  <span data-effort-slider-glyph="" />
+                  <KindSliderValue />
+                </span>
               </>
             )}
           </div>
@@ -128,7 +131,6 @@ const stopsContent = ({ stops }: { stops: EffortSliderStop[] }) =>
       data-top={stop.top ? "" : undefined}
       style={{ "--kind-effort-slider-stop": stop.position } as CSSProperties}
     >
-      {stop.top ? <span data-effort-slider-sparkle="" /> : null}
       {stop.label}
     </span>
   ));

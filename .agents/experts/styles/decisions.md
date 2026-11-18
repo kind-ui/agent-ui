@@ -6,6 +6,7 @@ Last reviewed: `f2a2539` (Wave 5 Task 8 Effort Slider)
 
 ## Settled
 
+- **No sparkle icons in any component** (user rule, Wave 5 Task 8): no sparkle or star-burst glyph, "AI sparkles" motif or sparkle animation. Effort Slider uses a flame and one glow instead.
 - **A Transcript segment's header has a set `height: 1.25rem`** (Wave 4 Task 13): baseline alignment of the speaker and time made it as tall as the font's metrics (22px on macOS), so segment heights and the Transcript budgets differed on Linux CI. The search budget rose to 72 writes, 201 renders and 140 re-reads because 62px segments put one more in view, the count Linux CI already measured.
 - **The Transcript match count changes width as you type** (Wave 4 Task 10): it sits inside the search field after the input, which only shrinks; nothing outside the field moves.
 - **Switching the Test Results filter plays the rows' entrance again** (Wave 4 Task 9): the filter mounts the rows it lets through, which is a mount; reduced motion keeps it to a 120 ms fade.
