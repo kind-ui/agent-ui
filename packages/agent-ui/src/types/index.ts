@@ -20,7 +20,6 @@ export type {
   PickerAction,
   PickerItem,
   PlanItem,
-  PromptTemplate,
   Question,
   QuestionOption,
   QueueItem,

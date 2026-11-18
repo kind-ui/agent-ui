@@ -1,0 +1,23 @@
+---
+"@kind-ui/agent-ui": minor
+---
+
+Wave 5: Picker, Add Menu, Settings Menu, Approval Mode, Model Control, Context Bar and Dictation, in React and Web Components, with their `@kind-ui` registry items. Model Selector moves onto Picker, Message gains a regenerate-with menu, and the Composer restores drafts and fits narrow screens.
+
+- Every Wave 5 popup takes `presentation`: `"auto"` (the default) is a bottom sheet on small touch screens and a popover elsewhere.
+- `./core` exports the new primitives and their bases and helpers (`pickerBase`, `pickerPages`, `menuBase`, `menuItems`, `settingsBase`, `addMenuSections`, `approvalModeName`, `approvalModeRows`, `modelEffort`, `fitChips`, `hearComposed` and `createSpeechDictation`), and the package root adds the `PickerItem`, `PickerAction`, `MenuEntry`, `SettingsEntry`, `SettingsToggle`, `SettingsChoice`, `SettingsOption`, `SettingsValues`, `ApprovalModeOption`, `EffortLevel`, `ContextChip` and `RegenerateOption` types. `ModelOption` gains `efforts`, the effort levels a model supports.
+- Model Control is a button reading "GPT-5 · High" that opens a settings menu: Model and Effort are radio submenus, beside the host's own toggles and choices. Its trigger is named "Model, <model>, <level> effort". When a model doesn't support the chosen effort, it uses `modelEffort(levels, model, effort)`, the highest supported level at or below it, and reports the change with reason `"model-change"`.
+- Dictation runs a `DictationSource` the host passes as `source`; `createSpeechDictation` makes one from the browser's speech recognition. Without a `source` it shows no mic button.
+- Message takes `regenerateOptions`: Regenerate then opens a menu whose first row is "Try again". `onRegenerate(text, details)` gains `details.optionId`, the option chosen (`undefined` for a plain regenerate or "Try again"), and the Web Components `regenerate` event carries it as `detail.optionId`. Hosts written for 0.4 keep working.
+- Composer takes `draftKey` and `draftStorage` (UI SDK's `createLocalStorage` or `createSessionStorage`) to save an uncontrolled draft per conversation and restore it on the next mount, with "Draft restored" and Discard. Its change reasons add `"restore"` and `"discard-press"`. A controlled `value` never reads or writes storage.
+- Composer has a `context` row above the editor, where a Context Bar placed as its direct child sits, and a direct-child Dictation sits beside Send. Below a width of 28rem (a container query on the composer, named `kind-composer`), Model Control and Approval Mode show only their icons. The composer is now an inline-size container, so one inside a shrink-to-fit parent, like a centered flex column or a flex row, needs a width.
+- `--kind-color-danger`'s light value darkens from `oklch(0.58 0.21 27)` to `oklch(0.55 0.21 27)`, so danger text meets AA contrast on `--kind-color-hover`.
+- **Breaking:** Model Selector is built on Picker. Its search field beside a button becomes a button whose list holds the search, so its markup and parts change; the Model Selector page's "Changes in 0.5" lists every part. Update copied files along with the package with `npx shadcn@latest add @kind-ui/model-selector --overwrite` (or `@kind-ui/model-selector-web`). Then:
+  - Styles hook onto Picker's `data-picker-*` attributes and `--kind-picker-*` variables. `data-model-selector-field` is gone; `--kind-model-selector-width` still sets the button's width.
+  - A person's choice reaches `onValueChange` with the reason `"item-press"`, not `"input-change"`.
+  - `openLabel` is gone, and the empty text is the new `emptyText` option.
+  - On Web Components, set `el.value` instead of calling `el.api.setValue`.
+  - A model's `id` must not start with `group:`, which `pages: "groups"` uses for its provider rows.
+  - The `internal-combobox` registry item is gone.
+- **Breaking (types):** from `./core`, `filterModels`, `ModelGroup`, `ModelSelectorComboboxState`, `ModelSelectorContentState` and `ModelSelectorItem` are gone, and so are Model Selector's api methods `getModels`, `read`, `search`, `follow`, `syncValue`, `comboboxState` and `contentState`. Its state's `models` is now `items`, as Picker's is.
+- **Breaking (types):** Message's `api.regenerate` takes an option id first: `api.regenerate(optionId?, event?)`, where 0.4 had `api.regenerate(event?)`. Code that passed an event passes `undefined` before it. Agents and the render files are unaffected.

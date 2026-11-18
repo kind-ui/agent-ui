@@ -11,7 +11,7 @@ Agent-operable AI components built on [UI SDK](https://ui-sdk.dev/docs).
 
 Styled React and Web Components are distributed through the registry, not this package.
 
-Components: Step and Step List, Status, Reasoning, Tool, Chain of Thought, Task, Plan, Subagent, Queue, Confirmation, Question, Checkpoint, Model Selector, Reasoning Effort, Suggestion, Context Meter, Feedback, Notice, Guardrail Notice, Conversation, Message, Markdown, Code Block, Markdown Table, Composer, Attachments, Uploader, Loader, Thinking Indicator, Typing Indicator, Streaming Text, Sources, Inline Citation, Document, Generated Image, File Tree, Terminal, Stack Trace, Test Results, Transcript, Selection and Action.
+Components: Step and Step List, Status, Reasoning, Tool, Chain of Thought, Task, Plan, Subagent, Queue, Confirmation, Question, Checkpoint, Model Selector, Reasoning Effort, Suggestion, Context Meter, Feedback, Notice, Guardrail Notice, Conversation, Message, Markdown, Code Block, Markdown Table, Composer, Attachments, Uploader, Loader, Thinking Indicator, Typing Indicator, Streaming Text, Sources, Inline Citation, Document, Generated Image, File Tree, Terminal, Stack Trace, Test Results, Transcript, Selection, Action, Picker, Add Menu, Settings Menu, Approval Mode, Model Control, Context Bar and Dictation.
 
 ## Registry
 

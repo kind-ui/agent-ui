@@ -232,15 +232,6 @@ export interface ContextChip<Icon = unknown> {
   icon?: Icon;
 }
 
-/** A saved prompt to insert into the composer. */
-export interface PromptTemplate {
-  id: string;
-  title: string;
-  body: string;
-  description?: string;
-  group?: string;
-}
-
 /** A way to regenerate a message, like "More concise". One with `items` opens a submenu of them. */
 export interface RegenerateOption<Icon = unknown> {
   id: string;
