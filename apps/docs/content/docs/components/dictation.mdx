@@ -44,7 +44,7 @@ Dictation
 
 Pass a `source`, an object whose `start(signal)` returns an async iterable of events: `{ level }` for the waveform (0 to 1), `{ text, final }` for recognized text, and `{ error }` when it fails. It listens until `signal` aborts. Stop aborts it without a reason, and the source reports the text still to come and ends. Cancel, or the component unmounting, aborts it with the reason `"cancel"`: nothing more is read, so the source can drop what it heard. Without a `source` there's no mic button.
 
-`createSpeechDictation` is a source over the browser's speech recognition, with levels from the microphone. Pass `lang` for the language spoken; it defaults to the page's `lang`. Chrome's speech recognition sends audio to a speech service, and browsers without speech recognition report "Dictation isn't supported in this browser".
+`createSpeechDictation` is a source over the browser's speech recognition, with levels from the microphone. Pass `lang` for the language spoken; it defaults to the page's `lang`. Chrome's speech recognition sends audio to a speech service, and browsers without speech recognition show "Not supported in this browser".
 
 ```tsx
 import { createSpeechDictation } from "@kind-ui/agent-ui/core";

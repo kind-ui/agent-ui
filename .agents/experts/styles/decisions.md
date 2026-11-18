@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `784d503` (Wave 5 Task 9 Model Control on Settings Menu)
+Last reviewed: `74a2460` (Wave 5 Task 11 Dictation)
 
 ## Settled
 
+- **Dictation's idle box keeps its full width (Wave 5 Task 11):** the mic button, waveform and status share one box so nothing beside it moves (plan Design bar); hosts size it with `--kind-dictation-width`.
 - **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.
 - **A Transcript segment's header has a set `height: 1.25rem`** (Wave 4 Task 13): baseline alignment of the speaker and time made it as tall as the font's metrics (22px on macOS), so segment heights and the Transcript budgets differed on Linux CI. The search budget rose to 72 writes, 201 renders and 140 re-reads because 62px segments put one more in view, the count Linux CI already measured.
 - **The Transcript match count changes width as you type** (Wave 4 Task 10): it sits inside the search field after the input, which only shrinks; nothing outside the field moves.
@@ -58,6 +59,7 @@ Last reviewed: `784d503` (Wave 5 Task 9 Model Control on Settings Menu)
 
 ## Resolved
 
+- **Dictation (Wave 5 Task 11):** words heard were cut at the end (now cut at the start, newest in view), the unsupported error didn't fit ("Not supported in this browser"), the bars' timing is `--kind-dictation-bar-smoothing`, a large `bars` overflowed the box (the waveform shrinks and clips), two selectors gained `:where()`, a pending Stop no longer hovers and reads `GrayText` in forced colors. `dictation.spec.ts` pins the box across phases and `prefers-reduced-motion`; `forced-colors.spec.ts` lists Dictation.
 - **Context Bar (Wave 5 Task 10):** WebKit has no `overflow-clip-margin`, so the clipped bar hid focus rings on chips and "+N"; the rings now sit inside (`outline-offset: -2px`). `motion="none"` and the remove icon in forced colors are tested.
 - **Settings Menu switch and icon trigger (Wave 5 Task 5):** the switch had a transition under `motion="none"` and its track faded under reduced motion; the icon trigger lost its look with custom children, as Add Menu's did. Both fixed; the spec checks the reduced track and thumb.
 - **Menu exit ran 150 ms under reduced motion, and the Add Menu trigger rule was two attributes deep (Wave 5 Task 4):** the base exit rule and the trigger's context moved into `:where()`; the spec checks the 120 ms exit.

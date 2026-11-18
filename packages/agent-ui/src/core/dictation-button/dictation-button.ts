@@ -41,7 +41,7 @@ export type DictationOptions = {
    */
   label?: string;
   /**
-   * How many bars the waveform has.
+   * How many bars the waveform has, a whole number from 1 to 64.
    * @default 16
    */
   bars?: number;
@@ -76,11 +76,14 @@ export type DictationState = {
 };
 
 export type DictationApi = {
-  /** Starts listening. Offered only with a `source`, while idle or after an error. */
+  /** Starts listening, and returns whether it did. Offered only with a `source`, while idle or after an error. */
   readonly start: (() => boolean) | undefined;
-  /** Stops listening; the final text goes to `onText` once the source has reported it. Offered only while listening. */
+  /**
+   * Stops listening, and returns whether it did; the final text goes to `onText` once the source has reported it.
+   * Offered only while listening.
+   */
   readonly stop: (() => boolean) | undefined;
-  /** Stops and inserts nothing. Offered while listening or transcribing. */
+  /** Stops, inserts nothing, and returns whether it did. Offered while listening or transcribing. */
   readonly cancel: (() => boolean) | undefined;
   /** Stop, from its button. */
   pressStop: (event?: Event) => boolean;
@@ -119,23 +122,25 @@ export type DictationPrimitive = ReturnType<
 
 const ERRORS: Record<string, string> = {
   denied: "Microphone blocked",
-  unsupported: "Dictation isn't supported in this browser",
+  unsupported: "Not supported in this browser",
   "no-speech": "No speech heard",
   network: "Speech service unreachable",
   "audio-capture": "No microphone found",
 };
 
 /** The words for an error a source reported. */
-export const dictationError = (error: string): string => ERRORS[error] ?? "Dictation failed";
+const dictationError = (error: string): string => ERRORS[error] ?? "Dictation failed";
 
 /** Joins final texts, which recognizers often start with a space. */
-export const joinFinals = (finals: readonly string[]): string =>
+const joinFinals = (finals: readonly string[]): string =>
   finals
     .map((text) => text.trim())
     .filter(Boolean)
     .join(" ");
 
-const barCount = (options: DictationOptions) => Math.max(1, Math.floor(options.bars ?? 16));
+const MAX_BARS = 64;
+const barCount = ({ bars = 16 }: DictationOptions) =>
+  Number.isFinite(bars) ? Math.min(MAX_BARS, Math.max(1, Math.floor(bars))) : 16;
 const silence = (bars: number) => Array<number>(bars).fill(0);
 
 const presentation = (options: DictationOptions) => ({
@@ -156,7 +161,10 @@ const statusState = (state: DictationState): DictationStatusState => ({
 
 const isActive = (phase: DictationPhase) => phase === "listening" || phase === "transcribing";
 
-type Run = { controller: AbortController; stopped?: { reason: DictationTextReason; source: ChangeSource } };
+type Run = {
+  controller: AbortController;
+  stopped?: { reason: DictationTextReason; source: ChangeSource };
+};
 
 export const dictationButtonPrimitive: DictationPrimitive = definePrimitive<
   DictationOptions,
@@ -183,7 +191,7 @@ export const dictationButtonPrimitive: DictationPrimitive = definePrimitive<
   sync: presentation,
   // A level or an interim text arrives many times a second; only the parts that show them hear it.
   live: ["levels", "interim"],
-  controlled: ["phase"],
+  controlled: ["phase", "error"],
   api: (context) => {
     const { store } = context;
     // A run that's no longer current, because it was canceled or another started, writes nothing.
@@ -192,6 +200,9 @@ export const dictationButtonPrimitive: DictationPrimitive = definePrimitive<
     sourceOf();
 
     context.onOptions((options) => {
+      // A host that drops its source takes the microphone away. A new source object, like one written inline in
+      // React, waits for the next start.
+      if (run && !options.source) cancel();
       const bars = barCount(options);
       if (store.get().levels.length !== bars) store.set({ levels: silence(bars) });
     });
@@ -247,7 +258,12 @@ export const dictationButtonPrimitive: DictationPrimitive = definePrimitive<
       const current: Run = { controller: new AbortController() };
       run = current;
       store.set({ phase: "listening", error: "", interim: "" });
-      void listen(source, current);
+      // An error `onText` throws reaches the host as one thrown from an event, not as an unhandled rejection.
+      listen(source, current).catch((error) =>
+        queueMicrotask(() => {
+          throw error;
+        }),
+      );
       return true;
     };
 

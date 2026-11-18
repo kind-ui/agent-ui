@@ -110,12 +110,39 @@ for (const motion of ["reduced", "none"] as const)
     await load(page, motion);
     await listen(page);
     await push(page, { level: 0.3 }, { level: 0.9 }, { level: 0.6 });
+    const last = (await page.locator('[data-dictation-part="bar"]').count()) - 1;
     await expect(page.locator('[data-dictation-part="waveform"]')).toHaveCSS(
-      "--kind-dictation-level-23",
+      `--kind-dictation-level-${last}`,
       "0.6",
     );
     expect(await scales(page)).toEqual(["1 0.35", "1 0.35", "1 0.35"]);
   });
+
+test("prefers-reduced-motion holds the bars still too", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await load(page);
+  await listen(page);
+  await push(page, { level: 0.3 }, { level: 0.9 }, { level: 0.6 });
+  await expect.poll(() => scales(page)).toEqual(["1 0.35", "1 0.35", "1 0.35"]);
+});
+
+test("the box keeps its size in every phase", async ({ page }) => {
+  await load(page);
+  const size = async () => {
+    const box = await root(page).boundingBox();
+    return [box?.width, box?.height];
+  };
+  const idle = await size();
+  await listen(page);
+  await push(page, { text: "a long run of words that will not fit in the box at all", final: false });
+  expect(await size()).toEqual(idle);
+  await stop(page).click();
+  await expect(root(page)).toHaveAttribute("data-phase", "transcribing");
+  expect(await size()).toEqual(idle);
+  await push(page, { error: "unsupported" });
+  await expect(root(page)).toHaveAttribute("data-phase", "error");
+  expect(await size()).toEqual(idle);
+});
 
 test("without a source there's no mic button", async ({ page }) => {
   await page.goto("/?c=dictation&case=no-source");

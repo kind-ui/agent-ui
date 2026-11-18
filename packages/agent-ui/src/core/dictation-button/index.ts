@@ -8,6 +8,4 @@ export {
   type DictationTextReason,
   type DictationWaveformState,
   dictationButtonPrimitive,
-  dictationError,
-  joinFinals,
 } from "./dictation-button.js";

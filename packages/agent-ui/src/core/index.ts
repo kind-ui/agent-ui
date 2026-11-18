@@ -158,8 +158,6 @@ export {
   type DictationTextReason,
   type DictationWaveformState,
   dictationButtonPrimitive,
-  dictationError,
-  joinFinals,
 } from "./dictation-button/index.js";
 export {
   type DocumentApi,

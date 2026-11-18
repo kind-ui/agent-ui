@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `784d503` (Wave 5 Task 9 Model Control on Settings Menu)
+Last reviewed: `74a2460` (Wave 5 Task 11 Dictation)
 
 ## Settled
 
+- **Dictation keeps its run when the host passes a new `source` object (Wave 5 Task 11):** only dropping `source` cancels, since React hosts often write the source inline, a new object each render; the new source is used from the next start.
 - **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.
 - **Model Selector's `icon` is `unknown` in core, so each render layer casts once where core hands it over** (Wave 4 Task 12b): `definePrimitive` can't be generic per instance, and each layer types its own public `models` (`string | ReactElement` in React, `string | Element` on web), so no other value reaches the cast.
 - **Selection's `onDismiss` hears Escape, an outside press and `dismiss`, not a selection collapsing** (Wave 4 Task 11): a collapse is the reader moving on, not a dismissal; the JSDoc says so.
@@ -40,6 +41,9 @@ Last reviewed: `784d503` (Wave 5 Task 9 Model Control on Settings Menu)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **An agent's Dictation `stop` returns before `onText` (Wave 5 Task 11):** `phase` reads `transcribing` until the source ends; no `pending` key the bridge waits on.
+- **`createSpeechDictation`: an error recognition reports after Stop drops the finals already heard (Wave 5 Task 11):** Chrome may report `no-speech` or `network` then; the run ends in `error`.
+- **Components that read their source only through `dispatch`/`actionSource` may report a first keyboard press as `"virtual"`** (found in Wave 5 Task 11): UI SDK's input tracking starts on first use; Dictation calls `sourceOf()` as it's created. Confirmation and Document don't yet.
 - **Context Bar: Delete on the only chip shown sends focus to "+N"** (Wave 5 Task 10), the documented fallback, since the chip that slides in is still overflowed while the removed one leaves. Each overflowed chip with an inline `svg` icon is rendered twice while the list is open (bar and list), so ids in it repeat.
 - **`hearComposed` gives an event to the nearest element hearing its name, whatever tag that element's handler accepts** (Wave 5 Task 7): a `ui-file-input` inside a `menuBase` menu wouldn't reach an outer Composer, since every menu hears `valuechange`. Nothing nests one that way; a per-call tag filter would fix it.
 - **Two agent calls on a controlled Settings Menu with no render between them (Wave 5 Task 5):** the second builds on the owner's `values`, which haven't come back yet, so `onValuesChange={setValues}` keeps only the second; `setValues` carries values between its own changes. Not reproduced through the bridge.
@@ -84,6 +88,7 @@ Last reviewed: `784d503` (Wave 5 Task 9 Model Control on Settings Menu)
 
 ## Resolved
 
+- **Dictation (Wave 5 Task 11):** a non-finite `bars` threw (now the default, capped at 64); dropping `source` while listening left the microphone open (cancels now); a throwing `onText` was an unhandled rejection (rethrown from a microtask); `joinFinals`/`dictationError` are module-private; `error` is in `controlled`. Unit tests pin the first two.
 - **Context Bar (Wave 5 Task 10):** a focused chip pushed behind "+N" (a resize, a chip added in front) went `inert` and dropped focus to the page; `show` now hands focus to the last chip shown with `roving.focus` (the guard accepts `roving.focus(`), tested by narrowing the bar. The chip and row slots declare their `keys`. `createListFocus`'s recovery filter was dropped: `roving.items()` already returns only focusable items.
 - **Message's regenerate menu stayed open after the toolbar left or an agent regenerated (Wave 5 Task 7):** `menuBase` gained `canOpen`; the menu closes when there are no options, no `onRegenerate` or an unsettled message, and after an agent's `regenerate`; pinned in `message.spec.ts`.
 - **`hearComposed` didn't tell nested components apart (Wave 5 Task 1, fixed in Task 7):** an element nearer the event's target that hears the same event name now takes it, so an outer root no longer hears a nested component's `ui-*` events; `composed-events.spec.ts` nests one `kind-test-menu` in another and fails without the fix.

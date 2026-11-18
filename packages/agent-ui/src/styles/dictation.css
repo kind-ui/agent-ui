@@ -10,6 +10,8 @@
     --kind-dictation-icon-cancel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E");
     --kind-dictation-width: 16rem;
     --kind-dictation-height: 2rem;
+    /* About how often a source reports a level, so a bar moves from one to the next. */
+    --kind-dictation-bar-smoothing: 80ms;
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
@@ -47,7 +49,7 @@
       background-color: currentColor;
       mask: var(--kind-dictation-icon) center / contain no-repeat;
     }
-    &:hover {
+    &:hover:not([data-pending]) {
       background-color: var(--kind-color-hover);
     }
     &:focus-visible {
@@ -76,7 +78,7 @@
       inline-size: 12px;
       block-size: 12px;
     }
-    &:hover {
+    &:hover:not([data-pending]) {
       background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-fg));
     }
     &:where([data-pending]) {
@@ -86,7 +88,9 @@
 
   [data-dictation-part="waveform"] {
     display: inline-flex;
-    flex: none;
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    overflow: hidden;
     align-items: center;
     gap: 2px;
     block-size: 1.25rem;
@@ -94,44 +98,50 @@
   }
 
   [data-dictation-part="bar"] {
+    flex: none;
     inline-size: 2px;
     block-size: 100%;
     border-radius: 1px;
     background-color: currentColor;
     /* A bar never disappears, so silence still reads as a waveform. */
     scale: 1 max(0.15, var(--kind-dictation-bar, 0));
-    transition: scale 80ms linear;
+    transition: scale var(--kind-dictation-bar-smoothing) linear;
   }
 
   /* Held still: the waveform shows that the microphone is on, not how loud it is. */
-  [data-dictation-part="waveform"]:where([data-motion="reduced"], [data-motion="none"])
+  :where([data-dictation-part="waveform"]:is([data-motion="reduced"], [data-motion="none"]))
     [data-dictation-part="bar"] {
     scale: 1 0.35;
     transition: none;
   }
   @media (prefers-reduced-motion: reduce) {
-    [data-dictation-part="waveform"]:where([data-motion="auto"]) [data-dictation-part="bar"] {
+    :where([data-dictation-part="waveform"][data-motion="auto"]) [data-dictation-part="bar"] {
       scale: 1 0.35;
       transition: none;
     }
   }
 
+  /* Text that doesn't fit is cut at its start, so the newest words heard stay in view: the auto margin keeps short
+     text at the start, and gives way when the text overflows the end alignment. */
   [data-dictation-part="status"] {
     display: inline-flex;
     flex: 1 1 auto;
     align-items: center;
+    justify-content: flex-end;
     gap: 0.375rem;
     min-inline-size: 0;
+    overflow: hidden;
     color: var(--kind-color-muted);
+    white-space: nowrap;
 
     &:where([data-phase="error"]) {
       color: var(--kind-color-danger);
     }
-    & [data-dictation-text] {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+  }
+
+  :where([data-dictation-part="status"]) [data-dictation-text] {
+    flex: none;
+    margin-inline-end: auto;
   }
 
   [data-dictation-part="status-icon"] {
@@ -151,6 +161,9 @@
     [data-dictation-part="bar"] {
       forced-color-adjust: none;
       background-color: CanvasText;
+    }
+    [data-dictation-part="stop"]:where([data-pending])::before {
+      background-color: GrayText;
     }
   }
 }

@@ -94,3 +94,25 @@ test("without a source, nothing is offered", () => {
   assert.equal(instance.api.start, undefined);
   instance.destroy();
 });
+
+test("dropping the source while listening cancels it", async () => {
+  const { fake, texts, instance } = setup();
+  instance.api.start();
+  await tick();
+  instance.setOptions({});
+  assert.equal(fake.signal.reason, "cancel");
+  assert.equal(instance.get().phase, "idle");
+  fake.push({ text: "late", final: true });
+  fake.end();
+  await tick();
+  assert.deepEqual(texts, []);
+  instance.destroy();
+});
+
+test("a bar count that isn't finite falls back to the default", () => {
+  for (const bars of [Number.NaN, Number.POSITIVE_INFINITY]) {
+    const instance = dictationButtonPrimitive({ bars });
+    assert.equal(instance.get().levels.length, 16);
+    instance.destroy();
+  }
+});

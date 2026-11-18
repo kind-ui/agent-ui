@@ -27,7 +27,8 @@ const drawBars = (waveform: Element | null, count: number) => {
 };
 
 /**
- * `<kind-dictation>` fills in its waveform, status, mic button, Cancel and Stop when it has no children. Set `source`
+ * `<kind-dictation>` fills in its waveform, status, mic button, Cancel and Stop when it has no children, and an empty
+ * `<kind-dictation-status>` with its mark and a `[data-dictation-text]` span, where the status text goes. Set `source`
  * as a property; the final text arrives as a `dictationtext` event.
  */
 export function defineDictation(): void {
@@ -43,7 +44,11 @@ export function defineDictation(): void {
         const draw = () => {
           const state = instance.get();
           drawBars(el.querySelector("kind-dictation-waveform"), state.levels.length);
-          const text = el.querySelector("kind-dictation-status [data-dictation-text]");
+          const status = el.querySelector("kind-dictation-status");
+          if (status && !status.firstElementChild)
+            status.innerHTML =
+              "<kind-dictation-status-icon></kind-dictation-status-icon><span data-dictation-text></span>";
+          const text = status?.querySelector("[data-dictation-text]");
           const { text: words } = api.statusState(state);
           if (text && text.textContent !== words) text.textContent = words;
         };

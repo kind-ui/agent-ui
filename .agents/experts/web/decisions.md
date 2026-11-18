@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `784d503` (Wave 5 Task 9 Model Control on Settings Menu)
+Last reviewed: `74a2460` (Wave 5 Task 11 Dictation)
 
 ## Settled
 
@@ -25,6 +25,8 @@ Last reviewed: `784d503` (Wave 5 Task 9 Model Control on Settings Menu)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Dictation's web `draw` runs on every level (Wave 5 Task 11):** cheap and guarded; no `written` or `moved` fixture case yet.
+- **An empty `<kind-dictation>` takes no room until defined (Wave 5 Task 11):** a `:not(:defined)` rule from its size variables would hold it.
 - **An `addaction` (and `pickeraction`) listener can't keep an item pending (Wave 5 Task 4):** `onAction` is a `"callback"`, so no `waitUntil`; decide `"action"` for Picker and Add Menu together.
 - **The `open` attribute of `kind-picker` and every `menuBase` element doesn't reflect (Wave 5 Task 4; Task 6 adds `kind-approval-mode`, where it does control the menu):** the docs say to set the property; reflect it or stop observing it with Picker's root state.
 - **`kind-model-selector` has no moved or shadow-root fixture case** (Wave 5 Task 3): both paths were checked by hand in review (a moved element redraws and keeps working; in a shadow root focus, `aria-controls` and `modelchange` behave); add cases when Picker gains its own.
@@ -68,6 +70,7 @@ Last reviewed: `784d503` (Wave 5 Task 9 Model Control on Settings Menu)
 
 ## Resolved
 
+- **An empty written `<kind-dictation-status>` showed nothing (Wave 5 Task 11):** `draw` fills in its mark and `[data-dictation-text]`.
 - **Context Bar (Wave 5 Task 10):** a list written with only whitespace inside is filled in; new chip objects with the same content keep their rows; the content's `initial-focus`, `side-offset` and `align` are set on every draw, so content added later opens as React's does (`written` case).
 - **A `kind-message` written with menu markup and no `regenerateOptions` both regenerated and opened a menu of "Try again" (Wave 5 Task 7):** the root now always controls its `ui-menu`, which refuses to open without options, and empties a content it owns; `message.spec.ts` has a `no-options` case.
 - **`hearComposed` didn't tell nested components apart (Wave 5 Task 1, fixed in Task 7):** an element nearer the event's target that hears the same event name now takes it, so an outer root no longer hears a nested component's `ui-*` events; `composed-events.spec.ts` nests one `kind-test-menu` in another and fails without the fix.

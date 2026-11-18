@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `784d503` (Wave 5 Task 9 Model Control on Settings Menu)
+Last reviewed: `74a2460` (Wave 5 Task 11 Dictation)
 
 ## Settled
 
@@ -53,6 +53,7 @@ Last reviewed: `784d503` (Wave 5 Task 9 Model Control on Settings Menu)
 
 ## Resolved
 
+- **Dictation spec read `--kind-dictation-level-23` after the default went to 16 bars (Wave 5 Task 11):** it reads the last bar's index now.
 - **Context Bar (Wave 5 Task 10):** `ContextBarChip` and `ContextBarItem` take `children` (a function of the chip, by default its icon, label and remove control), and `ContextBarRemove` / `ContextBarItemRemove` are exported, so a custom chip keeps its remove control as on web.
 - **`MessageRegenerate` cloned its child and had no way to replace the rows (Wave 5 Task 7):** the child is now `MenuTrigger`'s `render` (its own `render` kept), `menuContent` replaces `MessageRegenerateContent`, and `Message` types `regenerateOptions` icons as `string | ReactElement`; `custom-rows` case in `message.spec.ts`.
 - **`<AddMenuContent>{null}</AddMenuContent>` still drew the rows (Wave 5 Task 4):** children now default to a function of the content's state, as `sources.tsx` does. Fixtures dropped the unused sheet case and added `inert`.
