@@ -9,6 +9,7 @@ import { Checkpoint } from "./components/ui/checkpoint.js";
 import { CodeBlock } from "./components/ui/code-block.js";
 import { Composer, ComposerInput, ComposerStop, ComposerSubmit } from "./components/ui/composer.js";
 import { Confirmation } from "./components/ui/confirmation.js";
+import { ContextBar } from "./components/ui/context-bar.js";
 import { ContextMeter } from "./components/ui/context-meter.js";
 import {
   Conversation,
@@ -235,6 +236,7 @@ const items = {
       defaultModel="gpt-5"
     />
   ),
+  "context-bar": <ContextBar chips={[{ id: "readme", label: "README.md", kind: "file" }]} />,
   terminal: <Terminal command="npm test" output={"\x1b[32m✓\x1b[0m 22 passed"} exitCode={0} defaultOpen />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">

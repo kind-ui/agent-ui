@@ -8,6 +8,7 @@ import { defineCheckpoint } from "./components/ui/web/checkpoint.js";
 import { defineCodeBlock } from "./components/ui/web/code-block.js";
 import { defineComposer } from "./components/ui/web/composer.js";
 import { defineConfirmation } from "./components/ui/web/confirmation.js";
+import { defineContextBar } from "./components/ui/web/context-bar.js";
 import { defineContextMeter } from "./components/ui/web/context-meter.js";
 import { defineConversation } from "./components/ui/web/conversation.js";
 import { defineDocument } from "./components/ui/web/document.js";
@@ -85,6 +86,7 @@ for (const define of [
   defineSettingsMenu,
   defineApprovalMode,
   defineModelControl,
+  defineContextBar,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -143,6 +145,7 @@ const items = {
   "settings-menu": `<kind-settings-menu></kind-settings-menu>`,
   "approval-mode": `<kind-approval-mode></kind-approval-mode>`,
   "model-control": `<kind-model-control></kind-model-control>`,
+  "context-bar": `<kind-context-bar></kind-context-bar>`,
   terminal: `<kind-terminal command="npm test" exit-code="0" default-open></kind-terminal>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
