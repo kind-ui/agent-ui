@@ -11,6 +11,7 @@ import { defineConfirmation } from "./components/ui/web/confirmation.js";
 import { defineContextMeter } from "./components/ui/web/context-meter.js";
 import { defineConversation } from "./components/ui/web/conversation.js";
 import { defineDocument } from "./components/ui/web/document.js";
+import { defineEffortSlider } from "./components/ui/web/effort-slider.js";
 import { defineFeedback } from "./components/ui/web/feedback.js";
 import { defineFileTree } from "./components/ui/web/file-tree.js";
 import { defineGeneratedImage } from "./components/ui/web/generated-image.js";
@@ -83,6 +84,7 @@ for (const define of [
   defineAddMenu,
   defineSettingsMenu,
   defineApprovalMode,
+  defineEffortSlider,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -140,6 +142,7 @@ const items = {
   "add-menu": `<kind-add-menu can-run></kind-add-menu>`,
   "settings-menu": `<kind-settings-menu></kind-settings-menu>`,
   "approval-mode": `<kind-approval-mode></kind-approval-mode>`,
+  "effort-slider": `<kind-effort-slider></kind-effort-slider>`,
   terminal: `<kind-terminal command="npm test" exit-code="0" default-open></kind-terminal>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>

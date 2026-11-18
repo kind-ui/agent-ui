@@ -18,6 +18,7 @@ import {
   ConversationViewport,
 } from "./components/ui/conversation.js";
 import { Document } from "./components/ui/document.js";
+import { EffortSlider } from "./components/ui/effort-slider.js";
 import { Feedback } from "./components/ui/feedback.js";
 import { FileTree } from "./components/ui/file-tree.js";
 import { GeneratedImage } from "./components/ui/generated-image.js";
@@ -227,6 +228,7 @@ const items = {
     />
   ),
   "approval-mode": <ApprovalMode modes={[{ value: "ask", label: "Ask every time" }]} defaultValue="ask" />,
+  "effort-slider": <EffortSlider defaultValue="high" />,
   terminal: <Terminal command="npm test" output={"\x1b[32m✓\x1b[0m 22 passed"} exitCode={0} defaultOpen />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
