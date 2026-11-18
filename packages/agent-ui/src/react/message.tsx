@@ -142,8 +142,9 @@ export function MessageRegenerateContent({
   return (
     <message.RegenerateContent>
       {(state) => (
-        // Hidden from agents, which use the Message's own `regenerate`.
-        <KindMenuContent align="start" sideOffset={6} data-agent-hidden="" {...props}>
+        // Hidden from agents, which use the Message's own `regenerate`. Kept in the page while closed, as on web, so
+        // the mark keeps Menu out of the snapshot while only its trigger would show.
+        <KindMenuContent align="start" sideOffset={6} keepMounted data-agent-hidden="" {...props}>
           {typeof children === "function" ? children(state) : children}
         </KindMenuContent>
       )}

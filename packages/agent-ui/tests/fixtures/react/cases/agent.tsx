@@ -1,8 +1,10 @@
 import type { Answers, QueueItem } from "@kind-ui/agent-ui";
 import type { AttachmentItem, UploadItem } from "@kind-ui/agent-ui/core";
 import type { AgentAction } from "@ui-sdk/react/agent";
-import { useEffect, useState } from "react";
+import { type CSSProperties, useEffect, useState } from "react";
 import { Action } from "../../../../src/react/action.js";
+import { AddMenu } from "../../../../src/react/add-menu.js";
+import { ApprovalMode } from "../../../../src/react/approval-mode.js";
 import { Attachments } from "../../../../src/react/attachments.js";
 import { ChainOfThought } from "../../../../src/react/chain-of-thought.js";
 import { Checkpoint } from "../../../../src/react/checkpoint.js";
@@ -11,11 +13,13 @@ import {
   ComposerAttach,
   ComposerAttachments,
   ComposerInput,
+  ComposerRestored,
   ComposerStop,
   ComposerSubmit,
   ComposerTriggerMenu,
 } from "../../../../src/react/composer.js";
 import { Confirmation } from "../../../../src/react/confirmation.js";
+import { ContextBar } from "../../../../src/react/context-bar.js";
 import { ContextMeter } from "../../../../src/react/context-meter.js";
 import {
   Conversation,
@@ -24,6 +28,7 @@ import {
   ConversationRow,
   ConversationViewport,
 } from "../../../../src/react/conversation.js";
+import { Dictation } from "../../../../src/react/dictation.js";
 import { Document } from "../../../../src/react/document.js";
 import { Feedback } from "../../../../src/react/feedback.js";
 import { FileTree } from "../../../../src/react/file-tree.js";
@@ -46,14 +51,17 @@ import {
   MessageRegenerate,
   MessageToolbar,
 } from "../../../../src/react/message.js";
+import { ModelControl } from "../../../../src/react/model-control.js";
 import { ModelSelector } from "../../../../src/react/model-selector.js";
 import { Notice } from "../../../../src/react/notice.js";
+import { Picker } from "../../../../src/react/picker.js";
 import { Plan } from "../../../../src/react/plan.js";
 import { Question as QuestionForm } from "../../../../src/react/question.js";
 import { Queue } from "../../../../src/react/queue.js";
 import { Reasoning } from "../../../../src/react/reasoning.js";
 import { ReasoningEffort } from "../../../../src/react/reasoning-effort.js";
 import { Selection } from "../../../../src/react/selection.js";
+import { SettingsMenu } from "../../../../src/react/settings-menu.js";
 import { Sources } from "../../../../src/react/sources.js";
 import { StackTrace } from "../../../../src/react/stack-trace.js";
 import { Status } from "../../../../src/react/status.js";
@@ -77,10 +85,13 @@ import { Tool } from "../../../../src/react/tool.js";
 import { Transcript } from "../../../../src/react/transcript.js";
 import { TypingIndicator } from "../../../../src/react/typing-indicator.js";
 import { Uploader } from "../../../../src/react/uploader.js";
+import { addItems } from "../../shared/add-menu.js";
 import {
+  agentDrafts,
   agentHost,
   approvalCall,
   chainSteps,
+  draftKey,
   files,
   filler,
   moveItem,
@@ -94,15 +105,26 @@ import {
   thoughts,
   toolCalls,
 } from "../../shared/agent.js";
+import { learnMoreHref, modes } from "../../shared/approval-mode.js";
 import { commands, mentions } from "../../shared/composer.js";
+import { contextChips } from "../../shared/context-bar.js";
 import { context } from "../../shared/context-meter.js";
+import { dictationHost } from "../../shared/dictation.js";
 import { downloads, readme } from "../../shared/document.js";
 import { entries } from "../../shared/file-tree.js";
 import { lighthouse, size } from "../../shared/generated-image.js";
 import { answer } from "../../shared/markdown.js";
-import { levels, models } from "../../shared/model-selector.js";
+import { regenerateOptions } from "../../shared/message.js";
+import {
+  levels as controlLevels,
+  models as controlModels,
+  settings as controlSettings,
+} from "../../shared/model-control.js";
+import { levels, modelActions, models } from "../../shared/model-selector.js";
 import { guardrails, type NoticeData, notices } from "../../shared/notice.js";
+import { placeActions, places } from "../../shared/picker.js";
 import { deployQuestions } from "../../shared/question.js";
+import { initialValues, settings } from "../../shared/settings-menu.js";
 import { sources } from "../../shared/sources.js";
 import { typeErrorStack } from "../../shared/stack-trace.js";
 import { suggestions } from "../../shared/suggestion.js";
@@ -353,7 +375,7 @@ function Foundation() {
 
 const rateLimited = notices.find((notice) => notice.id === "warning") as NoticeData;
 
-function HumanInput({ confirm }: { confirm: boolean }) {
+function HumanInput({ confirm, wave }: { confirm: boolean; wave: 3 | 4 | 5 }) {
   const [submitted, setSubmitted] = useState<Answers>();
   const [shown, setShown] = useState({ notice: true, guardrail: true });
   const remove = (part: keyof typeof shown) => () => {
@@ -414,6 +436,7 @@ function HumanInput({ confirm }: { confirm: boolean }) {
           models={models}
           defaultValue="gpt-5"
           onValueChange={(_value, details) => host.change("model", details)}
+          {...(wave === 5 ? { actions: modelActions, onAction: host.decide("model-action") } : {})}
         />
         <ReasoningEffort
           id="effort"
@@ -575,7 +598,122 @@ function Artifacts() {
   );
 }
 
-function Confirmable({ wave }: { wave: 2 | 3 | 4 }) {
+// One fake microphone for the page, made outside render so StrictMode's second render shares it.
+const dictation = dictationHost();
+
+function Composing({ confirm }: { confirm: boolean }) {
+  const [settingValues, setSettingValues] = useState(initialValues);
+  const [mode, setMode] = useState("ask");
+  const [chips, setChips] = useState(() => contextChips(4));
+  useEffect(() => {
+    Object.assign(window, { kindDictation: dictation.host });
+  }, []);
+  const [drafts] = useState(agentDrafts);
+  return (
+    <div className="flex w-[40rem] flex-col gap-8 p-6">
+      <section id="picker" data-case="picker">
+        <Picker
+          label="Work in"
+          items={places}
+          actions={placeActions}
+          defaultValue="kind-ui/agent-ui"
+          onValueChange={(_value, details) => host.change("picker", details)}
+          onAction={host.decide("picker-action")}
+        />
+      </section>
+      <section id="add-menu" data-case="add-menu">
+        <AddMenu items={addItems} onAction={host.decide("add")} />
+      </section>
+      <section id="settings-menu" data-case="settings-menu">
+        <SettingsMenu
+          settings={settings}
+          values={settingValues}
+          onValuesChange={(next, details) => {
+            if (host.change("settings", details)) setSettingValues(next);
+          }}
+        />
+      </section>
+      <section id="approval-mode" data-case="approval-mode">
+        <ApprovalMode
+          modes={modes}
+          value={mode}
+          learnMoreHref={learnMoreHref}
+          agentConfirm={confirm}
+          onValueChange={(next, details) => {
+            if (host.change("approval", details)) setMode(next);
+          }}
+        />
+      </section>
+      <section id="model-control" data-case="model-control">
+        <ModelControl
+          models={controlModels}
+          levels={controlLevels}
+          settings={controlSettings}
+          defaultModel="opus"
+          defaultEffort="medium"
+          defaultValues={{ fast: false, context: "1m" }}
+          onModelChange={(_value, details) => host.change("model-control", details)}
+          onEffortChange={(_value, details) => host.change("model-control", details)}
+          onValuesChange={(_values, details) => host.change("model-control", details)}
+          actions={modelActions}
+          onAction={host.decide("model-control-action")}
+        />
+      </section>
+      <section id="context-bar" data-case="context-bar" style={{ width: 360 }}>
+        <ContextBar
+          chips={chips}
+          style={{ "--kind-context-chip-max-width": "120px" } as CSSProperties}
+          onRemove={(id, details) => {
+            if (host.change("context-bar", details)) setChips((all) => all.filter((chip) => chip.id !== id));
+          }}
+        />
+      </section>
+      <section id="dictation" data-case="dictation" style={{ width: 320 }}>
+        <Dictation source={dictation.source} agentConfirm={confirm} onText={host.decide("dictate")} />
+      </section>
+      <section id="answer" data-case="message">
+        <Message
+          aria-label="Answer"
+          messageRole="assistant"
+          text={replies[0]}
+          regenerateOptions={regenerateOptions}
+          onRegenerate={(text, details) => {
+            host.decide(`regenerate:${details.optionId ?? ""}`)(text, details);
+          }}
+        >
+          <MessageContent>{replies[0]}</MessageContent>
+          <MessageToolbar>
+            <KindToolbar aria-label="Answer actions">
+              <MessageCopy>
+                <KindToolbarButton aria-label="Copy" />
+              </MessageCopy>
+              <MessageRegenerate>
+                <KindToolbarButton aria-label="Regenerate" />
+              </MessageRegenerate>
+            </KindToolbar>
+          </MessageToolbar>
+        </Message>
+      </section>
+      <section id="draft" data-case="composer">
+        <Composer
+          aria-label="Draft"
+          draftKey={draftKey}
+          draftStorage={drafts}
+          onSubmit={host.submit}
+          onValueChange={(_value, details) => {
+            if (details.reason !== "restore") host.change("draft", details);
+          }}
+        >
+          <ComposerInput aria-label="Draft prompt" />
+          <ComposerRestored />
+          <ComposerSubmit />
+        </Composer>
+      </section>
+    </div>
+  );
+}
+
+function Confirmable({ wave }: { wave: 2 | 3 | 4 | 5 }) {
   const [confirm, setConfirm] = useState(true);
   useEffect(() => {
     host.confirm = setConfirm;
@@ -583,13 +721,14 @@ function Confirmable({ wave }: { wave: 2 | 3 | 4 }) {
   return (
     <>
       <Activity confirm={confirm} />
-      {wave >= 3 ? <HumanInput confirm={confirm} /> : null}
-      {wave === 4 ? <Artifacts /> : null}
+      {wave >= 3 ? <HumanInput confirm={confirm} wave={wave === 5 ? 5 : 3} /> : null}
+      {wave >= 4 ? <Artifacts /> : null}
+      {wave === 5 ? <Composing confirm={confirm} /> : null}
     </>
   );
 }
 
-function Page({ wave }: { wave: 2 | 3 | 4 }) {
+function Page({ wave }: { wave: 2 | 3 | 4 | 5 }) {
   return (
     <>
       <Foundation />
@@ -603,4 +742,5 @@ export const cases = {
   "wave-2": () => <Page wave={2} />,
   "wave-3": () => <Page wave={3} />,
   "wave-4": () => <Page wave={4} />,
+  "wave-5": () => <Page wave={5} />,
 };

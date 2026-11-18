@@ -1,30 +1,38 @@
 import type { AgentAction } from "@ui-sdk/web/agent";
 import { defineAction } from "../../../../src/web/action.js";
+import { defineAddMenu } from "../../../../src/web/add-menu.js";
+import { defineApprovalMode } from "../../../../src/web/approval-mode.js";
 import { defineAttachments, type KindAttachmentsElement } from "../../../../src/web/attachments.js";
 import { defineChainOfThought } from "../../../../src/web/chain-of-thought.js";
 import { defineCheckpoint } from "../../../../src/web/checkpoint.js";
 import { defineComposer, type KindComposerElement } from "../../../../src/web/composer.js";
 import { defineConfirmation } from "../../../../src/web/confirmation.js";
+import { defineContextBar } from "../../../../src/web/context-bar.js";
 import { defineContextMeter } from "../../../../src/web/context-meter.js";
 import { defineConversation } from "../../../../src/web/conversation.js";
+import { defineDictation } from "../../../../src/web/dictation.js";
 import { defineDocument } from "../../../../src/web/document.js";
 import { defineFeedback } from "../../../../src/web/feedback.js";
 import { defineFileTree } from "../../../../src/web/file-tree.js";
 import { defineGeneratedImage } from "../../../../src/web/generated-image.js";
 import { defineGuardrailNotice } from "../../../../src/web/guardrail-notice.js";
 import { defineInlineCitation } from "../../../../src/web/inline-citation.js";
+import { defineInternalMenu } from "../../../../src/web/internal/menu.js";
 import { defineInternalToolbar } from "../../../../src/web/internal/toolbar.js";
 import { defineLoader } from "../../../../src/web/loader.js";
 import { defineMarkdown } from "../../../../src/web/markdown.js";
 import { defineMessage } from "../../../../src/web/message.js";
+import { defineModelControl } from "../../../../src/web/model-control.js";
 import { defineModelSelector } from "../../../../src/web/model-selector.js";
 import { defineNotice } from "../../../../src/web/notice.js";
+import { definePicker } from "../../../../src/web/picker.js";
 import { definePlan } from "../../../../src/web/plan.js";
 import { defineQuestion } from "../../../../src/web/question.js";
 import { defineQueue } from "../../../../src/web/queue.js";
 import { defineReasoning } from "../../../../src/web/reasoning.js";
 import { defineReasoningEffort } from "../../../../src/web/reasoning-effort.js";
 import { defineSelection } from "../../../../src/web/selection.js";
+import { defineSettingsMenu } from "../../../../src/web/settings-menu.js";
 import { defineSources } from "../../../../src/web/sources.js";
 import { defineStackTrace } from "../../../../src/web/stack-trace.js";
 import { defineStatus } from "../../../../src/web/status.js";
@@ -40,10 +48,13 @@ import { defineTool } from "../../../../src/web/tool.js";
 import { defineTranscript } from "../../../../src/web/transcript.js";
 import { defineTypingIndicator } from "../../../../src/web/typing-indicator.js";
 import { defineUploader, type KindUploaderElement } from "../../../../src/web/uploader.js";
+import { addItems } from "../../shared/add-menu.js";
 import {
+  agentDrafts,
   agentHost,
   approvalCall,
   chainSteps,
+  draftKey,
   files,
   filler,
   moveItem,
@@ -57,15 +68,26 @@ import {
   thoughts,
   toolCalls,
 } from "../../shared/agent.js";
+import { learnMoreHref, modes } from "../../shared/approval-mode.js";
 import { commands, mentions } from "../../shared/composer.js";
+import { contextChips } from "../../shared/context-bar.js";
 import { context } from "../../shared/context-meter.js";
+import { dictationHost } from "../../shared/dictation.js";
 import { downloads, readme } from "../../shared/document.js";
 import { entries } from "../../shared/file-tree.js";
 import { lighthouse, size } from "../../shared/generated-image.js";
 import { answer } from "../../shared/markdown.js";
-import { levels, models } from "../../shared/model-selector.js";
+import { regenerateOptions } from "../../shared/message.js";
+import {
+  levels as controlLevels,
+  models as controlModels,
+  settings as controlSettings,
+} from "../../shared/model-control.js";
+import { levels, modelActions, models } from "../../shared/model-selector.js";
 import { guardrails, type NoticeData, notices } from "../../shared/notice.js";
+import { placeActions, places } from "../../shared/picker.js";
 import { deployQuestions } from "../../shared/question.js";
+import { initialValues, settings } from "../../shared/settings-menu.js";
 import { sources } from "../../shared/sources.js";
 import { typeErrorStack } from "../../shared/stack-trace.js";
 import { suggestions } from "../../shared/suggestion.js";
@@ -534,24 +556,141 @@ function waveThree(root: HTMLElement) {
   wireHumanInput(root.lastElementChild as Element);
 }
 
+const composing = `
+  <div class="flex w-[40rem] flex-col gap-8 p-6">
+    <section id="picker" data-case="picker"></section>
+    <section id="add-menu" data-case="add-menu"></section>
+    <section id="settings-menu" data-case="settings-menu"></section>
+    <section id="approval-mode" data-case="approval-mode"></section>
+    <section id="model-control" data-case="model-control"></section>
+    <section id="context-bar" data-case="context-bar" style="width: 360px"></section>
+    <section id="dictation" data-case="dictation" style="width: 320px"></section>
+    <section id="answer" data-case="message">
+      <kind-message aria-label="Answer" message-role="assistant" can-regenerate text="${replies[0]}">
+        <kind-message-content>${replies[0]}</kind-message-content>
+        <kind-message-toolbar>
+          <kind-internal-toolbar><ui-toolbar aria-label="Answer actions">${button("copy", "Copy")}
+            <kind-message-regenerate><kind-internal-menu><ui-menu>
+              <kind-message-regenerate-trigger><ui-toolbar-button><ui-menu-trigger><button aria-label="Regenerate"></button></ui-menu-trigger></ui-toolbar-button></kind-message-regenerate-trigger>
+              <kind-message-regenerate-content><ui-menu-content side-offset="6" align="start" data-agent-hidden></ui-menu-content></kind-message-regenerate-content>
+            </ui-menu></kind-internal-menu></kind-message-regenerate>
+          </ui-toolbar></kind-internal-toolbar>
+        </kind-message-toolbar>
+      </kind-message>
+    </section>
+    <section id="draft" data-case="composer">
+      <kind-composer draft-key="${draftKey}">
+        <form aria-label="Draft">
+          <ui-file-input>
+            <ui-file-input-dropzone>
+              <kind-composer-input>
+                <ui-token-input><ui-token-input-editor aria-label="Draft prompt"></ui-token-input-editor></ui-token-input>
+              </kind-composer-input>
+              <kind-composer-restored></kind-composer-restored>
+              <kind-composer-submit><button></button></kind-composer-submit>
+            </ui-file-input-dropzone>
+          </ui-file-input>
+        </form>
+      </kind-composer>
+    </section>
+  </div>`;
+
+function wireComposing(wave: Element) {
+  const place = <Tag extends keyof HTMLElementTagNameMap>(id: string, tag: Tag, props: object) => {
+    const el = Object.assign(document.createElement(tag), props);
+    wave.querySelector(`#${id}`)?.append(el);
+    return el;
+  };
+  const picker = place("picker", "kind-picker", {
+    label: "Work in",
+    items: places,
+    actions: placeActions,
+    canRun: true,
+    defaultValue: "kind-ui/agent-ui",
+  });
+  picker.addEventListener("pickerchange", (event) => recordChange("picker", event));
+  picker.addEventListener("pickeraction", decide("picker-action"));
+  const add = place("add-menu", "kind-add-menu", { items: addItems, canRun: true });
+  add.addEventListener("addaction", decide("add"));
+  const settingsMenu = place("settings-menu", "kind-settings-menu", { settings, values: initialValues });
+  settingsMenu.addEventListener("valueschange", (event) => recordChange("settings", event));
+  const approval = place("approval-mode", "kind-approval-mode", { modes, value: "ask", learnMoreHref });
+  approval.addEventListener("modechange", (event) => recordChange("approval", event));
+  const control = place("model-control", "kind-model-control", {
+    models: controlModels,
+    levels: controlLevels,
+    settings: controlSettings,
+    defaultModel: "opus",
+    defaultEffort: "medium",
+    defaultValues: { fast: false, context: "1m" },
+    actions: modelActions,
+    canRun: true,
+  });
+  for (const name of ["modelchange", "effortchange", "valueschange"] as const)
+    control.addEventListener(name, (event) => recordChange("model-control", event));
+  control.addEventListener("modelaction", decide("model-control-action"));
+  const bar = place("context-bar", "kind-context-bar", { chips: contextChips(4), canRemove: true });
+  bar.style.setProperty("--kind-context-chip-max-width", "120px");
+  bar.addEventListener("contextremove", (event) => {
+    const id = event.detail.value;
+    if (recordChange("context-bar", event)) bar.chips = (bar.chips ?? []).filter((chip) => chip.id !== id);
+  });
+  const fake = dictationHost();
+  Object.assign(window, { kindDictation: fake.host });
+  const dictation = place("dictation", "kind-dictation", { source: fake.source });
+  dictation.addEventListener("dictationtext", decide("dictate"));
+  const answerMessage = wave.querySelector("#answer kind-message") as HTMLElementTagNameMap["kind-message"];
+  answerMessage.regenerateOptions = regenerateOptions;
+  answerMessage.addEventListener("regenerate", (event) =>
+    host.decide(`regenerate:${event.detail.optionId ?? ""}`)(event.detail),
+  );
+  const draft = wave.querySelector("#draft kind-composer") as KindComposerElement;
+  draft.draftStorage = agentDrafts();
+  draft.addEventListener("composersubmit", ({ detail }) => detail.waitUntil(host.submit(detail.value)));
+  draft.addEventListener("valuechange", (event) => {
+    if (event.detail.reason !== "restore") recordChange("draft", event);
+  });
+  confirmable.push(approval, dictation);
+}
+
+function waveFour(root: HTMLElement) {
+  waveThree(root);
+  defineSources();
+  defineInlineCitation();
+  defineDocument();
+  defineGeneratedImage();
+  defineFileTree();
+  defineTerminal();
+  defineStackTrace();
+  defineTestResults();
+  defineTranscript();
+  defineSelection();
+  defineAction();
+  root.insertAdjacentHTML("beforeend", artifacts);
+  wireArtifacts(root.lastElementChild as Element);
+}
+
 export const cases = {
   all: foundation,
   "wave-2": waveTwo,
   "wave-3": waveThree,
-  "wave-4": (root: HTMLElement) => {
-    waveThree(root);
-    defineSources();
-    defineInlineCitation();
-    defineDocument();
-    defineGeneratedImage();
-    defineFileTree();
-    defineTerminal();
-    defineStackTrace();
-    defineTestResults();
-    defineTranscript();
-    defineSelection();
-    defineAction();
-    root.insertAdjacentHTML("beforeend", artifacts);
-    wireArtifacts(root.lastElementChild as Element);
+  "wave-4": waveFour,
+  "wave-5": (root: HTMLElement) => {
+    waveFour(root);
+    const model = root.querySelector(
+      "kind-model-selector#model",
+    ) as HTMLElementTagNameMap["kind-model-selector"];
+    Object.assign(model, { actions: modelActions, canRun: true });
+    model.addEventListener("modelaction", decide("model-action"));
+    definePicker();
+    defineAddMenu();
+    defineSettingsMenu();
+    defineApprovalMode();
+    defineModelControl();
+    defineContextBar();
+    defineDictation();
+    defineInternalMenu();
+    root.insertAdjacentHTML("beforeend", composing);
+    wireComposing(root.lastElementChild as Element);
   },
 };
