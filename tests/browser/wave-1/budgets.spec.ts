@@ -111,8 +111,13 @@ function instrument() {
     },
   });
 
+  // UI SDK's `announce` empties its shared live region at once and writes the text in a 100 ms timer, which a later
+  // `announce` cancels. Whether those writes land in a run depends on how long the page takes, so they're left out.
+  const announcer = (node: Node) => node instanceof Element && node.hasAttribute("data-ui-sdk-announcer");
+  const counted = (records: MutationRecord[]) =>
+    records.filter((record) => !announcer(record.target) && ![...record.addedNodes].some(announcer)).length;
   const observer = new MutationObserver((records) => {
-    writes += records.length;
+    writes += counted(records);
   });
   observer.observe(document, { subtree: true, childList: true, attributes: true, characterData: true });
   Object.assign(window, {
@@ -122,7 +127,7 @@ function instrument() {
         read = new WeakSet();
         writes = renders = notified = layoutReads = 0;
       },
-      read: () => ({ writes: writes + observer.takeRecords().length, renders, notified, layoutReads }),
+      read: () => ({ writes: writes + counted(observer.takeRecords()), renders, notified, layoutReads }),
     },
   });
 }
