@@ -117,7 +117,7 @@ export type ContextBarApi = Omit<Popup, "open" | "close"> & {
   readonly open: (() => boolean) | undefined;
   /** Closes the list of the chips that don't fit. Offered only while it's open. */
   readonly close: (() => boolean) | undefined;
-  /** The `chips`. */
+  /** The `chips` the host passed, leaving ones left out. */
   getChips: () => readonly ContextChip[];
   /** The bar's chips: one Tab stop, the arrow keys between them, and focus that moves on when one leaves. */
   chipFocus: ListFocus<ContextBarState, ChipProps>;
@@ -177,7 +177,6 @@ const presentation = (options: ContextBarOptions) => ({
 
 const rowOf = (state: ContextBarState, id: string) => state.rows.find((row) => row.item.id === id);
 
-/** Whether `rows` past `visibleCount` changed for any part that reads them. */
 const sameIds = (a: readonly string[], b: readonly string[]) =>
   a.length === b.length && a.every((id, index) => id === b[index]);
 
