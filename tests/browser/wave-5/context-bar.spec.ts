@@ -56,6 +56,26 @@ test("the chips are one Tab stop; Delete removes the focused one and focus moves
   expect(await removes(page)).toEqual([{ id: "chip-1", reason: "remove-press", source: "keyboard" }]);
 });
 
+test("parts written with whitespace inside are filled in, and the list opens at the button's end", async ({
+  page,
+}) => {
+  await load(page, "written");
+  await expect(shown(page)).toHaveCount(2);
+  await more(page).click();
+  await expect(items(page)).toHaveCount(4);
+  await expect(content(page)).toHaveAttribute("data-align", "end");
+});
+
+test("a focused chip that no longer fits hands focus to the last chip shown", async ({ page }) => {
+  await load(page);
+  await shown(page).nth(1).focus();
+  await page.locator("#context").evaluate((el) => {
+    (el.parentElement as HTMLElement).style.width = "260px";
+  });
+  await expect(more(page)).toHaveText("+5");
+  await expect(shown(page).first()).toBeFocused();
+});
+
 test("a host that refuses keeps the chip", async ({ page }) => {
   await load(page, "refusing");
   await shown(page).first().focus();
@@ -174,6 +194,14 @@ for (const [name, fixture, reducedMotion] of [
     expect(transition).toEqual({ property: "opacity", duration: "0.12s" });
   });
 }
+
+test('with motion "none" the list opens without a transition', async ({ page }) => {
+  await page.goto("/?c=context-bar&case=none");
+  await more(page).click();
+  await expect(content(page)).toBeVisible();
+  expect(await content(page).evaluate((el) => getComputedStyle(el).transitionDuration)).toBe("0s");
+  expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
+});
 
 test.describe("on a touch screen", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });

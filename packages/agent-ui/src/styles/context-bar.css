@@ -33,10 +33,9 @@
     block-size: var(--kind-context-chip-height);
     margin: 0;
     padding: 0;
-    /* Chips past the fit stay laid out; clipping keeps them from widening the page, and the margin keeps focus
-       rings. */
+    /* Chips past the fit stay laid out; clipping keeps them from widening the page. Focus rings sit inside, since
+       WebKit has no `overflow-clip-margin`. */
     overflow: clip;
-    overflow-clip-margin: 4px;
     font-size: 0.75rem;
     line-height: 1rem;
   }
@@ -72,7 +71,7 @@
 
     &:focus-visible {
       outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline-offset: -2px;
     }
     /* Laid out so core keeps its width, but takes no room and can't be reached. */
     &:where([data-overflow]) {
@@ -178,7 +177,7 @@
     }
     &:focus-visible {
       outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline-offset: -2px;
     }
   }
 

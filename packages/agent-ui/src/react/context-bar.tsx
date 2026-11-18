@@ -33,12 +33,19 @@ export type ContextBarProps = Omit<ComponentProps<typeof parts.Root>, "chips"> &
   chips?: readonly ContextBarChipData[];
 };
 export type ContextBarListProps = ComponentProps<typeof parts.List>;
-export type ContextBarChipProps = Omit<ComponentProps<typeof parts.Chip>, "children">;
+export type ContextBarChipProps = ComponentProps<typeof parts.Chip>;
 export type ContextBarOverflowProps = ComponentProps<typeof parts.Overflow>;
 export type ContextBarContentProps = ComponentProps<typeof parts.Content>;
 export type ContextBarTitleProps = ComponentProps<typeof parts.Title>;
 export type ContextBarOverflowListProps = ComponentProps<typeof parts.OverflowList>;
-export type ContextBarItemProps = Omit<ComponentProps<typeof parts.Item>, "children">;
+export type ContextBarItemProps = ComponentProps<typeof parts.Item>;
+export type ContextBarRemoveProps = ComponentProps<typeof parts.Remove>;
+export type ContextBarItemRemoveProps = ComponentProps<typeof parts.ItemRemove>;
+
+/** A chip's remove control in the bar, for the pointer: hidden from assistive technology, which uses Delete. */
+export const ContextBarRemove = parts.Remove;
+/** A chip's remove control in the list of the rest, as `ContextBarRemove` is in the bar. */
+export const ContextBarItemRemove = parts.ItemRemove;
 
 const chipContent = ({ chip }: ContextBarChipState, remove: ReactElement) => {
   const icon = chip?.icon as string | ReactElement | undefined;
@@ -53,10 +60,19 @@ const chipContent = ({ chip }: ContextBarChipState, remove: ReactElement) => {
   );
 };
 
-/** One chip in the bar: its icon, its label and a remove control. Memoized, so adding a chip renders only that one. */
-export const ContextBarChip = memo(function ContextBarChip(props: ContextBarChipProps) {
+/**
+ * One chip in the bar: its icon, its label and a `ContextBarRemove`, unless you pass children. Memoized, so adding a
+ * chip renders only that one.
+ */
+export const ContextBarChip = memo(function ContextBarChip({
+  value,
+  children = (state) => chipContent(state, <ContextBarRemove value={value} />),
+  ...props
+}: ContextBarChipProps) {
   return (
-    <parts.Chip {...props}>{(state) => chipContent(state, <parts.Remove value={props.value} />)}</parts.Chip>
+    <parts.Chip value={value} {...props}>
+      {children}
+    </parts.Chip>
   );
 });
 
@@ -81,11 +97,15 @@ export function ContextBarTitle({ children = ({ label }) => label, ...props }: C
   return <parts.Title {...props}>{children}</parts.Title>;
 }
 
-/** One chip in the list of the rest, as `ContextBarChip` is in the bar. */
-export const ContextBarItem = memo(function ContextBarItem(props: ContextBarItemProps) {
+/** One chip in the list of the rest, as `ContextBarChip` is in the bar, with a `ContextBarItemRemove`. */
+export const ContextBarItem = memo(function ContextBarItem({
+  value,
+  children = (state) => chipContent(state, <ContextBarItemRemove value={value} />),
+  ...props
+}: ContextBarItemProps) {
   return (
-    <parts.Item {...props}>
-      {(state) => chipContent(state, <parts.ItemRemove value={props.value} />)}
+    <parts.Item value={value} {...props}>
+      {children}
     </parts.Item>
   );
 });

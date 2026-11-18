@@ -9,10 +9,12 @@ const page =
     count = 6,
     motion,
     refusing = false,
+    written = false,
   }: {
     count?: number;
     motion?: MotionMode;
     refusing?: boolean;
+    written?: boolean;
   } = {}) =>
   (root: HTMLElement) => {
     defineContextBar();
@@ -23,6 +25,15 @@ const page =
     const bar = document.createElement("kind-context-bar");
     bar.id = "context";
     bar.style.setProperty("--kind-context-chip-max-width", "120px");
+    if (written)
+      bar.innerHTML = `
+        <kind-context-bar-list>
+        </kind-context-bar-list>
+        <kind-context-bar-overflow><button></button></kind-context-bar-overflow>
+        <kind-context-bar-content hidden>
+          <kind-context-bar-overflow-list>
+          </kind-context-bar-overflow-list>
+        </kind-context-bar-content>`;
     bar.chips = contextChips(count);
     bar.canRemove = true;
     if (motion) bar.motion = motion;
@@ -55,6 +66,7 @@ export const cases = {
   reduced: page({ motion: "reduced" }),
   none: page({ motion: "none" }),
   refusing: page({ refusing: true }),
+  written: page({ written: true }),
   "many-10": page({ count: 10 }),
   "many-200": page({ count: 200 }),
 };

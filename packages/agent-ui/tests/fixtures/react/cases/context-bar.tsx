@@ -45,6 +45,7 @@ export const cases = {
   reduced: () => <Page motion="reduced" />,
   none: () => <Page motion="none" />,
   refusing: () => <Page refusing />,
+  written: () => <Page />,
   "many-10": () => <Page count={10} />,
   "many-200": () => <Page count={200} />,
 };

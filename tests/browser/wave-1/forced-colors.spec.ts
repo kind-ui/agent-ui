@@ -15,6 +15,7 @@ const pages = [
   "context-meter&case=high",
   "stack-trace&case=all",
   "terminal&case=all",
+  "context-bar&case=all",
 ];
 
 type Colors = { backdrop(el: Element): string };

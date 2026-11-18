@@ -91,6 +91,7 @@ export type ContextBarState = PopupState & {
   label: string;
   /** Whether `onRemove` is set. */
   canRemove: boolean;
+  /** The `motion` option. */
   motion: MotionMode;
 };
 
@@ -127,8 +128,9 @@ export type ContextBarApi = Omit<Popup, "open" | "close"> & {
   overflowRecovery: ReturnType<typeof createFocusRecovery>;
   /** Removes a chip from a press or a key. */
   pressRemove: (id: string, event?: Event) => void;
-  /** Hands the `list` and `overflow-list` parts their rows. */
+  /** Hands the `list` part every row. */
   listState: (state: ContextBarState) => ContextBarListState;
+  /** Hands the `overflow-list` part the rows past `visibleCount`. */
   overflowState: (state: ContextBarState) => ContextBarListState;
   /** Measures the bar and its chips, so `visibleCount` follows their widths. Bound by the root. */
   bindRoot: (el: HTMLElement) => () => void;
@@ -359,12 +361,19 @@ export const contextBarPrimitive: ContextBarPrimitive = definePrimitive<
       const overflowed = rest.map((row) => row.item.id);
       const overflowCount = rest.filter((row) => !row.leaving).length;
       if (rows === state.rows && visibleCount === state.visibleCount) return;
+      // A focused chip that no longer fits turns inert, which drops focus to the page: hand it to the last one shown.
+      const active = root?.ownerDocument.activeElement;
+      const pushedOut = overflowed.some(
+        (id) => !state.overflowed.includes(id) && elements.get(id)?.contains(active ?? null),
+      );
       store.set({
         rows,
         visibleCount,
         overflowed: sameIds(overflowed, state.overflowed) ? state.overflowed : overflowed,
         overflowCount,
       });
+      const last = rows.slice(0, visibleCount).findLast((row) => !row.leaving);
+      if (pushedOut && last) chipFocus.roving.focus(last.item.id);
     };
 
     // Ids whose chip has entered, forgotten once it's dropped, so a chip added again enters again.
@@ -527,6 +536,7 @@ export const contextBarPrimitive: ContextBarPrimitive = definePrimitive<
         role: "listitem",
         props: { value: "string" },
         focus: "roving",
+        keys: ["ArrowLeft", "ArrowRight", "Home", "End", "Delete", "Backspace"],
         selects: ownChip,
         state: (state, { props }) => ({ chip: rowOf(state, props.value)?.item }),
         attrs: (state, part) => {
@@ -600,6 +610,7 @@ export const contextBarPrimitive: ContextBarPrimitive = definePrimitive<
         role: "listitem",
         props: { value: "string" },
         focus: "roving",
+        keys: ["ArrowUp", "ArrowDown", "Home", "End", "Delete", "Backspace"],
         selects: ownItem,
         state: (state, { props }) => ({ chip: rowOf(state, props.value)?.item }),
         attrs: (state, part) => {

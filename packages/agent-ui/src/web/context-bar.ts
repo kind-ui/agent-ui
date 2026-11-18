@@ -30,8 +30,13 @@ const viewports = new WeakMap<Element, Element>();
 // The chip each row was last filled from, so a redraw for another row's change leaves it alone.
 const drawn = new WeakMap<Element, ContextChip>();
 
+// A host that sends new chip objects with the same content keeps each row as it is.
+const sameChip = (a: ContextChip | undefined, b: ContextChip) =>
+  a?.id === b.id && a.label === b.label && a.kind === b.kind && a.icon === b.icon;
+
+// A part written with only whitespace inside, as indented markup is, counts as empty.
 const owns = (part: Element | null): part is Element => {
-  if (!part || !(owned.has(part) || !part.firstChild)) return false;
+  if (!part || !(owned.has(part) || (!part.firstElementChild && !part.textContent?.trim()))) return false;
   owned.add(part);
   return true;
 };
@@ -82,10 +87,8 @@ function drawRows(list: Element, rows: ContextBarListState["rows"], tag: string,
       child.setAttribute("value", item.id);
       byId.set(item.id, child);
     }
-    if (drawn.get(child) !== item) {
-      fill(child, item, removeTag);
-      drawn.set(child, item);
-    }
+    if (!sameChip(drawn.get(child), item)) fill(child, item, removeTag);
+    drawn.set(child, item);
     if (list.children[index] !== child) list.insertBefore(child, list.children[index] ?? null);
   });
 }
@@ -136,16 +139,16 @@ export function defineContextBar(): void {
         instances.set(el, instance);
         const api = instance.api as ContextBarApi;
         if (!el.firstElementChild) el.innerHTML = DEFAULT_PARTS;
-        // As React's `ContextBarContent` places it, unless the author wrote their own.
-        const content = el.querySelector("kind-context-bar-content");
-        for (const [name, value] of [
-          ["initial-focus", CONTEXT_BAR_FIRST_ITEM],
-          ["side-offset", "6"],
-          ["align", "end"],
-        ] as const)
-          if (content && !content.hasAttribute(name)) content.setAttribute(name, value);
         const draw = () => {
           const state = instance.get() as ContextBarState;
+          // As React's `ContextBarContent` places it, unless the author wrote their own, also when it's added later.
+          const content = el.querySelector("kind-context-bar-content");
+          for (const [name, value] of [
+            ["initial-focus", CONTEXT_BAR_FIRST_ITEM],
+            ["side-offset", "6"],
+            ["align", "end"],
+          ] as const)
+            if (content && !content.hasAttribute(name)) content.setAttribute(name, value);
           const list = el.querySelector("kind-context-bar-list");
           if (owns(list))
             drawRows(list, api.listState(state).rows, "kind-context-bar-chip", "kind-context-bar-remove");

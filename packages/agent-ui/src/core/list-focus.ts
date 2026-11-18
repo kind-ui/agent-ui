@@ -31,6 +31,10 @@ export const createListFocus = <State extends object, Props extends object>(
      * @default "focused"
      */
     key?: keyof State & string;
+    /**
+     * Which arrows move focus, as `createRovingFocus`'s `orientation`.
+     * @default "vertical"
+     */
     orientation?: RovingFocusOptions<State, Props>["orientation"];
     focusable?: (item: { key: string }) => boolean;
     /** Replaces the arrow keys, Home and End, as `createRovingFocus`'s `move` does: for items that aren't rendered. */
@@ -57,7 +61,7 @@ export const createListFocus = <State extends object, Props extends object>(
     fallback: (lost) => {
       const order = current.includes(lost.key) ? current : previous;
       const index = order.indexOf(lost.key);
-      const items = roving.items().filter((item) => focusable?.(item) ?? true);
+      const items = roving.items();
       const at = (key: string | undefined) => items.find((item) => item.key === key);
       // An item that moved to a new element, like a Queue item that completed, keeps focus.
       return (
