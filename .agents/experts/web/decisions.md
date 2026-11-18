@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `780e148` (Wave 5 Task 6 Approval Mode)
+Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
 
 ## Settled
 
@@ -65,6 +65,7 @@ Last reviewed: `780e148` (Wave 5 Task 6 Approval Mode)
 
 ## Resolved
 
+- **A `kind-message` written with menu markup and no `regenerateOptions` both regenerated and opened a menu of "Try again" (Wave 5 Task 7):** the root now always controls its `ui-menu`, which refuses to open without options, and empties a content it owns; `message.spec.ts` has a `no-options` case.
 - **`hearComposed` didn't tell nested components apart (Wave 5 Task 1, fixed in Task 7):** an element nearer the event's target that hears the same event name now takes it, so an outer root no longer hears a nested component's `ui-*` events; `composed-events.spec.ts` nests one `kind-test-menu` in another and fails without the fix.
 - **`placeMenuChild` re-added every row on each redraw (Wave 5 Task 5):** a row already in place was moved before itself, which in WebKit (no `moveBefore`) dropped focus and closed a submenu; Task 4's Add Menu fix only held in Chromium. It now leaves the row, and Settings Menu draws a choice's options by value; `settings-menu.spec.ts` counts zero removals on a value change and an equal `settings` copy.
 - **`kind-add-menu` rebuilt every row on an `items` change, dropping focus (Wave 5 Task 4):** rows are now drawn by `id` and moved only when out of place; a written empty `ui-menu-content` fills itself in. Spec covers both.

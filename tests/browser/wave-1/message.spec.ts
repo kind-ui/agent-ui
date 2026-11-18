@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { allowClipboard, readClipboard } from "../clipboard.js";
+import { layerOf } from "../layer.js";
 
 type Fixture = {
   kindMessage: { calls: string[]; source: string; append(chunk: string): void; finish(): void };
@@ -168,8 +169,12 @@ test.describe("with regenerate options", () => {
 
     await regenerate(page).click();
     await row(page, "Try again").click();
-    await regenerate(page).click();
-    await row(page, "Try with another model").press("ArrowRight");
+    await expect(regenerate(page)).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(row(page, "Try again")).toBeFocused();
+    await page.keyboard.press("ArrowUp");
+    await expect(row(page, "Try with another model")).toBeFocused();
+    await page.keyboard.press("ArrowRight");
     await expect(row(page, "GPT-5")).toBeFocused();
     await page.keyboard.press("Enter");
     expect(await calls(page)).toEqual([
@@ -177,6 +182,27 @@ test.describe("with regenerate options", () => {
       "regenerate::item-press:mouse",
       "regenerate:gpt-5:item-press:keyboard",
     ]);
+  });
+
+  test("the menu closes when the message streams again, and stays closed when it settles", async ({
+    page,
+  }) => {
+    await open(page, "options");
+    await regenerate(page).click();
+    await expect(row(page, "Try again")).toBeVisible();
+    await page.evaluate(() =>
+      (window as unknown as { kindRegenerate: { status(value: string): void } }).kindRegenerate.status(
+        "streaming",
+      ),
+    );
+    await expect(page.getByRole("menu")).toBeHidden();
+    await page.evaluate(() =>
+      (window as unknown as { kindRegenerate: { status(value: string): void } }).kindRegenerate.status(
+        "complete",
+      ),
+    );
+    await expect(regenerate(page)).toBeVisible();
+    await expect(page.getByRole("menu")).toBeHidden();
   });
 
   test("a regenerate the host cancels keeps the menu open", async ({ page }) => {
@@ -200,6 +226,23 @@ test.describe("with regenerate options", () => {
       "regenerate:claude-sonnet:imperative:agent",
       "regenerate::imperative:agent",
     ]);
+  });
+
+  test("content replaces the rows", async ({ page }, testInfo) => {
+    test.skip(layerOf(testInfo) === "web", "web writes its rows into the content");
+    await open(page, "custom-rows");
+    await regenerate(page).click();
+    await row(page, "ADD DETAILS").click();
+    expect(await calls(page)).toEqual(["regenerate:details:item-press:mouse"]);
+  });
+
+  test("menu markup without options regenerates as a plain button", async ({ page }, testInfo) => {
+    test.skip(layerOf(testInfo) !== "web", "web markup keeps its menu; React renders a button");
+    await open(page, "no-options");
+    await regenerate(page).click();
+    await expect(page.getByRole("menu")).toBeHidden();
+    await expect(page.getByRole("menuitem")).toHaveCount(0);
+    expect(await calls(page)).toEqual(["regenerate::regenerate-press:mouse"]);
   });
 
   for (const scheme of ["light", "dark"] as const)

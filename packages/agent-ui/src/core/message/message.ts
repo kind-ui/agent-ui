@@ -231,6 +231,11 @@ const menu = menuBase<MessageOptions>({
   kind: "message-regenerate",
   label: "Regenerate",
   toData: (options) => toData(options.regenerateOptions),
+  // Web markup keeps its menu without options, when the trigger regenerates instead.
+  canOpen: (options) =>
+    !!options.regenerateOptions?.length &&
+    options.onRegenerate !== undefined &&
+    settled(options.status ?? "complete"),
   onAction: (value, { event, source, keepOpen }, context) => {
     // `menuBase` types the context with its own state; it's Message's.
     if (!runRegenerate(context as Context, value, { reason: "item-press", event, source })) keepOpen();
@@ -324,8 +329,13 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       get regenerate() {
         const { canRegenerate, status } = store.get();
         if (!canRegenerate || !settled(status)) return undefined;
-        return (optionId?: string, event?: Event) =>
-          runRegenerate(context, optionId, { reason: event ? "regenerate-press" : "imperative", event });
+        return (optionId?: string, event?: Event) => {
+          if (!runRegenerate(context, optionId, { reason: event ? "regenerate-press" : "imperative", event }))
+            return false;
+          // A row closes the menu itself; an agent's call closes it as the row would.
+          regenerateMenu.setOpen(false);
+          return true;
+        };
       },
       get edit() {
         const { canEdit, status } = store.get();

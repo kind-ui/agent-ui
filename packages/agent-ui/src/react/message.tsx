@@ -7,7 +7,7 @@ import {
 } from "@kind-ui/agent-ui/core";
 import { MenuTrigger } from "@ui-sdk/react/menu";
 import { createParts } from "@ui-sdk/react/primitive";
-import { type ComponentProps, cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
+import { type ComponentProps, isValidElement, type ReactElement, type ReactNode } from "react";
 import {
   KindMenu,
   KindMenuContent,
@@ -45,8 +45,14 @@ export type MessageRegenerateOption = Omit<
   items?: MessageRegenerateOption[];
 };
 
+export type MessageProps = Omit<ComponentProps<typeof message.Root>, "regenerateOptions"> & {
+  regenerateOptions?: MessageRegenerateOption[];
+};
+
 /** Name it with `aria-label`, like "Assistant message". */
-export const Message = message.Root;
+export function Message(props: MessageProps) {
+  return <message.Root {...props} />;
+}
 export const MessageAvatar = message.Avatar;
 export const MessageContent = message.Content;
 /** Shown in place of the content while a user message is edited. */
@@ -59,22 +65,28 @@ export const MessageCopy = message.Copy;
 export type MessageRegenerateProps = Omit<ComponentProps<typeof message.Regenerate>, "children"> & {
   /** The `KindToolbarButton` that regenerates, or opens the menu while there are `regenerateOptions`. */
   children?: ReactNode;
+  /** The menu, while there are `regenerateOptions`: `<MessageRegenerateContent />` by default. */
+  menuContent?: ReactNode;
 };
 
 /**
  * Wraps the toolbar button that regenerates. While the message has `regenerateOptions`, the button opens a menu of
  * them instead, rendered through UI SDK's `MenuTrigger`, so it keeps its place in the toolbar's arrow-key order.
  */
-export function MessageRegenerate({ children, ...props }: MessageRegenerateProps) {
+export function MessageRegenerate({
+  children,
+  menuContent = DEFAULT_CONTENT,
+  ...props
+}: MessageRegenerateProps) {
   return (
     <message.Regenerate {...props}>
       {({ menu }) =>
-        menu && isValidElement<{ render?: ReactElement }>(children) ? (
+        menu && isValidElement<Record<string, unknown>>(children) ? (
           <KindMenu {...menu}>
             <message.RegenerateTrigger>
-              {cloneElement(children, { render: <MenuTrigger /> })}
+              <MenuTrigger render={children} />
             </message.RegenerateTrigger>
-            <MessageRegenerateContent />
+            {menuContent}
           </KindMenu>
         ) : (
           children
@@ -140,6 +152,8 @@ export function MessageRegenerateContent({
 }
 
 const DEFAULT_ROWS = (state: MessageRegenerateContentState) => <MessageRegenerateRows {...state} />;
+// Shared, so an update doesn't render the default content's wrapper again.
+const DEFAULT_CONTENT = <MessageRegenerateContent />;
 
 export const MessageEdit = message.Edit;
 export const MessageBranch = message.Branch;

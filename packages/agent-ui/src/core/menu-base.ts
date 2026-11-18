@@ -140,6 +140,8 @@ export type MenuBaseConfig<Options extends MenuBaseOptions> = {
    * every instance of the component shares one cache.
    */
   toData: (options: Options) => MenuData;
+  /** Whether the menu may open now, beside `disabled`. */
+  canOpen?: (options: Options) => boolean;
   /** A plain item ran. A returned promise keeps the item pending and the menu open until it settles. */
   onAction?: (value: string, details: MenuRun, context: Context<Options>) => unknown;
   /** A checkbox item, by its value, wants to toggle. */
@@ -223,15 +225,17 @@ export const menuBase = <Options extends MenuBaseOptions>(config: MenuBaseConfig
       // `createChange` reads open change reasons from the options type, which a generic `Options` hides.
       const change = createChange(context as PrimitiveContext<MenuBaseOptions, MenuBaseState, string>);
       const controller = createMenuController();
+      const refused = () => store.get().disabled || config.canOpen?.(context.options()) === false;
       context.onOptions((options) => {
-        if (options.disabled && store.get().open) change("open", false, { reason: "imperative" });
+        if ((options.disabled || config.canOpen?.(options) === false) && store.get().open)
+          change("open", false, { reason: "imperative" });
       });
 
       // Menu closes right after it runs an item, so an item that asked to keep it open refuses that close.
       let keep = false;
       const onOpenChange = (open: boolean, details: ChangeDetails<MenuOpenChangeReason>) => {
         const { reason, event, source } = details;
-        if (open && store.get().disabled) return details.cancel();
+        if (open && refused()) return details.cancel();
         if (!open && keep && reason === "item-press") {
           keep = false;
           return details.cancel();
@@ -314,7 +318,7 @@ export const menuBase = <Options extends MenuBaseOptions>(config: MenuBaseConfig
 
       const setOpen = (open: boolean) => {
         if (open === store.get().open) return true;
-        if (open && store.get().disabled) return false;
+        if (open && refused()) return false;
         return change("open", open, { reason: "imperative" });
       };
 
@@ -323,8 +327,7 @@ export const menuBase = <Options extends MenuBaseOptions>(config: MenuBaseConfig
         isOpen: () => store.get().open,
         setOpen,
         get open() {
-          const { open, disabled } = store.get();
-          return open || disabled ? undefined : () => setOpen(true);
+          return store.get().open || refused() ? undefined : () => setOpen(true);
         },
         get close() {
           return store.get().open ? () => setOpen(false) : undefined;

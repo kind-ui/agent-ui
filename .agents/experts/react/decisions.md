@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `780e148` (Wave 5 Task 6 Approval Mode)
+Last reviewed: `eb47e81` (Wave 5 Task 7 Message regenerate-with menu)
 
 ## Settled
 
@@ -15,6 +15,7 @@ Last reviewed: `780e148` (Wave 5 Task 6 Approval Mode)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Adding or removing `regenerateOptions` while mounted remounts Message's Regenerate button and drops its focus** (Wave 5 Task 7): the button sits inside `KindMenu` only while there are options. Keeping the menu mounted would make a plain button a menu trigger.
 - **A Settings Menu choice row's typeahead text includes every option label (Wave 5 Task 5):** `MenuSubTrigger` takes no `label`, so it matches its text; typing from the row's label still finds it.
 - **Add Menu sheet: re-entering a submenu right after going back sometimes closes the sheet (Wave 5 Task 4):** reason `swipe` from UI SDK's sheet swipe-to-dismiss, React only, about 1 in 200; the spec no longer re-enters. Report upstream.
 - **UI SDK `CommandGroup` renders `hidden` without `aria-labelledby` on the server (Wave 5 Task 1):** a server-rendered Kind Command shows an empty group until hydration. UI SDK's; matters once Command renders outside a closed popup. Picker (Wave 5 Task 2) renders Command only while its list is open, so needs no workaround.
@@ -49,6 +50,7 @@ Last reviewed: `780e148` (Wave 5 Task 6 Approval Mode)
 
 ## Resolved
 
+- **`MessageRegenerate` cloned its child and had no way to replace the rows (Wave 5 Task 7):** the child is now `MenuTrigger`'s `render` (its own `render` kept), `menuContent` replaces `MessageRegenerateContent`, and `Message` types `regenerateOptions` icons as `string | ReactElement`; `custom-rows` case in `message.spec.ts`.
 - **`<AddMenuContent>{null}</AddMenuContent>` still drew the rows (Wave 5 Task 4):** children now default to a function of the content's state, as `sources.tsx` does. Fixtures dropped the unused sheet case and added `inert`.
 - **Model Selector's Combobox field (`ComboboxValueIcon` without server markup, an old name kept after a rename)** (Wave 5 Task 3): Model Selector moved onto Picker; its trigger draws the chosen model's icon and name from data.
 - **Model Selector's field icon went stale and was missing from server markup** (Wave 4 Task 12b): `ComboboxValueIcon` was replaced by the primitive's `icon` part, drawn from the chosen model, and `keepMounted` is gone.

@@ -9,6 +9,7 @@ import {
   ConversationViewport,
 } from "../../../../src/react/conversation.js";
 import { KindAvatar, KindAvatarFallback } from "../../../../src/react/internal/avatar.js";
+import { KindMenuItem } from "../../../../src/react/internal/menu.js";
 import { KindToolbar, KindToolbarButton } from "../../../../src/react/internal/toolbar.js";
 import { Markdown } from "../../../../src/react/markdown.js";
 import {
@@ -23,6 +24,7 @@ import {
   MessageEdit,
   MessageEditor,
   MessageRegenerate,
+  MessageRegenerateContent,
   MessageToolbar,
 } from "../../../../src/react/message.js";
 import { answer } from "../../shared/markdown.js";
@@ -91,10 +93,29 @@ function Assistant({ callbacks }: { callbacks: boolean }) {
   );
 }
 
-function WithOptions({ refusing }: { refusing?: boolean }) {
+const customRows = (
+  <MessageRegenerateContent>
+    {({ options }) =>
+      options.map((option) => (
+        <KindMenuItem key={option.id} value={option.id} label={option.label}>
+          {option.label.toUpperCase()}
+        </KindMenuItem>
+      ))
+    }
+  </MessageRegenerateContent>
+);
+
+function WithOptions({ refusing, custom }: { refusing?: boolean; custom?: boolean }) {
+  const [status, setStatus] = useState<MessageStatus>("complete");
+  useEffect(() => {
+    Object.assign(window, {
+      kindRegenerate: { status: (value: MessageStatus) => flushSync(() => setStatus(value)) },
+    });
+  }, []);
   return (
     <Message
       aria-label="Assistant message"
+      status={status}
       text={replies[0]}
       regenerateOptions={regenerateOptions}
       onRegenerate={(_text: string, details: MessageRegenerateDetails) => {
@@ -105,7 +126,7 @@ function WithOptions({ refusing }: { refusing?: boolean }) {
       <MessageContent>{replies[0]}</MessageContent>
       <MessageToolbar>
         <Actions>
-          <MessageRegenerate>
+          <MessageRegenerate {...(custom ? { menuContent: customRows } : {})}>
             <KindToolbarButton aria-label="Regenerate" />
           </MessageRegenerate>
         </Actions>
@@ -213,6 +234,11 @@ export const cases = {
   refusing: () => (
     <div className="m-4 w-[36rem]">
       <WithOptions refusing />
+    </div>
+  ),
+  "custom-rows": () => (
+    <div className="m-4 w-[36rem]">
+      <WithOptions custom />
     </div>
   ),
 };

@@ -74,7 +74,7 @@ Pass `regenerateOptions` to offer ways to regenerate, like a shorter reply or an
 
 The button keeps its place in the toolbar, so the arrow keys still reach it, and Enter, Space or Down Arrow opens the menu. The menu works like the [Add Menu](./add-menu.mdx)'s: arrow keys move between rows, Right Arrow opens a submenu, and Escape closes it with focus back on the button. It's a popover, or a bottom sheet on small touch screens with `presentation="auto"`, the default; pass `"popover"` or `"sheet"` to choose one.
 
-To change the rows, pass `MessageRegenerateContent` a function of `{ tryAgain, options }` as its children, and render `MessageRegenerateRows` or rows of your own.
+To change the rows, pass `MessageRegenerate` a `menuContent`: a `MessageRegenerateContent` whose children are a function of `{ tryAgain, options }`, rendering `MessageRegenerateRows` or rows of your own.
 
 ### Responses
 

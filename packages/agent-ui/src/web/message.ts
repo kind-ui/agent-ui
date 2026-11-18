@@ -111,9 +111,10 @@ export function defineMessage(): void {
           const state = instance.get() as MessageState;
           for (const part of el.querySelectorAll("kind-message-regenerate")) {
             if (part.closest("kind-message") !== el) continue;
-            const { menu: props } = api.regenerateState(state);
+            // Controlled even without options, when the menu stays closed.
+            const props = api.regenerateMenu.partState.menu(state);
             const menu = part.querySelector("ui-menu");
-            if (menu && props) {
+            if (menu) {
               if (menu.controller !== props.controller) menu.controller = props.controller;
               if (menu.presentation !== props.presentation) menu.presentation = props.presentation;
               if (menu.open !== props.open) menu.open = props.open;
@@ -125,7 +126,8 @@ export function defineMessage(): void {
             if (!content.firstChild) owned.add(content);
             if (owned.has(content) && drawn.get(content) !== rows) {
               drawn.set(content, rows);
-              drawLevel(content, rows.options, rows.tryAgain);
+              if (rows.options.length) drawLevel(content, rows.options, rows.tryAgain);
+              else content.replaceChildren();
             }
           }
         };
