@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
+import { identityPlugin } from "../identity.mjs";
 
 const here = (path) => fileURLToPath(new URL(path, import.meta.url));
 
@@ -8,7 +9,7 @@ const here = (path) => fileURLToPath(new URL(path, import.meta.url));
 export default defineConfig(({ mode }) => ({
   root: here("."),
   cacheDir: here(`../../../../../node_modules/.vite/fixture-react-${mode}`),
-  plugins: [tailwindcss()],
+  plugins: [tailwindcss(), identityPlugin("react")],
   // A file written during a run would otherwise reload open pages and destroy the context a test evaluates in.
   server: { hmr: false },
   resolve: { alias: { "@kind-ui/agent-ui/core": here("../../../src/core/index.ts") } },

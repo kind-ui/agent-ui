@@ -8,7 +8,9 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
 
 const out = join(dirname(fileURLToPath(import.meta.url)), "../apps/docs/out");
-const origin = "http://127.0.0.1:4330";
+// Any free port, so parallel runs don't collide; `KIND_DOCS_PORT` fixes one.
+const port = Number(process.env.KIND_DOCS_PORT ?? 0);
+let origin = "http://127.0.0.1";
 const basePath = process.env.NEXT_PUBLIC_DOCS_BASE_PATH ?? "";
 const types = {
   ".html": "text/html",
@@ -49,9 +51,12 @@ function serve() {
   });
   return new Promise((resolve, reject) => {
     server.once("error", (error) =>
-      reject(error.code === "EADDRINUSE" ? new Error("port 4330 is in use") : error),
+      reject(error.code === "EADDRINUSE" ? new Error(`port ${port} is in use`) : error),
     );
-    server.listen(4330, "127.0.0.1", () => resolve(server));
+    server.listen(port, "127.0.0.1", () => {
+      origin = `http://127.0.0.1:${server.address().port}`;
+      resolve(server);
+    });
   });
 }
 
