@@ -18,7 +18,8 @@ import { insertText } from "../text-target.js";
 
 /**
  * `"idle"`: the mic button. `"listening"`: the waveform, Stop and Cancel. `"transcribing"`: after Stop, until the
- * source has reported its last text. `"error"`: the mic button and why the last dictation failed.
+ * source has reported its last text, with the waveform holding its last levels. `"error"`: the mic button and why the
+ * last dictation failed.
  */
 export type DictationPhase = "idle" | "listening" | "transcribing" | "error";
 
@@ -257,7 +258,7 @@ export const dictationButtonPrimitive: DictationPrimitive = definePrimitive<
       const text = joinFinals(finals);
       const { reason, source: who } = current.stopped ?? { reason: "source-end", source: "programmatic" };
       if (text && !dispatch(context, "onText", text, { reason, source: who }))
-        insertText(context.element("root"), text);
+        insertText(context.element("root"), text, who);
     };
 
     const start = () => {

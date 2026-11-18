@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `c4d8771` (Wave 5 Task 15 agent conformance)
+Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 
 ## Settled
 
@@ -16,6 +16,7 @@ Last reviewed: `c4d8771` (Wave 5 Task 15 agent conformance)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **No fixture covers a controlled Composer taking dictated text (Task 17):** a throwaway case passed in both React projects; the docs examples are uncontrolled now.
 - **checkPattern counts React's hidden form radios** (`@ui-sdk/core/testing`): React Radio group and Segmented Control keep an `aria-hidden` native radio per item for forms, which `checkPattern("radio-group")` counts as radios (it skips `aria-hidden` options in a listbox, not radios in a radio group), so it reports two checked radios and arrows that "skip" an input. Web has none. `wave-5/aria-patterns.spec.ts` accepts those problems; report to UI SDK.
 - **Context Bar server markup shows every chip until the bar measures** (Wave 5 Task 10): widths exist only in the browser, so hydration swaps the chip clipped at the edge for "+N" (nothing below moves; the root has a fixed height), and the server markup exposes every chip to assistive technology until then.
 - **Adding or removing `regenerateOptions` while mounted remounts Message's Regenerate button and drops its focus** (Wave 5 Task 7): the button sits inside `KindMenu` only while there are options. Keeping the menu mounted would make a plain button a menu trigger.

@@ -79,3 +79,20 @@ test("stop is offered only while pending with onStop", async () => {
   assert.equal(composer.api.stop, undefined);
   assert.deepEqual(composer.get().value, d(""));
 });
+
+test("appendText adds trimmed text after one space, reports dictation and its source, and refuses blank or disabled", () => {
+  const changes = [];
+  const composer = composerPrimitive({
+    defaultValue: d("Hi  "),
+    onValueChange: (value, details) => changes.push([value.text, details.reason, details.source]),
+  });
+  assert.equal(composer.api.appendText("  there ", "mouse"), true);
+  assert.equal(composer.get().value.text, "Hi there");
+  assert.equal(composer.api.appendText("next"), true);
+  assert.deepEqual(changes, [
+    ["Hi there", "dictation", "mouse"],
+    ["Hi there next", "dictation", "programmatic"],
+  ]);
+  assert.equal(composer.api.appendText("   "), false);
+  assert.equal(composerPrimitive({ disabled: true }).api.appendText("x"), false);
+});

@@ -20,7 +20,6 @@ const page =
     Object.assign(window, { kindDictation: host });
   };
 
-// Without a `dictationtext` listener the Dictation hands its text to the composer; with `takeOver` the host cancels that.
 const inComposer =
   ({ takeOver = false } = {}) =>
   (root: HTMLElement) => {

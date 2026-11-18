@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `b429d62` (Wave 5 Task 16 docs index and changeset)
+Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 
 ## Settled
 
+- **`appendText` returns `true` for a controlled composer before the owner applies the value (Task 17):** it goes through `createChange`, as `setValue` does.
 - **Dictation keeps its run when the host passes a new `source` object (Wave 5 Task 11):** only dropping `source` cancels, since React hosts often write the source inline, a new object each render; the new source is used from the next start.
 - **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.
 - **Model Selector's `icon` is `unknown` in core, so each render layer casts once where core hands it over** (Wave 4 Task 12b): `definePrimitive` can't be generic per instance, and each layer types its own public `models` (`string | ReactElement` in React, `string | Element` on web), so no other value reaches the cast.
@@ -44,6 +45,7 @@ Last reviewed: `b429d62` (Wave 5 Task 16 docs index and changeset)
 - **A picker's Escape closes its popover** (Model Selector, Picker, Wave 5 Task 2): Command's search is a `combobox` whose list is always shown inside the popover, so Escape closes the popover and focus returns to the trigger, where `checkPattern("combobox")` expects only the list to close and focus to stay. Every other combobox rule still runs.
 ## Known and open (don't report again, check whether fixed)
 
+- **The waveform's default of 128 bars writes 128 `--kind-dictation-level-*` properties per level (Task 17):** not profiled; lower the default or size it to the box if it shows up.
 - **Transcript with a controlled `query` reads `window` and `navigator` on a server (found in Wave 5 Task 15):** `searchSegments` runs UI SDK's `fuzzyScore`, whose text folding reads the user's locale, so a server and a browser with different locales may filter differently. The server case covers default options only; a fix needs `fuzzyScore` to take a locale.
 - **A web single-choice Question names its radio group with its prompt's text (Wave 5 Task 15):** React points `aria-labelledby` at the prompt (`choicesState.labelledBy`), but a web render file can't write an `aria-*` attribute and `checkPattern` reads attributes, so web sets `ariaLabel` from the prompt's text; a screen reader may hear the prompt twice there (item group and radio group).
 - **Controls inside a Composer ask a person before an agent changes them (Wave 5 Task 15):** the bridge marks every component inside a `data-agent-confirm` element, so Add Menu, Context Bar, Model Control and Settings Menu in the composer's form read "Writes and sends a message as you". The mark can't move to a composer part: `@ui-sdk/web` keys every part but the root (`input:auto-5`), and the bridge reads `confirm` only from unkeyed parts, so on web the composer's own actions would stop asking. A host that wants agents to change them freely passes `allow`, or puts them outside the form; a fix needs UI SDK to scope a mark to its own component.

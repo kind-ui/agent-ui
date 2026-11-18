@@ -50,7 +50,7 @@
       background-color: currentColor;
       mask: var(--kind-dictation-icon) center / contain no-repeat;
     }
-    &:hover:not([data-pending]) {
+    &:hover:where(:not([data-pending])) {
       background-color: var(--kind-color-hover);
     }
     &:focus-visible {
@@ -79,7 +79,7 @@
       inline-size: 12px;
       block-size: 12px;
     }
-    &:hover:not([data-pending]) {
+    &:hover:where(:not([data-pending])) {
       background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-fg));
     }
     &:where([data-pending]) {
@@ -102,6 +102,11 @@
     color: var(--kind-color-muted);
     background:
       linear-gradient(to right, transparent 2px, currentColor 2px) right center / 4px 2px repeat-x content-box;
+
+    &:dir(rtl) {
+      background-image: linear-gradient(to right, currentColor 2px, transparent 2px);
+      background-position: left center;
+    }
   }
 
   [data-dictation-part="bar"] {

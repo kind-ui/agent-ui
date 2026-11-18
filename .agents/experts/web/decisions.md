@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `c4d8771` (Wave 5 Task 15 agent conformance)
+Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 
 ## Settled
 
+- **A Dictation in a shadow root nested inside the Composer doesn't reach it (Task 17):** `insertText` walks `parentElement`, as a button in a shadow root doesn't submit an outer form.
 - **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.
 - **A `kind-model-selector` element icon is cloned with its ids** (Wave 4 Task 12b): rewriting ids inside each copy would be fragile; the `models` JSDoc says to pass a logo with `defs` as an image URL, and the fixture's Gemini logo is one.
 - **`drawIcon` compares icons by identity** (suspected, Wave 4 Task 12b): a host that builds new elements on every `models` write re-copies its icons, which is harmless.

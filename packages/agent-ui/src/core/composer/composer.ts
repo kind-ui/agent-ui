@@ -1,6 +1,7 @@
 import {
   announce,
   type ChangeDetails,
+  type ChangeSource,
   createChange,
   createFocusRecovery,
   createInputHistory,
@@ -140,9 +141,10 @@ export type ComposerApi = {
   setValue: (value: ComposerDraft | string, event?: Event) => boolean;
   /**
    * Adds text at the end of the draft, after a space, as a Dictation inside the composer does with what it heard.
-   * Returns whether the change was accepted.
+   * `source`, `"programmatic"` by default, is who caused it, as the change's details report. Returns whether the
+   * change was accepted.
    */
-  appendText: (text: string) => boolean;
+  appendText: (text: string, source?: ChangeSource) => boolean;
   /** Inserts a mention or command at the caret. Returns whether it was inserted. */
   insertToken: (token: TokenToInsert) => boolean;
   /** Removes an attachment from the draft by its `id`. Returns whether the change was accepted. */
@@ -312,12 +314,16 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       return change("value", next, event ? { reason: "input-change", event } : { reason: "imperative" });
     };
 
-    const appendText = (text: string) => {
+    // Text appended after its cause ended, like a dictation's source finishing, reports who caused it.
+    let appendSource: ChangeSource = "programmatic";
+    const appended = createChange(context, () => appendSource);
+    const appendText = (text: string, source: ChangeSource = "programmatic") => {
       const { value, disabled } = store.get();
       const words = text.trim();
       if (disabled || !words) return false;
       const joined = value.text.trim() ? `${value.text.trimEnd()} ${words}` : words;
-      return change(
+      appendSource = source;
+      return appended(
         "value",
         { ...value, text: joined, tokens: tokensOf(fromText(joined)) },
         { reason: "dictation" },

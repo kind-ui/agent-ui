@@ -77,7 +77,7 @@ export function defineComposer(): void {
           set: (api, value) => api.setValue(value ?? ""),
         },
       },
-      api: ["getValue", "setValue", "insertToken", "removeAttachment", "submit"],
+      api: ["getValue", "setValue", "appendText", "insertToken", "removeAttachment", "submit"],
       render: (el, instance) => {
         const api = instance.api as ComposerApi;
         const draw = () => {
@@ -156,7 +156,10 @@ export interface KindComposerElement
   commands?: ComposerOptions["commands"];
   history?: ComposerOptions["history"];
   draftStorage?: ComposerOptions["draftStorage"];
-  api: Pick<ComposerApi, "getValue" | "setValue" | "insertToken" | "removeAttachment" | "submit">;
+  api: Pick<
+    ComposerApi,
+    "getValue" | "setValue" | "appendText" | "insertToken" | "removeAttachment" | "submit"
+  >;
 }
 
 declare global {

@@ -100,7 +100,7 @@ It reports no levels, so its waveform stays flat; yield `{ level }` from Web Aud
 
 ### Inserting the Text
 
-Place Dictation as a direct child of a `Composer`, beside `ComposerInput`, and it adds its final text to the end of the draft, after a space, with no code of your own. The composer reports the change to `onValueChange` with the reason `dictation`, and a disabled composer takes nothing. The composer's api does the same through `appendText(text)`.
+Place Dictation as a direct child of a `Composer`, beside `ComposerInput`, and it adds its final text to the end of the draft, after a space, with no code of your own. The composer reports the change to `onValueChange` with the reason `dictation` and the source of the press that stopped it, and a disabled composer takes nothing. The composer's api does the same through `appendText(text, source?)`.
 
 `onText` is called first, once when a dictation ends, with its final texts joined, and never for one that was canceled, failed or heard nothing. The reason is `stop-press` from Stop, `imperative` from the api, like an agent's `stop`, or `source-end` when the source ended on its own. Call `details.cancel()` to keep the text out of the draft and handle it yourself.
 

@@ -20,12 +20,11 @@ function Page({ motion, withSource = true }: { motion?: MotionMode; withSource?:
   );
 }
 
-// Without `onText` the Dictation hands its text to the composer; with `takeOver` the host cancels that.
 function InComposer({ takeOver = false }: { takeOver?: boolean }) {
   useHost();
   return (
     <div className="p-4" style={{ width: 480 }}>
-      <Composer aria-label="Message" onSubmit={() => undefined}>
+      <Composer aria-label="Message">
         <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
         <Dictation
           source={source}
