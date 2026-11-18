@@ -2,7 +2,14 @@ import { expect, type Locator, type Page } from "@playwright/test";
 
 // Helpers for the `?c=agent` pages of Wave 2 and later, whose host is `agentHost()` in the shared fixtures.
 
-export type Entry = { ref: string; component: string; label?: string; actions: string[]; open?: boolean };
+export type Entry = {
+  ref: string;
+  component: string;
+  label?: string;
+  actions: string[];
+  open?: boolean;
+  confirm?: string;
+};
 type ActResult = { ok: boolean; error?: { message: string } };
 export type Host = {
   permit: boolean;

@@ -511,3 +511,35 @@ test("can-* attributes offer their actions", async ({ page }, testInfo) => {
     await expect.poll(actions, `#${target.id} with ${attribute}`).toContain(name);
   }
 });
+
+test("inside the full composer each control is one entry, under the composer's mark", async ({ page }) => {
+  await page.goto("/?c=full-composer&case=all");
+  await expect.poll(() => components(page)).toContain("kind-dictation");
+  await settled(page);
+  const listed = (await snapshot(page)).map((item) => `${item.component} "${item.label ?? ""}"`).sort();
+  // The composer's own Token Input and File Input have been entries of their own since Wave 1.
+  expect(listed).toEqual([
+    'file-input ""',
+    'kind-add-menu "Add"',
+    'kind-approval-mode "Approvals, Ask every time"',
+    'kind-composer "Message"',
+    'kind-context-bar "Context"',
+    'kind-dictation "Dictate"',
+    'kind-model-control "Model, Claude Opus 5.5, High effort"',
+    'kind-settings-menu "Settings"',
+    'token-input "Prompt"',
+  ]);
+  const confirms = Object.fromEntries((await snapshot(page)).map((item) => [item.component, item.confirm]));
+  // Every control inside the composer's form takes its mark (core decisions.md, "Controls inside a Composer").
+  const composer = "Writes and sends a message as you";
+  expect(confirms).toMatchObject({
+    "kind-composer": composer,
+    "token-input": composer,
+    "kind-add-menu": composer,
+    "kind-context-bar": composer,
+    "kind-model-control": composer,
+    "kind-settings-menu": composer,
+    "kind-approval-mode": "Changes what the agent may do without asking",
+    "kind-dictation": "Opens the microphone for dictation",
+  });
+});
