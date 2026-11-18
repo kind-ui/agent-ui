@@ -44,6 +44,7 @@ function renderToken(token: Token, host: HTMLElement): void {
  *         </ui-trigger-menu-content></ui-trigger-menu></kind-internal-trigger-menu></kind-composer-trigger-menu>
  *       </ui-token-input></kind-composer-input>
  *       <ui-file-input-trigger><button type="button" aria-label="Attach files"></button></ui-file-input-trigger>
+ *       <kind-composer-restored></kind-composer-restored>
  *       <kind-composer-submit><button></button></kind-composer-submit>
  *       <kind-composer-stop><button></button></kind-composer-stop>
  *     </ui-file-input-dropzone></ui-file-input>
@@ -53,6 +54,8 @@ function renderToken(token: Token, host: HTMLElement): void {
  *
  * Set `mentions`, `commands` and `history` as properties. `onSubmit` is a `composersubmit` event whose listeners
  * call `event.detail.waitUntil(promise)`. The `can-stop` attribute shows Stop while pending; it fires `stop`.
+ * With `draft-key` and the `draftStorage` property, an empty `kind-composer-restored` fills in "Draft restored" and
+ * its `kind-composer-discard`.
  */
 export function defineComposer(): void {
   if (customElements.get("kind-composer")) return;
@@ -78,6 +81,11 @@ export function defineComposer(): void {
       render: (el, instance) => {
         const api = instance.api as ComposerApi;
         const draw = () => {
+          const restored = el.querySelector("kind-composer-restored");
+          if (restored && !restored.firstElementChild) {
+            restored.innerHTML =
+              "<span>Draft restored</span><kind-composer-discard><button>Discard</button></kind-composer-discard>";
+          }
           const state = instance.get() as ComposerState;
           const { fileInput } = api.partState.root(state);
           const { tokenInput } = api.partState.input(state);
@@ -123,6 +131,8 @@ export function defineComposer(): void {
     attachments: "kind-composer-attachments",
     submit: { tag: "kind-composer-submit", target: wrappedButton, display: "contents" },
     stop: { tag: "kind-composer-stop", target: wrappedButton, display: "contents" },
+    restored: "kind-composer-restored",
+    discard: { tag: "kind-composer-discard", target: wrappedButton, display: "contents" },
   });
 }
 
@@ -136,7 +146,7 @@ export interface KindComposerElement
   extends UiElement<KindComposerEvents>,
     AttributeProperties<
       typeof composerPrimitive,
-      "api" | "commands" | "defaultValue" | "history" | "mentions" | "value"
+      "api" | "commands" | "defaultValue" | "draftStorage" | "history" | "mentions" | "value"
     > {
   canStop: boolean;
   get value(): ComposerDraft;
@@ -145,6 +155,7 @@ export interface KindComposerElement
   mentions?: ComposerOptions["mentions"];
   commands?: ComposerOptions["commands"];
   history?: ComposerOptions["history"];
+  draftStorage?: ComposerOptions["draftStorage"];
   api: Pick<ComposerApi, "getValue" | "setValue" | "insertToken" | "removeAttachment" | "submit">;
 }
 
@@ -156,5 +167,7 @@ declare global {
     "kind-composer-attachments": HTMLElement;
     "kind-composer-submit": HTMLElement;
     "kind-composer-stop": HTMLElement;
+    "kind-composer-restored": HTMLElement;
+    "kind-composer-discard": HTMLElement;
   }
 }

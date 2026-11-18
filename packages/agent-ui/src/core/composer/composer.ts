@@ -6,6 +6,7 @@ import {
   createInputHistory,
   definePrimitive,
   type SlotDefinition,
+  type ValueStorage,
 } from "@ui-sdk/core";
 import type { FileInputOptions, FileInputValueChangeReason } from "@ui-sdk/core/file-input";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
@@ -30,19 +31,24 @@ import {
   draftAfterSettle,
   emptyDraft,
   isSubmittable,
+  readSavedDraft,
+  saveDraft,
 } from "./draft.js";
 
 /**
  * `"input-change"`: typing, tokens or `setValue` with an event. `"history-key"`: ArrowUp or ArrowDown brought
  * back an earlier prompt. `"picker"`, `"drop"`, `"paste"`, `"reset"`: File Input attached files.
  * `"remove-press"`: an attachment was removed. `"submit"`: a resolved submission cleared the draft.
+ * `"restore"`: the draft saved under `draftKey` came back. `"discard-press"`: Discard emptied it.
  * `"imperative"`: an `api` call without an event.
  */
 export type ComposerValueChangeReason =
   | "input-change"
   | "history-key"
   | FileInputValueChangeReason
-  | "submit";
+  | "submit"
+  | "restore"
+  | "discard-press";
 
 export type ComposerOptions = {
   /** The draft. Passing it controls it: change it in `onValueChange`. Don't pass it with `defaultValue`. */
@@ -74,6 +80,17 @@ export type ComposerOptions = {
   /** Earlier prompts, oldest first, that ArrowUp brings back. */
   history?: readonly string[];
   /**
+   * Names the conversation whose draft `draftStorage` keeps. With both, an uncontrolled draft's text and tokens are
+   * saved as they change, and a composer that mounts with an empty draft, or whose `draftKey` changes while it's
+   * empty, gets that key's draft back. A controlled `value` is never saved or restored.
+   */
+  draftKey?: string;
+  /**
+   * Where drafts are kept, from UI SDK's `createLocalStorage` or `createSessionStorage`. One storage holds every
+   * `draftKey`'s draft. Storage that fails is ignored.
+   */
+  draftStorage?: ValueStorage;
+  /**
    * Stops editing, attaching, sending and every agent action.
    * @default false
    */
@@ -97,6 +114,8 @@ export type ComposerState = {
   pending: boolean;
   /** Whether the attachments part is collapsing after its last chip was removed; it stays shown until it ends. */
   attachmentsClosing: boolean;
+  /** Whether the draft came back from `draftStorage` and hasn't been edited since; "Draft restored" shows. */
+  restored: boolean;
   /** Whether `onStop` is set, so Stop takes Send's place while pending. */
   canStop: boolean;
   /** The options of the same name, with their defaults. */
@@ -125,6 +144,10 @@ export type ComposerApi = {
   submit: (event?: Event) => void;
   /** Calls `onStop`. Offered only while a submission is pending and `onStop` is set. */
   readonly stop: ((event?: Event) => void) | undefined;
+  /** Empties a restored draft and removes it from `draftStorage`. Offered only while "Draft restored" shows. */
+  readonly discardDraft: ((event?: Event) => void) | undefined;
+  /** Restores the saved draft and keeps saving it while the root is in the page. Returns a cleanup. */
+  bindDraft: () => () => void;
   /** Drives the Token Input; render layers pass it as its `controller`. */
   tokenInput: TokenInputController;
   /** Takes in what File Input accepted or rejected. */
@@ -136,6 +159,8 @@ export type ComposerApi = {
   connectInput: () => () => void;
   history: ReturnType<typeof createInputHistory<string>>;
   recovery: ReturnType<typeof createFocusRecovery>;
+  /** Moves focus to the editor when Discard leaves while focused. */
+  discardRecovery: ReturnType<typeof createFocusRecovery>;
   /** Plays Send's entrance when it comes back from Stop, not when the composer mounts. */
   enterSubmit: (el: HTMLElement) => void;
   /** Expands the attachments part as its first chip arrives, and collapses it once the last is removed. */
@@ -193,6 +218,8 @@ export type ComposerPrimitive = ReturnType<
       attachments: ComposerSlot<ComposerAttachmentsState>;
       submit: ComposerSlot;
       stop: ComposerSlot;
+      restored: ComposerSlot;
+      discard: ComposerSlot;
     }
   >
 >;
@@ -238,6 +265,8 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
     accept: "string",
     maxSize: "number",
     history: "value",
+    draftKey: "string",
+    draftStorage: "value",
     disabled: "boolean",
     agentConfirm: "boolean",
     motion: "string",
@@ -251,6 +280,7 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       value: options.value ?? options.defaultValue ?? emptyDraft(),
       pending: false,
       attachmentsClosing: false,
+      restored: false,
     };
   },
   sync: (options: ComposerOptions) => ({
@@ -427,6 +457,59 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       }),
     );
 
+    // The draft as restored; any other draft means it was edited.
+    let restoredDraft: ComposerDraft | undefined;
+    const draftStore = () => {
+      const { draftKey, draftStorage, value } = context.options();
+      return draftKey !== undefined && draftStorage && value === undefined
+        ? { key: draftKey, storage: draftStorage }
+        : undefined;
+    };
+    const restore = () => {
+      const saved = draftStore();
+      const { value } = store.get();
+      if (!saved || value.text !== "" || value.attachments.length > 0) return;
+      const text = readSavedDraft(saved.storage, saved.key);
+      if (text === undefined) return;
+      // Tokens are part of the codec text, so they come back from it.
+      const draft = { text, tokens: tokensOf(fromText(text)), attachments: [] };
+      if (!change("value", draft, { reason: "restore" })) return;
+      restoredDraft = store.get().value;
+      store.set({ restored: true });
+      announce("Draft restored", { priority: "polite" });
+    };
+    let bound = false;
+    let { draftKey: lastKey, draftStorage: lastStorage } = context.options();
+    // A web host sets `draftStorage` after the element is in the page, so a new storage restores too.
+    context.onOptions(({ draftKey, draftStorage }) => {
+      if (draftKey === lastKey && draftStorage === lastStorage) return;
+      if (draftKey !== lastKey) {
+        restoredDraft = undefined;
+        if (store.get().restored) store.set({ restored: false });
+      }
+      lastKey = draftKey;
+      lastStorage = draftStorage;
+      if (bound) restore();
+    });
+    const bindDraft = () => {
+      bound = true;
+      restore();
+      let last = store.get().value;
+      const unsubscribe = store.subscribe(() => {
+        const { value, restored } = store.get();
+        if (value === last) return;
+        last = value;
+        if (restored && value !== restoredDraft) store.set({ restored: false });
+        const saved = draftStore();
+        if (saved) saveDraft(saved.storage, saved.key, value);
+      });
+      return () => {
+        bound = false;
+        unsubscribe();
+      };
+    };
+    const discardRecovery = createFocusRecovery({ fallback: focusEditor });
+
     return {
       getValue: () => store.get().value,
       setValue,
@@ -451,11 +534,29 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
         const { onStop } = context.options();
         return pending && onStop ? () => onStop() : undefined;
       },
+      get discardDraft() {
+        const { restored, disabled } = store.get();
+        if (!restored || disabled) return undefined;
+        return (event?: Event) => {
+          if (
+            !change(
+              "value",
+              emptyDraft(),
+              event ? { reason: "discard-press", event } : { reason: "imperative" },
+            )
+          )
+            return;
+          const saved = draftStore();
+          if (saved) saveDraft(saved.storage, saved.key, emptyDraft());
+        };
+      },
+      bindDraft,
       tokenInput,
       intake,
       connectInput,
       history,
       recovery,
+      discardRecovery,
       enterSubmit: (el) => {
         if (!returningFromStop) return;
         returningFromStop = false;
@@ -516,7 +617,14 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
           api.submit(event);
         },
       },
-      bind: (el, { api }) => forwardFileInputEvents(el, api.intake),
+      bind: (el, { api }) => {
+        const stopForwarding = forwardFileInputEvents(el, api.intake);
+        const unbindDraft = api.bindDraft();
+        return () => {
+          stopForwarding();
+          unbindDraft();
+        };
+      },
     }),
     // Wraps the Token Input and hears its keys bubble for ArrowUp history, as the skill's "wrap ours" seam does.
     input: slot<BaseSlotProps, ComposerInputState>({
@@ -568,6 +676,23 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       on: { mousedown: (event) => event.preventDefault() },
       bind: (el, part) => part.api.recovery.bind(el, part),
     }),
+    // Sits in the actions row's free middle, so neither its arrival nor its leaving moves the editor.
+    restored: slot({
+      role: "status",
+      present: (state) => state.restored,
+      attrs: (state) => ({ "data-motion": state.motion }),
+    }),
+    discard: slot({
+      role: "button",
+      focus: "native",
+      present: (state) => state.restored,
+      press: ({ api }, event) => api.discardDraft?.(event),
+      attrs: (state) => ({
+        type: "button",
+        "aria-disabled": state.disabled ? "true" : undefined,
+      }),
+      bind: (el, part) => part.api.discardRecovery.bind(el, part),
+    }),
   }),
-  agent: { actions: ["setValue", "insertToken", "removeAttachment", "submit", "stop"] },
+  agent: { actions: ["setValue", "insertToken", "removeAttachment", "submit", "stop", "discardDraft"] },
 });

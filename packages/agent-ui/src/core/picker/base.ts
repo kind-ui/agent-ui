@@ -246,8 +246,8 @@ export type PickerBaseConfig<Options extends PickerBaseOptions> = {
 const noActions: PickerAction<unknown>[] = [];
 
 /**
- * Everything but the name of a picker: a button whose popover holds UI SDK Command, for Picker, Model Selector, Model
- * Control and Prompt Library to spread into their own `definePrimitive`, as Step-based components spread `stepBase`.
+ * Everything but the name of a picker: a button whose popover holds UI SDK Command, for Picker and Model Selector to
+ * spread into their own `definePrimitive`, as Step-based components spread `stepBase`.
  * Command searches, marks matches and opens pages; the picker adds the chosen item, two-line rows, trailing text and
  * the footer actions.
  */

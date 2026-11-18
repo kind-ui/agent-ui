@@ -1,4 +1,10 @@
-import type { AttachmentItem, ComposerDraft, ComposerTriggerItem } from "@kind-ui/agent-ui/core";
+import type {
+  AttachmentItem,
+  ComposerDraft,
+  ComposerOptions,
+  ComposerTriggerItem,
+} from "@kind-ui/agent-ui/core";
+import { createLocalStorage, type ValueStorage } from "@ui-sdk/core";
 
 export const mentions: ComposerTriggerItem[] = [
   { value: "ada", label: "Ada Lovelace", description: "Research" },
@@ -57,4 +63,27 @@ export function attachmentsHost(update: (change: (items: AttachmentItem[]) => At
         update((items) => [...items, all.find((item) => item.id === id) as AttachmentItem]),
     },
   });
+}
+
+/**
+ * `draft` gives the composer a draft storage: localStorage under `kind-drafts`, whose calls `kindDrafts.calls`
+ * records, or with `draft=throws` one whose writes throw. `draftKey` names the key (default `chat-1`).
+ */
+export function draftOptions(params: URLSearchParams): Pick<ComposerOptions, "draftKey" | "draftStorage"> {
+  if (!params.has("draft")) return {};
+  const local = createLocalStorage("kind-drafts");
+  const calls: string[] = [];
+  const fail = params.get("draft") === "throws";
+  const draftStorage: ValueStorage = {
+    ...local,
+    get: () => (calls.push("get"), local.get()),
+    set: (value) => {
+      calls.push("set");
+      if (fail) throw new DOMException("Full", "QuotaExceededError");
+      return local.set(value);
+    },
+    remove: () => (calls.push("remove"), local.remove()),
+  };
+  Object.assign(window, { kindDrafts: { calls } });
+  return { draftKey: params.get("draftKey") ?? "chat-1", draftStorage };
 }

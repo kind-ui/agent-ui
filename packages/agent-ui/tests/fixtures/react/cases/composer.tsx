@@ -1,4 +1,4 @@
-import type { MotionMode } from "@kind-ui/agent-ui/core";
+import type { ComposerDraft, MotionMode } from "@kind-ui/agent-ui/core";
 import { useEffect, useState } from "react";
 import { Attachments } from "../../../../src/react/attachments.js";
 import {
@@ -6,6 +6,7 @@ import {
   ComposerAttach,
   ComposerAttachments,
   ComposerInput,
+  ComposerRestored,
   ComposerStop,
   ComposerSubmit,
   ComposerTriggerMenu,
@@ -14,6 +15,7 @@ import {
   attachmentItems,
   attachmentsHost,
   commands,
+  draftOptions,
   history,
   mentions,
   recorder,
@@ -25,8 +27,14 @@ const { onSubmit, onStop } = recorder();
 
 function Full({ submitOn }: { submitOn?: "enter" | "mod-enter" }) {
   const [mounted, setMounted] = useState(true);
+  const [draft, setDraft] = useState<ComposerDraft>({ text: "", tokens: [], attachments: [] });
+  const [draftKey, setDraftKey] = useState(params.get("draftKey") ?? "chat-1");
   useEffect(() => {
-    Object.assign(window, { unmountComposer: () => setMounted(false) });
+    Object.assign(window, {
+      unmountComposer: () => setMounted(false),
+      remountComposer: () => setMounted(true),
+      setDraftKey,
+    });
   }, []);
   if (!mounted) return null;
   return (
@@ -40,8 +48,12 @@ function Full({ submitOn }: { submitOn?: "enter" | "mod-enter" }) {
         maxSize={3072}
         submitOn={submitOn ?? "enter"}
         onSubmit={onSubmit}
-        onValueChange={(_value, details) => {
+        {...draftOptions(params)}
+        {...(params.has("draft") ? { draftKey } : {})}
+        {...(params.has("controlled") ? { value: draft } : {})}
+        onValueChange={(value, details) => {
           if ((window as { refuseEdits?: boolean }).refuseEdits) details.cancel();
+          else setDraft(value);
         }}
         {...(params.has("stop") ? { onStop } : {})}
         {...(params.has("motion") ? { motion: params.get("motion") as MotionMode } : {})}
@@ -58,6 +70,7 @@ function Full({ submitOn }: { submitOn?: "enter" | "mod-enter" }) {
           <ComposerTriggerMenu />
         </ComposerInput>
         <ComposerAttach />
+        <ComposerRestored />
         <ComposerSubmit />
         <ComposerStop />
       </Composer>

@@ -1,3 +1,5 @@
+import type { ValueStorage } from "@ui-sdk/core";
+
 /** A mention or command inside the draft, inserted from the Trigger Menu or with `insertToken`. */
 export type ComposerToken = { id: string; kind: "mention" | "command"; value: string; label: string };
 
@@ -42,4 +44,46 @@ export function draftAfterSettle(
   outcome: "resolved" | "rejected",
 ): ComposerDraft {
   return outcome === "resolved" && sameDraft(current, submitted) ? emptyDraft() : current;
+}
+
+type DraftStorage = Pick<ValueStorage, "get" | "set" | "remove">;
+
+type SavedDraft = Pick<ComposerDraft, "text" | "tokens">;
+
+// One storage keeps every conversation's draft, as JSON keyed by `draftKey`. Storage that throws counts as empty.
+function readAll(storage: DraftStorage): Record<string, SavedDraft> {
+  try {
+    const saved: unknown = JSON.parse(storage.get() ?? "{}");
+    return saved && typeof saved === "object" ? (saved as Record<string, SavedDraft>) : {};
+  } catch {
+    return {};
+  }
+}
+
+/** The text saved under `key`, or `undefined` when there's none. */
+export function readSavedDraft(storage: DraftStorage, key: string): string | undefined {
+  const text = readAll(storage)[key]?.text;
+  return typeof text === "string" && text !== "" ? text : undefined;
+}
+
+/** Saves the draft's text and tokens under `key`, or removes the entry when the draft has neither. */
+export function saveDraft(
+  storage: DraftStorage,
+  key: string,
+  draft: Pick<ComposerDraft, "text" | "tokens">,
+): void {
+  const all = readAll(storage);
+  if (draft.text === "" && draft.tokens.length === 0) {
+    if (!(key in all)) return;
+    delete all[key];
+  } else {
+    if (all[key]?.text === draft.text) return;
+    all[key] = { text: draft.text, tokens: draft.tokens };
+  }
+  try {
+    if (Object.keys(all).length === 0) storage.remove();
+    else storage.set(JSON.stringify(all));
+  } catch {
+    // Quota or private mode: typing goes on without saving.
+  }
 }

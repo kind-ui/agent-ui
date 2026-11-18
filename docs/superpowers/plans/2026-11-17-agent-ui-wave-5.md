@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Each task is one session and one stacked PR: Task 1 stacks on this plan's PR, and each later task stacks on the one before.
 
-**Goal:** Ship Wave 5, "composer controls": Picker, Add Menu, Settings Menu, Approval Mode, Model Control, Context Bar, Dictation and Prompt Library, plus Model Selector rebuilt on Picker, Message's regenerate-with menu, and the Composer's draft restore and narrow-screen layout, in React and Web Components, with registry items, docs pages and the 0.5.0 changeset.
+**Goal:** Ship Wave 5, "composer controls": Picker, Add Menu, Settings Menu, Approval Mode, Model Control, Context Bar and Dictation, plus Model Selector rebuilt on Picker, Message's regenerate-with menu, and the Composer's draft restore and narrow-screen layout, in React and Web Components, with registry items, docs pages and the 0.5.0 changeset.
 
-**Architecture:** Every Wave 5 component is one `definePrimitive` that composes UI SDK as Waves 1–4 do. Popups are the primitive's own through `createPopup`, as Context Meter's are, so `open`/`onOpenChange` reach a web host; what sits inside them is a ready-made UI SDK component (Command, Menu) driven through a controller the primitive owns. One new core module hears those components' web events (D1), so no component needs the "wrap ours" seam to learn what a person chose. The four menus share one `menuBase` over UI SDK Menu, as the Step-based components share `stepBase`. Picker is a public base the way `stepPrimitive` is: Model Selector and Prompt Library spread `pickerBase`, and Model Control spreads Settings Menu's `settingsBase`.
+**Architecture:** Every Wave 5 component is one `definePrimitive` that composes UI SDK as Waves 1–4 do. Popups are the primitive's own through `createPopup`, as Context Meter's are, so `open`/`onOpenChange` reach a web host; what sits inside them is a ready-made UI SDK component (Command, Menu) driven through a controller the primitive owns. One new core module hears those components' web events (D1), so no component needs the "wrap ours" seam to learn what a person chose. The four menus share one `menuBase` over UI SDK Menu, as the Step-based components share `stepBase`. Picker is a public base the way `stepPrimitive` is: Model Selector spreads `pickerBase`, and Model Control spreads Settings Menu's `settingsBase`.
 
 **Tech Stack:** `@ui-sdk/core`, `@ui-sdk/react` and `@ui-sdk/web` stay at `0.1.0-beta.1`, `motion` at `14.14.0`. No new runtime dependency: dictation uses the browser's Web Speech API, `getUserMedia` and Web Audio's `AnalyserNode` (D10), and draft restore uses UI SDK's `createLocalStorage` (D12).
 
@@ -28,7 +28,7 @@ Proposed 2026-11-17. **Open** marks a decision that needs the user's answer befo
 - **D11. Context Bar overflow is measured, not guessed.** Chips (`ContextChip { id, label, kind?, icon? }`) sit in one row; the `list` slot's `bind` measures it with a `ResizeObserver`, as Document measures its content, into `visibleCount`, and the rest go behind a "+N" button that opens a popover (`createPopup`) listing them, each removable. Chips are one roving Tab stop (`createListFocus`); Delete and Backspace remove the focused chip through the Attachments spec §2 row, which this task extends to Context Bar. Chip width is capped by `--kind-context-chip-max-width`, so the count depends on that cap, not on font metrics, in the budgets fixture.
 - **D12. Draft restore is a Composer option over UI SDK storage.** `draftKey` (a conversation id) and `draftStorage` (UI SDK's `createLocalStorage`, `createSessionStorage` or a host `ValueStorage`) save the uncontrolled draft's text and tokens on each change and restore them when a composer mounts with that key and an empty draft. Attachments aren't saved (files don't serialize). A controlled draft is never written: the host owns it (spec §4.1). A restored draft shows a "Draft restored" status with Discard, which leaves on the next edit; submitting clears the saved draft once the submission resolves, by the same snapshot rule §4.1 sets for the field. Storage that throws (quota, private mode) is ignored.
 - **D13. The narrow-screen composer is CSS and `presentation`, no new component.** The composer gets a container query: below `--kind-composer-compact-width` (28rem) the controls row wraps under the editor and labelled controls (Model Control, Approval Mode) show their icon with the name kept as their accessible name. Every Wave 5 popup takes `presentation: "auto" | "popover" | "sheet"` (default `"auto"`), which UI SDK turns into a bottom sheet on small touch screens; Menu's submenus then replace the current level. No JavaScript decides the layout.
-- **D14. Prompt Library is a Picker of prompts.** It spreads `pickerBase` with `prompts: PromptTemplate[]` (`{ id, title, body, description?, group? }`), searches title, description and body (`keywords`), shows no check mark, and calls `onInsert(prompt, details)` on a choice; the docs insert `body` into the composer with `setValue`. A "Manage prompts" footer action is the host's. No prompt variables or editing in Wave 5.
+- **D14. Prompt Library:** dropped by the user.
 - **D15. Regenerate-with is a Message option.** `regenerateOptions?: { id, label, description?, icon? }[]` turns Message's Regenerate toolbar button into a menu button (the internal Menu, through `menuBase`) whose first item is "Try again" and the rest the host's ("Add details", "More concise", "Try with another model ›" as a submenu of model names). `onRegenerate(optionId?, details)`: `undefined` for "Try again". Without `regenerateOptions`, Regenerate stays a button. Agent action `regenerate(optionId?)`, refusing an unknown id.
 - **D16. No showcase (Open).** Each component page has its example, and the Composer page gains one "full composer" example with the Wave 5 controls in its actions row and at a narrow width. A showcase would replay nothing a page doesn't show: these controls have no run to script. Recommended: no showcase task.
 - **D17. Version order (a note).** 0.4.0 is published (`main` reads `0.4.0`). Task 16's changeset is `minor` for 0.5.0.
@@ -69,10 +69,10 @@ Proposed 2026-11-17. **Open** marks a decision that needs the user's answer befo
 ## File Map
 
 ```text
-packages/agent-ui/src/types/records.ts                 (+ PickerItem, PickerAction, MenuEntry, ApprovalModeOption, EffortLevel, ContextChip, PromptTemplate, RegenerateOption)
+packages/agent-ui/src/types/records.ts                 (+ PickerItem, PickerAction, MenuEntry, ApprovalModeOption, EffortLevel, ContextChip, RegenerateOption)
 packages/agent-ui/src/core/{composed-events,dictation,menu-base}.ts
 packages/agent-ui/src/core/picker/{picker,base,index}.ts
-packages/agent-ui/src/core/{add-menu,settings-menu,approval-mode,model-control,context-bar,dictation-button,prompt-library}/{<name>,index}.ts
+packages/agent-ui/src/core/{add-menu,settings-menu,approval-mode,model-control,context-bar,dictation-button}/{<name>,index}.ts
 packages/agent-ui/src/core/{model-selector,message,composer}/…                (Tasks 3, 7, 13, 14)
 packages/agent-ui/src/react/<name>.tsx    packages/agent-ui/src/web/<name>.ts
 packages/agent-ui/src/{react,web}/internal/{command,slider,switch}.*         (Task 1)
@@ -118,7 +118,6 @@ Spec §2, §7 Wave 5; D1, D5, D10.
   - `ApprovalModeOption { value: string; label: string; description?: string; danger?: boolean }`
   - `EffortLevel { value: string; label: string }`
   - `ContextChip<Icon = unknown> { id: string; label: string; kind?: string; icon?: Icon }`
-  - `PromptTemplate { id: string; title: string; body: string; description?: string; group?: string }`
   - `RegenerateOption<Icon = unknown> { id: string; label: string; description?: string; icon?: Icon; items?: RegenerateOption<Icon>[] }`
 - `core/composed-events.ts` (D1): `hearComposed(el: HTMLElement, handlers: Record<string, (detail: unknown, event: Event) => void>): () => void`. Capture-phase listeners on `el` for each named event whose target's tag starts with `ui-`; returns the cleanup a `bind` returns. A cancelled event (`defaultPrevented`) is not handed on.
 - `core/dictation.ts` (D10): `DictationEvent = { level: number } | { text: string; final: boolean } | { error: "unsupported" | "denied" | "no-speech" | "network" | string }`; `DictationSource { start(signal: AbortSignal): AsyncIterable<DictationEvent> }`; `createSpeechDictation(options?: { lang?: string; bars?: number }): DictationSource`. Aborting the signal stops recognition and releases every media track.
@@ -155,7 +154,7 @@ Spec §7 Wave 5 "Picker"; D2, D3, D13.
 - Test: `packages/agent-ui/tests/core/picker.test.mjs`, `tests/browser/wave-5/picker.spec.ts`
 
 **Interfaces:**
-- `pickerBase({ kind, toItems(options): PickerItem[], check?: boolean })` (`core/picker/base.ts`): everything below but the name, for Model Selector, Model Control and Prompt Library to spread.
+- `pickerBase({ kind, toItems(options): PickerItem[], check?: boolean })` (`core/picker/base.ts`): everything below but the name, for Model Selector to spread.
 - Produces `pickerPrimitive` (`kind-picker`):
   - Options: `items: PickerItem[]`; `actions?: PickerAction[]`; `label` (the trigger's name: "Model", "Work in", …); `placeholder?` (the search field's, default "Search"); `emptyText?` (default "No matches"); `value`/`defaultValue`/`onValueChange`; `onAction?(id, details)` (`callback` through `dispatch`, closes the popup unless cancelled); `open`/`defaultOpen`/`onOpenChange`; `presentation?`; `motion`.
   - State: `popupState`, `query`, `pages` (the open page path, by row `value`), `chosen` (the chosen item, for the trigger).
@@ -378,24 +377,7 @@ Spec §2 ("Dictation audio and speech" row), §6 "Agent actions", §7 Wave 5 "Di
 
 ### Task 12: Prompt Library
 
-Spec §7 Wave 5 "Prompt Library"; D14.
-
-**Files:**
-- Create: `packages/agent-ui/src/core/prompt-library/{prompt-library,index}.ts`, `src/react/prompt-library.tsx`, `src/web/prompt-library.ts`, `src/styles/prompt-library.css`
-- Test: `tests/browser/wave-5/prompt-library.spec.ts`
-
-**Interfaces:**
-- Produces `promptLibraryPrimitive` (`kind-prompt-library`), spreading `pickerBase` with `check: false`:
-  - Options: `prompts: PromptTemplate[]`; `onInsert?(prompt, details)` (`callback` through `dispatch`); `actions?`/`onAction?`; `label` (default "Prompts"); `open`/`defaultOpen`/`onOpenChange`; `presentation?`; `motion`.
-  - Rows show the title and the description, else the body's first line; the search matches the body too. Choosing a prompt calls `onInsert` and closes.
-  - API: Picker's `open`/`close`/`run` plus `insert(id)` (while `onInsert` is set). Agent actions: `open`, `close`, `insert`, `run`.
-- React: `PromptLibrary`. Web: `definePromptLibrary()`, `can-insert`, event `promptinsert`.
-
-- [ ] **Step 1: Write the failing browser test**, both layers: a query that only matches a body finds its prompt; Enter calls `onInsert` with the prompt and focus returns to the trigger; no row has a check mark; axe open, light and dark; `expectAgentActions(page, "Prompts", ["open", "insert"])`.
-- [ ] **Step 2: Run** `npx playwright test tests/browser/wave-5/prompt-library.spec.ts`. Expected: FAIL.
-- [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run** the same, plus `npm run lint`. Expected: PASS.
-- [ ] **Step 5: Component task routine** (`uses: ["picker", "internal-command"]`). Commit `feat(prompt-library): add Prompt Library`.
+Dropped by the user.
 
 ---
 
@@ -470,7 +452,7 @@ Spec §9.1, §9.5; D16, D17.
 - Modify: `apps/docs/content/docs/index.mdx`, `packages/agent-ui/README.md` (component list), `scripts/tests/docs.test.mjs` (the visible pages)
 
 **Interfaces:**
-- `.changeset/agent-ui-wave-5.md`: `"@kind-ui/agent-ui": minor`, listing the nine new components, Model Selector's move onto Picker (its markup changes: what a host styling `data-model-selector-field` or the combobox must change), Message's `regenerateOptions` and the Composer's `draftKey`.
+- `.changeset/agent-ui-wave-5.md`: `"@kind-ui/agent-ui": minor`, listing the new components, Model Selector's move onto Picker (its markup changes: what a host styling `data-model-selector-field` or the combobox must change), Message's `regenerateOptions` and the Composer's `draftKey`.
 - No showcase page unless D16 changes.
 
 - [ ] **Step 1: Write the failing test.** `docs.test.mjs`: every Wave 5 page is listed in `components/meta.json` and the docs index.
@@ -486,7 +468,7 @@ Spec §9.1, §9.5; D16, D17.
 | Requirement | Where |
 | --- | --- |
 | One `definePrimitive` per component, `createParts` per render file | Guard in `npm run lint`, every task |
-| Search, pages and ranked matches are UI SDK Command | Picker, Model Selector, Prompt Library (Tasks 2, 3, 12) |
+| Search, pages and ranked matches are UI SDK Command | Picker, Model Selector (Tasks 2, 3) |
 | Menus, submenus, checkbox and radio items are UI SDK Menu | `menuBase` (Task 1), Tasks 4–7, 9 |
 | Popups and sheets come from `createPopup`, Menu and `presentation` | Tasks 2, 4–7, 9–12, 14 |
 | Roving chips, focus recovery and leaving rows reuse Waves 1–2 | Context Bar (Task 10) |
@@ -497,7 +479,7 @@ Spec §9.1, §9.5; D16, D17.
 
 ## Self-Review Notes
 
-- **Scope coverage:** searchable Picker with icons, check mark, two-line rows, sections, page rows and footer actions (Task 2), Model Selector on it with logos and "More models" (Task 3), Work in/project/branch pickers (Task 2's page, D3); Add menu (Task 4); Settings menu (Task 5); Approval mode menu (Task 6); the combined model and effort menu (Task 9); context bar (Task 10); dictation (Task 11); prompt library (Task 12); draft restore (Task 13); mobile composer (Task 14); regenerate-with menu (Task 7).
+- **Scope coverage:** searchable Picker with icons, check mark, two-line rows, sections, page rows and footer actions (Task 2), Model Selector on it with logos and "More models" (Task 3), Work in/project/branch pickers (Task 2's page, D3); Add menu (Task 4); Settings menu (Task 5); Approval mode menu (Task 6); the combined model and effort menu (Task 9); context bar (Task 10); dictation (Task 11); draft restore (Task 13); mobile composer (Task 14); regenerate-with menu (Task 7).
 - **Spec coverage:** §2 rows and internal table: Task 1, Task 10, Task 11. §4.1: Task 13. §6 agent confirm list: Tasks 6, 11, 15. §7 Wave 5 rows and behavior lines: Tasks 2–14. §8: axe, keyboard and announcement checks per task. §9.1, §9.5: Task 16 and each page.
 - **Follow-ups D1 opens, not in Wave 5:** File Tree's `onSelect` and Inline Citation's page count can move onto `hearComposed` and leave `decisions.md`'s open list; each is its own fix PR.
-- **Out of scope:** prompt variables and editing (D14); saving attachments with a draft (D12); a speech engine of our own (D10); a showcase (D16).
+- **Out of scope:** Prompt Library (dropped by the user, D14); saving attachments with a draft (D12); a speech engine of our own (D10); a showcase (D16).

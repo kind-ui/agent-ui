@@ -93,9 +93,9 @@ AI components need general controls. These are UI SDK components or `@ui-sdk/cor
 | --- | --- | --- |
 | Button | Button | almost all |
 | Collapsible | Collapsible, `bindPanel`, `bindFindable` | Step and every Step-based component, Sources, Queue |
-| Popover, Tooltip | Popover (`createPopup`; Context Meter and Inline Citation add hover and focus opening; Wave 5 popups take `presentation`), Tooltip | Feedback, Checkpoint, Context Meter, Inline Citation, Picker, Context Bar, Prompt Library |
+| Popover, Tooltip | Popover (`createPopup`; Context Meter and Inline Citation add hover and focus opening; Wave 5 popups take `presentation`), Tooltip | Feedback, Checkpoint, Context Meter, Inline Citation, Picker, Context Bar |
 | Menu | Menu (checkbox and radio items, submenus, `presentation`) | Message, Add Menu, Settings Menu, Approval Mode, Model Control |
-| Command | Command | Picker, Model Selector, Prompt Library |
+| Command | Command | Picker, Model Selector |
 | Slider, Switch | Slider; Switch's look for Settings Menu's checkbox items | Settings Menu, Model Control |
 | Alert Dialog, Dialog | Alert Dialog, Dialog (`createPopup` with `dialogPreset` for Generated Image) | Checkpoint, Generated Image |
 | Scroll Area | Scroll Area, `createStickToBottom` | Conversation, Terminal, Code Block, Markdown Table, Document |
@@ -551,7 +551,6 @@ Behavior requirements:
 | **Model Control** | Settings Menu (`settingsBase`), Menu | `open`, `close`, `toggle(id, on?)`, `setValue(id, value)`, `setModel(id)`, `setEffort(level)`, `run(actionId)` | (new) |
 | **Context Bar** | `createRovingFocus`, `createFocusRecovery`, Popover (`createPopup`) | `remove(id)`, `open`, `close` | (new) |
 | **Dictation** | `announce`, `createFocusRecovery`, `core/dictation.ts` | `start`, `stop`, `cancel` | (new) |
-| **Prompt Library** | Picker | `open`, `close`, `insert(id)`, `run(actionId)` | (new) |
 
 Wave 5 also rebuilds **Model Selector** on Picker (it keeps `setValue` and gains `run`), gives **Message** a regenerate-with menu (`regenerate(optionId?)`), and gives **Composer** draft restore (`discardDraft`) and a narrow-screen layout.
 
@@ -566,11 +565,10 @@ Behavior requirements:
 - **Model Control:** one trigger, "<model> · <effort>", opening a Settings Menu whose Model and Effort rows are submenus of radio items with a check on the chosen one, between the host's toggles and its choices. The Model submenu lists models under their group with their icons and footer actions like "More models"; levels a model doesn't support (`ModelOption.efforts`) are dimmed and can't be chosen, and the effort falls back to the highest supported level at or below it.
 - **Context Bar:** chips in one row, one Tab stop with arrow keys, removable by Delete/Backspace or their pointer control; chips past the row's width go behind a "+N" button whose popover lists them. Adding or removing a chip never moves content below the bar.
 - **Dictation:** a mic button starts a host-supplied `DictationSource`; while listening it shows a waveform from the source's levels with Stop and Cancel; Stop inserts the final text once through `onText`, never interim text; Cancel inserts nothing; errors (unsupported, microphone blocked) show their words and are announced. No source ships enabled: `createSpeechDictation` (Web Speech API, which may send audio to the browser's speech service) is opt-in.
-- **Prompt Library:** Picker of the host's prompts, searching title, description and body, with no check mark; a choice calls `onInsert`.
 - **Message regenerate-with:** with `regenerateOptions`, Regenerate becomes a menu whose first item is "Try again"; `onRegenerate` receives the option's id, `undefined` for "Try again".
 - **Composer:** `draftKey` with `draftStorage` restores an uncontrolled draft (§4.1) and shows "Draft restored" with Discard. Below `--kind-composer-compact-width` its controls row wraps under the editor and labelled triggers show only their icon, keeping their names.
 
-Component count: 13 + 8 + 10 + 10 + 9 = 50 rows, with Selection and Action counted as one family.
+Component count: 13 + 8 + 10 + 10 + 7 = 48 rows, with Selection and Action counted as one family.
 
 ## 8. Accessibility requirements
 
