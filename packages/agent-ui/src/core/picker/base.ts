@@ -30,6 +30,7 @@ import type { PickerAction, PickerItem } from "../../types/index.js";
 import { type ComposedHandler, hearComposed } from "../composed-events.js";
 import { memo } from "../memo.js";
 import type { MotionMode } from "../motion/index.js";
+import { withAutoPresentation } from "../presentation.js";
 import { keyKind, keyValue, type PickerPage, type PickerRow, pickerLeaves, pickerPages } from "./pages.js";
 
 /** `"item-press"`: a person chose a row. `"imperative"`: an `api` call, like an agent's `setValue` or `run`. */
@@ -301,18 +302,8 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
       const { store } = context;
       // `createChange` reads reasons from the options type, which a generic `Options` hides.
       const typed = context as unknown as PrimitiveContext<PickerBaseOptions, PickerBaseState, string>;
-      // `createPopup` presents as a popover unless the options say otherwise. A prototype rather than a spread, because
-      // on Web Components `@ui-sdk/web` fills in the callbacks on read.
       const popup = createPopup<PickerBaseOptions, PickerBaseState, typeof popoverPreset>(
-        {
-          ...typed,
-          options: (): PickerBaseOptions => {
-            const options = typed.options();
-            return options.presentation
-              ? options
-              : Object.create(options, { presentation: { value: "auto" } });
-          },
-        },
+        { ...typed, options: () => withAutoPresentation(typed.options()) },
         { preset: popoverPreset },
       );
       const change = createChange(typed);

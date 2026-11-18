@@ -104,6 +104,20 @@ export {
   confirmationPrimitive,
 } from "./confirmation/index.js";
 export {
+  CONTEXT_BAR_ITEM_STOP,
+  type ContextBarApi,
+  type ContextBarChipState,
+  type ContextBarListState,
+  type ContextBarOptions,
+  type ContextBarOverflowState,
+  type ContextBarPresentation,
+  type ContextBarPrimitive,
+  type ContextBarRemoveReason,
+  type ContextBarState,
+  contextBarPrimitive,
+  fitChips,
+} from "./context-bar/index.js";
+export {
   type ContextLevel,
   type ContextMeterApi,
   type ContextMeterOpenChangeReason,
