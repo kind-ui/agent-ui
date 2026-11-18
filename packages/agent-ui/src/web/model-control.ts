@@ -42,7 +42,7 @@ const drawTrigger = (button: Element, { model, effort }: ModelControlTriggerStat
     if (effort) {
       const value = element(document, "span", { "data-model-control-effort": "" });
       value.append(...effort.options.map((option) => element(document, "span", {}, option.label)));
-      // Text nodes, not a flex gap, space the model from the effort, so the text reads "GPT-5 · High".
+      // Spaces around the "·", so the accessible name reads "GPT-5 · High"; the trigger's gap spaces it on screen.
       parts.push(" ", element(document, "span", { "data-model-control-separator": "" }, "·"), " ", value);
     }
     parts.push(element(document, "span", { "data-menu-chevron": "" }));
@@ -154,13 +154,13 @@ export interface KindModelControlElement
   actions?: (Omit<NonNullable<ModelControlOptions["actions"]>[number], "icon"> & { icon?: Icon })[];
   /** More rows: toggles above Model and Effort, choices below. */
   settings?: (NonNullable<ModelControlOptions["settings"]>[number] & { icon?: Icon })[];
-  /** The chosen model's `id`. Setting it chooses one, firing `modelchange`. */
+  /** The chosen model's `id`. Setting it chooses one and fires no event, as a native `value` does. */
   get model(): string | null;
   set model(id: string);
-  /** The effort level the chosen model uses. Setting it chooses one, firing `effortchange`. */
+  /** The effort level the chosen model uses. Setting it chooses one and fires no event, as a native `value` does. */
   get effort(): string | null;
   set effort(level: string);
-  /** The other settings' values by `id`. Setting it changes each that differs, firing `valueschange` for each. */
+  /** The other settings' values by `id`. Setting it changes each that differs and fires no event. */
   values: Record<string, boolean | string>;
   defaultValues?: Record<string, boolean | string>;
   open: boolean;

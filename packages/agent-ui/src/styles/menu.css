@@ -125,6 +125,9 @@
       forced-color-adjust: none;
       background-color: CanvasText;
     }
+    [data-menu-part="trigger"] [data-menu-chevron] {
+      background-color: ButtonText;
+    }
     [data-menu-trigger-icon] {
       forced-color-adjust: none;
       background-color: ButtonText;

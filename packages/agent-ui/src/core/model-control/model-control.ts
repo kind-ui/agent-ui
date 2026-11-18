@@ -24,6 +24,7 @@ import {
   type SettingsBaseState,
   type SettingsMenuAction,
   type SettingsMenuChangeReason,
+  type SettingsMenuChoiceRow,
   type SettingsMenuRow,
   settingsBase,
   settingsChoiceRow,
@@ -40,8 +41,9 @@ export type ModelControlChangeReason = SettingsMenuChangeReason;
  */
 export type ModelControlEffortChangeReason = SettingsMenuChangeReason | "model-change";
 
-/** The row ids Model Control keeps for itself: a host setting can't take them. */
+/** The Model row's id, which Model Control keeps for itself: a host setting with it is left out. */
 export const MODEL_CONTROL_MODEL = "model";
+/** The Effort row's id, which Model Control keeps for itself: a host setting with it is left out. */
 export const MODEL_CONTROL_EFFORT = "effort";
 
 export type ModelControlOptions = SettingsBaseOptions & {
@@ -218,36 +220,47 @@ const toModelOptions = (models: ModelOption<unknown>[]) =>
     })),
   );
 
-const byId = memo((models: ModelOption<unknown>[]) => new Map(models.map((model) => [model.id, model])));
+const ids = new WeakMap<ModelOption<unknown>[], Map<string, ModelOption<unknown>>>();
 const chosenModel = ({ models, model }: Pick<ModelControlState, "models" | "model">) =>
-  model === null ? undefined : byId(models).get(model);
+  model === null
+    ? undefined
+    : cached(ids, models, () => new Map(models.map((each) => [each.id, each]))).get(model);
+
+const reserved = (id: string) => id === MODEL_CONTROL_MODEL || id === MODEL_CONTROL_EFFORT;
+const hosts = new WeakMap<SettingsEntry<unknown>[], SettingsEntry<unknown>[]>();
+/** The host's settings without any that take Model Control's own ids. */
+const hostSettings = (settings: SettingsEntry<unknown>[]) =>
+  cached(hosts, settings, () =>
+    settings.some((setting) => reserved(setting.id))
+      ? settings.filter((setting) => !reserved(setting.id))
+      : settings,
+  );
 
 const actionValue = (id: string) => `action:${id}`;
 
-const data = new WeakMap<SettingsEntry<unknown>[], WeakMap<ModelOption<unknown>[], MenuData>>();
-const toData = (settings: SettingsEntry<unknown>[], models: ModelOption<unknown>[]) =>
-  cached(
-    cached(data, settings, () => new WeakMap()),
-    models,
-    () => [
-      {
-        type: "submenu" as const,
-        label: MODEL_CONTROL_MODEL,
-        items: [
-          {
-            type: "radio-group" as const,
-            name: MODEL_CONTROL_MODEL,
-            items: toModelOptions(models).map(({ value, label, disabled }) => ({
-              value,
-              label,
-              ...(disabled && { disabled }),
-            })),
-          },
-        ],
-      },
-      ...settingsData(settings),
-    ],
-  );
+const radios = (name: string, options: SettingsOption<unknown>[]) => ({
+  type: "radio-group" as const,
+  name,
+  items: options.map(({ value, label, disabled }) => ({ value, label, ...(disabled && { disabled }) })),
+});
+
+/** The rows as UI SDK Menu data, as `getItems` reads them: the Model and Effort submenus among the host's settings. */
+const toData = (rows: SettingsMenuRow[], settings: SettingsEntry<unknown>[]): MenuData => {
+  const host = settingsData(settings);
+  return rows.map((row) => {
+    const index = settings.findIndex((setting) => setting.id === row.id);
+    if (index !== -1) return host[index] as MenuData[number];
+    const choice = row as SettingsMenuChoiceRow;
+    return {
+      type: "submenu" as const,
+      label: choice.label,
+      items: [
+        radios(choice.id, choice.options),
+        ...choice.actions.map(({ value, label }) => ({ value, label })),
+      ],
+    };
+  });
+};
 
 const own = (options: ModelControlOptions) => ({
   models: options.models ?? NO_MODELS,
@@ -259,11 +272,55 @@ const own = (options: ModelControlOptions) => ({
 
 type Context = PrimitiveContext<ModelControlOptions, ModelControlState, string>;
 
+type RowsInput = Pick<
+  ModelControlState,
+  "entries" | "values" | "models" | "model" | "levels" | "effort" | "actions" | "modelLabel" | "effortLabel"
+>;
+
+/** The rows: the host's toggles, then Model and Effort, then the host's choices. */
+const modelControlRows = (input: RowsInput): SettingsMenuRow[] => {
+  const host = settingsMenuRows(hostSettings(input.entries), input.values);
+  const chosen = chosenModel(input);
+  const efforts = levelOptions(input.levels, chosen?.efforts);
+  const actions: SettingsMenuAction[] = input.actions.map(({ id, label, icon }) => ({
+    value: actionValue(id),
+    label,
+    icon,
+  }));
+  const added: SettingsMenuRow[] = [
+    settingsChoiceRow(
+      { id: MODEL_CONTROL_MODEL, label: input.modelLabel, options: toModelOptions(input.models), actions },
+      input.model,
+    ),
+  ];
+  if (efforts.some((option) => !option.disabled))
+    added.push(
+      settingsChoiceRow(
+        { id: MODEL_CONTROL_EFFORT, label: input.effortLabel, options: efforts },
+        modelEffort(input.levels, chosen, input.effort),
+      ),
+    );
+  const toggles = host.filter((row) => row.type === "toggle").length;
+  return [...host.slice(0, toggles), ...added, ...host.slice(toggles)];
+};
+
 const base = settingsBase<ModelControlOptions>({
   kind: "model-control",
   label: "Model",
-  toData: (options) => toData(options.settings ?? NO_SETTINGS, options.models ?? NO_MODELS),
-  // Model and Effort sit after the host's toggles and before its choices.
+  // Read from the options, for `getItems`: the rows' shape, which uncontrolled values don't change.
+  toData: (options) => {
+    const entries = options.settings ?? NO_SETTINGS;
+    return toData(
+      modelControlRows({
+        ...own(options),
+        entries,
+        values: options.values ?? options.defaultValues ?? {},
+        model: options.model ?? options.defaultModel ?? null,
+        effort: options.effort ?? options.defaultEffort ?? null,
+      }),
+      hostSettings(entries),
+    );
+  },
   rows: () => {
     const rows = memo(
       (
@@ -276,37 +333,18 @@ const base = settingsBase<ModelControlOptions>({
         actions: PickerAction<unknown>[],
         modelLabel: string,
         effortLabel: string,
-      ): SettingsMenuRow[] => {
-        const own = settingsMenuRows(entries, values);
-        const chosen = chosenModel({ models, model });
-        const efforts = levelOptions(levels, chosen?.efforts);
-        const items: SettingsMenuAction[] = actions.map(({ id, label, icon }) => ({
-          value: actionValue(id),
-          label,
-          icon,
-        }));
-        const added: SettingsMenuRow[] = [
-          settingsChoiceRow(
-            {
-              id: MODEL_CONTROL_MODEL,
-              label: modelLabel,
-              icon: undefined,
-              options: toModelOptions(models),
-              actions: items,
-            },
-            model,
-          ),
-        ];
-        if (efforts.some((option) => !option.disabled))
-          added.push(
-            settingsChoiceRow(
-              { id: MODEL_CONTROL_EFFORT, label: effortLabel, options: efforts },
-              modelEffort(levels, chosen, effort),
-            ),
-          );
-        const toggles = own.filter((row) => row.type === "toggle").length;
-        return [...own.slice(0, toggles), ...added, ...own.slice(toggles)];
-      },
+      ) =>
+        modelControlRows({
+          entries,
+          values,
+          models,
+          model,
+          levels,
+          effort,
+          actions,
+          modelLabel,
+          effortLabel,
+        }),
     );
     return (state) => {
       const own = state as ModelControlState;
@@ -323,8 +361,13 @@ const base = settingsBase<ModelControlOptions>({
       );
     };
   },
+  stored: (id, state) => {
+    if (!reserved(id)) return undefined;
+    const own = state as ModelControlState;
+    return id === MODEL_CONTROL_MODEL ? own.model : own.effort;
+  },
   commit: (id, value, { reason, event, source }, context) => {
-    if (id !== MODEL_CONTROL_MODEL && id !== MODEL_CONTROL_EFFORT) return undefined;
+    if (!reserved(id)) return undefined;
     const change = createChange(context as unknown as Context);
     return change(id, value as string, {
       reason: reason as ModelControlChangeReason,
@@ -363,7 +406,7 @@ export const modelControlPrimitive: ModelControlPrimitive = definePrimitive<
     defaultModel: "value",
     onModelChange: "callback",
     levels: "value",
-    effort: "string",
+    effort: "value",
     defaultEffort: "string",
     onEffortChange: "callback",
     actions: "value",

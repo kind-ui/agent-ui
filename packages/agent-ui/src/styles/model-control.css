@@ -14,7 +14,9 @@
 
   :where([data-kind="model-control"] [data-menu-part="trigger"]) [data-menu-chevron] {
     margin-inline-start: 0.125rem;
+    /* Down in either direction, so `menu.css`'s right-to-left mirror is off. */
     rotate: 90deg;
+    scale: none;
   }
 
   [data-model-control-separator],
@@ -24,6 +26,7 @@
 
   [data-model-control-effort] {
     display: grid;
+    justify-items: start;
   }
 
   :where([data-model-control-effort]) > * {

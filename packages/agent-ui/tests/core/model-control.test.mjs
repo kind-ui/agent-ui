@@ -81,3 +81,40 @@ test("a model without effort levels has no Effort row or setEffort", () => {
   assert.equal(instance.api.name(instance.get()), "Model, Tiny");
   instance.destroy();
 });
+
+test("setValues keeps Model and Effort out of the host's values, and host settings can't take their ids", () => {
+  const changes = [];
+  const instance = modelControlPrimitive({
+    models,
+    levels,
+    defaultModel: "big",
+    settings: [
+      { type: "toggle", id: "fast", label: "Fast" },
+      { type: "toggle", id: "model", label: "Clash" },
+    ],
+    onValuesChange: (values) => changes.push(values),
+  });
+  assert.deepEqual(
+    instance.api.contentState(instance.get()).rows.map((row) => row.id),
+    ["fast", "model", "effort"],
+  );
+  assert.equal(instance.api.setValues({ model: "small", fast: true }), true);
+  assert.deepEqual(changes, [{ fast: true }]);
+  assert.equal(instance.api.getModel(), "small");
+  instance.destroy();
+});
+
+test("choosing the level a controlled effort falls back to reports it", () => {
+  const changes = [];
+  const instance = modelControlPrimitive({
+    models,
+    levels,
+    model: "small",
+    effort: "high",
+    onEffortChange: (value) => changes.push(value),
+  });
+  assert.equal(instance.api.getEffort(), "medium");
+  assert.equal(instance.api.setEffort("medium"), true);
+  assert.deepEqual(changes, ["medium"]);
+  instance.destroy();
+});

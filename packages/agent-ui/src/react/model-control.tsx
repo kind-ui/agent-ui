@@ -10,7 +10,7 @@ import { MenuTrigger } from "@ui-sdk/react/menu";
 import { createParts } from "@ui-sdk/react/primitive";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { KindMenu, KindMenuContent, KindMenuItemIcon } from "./internal/menu.js";
-import { SettingsMenuRows } from "./settings-menu.js";
+import { SettingsMenuRows, type SettingsMenuSetting } from "./settings-menu.js";
 
 const parts = createParts(modelControlPrimitive, { root: "div", trigger: "span", content: "div" });
 
@@ -29,7 +29,7 @@ export type ModelControlProps = Omit<
   /** Items after the models in the Model submenu, like "More models". */
   actions?: (Omit<NonNullable<ModelControlOptions["actions"]>[number], "icon"> & { icon?: Icon })[];
   /** More rows: toggles above Model and Effort, choices below. */
-  settings?: (NonNullable<ModelControlOptions["settings"]>[number] & { icon?: Icon })[];
+  settings?: SettingsMenuSetting[];
   children?: ReactNode;
 };
 
@@ -52,7 +52,7 @@ const triggerContent = ({ model, effort }: ModelControlTriggerState) => (
     <span data-model-control-model="">{model.label}</span>
     {effort ? (
       <>
-        {/* Text nodes, not a flex gap, space the model from the effort, so the text reads "GPT-5 · High". */}{" "}
+        {/* Spaces around the "·", so the accessible name reads "GPT-5 · High"; the trigger's gap spaces it on screen. */}{" "}
         <span data-model-control-separator="">·</span>{" "}
         {/* Every level's label shares one cell and only the chosen one shows, so the trigger keeps its width. */}
         <span data-model-control-effort="">

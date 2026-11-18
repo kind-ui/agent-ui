@@ -26,6 +26,7 @@ export type SettingsMenuChangeReason = "item-press" | "imperative";
 /** A change's details, with the `id` of the setting that changed. */
 export type SettingsMenuChangeDetails = ChangeDetails<SettingsMenuChangeReason> & { id: string };
 
+/** A settings menu's options: the menu's, plus its settings and their values. */
 export type SettingsBaseOptions = MenuBaseOptions & {
   /**
    * The rows, in order: a `toggle` is a switch that keeps the menu open, a `choice` a submenu of its `options` showing
@@ -66,6 +67,7 @@ export type SettingsMenuOptionGroup = { label: string | undefined; options: Sett
 export type SettingsMenuAction = {
   /** The item's value in UI SDK Menu, apart from every option's. */
   value: string;
+  /** Its text, which typeahead matches. */
   label: string;
   /** Passed through untouched, for the render layer to draw. */
   icon: unknown;
@@ -157,6 +159,11 @@ export type SettingsBaseConfig<Options extends SettingsBaseOptions> = Pick<
     cause: SettingsCause,
     context: Context<Options>,
   ) => boolean | undefined;
+  /**
+   * The stored value of a row the component owns, which a change is compared with, since its row may show another;
+   * `undefined` for a row that isn't its own.
+   */
+  stored?: (id: string, state: SettingsBaseState) => boolean | string | null | undefined;
 };
 
 const NO_SETTINGS: SettingsEntry<unknown>[] = [];
@@ -312,8 +319,13 @@ export const settingsBase = <Options extends SettingsBaseOptions>(config: Settin
       );
       const rows = config.rows?.(context) ?? ((state: SettingsBaseState) => own(state.entries, state.values));
       const find = (id: string, state = store.get()) => rows(state).find((row) => row.id === id);
-      const current = (row: SettingsMenuRow) => (row.type === "toggle" ? row.checked : row.value);
+      const current = (row: SettingsMenuRow) => {
+        const stored = config.stored?.(row.id, store.get());
+        return stored !== undefined ? stored : row.type === "toggle" ? row.checked : row.value;
+      };
 
+      // Whether the last change went through the component's `commit` rather than `values`.
+      let owned = false;
       // `values` is what a `values` change builds on: a controlled store keeps the owner's until it passes new ones.
       const change = (
         id: string,
@@ -321,19 +333,18 @@ export const settingsBase = <Options extends SettingsBaseOptions>(config: Settin
         cause: SettingsCause,
         values = store.get().values,
       ) => {
+        owned = false;
         const row = find(id);
         if (store.get().disabled || !row || !fits(row, value)) return false;
         if (current(row) === value) return true;
+        const committed = config.commit?.(id, value, cause, context);
+        owned = committed !== undefined;
         return (
-          config.commit?.(id, value, cause, context) ??
+          committed ??
           changeValues(
             "values",
             { ...values, [id]: value },
-            {
-              ...cause,
-              reason: cause.reason as SettingsMenuChangeReason,
-              id,
-            },
+            { ...cause, reason: cause.reason as SettingsMenuChangeReason, id },
           )
         );
       };
@@ -363,8 +374,9 @@ export const settingsBase = <Options extends SettingsBaseOptions>(config: Settin
           let next = store.get().values;
           let accepted = true;
           for (const [id, value] of Object.entries(values)) {
-            if (change(id, value, { reason: "imperative" }, next)) next = { ...next, [id]: value };
-            else accepted = false;
+            if (!change(id, value, { reason: "imperative" }, next)) accepted = false;
+            // A row the component owns keeps its value out of `values`.
+            else if (!owned) next = { ...next, [id]: value };
           }
           return accepted;
         },

@@ -28,10 +28,14 @@ import {
 
 const parts = createParts(settingsMenuPrimitive, { root: "div", trigger: "span", content: "div" });
 
-/** A setting, whose `icon` is an image URL or an element such as an inline `svg`. */
-export type SettingsMenuSetting = NonNullable<SettingsMenuOptions["settings"]>[number] & {
-  icon?: string | ReactElement;
-};
+type Entry = NonNullable<SettingsMenuOptions["settings"]>[number];
+type Choice = Extract<Entry, { type: "choice" }>;
+type Icon = string | ReactElement;
+
+/** A setting, whose `icon` and options' `icon`s are image URLs or elements such as an inline `svg`. */
+export type SettingsMenuSetting =
+  | (Extract<Entry, { type: "toggle" }> & { icon?: Icon })
+  | (Omit<Choice, "options"> & { icon?: Icon; options: (Choice["options"][number] & { icon?: Icon })[] });
 
 export type SettingsMenuProps = Omit<ComponentProps<typeof parts.Root>, "children" | "settings"> & {
   settings?: SettingsMenuSetting[];
