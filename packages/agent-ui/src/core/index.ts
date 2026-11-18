@@ -149,6 +149,19 @@ export {
   type SpeechDictationOptions,
 } from "./dictation.js";
 export {
+  type DictationApi,
+  type DictationOptions,
+  type DictationPhase,
+  type DictationPrimitive,
+  type DictationState,
+  type DictationStatusState,
+  type DictationTextReason,
+  type DictationWaveformState,
+  dictationButtonPrimitive,
+  dictationError,
+  joinFinals,
+} from "./dictation-button/index.js";
+export {
   type DocumentApi,
   type DocumentContentState,
   type DocumentDownload,
