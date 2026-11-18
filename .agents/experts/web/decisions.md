@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `cdf3734` (Wave 5 Task 14 Composer on narrow screens)
+Last reviewed: `c4d8771` (Wave 5 Task 15 agent conformance)
 
 ## Settled
 
