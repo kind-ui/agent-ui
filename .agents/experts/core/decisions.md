@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `c4d8771` (Wave 5 Task 15 agent conformance)
+Last reviewed: `e853a18` (Wave 5 Task 16 docs index and changeset)
 
 ## Settled
 
