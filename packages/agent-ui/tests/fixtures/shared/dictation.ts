@@ -2,10 +2,6 @@ import type { DictationEvent, DictationSource } from "@kind-ui/agent-ui/core";
 
 type Text = { text: string; reason: string; source?: string };
 
-/**
- * A source the test drives through `window.kindDictation`: `push` reports an event to the current dictation, and its
- * iterator ends only when `end` runs, as a recognizer's does after an abort.
- */
 export function dictationHost() {
   const texts: Text[] = [];
   let queue: DictationEvent[] = [];
