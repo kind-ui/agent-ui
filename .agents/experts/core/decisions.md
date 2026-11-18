@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `f2a2539` (Wave 5 Task 8 Effort Slider)
+Last reviewed: `bd7b39b` (Wave 5 Task 8 Effort Slider, whimsy)
 
 ## Settled
 
+- **Effort Slider bumps for any level the Slider lands on while open (Wave 5 Task 8):** a host, an agent, Reset or a refused drag moves the thumb too, so it answers the same way; `ticks` resets as the popup opens, so nothing replays on open.
 - **Effort Slider's model line hears its button's click bubble (Wave 5 Task 8):** the line is an `a`, a `button` or text by its options, so no single `role: "button"` slot can own it; the `model` part checks `closest("button")` before calling `onModelPress`.
 - **Model Selector's `icon` is `unknown` in core, so each render layer casts once where core hands it over** (Wave 4 Task 12b): `definePrimitive` can't be generic per instance, and each layer types its own public `models` (`string | ReactElement` in React, `string | Element` on web), so no other value reaches the cast.
 - **Selection's `onDismiss` hears Escape, an outside press and `dismiss`, not a selection collapsing** (Wave 4 Task 11): a collapse is the reader moving on, not a dismissal; the JSDoc says so.
@@ -83,6 +84,7 @@ Last reviewed: `f2a2539` (Wave 5 Task 8 Effort Slider)
 
 ## Resolved
 
+- **Effort Slider's `live` level went stale when `levels` changed around the same value (Wave 5 Task 8):** the subscriber resets `live` on new levels as well as a new value; unit-tested.
 - **Effort Slider kept a `value` that named no level (Wave 5 Task 8):** `known` reads it as the `defaultLevel` in `state` and `sync`, an uncontrolled slider whose level leaves `levels` moves to it, an empty `label` reads as "Effort", and `destroy()` cancels only a requested frame; `tests/core/effort-slider.test.mjs`.
 - **Message's regenerate menu stayed open after the toolbar left or an agent regenerated (Wave 5 Task 7):** `menuBase` gained `canOpen`; the menu closes when there are no options, no `onRegenerate` or an unsettled message, and after an agent's `regenerate`; pinned in `message.spec.ts`.
 - **`hearComposed` didn't tell nested components apart (Wave 5 Task 1, fixed in Task 7):** an element nearer the event's target that hears the same event name now takes it, so an outer root no longer hears a nested component's `ui-*` events; `composed-events.spec.ts` nests one `kind-test-menu` in another and fails without the fix.

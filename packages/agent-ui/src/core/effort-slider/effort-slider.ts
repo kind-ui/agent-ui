@@ -126,7 +126,7 @@ export type EffortSliderState = PopupState & {
   motion: MotionMode;
   /** The level the Slider shows now, by index: it follows a drag or a key before the level is reported. */
   live: number;
-  /** How many times `live` changed, which replays the snap on each change. */
+  /** How many levels the Slider landed on since the popup opened, which replays the snap on each. 0: none yet. */
   ticks: number;
 };
 
@@ -223,7 +223,7 @@ export type EffortSliderApi = Omit<Popup, "open" | "close"> & {
   pressReset: (event?: Event) => void;
   /** Reports a press on the model line's button. */
   pressModel: (event: Event) => void;
-  /** UI SDK Slider's `valuecommit` on Web Components, heard by the slider slot through `hearComposed`. */
+  /** UI SDK Slider's `valuechange` and `valuecommit` on Web Components, heard by the slider slot through `hearComposed`. */
   composedEvents: Record<string, ComposedHandler>;
   /** Moves focus to the thumb when Reset leaves while focused. */
   resetRecovery: ReturnType<typeof createFocusRecovery>;
@@ -367,8 +367,9 @@ export const effortSliderPrimitive: EffortSliderPrimitive = definePrimitive<
       if (shown !== undefined && shown !== index) controller.setValue(index);
     };
     store.subscribe(syncValue);
-    // A level chosen anywhere but the Slider (a host, an agent, Reset) moves what it shows too.
+    // A level chosen anywhere but the Slider (a host, an agent, Reset), or new levels, move what it shows too.
     let committed = store.get().value;
+    let levels = store.get().levels;
     // Each opening starts without a snap, so the bump and the glow play only for a level reached while it's open.
     let wasOpen = store.get().open;
     store.subscribe(() => {
@@ -377,8 +378,9 @@ export const effortSliderPrimitive: EffortSliderPrimitive = definePrimitive<
         wasOpen = state.open;
         if (state.open && state.ticks) store.set({ ticks: 0 });
       }
-      if (state.value === committed) return;
+      if (state.value === committed && state.levels === levels) return;
       committed = state.value;
+      levels = state.levels;
       const index = indexOf(state);
       if (index !== state.live) store.set({ live: index });
     });

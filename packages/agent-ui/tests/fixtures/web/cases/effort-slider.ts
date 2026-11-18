@@ -53,6 +53,7 @@ const page =
 export const cases = {
   all: page(),
   reduced: page({ motion: "reduced" }),
+  none: page({ motion: "none" }),
   refusing: page({ refusing: true }),
   controlled: page(),
   written: page({ written: true }),

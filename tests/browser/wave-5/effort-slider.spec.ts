@@ -266,6 +266,16 @@ for (const [name, fixture, reducedMotion] of [
   });
 }
 
+test('with motion "none" nothing animates as the level changes', async ({ page }) => {
+  await load(page, "none");
+  await open(page);
+  await settled(page);
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("End");
+  await expect(page.locator('[data-effort-slider-part="slider"]')).toHaveAttribute("data-top", "");
+  expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
+});
+
 for (const colorScheme of ["light", "dark"] as const) {
   test(`axe reports no violations with the popup open in ${colorScheme} mode`, async ({ page }) => {
     await page.emulateMedia({ colorScheme });

@@ -38,3 +38,14 @@ test("an empty label reads as Effort", () => {
   assert.equal(instance.api.modelState(instance.get()).text, "Effort for GPT-5");
   instance.destroy();
 });
+
+test("new levels around the same value keep the stops on it", () => {
+  const instance = effortSliderPrimitive({ levels, value: "high" });
+  instance.setOptions({
+    levels: [{ value: "min", label: "Min" }, ...levels, { value: "max", label: "Max" }],
+    value: "high",
+  });
+  const current = instance.api.stopsState(instance.get()).stops.find((stop) => stop.current);
+  assert.equal(current?.value, "high");
+  instance.destroy();
+});

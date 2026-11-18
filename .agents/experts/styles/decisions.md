@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `f2a2539` (Wave 5 Task 8 Effort Slider)
+Last reviewed: `bd7b39b` (Wave 5 Task 8 Effort Slider, whimsy)
 
 ## Settled
 
@@ -58,6 +58,7 @@ Last reviewed: `f2a2539` (Wave 5 Task 8 Effort Slider)
 
 ## Resolved
 
+- **Effort Slider's whimsy moved the header flame and repainted on the max glow (Wave 5 Task 8):** the flame sits after the stacked-width value, the glow animates `scale`/`opacity` of a static ring, the spring is the `--kind-ease-spring` token (`EASE.spring`), and the current stop is marked by color only; a `none` case asserts no animations.
 - **Effort Slider's web stops collapsed to an inline box, and state rules were two attributes deep (Wave 5 Task 8):** the stops part is `display: block`, and `data-current`, `data-motion` and starting/ending style sit in `:where()`; the spec checks each stop under the thumb on both layers.
 - **Settings Menu switch and icon trigger (Wave 5 Task 5):** the switch had a transition under `motion="none"` and its track faded under reduced motion; the icon trigger lost its look with custom children, as Add Menu's did. Both fixed; the spec checks the reduced track and thumb.
 - **Menu exit ran 150 ms under reduced motion, and the Add Menu trigger rule was two attributes deep (Wave 5 Task 4):** the base exit rule and the trigger's context moved into `:where()`; the spec checks the 120 ms exit.

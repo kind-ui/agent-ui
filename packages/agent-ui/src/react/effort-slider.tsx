@@ -104,8 +104,8 @@ export function EffortSliderSlider({
               <>
                 <EffortSliderTitle />
                 <span data-effort-slider-reading="">
-                  <span data-effort-slider-glyph="" />
                   <KindSliderValue />
+                  <span data-effort-slider-glyph="" />
                 </span>
               </>
             )}

@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `f2a2539` (Wave 5 Task 8 Effort Slider)
+Last reviewed: `bd7b39b` (Wave 5 Task 8 Effort Slider, whimsy)
 
 ## Settled
 

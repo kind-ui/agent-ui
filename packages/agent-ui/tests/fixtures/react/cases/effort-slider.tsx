@@ -46,6 +46,7 @@ function Page({
 export const cases = {
   all: () => <Page />,
   reduced: () => <Page motion="reduced" />,
+  none: () => <Page motion="none" />,
   refusing: () => <Page refusing />,
   controlled: () => <Page controlled />,
 };

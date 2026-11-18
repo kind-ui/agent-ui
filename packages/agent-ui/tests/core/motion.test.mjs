@@ -30,4 +30,5 @@ test("agent-ui.css mirrors the motion tokens", () => {
     assert.equal(value(`--kind-duration-${name}`), `${Math.round(seconds * 1000)}ms`, name);
   assert.equal(value("--kind-ease"), `cubic-bezier(${EASE.standard.join(", ")})`);
   assert.equal(value("--kind-ease-out"), `cubic-bezier(${EASE.out.join(", ")})`);
+  assert.equal(value("--kind-ease-spring"), `cubic-bezier(${EASE.spring.join(", ")})`);
 });
