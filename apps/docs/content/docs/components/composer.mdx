@@ -76,7 +76,7 @@ Pass earlier prompts as `history`, oldest first. ArrowUp at the start of the pro
 
 ### Draft Restore
 
-Pass `draftKey` and `draftStorage` to keep an unsent draft across reloads. `draftKey` names the conversation, and `draftStorage` is a storage from UI SDK's `createLocalStorage` or `createSessionStorage`. One storage holds the drafts of every key, so you can share it across conversations:
+Pass `draftKey` and `draftStorage` to keep an unsent draft across reloads. `draftKey` names the conversation, and `draftStorage` is a storage from UI SDK's `createLocalStorage` or `createSessionStorage`. One storage holds the drafts of every key, so create it once, outside render, and share it across conversations:
 
 ```tsx
 import { createLocalStorage } from "@ui-sdk/core";
@@ -91,7 +91,7 @@ const drafts = createLocalStorage("drafts");
 >
 ```
 
-The text and tokens are saved as they change. Attachments aren't, since files can't be saved. When the composer mounts with an empty draft, or `draftKey` changes while the prompt is empty, the saved draft comes back. It never replaces text someone typed.
+The text and tokens are saved as they change. Attachments aren't, since files can't be saved. When the composer mounts with an empty draft, or `draftKey` changes while the prompt is empty, the saved draft comes back. It never replaces text someone typed: text kept through a `draftKey` change stays saved under the conversation it was written in.
 
 When a draft comes back, screen readers hear "Draft restored", and `ComposerRestored` shows **Draft restored** with a **Discard** button between Attach and Send, so the prompt doesn't move. The next edit hides it. **Discard** empties the draft, removes it from storage and moves focus to the prompt.
 

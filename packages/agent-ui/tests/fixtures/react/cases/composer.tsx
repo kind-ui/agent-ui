@@ -24,6 +24,7 @@ import {
 const unsettled = new Promise<void>(() => {});
 const params = new URLSearchParams(location.search);
 const { onSubmit, onStop } = recorder();
+const drafts = draftOptions(params);
 
 function Full({ submitOn }: { submitOn?: "enter" | "mod-enter" }) {
   const [mounted, setMounted] = useState(true);
@@ -48,7 +49,7 @@ function Full({ submitOn }: { submitOn?: "enter" | "mod-enter" }) {
         maxSize={3072}
         submitOn={submitOn ?? "enter"}
         onSubmit={onSubmit}
-        {...draftOptions(params)}
+        {...drafts}
         {...(params.has("draft") ? { draftKey } : {})}
         {...(params.has("controlled") ? { value: draft } : {})}
         onValueChange={(value, details) => {

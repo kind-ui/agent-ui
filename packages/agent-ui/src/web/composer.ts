@@ -82,7 +82,7 @@ export function defineComposer(): void {
         const api = instance.api as ComposerApi;
         const draw = () => {
           const restored = el.querySelector("kind-composer-restored");
-          if (restored && !restored.firstElementChild) {
+          if (restored && !restored.firstElementChild && !restored.textContent?.trim()) {
             restored.innerHTML =
               "<span>Draft restored</span><kind-composer-discard><button>Discard</button></kind-composer-discard>";
           }

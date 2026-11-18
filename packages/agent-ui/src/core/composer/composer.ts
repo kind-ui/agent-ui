@@ -459,49 +459,58 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
 
     // The draft as restored; any other draft means it was edited.
     let restoredDraft: ComposerDraft | undefined;
-    const draftStore = () => {
-      const { draftKey, draftStorage, value } = context.options();
-      return draftKey !== undefined && draftStorage && value === undefined
-        ? { key: draftKey, storage: draftStorage }
-        : undefined;
+    // The key the draft on screen belongs to: text kept through a `draftKey` change stays its old conversation's.
+    let owner: string | undefined;
+    // A storage that arrives late (a web property, a React host's new object) restores only before this.
+    let touched = false;
+    const storageOf = (): ValueStorage | undefined => {
+      const { draftStorage, value } = context.options();
+      return value === undefined ? draftStorage : undefined;
     };
+    const isEmpty = (draft: ComposerDraft) => draft.text === "" && draft.attachments.length === 0;
     const restore = () => {
-      const saved = draftStore();
-      const { value } = store.get();
-      if (!saved || value.text !== "" || value.attachments.length > 0) return;
-      const text = readSavedDraft(saved.storage, saved.key);
+      const { draftKey } = context.options();
+      const storage = storageOf();
+      if (draftKey === undefined || !storage || !isEmpty(store.get().value)) return;
+      owner = draftKey;
+      const text = readSavedDraft(storage, draftKey);
       if (text === undefined) return;
       // Tokens are part of the codec text, so they come back from it.
       const draft = { text, tokens: tokensOf(fromText(text)), attachments: [] };
       if (!change("value", draft, { reason: "restore" })) return;
+      touched = true;
       restoredDraft = store.get().value;
       store.set({ restored: true });
       announce("Draft restored", { priority: "polite" });
     };
     let bound = false;
     let { draftKey: lastKey, draftStorage: lastStorage } = context.options();
-    // A web host sets `draftStorage` after the element is in the page, so a new storage restores too.
     context.onOptions(({ draftKey, draftStorage }) => {
-      if (draftKey === lastKey && draftStorage === lastStorage) return;
-      if (draftKey !== lastKey) {
+      const keyChanged = draftKey !== lastKey;
+      const storageArrived = draftStorage !== lastStorage && !touched;
+      lastKey = draftKey;
+      lastStorage = draftStorage;
+      if (keyChanged) {
         restoredDraft = undefined;
         if (store.get().restored) store.set({ restored: false });
       }
-      lastKey = draftKey;
-      lastStorage = draftStorage;
-      if (bound) restore();
+      if (bound && (keyChanged || storageArrived)) restore();
     });
     const bindDraft = () => {
       bound = true;
+      owner = context.options().draftKey;
       restore();
       let last = store.get().value;
       const unsubscribe = store.subscribe(() => {
         const { value, restored } = store.get();
         if (value === last) return;
         last = value;
+        touched = true;
         if (restored && value !== restoredDraft) store.set({ restored: false });
-        const saved = draftStore();
-        if (saved) saveDraft(saved.storage, saved.key, value);
+        const storage = storageOf();
+        if (storage && owner !== undefined) saveDraft(storage, owner, value);
+        // Once the old conversation's text is sent or cleared, the current key's draft comes back.
+        if (isEmpty(value) && owner !== context.options().draftKey) restore();
       });
       return () => {
         bound = false;

@@ -54,9 +54,11 @@ type SavedDraft = Pick<ComposerDraft, "text" | "tokens">;
 function readAll(storage: DraftStorage): Record<string, SavedDraft> {
   try {
     const saved: unknown = JSON.parse(storage.get() ?? "{}");
-    return saved && typeof saved === "object" ? (saved as Record<string, SavedDraft>) : {};
+    // A null prototype, so a key like "__proto__" or "toString" is just a key.
+    const all: Record<string, SavedDraft> = Object.create(null);
+    return saved && typeof saved === "object" && !Array.isArray(saved) ? Object.assign(all, saved) : all;
   } catch {
-    return {};
+    return Object.create(null);
   }
 }
 
@@ -74,7 +76,7 @@ export function saveDraft(
 ): void {
   const all = readAll(storage);
   if (draft.text === "" && draft.tokens.length === 0) {
-    if (!(key in all)) return;
+    if (!Object.hasOwn(all, key)) return;
     delete all[key];
   } else {
     if (all[key]?.text === draft.text) return;

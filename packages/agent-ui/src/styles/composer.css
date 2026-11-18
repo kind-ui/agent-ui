@@ -367,7 +367,7 @@
     color: var(--kind-color-muted);
     font-size: 0.8125rem;
     white-space: nowrap;
-    transition: opacity var(--kind-duration-normal) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-base) var(--kind-ease-out);
 
     @starting-style {
       opacity: 0;
@@ -381,6 +381,9 @@
 
   [data-slot="kind-composer-discard"] {
     padding: 0.125rem 0.375rem;
+    border: 0;
+    background-color: transparent;
+    transition: background-color var(--kind-duration-fast);
     border-radius: calc(var(--kind-radius) / 2);
     color: var(--kind-color-fg);
     font: inherit;

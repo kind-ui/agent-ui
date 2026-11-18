@@ -27,6 +27,7 @@ Last reviewed: `74a2460` (Wave 5 Task 11 Dictation)
 
 - **Dictation's web `draw` runs on every level (Wave 5 Task 11):** cheap and guarded; no `written` or `moved` fixture case yet.
 - **An empty `<kind-dictation>` takes no room until defined (Wave 5 Task 11):** a `:not(:defined)` rule from its size variables would hold it.
+- **`kind-composer` removed and put back a tick later forgets "Draft restored"** (Wave 5 Task 13): the draft text comes back through `defaultValue`, but `@ui-sdk/web` carries a mapped root state only through a `default<Key>` option, and `restored` has none; a same-tick move keeps it. Fixing it needs a public `defaultRestored`-style option.
 - **An `addaction` (and `pickeraction`) listener can't keep an item pending (Wave 5 Task 4):** `onAction` is a `"callback"`, so no `waitUntil`; decide `"action"` for Picker and Add Menu together.
 - **The `open` attribute of `kind-picker` and every `menuBase` element doesn't reflect (Wave 5 Task 4; Task 6 adds `kind-approval-mode`, where it does control the menu):** the docs say to set the property; reflect it or stop observing it with Picker's root state.
 - **`kind-model-selector` has no moved or shadow-root fixture case** (Wave 5 Task 3): both paths were checked by hand in review (a moved element redraws and keeps working; in a shadow root focus, `aria-controls` and `modelchange` behave); add cases when Picker gains its own.

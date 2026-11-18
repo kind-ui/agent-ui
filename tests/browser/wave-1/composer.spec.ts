@@ -556,6 +556,14 @@ test("a changed draftKey restores its draft into an empty editor, never over tex
   await setDraftKey("chat-2");
   await expect(editor).toHaveText("typed");
   await expect(restoredStatus(page)).toBeHidden();
+  await page.keyboard.type("!");
+  await expect
+    .poll(() => saved(page))
+    .toMatchObject({ "chat-2": { text: "other chat" }, "chat-3": { text: "typed!" } });
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.press("Backspace");
+  await expect(editor).toHaveText("other chat");
+  expect(Object.keys(await saved(page))).toEqual(["chat-2"]);
 });
 
 test("a storage whose writes throw leaves typing working", async ({ page }) => {
