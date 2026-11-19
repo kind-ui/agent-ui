@@ -8,6 +8,7 @@ Design system foundation: shared tokens and controls every component can draw on
 - `styles.css` adds shared control styles keyed on `data-kind-button` (ghost, `secondary`, `primary`, `danger`), `data-kind-icon-button`, `data-kind-trigger`, `data-kind-badge`, `data-kind-popup`, `data-kind-dialog`, `data-kind-dialog-title`, `data-kind-scrim` and `data-kind-code`, with a 44px hit area under a coarse pointer.
 - Every focus ring is 2px of `--kind-color-ring`, at least 3:1 on every fill. Step, item, Queue and Stack Trace rows drew a 1.5px ring at half strength (1.9:1), and the internal Switch and Segmented Control drew none.
 - The light `--kind-color-warning` is darker (3.8:1 on the surface, was 2.6:1), and a pending status mark's dashed ring reaches 3:1.
+- `--kind-color-accent` is a touch darker in light and lighter in dark, so accent text reads at 4.5:1 on a selected or current row too.
 - Menu and list rows highlight with `--kind-color-selected` rather than the hover fill; internal menus, pickers' lists and tooltips share one popup radius and shadow, dialogs one radius, shadow, title size and scrim, and a sheet's backdrop shows in dark.
 - The internal Button, Menu trigger, Toggle, Toolbar buttons and Carousel arrows are ghost controls of the shared heights; a pressed internal Toggle fills with `--kind-color-selected` instead of inverting.
 - Running Step-based titles and the Thinking Indicator's label no longer shimmer: the status mark and the dots are the only loops, and `kind-shimmer` is gone.
