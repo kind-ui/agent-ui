@@ -94,10 +94,13 @@ const iconColor = (locator: Locator) =>
   locator.evaluate((el) => getComputedStyle(el, "::before").backgroundColor);
 const backdrop = (locator: Locator) => locator.evaluate((el) => (window as unknown as Colors).backdrop(el));
 
-test("in forced colors every mask-drawn icon keeps a system color", async ({ page }) => {
+test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ forcedColors: "active" });
   await page.addInitScript(defineBackdrop);
-  for (const query of pages) {
+});
+
+for (const query of pages) {
+  test(`in forced colors every mask-drawn icon on ${query} keeps a system color`, async ({ page }) => {
     await page.goto(`/?c=${query}`);
     await expect(page.locator("#root [data-slot]").first()).toBeAttached();
     if (query.startsWith("conversation")) {
@@ -116,8 +119,10 @@ test("in forced colors every mask-drawn icon keeps a system color", async ({ pag
       expect(color, `${query} ${icon}`).not.toMatch(/^rgba\(.*, 0\)$/);
       expect(color, `${query} ${icon}`).not.toBe(backdrop);
     }
-  }
+  });
+}
 
+test("in forced colors Send's icon changes when it enables", async ({ page }) => {
   await page.goto("/?c=composer&case=full");
   const send = page.getByRole("button", { name: "Send" });
   await expect(send).toHaveAttribute("aria-disabled", "true");
@@ -126,7 +131,9 @@ test("in forced colors every mask-drawn icon keeps a system color", async ({ pag
   await page.keyboard.type("hello");
   await expect(send).not.toHaveAttribute("aria-disabled", "true");
   expect(await iconColor(send)).not.toBe(disabled);
+});
 
+test("in forced colors a pressed Wrap lines keeps its icon visible", async ({ page }) => {
   await page.goto("/?c=markdown&case=answer");
   const wrap = page.getByRole("button", { name: "Wrap lines" });
   const off = await backdrop(wrap);

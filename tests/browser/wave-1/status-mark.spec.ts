@@ -30,10 +30,36 @@ const consumers: Record<string, string> = {
   "item-list.ts": "kind-task-item-icon",
   "test-results/test-results.ts": "kind-test-results-item-status",
   "dictation-button/dictation-button.ts": "kind-dictation-status-icon",
+
+  // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its consumers right below its own line.
+
+  // wave-6-task-2: Thread List
+
   "thread-list/thread-list.ts": "kind-thread-list-status",
-  "connection-status/connection-status.ts": "kind-connection-status-mark",
-  "message/message.ts": "kind-message-outcome-icon",
+
+  // wave-6-task-3: Thread Search
+
   "thread-search/thread-search.ts": "kind-thread-search-status",
+
+  // wave-6-task-4: Sidebar
+
+  // wave-6-task-5: Launcher
+
+  // wave-6-task-6: Day Separator
+
+  // wave-6-task-7: Connection Status
+
+  "connection-status/connection-status.ts": "kind-connection-status-mark",
+
+  // wave-6-task-8: Share Dialog
+
+  // wave-6-task-9: Message author, time and outcomes
+
+  "message/message.ts": "kind-message-outcome-icon",
+
+  // wave-6-task-10: Conversation states
+
+  // wave-6-task-11: Conversation Search
 };
 
 type Fixture = {
@@ -68,7 +94,6 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
   },
   { url: "/?c=stack-trace&case=all", slots: ["kind-stack-trace-icon"] },
   { url: "/?c=terminal&case=all", slots: ["kind-terminal-icon"] },
-  { url: "/?c=thread-list&case=all", slots: ["kind-thread-list-status"] },
   {
     url: "/?c=checkpoint&case=all",
     slots: ["kind-checkpoint-restored"],
@@ -104,13 +129,40 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
       await page.evaluate(() => (window as unknown as Fixture).kindDictation.push({ error: "denied" }));
     },
   },
-  { url: "/?c=connection-status&case=offline", slots: ["kind-connection-status-mark"] },
-  { url: "/?c=message&case=outcomes", slots: ["kind-message-outcome-icon"] },
+
+  // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its pages right below its own line.
+
+  // wave-6-task-2: Thread List
+
+  { url: "/?c=thread-list&case=all", slots: ["kind-thread-list-status"] },
+
+  // wave-6-task-3: Thread Search
+
   {
     url: "/?c=thread-search&case=all",
     slots: ["kind-thread-search-status"],
     show: (page) => page.getByRole("button", { name: "Search chats" }).click(),
   },
+
+  // wave-6-task-4: Sidebar
+
+  // wave-6-task-5: Launcher
+
+  // wave-6-task-6: Day Separator
+
+  // wave-6-task-7: Connection Status
+
+  { url: "/?c=connection-status&case=offline", slots: ["kind-connection-status-mark"] },
+
+  // wave-6-task-8: Share Dialog
+
+  // wave-6-task-9: Message author, time and outcomes
+
+  { url: "/?c=message&case=outcomes", slots: ["kind-message-outcome-icon"] },
+
+  // wave-6-task-10: Conversation states
+
+  // wave-6-task-11: Conversation Search
 ];
 
 test("every mark size is an even whole number of pixels", () => {
