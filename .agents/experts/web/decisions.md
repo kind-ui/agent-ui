@@ -75,6 +75,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **Inside a shadow root, a web popup's string `finalFocus` is looked up in `ownerDocument`** (UI SDK `popup.js`), so Thread List's menu and dialog return focus through UI SDK's trigger fallback, not to the row after a deleted one (report upstream).
 - Sidebar: `open` set as an attribute or property follows the `open` option, not the root `state` setter, so it changes silently and a present `open="false"` doesn't follow presses (same as the Picker and `menuBase` item above). A React-rendered `kind-sidebar` isn't supported, since the element moves the host's panel and inset.
 - **A Day Separator inside a shadow root doesn't read its host's `lang`** (Wave 6 Task 6): UI SDK `pageLocale` uses `closest("[lang]")`, which stops at the shadow boundary; report upstream. `locale` works around it.
+- **Share Dialog's fixture has no moved or shadow-root case** (Wave 6 Task 8): both were checked by hand in review (state kept across a move, ids and focus return inside a shadow root); only the `written` case is tested.
 
 ## Resolved
 

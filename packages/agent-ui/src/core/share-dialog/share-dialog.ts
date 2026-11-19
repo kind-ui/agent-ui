@@ -83,13 +83,15 @@ export type ShareDialogOptions = {
   /**
    * Called when Create link is pressed. Shows Create link while set, `visibility` is `"link"` and there's no `link`.
    * Make the link and pass it as `link`; return a promise to keep Create link pending until it settles. If it rejects
-   * or throws, the dialog shows and announces "Couldn't create a link", and Create link is offered again.
+   * or throws, the dialog shows and announces "Couldn't create a link", and Create link is offered again. A call that
+   * resolves without a new `link` keeps Create link disabled until `link` changes.
    */
   onCreateLink?: (details: ShareDialogActionDetails) => unknown;
   /**
    * Called when Stop sharing is pressed. Shows Stop sharing while set and there's a `link`. Revoke the link, then
    * clear `link` (and usually set `visibility` to `"private"`); a promise keeps it pending until it settles. If it
-   * rejects or throws, the dialog shows and announces "Couldn't stop sharing".
+   * rejects or throws, the dialog shows and announces "Couldn't stop sharing". A call that resolves without clearing
+   * `link` keeps Stop sharing disabled until `link` changes.
    */
   onRevoke?: (details: ShareDialogActionDetails) => unknown;
   /** Called before Copy link writes `link` to the clipboard. `details.cancel()` keeps it from writing. */
@@ -153,7 +155,7 @@ export type ShareDialogState = PopupState & {
 export type ShareDialogVisibilityState = {
   /** The primitive's own, which it reads and writes the visibility through. */
   controller: SegmentedControlController;
-  /** The visibility when the Segmented Control mounted. */
+  /** The visibility, which a Segmented Control starts on as it mounts with the dialog. */
   defaultValue: ShareVisibility;
   /** Names the radio group. */
   "aria-label": string;
@@ -162,7 +164,14 @@ export type ShareDialogVisibilityState = {
 };
 
 /** What the link part hands UI SDK's Input: pass every key to it. */
-export type ShareDialogLinkState = { value: string; readOnly: true; "aria-label": string };
+export type ShareDialogLinkState = {
+  /** The `link`. */
+  value: string;
+  /** Always `true`: the host makes the link. */
+  readOnly: true;
+  /** "Link", which names the field. */
+  "aria-label": string;
+};
 
 type Popup = ReturnType<typeof createPopup<ShareDialogOptions, ShareDialogState, typeof dialogPreset>>;
 
@@ -186,8 +195,12 @@ export type ShareDialogApi = Omit<Popup, "open" | "close"> & {
    * Returns `false` when the owner refuses the change.
    */
   changeVisibility: (visibility: ShareVisibility) => boolean;
+  /** Writes the visibility into the Segmented Control once it has attached the controller. */
+  syncVisibility: () => void;
   /** Reports the visibility a person chose. Called as the Segmented Control's `change` bubbles to its part. */
   readVisibility: (event: Event) => void;
+  /** Hands the Input its props. Called by the link slot. */
+  linkState: (state: ShareDialogState) => ShareDialogLinkState;
   /** Hands the Segmented Control its props. Called by the visibility slot. */
   visibilityState: (state: ShareDialogState) => ShareDialogVisibilityState;
 };
@@ -219,6 +232,7 @@ export type ShareDialogPrimitive = ReturnType<
   typeof definePrimitive<ShareDialogOptions, ShareDialogState, ShareDialogApi, ShareDialogSlots>
 >;
 
+/** The visibility choices, in order, as the Segmented Control shows them and `agent.items` lists them. */
 export const SHARE_VISIBILITY_OPTIONS: readonly ShareVisibilityOption[] = [
   { value: "private", label: "Only you" },
   { value: "link", label: "Anyone with the link" },
@@ -304,6 +318,10 @@ export const shareDialogPrimitive: ShareDialogPrimitive = definePrimitive<
     const copy = createCopy(context);
     const controller = createSegmentedControlController();
 
+    let resync = 0;
+    context.onDestroy(() => {
+      if (resync) cancelAnimationFrame(resync);
+    });
     const syncVisibility = () => {
       const { visibility } = store.get();
       // The controller reads `undefined` until a Segmented Control attaches it.
@@ -321,9 +339,13 @@ export const shareDialogPrimitive: ShareDialogPrimitive = definePrimitive<
       syncVisibility();
     });
 
+    const runnable = (shown: (state: ShareDialogState) => boolean) => {
+      const state = store.get();
+      return state.open && !state.pending && !state.sent && shown(state);
+    };
     const run = (name: "onCreateLink" | "onRevoke", event: Event | undefined) => {
       const call = context.options()[name];
-      if (!call) return;
+      if (!call || !runnable(name === "onCreateLink" ? shows.create : shows.revoke)) return;
       const reason = !event ? "imperative" : name === "onCreateLink" ? "create-press" : "revoke-press";
       const details = { reason, source: actionSource(event, reason) } as const;
       store.set({ error: undefined });
@@ -338,11 +360,6 @@ export const shareDialogPrimitive: ShareDialogPrimitive = definePrimitive<
           announce(FAILURES[name], { priority: "polite" });
         });
     };
-    const runnable = (shown: (state: ShareDialogState) => boolean) => {
-      const state = store.get();
-      return state.open && !state.pending && !state.sent && shown(state);
-    };
-
     const setVisibility = (visibility: ShareVisibility, event?: Event) => {
       const state = store.get();
       if (!isVisibility(visibility)) return false;
@@ -370,6 +387,10 @@ export const shareDialogPrimitive: ShareDialogPrimitive = definePrimitive<
       }),
     );
 
+    const linkState = memo(
+      (value: string): ShareDialogLinkState => ({ value, readOnly: true, "aria-label": "Link" }),
+    );
+
     return {
       ...popup,
       get open() {
@@ -392,14 +413,20 @@ export const shareDialogPrimitive: ShareDialogPrimitive = definePrimitive<
       get revoke() {
         return runnable(shows.revoke) ? (event?: Event) => run("onRevoke", event) : undefined;
       },
+      syncVisibility,
       readVisibility: (event) => {
         const next = controller.getValue();
         if (!isVisibility(next) || next === store.get().visibility) return;
-        // The Segmented Control holds its own value, so a change the owner cancels or doesn't take is written back.
-        setVisibility(next, event);
-        syncVisibility();
+        // The Segmented Control holds its own value, so a change the owner cancels is written back, and so is one a
+        // controlling owner didn't take by the next frame.
+        if (!setVisibility(next, event)) syncVisibility();
+        else if (context.options().visibility !== undefined) {
+          cancelAnimationFrame(resync);
+          resync = requestAnimationFrame(syncVisibility);
+        }
       },
       visibilityState: (state) => visibilityState(state.visibility),
+      linkState: (state) => linkState(state.link ?? ""),
     };
   },
   slots: (slot) => {
@@ -485,7 +512,7 @@ export const shareDialogPrimitive: ShareDialogPrimitive = definePrimitive<
       }),
       link: slot({
         present: shows.link,
-        state: (state) => ({ value: state.link ?? "", readOnly: true as const, "aria-label": "Link" }),
+        state: (state, { api }) => api.linkState(state),
         attrs: () => ({ "data-share-dialog-part": "link" }),
       }),
       create: action("create"),

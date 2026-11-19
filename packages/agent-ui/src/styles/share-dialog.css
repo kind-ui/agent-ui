@@ -170,11 +170,11 @@
       outline: 2px solid var(--kind-color-ring);
       outline-offset: 2px;
     }
-    &[aria-disabled="true"] {
+    &:where([aria-disabled="true"]) {
       cursor: default;
       opacity: 0.5;
     }
-    &[data-pending] {
+    &:where([data-pending]) {
       cursor: progress;
     }
   }
@@ -185,7 +185,7 @@
     background-color: var(--kind-color-accent);
     color: var(--kind-color-on-accent);
 
-    &:hover:not([aria-disabled="true"]) {
+    &:where(:hover:not([aria-disabled="true"])) {
       background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-fg));
     }
   }
@@ -259,7 +259,7 @@
   [data-share-dialog-part="revoke"] {
     color: var(--kind-color-danger);
 
-    &:hover:not([aria-disabled="true"]) {
+    &:where(:hover:not([aria-disabled="true"])) {
       background-color: var(--kind-color-hover);
     }
   }

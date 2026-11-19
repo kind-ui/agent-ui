@@ -32,7 +32,7 @@ const DEFAULT_PARTS = `
     </kind-share-dialog-visibility>
     <div data-share-dialog-link-row>
       <kind-share-dialog-create><button>Create link</button></kind-share-dialog-create>
-      <kind-share-dialog-link><ui-input><input readonly aria-label="Link" data-agent-hidden></ui-input></kind-share-dialog-link>
+      <kind-share-dialog-link><ui-input><input data-agent-hidden></ui-input></kind-share-dialog-link>
       <kind-share-dialog-copy><button></button></kind-share-dialog-copy>
     </div>
     <div data-share-dialog-footer>
@@ -49,7 +49,7 @@ const instances = new WeakMap<Element, { get: () => unknown }>();
 const viewports = new WeakMap<Element, Element>();
 
 const owns = (part: Element | null): part is Element => {
-  if (!part || !(owned.has(part) || !part.textContent?.trim())) return false;
+  if (!part || !(owned.has(part) || (!part.firstElementChild && !part.textContent?.trim()))) return false;
   owned.add(part);
   return true;
 };
@@ -69,7 +69,7 @@ const write = <Target extends object, Key extends keyof Target>(
 /**
  * `<kind-share-dialog>` fills in its trigger and dialog when it has no children. Set `link` once the host has made
  * one. `can-create-link` offers Create link, which fires `createlink`; `can-revoke` offers Stop sharing, which fires
- * `revoke`. Choosing who can open the chat fires `visibilitychange`, and Copy link `linkcopy`.
+ * `revoke`. Choosing who can open the chat fires `sharevisibilitychange`, and Copy link `linkcopy`.
  */
 export function defineShareDialog(): void {
   if (customElements.get("kind-share-dialog")) return;
@@ -97,8 +97,8 @@ export function defineShareDialog(): void {
           set: (api, visibility) => api.changeVisibility(visibility),
         },
       },
-      // The inner Segmented Control fires its own `valuechange`, and Copy link's native `copy` bubbles.
-      events: { onCopy: "linkcopy" },
+      // `visibilitychange` is the document's Page Visibility event, and Copy link's native `copy` bubbles.
+      events: { onCopy: "linkcopy", onVisibilityChange: "sharevisibilitychange" },
       // `setVisibility`, `createLink`, `copyLink` and `revoke` are offered only while available, so they aren't
       // copied onto `api`.
       api: ["isOpen", "setOpen", "getVisibility", "changeVisibility"],
@@ -139,14 +139,21 @@ export function defineShareDialog(): void {
           const control = el.querySelector<Element & Record<string, unknown>>(
             "kind-share-dialog-visibility ui-segmented-control",
           );
-          const { options, "aria-label": ariaLabel, ...props } = api.visibilityState(state);
+          // The control keeps its first `defaultValue`; later values reach it through the controller.
+          const { options, defaultValue, "aria-label": ariaLabel, ...props } = api.visibilityState(state);
           if (control)
             for (const [key, value] of Object.entries({ ...props, ariaLabel })) write(control, key, value);
+          // `ui-input` holds the value, and the native input its attributes.
+          const { value, readOnly, "aria-label": inputLabel } = api.linkState(state);
           write(
             el.querySelector<Element & { value: string }>("kind-share-dialog-link ui-input"),
             "value",
-            state.link ?? "",
+            value,
           );
+          const input = el.querySelector<HTMLInputElement>("kind-share-dialog-link input");
+          write(input, "readOnly", readOnly);
+          write(input, "ariaLabel", inputLabel);
+          api.syncVisibility();
         };
         draw();
         return instance.subscribe(draw);
@@ -170,7 +177,7 @@ export function defineShareDialog(): void {
 
 export type KindShareDialogEvents = {
   openchange: UiChangeEvent<boolean, DialogOpenChangeReason>;
-  visibilitychange: UiChangeEvent<ShareVisibility, ShareVisibilityChangeReason>;
+  sharevisibilitychange: UiChangeEvent<ShareVisibility, ShareVisibilityChangeReason>;
   createlink: CustomEvent<ShareDialogActionDetails & Pick<UiActionDetail, "waitUntil">>;
   revoke: CustomEvent<ShareDialogActionDetails & Pick<UiActionDetail, "waitUntil">>;
   linkcopy: UiDetailedChangeEvent<string, Parameters<NonNullable<ShareDialogOptions["onCopy"]>>[1]>;

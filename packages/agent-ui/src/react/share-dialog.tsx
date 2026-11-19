@@ -61,31 +61,28 @@ export function ShareDialogDescription({
   return <parts.Description {...props}>{children}</parts.Description>;
 }
 
+const VISIBILITY: ShareDialogVisibilityProps["children"] = ({ options, ...control }) => (
+  // Hidden from agents, which use the Share Dialog's own `setVisibility`.
+  <KindSegmentedControl {...control} data-agent-hidden="">
+    <KindSegmentedControlIndicator />
+    {options.map((option) => (
+      <KindSegmentedControlItem key={option.value} value={option.value}>
+        {option.label}
+      </KindSegmentedControlItem>
+    ))}
+  </KindSegmentedControl>
+);
+
 /** "Only you" or "Anyone with the link", a UI SDK Segmented Control, unless you pass children. */
-export function ShareDialogVisibility({ children, ...props }: ShareDialogVisibilityProps) {
-  return (
-    <parts.Visibility {...props}>
-      {children ??
-        (({ options, ...control }) => (
-          // Hidden from agents, which use the Share Dialog's own `setVisibility`.
-          <KindSegmentedControl {...control} data-agent-hidden="">
-            <KindSegmentedControlIndicator />
-            {options.map((option) => (
-              <KindSegmentedControlItem key={option.value} value={option.value}>
-                {option.label}
-              </KindSegmentedControlItem>
-            ))}
-          </KindSegmentedControl>
-        ))}
-    </parts.Visibility>
-  );
+export function ShareDialogVisibility({ children = VISIBILITY, ...props }: ShareDialogVisibilityProps) {
+  return <parts.Visibility {...props}>{children}</parts.Visibility>;
 }
 
+const LINK: ShareDialogLinkProps["children"] = (input) => <Input {...input} data-agent-hidden="" />;
+
 /** The `link`, in a read-only UI SDK Input, unless you pass children. */
-export function ShareDialogLink({ children, ...props }: ShareDialogLinkProps) {
-  return (
-    <parts.Link {...props}>{children ?? ((input) => <Input {...input} data-agent-hidden="" />)}</parts.Link>
-  );
+export function ShareDialogLink({ children = LINK, ...props }: ShareDialogLinkProps) {
+  return <parts.Link {...props}>{children}</parts.Link>;
 }
 
 /** Calls `onCreateLink`. "Create link", unless you pass children. */

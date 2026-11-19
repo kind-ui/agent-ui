@@ -3,6 +3,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { shareLink } from "../../../packages/agent-ui/tests/fixtures/shared/share-dialog.js";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { allowClipboard, readClipboard } from "../clipboard.js";
+import { layerOf } from "../layer.js";
 
 type Fixture = {
   kindHost: {
@@ -111,6 +112,7 @@ test("Create link stays pending until the host makes the link, then shows it", a
   expect(await host(page, "calls")).toEqual([{ action: "create", reason: "create-press", source: "mouse" }]);
   await host(page, "resolve");
   await expect(linkBox(page)).toHaveValue(shareLink);
+  await expect(linkBox(page)).not.toBeEditable();
   await expect(button(page, "Copy link")).toBeVisible();
   await expect(button(page, "Create link")).toHaveCount(0);
   await expect(button(page, "Stop sharing")).not.toHaveAttribute("aria-disabled");
@@ -180,6 +182,40 @@ test("with agentConfirm off an agent shares the chat, and an unknown visibility 
   await host(page, "resolve");
   await expect(linkBox(page)).toHaveValue(shareLink);
   await expectAgentActions(page, "Share", ["close", "setVisibility", "copyLink", "revoke", "press"]);
+});
+
+test("a visibility the owner refuses is written back", async ({ page }) => {
+  await load(page, "refusing");
+  await trigger(page).click();
+  await anyone(page).click();
+  expect(await host(page, "visibilities")).toMatchObject([{ value: "link" }]);
+  await expect(dialog(page).getByRole("radio", { name: "Only you" })).toBeChecked();
+  await expect(dialog(page)).toContainText("Only you can open this chat.");
+  await expect(button(page, "Create link")).toHaveCount(0);
+});
+
+for (const [name, fixture, reducedMotion] of [
+  ["the motion option", "reduced", null],
+  ["prefers-reduced-motion", "all", "reduce"],
+] as const) {
+  test(`with reduced motion through ${name} the dialog only fades`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion });
+    await load(page, fixture);
+    await trigger(page).click();
+    await expect(dialog(page)).toBeVisible();
+    const transition = await dialog(page).evaluate((el) => {
+      const style = getComputedStyle(el);
+      return { property: style.transitionProperty, duration: style.transitionDuration };
+    });
+    expect(transition).toEqual({ property: "opacity", duration: "0.12s" });
+  });
+}
+
+test("a trigger someone wrote keeps its icon", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web fills in only empty parts");
+  await load(page, "written");
+  await expect(trigger(page).locator("svg")).toHaveCount(1);
+  await expect(trigger(page)).toHaveText("");
 });
 
 test.describe("on a touch screen", () => {

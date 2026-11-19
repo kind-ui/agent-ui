@@ -9,10 +9,12 @@ function Page({
   linked = false,
   agentConfirm,
   motion,
+  refusing = false,
 }: {
   linked?: boolean;
   agentConfirm?: boolean;
   motion?: MotionMode;
+  refusing?: boolean;
 }) {
   const [visibility, setVisibility] = useState<ShareVisibility>(linked ? "link" : "private");
   const [link, setLink] = useState<string | undefined>(linked ? shareLink : undefined);
@@ -31,7 +33,7 @@ function Page({
         visibility={visibility}
         onVisibilityChange={(value, details) => {
           host.visibilities.push({ value, reason: details.reason, source: details.source });
-          setVisibility(value);
+          if (!refusing) setVisibility(value);
         }}
         link={link}
         onCreateLink={(details) => call("create", details)}
@@ -49,4 +51,5 @@ export const cases = {
   linked: () => <Page linked />,
   unconfirmed: () => <Page agentConfirm={false} />,
   reduced: () => <Page motion="reduced" />,
+  refusing: () => <Page refusing />,
 };
