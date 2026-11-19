@@ -13,6 +13,8 @@ export const cases = {
         <kind-day-separator id="absolute" date="2026-11-18T09:30:00Z" time-zone="UTC"></kind-day-separator>
         <kind-day-separator id="late-utc" date="2026-11-17T23:30:00Z" time-zone="UTC"></kind-day-separator>
         <kind-day-separator id="late-tokyo" date="2026-11-17T23:30:00Z" time-zone="Asia/Tokyo"></kind-day-separator>
+        <kind-day-separator id="undated" time-zone="UTC"></kind-day-separator>
+        <kind-day-separator id="written" date="2026-11-18T09:30:00Z" time-zone="UTC"><span>Pending</span></kind-day-separator>
       </div>`;
     const absolute = root.querySelector<KindDaySeparatorElement>("#absolute");
     if (absolute) absolute.relative = false;

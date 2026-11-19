@@ -44,6 +44,8 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **Test Results' failures sit inside its tree** (Wave 4 Task 9): a failed test's row holds its Stack Trace, whose buttons are tab stops inside the `tree`, which `checkPattern("tree")` reports as non-`treeitem` children and extra tab stops. Every other tree rule still runs.
 - **A picker's Escape closes its popover** (Model Selector, Picker, Wave 5 Task 2): Command's search is a `combobox` whose list is always shown inside the popover, so Escape closes the popover and focus returns to the trigger, where `checkPattern("combobox")` expects only the list to close and focus to stay. Every other combobox rule still runs.
 - **Thread List has no core unit test** (Wave 6 Task 2): its pure part is `threadGroups`, which `time`/`thread-groups` tests cover; its delete lock, load-more retry and focus moves need a grid, a virtualizer and focus, so `wave-6/thread-list.spec.ts` checks them in both layers.
+- **Day Separator joins the page's minute clock with `relative: false` too** (Wave 6 Task 6): it reads today again and renders its root once at midnight for nothing, since the label is memoized; skipping it would need the subscription to follow `relative` changes.
+
 ## Known and open (don't report again, check whether fixed)
 
 - **The waveform's default of 128 bars writes 128 `--kind-dictation-level-*` properties per level (Task 17):** not profiled; lower the default or size it to the box if it shows up.
@@ -167,6 +169,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **An unknown Status `status` showed a badge with no text (Wave 2 Task 2).** Fixed: it shows as pending.
 - **Approval Mode `value` outside `modes` (Wave 5 Task 6):** the snapshot showed a mode the trigger didn't; `state`/`sync` keep only a known value and `onOptions` drops an uncontrolled one whose mode left. `tests/core/approval-mode.test.mjs` pins it with `setValue`'s refusals.
 - **Model Control (Wave 5 Task 9):** `setValues` keeps Model and Effort out of the host's `values` (`owned`); host settings with the ids `model`/`effort` are left out; `getItems` reads the rows; a controlled effort's fallback is chosen against the stored value; model lookups are cached per `models` array. `tests/core/model-control.test.mjs` pins them.
+- **Day Separator (Wave 6 Task 6):** an undated or invalid `date` hides the heading (`hidden`, so no empty heading); the root's `bind` writes `pageLocale` and `today` in one `store.set`; `level` and the state keys have JSDoc.
 
 ## Revisit
 

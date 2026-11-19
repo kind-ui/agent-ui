@@ -72,6 +72,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **No moved or shadow-root fixture case for `kind-model-control`;** checked by hand in review (Wave 5 Task 9), as Model Selector's gap.
 - **Inside a shadow root, a web popup's string `finalFocus` is looked up in `ownerDocument`** (UI SDK `popup.js`), so Thread List's menu and dialog return focus through UI SDK's trigger fallback, not to the row after a deleted one (report upstream).
 - Sidebar: `open` set as an attribute or property follows the `open` option, not the root `state` setter, so it changes silently and a present `open="false"` doesn't follow presses (same as the Picker and `menuBase` item above). A React-rendered `kind-sidebar` isn't supported, since the element moves the host's panel and inset.
+- **A Day Separator inside a shadow root doesn't read its host's `lang`** (Wave 6 Task 6): UI SDK `pageLocale` uses `closest("[lang]")`, which stops at the shadow boundary; report upstream. `locale` works around it.
 
 ## Resolved
 
@@ -128,6 +129,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **`kind-status` overwrote text written into its `<kind-status-label>`, and missed a label added later (Wave 2 Task 2).** Fixed: it writes only into a label that was empty, and redraws when parts arrive.
 - **Approval Mode (Wave 5 Task 6):** the `value` JSDoc claimed a `modechange` and typed a setter that took `undefined`; the trigger redrew on every new `modes` array (now keyed by content); `approval-mode.spec.ts` gained a zero-removal redraw test and a `learnmore` case.
 - **Model Control's `effort` reflected to a stale attribute (Wave 5 Task 9):** it is a property-only `value` option now, as `model` is; the property JSDoc says setting fires no event.
+- **Day Separator (Wave 6 Task 6):** host text inside the element is kept (the fill-in checks `textContent`, and appends rather than writing `innerHTML`); a label written after connecting, or a `<time>` holding only whitespace, is filled in through a `MutationObserver`, as Status does.
 
 ## Revisit
 

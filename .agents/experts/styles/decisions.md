@@ -28,6 +28,7 @@ Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 - **Radii scale from `--kind-radius` by `/ 3`, `/ 2`, `* 2 / 3`, `1` and `* 1.5`;** pills and 1–2 px detail radii stay fixed. Nested corners subtract the inset, floored at 0.
 - **A Status badge's width follows its label;** its height doesn't change, and the docs say to put it at the end of a row.
 - **Approval Mode's trigger width follows its mode (Wave 5 Task 6):** only a person's choice or the host changes it, and choosing closes the menu, so nothing moves while it's open; stacking every label as Settings Menu does would widen a composer row to the longest mode.
+- **Day Separator's `::first-letter` capitalizes a host's `DaySeparatorLabel` children too** (Wave 6 Task 6): by design, since a heading starts with a capital; a locale whose date shouldn't start with one passes `relative={false}` or its own text.
 
 ## Known and open (don't report again, check whether fixed)
 
@@ -113,6 +114,7 @@ Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 - **The Status mark sat 1px off-center in its pill (Wave 2 Task 2).** Fixed: the start padding is worked out from the pill's height.
 - **Approval Mode styles (Wave 5 Task 6):** web's Learn more missed its rule (`as-child` puts the link a level down), the selectors were 3–4 attributes deep (now `:where()`), and light `--kind-color-danger` was 4.34:1 on `--kind-color-hover`; it is now `oklch(0.55 0.21 27)`.
 - **Model Control's trigger chevron pointed up in right-to-left text (Wave 5 Task 9):** its rotation turns off `menu.css`'s mirror; a menu trigger's chevron reads `ButtonText` in forced colors.
+- **Day Separator overflowed a narrow container** (Wave 6 Task 6): the label now ellipsizes (`min-width: 0`), and `[hidden]` sets `display: none` over the root's `display: flex`.
 
 ## Revisit
 

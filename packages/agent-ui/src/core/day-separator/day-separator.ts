@@ -4,7 +4,10 @@ import { memo } from "../memo.js";
 import { dayKey, dayLabel, todayKey } from "../time.js";
 
 export type DaySeparatorOptions = {
-  /** The day the heading names: an ISO date (`"2026-11-18"`) or date-time, read in `timeZone`. */
+  /**
+   * The day the heading names: an ISO date (`"2026-11-18"`) or date-time, read in `timeZone`. Without a valid one the
+   * heading is `hidden`.
+   */
   date?: string;
   /** A BCP 47 tag the day reads in. Defaults to the page's language in the browser, and English on the server. */
   locale?: string;
@@ -14,7 +17,7 @@ export type DaySeparatorOptions = {
    */
   timeZone?: string;
   /**
-   * The heading level, 1 to 6.
+   * The heading level, 1 to 6. Anything else reads as 3.
    * @default 3
    */
   level?: number;
@@ -26,10 +29,15 @@ export type DaySeparatorOptions = {
 };
 
 export type DaySeparatorState = {
+  /** The `date` option, `""` without one. */
   date: string;
+  /** The `locale` option, before the page's language fills in for it. */
   locale: string | undefined;
+  /** The `timeZone` option; `undefined` reads as UTC. */
   timeZone: string | undefined;
+  /** The heading level, 1 to 6. */
   level: number;
+  /** The `relative` option, `true` by default. */
   relative: boolean;
   /** The page's language and today's date, read in the browser; `null` on the server. */
   pageLocale: string | null;
@@ -113,15 +121,17 @@ export const daySeparatorPrimitive: DaySeparatorPrimitive = definePrimitive<
   slots: (slot) => ({
     root: slot({
       role: "heading",
-      attrs: (state) => ({ "aria-level": String(state.level) }),
+      attrs: (state, { api }) => ({
+        "aria-level": String(state.level),
+        hidden: api.labelState(state).dateTime === undefined ? "" : undefined,
+      }),
       bind: (el, { store }) => {
         // Read here, never in `state`, so server markup shows the date and hydrates before the words change.
         const readToday = () => {
           const today = todayKey(store.get().timeZone);
           if (store.get().today !== today) store.set({ today });
         };
-        store.set({ pageLocale: pageLocale(el) ?? null });
-        readToday();
+        store.set({ pageLocale: pageLocale(el) ?? null, today: todayKey(store.get().timeZone) });
         const unsubscribe = store.subscribe(readToday);
         const stop = everyMinute(readToday);
         return () => {

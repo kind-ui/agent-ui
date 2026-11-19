@@ -36,6 +36,7 @@ export const cases = {
       <DaySeparator id="absolute" date="2026-11-18T09:30:00Z" timeZone="UTC" relative={false} />
       <DaySeparator id="late-utc" date="2026-11-17T23:30:00Z" timeZone="UTC" />
       <DaySeparator id="late-tokyo" date="2026-11-17T23:30:00Z" timeZone="Asia/Tokyo" />
+      <DaySeparator id="undated" timeZone="UTC" />
     </div>
   ),
   hydrate: () => <Hydrated />,

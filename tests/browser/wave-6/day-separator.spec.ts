@@ -33,6 +33,20 @@ test("a recent day reads in words, an older one as its date, under a level 3 hea
   await expect(separator(page, "absolute")).toHaveText("November 18, 2026");
 });
 
+test("without a date the heading is hidden", async ({ page }) => {
+  await load(page, "2026-11-18T12:00:00Z");
+  await expect(separator(page, "undated")).toBeHidden();
+});
+
+test("a label written after the element connects is filled in", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements fill in their parts");
+  await load(page, "2026-11-18T12:00:00Z");
+  await separator(page, "written").evaluate((el) => {
+    el.innerHTML = "<kind-day-separator-label><time>\n  </time></kind-day-separator-label>";
+  });
+  await expect(separator(page, "written")).toHaveText("today");
+});
+
 test("the time zone decides which day a date-time falls on", async ({ page }) => {
   await load(page, "2026-11-18T12:00:00Z");
   await expect(separator(page, "late-tokyo")).toHaveText("today");

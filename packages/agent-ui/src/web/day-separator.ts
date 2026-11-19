@@ -17,17 +17,29 @@ export function defineDaySeparator(): void {
       tag: "kind-day-separator",
       defaults: { relative: true },
       render: (el, instance) => {
-        if (!el.firstElementChild)
-          el.innerHTML = "<kind-day-separator-label><time></time></kind-day-separator-label>";
+        if (!el.firstElementChild && !el.textContent?.trim()) {
+          const label = document.createElement("kind-day-separator-label");
+          label.append(document.createElement("time"));
+          el.append(label);
+        }
         const draw = () => {
           const time = el.querySelector("kind-day-separator-label > time");
-          if (!time || (!owned.has(time) && time.textContent)) return;
+          if (!time || (!owned.has(time) && time.textContent?.trim())) return;
           owned.add(time);
           const { label } = instance.api.labelState(instance.get());
           if (time.textContent !== label) time.textContent = label;
         };
         draw();
-        return instance.subscribe(draw);
+        const unsubscribe = instance.subscribe(draw);
+        const arrivals = new MutationObserver((records) => {
+          if (records.some((record) => [...record.addedNodes].some((node) => node instanceof Element)))
+            draw();
+        });
+        arrivals.observe(el, { childList: true, subtree: true });
+        return () => {
+          unsubscribe();
+          arrivals.disconnect();
+        };
       },
     },
     label: { tag: "kind-day-separator-label", target: wrappedChild("time"), display: "contents" },
