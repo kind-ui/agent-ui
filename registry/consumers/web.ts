@@ -72,6 +72,8 @@ import { defineDaySeparator } from "./components/ui/web/day-separator.js";
 
 // wave-6-task-7: Connection Status
 
+import { defineConnectionStatus } from "./components/ui/web/connection-status.js";
+
 // wave-6-task-8: Share Dialog
 
 // wave-6-task-9: Message author, time and outcomes
@@ -155,6 +157,8 @@ for (const define of [
   defineDaySeparator,
 
   // wave-6-task-7: Connection Status
+
+  defineConnectionStatus,
 
   // wave-6-task-8: Share Dialog
 
@@ -267,6 +271,8 @@ const items = {
   "day-separator": `<kind-day-separator date="2026-11-18"></kind-day-separator>`,
 
   // wave-6-task-7: Connection Status
+
+  "connection-status": `<kind-connection-status state="offline" can-retry></kind-connection-status>`,
 
   // wave-6-task-8: Share Dialog
 

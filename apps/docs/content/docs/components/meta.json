@@ -42,6 +42,7 @@
     "sidebar",
     "launcher",
     "day-separator",
+    "connection-status",
     "conversation",
     "message",
     "markdown",

@@ -252,6 +252,8 @@ const cases = {
 
   // wave-6-task-7: Connection Status
 
+  connectionStatus: { options: { state: "offline", onRetry: noop } },
+
   // wave-6-task-8: Share Dialog
 
   // wave-6-task-9: Message author, time and outcomes

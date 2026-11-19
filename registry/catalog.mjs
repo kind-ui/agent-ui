@@ -288,6 +288,12 @@ const components = {
 
   // wave-6-task-7: Connection Status
 
+  "connection-status": {
+    title: "Connection Status",
+    description: "A pill over a conversation that says the connection dropped, counts down and retries.",
+    uses: [],
+  },
+
   // wave-6-task-8: Share Dialog
 
   // wave-6-task-9: Message author, time and outcomes

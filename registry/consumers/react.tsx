@@ -85,6 +85,8 @@ import { DaySeparator } from "./components/ui/day-separator.js";
 
 // wave-6-task-7: Connection Status
 
+import { ConnectionStatus } from "./components/ui/connection-status.js";
+
 // wave-6-task-8: Share Dialog
 
 // wave-6-task-9: Message author, time and outcomes
@@ -376,6 +378,8 @@ const items = {
   "day-separator": <DaySeparator date="2026-11-18" />,
 
   // wave-6-task-7: Connection Status
+
+  "connection-status": <ConnectionStatus state="offline" onRetry={() => {}} />,
 
   // wave-6-task-8: Share Dialog
 

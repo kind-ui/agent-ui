@@ -1,0 +1,94 @@
+---
+title: Connection Status
+description: Show when the connection to your server drops, comes back or is resuming a stream, in a small pill over the conversation.
+---
+
+import ConnectionStatusExample from "../../../examples/connection-status/basic";
+
+Use a connection status inside a [Conversation](./conversation.mdx) to say that replies can't arrive right now, and when the next try is. It floats over the top of the conversation, so it covers nothing below and moves nothing as it comes and goes.
+
+<Example caption="Press Offline to drop the connection and disable the composer, or Reconnecting to count down to the next try. Press Retry in the pill, or Online, to get the connection back.">
+  <ConnectionStatusExample />
+
+  <include cwd lang="tsx">./examples/connection-status/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/connection-status
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/connection-status-web
+```
+
+## Composition
+
+```text
+ConnectionStatus
+├── ConnectionStatusMark
+├── ConnectionStatusText
+└── ConnectionStatusRetry
+```
+
+`ConnectionStatus` renders these parts: a group named by its state's words. `ConnectionStatusMark` is the status mark, a spinner while connecting, reconnecting or resuming and a warning while offline. `ConnectionStatusText` shows the state's words, or the countdown while reconnecting, and `ConnectionStatusRetry` is the **Retry** button. To arrange the parts yourself, render them inside `ConnectionStatusRoot`.
+
+## Usage
+
+### Placement
+
+Put the connection status inside the `Conversation`, beside its viewport. It's positioned over the top edge of the conversation, centered, so showing it changes no layout.
+
+```tsx
+<Conversation aria-label="Conversation" messageCount={messages.length}>
+  <ConversationViewport>…</ConversationViewport>
+  <ConnectionStatus state={state} />
+</Conversation>
+```
+
+### States
+
+Pass `state` as `"online"` (the default), `"connecting"`, `"reconnecting"` or `"offline"`. The pill shows **Connecting**, **Reconnecting** or **Offline** while the state isn't `online`, and fades out when it turns `online`, still showing the last state's words as it leaves.
+
+After a reconnect, pass `resuming` while a stream picks up where it stopped. With `state="online"`, the pill shows **Resuming** until you set it back to `false`.
+
+What the rest of the page does while the connection is down is up to you. The example disables the `Composer` while offline, so nothing is typed that can't be sent.
+
+### Countdown
+
+While `reconnecting`, pass `retryAt`, an ISO 8601 time, to count down to the next try: **Retrying in 5 s**. The number changes on each whole second and the pill shows **Reconnecting** once it reaches 0. Pass a new `retryAt` for each try.
+
+```tsx
+<ConnectionStatus state="reconnecting" retryAt={new Date(Date.now() + 5000).toISOString()} />
+```
+
+### Retry
+
+Pass `onRetry` to show **Retry** while the pill shows. Return a promise to keep **Retry** disabled until it settles; change `state` once the connection is back. If **Retry** has focus when the pill leaves, focus moves on to the next element Tab reaches.
+
+```tsx
+<ConnectionStatus state={state} onRetry={() => reconnect()} />
+```
+
+### Announcements
+
+The pill isn't a live region, so it never reads the countdown. When the connection drops, to `reconnecting` or `offline`, **Connection lost** is announced once, and when it's `online` again (or `resuming`), **Reconnected** is announced once. A connection that's already down as the page loads isn't announced. Pass `labels` to change any of these words, for another language or tone.
+
+### Motion
+
+The pill fades in as it drops into place, and fades out as it rises. Under `prefers-reduced-motion`, or with `motion="reduced"`, it only fades, and with `motion="none"` it comes and goes at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/connection-status/connection-status.ts" name="ConnectionStatusOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the connection status by its state's words, and sees its `phase` and whether a retry is `pending`. `retry()` does what **Retry** does, offered while `onRetry` is set, the pill shows and no retry is pending. It doesn't ask a person first.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/connection-status/connection-status.ts" name="ConnectionStatusAgentActions" type='Pick<ConnectionStatusApi, "retry">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-connection-status>`, props are kebab-case attributes (`state="offline"`, `retry-at`) and `labels` is a property. The element adds its mark, words and Retry. The `can-retry` attribute shows Retry, which fires `retry`: call `event.detail.waitUntil(promise)` to keep it pending until the promise settles.
+</Caption>
