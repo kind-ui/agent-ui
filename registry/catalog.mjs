@@ -296,6 +296,13 @@ const components = {
 
   // wave-6-task-8: Share Dialog
 
+  "share-dialog": {
+    title: "Share Dialog",
+    description:
+      "A Share button whose dialog chooses who can open the chat and shows the link the host makes, with Copy link.",
+    uses: ["internal-segmented-control"],
+  },
+
   // wave-6-task-9: Message author, time and outcomes
 
   // wave-6-task-10: Conversation states

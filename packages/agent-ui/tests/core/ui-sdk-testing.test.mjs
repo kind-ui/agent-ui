@@ -256,6 +256,8 @@ const cases = {
 
   // wave-6-task-8: Share Dialog
 
+  shareDialog: { options: { link: "https://example.com/s/abc", defaultVisibility: "link", onRevoke: noop } },
+
   // wave-6-task-9: Message author, time and outcomes
 
   // wave-6-task-10: Conversation states

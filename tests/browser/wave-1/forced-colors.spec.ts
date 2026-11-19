@@ -42,6 +42,8 @@ const pages = [
 
   // wave-6-task-8: Share Dialog
 
+  "share-dialog&case=all",
+
   // wave-6-task-9: Message author, time and outcomes
 
   // wave-6-task-10: Conversation states

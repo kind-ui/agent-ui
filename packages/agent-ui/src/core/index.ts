@@ -690,6 +690,22 @@ export {
 
 // wave-6-task-8: Share Dialog
 
+export {
+  SHARE_VISIBILITY_OPTIONS,
+  type ShareDialogActionDetails,
+  type ShareDialogApi,
+  type ShareDialogLinkState,
+  type ShareDialogOptions,
+  type ShareDialogPresentation,
+  type ShareDialogPrimitive,
+  type ShareDialogState,
+  type ShareDialogVisibilityState,
+  type ShareVisibility,
+  type ShareVisibilityChangeReason,
+  type ShareVisibilityOption,
+  shareDialogPrimitive,
+} from "./share-dialog/index.js";
+
 // wave-6-task-9: Message author, time and outcomes
 
 // wave-6-task-10: Conversation states

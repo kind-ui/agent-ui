@@ -89,6 +89,8 @@ import { ConnectionStatus } from "./components/ui/connection-status.js";
 
 // wave-6-task-8: Share Dialog
 
+import { ShareDialog } from "./components/ui/share-dialog.js";
+
 // wave-6-task-9: Message author, time and outcomes
 
 // wave-6-task-10: Conversation states
@@ -382,6 +384,8 @@ const items = {
   "connection-status": <ConnectionStatus state="offline" onRetry={() => {}} />,
 
   // wave-6-task-8: Share Dialog
+
+  "share-dialog": <ShareDialog link="https://example.com/s/abc" defaultVisibility="link" />,
 
   // wave-6-task-9: Message author, time and outcomes
 

@@ -76,6 +76,8 @@ import { defineConnectionStatus } from "./components/ui/web/connection-status.js
 
 // wave-6-task-8: Share Dialog
 
+import { defineShareDialog } from "./components/ui/web/share-dialog.js";
+
 // wave-6-task-9: Message author, time and outcomes
 
 // wave-6-task-10: Conversation states
@@ -161,6 +163,8 @@ for (const define of [
   defineConnectionStatus,
 
   // wave-6-task-8: Share Dialog
+
+  defineShareDialog,
 
   // wave-6-task-9: Message author, time and outcomes
 
@@ -275,6 +279,8 @@ const items = {
   "connection-status": `<kind-connection-status state="offline" can-retry></kind-connection-status>`,
 
   // wave-6-task-8: Share Dialog
+
+  "share-dialog": `<kind-share-dialog link="https://example.com/s/abc" default-visibility="link"></kind-share-dialog>`,
 
   // wave-6-task-9: Message author, time and outcomes
 

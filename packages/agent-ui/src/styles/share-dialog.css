@@ -1,0 +1,351 @@
+/* Share Dialog (spec §7): a quiet Share button whose dialog chooses who can open the chat and shows its link. Keyed
+   on `data-share-dialog-part`, so both render layers draw the same. The dialog sits near the top of the screen rather
+   than centered, so the link row appearing grows it downward and nothing above it moves; each row keeps one height
+   whatever it holds, so Create link, the link and Copy link, Copied, the error and Stop sharing swap in place. */
+@layer components {
+  [data-share-dialog-part="root"] {
+    display: inline-flex;
+  }
+
+  [data-share-dialog-part="trigger"] {
+    /* Lucide "share", see THIRD_PARTY_NOTICES.md. */
+    --kind-share-dialog-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2v13'/%3E%3Cpath d='m16 6-4-4-4 4'/%3E%3Cpath d='M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8'/%3E%3C/svg%3E");
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 6px;
+    box-sizing: border-box;
+    height: 2rem;
+    margin: 0;
+    padding-inline: 10px 12px;
+    border: 0;
+    border-radius: calc(var(--kind-radius) / 2);
+    background-color: transparent;
+    color: var(--kind-color-fg);
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    white-space: nowrap;
+    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+
+    &::before {
+      content: "";
+      flex-shrink: 0;
+      width: 14px;
+      height: 14px;
+      background-color: currentColor;
+      mask: var(--kind-share-dialog-icon) center / contain no-repeat;
+    }
+    &:hover,
+    &:where([data-open]) {
+      background-color: var(--kind-color-hover);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  [data-share-dialog-part="backdrop"] {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background-color: color-mix(in oklab, var(--kind-color-shadow) 55%, transparent);
+  }
+
+  [data-share-dialog-part="content"] {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-sizing: border-box;
+    padding: 16px;
+    border: 1px solid var(--kind-color-border);
+    border-radius: var(--kind-radius);
+    background-color: var(--kind-color-surface);
+    box-shadow: 0 16px 48px -12px color-mix(in oklab, var(--kind-color-shadow) 35%, transparent);
+    color: var(--kind-color-fg);
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    outline: none;
+
+    /* A sheet is placed by UI SDK, in its viewport. */
+    &:where(:not([data-presentation="sheet"])) {
+      position: fixed;
+      inset: max(1rem, 15vh) 0 auto;
+      z-index: 50;
+      width: min(28rem, 100vw - 2rem);
+      height: fit-content;
+      max-height: calc(100dvh - max(1rem, 15vh) - 1rem);
+      margin: 0 auto;
+      overflow-y: auto;
+    }
+    &:where([data-presentation="sheet"]) {
+      width: 100%;
+      max-width: none;
+      padding-block-end: calc(16px + env(safe-area-inset-bottom, 0px));
+      border-radius: var(--kind-radius) var(--kind-radius) 0 0;
+    }
+  }
+
+  [data-share-dialog-header] {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  [data-share-dialog-part="title"] {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+  }
+
+  /* One line, so swapping who can open the chat never changes the dialog's height. */
+  [data-share-dialog-part="description"] {
+    margin: 0;
+    overflow: hidden;
+    color: var(--kind-color-muted);
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The internal Segmented Control's utilities set its display and padding, not its width, so it fills the row with
+     two equal choices from here. */
+  [data-share-dialog-part="visibility"] {
+    display: flex;
+    min-width: 0;
+  }
+
+  :where([data-share-dialog-part="visibility"]) {
+    & [data-slot="segmented-control"] {
+      width: 100%;
+    }
+    & [data-slot="segmented-control-item"] {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
+
+  [data-share-dialog-link-row] {
+    display: flex;
+    gap: 8px;
+    height: 2.25rem;
+  }
+
+  :where([data-share-dialog-part="content"][data-visibility="private"]) [data-share-dialog-link-row] {
+    display: none;
+  }
+
+  :is(
+    [data-share-dialog-part="create"],
+    [data-share-dialog-part="copy"],
+    [data-share-dialog-part="revoke"],
+    [data-share-dialog-part="close"]
+  ) {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    margin: 0;
+    padding-inline: 14px;
+    border: 1px solid transparent;
+    border-radius: calc(var(--kind-radius) / 2);
+    background-color: transparent;
+    color: var(--kind-color-fg);
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    white-space: nowrap;
+    transition:
+      background-color var(--kind-duration-fast) var(--kind-ease-out),
+      opacity var(--kind-duration-fast) var(--kind-ease-out);
+
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+    &[aria-disabled="true"] {
+      cursor: default;
+      opacity: 0.5;
+    }
+    &[data-pending] {
+      cursor: progress;
+    }
+  }
+
+  [data-share-dialog-part="create"] {
+    flex: 1;
+    height: 100%;
+    background-color: var(--kind-color-accent);
+    color: var(--kind-color-on-accent);
+
+    &:hover:not([aria-disabled="true"]) {
+      background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-fg));
+    }
+  }
+
+  [data-share-dialog-part="link"] {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+  }
+
+  :where([data-share-dialog-part="link"]) {
+    & :where(ui-input) {
+      display: contents;
+    }
+    & input {
+      flex: 1;
+      box-sizing: border-box;
+      min-width: 0;
+      height: 100%;
+      margin: 0;
+      padding-inline: 10px;
+      border: 1px solid var(--kind-color-border);
+      border-radius: calc(var(--kind-radius) / 2);
+      background-color: var(--kind-color-surface);
+      color: var(--kind-color-fg);
+      font: inherit;
+      font-size: 0.8125rem;
+      text-overflow: ellipsis;
+
+      &:focus-visible {
+        outline: 2px solid var(--kind-color-ring);
+        outline-offset: -1px;
+      }
+    }
+  }
+
+  /* Wide enough for "Copy link", so "Copied" doesn't move the link. */
+  [data-share-dialog-part="copy"] {
+    min-width: 6.5rem;
+    height: 100%;
+    border-color: var(--kind-color-border);
+    background-color: var(--kind-color-surface);
+
+    &:hover {
+      background-color: var(--kind-color-hover);
+    }
+  }
+
+  /* The error at the start, then Stop sharing, with Done always last, so nothing arriving moves Done. */
+  [data-share-dialog-footer] {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    min-height: 2rem;
+  }
+
+  [data-share-dialog-part="error"] {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    color: var(--kind-color-danger);
+    font-size: 0.8125rem;
+    line-height: 1rem;
+  }
+
+  :is([data-share-dialog-part="revoke"], [data-share-dialog-part="close"]) {
+    height: 2rem;
+  }
+
+  [data-share-dialog-part="revoke"] {
+    color: var(--kind-color-danger);
+
+    &:hover:not([aria-disabled="true"]) {
+      background-color: var(--kind-color-hover);
+    }
+  }
+
+  [data-share-dialog-part="close"] {
+    border-color: var(--kind-color-border);
+    background-color: var(--kind-color-surface);
+
+    &:hover {
+      background-color: var(--kind-color-hover);
+    }
+  }
+
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    [data-share-dialog-part="trigger"]::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+  }
+
+  /* Motion: the dialog rises and fades in over a fading backdrop. Reduced motion only fades, in 120 ms; `none`
+     doesn't animate. A sheet is UI SDK's, which slides whatever the motion settings. */
+  [data-share-dialog-part="content"]:where(:not([data-presentation="sheet"])) {
+    transition:
+      opacity var(--kind-duration-base) var(--kind-ease),
+      translate var(--kind-duration-base) var(--kind-ease),
+      scale var(--kind-duration-base) var(--kind-ease);
+
+    &:where([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+      translate: 0 8px;
+      scale: 0.98;
+    }
+    &:where([data-ending-style]) {
+      transition-duration: var(--kind-duration-fast);
+    }
+  }
+
+  [data-share-dialog-part="backdrop"] {
+    transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+
+    &:where([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+    }
+    &:where([data-ending-style]) {
+      transition-duration: var(--kind-duration-fast);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :is([data-share-dialog-part="content"], [data-share-dialog-part="backdrop"]):where([data-motion="auto"]) {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+      &:where([data-starting-style], [data-ending-style]) {
+        translate: none;
+        scale: none;
+      }
+    }
+  }
+
+  :is([data-share-dialog-part="content"], [data-share-dialog-part="backdrop"]):where(
+    [data-motion="reduced"]
+  ) {
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+    &:where([data-starting-style], [data-ending-style]) {
+      translate: none;
+      scale: none;
+    }
+  }
+
+  :is([data-share-dialog-part="content"], [data-share-dialog-part="backdrop"]):where([data-motion="none"]),
+  :where([data-share-dialog-part="root"][data-motion="none"]) [data-share-dialog-part="trigger"],
+  :where([data-share-dialog-part="content"][data-motion="none"])
+    :is(
+      [data-share-dialog-part="create"],
+      [data-share-dialog-part="copy"],
+      [data-share-dialog-part="revoke"],
+      [data-share-dialog-part="close"]
+    ) {
+    transition: none;
+  }
+
+  /* Web keeps parts that aren't present in the page with `hidden`, and UI SDK hides a closed dialog and backdrop. */
+  [data-share-dialog-part]:where([hidden]) {
+    display: none;
+  }
+}

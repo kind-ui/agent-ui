@@ -51,6 +51,8 @@
 
 <!-- wave-6-task-8: Share Dialog -->
 
+- Share Dialog: `packages/agent-ui/src/styles/share-dialog.css` (the trigger's glyph), `share`, unchanged, as a CSS mask image; it derives from Feather.
+
 <!-- wave-6-task-9: Message author, time and outcomes -->
 
 <!-- wave-6-task-10: Conversation states -->
