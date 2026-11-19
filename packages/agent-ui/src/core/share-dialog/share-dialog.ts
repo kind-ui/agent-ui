@@ -224,6 +224,12 @@ export const SHARE_VISIBILITY_OPTIONS: readonly ShareVisibilityOption[] = [
   { value: "link", label: "Anyone with the link" },
 ];
 
+/** What the dialog's description says for each visibility. */
+export const SHARE_DIALOG_DESCRIPTIONS: Readonly<Record<ShareVisibility, string>> = {
+  private: "Only you can open this chat.",
+  link: "Anyone with the link can open this chat.",
+};
+
 const isVisibility = (value: unknown): value is ShareVisibility => value === "private" || value === "link";
 
 const presentation = (options: ShareDialogOptions) => ({
@@ -465,12 +471,7 @@ export const shareDialogPrimitive: ShareDialogPrimitive = definePrimitive<
       }),
       description: slot({
         ...description,
-        state: (state) => ({
-          text:
-            state.visibility === "private"
-              ? "Only you can open this chat."
-              : "Anyone with the link can open this chat.",
-        }),
+        state: (state) => ({ text: SHARE_DIALOG_DESCRIPTIONS[state.visibility] }),
         attrs: (state, part) => ({
           ...description.attrs?.(state, part),
           "data-share-dialog-part": "description",

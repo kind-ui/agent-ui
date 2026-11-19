@@ -1,4 +1,5 @@
 export {
+  SHARE_DIALOG_DESCRIPTIONS,
   SHARE_VISIBILITY_OPTIONS,
   type ShareDialogActionDetails,
   type ShareDialogApi,

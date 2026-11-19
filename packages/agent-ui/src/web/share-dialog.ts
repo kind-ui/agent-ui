@@ -1,5 +1,6 @@
 import "@ui-sdk/web/input";
 import {
+  SHARE_DIALOG_DESCRIPTIONS,
   type ShareDialogActionDetails,
   type ShareDialogApi,
   type ShareDialogOptions,
@@ -44,9 +45,7 @@ const DEFAULT_PARTS = `
 // Parts this element filled in, and so writes. A part someone wrote keeps its own, as React's children do. Kept across
 // instances, because UI SDK rebuilds one when the element returns to the page.
 const owned = new WeakSet<Element>();
-// Each element's instance, which the content's portal reads to tell how it presents.
 const instances = new WeakMap<Element, { get: () => unknown }>();
-// The full-screen element each dialog's sheet sits in, made the first time it presents as one.
 const viewports = new WeakMap<Element, Element>();
 
 const owns = (part: Element | null): part is Element => {
@@ -133,9 +132,7 @@ export function defineShareDialog(): void {
           text(el.querySelector("kind-share-dialog-title > h2"), state.dialogLabel);
           text(
             el.querySelector("kind-share-dialog-description > p"),
-            state.visibility === "private"
-              ? "Only you can open this chat."
-              : "Anyone with the link can open this chat.",
+            SHARE_DIALOG_DESCRIPTIONS[state.visibility],
           );
           text(el.querySelector("kind-share-dialog-copy > button"), state.copied ? "Copied" : "Copy link");
           text(el.querySelector("kind-share-dialog-error > p"), state.error ?? "");

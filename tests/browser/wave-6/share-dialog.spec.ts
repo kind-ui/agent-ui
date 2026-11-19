@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
+import { shareLink } from "../../../packages/agent-ui/tests/fixtures/shared/share-dialog.js";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { allowClipboard, readClipboard } from "../clipboard.js";
 
@@ -14,8 +15,6 @@ type Fixture = {
   kindAnnounced: string[];
   agent: { act(input: unknown): Promise<unknown> };
 };
-
-const LINK = "https://example.com/share/abc123";
 
 const trigger = (page: Page) => page.locator("#share").getByRole("button", { name: "Share", exact: true });
 const dialog = (page: Page) => page.getByRole("dialog", { name: "Share chat" });
@@ -111,7 +110,7 @@ test("Create link stays pending until the host makes the link, then shows it", a
   await create.click({ force: true });
   expect(await host(page, "calls")).toEqual([{ action: "create", reason: "create-press", source: "mouse" }]);
   await host(page, "resolve");
-  await expect(linkBox(page)).toHaveValue(LINK);
+  await expect(linkBox(page)).toHaveValue(shareLink);
   await expect(button(page, "Copy link")).toBeVisible();
   await expect(button(page, "Create link")).toHaveCount(0);
   await expect(button(page, "Stop sharing")).not.toHaveAttribute("aria-disabled");
@@ -123,8 +122,8 @@ test("Copy link writes the link to the clipboard and says so", async ({ page, co
   await trigger(page).click();
   await button(page, "Copy link").click();
   await expect(button(page, "Copied")).toBeVisible();
-  expect(await readClipboard(page, browserName)).toBe(LINK);
-  expect(await host(page, "copies")).toEqual([{ link: LINK, reason: "copy-press" }]);
+  expect(await readClipboard(page, browserName)).toBe(shareLink);
+  expect(await host(page, "copies")).toEqual([{ link: shareLink, reason: "copy-press" }]);
   await expect.poll(() => announced(page)).toContain("Copied");
 });
 
@@ -141,7 +140,7 @@ test("a create that fails shows and announces why, and Create link works again",
   await create.click();
   await expect(error).toBeHidden();
   await host(page, "resolve");
-  await expect(linkBox(page)).toHaveValue(LINK);
+  await expect(linkBox(page)).toHaveValue(shareLink);
   expect(await host(page, "calls")).toHaveLength(2);
 });
 
@@ -179,7 +178,7 @@ test("with agentConfirm off an agent shares the chat, and an unknown visibility 
   expect(await act(page, "createLink")).toContain('"ok":true');
   expect(await host(page, "calls")).toEqual([{ action: "create", reason: "imperative", source: "agent" }]);
   await host(page, "resolve");
-  await expect(linkBox(page)).toHaveValue(LINK);
+  await expect(linkBox(page)).toHaveValue(shareLink);
   await expectAgentActions(page, "Share", ["close", "setVisibility", "copyLink", "revoke", "press"]);
 });
 
@@ -200,7 +199,7 @@ for (const colorScheme of ["light", "dark"] as const)
     await load(page, "linked");
     await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     await trigger(page).click();
-    await expect(linkBox(page)).toHaveValue(LINK);
+    await expect(linkBox(page)).toHaveValue(shareLink);
     await settled(page);
     const { violations } = await new AxeBuilder({ page }).include("#root").analyze();
     expect(violations).toEqual([]);
