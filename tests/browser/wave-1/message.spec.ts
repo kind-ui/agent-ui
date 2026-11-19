@@ -295,7 +295,6 @@ test.describe("an answer that stops or fails", () => {
     kindAnnounced: string[];
   };
   const openOutcomes = async (page: Page) => {
-    // Records each text UI SDK's live regions are given.
     await page.addInitScript(() => {
       const announced: string[] = [];
       Object.assign(window, { kindAnnounced: announced });

@@ -167,7 +167,6 @@ export type MessageState = MenuBaseState & {
   /** Whether it's a user message with `onEdit`. */
   canEdit: boolean;
   motion: MotionMode;
-  /** The `author` option. */
   author: MessageAuthor | undefined;
   continued: boolean;
   createdAt: string | undefined;
