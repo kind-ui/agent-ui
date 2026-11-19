@@ -96,10 +96,10 @@ function chat(root: HTMLElement, count: number, virtualize = false) {
   });
 }
 
-function states(root: HTMLElement, initial: ConversationStatus) {
+function states(root: HTMLElement, initial: ConversationStatus, canRetry = true) {
   defineConversation();
   root.innerHTML = `
-    <kind-conversation aria-label="Conversation" message-count="0" status="${initial}" can-retry
+    <kind-conversation aria-label="Conversation" message-count="0" status="${initial}"${canRetry ? " can-retry" : ""}
       class="m-4 h-[28rem] w-[32rem] max-w-[calc(100%-2rem)] rounded-xl border border-[var(--kind-color-border)]">
       <kind-conversation-viewport>
         <kind-conversation-content>
@@ -150,5 +150,6 @@ export const cases = {
   },
   loading: (root: HTMLElement) => states(root, "loading"),
   error: (root: HTMLElement) => states(root, "error"),
+  "error-plain": (root: HTMLElement) => states(root, "error", false),
   welcome: (root: HTMLElement) => states(root, "ready"),
 };

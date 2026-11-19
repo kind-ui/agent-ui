@@ -115,7 +115,7 @@ function Remount() {
   return shown ? <Chat count={31} /> : null;
 }
 
-function States({ initial }: { initial: ConversationStatus }) {
+function States({ initial, canRetry = true }: { initial: ConversationStatus; canRetry?: boolean }) {
   const [view, setView] = useState<{ status: ConversationStatus; count: number; error?: string }>({
     status: initial,
     count: 0,
@@ -136,7 +136,7 @@ function States({ initial }: { initial: ConversationStatus }) {
       messageCount={view.count}
       status={view.status}
       {...(view.error !== undefined && { error: view.error })}
-      onRetry={retry.onRetry}
+      {...(canRetry && { onRetry: retry.onRetry })}
       className="m-4 h-[28rem] w-[32rem] max-w-[calc(100%-2rem)] rounded-xl border border-[var(--kind-color-border)]"
     >
       <ConversationViewport>
@@ -169,5 +169,6 @@ export const cases = {
   remount: () => <Remount />,
   loading: () => <States initial="loading" />,
   error: () => <States initial="error" />,
+  "error-plain": () => <States initial="error" canRetry={false} />,
   welcome: () => <States initial="ready" />,
 };

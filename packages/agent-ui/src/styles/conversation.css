@@ -136,7 +136,8 @@
 
   /* Whatever follows the words, like a Suggestion, gets room and the row's width. */
   [data-slot="kind-conversation-empty"]
-    > :not([data-slot="kind-conversation-empty-title"], [data-slot="kind-conversation-empty-description"]) {
+    > :is([data-slot="kind-conversation-empty-title"], [data-slot="kind-conversation-empty-description"])
+    ~ :not([data-slot="kind-conversation-empty-title"], [data-slot="kind-conversation-empty-description"]) {
     align-self: stretch;
     margin-top: 1rem;
   }
@@ -152,10 +153,12 @@
   [data-slot="kind-conversation-empty-description"] {
     display: block;
     max-width: 28rem;
+    overflow-wrap: anywhere;
   }
 
   [data-slot="kind-conversation-error-text"] {
     display: block;
+    overflow-wrap: anywhere;
     color: var(--kind-color-fg);
   }
 
@@ -199,7 +202,7 @@
     & > * {
       display: block;
       height: var(--kind-conversation-skeleton-row);
-      border-radius: 1rem;
+      border-radius: calc(var(--kind-radius) * 1.5);
       background-color: var(--kind-color-hover);
       animation: kind-pulse 1.6s ease-in-out infinite;
     }

@@ -11,6 +11,8 @@ import type { AttributeProperties, UiElement, UiPartElement } from "@ui-sdk/web/
 const SKELETON_ROWS = "<span></span><span></span><span></span>";
 const ERROR_PARTS = `<kind-conversation-error-text></kind-conversation-error-text><kind-conversation-retry><button>Retry</button></kind-conversation-retry>`;
 
+const STATE_PARTS = /^kind-conversation-(skeleton|loading|error|error-text)$/;
+
 // Parts this element wrote into, so it keeps them current while leaving a host's own content alone. Kept across
 // instances, because UI SDK rebuilds one when the element returns to the page.
 const owned = new WeakSet<Element>();
@@ -45,9 +47,9 @@ export function defineConversation(): void {
       api: ["scrollToEnd", "prepend", "isFollowing", "getRows"],
       render: (el, instance) => {
         let drawn: string | undefined;
-        const draw = () => {
-          const { status, error } = instance.get() as ConversationState;
-          if (`${status}\n${error}` === drawn) return;
+        const draw = (force?: boolean) => {
+          const { status, error = "" } = instance.get() as ConversationState;
+          if (!force && `${status}\n${error}` === drawn) return;
           drawn = `${status}\n${error}`;
           fill(el.querySelector("kind-conversation-skeleton"), SKELETON_ROWS);
           const loading = el.querySelector("kind-conversation-loading");
@@ -57,7 +59,21 @@ export function defineConversation(): void {
           if (owns(text) && text.textContent !== error) text.textContent = error;
         };
         draw();
-        return instance.subscribe(draw);
+        const unsubscribe = instance.subscribe(() => draw());
+        // A state part written after the root connected; streamed rows don't count.
+        const arrivals = new MutationObserver((records) => {
+          const arrived = records.some((record) =>
+            [...record.addedNodes].some(
+              (node) => node instanceof Element && STATE_PARTS.test(node.localName),
+            ),
+          );
+          if (arrived) draw(true);
+        });
+        arrivals.observe(el, { childList: true, subtree: true });
+        return () => {
+          unsubscribe();
+          arrivals.disconnect();
+        };
       },
     },
     viewport: "kind-conversation-viewport",

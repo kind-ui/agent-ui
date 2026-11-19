@@ -94,7 +94,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **Guard comment stripping is regex-based:** a `//` inside a string hides the rest of the line from the forbidden-pattern checks. Use the TypeScript scanner.
 - **Guard rule 1 misses `definePrimitive<…Record<…>>(`** with nested generics.
 - **`src/internal/index.ts` is imported by nothing.**
-- **A batch of rows added at once all play the entrance** (an async first load into an empty conversation). Animating only the newest needs the count before the rows bind, which web markup doesn't guarantee.
+- **A batch of rows added at once all play the entrance** (an async first load into an empty conversation) unless the host passes `status`: rows that arrive while it isn't `ready`, or with the change to `ready`, skip it (Wave 6 Task 10). Without `status`, animating only the newest needs the count before the rows bind, which web markup doesn't guarantee.
 - **Exported `Token` and `Highlight` are generic names** for the core entry; they may clash with later exports (Token Input). Consider `CodeToken` / `CodeHighlight` before 0.1.
 - **`toLines` trusts that a highlighter's tokens join to exactly the code it was given;** one that trims a trailing newline shifts the plain remainder.
 - **A pending submission's lock carries over when a host swaps the controlled `value`** (switching conversations on one instance): the settled result is still ignored for the new draft, but Send stays locked until it settles. Hosts can remount with `key`; spec §4.1 needs to say whether that's required.

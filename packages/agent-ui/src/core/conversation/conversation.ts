@@ -37,6 +37,9 @@ export const createConversationController = (): ConversationController =>
 /** What the conversation shows in its rows' place: its messages, a skeleton while loading, or an error. */
 export type ConversationStatus = "ready" | "loading" | "error";
 
+const STATUSES: readonly ConversationStatus[] = ["ready", "loading", "error"];
+
+/** What `onRetry` gets: `"retry-press"` for Retry, `"imperative"` for the api and agents, and who caused it. */
 export type ConversationRetryDetails = ActionDetails & { reason: "retry-press" | "imperative" };
 
 export type ConversationOptions = {
@@ -77,7 +80,8 @@ export type ConversationOptions = {
   error?: string;
   /**
    * Called when Retry is pressed. Shows Retry while `status` is `"error"`. Return a promise to keep Retry pending
-   * until it settles.
+   * until it settles; a rejection gives Retry back. A `status` change while it's pending drops the lock and ignores
+   * the late result.
    */
   onRetry?: (details: ConversationRetryDetails) => unknown;
   /**
@@ -96,12 +100,12 @@ export type ConversationState = {
   motion: MotionMode;
   /** The `status` option. */
   status: ConversationStatus;
-  /** The `error` option, or its default. */
-  error: string;
+  /** The `error` option, or its default, while `status` is `"error"`; `undefined` otherwise, since agents read a set `error` as a failed action. */
+  error: string | undefined;
   /** Whether `onRetry` is set. */
   canRetry: boolean;
-  /** Whether a promise `onRetry` returned is still pending. */
-  retrying: boolean;
+  /** Whether a promise `onRetry` returned is still pending. Agents wait on it. */
+  pending: boolean;
   /** Whether the error appeared after the conversation mounted, so it's an alert rather than a status. */
   errorAlert: boolean;
   /** Whether new content scrolls into view. Set by `createStickToBottom`; listed in `controlled` for the agent snapshot only. */
@@ -164,11 +168,14 @@ export type ConversationPrimitive = ReturnType<
 
 const newMessages = (count: number) => `${count} new message${count === 1 ? "" : "s"}`;
 
+const statusOf = (options: ConversationOptions): ConversationStatus =>
+  options.status && STATUSES.includes(options.status) ? options.status : "ready";
+
 const presentation = (options: ConversationOptions) => ({
   messageCount: options.messageCount ?? 0,
   motion: options.motion ?? "auto",
-  status: options.status ?? "ready",
-  error: options.error ?? "Couldn't load this conversation",
+  status: statusOf(options),
+  error: statusOf(options) === "error" ? (options.error ?? "Couldn't load this conversation") : undefined,
   canRetry: options.onRetry !== undefined,
 });
 
@@ -197,7 +204,7 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
     following: true,
     newCount: 0,
     jumpExiting: false,
-    retrying: false,
+    pending: false,
     errorAlert: false,
     rows: [],
     size: 0,
@@ -241,11 +248,11 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
       context.options().onRowsChange?.(rows);
     });
 
-    const pendingRetry = createPendingAction(context, { state: "retrying" });
+    const pendingRetry = createPendingAction(context, { state: "pending" });
 
     context.onOptions((options) => {
       const count = options.messageCount ?? 0;
-      const next = options.status ?? "ready";
+      const next = statusOf(options);
       const loaded = next === "ready" && status !== "ready";
       if (next !== status) {
         status = next;
@@ -299,8 +306,8 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
         });
       },
       get retry() {
-        const { canRetry, retrying, status } = store.get();
-        return canRetry && status === "error" && !retrying ? retry : undefined;
+        const { canRetry, pending, status } = store.get();
+        return canRetry && status === "error" && !pending ? retry : undefined;
       },
     };
   },
@@ -418,18 +425,18 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
       present: (state) => state.status === "error",
     }),
     "error-text": slot<BaseSlotProps, { error: string }>({
-      state: (state) => ({ error: state.error }),
+      state: (state) => ({ error: state.error ?? "" }),
     }),
     retry: slot<BaseSlotProps, { retrying: boolean }>({
       role: "button",
       focus: "native",
       press: ({ api }, event) => api.retry?.(event),
       present: (state) => state.status === "error" && state.canRetry,
-      state: (state) => ({ retrying: state.retrying }),
+      state: (state) => ({ retrying: state.pending }),
       attrs: (state) => ({
         type: "button",
-        "aria-disabled": state.retrying ? "true" : undefined,
-        "data-pending": state.retrying ? "" : undefined,
+        "aria-disabled": state.pending ? "true" : undefined,
+        "data-pending": state.pending ? "" : undefined,
       }),
       bind: (el, part) => part.api.recovery.bind(el, part),
     }),

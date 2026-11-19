@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Fixture = {
   kindConversation: {
@@ -10,6 +11,15 @@ type Fixture = {
     remove(n?: number): void;
   };
 };
+
+const act = (page: Page, action: string) =>
+  page.evaluate(
+    (name) =>
+      (window as unknown as { agent: { act(input: unknown): Promise<unknown> } }).agent.act({
+        steps: [{ ref: "Conversation", action: name }],
+      }),
+    action,
+  );
 
 const open = async (page: Page, name = "chat") => {
   await page.goto(`/?c=conversation&case=${name}`);
@@ -183,11 +193,7 @@ test("is a live UI SDK primitive agents can scroll to the end", async ({ page })
   await open(page);
   await expectAgentActions(page, "Conversation", ["scrollToEnd"]);
   await scrollUp(page, 200);
-  await page.evaluate(() =>
-    (window as unknown as { agent: { act(input: unknown): Promise<unknown> } }).agent.act({
-      steps: [{ ref: "Conversation", action: "scrollToEnd" }],
-    }),
-  );
+  expect(await act(page, "scrollToEnd")).toMatchObject({ ok: true });
   await atEnd(page);
   await expect(page.locator('[data-slot="kind-conversation"]')).toHaveAttribute("data-following", "");
 });
@@ -216,7 +222,7 @@ const states = <K extends keyof States["kindConversationStates"]>(
     },
     [method, args] as const,
   );
-const openState = async (page: Page, name: "loading" | "error" | "welcome") => {
+const openState = async (page: Page, name: "loading" | "error" | "error-plain" | "welcome") => {
   await page.goto(`/?c=conversation&case=${name}`);
   await expect(page.locator('[data-slot="kind-conversation"]')).toHaveAttribute("data-following", "");
   await expect.poll(() => page.evaluate(() => "kindConversationStates" in window)).toBe(true);
@@ -265,6 +271,44 @@ test("an error shows its words and Retry, which locks while pending", async ({ p
   await expect(viewport(page)).toBeFocused();
   await states(page, "set", "error", 0, "The connection dropped.");
   await expect(page.getByRole("alert")).toContainText("The connection dropped.");
+  await retryButton(page).click();
+  await states(page, "resolveRetry");
+  await states(page, "set", "ready", 3);
+  await expect(page.locator('[data-message="m2"]')).toBeVisible();
+});
+
+test("an agent's retry waits for the host and succeeds once the error is gone", async ({ page }) => {
+  await openState(page, "error");
+  const result = act(page, "retry");
+  await expect(retryButton(page)).toHaveAttribute("aria-disabled", "true");
+  await states(page, "set", "loading");
+  expect(await result).toMatchObject({ ok: true });
+  expect(await states(page, "retries")).toEqual([{ reason: "imperative", source: "agent" }]);
+});
+
+test("without onRetry an error offers no Retry", async ({ page }) => {
+  await openState(page, "error-plain");
+  await expect(page.getByRole("status")).toContainText("Couldn't load this conversation");
+  await expect(retryButton(page)).toHaveCount(0);
+  await expectAgentActions(page, "Conversation", ["scrollToEnd"]);
+});
+
+test("web fills state parts written after it connects, and reads an unknown status as ready", async ({
+  page,
+}, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "Web Components only");
+  await openState(page, "loading");
+  await page.evaluate(() => {
+    const content = document.querySelector("kind-conversation-content") as HTMLElement;
+    for (const tag of ["kind-conversation-skeleton", "kind-conversation-loading"]) {
+      content.querySelector(tag)?.remove();
+      content.append(document.createElement(tag));
+    }
+  });
+  await expect(skeleton(page).locator("span")).toHaveCount(3);
+  await expect(page.getByRole("status")).toHaveText("Loading conversation");
+  await page.locator("kind-conversation").evaluate((el) => el.setAttribute("status", "failed"));
+  await expect(page.getByText("What can I help with?")).toBeVisible();
 });
 
 test("the empty part's title and description center at 390 px", async ({ page }) => {
