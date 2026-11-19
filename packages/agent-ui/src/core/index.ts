@@ -566,6 +566,7 @@ export {
   type RelativeTimeOptions,
   type TimeOptions,
   timeLabel,
+  todayKey,
 } from "./time.js";
 export {
   type ToolApi,

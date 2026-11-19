@@ -1,15 +1,17 @@
 import { toLocale } from "@ui-sdk/core";
-import { dateParts, daysBetween, formatDate } from "@ui-sdk/core/date";
+import { dateParts, daysBetween, formatDate as formatDay, todayDate } from "@ui-sdk/core/date";
 import type { Message } from "../types/index.js";
 
-/** Where and in which language a date reads. Both default to English and UTC, so a server and a browser agree. */
+/** Where and in which language a date reads. */
 export interface TimeOptions {
+  /** A BCP 47 tag. Defaults to English, so a server and a browser agree; an invalid tag reads as English. */
   locale?: string | undefined;
+  /** An IANA time zone, like `"Europe/Paris"`. Defaults to UTC; an invalid zone reads as UTC. */
   timeZone?: string | undefined;
 }
 
 /**
- * `now` is today: an ISO date (`todayDate(timeZone)` from `@ui-sdk/core/date`, read in a `bind`) or an instant.
+ * `now` is today: an ISO date (`todayKey(timeZone)`, read in a `bind`) or an instant.
  * Leave it out for the absolute date, as server markup shows it.
  */
 export interface RelativeTimeOptions extends TimeOptions {
@@ -20,6 +22,7 @@ export interface RelativeTimeOptions extends TimeOptions {
 export type DateGroupKey = "today" | "yesterday" | "previous-7-days" | "previous-30-days" | "older";
 
 export interface DateGroupOptions extends RelativeTimeOptions {
+  /** Today: an ISO date (`todayKey(timeZone)`) or an instant. */
   now: string;
   labels?: Partial<Record<DateGroupKey, string>> | undefined;
 }
@@ -31,6 +34,11 @@ export interface DateGroup {
 }
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const ISO_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(Z|[+-]\d{2}:\d{2})?$/i;
+// Some ICU versions put a narrow or thin space before "AM"; a server and a browser on different ones wouldn't hydrate.
+const THIN_SPACES = /[\u2009\u202F]/g;
+
+const formatDate = (...args: Parameters<typeof formatDay>) => formatDay(...args).replace(THIN_SPACES, " ");
 
 const locale = (tag: string | undefined): string => toLocale(tag ?? "en") ?? "en";
 
@@ -59,12 +67,18 @@ const relativeDay = (tag: string, days: number) => {
   return found.format(-days, "day");
 };
 
+/** An ISO date-time; one without an offset reads as UTC, since `Date` would read it in the machine's own zone. */
 const instant = (iso: string): Date | undefined => {
-  const date = new Date(iso);
+  const match = ISO_DATE_TIME.exec(iso);
+  if (!match) return undefined;
+  const date = new Date(match[1] ? iso : `${iso}Z`);
   return Number.isNaN(date.getTime()) ? undefined : date;
 };
 
-/** The calendar day `iso` falls on in `timeZone` (default UTC), as `YYYY-MM-DD`; an ISO date is its own day. */
+/**
+ * The calendar day an ISO date-time falls on in `timeZone` (default UTC), as `YYYY-MM-DD`; an ISO date is its own day.
+ * `undefined` for anything else.
+ */
 export function dayKey(iso: string, timeZone?: string): string | undefined {
   if (ISO_DATE.test(iso)) return dateParts(iso) ? iso : undefined;
   const date = instant(iso);
@@ -78,6 +92,16 @@ export function dayKey(iso: string, timeZone?: string): string | undefined {
   return `${read("year").padStart(4, "0")}-${read("month")}-${read("day")}`;
 }
 
+/** Today in `timeZone`, which defaults to UTC as every helper here does. Reads the clock: call it in a `bind`. */
+export function todayKey(timeZone?: string): string {
+  try {
+    return todayDate(timeZone ?? "UTC");
+  } catch {
+    return todayDate("UTC");
+  }
+}
+
+/** Whether `a` and `b` fall on the same calendar day in `timeZone` (default UTC). */
 export function isSameDay(a: string, b: string, timeZone?: string): boolean {
   const day = dayKey(a, timeZone);
   return day !== undefined && day === dayKey(b, timeZone);
@@ -104,7 +128,10 @@ export function dayLabel(iso: string, options: RelativeTimeOptions = {}): string
   return formatDate(day, tag, { year: "numeric", month: "long", day: "numeric" });
 }
 
-/** The time of day `iso` reads in `timeZone`, with the date when it isn't `now`'s day (and the year when not its year). */
+/**
+ * The time of day an ISO date-time reads in `timeZone`, with the date when it isn't `now`'s day (and the year when not
+ * its year). Empty for anything else, a date without a time included.
+ */
 export function timeLabel(iso: string, options: RelativeTimeOptions = {}): string {
   const date = instant(iso);
   const found = daysAgo(iso, options.now, options.timeZone);
@@ -115,10 +142,11 @@ export function timeLabel(iso: string, options: RelativeTimeOptions = {}): strin
     format.day = "numeric";
     if (found.today?.slice(0, 4) !== found.day.slice(0, 4)) format.year = "numeric";
   }
-  return formatter(locale(options.locale), options.timeZone, format).format(date);
+  return formatter(locale(options.locale), options.timeZone, format).format(date).replace(THIN_SPACES, " ");
 }
 
 const unitFormats = new Map<string, Intl.NumberFormat>();
+const unitLists = new Map<string, Intl.ListFormat>();
 const unit = (tag: string, name: "hour" | "minute" | "second", value: number) => {
   const key = `${tag}|${name}`;
   let found = unitFormats.get(key);
@@ -141,7 +169,12 @@ export function durationLabel(seconds: number | undefined, localeTag?: string): 
   if (hours) parts.push(unit(tag, "hour", hours));
   if (minutes) parts.push(unit(tag, "minute", minutes));
   if (rest) parts.push(unit(tag, "second", rest));
-  return parts.join(" ");
+  let list = unitLists.get(tag);
+  if (!list) {
+    list = new Intl.ListFormat(tag, { type: "unit", style: "narrow" });
+    unitLists.set(tag, list);
+  }
+  return list.format(parts);
 }
 
 /**

@@ -33,3 +33,14 @@ test("threadGroups puts pinned first, then host groups, then date buckets", () =
     ],
   );
 });
+
+test("an empty or null group falls back to the date group", () => {
+  const threads = [
+    { id: "a", title: "A", group: "", updatedAt: "2026-11-18T01:00:00Z" },
+    { id: "b", title: "B", group: null, updatedAt: "2026-11-18T02:00:00Z" },
+  ];
+  assert.deepEqual(
+    threadGroups(threads, { now: "2026-11-18" }).map(({ key, threads }) => [key, threads.length]),
+    [["today", 2]],
+  );
+});

@@ -56,6 +56,29 @@ import { Tool } from "./components/ui/tool.js";
 import { Transcript } from "./components/ui/transcript.js";
 import { TypingIndicator } from "./components/ui/typing-indicator.js";
 import { Uploader } from "./components/ui/uploader.js";
+
+// Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its imports right below its own line.
+
+// wave-6-task-2: Thread List
+
+// wave-6-task-3: Thread Search
+
+// wave-6-task-4: Sidebar
+
+// wave-6-task-5: Launcher
+
+// wave-6-task-6: Day Separator
+
+// wave-6-task-7: Connection Status
+
+// wave-6-task-8: Share Dialog
+
+// wave-6-task-9: Message author, time and outcomes
+
+// wave-6-task-10: Conversation states
+
+// wave-6-task-11: Conversation Search
+
 import "./index.css";
 
 const items = {
@@ -303,6 +326,28 @@ const items = {
   "thinking-indicator": <ThinkingIndicator />,
   "typing-indicator": <TypingIndicator />,
   "streaming-text": <StreamingText text="Streaming text" caret />,
+
+  // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its item right below its own line.
+
+  // wave-6-task-2: Thread List
+
+  // wave-6-task-3: Thread Search
+
+  // wave-6-task-4: Sidebar
+
+  // wave-6-task-5: Launcher
+
+  // wave-6-task-6: Day Separator
+
+  // wave-6-task-7: Connection Status
+
+  // wave-6-task-8: Share Dialog
+
+  // wave-6-task-9: Message author, time and outcomes
+
+  // wave-6-task-10: Conversation states
+
+  // wave-6-task-11: Conversation Search
 };
 
 createRoot(document.getElementById("root") as HTMLElement).render(

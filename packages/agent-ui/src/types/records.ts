@@ -12,6 +12,7 @@ export interface Source {
 export interface MessageAuthor {
   id: string;
   name: string;
+  /** An image of the author. Without one, the avatar shows the name's initials. */
   avatarUrl?: string;
 }
 
@@ -22,7 +23,7 @@ export interface Thread {
   /** ISO 8601. Picks the thread's date group. */
   updatedAt?: string;
   pinned?: boolean;
-  /** A group of the host's, like a project or a folder, in place of the date group. */
+  /** A group of the host's, like a project or a folder, in place of the date group. Empty means none. */
   group?: string;
   /** The thread's own URL, so its row is a real link. */
   href?: string;

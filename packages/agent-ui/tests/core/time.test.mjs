@@ -7,6 +7,7 @@ import {
   durationLabel,
   isContinuation,
   timeLabel,
+  todayKey,
 } from "@kind-ui/agent-ui/core";
 
 const now = "2026-11-18T07:30:00Z";
@@ -29,12 +30,20 @@ test("dayKey takes an ISO date as its own day and an instant in the zone", () =>
   assert.equal(dayKey("2026-11-18T01:00:00Z", "Asia/Tokyo"), "2026-11-18");
   assert.equal(dayKey("2026-11-18T01:00:00Z", "America/Los_Angeles"), "2026-11-17");
   assert.equal(dayKey("2026-02-30"), undefined);
+  assert.equal(
+    dayKey("2026-11-17T23:30:00", "UTC"),
+    "2026-11-17",
+    "no offset: UTC, whatever the machine's zone",
+  );
+  assert.equal(dayKey("Nov 17 2026"), undefined);
+  assert.match(todayKey("Not/AZone"), /^\d{4}-\d{2}-\d{2}$/);
 });
 
 test("timeLabel adds the date when not today, and the year when not this year", () => {
   assert.equal(timeLabel("2026-11-18T06:05:00Z", utc), "6:05 AM");
   assert.equal(timeLabel("2026-11-17T18:05:00Z", utc), "Nov 17, 6:05 PM");
   assert.equal(timeLabel("2025-12-31T18:05:00Z", utc), "Dec 31, 2025, 6:05 PM");
+  assert.equal(timeLabel("2026-11-18", utc), "");
 });
 
 test("durationLabel joins whole units in the locale's short form", () => {

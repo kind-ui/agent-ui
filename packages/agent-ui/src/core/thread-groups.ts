@@ -2,9 +2,11 @@ import type { Thread } from "../types/index.js";
 import { type DateGroupKey, dateGroup } from "./time.js";
 
 export interface ThreadGroupOptions {
-  /** Today: an ISO date (`todayDate(timeZone)`) or an instant. */
+  /** Today: an ISO date (`todayKey(timeZone)`) or an instant. */
   now: string;
+  /** A BCP 47 tag for the month, year and relative day names. Defaults to English. */
   locale?: string | undefined;
+  /** The IANA time zone that decides a thread's day. Defaults to UTC. */
   timeZone?: string | undefined;
   /** Replaces the fixed groups' words, by key. */
   labels?: Partial<Record<DateGroupKey | "pinned", string>> | undefined;
@@ -48,7 +50,7 @@ export function threadGroups(threads: readonly Thread[], options: ThreadGroupOpt
   };
   for (const thread of threads) {
     if (thread.pinned) pinned.threads.push(thread);
-    else if (thread.group !== undefined) add(hosts, `group:${thread.group}`, thread.group, thread);
+    else if (thread.group) add(hosts, `group:${thread.group}`, thread.group, thread);
     else {
       const { key, label } = dateGroup(thread.updatedAt, options);
       add(dates, key, label, thread);

@@ -17,6 +17,28 @@ const pages = [
   "terminal&case=all",
   "context-bar&case=all",
   "dictation&case=default",
+
+  // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its pages right below its own line.
+
+  // wave-6-task-2: Thread List
+
+  // wave-6-task-3: Thread Search
+
+  // wave-6-task-4: Sidebar
+
+  // wave-6-task-5: Launcher
+
+  // wave-6-task-6: Day Separator
+
+  // wave-6-task-7: Connection Status
+
+  // wave-6-task-8: Share Dialog
+
+  // wave-6-task-9: Message author, time and outcomes
+
+  // wave-6-task-10: Conversation states
+
+  // wave-6-task-11: Conversation Search
 ];
 
 type Colors = { backdrop(el: Element): string };
