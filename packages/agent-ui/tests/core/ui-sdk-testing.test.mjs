@@ -77,7 +77,7 @@ const cases = {
   contextMeter: {
     options: { used: 57600, total: 128000, usage: { input: 50000, output: 7600 }, locale: "en" },
   },
-  conversation: { options: { messageCount: 2 }, keys: { row: ["0", "1"] } },
+  conversation: { options: { messageCount: 2, marks: [1] }, keys: { row: ["0", "1"], mark: ["1"] } },
   dictationButton: { options: { source: async function* () {}, bars: 2 }, keys: { bar: ["0", "1"] } },
   document: {
     options: {
@@ -263,6 +263,10 @@ const cases = {
   // wave-6-task-10: Conversation states
 
   // wave-6-task-11: Conversation Search
+
+  conversationSearch: {
+    options: { messages: [{ id: "m1", text: "Hello **there**" }], defaultQuery: "there", defaultOpen: true },
+  },
 };
 
 const fromOf = (props) =>

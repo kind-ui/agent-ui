@@ -101,6 +101,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **`setValue` with a draft trusts its `tokens`;** they're rebuilt from `text` only on the next edit.
 - Sidebar: a controlling owner who cancels the `"breakpoint"` close keeps `open` true, so the modal drawer opens as the window narrows. The owner's value wins.
 - **Share Dialog says "Only you can open this chat." while a `link` still exists** (Wave 6 Task 8): choosing "Only you" hides the link but doesn't revoke it, since D19 leaves revoking to the host (`onVisibilityChange` then `onRevoke`). Whether the primitive should revoke or word it differently is a spec question.
+- **Conversation rows are kept by `index` for `rowElement`** (Wave 6 Task 11): a host that prepends rows without UI SDK binding them again under their new index would hand Conversation Search the wrong row. `virtual.measure` keys rows the same way; unchecked.
 
 ## Resolved
 
@@ -174,6 +175,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **Model Control (Wave 5 Task 9):** `setValues` keeps Model and Effort out of the host's `values` (`owned`); host settings with the ids `model`/`effort` are left out; `getItems` reads the rows; a controlled effort's fallback is chosen against the stored value; model lookups are cached per `models` array. `tests/core/model-control.test.mjs` pins them.
 - **Day Separator (Wave 6 Task 6):** an undated or invalid `date` hides the heading (`hidden`, so no empty heading); the root's `bind` writes `pageLocale` and `today` in one `store.set`; `level` and the state keys have JSDoc.
 - **Message (Wave 6 Task 9):** Retry and Continue dropped focus to the body as the new response started (now the toolbar, else the next tab stop after the message, `core/tab-stop.ts`); a web `status` of `"toString"` read as an outcome; the avatar's state changed with each new `author` object (now keyed by name and image); state JSDoc. Pinned in `message.spec.ts`.
+- **Conversation Search found nothing when it mounted open with a search, kept every streamed version of a message's text, announced "No results" after closing, and the guard took any `controller.focus(` as UI SDK's** (Wave 6 Task 11): fixed (a first search at mount, text and matches kept per message id with an engine per streamed message, the timer checks `open`, and the guard needs a `create…Controller()` in the file, pinned in `ui-sdk-usage.test.mjs`); Escape while composing and a marks track before the viewport were fixed with them.
 
 ## Revisit
 

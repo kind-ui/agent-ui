@@ -1,0 +1,109 @@
+---
+title: Conversation Search
+description: Find text in a conversation's messages, move from match to match, and see where they are beside the scrollbar.
+---
+
+import ConversationSearchExample from "../../../examples/conversation-search/basic";
+
+Use a conversation search to let readers find something said earlier in a long chat. It searches every message, including the ones a virtualized [Conversation](./conversation.mdx) hasn't rendered, counts the matches, scrolls to the current one and marks each message that holds one beside the scrollbar.
+
+<Example caption="Type in the search field, or keep billing, then press Enter or Next to move to the next match and Shift+Enter or Previous to go back. Press Escape to clear the search, and again to close the bar.">
+  <ConversationSearchExample />
+
+  <include cwd lang="tsx">./examples/conversation-search/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/conversation-search
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/conversation-search-web
+```
+
+## Composition
+
+```text
+ConversationSearch
+├── ConversationSearchInput
+│   └── ConversationSearchCount
+├── ConversationSearchPrevious
+├── ConversationSearchNext
+└── ConversationSearchClose
+```
+
+`ConversationSearchInput` renders a UI SDK Input with a clear button, and `ConversationSearchCount` inside it says where you are, like "3 of 12", or "No results". `ConversationSearchPrevious` and `ConversationSearchNext` move between matches, and `ConversationSearchClose` closes the bar. Render `ConversationSearch` without children to get all of them; the buttons draw their icons in CSS, so render them empty when you arrange the parts yourself.
+
+## Usage
+
+### Connecting a Conversation
+
+The bar floats over the top end of the conversation without taking room, so put `ConversationSearch` and `Conversation` in one box with `position: relative`. Make one controller with `createConversationController()` and pass it to Conversation's `controller` and the search's `conversation`: the search scrolls to a match and finds the rows to paint through it.
+
+Pass `onMarksChange` a setter for Conversation's `marks`, and render `ConversationMarks` inside the Conversation to show where the matches are beside the scrollbar:
+
+```tsx
+import { createConversationController } from "@kind-ui/agent-ui/core";
+import { useState } from "react";
+
+export function Chat({ messages }: { messages: { id: string; text: string }[] }) {
+  const [controller] = useState(createConversationController);
+  const [marks, setMarks] = useState<readonly number[]>([]);
+
+  return (
+    <div className="relative h-96">
+      <ConversationSearch messages={messages} conversation={controller} onMarksChange={setMarks} />
+      <Conversation messageCount={messages.length} controller={controller} marks={marks} className="h-full">
+        <ConversationViewport>{/* rows */}</ConversationViewport>
+        <ConversationMarks />
+      </Conversation>
+    </div>
+  );
+}
+```
+
+Render each row as a component wrapped in React's `memo`, so a change of `marks` renders only the marks, not every message and its Markdown.
+
+### Messages
+
+Pass `messages` as `{ id, text }`, in the Conversation's order, so a match's index is its row's index. `text` is the message's Markdown, which the search reads as the text it renders: syntax, link targets and a shown image's alt text don't match, and no match runs across blocks, list items or table cells. Case and accents fold, so "cafe" finds "Café". A message that streams is searched again as it grows.
+
+### Moving Between Matches
+
+The search starts on the first match in the newest message that holds one, and moving scrolls its message into view. Next goes to the following match and wraps from the last to the first; Previous goes back. Both are disabled while nothing matches. The count is announced politely once typing pauses.
+
+Matches are painted with the CSS Custom Highlight API, as `::highlight(kind-search)` and `::highlight(kind-search-current)`, so no markup is written into the messages. A browser without the API still counts, moves and marks the scrollbar.
+
+### Opening and Closing
+
+The bar is closed until you open it: pass `defaultOpen`, control it with `open` and `onOpenChange`, or give it a `shortcut`. Opening moves focus to the field. Closing keeps the search, takes the marks and highlights away, and moves focus back to what had it before the bar opened. Pass `defaultQuery` to start with a search, or control it with `query` and `onQueryChange`.
+
+### Keyboard
+
+In the field, Enter goes to the next match and Shift+Enter to the previous one. F3 and Shift+F3 do the same anywhere in the bar. Escape clears the search, and a second Escape closes the bar.
+
+### Shortcut
+
+The search registers no keys of its own by default. Pass `shortcut` to open it with a key, through UI SDK's shortcuts; pressing it while the bar is open moves focus back to the field:
+
+```tsx
+<ConversationSearch shortcut="mod+f" messages={messages} conversation={controller} onMarksChange={setMarks} />
+```
+
+`mod+f` replaces the browser's own find. That's worth it for a virtualized conversation, since the browser's find can't reach messages that aren't rendered and this search can.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/conversation-search/conversation-search.ts" name="ConversationSearchOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the search by its `label` and reads `query` and `open`. It can `search` with any text, which opens the bar and searches as typing does; `next` and `previous` are offered while there are matches, and `close` while the bar is open.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/conversation-search/conversation-search.ts" name="ConversationSearchAgentActions" type='Pick<ConversationSearchApi, "search" | "next" | "previous" | "close">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-conversation-search>`, set `messages` and `conversation` (the controller you also set on the `<kind-conversation>`) as properties; the other props are kebab-case attributes. `onQueryChange` is the `querychange` event, `onOpenChange` is `openchange`, and `onMarksChange` is `markschange`, whose `detail.value` goes to the Conversation's `marks`. On `<kind-conversation>`, add a `kind-conversation-marks` and the element fills it with a `kind-conversation-mark` for each mark.
+</Caption>

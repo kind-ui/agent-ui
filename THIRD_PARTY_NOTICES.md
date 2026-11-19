@@ -59,6 +59,8 @@
 
 <!-- wave-6-task-11: Conversation Search -->
 
+- `packages/agent-ui/src/styles/conversation-search.css` (Conversation Search): `search`, `chevron-up`, `chevron-down` and `x`, unchanged; all derive from Feather.
+
 ## Lobe Icons
 
 - Source: https://github.com/lobehub/lobe-icons, npm `@lobehub/icons-static-svg@1.103.0`, the `anthropic`, `openai`, `microsoft-color`, `gemini-color` and `xai` icons.

@@ -2,7 +2,7 @@
 
 import { conversationPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/react/primitive";
-import type { ComponentProps } from "react";
+import { type ComponentProps, memo } from "react";
 
 const conversation = createParts(conversationPrimitive, {
   root: "div",
@@ -18,6 +18,8 @@ const conversation = createParts(conversationPrimitive, {
   error: "div",
   "error-text": "div",
   retry: "button",
+  marks: "div",
+  mark: "span",
 });
 
 /** Pass `controller={createConversationController()}` (from `@kind-ui/agent-ui/core`) to scroll it from outside. */
@@ -75,6 +77,25 @@ export type ConversationRetryProps = ComponentProps<typeof conversation.Retry>;
 export function ConversationRetry({ children = "Retry", ...props }: ConversationRetryProps) {
   return <conversation.Retry {...props}>{children}</conversation.Retry>;
 }
+
+export type ConversationMarksProps = ComponentProps<typeof conversation.Marks>;
+
+/**
+ * The track beside the scrollbar that shows each message in `marks`, one `ConversationMark` per 4px step that holds
+ * one, unless you pass children. Hidden from assistive technology.
+ */
+export function ConversationMarks({
+  children = ({ marks }) => marks.map((step) => <ConversationMark key={step} value={String(step)} />),
+  ...props
+}: ConversationMarksProps) {
+  return <conversation.Marks {...props}>{children}</conversation.Marks>;
+}
+
+/**
+ * One mark on the track, at `--kind-conversation-mark` (0 to 1) down it. `value` is its step. Memoized, so a host
+ * render that keeps the marks renders none of them.
+ */
+export const ConversationMark = memo(conversation.Mark);
 
 const SKELETON_ROWS = (
   <>

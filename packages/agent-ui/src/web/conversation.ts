@@ -27,6 +27,30 @@ const fill = (part: Element | null, html: string) => {
   if (owns(part) && !part.firstChild) part.innerHTML = html;
 };
 
+// One `kind-conversation-mark` per step, reused by its value, in order.
+const drawMarks = (track: Element, steps: readonly number[]) => {
+  const existing = new Map(
+    [...track.querySelectorAll(":scope > kind-conversation-mark")].map((mark) => [
+      mark.getAttribute("value"),
+      mark,
+    ]),
+  );
+  let previous: Element | null = null;
+  for (const step of steps) {
+    const value = String(step);
+    let mark = existing.get(value);
+    existing.delete(value);
+    if (!mark) {
+      mark = document.createElement("kind-conversation-mark");
+      mark.setAttribute("value", value);
+    }
+    const before: Element | null = previous ? previous.nextElementSibling : track.firstElementChild;
+    if (before !== mark) track.insertBefore(mark, before);
+    previous = mark;
+  }
+  for (const mark of existing.values()) mark.remove();
+};
+
 /**
  * With `virtualize`, render a `<kind-conversation-row value index>` for each row of the root's
  * `rowschange` event (`detail.value`), starting from `element.api.getRows()`. Write the jump control as
@@ -34,7 +58,8 @@ const fill = (part: Element | null, html: string) => {
  * loading and error parts with `hidden` unless their state shows, so none shows before the elements
  * upgrade; the primitive writes the button's text. An empty `kind-conversation-skeleton`,
  * `kind-conversation-loading`, `kind-conversation-error` or `kind-conversation-error-text` is filled in.
- * The `can-retry` attribute offers Retry, which fires `retry`.
+ * The `can-retry` attribute offers Retry, which fires `retry`. Set `marks` as a property; an empty
+ * `kind-conversation-marks` draws a `kind-conversation-mark` for each.
  */
 export function defineConversation(): void {
   if (customElements.get("kind-conversation")) return;
@@ -44,11 +69,17 @@ export function defineConversation(): void {
       kinds: { canRetry: "boolean" },
       // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
       options: (el) => ((el as KindConversationElement).canRetry ? {} : { onRetry: undefined }),
-      api: ["scrollToEnd", "prepend", "isFollowing", "getRows"],
+      api: ["scrollToEnd", "prepend", "isFollowing", "getRows", "scrollToIndex", "rowElement", "observe"],
       render: (el, instance) => {
         let drawn: string | undefined;
+        let markSteps: readonly number[] | undefined;
         const draw = (force?: boolean) => {
-          const { status, error = "" } = instance.get() as ConversationState;
+          const { status, error = "", markSteps: steps } = instance.get() as ConversationState;
+          const track = el.querySelector("kind-conversation-marks");
+          if (track && owns(track) && (force || steps !== markSteps)) {
+            markSteps = steps;
+            drawMarks(track, steps);
+          }
           if (!force && `${status}\n${error}` === drawn) return;
           drawn = `${status}\n${error}`;
           fill(el.querySelector("kind-conversation-skeleton"), SKELETON_ROWS);
@@ -64,7 +95,9 @@ export function defineConversation(): void {
         const arrivals = new MutationObserver((records) => {
           const arrived = records.some((record) =>
             [...record.addedNodes].some(
-              (node) => node instanceof Element && STATE_PARTS.test(node.localName),
+              (node) =>
+                node instanceof Element &&
+                (STATE_PARTS.test(node.localName) || node.localName === "kind-conversation-marks"),
             ),
           );
           if (arrived) draw(true);
@@ -88,6 +121,8 @@ export function defineConversation(): void {
     error: "kind-conversation-error",
     "error-text": "kind-conversation-error-text",
     retry: { tag: "kind-conversation-retry", target: wrappedButton, display: "contents" },
+    marks: "kind-conversation-marks",
+    mark: "kind-conversation-mark",
   });
 }
 
@@ -98,9 +133,13 @@ export type KindConversationEvents = {
 
 export interface KindConversationElement
   extends UiElement<KindConversationEvents>,
-    AttributeProperties<typeof conversationPrimitive, "api" | "controller" | "rowKey"> {
-  api: Pick<ConversationApi, "scrollToEnd" | "prepend" | "isFollowing" | "getRows">;
+    AttributeProperties<typeof conversationPrimitive, "api" | "controller" | "rowKey" | "marks"> {
+  api: Pick<
+    ConversationApi,
+    "scrollToEnd" | "prepend" | "isFollowing" | "getRows" | "scrollToIndex" | "rowElement" | "observe"
+  >;
   controller?: ConversationOptions["controller"];
+  marks?: ConversationOptions["marks"];
   rowKey?: ConversationOptions["rowKey"];
   /** Offers Retry while `status` is `"error"`; pressing it fires `retry`. */
   canRetry: boolean;
@@ -121,5 +160,7 @@ declare global {
     "kind-conversation-error": HTMLElement;
     "kind-conversation-error-text": HTMLElement;
     "kind-conversation-retry": HTMLElement;
+    "kind-conversation-marks": HTMLElement;
+    "kind-conversation-mark": UiPartElement<typeof conversationPrimitive, "mark", "value">;
   }
 }

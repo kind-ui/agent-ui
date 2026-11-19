@@ -308,6 +308,13 @@ const components = {
   // wave-6-task-10: Conversation states
 
   // wave-6-task-11: Conversation Search
+
+  "conversation-search": {
+    title: "Conversation Search",
+    description:
+      "A find bar over a conversation's messages that counts matches, moves between them and marks them on the scrollbar.",
+    uses: [],
+  },
 };
 
 const internals = [

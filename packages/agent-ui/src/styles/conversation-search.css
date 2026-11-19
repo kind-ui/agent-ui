@@ -1,0 +1,248 @@
+/* Conversation Search (spec §7): a find bar floating over the top end of a Conversation, and the highlights it paints
+   on matches through the CSS Custom Highlight API. The host puts the bar and the Conversation in one
+   `position: relative` box, which the bar sits in without taking room or moving anything. */
+@layer components {
+  [data-slot="kind-conversation-search"] {
+    --kind-conversation-search-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21 21-4.34-4.34'/%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3C/svg%3E");
+    --kind-conversation-search-previous-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m18 15-6-6-6 6'/%3E%3C/svg%3E");
+    --kind-conversation-search-next-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    --kind-conversation-search-close-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E");
+    position: absolute;
+    inset-block-start: 0.5rem;
+    inset-inline-end: 1rem;
+    z-index: 1;
+    /* On a narrow conversation the field gives up width, so the bar stays inside it. */
+    max-inline-size: calc(100% - 2rem);
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.125rem;
+    padding: 0.25rem;
+    border: 1px solid var(--kind-color-border);
+    border-radius: calc(var(--kind-radius) * 2 / 3);
+    background-color: var(--kind-color-surface);
+    color: var(--kind-color-fg);
+    box-shadow: 0 4px 12px -4px color-mix(in oklab, var(--kind-color-shadow) 18%, transparent);
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  /* Custom elements on Web Components are inline until styled. */
+  [data-slot="kind-conversation-search-input"] {
+    display: block;
+    min-inline-size: 0;
+    flex-shrink: 1;
+
+    & :where(ui-input) {
+      display: contents;
+    }
+
+    & [data-slot="input-group"] {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      width: 14rem;
+      max-inline-size: 100%;
+      box-sizing: border-box;
+      height: 1.75rem;
+      padding-inline: 0.5rem 0.125rem;
+      border-radius: calc(var(--kind-radius) / 2);
+      background-color: var(--kind-color-hover);
+      color: var(--kind-color-muted);
+      transition: box-shadow var(--kind-duration-fast);
+
+      &::before {
+        content: "";
+        flex-shrink: 0;
+        width: 0.875rem;
+        height: 0.875rem;
+        background-color: currentColor;
+        mask: var(--kind-conversation-search-icon) center / contain no-repeat;
+      }
+      &:has(input:focus-visible) {
+        box-shadow: 0 0 0 1.5px var(--kind-color-ring);
+        /* Shows in forced colors, where the shadow doesn't. */
+        outline: 1.5px solid transparent;
+      }
+    }
+
+    & input {
+      flex: 1;
+      min-width: 0;
+      height: 100%;
+      padding: 0 0.25rem;
+      border: 0;
+      background: none;
+      color: var(--kind-color-fg);
+      font: inherit;
+      font-size: 0.875rem;
+      outline: none;
+
+      &::placeholder {
+        color: var(--kind-color-muted);
+      }
+      &::-webkit-search-cancel-button {
+        appearance: none;
+      }
+    }
+
+    & [data-slot="input-clear"] {
+      display: inline-grid;
+      flex-shrink: 0;
+      place-items: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      padding: 0;
+      border: 0;
+      border-radius: calc(var(--kind-radius) / 3);
+      background-color: transparent;
+      color: var(--kind-color-muted);
+
+      &::before {
+        content: "";
+        width: 0.75rem;
+        height: 0.75rem;
+        background-color: currentColor;
+        mask: var(--kind-conversation-search-close-icon) center / contain no-repeat;
+      }
+      &:hover {
+        color: var(--kind-color-fg);
+        background-color: color-mix(in oklab, var(--kind-color-fg) 6%, transparent);
+      }
+      &:focus-visible {
+        outline: 1.5px solid var(--kind-color-ring);
+        outline-offset: -1.5px;
+      }
+      &[hidden] {
+        display: none;
+      }
+    }
+  }
+
+  [data-slot="kind-conversation-search-count"] {
+    display: block;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--kind-color-muted);
+
+    &[data-empty] {
+      display: none;
+    }
+  }
+
+  :is(
+    [data-slot="kind-conversation-search-previous"],
+    [data-slot="kind-conversation-search-next"],
+    [data-slot="kind-conversation-search-close"]
+  ) {
+    display: inline-grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--kind-radius) / 2);
+    background-color: transparent;
+    color: var(--kind-color-muted);
+    cursor: pointer;
+    transition:
+      background-color var(--kind-duration-fast),
+      color var(--kind-duration-fast);
+
+    &::before {
+      content: "";
+      width: 1rem;
+      height: 1rem;
+      background-color: currentColor;
+      mask: var(--kind-conversation-search-icon-image) center / contain no-repeat;
+    }
+    &:hover:where(:not([aria-disabled="true"])) {
+      color: var(--kind-color-fg);
+      background-color: var(--kind-color-hover);
+    }
+    &:focus-visible {
+      outline: 1.5px solid var(--kind-color-ring);
+      outline-offset: -1.5px;
+    }
+    &:where([aria-disabled="true"]) {
+      opacity: 0.45;
+      cursor: default;
+    }
+  }
+
+  [data-slot="kind-conversation-search-previous"] {
+    --kind-conversation-search-icon-image: var(--kind-conversation-search-previous-icon);
+  }
+  [data-slot="kind-conversation-search-next"] {
+    --kind-conversation-search-icon-image: var(--kind-conversation-search-next-icon);
+  }
+  [data-slot="kind-conversation-search-close"] {
+    --kind-conversation-search-icon-image: var(--kind-conversation-search-close-icon);
+  }
+
+  /* The bar fades in as it opens, over 120 ms under reduced motion, and shows at once with "none" (spec §6). */
+  [data-slot="kind-conversation-search"]:where(:not([data-motion="none"])) {
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+    @starting-style {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    [data-slot="kind-conversation-search"]:where([data-motion="auto"]) {
+      transition:
+        opacity var(--kind-duration-base) var(--kind-ease-out),
+        translate var(--kind-duration-base) var(--kind-ease);
+
+      @starting-style {
+        opacity: 0;
+        translate: 0 -4px;
+      }
+    }
+  }
+
+  /* Every match, and the current one stronger. The current match is dark text on amber (6.9:1 in light, 9.8:1 in
+     dark); other matches keep the page's text over a dim amber (12.9:1 in light, 6.6:1 in dark). */
+  ::highlight(kind-search) {
+    background-color: color-mix(in oklab, var(--kind-color-warning) 35%, transparent);
+    color: var(--kind-color-fg);
+  }
+  ::highlight(kind-search-current) {
+    background-color: var(--kind-color-warning);
+    color: var(--kind-color-on-warning);
+  }
+
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    [data-slot="kind-conversation-search-input"]
+      :is([data-slot="input-group"], [data-slot="input-clear"])::before,
+    :is(
+        [data-slot="kind-conversation-search-previous"],
+        [data-slot="kind-conversation-search-next"],
+        [data-slot="kind-conversation-search-close"]
+      )::before {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+    }
+    :is(
+        [data-slot="kind-conversation-search-previous"],
+        [data-slot="kind-conversation-search-next"]
+      )[aria-disabled="true"]::before {
+      background-color: GrayText;
+    }
+    ::highlight(kind-search) {
+      background-color: Mark;
+      color: MarkText;
+    }
+    ::highlight(kind-search-current) {
+      background-color: Highlight;
+      color: HighlightText;
+    }
+  }
+}

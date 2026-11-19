@@ -33,6 +33,7 @@
     "launcherPrimitive": 44000,
     "daySeparatorPrimitive": 5500,
     "connectionStatusPrimitive": 7000,
-    "shareDialogPrimitive": 39000
+    "shareDialogPrimitive": 39000,
+    "conversationSearchPrimitive": 61500
   }
 }

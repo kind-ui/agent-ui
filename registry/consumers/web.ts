@@ -84,6 +84,8 @@ import { defineShareDialog } from "./components/ui/web/share-dialog.js";
 
 // wave-6-task-11: Conversation Search
 
+import { defineConversationSearch } from "./components/ui/web/conversation-search.js";
+
 import "./index.css";
 
 for (const define of [
@@ -171,6 +173,8 @@ for (const define of [
   // wave-6-task-10: Conversation states
 
   // wave-6-task-11: Conversation Search
+
+  defineConversationSearch,
 ]) {
   define();
 }
@@ -287,6 +291,8 @@ const items = {
   // wave-6-task-10: Conversation states
 
   // wave-6-task-11: Conversation Search
+
+  "conversation-search": `<kind-conversation-search default-open></kind-conversation-search>`,
 };
 
 const main = document.createElement("main");

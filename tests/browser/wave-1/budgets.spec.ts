@@ -33,6 +33,12 @@ const BUDGETS = {
   threadAppend: { writes: 200, renders: 77, notified: 78, layoutReads: 2 },
 
   // wave-6-task-11: Conversation Search
+
+  // The fixture's rows are 48px in a 480px viewport, so the same rows are in view at 100 and 5,000 messages, and the
+  // 480px track holds at most 120 marks, placed by index rather than measured. What a character costs beyond the rows
+  // in view is the marks it moves: at 100 messages, about 40 marks come and go (3 writes each on web, which also
+  // re-reads every mark); at 5,000 every 4px step holds a match whatever the search, so no mark moves.
+  conversationSearchType: { writes: 151, renders: 88, notified: 128, layoutReads: 4 },
 };
 const SIZES = [10, 500];
 
@@ -338,6 +344,29 @@ for (const threads of ["ten", "thousand"])
     });
 
 // wave-6-task-11: Conversation Search
+
+// Typing a character re-renders the marks it moves and the rows in view, not the messages: at 100 as at 5,000.
+for (const messages of [100, 5000]) {
+  test(`typing a character in a search over ${messages} messages`, async ({ page }) => {
+    await page.goto(`/?c=conversation-search&case=many-${messages}`);
+    await expect(page.locator('[data-slot="kind-conversation-row"]').first()).toBeVisible();
+    await page.evaluate(() =>
+      (window as unknown as { kindSearch: { set(query: string): void } }).kindSearch.set("r"),
+    );
+    await expect(page.locator('[data-slot="kind-conversation-search-count"]')).not.toHaveText("");
+    const counts = await most(
+      page,
+      20,
+      'kindSearch.set(["re", "r", "ro", "r"][(window.kindStep = (window.kindStep ?? 0) + 1) % 4])',
+    );
+    const marks = await page.locator('[data-slot="kind-conversation-mark"]').count();
+    expect(marks).toBeLessThanOrEqual(120);
+    expect(counts.writes).toBeLessThanOrEqual(BUDGETS.conversationSearchType.writes);
+    expect(counts.renders).toBeLessThanOrEqual(BUDGETS.conversationSearchType.renders);
+    expect(counts.notified).toBeLessThanOrEqual(BUDGETS.conversationSearchType.notified);
+    expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS.conversationSearchType.layoutReads);
+  });
+}
 
 test("mounting and unmounting a conversation leaves no nodes or listeners behind", async ({
   page,

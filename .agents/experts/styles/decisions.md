@@ -60,6 +60,7 @@ Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 - **`plan.spec.ts` doesn't check the progress fill's motion;** checked by hand: `width` over 280 ms at full motion, none under reduced motion and `motion="reduced"`.
 - **`field-sizing: content` on the message editor grows only in Chromium;** elsewhere it keeps its 2.5rem minimum.
 - **Chain of Thought: the line to a new step appears at once** while the step fades up (`--kind-duration-base`), pointing 2px into the space it's about to take. No layout moves; drawing it from the new item can't reach a previous item's open content.
+- **Where Conversation's marks sit beside a classic (non-overlay) scrollbar is unmeasured** (Wave 6 Task 11): headless macOS draws a 0px scrollbar.
 
 ## Resolved
 
@@ -117,6 +118,7 @@ Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 - **Model Control's trigger chevron pointed up in right-to-left text (Wave 5 Task 9):** its rotation turns off `menu.css`'s mirror; a menu trigger's chevron reads `ButtonText` in forced colors.
 - **Day Separator overflowed a narrow container** (Wave 6 Task 6): the label now ellipsizes (`min-width: 0`), and `[hidden]` sets `display: none` over the root's `display: flex`.
 - **Message (Wave 6 Task 9):** `::first-letter` on the time capitalized lower-case months (Hungarian "nov."); the avatar and failed-outcome rules weighed two and three attributes (now `:where()`).
+- **Conversation Search's motion rules outranked a consumer class, light-mode marks were 2.6:1, and the highlight contrast comment was wrong** (Wave 6 Task 11): fixed (`:where()`, marks mixed toward `--kind-color-fg`, the measured ratios).
 
 ## Revisit
 

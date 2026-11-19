@@ -719,3 +719,18 @@ export {
 // wave-6-task-10: Conversation states
 
 // wave-6-task-11: Conversation Search
+
+export {
+  type ConversationSearchApi,
+  type ConversationSearchInputState,
+  type ConversationSearchMatch,
+  type ConversationSearchMessage,
+  type ConversationSearchOpenChangeReason,
+  type ConversationSearchOptions,
+  type ConversationSearchPrimitive,
+  type ConversationSearchQueryChangeReason,
+  type ConversationSearchState,
+  conversationSearchPrimitive,
+  findMatches,
+  searchText,
+} from "./conversation-search/index.js";

@@ -97,6 +97,8 @@ import { ShareDialog } from "./components/ui/share-dialog.js";
 
 // wave-6-task-11: Conversation Search
 
+import { ConversationSearch } from "./components/ui/conversation-search.js";
+
 import "./index.css";
 
 const items = {
@@ -392,6 +394,8 @@ const items = {
   // wave-6-task-10: Conversation states
 
   // wave-6-task-11: Conversation Search
+
+  "conversation-search": <ConversationSearch defaultOpen messages={[{ id: "1", text: "Hello." }]} />,
 };
 
 createRoot(document.getElementById("root") as HTMLElement).render(

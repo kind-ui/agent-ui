@@ -40,10 +40,12 @@ Conversation
 │       └── ConversationEmpty
 │           ├── ConversationEmptyTitle
 │           └── ConversationEmptyDescription
-└── ConversationJump
+├── ConversationJump
+└── ConversationMarks
+    └── ConversationMark
 ```
 
-The viewport is the part that scrolls, and the content holds a `ConversationRow` for each message, with its `value` and `index`. The other parts of the content take the rows' place when there are none to show: `ConversationSkeleton` and `ConversationLoading` while the conversation loads, `ConversationError` when it couldn't load, and `ConversationEmpty` once it's loaded with no messages. `ConversationJump` renders a button that shows while the reader is away from the end.
+The viewport is the part that scrolls, and the content holds a `ConversationRow` for each message, with its `value` and `index`. The other parts of the content take the rows' place when there are none to show: `ConversationSkeleton` and `ConversationLoading` while the conversation loads, `ConversationError` when it couldn't load, and `ConversationEmpty` once it's loaded with no messages. `ConversationJump` renders a button that shows while the reader is away from the end, and `ConversationMarks` a track beside the scrollbar with a `ConversationMark` for each marked message.
 
 ## Usage
 
@@ -97,6 +99,17 @@ async function loadOlder() {
   controller.prepend();
   setMessages((messages) => [...older, ...messages]);
 }
+```
+
+### Marks Beside the Scrollbar
+
+Pass `marks` the indexes of messages to point out, like the ones a search matched, and render `ConversationMarks` inside the Conversation. It draws a mark for each beside the scrollbar, at the message's place in the conversation, and marks closer than 4px merge into one, so a thousand matches stay readable. The track is decorative and hidden from screen readers. [Conversation Search](./conversation-search.mdx) hands you its matches through `onMarksChange`.
+
+```tsx
+<Conversation messageCount={messages.length} marks={[2, 7]}>
+  <ConversationViewport>{/* rows */}</ConversationViewport>
+  <ConversationMarks />
+</Conversation>
 ```
 
 ### Long Conversations

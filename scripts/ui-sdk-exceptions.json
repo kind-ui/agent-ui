@@ -1,5 +1,6 @@
 {
   "src/core/composed-events.ts": "Composed UI SDK component events on Web Components",
+  "src/core/conversation-search/highlights.ts": "Conversation search highlights",
   "src/core/dictation.ts": "Dictation audio and speech",
   "src/core/motion/index.ts": "Motion helper presets (§6)"
 }

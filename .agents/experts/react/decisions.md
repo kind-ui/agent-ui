@@ -54,6 +54,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **UI SDK Menu rendered open on the server leaves its radio group unnamed (Wave 5 Task 6):** `role="group"` has no `aria-labelledby` though its label is in the markup, like the known `CommandGroup` one; the client names it. UI SDK's; report upstream.
 - **Model Control's trigger repeats `KindMenuItemContent`'s string-or-element icon code** (Wave 5 Task 9); one internal icon helper would serve both.
 - Sidebar: no fixture or spec for a controlled `open` that refuses or follows changes; core's write-back was checked by hand in review.
+- **A custom `ConversationSearchInput` without `ConversationSearchCount` leaves the field's `aria-describedby` naming a missing id** (Wave 6 Task 11), as the `StepTitle` and `QuestionPrompt` items do.
 
 ## Resolved
 
@@ -107,6 +108,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **Approval Mode fixtures (Wave 5 Task 6):** `onLearnMore` had no case and the fixtures carried an unused `id`; a `learning` case and spec test cover it, and the `id` is gone.
 - **A choice option's `icon` was `unknown` in React's `settings` props (Wave 5 Task 9):** `SettingsMenuSetting` narrows the options' icons too, and Model Control's `settings` use it.
 - **`MessageTime` warned "Invalid DOM property `datetime`" (Wave 6 Task 9):** UI SDK's React props don't rename it, so the core slot writes `dateTime`; the clock path (no `now`) is pinned in `message.spec.ts` with no console errors.
+- **Conversation Search ignored its `defaultQuery` at mount, didn't write back a controlled search the owner didn't take, left its marks when unmounted, and the docs example rendered every row on a marks change** (Wave 6 Task 11): fixed, with `preset` and `refused` cases; the example's rows are `memo`.
 
 ## Revisit
 
