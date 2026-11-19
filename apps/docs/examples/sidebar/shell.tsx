@@ -1,7 +1,7 @@
 "use client";
 import type { MessageAuthor, Thread } from "@kind-ui/agent-ui";
 import { createConversationController, dayKey, isContinuation } from "@kind-ui/agent-ui/core";
-import { memo, useState, useSyncExternalStore } from "react";
+import { memo, useMemo, useState, useSyncExternalStore } from "react";
 import { ConnectionStatus } from "@/components/ui/connection-status";
 import {
   Conversation,
@@ -120,6 +120,7 @@ const ChatRow = memo(function ChatRow({ row, index }: { row: Row; index: number 
           author={row.line.author}
           continued={row.continued}
           createdAt={row.line.createdAt}
+          now={now}
           timeZone={timeZone}
         >
           {row.line.author && (
@@ -136,7 +137,7 @@ const ChatRow = memo(function ChatRow({ row, index }: { row: Row; index: number 
           </MessageContent>
         </Message>
       ) : (
-        <DaySeparator date={row.date} timeZone={timeZone} />
+        <DaySeparator date={row.date} timeZone={timeZone} relative={false} />
       )}
     </ConversationRow>
   );
@@ -165,7 +166,11 @@ export default function ChatShellExample() {
   );
 
   const thread = threads.find((item) => item.id === current);
-  const rows = toRows(lines[current] ?? []);
+  const rows = useMemo(() => toRows(lines[current] ?? []), [lines, current]);
+  const searchable = useMemo(
+    () => rows.map((row) => ({ id: row.id, text: "line" in row ? row.line.text : "" })),
+    [rows],
+  );
   const update = (id: string, change: Partial<Thread>) =>
     setThreads((items) => items.map((item) => (item.id === id ? { ...item, ...change } : item)));
   const open = (id: string) => {
@@ -215,7 +220,13 @@ export default function ChatShellExample() {
               onNew={() => create("")}
               onRename={(id, { title }) => update(id, { title })}
               onPinChange={(id, { pinned }) => update(id, { pinned })}
-              onDelete={(id) => setThreads((items) => items.filter((item) => item.id !== id))}
+              onDelete={(id) => {
+                const rest = threads.filter((item) => item.id !== id);
+                setThreads(rest);
+                if (id !== current) return;
+                if (rest[0]) open(rest[0].id);
+                else create("");
+              }}
             />
           </div>
         </div>
@@ -235,7 +246,7 @@ export default function ChatShellExample() {
         </header>
         <div className="relative min-h-0 flex-1">
           <ConversationSearch
-            messages={rows.map((row) => ({ id: row.id, text: "line" in row ? row.line.text : "" }))}
+            messages={searchable}
             conversation={controller}
             open={searching}
             onOpenChange={setSearching}
