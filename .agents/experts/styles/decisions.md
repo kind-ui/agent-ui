@@ -33,7 +33,7 @@ Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 
 ## Known and open (don't report again, check whether fixed)
 
-- **Connection Status's pill narrows by a digit's width when its countdown drops from 10 s to 9 s, and again at "Reconnecting"** (Wave 6 Task 7): `tabular-nums` keeps widths equal within a digit count; centred by `translate`, both edges move about 4px. Nothing else moves; a minimum width keyed on the label's length would fix it.
+- **Connection Status's pill narrows when the countdown ends at "Reconnecting"** (Wave 6 Task 7): the words change, so the width does; centred by `translate`, both edges move. Nothing else moves.
 - **Every one of the 128 bars transitions its `scale` on each level, clipped ones too (Task 17):** cost not profiled.
 - **The unchecked switch is about 1.3:1 thumb to track, in both schemes (Wave 5 Task 5):** D6 copies UI SDK Switch's look; fix it on `internal-switch` and `menu.css` together.
 - **`--kind-picker-trigger-width` set on an ancestor doesn't reach Model Selector** (Wave 5 Task 3): its trigger maps `--kind-model-selector-width` (default 14rem) onto it, so 0.4's variable works on the trigger too; no CSS keeps both names working at every level. `picker.mdx` doesn't document the variable yet.
@@ -65,6 +65,7 @@ Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 
 ## Resolved
 
+- **Connection Status's pill narrowed as its countdown lost a digit (Wave 6 Task 7, fixed in Task 12):** the text part's `live` `data-spare-digits` holds a zero per digit lost since the countdown began, drawn `visibility: hidden` in `::after` with the same `tabular-nums`, so "10 s" to "9 s" keeps the width within a layout unit. A minimum width can't know a host's `countdown` words, and `ch` isn't a tabular digit's width (off by 0.05px). `connection-status.spec.ts` measures it.
 - **Dictation (Wave 5 Task 11):** words heard were cut at the end (now cut at the start, newest in view), the unsupported error didn't fit ("Not supported in this browser"), the bars' timing is `--kind-dictation-bar-smoothing`, a large `bars` overflowed the box (the waveform shrinks and clips), two selectors gained `:where()`, a pending Stop no longer hovers and reads `GrayText` in forced colors. `dictation.spec.ts` pins the box across phases and `prefers-reduced-motion`; `forced-colors.spec.ts` lists Dictation.
 - **Context Bar (Wave 5 Task 10):** WebKit has no `overflow-clip-margin`, so the clipped bar hid focus rings on chips and "+N"; the rings now sit inside (`outline-offset: -2px`). `motion="none"` and the remove icon in forced colors are tested.
 - **Settings Menu switch and icon trigger (Wave 5 Task 5):** the switch had a transition under `motion="none"` and its track faded under reduced motion; the icon trigger lost its look with custom children, as Add Menu's did. Both fixed; the spec checks the reduced track and thumb.

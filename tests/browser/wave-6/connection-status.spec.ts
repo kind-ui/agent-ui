@@ -84,6 +84,20 @@ test("reconnecting counts down to the next try each second, without a live regio
   expect(await announced(page)).toEqual(["Connection lost"]);
 });
 
+test("the pill keeps its width as the countdown loses a digit", async ({ page }) => {
+  await page.clock.install({ time: new Date("2026-11-18T12:00:00Z") });
+  await open(page, "online");
+  await page.clock.pauseAt(new Date("2026-11-18T12:00:10Z"));
+  await set(page, "reconnecting", { retryAt: "2026-11-18T12:00:20Z" });
+  await expect(pill(page)).toHaveText(/Retrying in 10 s/);
+  const width = () => pill(page).evaluate((el) => el.getBoundingClientRect().width);
+  const before = await width();
+  await page.clock.runFor(1000);
+  await expect(pill(page)).toHaveText(/Retrying in 9 s/);
+  // Within a layout unit: the hidden zeros shape as a run of their own. A lost digit is about 7px.
+  expect(await width()).toBeCloseTo(before, 1);
+});
+
 test("losing the connection and getting it back are announced once each", async ({ page }) => {
   await open(page, "online");
   await set(page, "reconnecting");
@@ -112,6 +126,19 @@ test("focus moves on from Retry when the connection comes back, and a pending re
   await expect(page.locator('[data-slot="kind-conversation-viewport"]')).toBeFocused();
   await set(page, "offline");
   await expect(retryButton(page)).not.toHaveAttribute("aria-disabled");
+});
+
+test("focus moves from Retry into a shadow root after the pill", async ({ page }) => {
+  await open(page, "offline");
+  await pill(page).evaluate((el) => {
+    const host = document.createElement("div");
+    host.id = "after-pill";
+    host.attachShadow({ mode: "open" }).innerHTML = "<button>After</button>";
+    el.after(host);
+  });
+  await retryButton(page).focus();
+  await set(page, "online");
+  await expect(page.locator("#after-pill").getByRole("button", { name: "After" })).toBeFocused();
 });
 
 test("Retry calls the host once and waits for it", async ({ page }) => {

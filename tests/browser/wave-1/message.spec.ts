@@ -305,6 +305,15 @@ test.describe("author and time", () => {
     if (layerOf(testInfo) === "react") expect(errors).toEqual([]);
   });
 
+  test("a page left open past midnight shows today's time with its date", async ({ page }) => {
+    await page.clock.install({ time: new Date("2026-11-18T23:59:30Z") });
+    await open(page, "author-clock");
+    const today = message(page, "today").locator("time");
+    await expect(today).toHaveText("9:41 AM");
+    await page.clock.runFor(60_000);
+    await expect(today).toHaveText("Nov 18, 9:41 AM");
+  });
+
   test("clearing the author empties the avatar it filled", async ({ page }, testInfo) => {
     test.skip(layerOf(testInfo) !== "web", "web fills its avatar part itself");
     await open(page, "author");

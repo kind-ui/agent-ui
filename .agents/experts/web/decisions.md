@@ -28,7 +28,6 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 
 ## Known and open (don't report again, check whether fixed)
 
-- **`nearestTabStop` (`core/notice/base.ts`) searches only `ownerDocument.body`** (found in Wave 6 Task 7): a Notice or Connection Status inside a shadow root can't hand focus to a stop in that root, on top of UI SDK's own focus recovery there.
 - **Dictation's web `draw` runs on every level (Wave 5 Task 11):** cheap and guarded; no `written` or `moved` fixture case yet.
 - **An empty `<kind-dictation>` takes no room until defined (Wave 5 Task 11):** a `:not(:defined)` rule from its size variables would hold it.
 - **`kind-composer` removed and put back a tick later forgets "Draft restored"** (Wave 5 Task 13): the draft text comes back through `defaultValue`, but `@ui-sdk/web` carries a mapped root state only through a `default<Key>` option, and `restored` has none; a same-tick move keeps it. Fixing it needs a public `defaultRestored`-style option.
@@ -82,6 +81,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 
 ## Resolved
 
+- **`nearestTabStop` searched only `ownerDocument.body`** (found in Wave 6 Task 7, fixed in Task 12): it now walks open shadow roots too, so a Notice or Connection Status hands focus to a stop inside one, before or after it.
 - **An empty written `<kind-dictation-status>` showed nothing (Wave 5 Task 11):** `draw` fills in its mark and `[data-dictation-text]`.
 - **Context Bar (Wave 5 Task 10):** a list written with only whitespace inside is filled in; new chip objects with the same content keep their rows; the content's `initial-focus`, `side-offset` and `align` are set on every draw, so content added later opens as React's does (`written` case).
 - **A `kind-message` written with menu markup and no `regenerateOptions` both regenerated and opened a menu of "Try again" (Wave 5 Task 7):** the root now always controls its `ui-menu`, which refuses to open without options, and empties a content it owns; `message.spec.ts` has a `no-options` case.

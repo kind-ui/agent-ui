@@ -6,6 +6,7 @@ import {
   createFocusRecovery,
   definePrimitive,
   type FocusRecovery,
+  live,
   prepareAnnouncements,
   type SlotDefinition,
 } from "@ui-sdk/core";
@@ -82,6 +83,8 @@ export type ConnectionStatusState = {
   started: boolean;
   /** Whole seconds until `retryAt` while `reconnecting`, else 0. Live: only the text hears it. */
   seconds: number;
+  /** How many digits `seconds` has lost since its countdown started, which the text keeps room for. Live. */
+  spareDigits: number;
   /** The `retryAt` option. */
   retryAt: string | undefined;
   /** Whether `onRetry` is set. */
@@ -193,11 +196,12 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
       started: false,
       // Counted on the client, from the root's `bind`, so server markup and hydration agree.
       seconds: 0,
+      spareDigits: 0,
       pending: false,
     };
   },
   sync: presentation,
-  live: ["seconds", "started"],
+  live: ["seconds", "spareDigits", "started"],
   controlled: ["phase", "pending"],
   api: (context) => {
     const { store } = context;
@@ -262,10 +266,14 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
         let stop = () => {};
         let counting: string | undefined;
         let timer: ReturnType<typeof setTimeout> | undefined;
+        let digits = 0;
 
         const count = (at: number) => {
           const left = at - Date.now();
-          store.set({ seconds: Math.max(0, Math.ceil(left / 1000)) });
+          const seconds = Math.max(0, Math.ceil(left / 1000));
+          const shown = seconds > 0 ? String(seconds).length : 0;
+          digits = Math.max(digits, shown);
+          store.set({ seconds, spareDigits: shown ? digits - shown : 0 });
           // Wakes on the next whole second, so the number changes when it should.
           if (left > 0) timer = setTimeout(count, left % 1000 || 1000, at);
         };
@@ -276,8 +284,9 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
           if (target !== counting) {
             counting = target;
             clearTimeout(timer);
+            digits = 0;
             const at = target ? Date.parse(target) : Number.NaN;
-            if (Number.isNaN(at)) store.set({ seconds: 0 });
+            if (Number.isNaN(at)) store.set({ seconds: 0, spareDigits: 0 });
             else count(at);
           }
           const shows = phase !== "online";
@@ -309,6 +318,10 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
       // Reads the live `seconds`, so a tick renders this part alone.
       state: (state) => ({ text: connectionStatusText(state) }),
       attrs: () => ({ "data-connection-status-part": "text" }),
+      // "Retrying in 10 s" turning into "9 s" keeps the pill's width, so it doesn't jump on its centre.
+      live: live((state) => ({
+        "data-spare-digits": state.spareDigits ? "0".repeat(state.spareDigits) : undefined,
+      })),
     }),
     retry: slot<BaseSlotProps, { pending: boolean; label: string }>({
       role: "button",

@@ -2,6 +2,7 @@ import { definePrimitive, pageLocale, type SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { memo } from "../memo.js";
 import { dayKey, dayLabel, todayKey } from "../time.js";
+import { everyMinute } from "../today.js";
 
 export type DaySeparatorOptions = {
   /**
@@ -62,22 +63,6 @@ type DaySeparatorSlots = { root: DaySeparatorSlot; label: DaySeparatorSlot<DaySe
 export type DaySeparatorPrimitive = ReturnType<
   typeof definePrimitive<DaySeparatorOptions, DaySeparatorState, DaySeparatorApi, DaySeparatorSlots>
 >;
-
-// One clock for every separator in the page, so a page left open past midnight moves "Today" to "Yesterday".
-const minuteListeners = new Set<() => void>();
-let minuteTimer: ReturnType<typeof setInterval> | undefined;
-const everyMinute = (listener: () => void) => {
-  minuteListeners.add(listener);
-  minuteTimer ??= setInterval(() => {
-    for (const each of minuteListeners) each();
-  }, 60_000);
-  return () => {
-    minuteListeners.delete(listener);
-    if (minuteListeners.size > 0) return;
-    clearInterval(minuteTimer);
-    minuteTimer = undefined;
-  };
-};
 
 const presentation = (options: DaySeparatorOptions): Omit<DaySeparatorState, "pageLocale" | "today"> => {
   const { level } = options;

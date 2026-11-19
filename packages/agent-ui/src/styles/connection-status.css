@@ -54,6 +54,12 @@
   [data-connection-status-part="text"] {
     font-variant-numeric: tabular-nums;
   }
+  /* Digits a countdown has lost stay as unseen zeros after the words, as wide as the digits were, so "10 s" turning
+     into "9 s" doesn't resize the pill. */
+  [data-connection-status-part="text"][data-spare-digits]::after {
+    content: attr(data-spare-digits);
+    visibility: hidden;
+  }
 
   [data-connection-status-part="retry"] {
     display: inline-flex;

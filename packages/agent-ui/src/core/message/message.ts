@@ -31,6 +31,7 @@ import { enter, type MotionMode } from "../motion/index.js";
 import { createPendingAction } from "../pending.js";
 import { nearestTabStop } from "../tab-stop.js";
 import { durationLabel, timeLabel, todayKey } from "../time.js";
+import { everyMinute } from "../today.js";
 
 /** The branch switcher's text: `"2 of 3"` for the second of three. */
 export const branchLabel = (index: number, count: number): string => `${index + 1} of ${count}`;
@@ -222,8 +223,11 @@ export type MessageApi = {
    * settled.
    */
   enterToolbar: (el: HTMLElement) => void;
-  /** Reads today from the browser's clock, unless `now` is set. Called by the time part's `bind`. */
-  readClock: () => void;
+  /**
+   * Reads today from the browser's clock, unless `now` is set, and again each minute until the returned function is
+   * called. Called by the time part's `bind`.
+   */
+  readClock: () => () => void;
   /** Moves focus out of the outcome when Retry or Continue leaves while focused. */
   outcomeRecovery: ReturnType<typeof createFocusRecovery>;
   /** The avatar and time parts' states, memoized. */
@@ -557,8 +561,12 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       },
       readClock: () => {
         clock = true;
-        const now = today(context.options());
-        if (now !== store.get().now) store.set({ now });
+        const read = () => {
+          const now = today(context.options());
+          if (now !== store.get().now) store.set({ now });
+        };
+        read();
+        return everyMinute(read);
       },
       // Retry and Continue leave as a new response starts, before the toolbar is back, so focus moves past the
       // message, usually to the composer.
