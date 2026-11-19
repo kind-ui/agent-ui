@@ -6,7 +6,15 @@ import { type ConnectionHost, connectionHost, messages } from "../../shared/conn
 const { host, retried } = connectionHost();
 
 const page =
-  ({ initial = "online", motion }: { initial?: ConnectionState; motion?: MotionMode } = {}) =>
+  ({
+    initial = "online",
+    motion,
+    markup = "",
+  }: {
+    initial?: ConnectionState;
+    motion?: MotionMode;
+    markup?: string;
+  } = {}) =>
   (root: HTMLElement) => {
     defineConversation();
     defineConnectionStatus();
@@ -32,13 +40,15 @@ const page =
     );
     const status = document.createElement("kind-connection-status");
     status.id = "connection";
+    status.innerHTML = markup;
     status.state = initial;
     if (motion) status.motion = motion;
     status.canRetry = true;
     status.addEventListener("retry", (event) => event.detail.waitUntil(retried()));
     root.querySelector("kind-conversation")?.append(status);
-    const set: ConnectionHost["set"] = (state, retryAt) => {
-      status.retryAt = retryAt;
+    const set: ConnectionHost["set"] = (state, options) => {
+      status.retryAt = options?.retryAt;
+      status.resuming = options?.resuming ?? false;
       status.state = state;
     };
     Object.assign(window, { kindHost: Object.assign(host, { set }) });
@@ -48,4 +58,11 @@ export const cases = {
   online: page(),
   offline: page({ initial: "offline" }),
   reduced: page({ initial: "offline", motion: "reduced" }),
+  // Parts with words of their own, and a Retry without the mark and text before it.
+  written: page({
+    initial: "offline",
+    markup:
+      "<kind-connection-status-text>Sin conexión</kind-connection-status-text>" +
+      "<kind-connection-status-retry><button>Reintentar</button></kind-connection-status-retry>",
+  }),
 };

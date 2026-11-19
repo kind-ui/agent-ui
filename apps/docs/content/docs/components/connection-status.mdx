@@ -65,7 +65,7 @@ While `reconnecting`, pass `retryAt`, an ISO 8601 time, to count down to the nex
 
 ### Retry
 
-Pass `onRetry` to show **Retry** while the pill shows. Return a promise to keep **Retry** disabled until it settles; change `state` once the connection is back. If **Retry** has focus when the pill leaves, focus moves on to the next element Tab reaches.
+Pass `onRetry` to show **Retry** while the connection is down. It isn't shown while `resuming`, since the connection is back, and a retry still pending then no longer holds **Retry** in the next outage. Return a promise to keep **Retry** disabled until it settles; change `state` once the connection is back. If **Retry** has focus when the pill leaves, focus moves on to the next element Tab reaches.
 
 ```tsx
 <ConnectionStatus state={state} onRetry={() => reconnect()} />
@@ -77,7 +77,7 @@ The pill isn't a live region, so it never reads the countdown. When the connecti
 
 ### Motion
 
-The pill fades in as it drops into place, and fades out as it rises. Under `prefers-reduced-motion`, or with `motion="reduced"`, it only fades, and with `motion="none"` it comes and goes at once.
+The pill fades in as it drops into place, and fades out where it is. Under `prefers-reduced-motion`, or with `motion="reduced"`, it only fades, and with `motion="none"` it comes and goes at once.
 
 ## API Reference
 

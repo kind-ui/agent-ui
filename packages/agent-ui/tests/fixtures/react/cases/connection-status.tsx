@@ -12,11 +12,13 @@ import { type ConnectionHost, connectionHost, messages } from "../../shared/conn
 const { host, retried } = connectionHost();
 
 function Page({ initial = "online", motion }: { initial?: ConnectionState; motion?: MotionMode }) {
-  const [connection, setConnection] = useState<{ state: ConnectionState; retryAt?: string }>({
-    state: initial,
-  });
+  const [connection, setConnection] = useState<{
+    state: ConnectionState;
+    retryAt?: string | undefined;
+    resuming?: boolean | undefined;
+  }>({ state: initial });
   useEffect(() => {
-    const set: ConnectionHost["set"] = (state, retryAt) => setConnection({ state, retryAt });
+    const set: ConnectionHost["set"] = (state, options) => setConnection({ state, ...options });
     Object.assign(window, { kindHost: Object.assign(host, { set }) });
   }, []);
   return (
@@ -38,6 +40,7 @@ function Page({ initial = "online", motion }: { initial?: ConnectionState; motio
         id="connection"
         state={connection.state}
         retryAt={connection.retryAt}
+        resuming={connection.resuming}
         motion={motion}
         onRetry={retried}
       />

@@ -32,6 +32,7 @@ Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Connection Status's pill narrows by a digit's width when its countdown drops from 10 s to 9 s, and again at "Reconnecting"** (Wave 6 Task 7): `tabular-nums` keeps widths equal within a digit count; centred by `translate`, both edges move about 4px. Nothing else moves; a minimum width keyed on the label's length would fix it.
 - **Every one of the 128 bars transitions its `scale` on each level, clipped ones too (Task 17):** cost not profiled.
 - **The unchecked switch is about 1.3:1 thumb to track, in both schemes (Wave 5 Task 5):** D6 copies UI SDK Switch's look; fix it on `internal-switch` and `menu.css` together.
 - **`--kind-picker-trigger-width` set on an ancestor doesn't reach Model Selector** (Wave 5 Task 3): its trigger maps `--kind-model-selector-width` (default 14rem) onto it, so 0.4's variable works on the trigger too; no CSS keeps both names working at every level. `picker.mdx` doesn't document the variable yet.

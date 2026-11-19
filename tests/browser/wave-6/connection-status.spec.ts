@@ -1,11 +1,16 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 import { watchAnimations } from "../leaving.js";
 
 type ConnectionState = "online" | "connecting" | "reconnecting" | "offline";
 type Fixture = {
-  kindHost: { retries: number; resolve(): void; set(state: ConnectionState, retryAt?: string): void };
+  kindHost: {
+    retries: number;
+    resolve(): void;
+    set(state: ConnectionState, options?: { retryAt?: string; resuming?: boolean }): void;
+  };
   kindAnnounced: string[];
 };
 
@@ -13,10 +18,10 @@ const pill = (page: Page) => page.locator("#connection");
 const retryButton = (page: Page) => pill(page).getByRole("button", { name: "Retry" });
 const announced = (page: Page) => page.evaluate(() => (window as unknown as Fixture).kindAnnounced);
 const retries = (page: Page) => page.evaluate(() => (window as unknown as Fixture).kindHost.retries);
-const set = (page: Page, state: ConnectionState, retryAt?: string) =>
-  page.evaluate(([state, retryAt]) => (window as unknown as Fixture).kindHost.set(state, retryAt), [
+const set = (page: Page, state: ConnectionState, options?: { retryAt?: string; resuming?: boolean }) =>
+  page.evaluate(([state, options]) => (window as unknown as Fixture).kindHost.set(state, options), [
     state,
-    retryAt,
+    options,
   ] as const);
 const settled = (page: Page) =>
   page.waitForFunction(() =>
@@ -25,7 +30,7 @@ const settled = (page: Page) =>
       .getAnimations()
       .every((animation) => animation.playState !== "running" || animation.timeline !== document.timeline),
   );
-const open = async (page: Page, name: "online" | "offline" | "reduced") => {
+const open = async (page: Page, name: "online" | "offline" | "reduced" | "written") => {
   // Records each text UI SDK's live regions are given.
   await page.addInitScript(() => {
     const texts: string[] = [];
@@ -65,7 +70,7 @@ test("reconnecting counts down to the next try each second, without a live regio
   await page.clock.install({ time: new Date("2026-11-18T12:00:00Z") });
   await open(page, "online");
   await page.clock.pauseAt(new Date("2026-11-18T12:00:10Z"));
-  await set(page, "reconnecting", "2026-11-18T12:00:13Z");
+  await set(page, "reconnecting", { retryAt: "2026-11-18T12:00:13Z" });
   await expect(pill(page)).toHaveText(/Retrying in 3 s/);
   for (const text of ["Retrying in 2 s", "Retrying in 1 s", "Reconnecting"]) {
     await page.clock.runFor(1000);
@@ -87,8 +92,26 @@ test("losing the connection and getting it back are announced once each", async 
   await expect(pill(page)).toHaveAccessibleName("Offline");
   await set(page, "reconnecting");
   await expect(pill(page)).toHaveAccessibleName("Reconnecting");
-  await set(page, "online");
+  await set(page, "online", { resuming: true });
+  await expect(pill(page)).toHaveAccessibleName("Resuming");
+  await expect(retryButton(page)).toHaveCount(0);
   await expect.poll(() => announced(page)).toEqual(["Connection lost", "Reconnected"]);
+  await set(page, "online");
+  await expect(pill(page)).toBeHidden();
+  expect(await announced(page)).toEqual(["Connection lost", "Reconnected"]);
+});
+
+test("focus moves on from Retry when the connection comes back, and a pending retry doesn't outlast it", async ({
+  page,
+}) => {
+  await open(page, "offline");
+  await retryButton(page).focus();
+  await page.keyboard.press("Enter");
+  await expect(retryButton(page)).toHaveAttribute("aria-disabled", "true");
+  await set(page, "online");
+  await expect(page.locator('[data-slot="kind-conversation-viewport"]')).toBeFocused();
+  await set(page, "offline");
+  await expect(retryButton(page)).not.toHaveAttribute("aria-disabled");
 });
 
 test("Retry calls the host once and waits for it", async ({ page }) => {
@@ -104,22 +127,35 @@ test("Retry calls the host once and waits for it", async ({ page }) => {
   await expect.poll(() => retries(page)).toBe(2);
 });
 
-for (const [name, moved] of [
-  ["offline", ["opacity", "translate"]],
-  ["reduced", ["opacity"]],
-] as const) {
-  test(`leaving at ${name === "reduced" ? "reduced" : "full"} motion animates ${moved.join(" and ")}`, async ({
-    page,
-  }) => {
-    await page.emulateMedia({ reducedMotion: "no-preference" });
-    await open(page, name);
-    await settled(page);
-    const exit = await watchAnimations(page, "#connection");
-    await set(page, "online");
-    expect((await exit()).sort()).toEqual([...moved]);
-    await expect(pill(page)).toBeHidden();
-  });
-}
+test("at full motion the pill drops in and fades out; reduced motion only fades", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await open(page, "online");
+  const entrance = await watchAnimations(page, "#connection");
+  await set(page, "offline");
+  expect((await entrance()).sort()).toEqual(["opacity", "translate"]);
+  await settled(page);
+  const exit = await watchAnimations(page, "#connection");
+  await set(page, "online");
+  expect(await exit()).toEqual(["opacity"]);
+  await expect(pill(page)).toBeHidden();
+
+  await open(page, "reduced");
+  await settled(page);
+  const reduced = await watchAnimations(page, "#connection");
+  await set(page, "online");
+  expect(await reduced()).toEqual(["opacity"]);
+  await expect(pill(page)).toBeHidden();
+});
+
+test("web keeps the words written into its parts and adds only the parts it lacks", async ({
+  page,
+}, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web markup");
+  await open(page, "written");
+  await expect(pill(page)).toHaveText("Sin conexiónReintentar");
+  await expect(pill(page).locator("> *")).toHaveCount(3);
+  await expect(pill(page).getByRole("button")).toHaveCount(1);
+});
 
 test("agents retry", async ({ page }) => {
   await open(page, "offline");

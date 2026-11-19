@@ -45,19 +45,26 @@ export type ConnectionStatusOptions = {
    * @default "online"
    */
   state?: ConnectionState;
-  /** Whether a stream is picking up after a reconnect. Shows "Resuming" while `state` is `online`. */
+  /**
+   * Whether a stream is picking up after a reconnect. Shows "Resuming", without Retry, while `state` is `online`.
+   * @default false
+   */
   resuming?: boolean;
-  /** When the next try starts (ISO 8601). While `reconnecting`, the pill counts down to it. */
+  /**
+   * When the next try starts (ISO 8601). While `reconnecting`, the pill counts down to it, and shows "Reconnecting"
+   * once it's past or when it can't be read.
+   */
   retryAt?: string;
   /**
-   * Called when Retry is pressed. Shows Retry while set and the pill shows. Return a promise to keep Retry pending
-   * until it settles.
+   * Called when Retry is pressed. Shows Retry while set and the connection is down (not `online` or resuming).
+   * Return a promise to keep Retry pending until it settles; a rejection or a throw offers Retry again, and so does
+   * the next outage.
    */
   onRetry?: (details: ConnectionStatusRetryDetails) => unknown;
   /** The words to show and announce, for another language or tone. Each one left out keeps its English default. */
   labels?: Partial<ConnectionStatusLabels>;
   /**
-   * How the pill comes and goes: a fade and a short drop at full motion, a 120 ms fade with reduced motion, at once
+   * How the pill comes and goes: at full motion it drops in and fades out, a 120 ms fade with reduced motion, at once
    * with `"none"`. `"auto"` follows `prefers-reduced-motion`.
    * @default "auto"
    */
@@ -71,6 +78,8 @@ export type ConnectionStatusState = {
   shown: Exclude<ConnectionPhase, "online">;
   /** Whether the pill shows: false once `online` and its exit has ended. */
   present: boolean;
+  /** Whether the root has had its first frame. Changes before then aren't news. */
+  started: boolean;
   /** Whole seconds until `retryAt` while `reconnecting`, else 0. Live: only the text hears it. */
   seconds: number;
   /** The `retryAt` option. */
@@ -86,9 +95,9 @@ export type ConnectionStatusState = {
 };
 
 export type ConnectionStatusApi = {
-  /** Calls `onRetry`, as Retry does. Offered while `onRetry` is set, the pill shows and no retry is pending. */
+  /** Calls `onRetry`, as Retry does. Offered while `onRetry` is set, the connection is down and no retry is pending. */
   readonly retry: ((event?: Event) => void) | undefined;
-  /** Moves focus on when Retry leaves while focused. Called by the retry slot. */
+  /** Internal: moves focus on when Retry leaves while focused. Called by the retry slot. */
   recovery: FocusRecovery;
 };
 
@@ -137,6 +146,8 @@ const phaseOf = (options: ConnectionStatusOptions): ConnectionPhase => {
 
 const isLost = (phase: ConnectionPhase) => phase === "reconnecting" || phase === "offline";
 
+const isDown = (phase: ConnectionPhase) => phase !== "online" && phase !== "resuming";
+
 /** The pill's words: the countdown while reconnecting with time left, else the state's. */
 export const connectionStatusText = (
   state: Pick<ConnectionStatusState, "shown" | "seconds" | "labels">,
@@ -179,34 +190,41 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
       phase,
       shown: phase === "online" ? "connecting" : phase,
       present: phase !== "online",
+      started: false,
       // Counted on the client, from the root's `bind`, so server markup and hydration agree.
       seconds: 0,
       pending: false,
     };
   },
   sync: presentation,
-  live: ["seconds"],
+  live: ["seconds", "started"],
   controlled: ["phase", "pending"],
   api: (context) => {
     const { store } = context;
-    // A connection lost before the first frame isn't news.
     let lost = isLost(store.get().phase);
+    const pendingRetry = createPendingAction(context, { state: "pending" });
 
     context.onOptions((options) => {
       const phase = phaseOf(options);
       if (phase === store.get().phase) return;
       store.set(phase === "online" ? { phase } : { phase, shown: phase, present: true });
+      // A retry still pending when the connection comes back belongs to the outage that ended.
+      if (!isDown(phase)) pendingRetry.release();
+      // A web host sets the state once the element exists, so a connection lost before the first frame isn't news.
+      if (!store.get().started) {
+        lost = isLost(phase);
+        return;
+      }
       const labels = { ...DEFAULT_LABELS, ...options.labels };
       if (isLost(phase) && !lost) {
         lost = true;
         announce(labels.lost, { priority: "polite" });
-      } else if (!isLost(phase) && phase !== "connecting" && lost) {
+      } else if (!isDown(phase) && lost) {
         lost = false;
         announce(labels.restored, { priority: "polite" });
       }
     });
 
-    const pendingRetry = createPendingAction(context, { state: "pending" });
     const retry = (event?: Event) => {
       const { onRetry } = context.options();
       if (!onRetry) return;
@@ -218,7 +236,7 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
     return {
       get retry() {
         const { canRetry, pending, phase } = store.get();
-        return canRetry && !pending && phase !== "online" ? retry : undefined;
+        return canRetry && !pending && isDown(phase) ? retry : undefined;
       },
       recovery: createFocusRecovery({
         fallback: (lostFocus) => (lostFocus.el.isConnected ? nearestTabStop(lostFocus.el) : undefined),
@@ -239,6 +257,7 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
       // Comes and goes through CSS on UI SDK's `data-starting-style` and `data-ending-style`, and counts down.
       bind: (el, { store }) => {
         prepareAnnouncements(el.ownerDocument);
+        const frame = requestAnimationFrame(() => store.set({ started: true }));
         let showing = store.get().phase !== "online";
         let stop = () => {};
         let counting: string | undefined;
@@ -271,6 +290,7 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
         const unsubscribe = store.subscribe(follow);
         return () => {
           unsubscribe();
+          cancelAnimationFrame(frame);
           clearTimeout(timer);
           stop();
         };
@@ -293,7 +313,7 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
     retry: slot<BaseSlotProps, { pending: boolean; label: string }>({
       role: "button",
       focus: "native",
-      present: (state) => state.canRetry && state.present,
+      present: (state) => state.canRetry && state.present && state.phase !== "resuming",
       press: ({ api }, event) => api.retry?.(event),
       state: (state) => ({ pending: state.pending, label: state.labels.retry }),
       attrs: (state) => ({
@@ -307,7 +327,7 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
         // makes it inert.
         let unbind: (() => void) | undefined;
         const follow = () => {
-          if (part.store.get().phase !== "online") unbind ??= part.api.recovery.bind(el, part);
+          if (isDown(part.store.get().phase)) unbind ??= part.api.recovery.bind(el, part);
           else {
             unbind?.();
             unbind = undefined;

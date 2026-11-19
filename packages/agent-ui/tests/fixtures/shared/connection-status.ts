@@ -11,7 +11,7 @@ export type ConnectionHost = {
   retries: number;
   /** Settles the pending retry. */
   resolve(): void;
-  set(state: ConnectionState, retryAt?: string): void;
+  set(state: ConnectionState, options?: { retryAt?: string; resuming?: boolean }): void;
 };
 
 /** Counts each retry and keeps it pending until `resolve`. */
