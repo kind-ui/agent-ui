@@ -8,6 +8,31 @@ export interface Source {
   favicon?: string;
 }
 
+/** Who wrote a message. */
+export interface MessageAuthor {
+  id: string;
+  name: string;
+  avatarUrl?: string;
+}
+
+/** A conversation in a list of them. */
+export interface Thread {
+  id: string;
+  title: string;
+  /** ISO 8601. Picks the thread's date group. */
+  updatedAt?: string;
+  pinned?: boolean;
+  /** A group of the host's, like a project or a folder, in place of the date group. */
+  group?: string;
+  /** The thread's own URL, so its row is a real link. */
+  href?: string;
+  /** Work still going on in the background. */
+  status?: "running" | "awaiting-input" | "error";
+  unread?: boolean;
+  /** The text that matched a search. */
+  snippet?: string;
+}
+
 export interface TaskItem {
   id: string;
   title: string;

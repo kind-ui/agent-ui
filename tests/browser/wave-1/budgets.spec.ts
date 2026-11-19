@@ -21,6 +21,12 @@ const BUDGETS = {
   // Widths come from a ResizeObserver's entries, so fitting the chips reads no layout.
   contextChip: { writes: 27, renders: 8, notified: 9, layoutReads: 0 },
   remount: { nodes: 0, listeners: 0 },
+
+  // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its budgets right below its own line.
+
+  // wave-6-task-2: Thread List
+
+  // wave-6-task-11: Conversation Search
 };
 const SIZES = [10, 500];
 
@@ -301,6 +307,12 @@ for (const chips of [10, 200]) {
     expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS.contextChip.layoutReads);
   });
 }
+
+// Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its tests right below its own line.
+
+// wave-6-task-2: Thread List
+
+// wave-6-task-11: Conversation Search
 
 test("mounting and unmounting a conversation leaves no nodes or listeners behind", async ({
   page,

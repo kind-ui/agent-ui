@@ -53,6 +53,21 @@ Every component that shows streamed content passes these before its PR is ready:
 - [ ] **Compact completion:** tool and diff results collapse to a compact summary when they complete.
 - [ ] **Approvals keep their outcome:** a resolved approval shows what was decided, not the buttons it had.
 
+## Wave 6 shared-file markers
+
+Wave 6 Tasks 2 to 11 branch from Task 1 and land in any order (plan D21), so the files they all touch carry one marker comment per task, `wave-6-task-<n>: <name>`:
+
+| File | What goes under a task's marker |
+| --- | --- |
+| `packages/agent-ui/src/core/index.ts` | exports of the task's new modules. A task that extends an export block that already exists (Message's, Conversation's, Picker's) edits it in place. |
+| `registry/catalog.mjs` | the task's `components` item; Task 4's `internals` (`resizable`, `drawer`) under its own marker there |
+| `packages/agent-ui/tests/core/ui-sdk-testing.test.mjs` | the new primitive's server case |
+| `tests/browser/wave-1/budgets.spec.ts` | `BUDGETS` entries and tests (Tasks 2 and 11) |
+| `THIRD_PARTY_NOTICES.md` | one line per task naming the Lucide glyphs it adds |
+| `AGENTS.md` | the task's "UI SDK API notes" bullet |
+
+Find yours with `git grep -n "wave-6-task-<n>:"`. Keep your marker line and the blank line under it, add your lines after that blank line, and end them with one blank line, so two tasks' lines never touch and git merges them cleanly. Biome's `organizeImports` sorts exports only between comments that a blank line separates, so exports under a marker stay there, sorted among themselves. Never edit or move another task's marker. JSON files (`size-budget.json`, `apps/docs/content/docs/components/meta.json`) can't hold markers: a task that lands after another rebases and keeps both. Remove the markers once Tasks 2 to 11 have landed.
+
 ## UI SDK API notes
 
 Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2 and later fill this in.
@@ -163,6 +178,29 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 - **Wave 5 agent conformance (Task 15):** `tests/browser/wave-5/agent.spec.ts` runs `?c=agent&case=wave-5`, the Wave 4 page plus Picker, Add Menu, Settings Menu, Approval Mode, Model Control, Context Bar, Dictation, a Message with `regenerateOptions` ("Answer") and a Composer with `draftKey` ("Draft"), in one `createAgent` snapshot, and compares every Wave 5 action but the bridge's generic `press` through `expectSameAsPerson`; on this page the Wave 3 Model Selector also gets `actions`, so its `run` and `can-run` are covered. Ids sit on each component's `section`, since Context Meter already has `context` and Model Selector `model`. Menu person paths use the keyboard and ignore `[data-slot="menu-content"]`, and toggles and radio rows end with Escape, since the agent never opens the menu. Dictation's `error` is `undefined` without one, because the bridge reads any `error` in state that isn't null as a failed action; React `MessageRegenerateContent` is `keepMounted`, since a closed React menu left its trigger outside `data-agent-hidden` and Menu showed up in the snapshot. The saved draft goes into session storage on every load, so each run starts with "Draft restored"; the agent's `discardDraft` reports reason `"imperative"`. Only Approval Mode (while `agentConfirm`), an idle Dictation and the composer render `data-agent-confirm`. On `?c=full-composer`, each control in the composer is one entry, and every one but Approval Mode and Dictation takes the composer's mark: the bridge marks every component inside a marked element, and `@ui-sdk/web` keys every part but the root, whose mark alone the bridge reads, so the composer can't move its mark to a part (core `decisions.md`).
 - **Testing kit (Wave 5 Task 15):** `@ui-sdk/core/testing`'s `checkServer` needs no DOM: `tests/core/ui-sdk-testing.test.mjs` runs it under `node --test` over every exported `*Primitive`, with markup built from the primitive's `slots`, and fails when a primitive has no case. `mount`, `checkPattern` and `checkDirection` need a DOM, so `tests/browser/wave-5/aria-patterns.spec.ts` runs them in the browser: `tests/browser/ui-sdk-testing.ts` bundles the kit with Vite's `build` and adds it to a fixture page, because adding it to the fixtures' `optimizeDeps` would rewrite the dep cache every running fixture server shares. `checkPattern` checks each component on its own fixture page (menus opened with Enter, popups with their trigger, horizontal widgets again under `dir="rtl"`); `checkDirection` mounts Attachments and Context Bar, which move focus with Left and Right themselves. A problem a decision accepts is listed in the check's `known`, beside the `decisions.md` entry it names. A primitive's destroy cancels a frame only when it scheduled one, since a server has no `cancelAnimationFrame`.
 - **Announcer writes in budgets (Wave 5 Task 15):** `budgets.spec.ts` leaves writes to UI SDK's announcer region (`data-ui-sdk-announcer`) out of its DOM write count: `announce` empties the region at once and writes the text in a 100 ms timer that a later `announce` cancels, so whether a run saw those writes depended on load (the Transcript search hit 74 against 72 in a full suite).
+- **Wave 6 groundwork (Task 1):** `core/time.ts` turns dates into words over `@ui-sdk/core/date` and `Intl`: `dayKey`, `isSameDay`, `dayLabel`, `timeLabel`, `durationLabel`, `isContinuation` and `dateGroup`. Each is pure: `locale` and `timeZone` default to English and UTC, so a server and a browser agree, and `now` is passed in (an ISO date from `todayDate(timeZone)` read in a `bind`, or an instant); without `now`, `dayLabel` and `timeLabel` give the absolute date, as server markup shows it (D13). `@ui-sdk/core/date`'s `formatDate`, `formatDateToParts` and `dateFormatter` always format in UTC (they take date-only strings), and `todayDate(timeZone)` reads only `Date.now()`, so a timestamp's day in a zone (`dayKey`) and its time of day (`timeLabel`) use `Intl.DateTimeFormat` with `timeZone` directly; an invalid zone falls back to UTC, and `locale` goes through `toLocale`. Relative words come from `Intl.RelativeTimeFormat` (`numeric: "auto"`) in its own case ("today", "yesterday"), which components capitalize with CSS `::first-letter`. `durationLabel` joins `Intl.NumberFormat`'s short units ("4 sec", "1 min 12 sec"), not the plan's "4 s", which no `Intl` width writes in English; `Intl.DurationFormat` isn't in Node 22. `dateGroup` keys are `today` (a date after `now` too), `yesterday`, `previous-7-days` (2 to 7 days back), `previous-30-days` (8 to 30), the month this year (`"2026-10"`, "October"), the year (`"2025"`), and `older` without a date; `labels` renames the fixed ones. `threadGroups` lives in `core/thread-groups.ts`, not the plan's `core/thread-list/groups.ts`: the guard takes every `core/<dir>/` for a component and fails one without its primitive, and Thread Search shares it. It puts pinned threads first (`pinned`, "Pinned"), then the host's groups (`group:<name>`) in first-seen order, then date groups newest first. `Thread` and `MessageAuthor` join `types/records.ts`, and `Message` gains `author` and `error`. `scripts/tests/registry.test.mjs` compares the React items with `src/react/*.tsx` instead of counting them, so parallel tasks don't each change one number. Playwright has `wave-6` projects.
+
+<!-- Wave 6 markers ("Wave 6 shared-file markers"): each task adds its bullet right below its own line. -->
+
+<!-- wave-6-task-2: Thread List -->
+
+<!-- wave-6-task-3: Thread Search -->
+
+<!-- wave-6-task-4: Sidebar -->
+
+<!-- wave-6-task-5: Launcher -->
+
+<!-- wave-6-task-6: Day Separator -->
+
+<!-- wave-6-task-7: Connection Status -->
+
+<!-- wave-6-task-8: Share Dialog -->
+
+<!-- wave-6-task-9: Message author, time and outcomes -->
+
+<!-- wave-6-task-10: Conversation states -->
+
+<!-- wave-6-task-11: Conversation Search -->
 
 ## Root scripts
 
@@ -173,7 +211,7 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 | `npm run typecheck` | `build`, then `tsc` over render layers and fixtures (`tsconfig.checks.json`) and consumer type tests (`tests/types/{nodenext,bundler,with-ai,no-ai}/`) |
 | `npm run test:unit` | `build`, then `node --test` over `packages/agent-ui/tests/core/` (tests import `@kind-ui/agent-ui` by name, which resolves to `dist`) |
 | `npm run test:scripts` | `node --test` over `scripts/tests/` (tooling and guard tests) |
-| `npm run test:browser` | `playwright test` (accepts `--project` and `--shard`; projects `wave-<n>-react`, `wave-<n>-web`, `wave-<n>-react-strict` for waves 1 to 5, each matching `tests/browser/wave-<n>/`) |
+| `npm run test:browser` | `playwright test` (accepts `--project` and `--shard`; projects `wave-<n>-react`, `wave-<n>-web`, `wave-<n>-react-strict` for waves 1 to 6, each matching `tests/browser/wave-<n>/`) |
 | `npm run check:package` / `check:size` / `build:registry` / `check:registry-consumers` | packed-package gate / bundle-size budget / registry build / registry consumer installs |
 | `npm run check:fast` | `lint`, `typecheck`, `test:scripts`, `test:unit` |
 | `npm run audit` | `audit-ci` over every dependency at high severity with the `audit-ci.jsonc` allowlist, then `npm audit --omit=dev --audit-level=high` over the package's runtime dependencies with no allowlist (CI's Fast job and release's Validate) |

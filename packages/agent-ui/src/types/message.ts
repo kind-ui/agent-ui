@@ -1,4 +1,4 @@
-import type { Source } from "./records.js";
+import type { MessageAuthor, Source } from "./records.js";
 import type { Step } from "./step.js";
 
 export type Role = "user" | "assistant" | "system";
@@ -11,6 +11,10 @@ export interface Message {
   parts: Part[];
   /** ISO 8601. */
   createdAt?: string;
+  /** Who wrote it, when its role doesn't say. */
+  author?: MessageAuthor;
+  /** Why a message with status `"error"` failed. */
+  error?: { message: string };
   metadata?: Record<string, unknown>;
 }
 
