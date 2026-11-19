@@ -36,6 +36,16 @@ The installed docs describe the exact pinned version. Where the spec or plan nam
 
 Project skills live in `.agents/skills/` (`.claude/skills` links to it); [its README](.agents/skills/README.md) says when to use each. Write with [`write-code`](.agents/skills/write-code/SKILL.md), finish with [`unslop`](.agents/skills/unslop/SKILL.md), then run [`expert-review`](.agents/skills/expert-review/SKILL.md). For the docs site, write with [`write-docs`](.agents/skills/write-docs/SKILL.md) and [`fumadocs`](.agents/skills/fumadocs/SKILL.md); `.mcp.json` and `.vscode/mcp.json` register Fumadocs' docs MCP server. Layer experts (core, react, web, styles, markdown) live in `.agents/experts/`; `node scripts/expert-scope.mjs --base <ref>` shows which ones a diff reaches. Third-party attribution lives only in `THIRD_PARTY_NOTICES.md`.
 
+Design: [`docs/design-principles.md`](docs/design-principles.md) says what we build and when not to. Three design skills check it: [`apple-design`](.agents/skills/apple-design/SKILL.md) for motion and interaction feel, [`impeccable`](.agents/skills/impeccable/SKILL.md) (`audit`, `critique`, `polish`, `distill`) for the rendered result, and [`web-interface-guidelines`](.agents/skills/web-interface-guidelines/SKILL.md) as the interaction checklist. Boundaries: `unslop` owns the code's prose and shape, `expert-review` owns each layer's rules (tokens, reduced motion, layout shift, UI SDK's focus and ARIA), and the design skills judge what a person sees and feels. Don't report a finding twice; where a design skill restates an expert's checklist item, the expert's `decisions.md` wins.
+
+### Component task routine
+
+1. Before building, check the component against "When not to add" in `docs/design-principles.md`. For any motion or gesture, read `apple-design` first.
+2. Build with `write-code`; run the quick checks.
+3. Take the component's screenshots: its docs example and fixture, light and dark, wide and at 390px, nothing focused.
+4. Run `impeccable` `audit` and `critique` on those screenshots, then `web-interface-guidelines` as the checklist pass on the render and style files. Fix what they find, or reply why not; use `distill` when the critique says it does too much and `polish` as the last pass.
+5. Finish with `unslop`, then `expert-review`.
+
 ## Verification policy
 
 - **Quick checks while you work:** `npm run lint` and `npm run typecheck`, plus the unit tests or the one browser spec your change reaches. Run `npm run check` (browser suites included) once before you push.

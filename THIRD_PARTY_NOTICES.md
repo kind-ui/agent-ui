@@ -16,6 +16,26 @@
 - Used in: `.agents/skills/documentation-writer`, installed unchanged with `npx skills add` (`skills-lock.json`). Not shipped in the package.
 - Copyright GitHub, Inc. Licensed under the MIT License.
 
+## emilkowalski/skills (Apple Design)
+
+- Source: https://github.com/emilkowalski/skills, commit `64eb3deb9a5fbfa041faf783e0bc3fd635872e9c`, `skills/apple-design/SKILL.md`.
+- Used in: `.agents/skills/apple-design/SKILL.md`, unchanged. Not shipped in the package.
+- Copyright (c) 2026 Emil Kowalski. Licensed under the MIT License.
+
+## pbakaus/impeccable
+
+- Source: https://github.com/pbakaus/impeccable, commit `b49177d32788f2dc585c42831d845dacf1ebed2c` (version 4.10.0), the built skill in `.cursor/skills/impeccable/`: `SKILL.md` and `reference/audit.md`, `critique.md`, `critique-rubric.md`, `polish.md`, `distill.md` and `craft-floor.md`.
+- Used in: `.agents/skills/impeccable/`. Not shipped in the package.
+- Changes: `SKILL.md` cut to the `audit`, `critique`, `polish` and `distill` commands and the Operate and Read modes, with an "In this repository" section replacing the launcher setup; the references' launcher path (`.cursor/skills/impeccable/scripts/impeccable`) shortened to `impeccable`. The launcher, scripts, hooks, agents and the other commands and references are not included. The upstream `NOTICE.md` covers only files not included here.
+- Copyright Paul Bakaus. Licensed under the Apache License, Version 2.0.
+
+## vercel-labs/web-interface-guidelines
+
+- Source: https://github.com/vercel-labs/web-interface-guidelines, commit `434b7f91364665f2f733b310ec54809bf8f37937`, `AGENTS.md`.
+- Used in: `.agents/skills/web-interface-guidelines/SKILL.md`. Not shipped in the package.
+- Changes: a skill header (`name`, `description`) added before the unchanged text.
+- Copyright (c) 2025 Vercel Labs. Licensed under the MIT License.
+
 ## vercel/streamdown
 
 - Source: https://github.com/vercel/streamdown, `packages/streamdown/lib/parse-blocks.tsx`.
@@ -305,6 +325,58 @@ SOFTWARE.
 MIT License
 
 Copyright GitHub, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## emilkowalski/skills license
+
+MIT License
+
+Copyright (c) 2026 Emil Kowalski
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## vercel-labs/web-interface-guidelines license
+
+MIT License
+
+Copyright (c) 2025 Vercel Labs
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
