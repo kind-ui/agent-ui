@@ -80,7 +80,7 @@ const VARIANTS: Record<NoticeVariant, { mark: string; name: string }> = {
  * The first element after `el` that Tab reaches, else the last one before it. UI SDK finds these with a function it
  * doesn't export, and `createFocusRecovery` asks its `fallback` for the element.
  */
-const nearestTabStop = (el: HTMLElement): HTMLElement | undefined => {
+export const nearestTabStop = (el: HTMLElement): HTMLElement | undefined => {
   const stops = [...el.ownerDocument.body.querySelectorAll<HTMLElement>("*")].filter(
     (candidate) =>
       candidate.tabIndex >= 0 &&

@@ -675,6 +675,19 @@ export {
 
 // wave-6-task-7: Connection Status
 
+export {
+  type ConnectionPhase,
+  type ConnectionState,
+  type ConnectionStatusApi,
+  type ConnectionStatusLabels,
+  type ConnectionStatusOptions,
+  type ConnectionStatusPrimitive,
+  type ConnectionStatusRetryDetails,
+  type ConnectionStatusState,
+  connectionStatusPrimitive,
+  connectionStatusText,
+} from "./connection-status/index.js";
+
 // wave-6-task-8: Share Dialog
 
 // wave-6-task-9: Message author, time and outcomes
