@@ -95,6 +95,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **`toLines` trusts that a highlighter's tokens join to exactly the code it was given;** one that trims a trailing newline shifts the plain remainder.
 - **A pending submission's lock carries over when a host swaps the controlled `value`** (switching conversations on one instance): the settled result is still ignored for the new draft, but Send stays locked until it settles. Hosts can remount with `key`; spec §4.1 needs to say whether that's required.
 - **`setValue` with a draft trusts its `tokens`;** they're rebuilt from `text` only on the next edit.
+- Sidebar: a controlling owner who cancels the `"breakpoint"` close keeps `open` true, so the modal drawer opens as the window narrows. The owner's value wins.
 
 ## Resolved
 

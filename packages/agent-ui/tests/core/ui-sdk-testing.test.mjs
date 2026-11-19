@@ -240,6 +240,8 @@ const cases = {
 
   // wave-6-task-4: Sidebar
 
+  sidebar: { options: { label: "Chats" } },
+
   // wave-6-task-5: Launcher
 
   // wave-6-task-6: Day Separator

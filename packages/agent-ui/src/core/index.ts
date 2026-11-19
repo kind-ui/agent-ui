@@ -634,6 +634,21 @@ export {
 
 // wave-6-task-4: Sidebar
 
+export {
+  type SidebarApi,
+  type SidebarHandleState,
+  type SidebarInsetState,
+  type SidebarOpenChangeReason,
+  type SidebarOptions,
+  type SidebarPanelState,
+  type SidebarPrimitive,
+  type SidebarRootState,
+  type SidebarSide,
+  type SidebarState,
+  type SidebarTriggerState,
+  sidebarPrimitive,
+} from "./sidebar/index.js";
+
 // wave-6-task-5: Launcher
 
 // wave-6-task-6: Day Separator

@@ -262,6 +262,13 @@ const components = {
 
   // wave-6-task-4: Sidebar
 
+  sidebar: {
+    title: "Sidebar",
+    description:
+      "A panel beside the page that a person resizes and collapses, turning into a drawer on a narrow screen.",
+    uses: ["internal-resizable", "internal-drawer"],
+  },
+
   // wave-6-task-5: Launcher
 
   // wave-6-task-6: Day Separator
@@ -302,6 +309,9 @@ const internals = [
   "trigger-menu",
 
   // wave-6-task-4: Sidebar's internal items
+
+  "drawer",
+  "resizable",
 ];
 
 const layers = { react: { suffix: "", extension: ".tsx" }, web: { suffix: "-web", extension: ".ts" } };

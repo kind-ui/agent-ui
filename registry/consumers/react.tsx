@@ -67,6 +67,14 @@ import { ThreadList } from "./components/ui/thread-list.js";
 
 // wave-6-task-4: Sidebar
 
+import {
+  Sidebar,
+  SidebarHandle,
+  SidebarInset,
+  SidebarPanel,
+  SidebarTrigger,
+} from "./components/ui/sidebar.js";
+
 // wave-6-task-5: Launcher
 
 // wave-6-task-6: Day Separator
@@ -340,6 +348,16 @@ const items = {
   // wave-6-task-3: Thread Search
 
   // wave-6-task-4: Sidebar
+
+  sidebar: (
+    <Sidebar label="Chats" className="h-64">
+      <SidebarPanel>Chats</SidebarPanel>
+      <SidebarHandle />
+      <SidebarInset>
+        <SidebarTrigger />
+      </SidebarInset>
+    </Sidebar>
+  ),
 
   // wave-6-task-5: Launcher
 

@@ -60,6 +60,8 @@ import { defineThreadList } from "./components/ui/web/thread-list.js";
 
 // wave-6-task-4: Sidebar
 
+import { defineSidebar } from "./components/ui/web/sidebar.js";
+
 // wave-6-task-5: Launcher
 
 // wave-6-task-6: Day Separator
@@ -137,6 +139,8 @@ for (const define of [
   // wave-6-task-3: Thread Search
 
   // wave-6-task-4: Sidebar
+
+  defineSidebar,
 
   // wave-6-task-5: Launcher
 
@@ -243,6 +247,8 @@ const items = {
   // wave-6-task-3: Thread Search
 
   // wave-6-task-4: Sidebar
+
+  sidebar: `<kind-sidebar label="Chats" class="h-64"><kind-sidebar-panel>Chats</kind-sidebar-panel><kind-sidebar-inset><kind-sidebar-trigger><button></button></kind-sidebar-trigger></kind-sidebar-inset></kind-sidebar>`,
 
   // wave-6-task-5: Launcher
 

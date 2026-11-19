@@ -39,6 +39,8 @@
 
 <!-- wave-6-task-4: Sidebar -->
 
+- `packages/agent-ui/src/styles/sidebar.css` (Sidebar's trigger): `panel-left` and `panel-right`, unchanged; both derive from Feather.
+
 <!-- wave-6-task-5: Launcher -->
 
 <!-- wave-6-task-6: Day Separator -->

@@ -23,6 +23,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **Internal host classes stay per file.** A shared `defineHost` helper in `src/web/internal/` would be a render file that neither calls `createParts` nor wraps a component, which the guard rejects.
 - **A status change while a `kind-status` is out of the document isn't announced when it returns:** nobody could see the change.
 - **`kind-model-control`'s `model` and `effort` setters refuse while disabled, and `effort` while the model has no levels,** as Settings Menu's `values` refuses while disabled (Wave 5 Task 9).
+- Sidebar with `side="end"`: the handle's `aria-valuenow` and `aria-controls` are the inset's, since UI SDK's splitter reports the panel before the handle. That's the window splitter pattern; kept.
 
 ## Known and open (don't report again, check whether fixed)
 
@@ -70,6 +71,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **An empty `<kind-chain-of-thought>` inserts its parts on upgrade** (same class as `kind-reasoning`), which can shift layout before the element is defined.
 - **No moved or shadow-root fixture case for `kind-model-control`;** checked by hand in review (Wave 5 Task 9), as Model Selector's gap.
 - **Inside a shadow root, a web popup's string `finalFocus` is looked up in `ownerDocument`** (UI SDK `popup.js`), so Thread List's menu and dialog return focus through UI SDK's trigger fallback, not to the row after a deleted one (report upstream).
+- Sidebar: `open` set as an attribute or property follows the `open` option, not the root `state` setter, so it changes silently and a present `open="false"` doesn't follow presses (same as the Picker and `menuBase` item above). A React-rendered `kind-sidebar` isn't supported, since the element moves the host's panel and inset.
 
 ## Resolved
 

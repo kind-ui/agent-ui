@@ -28,6 +28,8 @@ const pages = [
 
   // wave-6-task-4: Sidebar
 
+  "sidebar&case=all",
+
   // wave-6-task-5: Launcher
 
   // wave-6-task-6: Day Separator

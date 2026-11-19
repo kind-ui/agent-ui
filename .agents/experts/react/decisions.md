@@ -52,6 +52,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **Chain of Thought: a host `steps` update renders every step's parts (Wave 2 Task 5),** 609 renders for one status change among 100 steps; `memo` on the items doesn't help, as the parts re-render from UI SDK's options change. A press reaches one step. Report to UI SDK; no budget, since it's per step, not per token.
 - **UI SDK Menu rendered open on the server leaves its radio group unnamed (Wave 5 Task 6):** `role="group"` has no `aria-labelledby` though its label is in the markup, like the known `CommandGroup` one; the client names it. UI SDK's; report upstream.
 - **Model Control's trigger repeats `KindMenuItemContent`'s string-or-element icon code** (Wave 5 Task 9); one internal icon helper would serve both.
+- Sidebar: no fixture or spec for a controlled `open` that refuses or follows changes; core's write-back was checked by hand in review.
 
 ## Resolved
 
