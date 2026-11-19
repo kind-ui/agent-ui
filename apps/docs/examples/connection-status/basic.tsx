@@ -43,7 +43,7 @@ export default function ConnectionStatusExample() {
 
   return (
     <div className="flex w-full max-w-xl flex-col gap-3">
-      <fieldset className="flex gap-1 self-start border-0 p-0 text-sm">
+      <fieldset className="flex flex-wrap gap-1 self-start border-0 p-0 text-sm">
         <legend className="sr-only">Connection</legend>
         {states.map((option) => (
           <button

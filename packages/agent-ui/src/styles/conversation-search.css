@@ -13,19 +13,47 @@
     z-index: 1;
     /* On a narrow conversation the field gives up width, so the bar stays inside it. */
     max-inline-size: calc(100% - 2rem);
-    box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     gap: 0.125rem;
-    padding: 0.25rem;
-    border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) * 2 / 3);
-    background-color: var(--kind-color-surface);
-    color: var(--kind-color-fg);
-    box-shadow: 0 4px 12px -4px color-mix(in oklab, var(--kind-color-shadow) 18%, transparent);
+    /* A step above the conversation's surface in dark, where a shadow doesn't separate it. */
+    background-color: light-dark(
+      var(--kind-color-surface),
+      color-mix(in oklab, var(--kind-color-surface), var(--kind-color-fg) 5%)
+    );
 
     &[hidden] {
       display: none;
+    }
+  }
+
+  /* While the bar shows, the conversation's top edge fades under it, so its text doesn't run into the bar. The bar
+     sits before the Conversation or inside it. */
+  :is(
+      [data-slot="kind-conversation-search"]:not([hidden]) ~ [data-slot="kind-conversation"],
+      [data-slot="kind-conversation"]:has(> [data-slot="kind-conversation-search"]:not([hidden]))
+    )
+    > [data-slot="kind-conversation-viewport"] {
+    mask-image: linear-gradient(to bottom, transparent, black 3.25rem);
+  }
+
+  /* The second layer repeats conversation.css's scroll fade, which the mask above would replace. */
+  @supports (animation-timeline: scroll()) {
+    :is(
+        [data-slot="kind-conversation-search"]:not([hidden]) ~ [data-slot="kind-conversation"],
+        [data-slot="kind-conversation"]:has(> [data-slot="kind-conversation-search"]:not([hidden]))
+      )
+      > [data-slot="kind-conversation-viewport"] {
+      mask-image:
+        linear-gradient(to bottom, transparent, black 3.25rem),
+        linear-gradient(
+          to bottom,
+          transparent,
+          black var(--kind-conversation-fade-start),
+          black calc(100% - var(--kind-conversation-fade-end)),
+          transparent
+        );
+      mask-composite: intersect;
     }
   }
 
@@ -47,11 +75,10 @@
       max-inline-size: 100%;
       box-sizing: border-box;
       height: 1.75rem;
-      padding-inline: 0.5rem 0.125rem;
-      border-radius: calc(var(--kind-radius) / 2);
-      background-color: var(--kind-color-hover);
+      padding-inline: 0.5rem;
+      border-radius: var(--kind-radius-md);
+      background-color: color-mix(in oklab, var(--kind-color-fg) 6%, transparent);
       color: var(--kind-color-muted);
-      transition: box-shadow var(--kind-duration-fast);
 
       &::before {
         content: "";
@@ -85,38 +112,6 @@
         appearance: none;
       }
     }
-
-    & [data-slot="input-clear"] {
-      display: inline-grid;
-      flex-shrink: 0;
-      place-items: center;
-      width: 1.5rem;
-      height: 1.5rem;
-      padding: 0;
-      border: 0;
-      border-radius: calc(var(--kind-radius) / 3);
-      background-color: transparent;
-      color: var(--kind-color-muted);
-
-      &::before {
-        content: "";
-        width: 0.75rem;
-        height: 0.75rem;
-        background-color: currentColor;
-        mask: var(--kind-conversation-search-close-icon) center / contain no-repeat;
-      }
-      &:hover {
-        color: var(--kind-color-fg);
-        background-color: color-mix(in oklab, var(--kind-color-fg) 6%, transparent);
-      }
-      &:focus-visible {
-        outline: var(--kind-focus-ring);
-        outline-offset: var(--kind-focus-offset-inset);
-      }
-      &[hidden] {
-        display: none;
-      }
-    }
   }
 
   [data-slot="kind-conversation-search-count"] {
@@ -127,6 +122,9 @@
     white-space: nowrap;
     color: var(--kind-color-muted);
 
+    &[data-none] {
+      color: var(--kind-color-danger);
+    }
     &[data-empty] {
       display: none;
     }
@@ -136,41 +134,12 @@
     [data-slot="kind-conversation-search-previous"],
     [data-slot="kind-conversation-search-next"],
     [data-slot="kind-conversation-search-close"]
-  ) {
-    display: inline-grid;
-    flex-shrink: 0;
-    place-items: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    padding: 0;
-    border: 0;
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: transparent;
-    color: var(--kind-color-muted);
-    cursor: pointer;
-    transition:
-      background-color var(--kind-duration-fast),
-      color var(--kind-duration-fast);
-
-    &::before {
-      content: "";
-      width: 1rem;
-      height: 1rem;
-      background-color: currentColor;
-      mask: var(--kind-conversation-search-icon-image) center / contain no-repeat;
-    }
-    &:hover:where(:not([aria-disabled="true"])) {
-      color: var(--kind-color-fg);
-      background-color: var(--kind-color-hover);
-    }
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset-inset);
-    }
-    &:where([aria-disabled="true"]) {
-      opacity: 0.45;
-      cursor: default;
-    }
+  )::after {
+    content: "";
+    width: 1rem;
+    height: 1rem;
+    background-color: currentColor;
+    mask: var(--kind-conversation-search-icon-image) center / contain no-repeat;
   }
 
   [data-slot="kind-conversation-search-previous"] {
@@ -218,20 +187,19 @@
 
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
-    [data-slot="kind-conversation-search-input"]
-      :is([data-slot="input-group"], [data-slot="input-clear"])::before,
+    [data-slot="kind-conversation-search-input"] [data-slot="input-group"]::before,
     :is(
         [data-slot="kind-conversation-search-previous"],
         [data-slot="kind-conversation-search-next"],
         [data-slot="kind-conversation-search-close"]
-      )::before {
+      )::after {
       forced-color-adjust: none;
       background-color: CanvasText;
     }
     :is(
         [data-slot="kind-conversation-search-previous"],
         [data-slot="kind-conversation-search-next"]
-      )[aria-disabled="true"]::before {
+      )[aria-disabled="true"]::after {
       background-color: GrayText;
     }
     ::highlight(kind-search) {

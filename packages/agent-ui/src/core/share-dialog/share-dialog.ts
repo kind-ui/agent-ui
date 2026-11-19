@@ -173,6 +173,9 @@ export type ShareDialogLinkState = {
   "aria-label": string;
 };
 
+/** What Create link and Stop sharing hand their children: a pending one shows a running mark beside its words. */
+export type ShareDialogActionState = { pending: boolean; motion: MotionMode };
+
 type Popup = ReturnType<typeof createPopup<ShareDialogOptions, ShareDialogState, typeof dialogPreset>>;
 
 export type ShareDialogApi = Omit<Popup, "open" | "close"> & {
@@ -220,9 +223,9 @@ type ShareDialogSlots = {
   description: Slot<BaseSlotProps, { text: string }>;
   visibility: Slot<BaseSlotProps, ShareDialogVisibilityState>;
   link: Slot<BaseSlotProps, ShareDialogLinkState>;
-  create: Slot;
+  create: Slot<BaseSlotProps, ShareDialogActionState>;
   copy: Slot<BaseSlotProps, { copied: boolean }>;
-  revoke: Slot;
+  revoke: Slot<BaseSlotProps, ShareDialogActionState>;
   error: Slot<BaseSlotProps, { message: string }>;
   close: Slot;
 };
@@ -238,10 +241,10 @@ export const SHARE_VISIBILITY_OPTIONS: readonly ShareVisibilityOption[] = [
   { value: "link", label: "Anyone with the link" },
 ];
 
-/** What the dialog's description says for each visibility. */
+/** What the dialog's description says for each visibility, beyond the choice the Segmented Control shows. */
 export const SHARE_DIALOG_DESCRIPTIONS: Readonly<Record<ShareVisibility, string>> = {
-  private: "Only you can open this chat.",
-  link: "Anyone with the link can open this chat.",
+  private: "Share a link to let others open this chat.",
+  link: "The link shows this chat up to now.",
 };
 
 const isVisibility = (value: unknown): value is ShareVisibility => value === "private" || value === "link";
@@ -442,8 +445,10 @@ export const shareDialogPrimitive: ShareDialogPrimitive = definePrimitive<
         focus: "native",
         present: shows[name],
         press: ({ api }, event) => (name === "create" ? api.createLink : api.revoke)?.(event),
+        state: (state) => ({ pending: state.pending, motion: state.motion }),
         attrs: (state) => ({
           type: "button",
+          "data-kind-button": name === "create" ? "primary" : "",
           "aria-disabled": state.pending || state.sent ? "true" : undefined,
           "data-pending": state.pending ? "" : undefined,
           "data-share-dialog-part": name,
@@ -469,6 +474,7 @@ export const shareDialogPrimitive: ShareDialogPrimitive = definePrimitive<
         attrs: (state, part) => ({
           ...trigger.attrs?.(state, part),
           type: "button",
+          "data-kind-button": "",
           "data-share-dialog-part": "trigger",
         }),
       }),
@@ -476,6 +482,7 @@ export const shareDialogPrimitive: ShareDialogPrimitive = definePrimitive<
         ...backdrop,
         attrs: (state, part) => ({
           ...backdrop.attrs?.(state, part),
+          "data-kind-scrim": "",
           "data-share-dialog-part": "backdrop",
           "data-motion": state.motion,
         }),
@@ -486,6 +493,7 @@ export const shareDialogPrimitive: ShareDialogPrimitive = definePrimitive<
         ...content,
         attrs: (state, part) => ({
           ...content.attrs?.(state, part),
+          "data-kind-dialog": "",
           "data-share-dialog-part": "content",
           "data-visibility": state.visibility,
           "data-motion": state.motion,
@@ -494,7 +502,11 @@ export const shareDialogPrimitive: ShareDialogPrimitive = definePrimitive<
       title: slot({
         ...title,
         state: (state) => ({ label: state.dialogLabel }),
-        attrs: (state, part) => ({ ...title.attrs?.(state, part), "data-share-dialog-part": "title" }),
+        attrs: (state, part) => ({
+          ...title.attrs?.(state, part),
+          "data-kind-dialog-title": "",
+          "data-share-dialog-part": "title",
+        }),
       }),
       description: slot({
         ...description,
@@ -525,6 +537,7 @@ export const shareDialogPrimitive: ShareDialogPrimitive = definePrimitive<
         attrs: (state) => ({
           type: "button",
           "data-copied": state.copied ? "" : undefined,
+          "data-kind-button": "secondary",
           "data-share-dialog-part": "copy",
         }),
       }),
@@ -539,6 +552,7 @@ export const shareDialogPrimitive: ShareDialogPrimitive = definePrimitive<
         attrs: (state, part) => ({
           ...close.attrs?.(state, part),
           type: "button",
+          "data-kind-button": "secondary",
           "data-share-dialog-part": "close",
         }),
       }),

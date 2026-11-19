@@ -90,8 +90,17 @@ test("without unread messages the button is named without a count and has no bad
   await expect(trigger(page)).toHaveText("");
 });
 
-test("the panel is named by its title and Close closes it", async ({ page }) => {
+test("a popover's button is its only close", async ({ page }) => {
   await load(page);
+  await trigger(page).click();
+  await expect(page.getByRole("dialog", { name: "Assistant" })).toBeVisible();
+  await expect(content(page).getByRole("button", { name: "Close Assistant" })).toHaveCount(0);
+  await trigger(page).click();
+  await expect(content(page)).toBeHidden();
+});
+
+test("a modal panel is named by its title and Close closes it", async ({ page }) => {
+  await load(page, "modal");
   await trigger(page).click();
   await expect(page.getByRole("dialog", { name: "Assistant" })).toBeVisible();
   await content(page).getByRole("button", { name: "Close Assistant" }).click();

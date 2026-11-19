@@ -27,8 +27,8 @@ const parts = createParts(threadSearchPrimitive, {
 });
 
 // Its parts are Picker's, with state the picker parts never read.
-// The status mark follows the title, since Command hides an item's icon from assistive technology and a status needs
-// its words.
+// The status mark ends the row, after the date, since Command hides an item's icon from assistive technology and a
+// status needs its words.
 const picker = pickerParts(parts as unknown as PickerParts, "ThreadSearch", {
   icon: () => null,
   trailing: (row) => (row.icon === undefined ? null : <ThreadSearchStatus value={row.option.value} />),

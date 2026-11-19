@@ -714,6 +714,7 @@ export {
   SHARE_DIALOG_DESCRIPTIONS,
   SHARE_VISIBILITY_OPTIONS,
   type ShareDialogActionDetails,
+  type ShareDialogActionState,
   type ShareDialogApi,
   type ShareDialogLinkState,
   type ShareDialogOptions,

@@ -252,6 +252,7 @@ export const launcherPrimitive: LauncherPrimitive = definePrimitive<
         attrs: (state, part) => ({
           ...content.attrs?.(state, part),
           "data-launcher-part": "content",
+          "data-kind-dialog": "",
           "data-modal": state.modal === true ? "" : undefined,
           "data-motion": state.motion,
         }),
@@ -259,15 +260,21 @@ export const launcherPrimitive: LauncherPrimitive = definePrimitive<
       title: slot<BaseSlotProps, { label: string }>({
         ...title,
         state: (state) => ({ label: state.label }),
-        attrs: (state, part) => ({ ...title.attrs?.(state, part), "data-launcher-part": "title" }),
+        attrs: (state, part) => ({
+          ...title.attrs?.(state, part),
+          "data-launcher-part": "title",
+          "data-kind-dialog-title": "",
+        }),
       }),
+      // A popover's trigger turns into its close, so only a dialog or sheet, which covers the trigger, has one.
       close: slot({
         ...close,
+        present: (state) => state.presentation !== "popover",
         attrs: (state, part) => ({
           ...close.attrs?.(state, part),
-          type: "button",
           "aria-label": `Close ${state.label}`,
           "data-launcher-part": "close",
+          "data-kind-icon-button": "",
         }),
       }),
     };

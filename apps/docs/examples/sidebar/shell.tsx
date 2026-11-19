@@ -205,8 +205,10 @@ export default function ChatShellExample() {
       className="h-[640px] w-full overflow-hidden rounded-xl border border-[var(--kind-color-border)]"
     >
       <SidebarPanel>
-        <div className="flex h-full flex-col gap-1 p-2">
+        <div className="flex h-12 shrink-0 items-center border-b border-[var(--kind-color-border)] px-2">
           <ThreadSearch threads={threads} now={now} timeZone={timeZone} onSelect={open} onNew={create} />
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col p-2">
           <div className="min-h-0 flex-1">
             <ThreadList
               threads={threads}
@@ -233,14 +235,10 @@ export default function ChatShellExample() {
       </SidebarPanel>
       <SidebarHandle />
       <SidebarInset>
-        <header className="flex items-center gap-2 border-b border-[var(--kind-color-border)] px-3 py-2">
+        <header className="flex h-12 shrink-0 items-center gap-2 border-b border-[var(--kind-color-border)] px-3">
           <SidebarTrigger />
-          <h3 className="m-0 min-w-0 flex-1 truncate text-sm font-medium">{thread?.title ?? "New chat"}</h3>
-          <button
-            type="button"
-            onClick={() => setSearching(true)}
-            className="rounded-md px-2 py-1 text-sm hover:bg-[var(--kind-color-hover)]"
-          >
+          <h2 className="m-0 min-w-0 flex-1 truncate text-sm font-medium">{thread?.title ?? "New chat"}</h2>
+          <button type="button" data-kind-button="" onClick={() => setSearching(true)}>
             Find
           </button>
         </header>

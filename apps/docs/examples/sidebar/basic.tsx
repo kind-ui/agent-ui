@@ -15,6 +15,9 @@ export default function SidebarExample() {
       className="h-[420px] w-full overflow-hidden rounded-xl border border-[var(--kind-color-border)]"
     >
       <SidebarPanel>
+        <div className="flex h-12 shrink-0 items-center border-b border-[var(--kind-color-border)] px-4">
+          <h2 className="m-0 text-sm font-medium">Chats</h2>
+        </div>
         <nav aria-label="Recent chats" className="p-2">
           <ul className="flex flex-col gap-0.5">
             {chats.map((chat) => (
@@ -32,9 +35,9 @@ export default function SidebarExample() {
       </SidebarPanel>
       <SidebarHandle />
       <SidebarInset>
-        <header className="flex items-center gap-2 border-b border-[var(--kind-color-border)] px-3 py-2">
+        <header className="flex h-12 shrink-0 items-center gap-2 border-b border-[var(--kind-color-border)] px-3">
           <SidebarTrigger />
-          <h3 className="m-0 text-sm font-medium">Nightly export timeouts</h3>
+          <h2 className="m-0 truncate text-sm font-medium">Nightly export timeouts</h2>
         </header>
         <p className="m-0 p-4 text-sm text-[var(--kind-color-muted)]">
           Drag the handle to resize the chats, or press the button beside the title to hide them.

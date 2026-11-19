@@ -49,7 +49,7 @@ Sidebar
 
 ### Parts in Reading Order
 
-Write `SidebarPanel`, `SidebarHandle` and `SidebarInset` in reading order. With `side="start"`, the default, the panel comes first. With `side="end"`, the inset comes first and the panel last. Both follow the writing direction, so a start panel sits on the right in a right-to-left page. Put the `SidebarTrigger` anywhere inside the sidebar, like the page's header, or the panel itself.
+Write `SidebarPanel`, `SidebarHandle` and `SidebarInset` in reading order. With `side="start"`, the default, the panel comes first. With `side="end"`, the inset comes first and the panel last. Both follow the writing direction, so a start panel sits on the right in a right-to-left page. Put the `SidebarTrigger` in the page's header, at the edge the panel sits on: the start of the header for a start panel, the end for an end panel. There it stays in place whether the panel is open, closed or a drawer.
 
 <Example caption="Press the button in the header to hide the assistant, or drag its handle to resize it. Type a prompt and press Enter to add it to the conversation.">
   <SidebarAssistantExample />
@@ -69,7 +69,7 @@ const [open, setOpen] = useState(true);
 </Sidebar>
 ```
 
-When the trigger, the shortcut or the api opens or closes it, the panel's width slides. Under `prefers-reduced-motion`, or with `motion="reduced"` or `"none"`, it changes at once. It never slides while someone drags the handle.
+When the trigger, the shortcut or the api opens or closes it, the panel slides in or out from its edge, and the page changes width once, as the panel starts to open or once it has closed, so its text doesn't wrap again on every frame. With a `collapsedSize` above 0, the width slides instead, so the rail stays in view. Under `prefers-reduced-motion`, or with `motion="reduced"` or `"none"`, it changes at once. It never slides while someone drags the handle.
 
 ### Sizes
 

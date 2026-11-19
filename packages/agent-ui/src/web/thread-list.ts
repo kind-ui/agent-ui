@@ -87,7 +87,8 @@ const newRow = (document: Document, id: string) => {
   const editor = element(document, "kind-thread-list-editor", { value: id });
   editor.append(element(document, "input", { type: "text" }));
   cell.append(link, editor);
-  const button = element(document, "button");
+  // The shared icon button is written as the row is made, not by its part, so a new row costs no more writes.
+  const button = element(document, "button", { "data-kind-icon-button": "" });
   button.append(element(document, "span", { "data-thread-list-icon": "more", "aria-hidden": "true" }));
   const more = element(document, "kind-thread-list-more", { value: id });
   more.append(button);

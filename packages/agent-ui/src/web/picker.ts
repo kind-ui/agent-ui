@@ -95,8 +95,8 @@ const drawItem = (
     part.replaceChildren(
       ...(iconEl ? [iconEl] : []),
       text,
-      ...(trailing?.(document, row) ?? []),
       ...(row.meta ? [element(document, "span", { "data-picker-meta": "" }, row.meta)] : []),
+      ...(trailing?.(document, row) ?? []),
       element(document, "span", { "data-picker-mark": "" }),
     );
   }
@@ -212,7 +212,7 @@ export type PickerElementsConfig<P extends Primitive> = {
   drawTrigger?: (button: Element, state: PickerBaseState, api: PickerBaseApi) => void;
   /** A row's icon: an image URL or a copied element by default. None draws no icon. */
   icon?: IconNodes;
-  /** What follows a row's text, before its `meta`. */
+  /** What follows a row's `meta`. */
   trailing?: IconNodes;
   /** More parts, as `createParts` takes them. */
   parts?: Record<string, string | PartOptions<P>>;

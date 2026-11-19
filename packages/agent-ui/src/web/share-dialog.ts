@@ -31,13 +31,13 @@ const DEFAULT_PARTS = `
       <kind-internal-segmented-control><ui-segmented-control data-agent-hidden><ui-segmented-control-indicator></ui-segmented-control-indicator><ui-segmented-control-item value="private">Only you</ui-segmented-control-item><ui-segmented-control-item value="link">Anyone with the link</ui-segmented-control-item></ui-segmented-control></kind-internal-segmented-control>
     </kind-share-dialog-visibility>
     <div data-share-dialog-link-row>
-      <kind-share-dialog-create><button>Create link</button></kind-share-dialog-create>
+      <kind-share-dialog-create><button></button></kind-share-dialog-create>
       <kind-share-dialog-link><ui-input><input data-agent-hidden></ui-input></kind-share-dialog-link>
       <kind-share-dialog-copy><button></button></kind-share-dialog-copy>
     </div>
     <div data-share-dialog-footer>
       <kind-share-dialog-error><p></p></kind-share-dialog-error>
-      <kind-share-dialog-revoke><button>Stop sharing</button></kind-share-dialog-revoke>
+      <kind-share-dialog-revoke><button></button></kind-share-dialog-revoke>
       <kind-share-dialog-close><button>Done</button></kind-share-dialog-close>
     </div>
   </kind-share-dialog-content>`;
@@ -56,6 +56,20 @@ const owns = (part: Element | null): part is Element => {
 
 const text = (part: Element | null, value: string) => {
   if (owns(part) && part.textContent !== value) part.textContent = value;
+};
+
+// A pending action keeps a running mark beside its words.
+const action = (part: Element | null, label: string, state: ShareDialogState) => {
+  if (!owns(part) || part.textContent === label) return;
+  const mark = part.ownerDocument.createElement("span");
+  for (const [name, value] of Object.entries({
+    "aria-hidden": "true",
+    "data-status-mark": "",
+    "data-status": "running",
+    "data-motion": state.motion,
+  }))
+    mark.setAttribute(name, value);
+  part.replaceChildren(...(state.pending ? [mark] : []), label);
 };
 
 const write = <Target extends object, Key extends keyof Target>(
@@ -135,6 +149,16 @@ export function defineShareDialog(): void {
             SHARE_DIALOG_DESCRIPTIONS[state.visibility],
           );
           text(el.querySelector("kind-share-dialog-copy > button"), state.copied ? "Copied" : "Copy link");
+          action(
+            el.querySelector("kind-share-dialog-create > button"),
+            state.pending ? "Creating link" : "Create link",
+            state,
+          );
+          action(
+            el.querySelector("kind-share-dialog-revoke > button"),
+            state.pending ? "Stopping" : "Stop sharing",
+            state,
+          );
           text(el.querySelector("kind-share-dialog-error > p"), state.error ?? "");
           const control = el.querySelector<Element & Record<string, unknown>>(
             "kind-share-dialog-visibility ui-segmented-control",

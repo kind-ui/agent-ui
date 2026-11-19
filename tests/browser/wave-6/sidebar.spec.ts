@@ -17,7 +17,7 @@ const reasons = (page: Page) =>
   );
 const panelWidth = (page: Page) =>
   page.locator('[data-sidebar-part="panel"]').evaluate((el) => el.getBoundingClientRect().width);
-// The width's transition ends before the next press, so each press starts from a settled panel.
+// The slide ends before the next press, so each press starts from a settled panel.
 const settled = (page: Page) =>
   page.waitForFunction(
     () =>
@@ -44,7 +44,7 @@ test.describe("beside the page", () => {
     await page.evaluate(() => {
       const runs: string[] = [];
       document.addEventListener("transitionrun", (event) => {
-        if (event.propertyName === "flex-basis") runs.push(event.propertyName);
+        if (event.propertyName === "translate") runs.push(event.propertyName);
       });
       Object.assign(window, { runs });
     });
@@ -54,7 +54,7 @@ test.describe("beside the page", () => {
     await expect(trigger(page)).toHaveAttribute("aria-expanded", "false");
     await expect(aside).not.toHaveAttribute("data-open");
     await settled(page);
-    // Only the trigger and the shortcut slide the width.
+    // Only the trigger and the shortcut slide the panel.
     expect(await runs()).toBeGreaterThan(0);
     const before = await runs();
 
@@ -70,6 +70,27 @@ test.describe("beside the page", () => {
     await expect(aside).not.toHaveAttribute("data-open");
     await expect(panel(page)).toBeHidden();
     expect(await reasons(page)).toEqual(["false trigger-press", "true handle", "false shortcut"]);
+  });
+
+  test("a slide moves the panel and sets the page's width once", async ({ page }) => {
+    await load(page);
+    const widths = async (press: () => Promise<void>) => {
+      await page.evaluate(() => {
+        const seen = new Set<number>();
+        const inset = document.querySelector('[data-sidebar-part="inset"]') as HTMLElement;
+        const read = () => {
+          seen.add(Math.round(inset.getBoundingClientRect().width));
+          if (document.querySelector("[data-animating]") || seen.size === 1) requestAnimationFrame(read);
+        };
+        Object.assign(window, { seen });
+        requestAnimationFrame(read);
+      });
+      await press();
+      await settled(page);
+      return page.evaluate(() => (window as unknown as { seen: Set<number> }).seen.size);
+    };
+    expect(await widths(() => trigger(page).click())).toBe(2);
+    expect(await widths(() => trigger(page).click())).toBe(2);
   });
 
   test("the handle resizes within bounds, which hold as the window shrinks", async ({ page }) => {

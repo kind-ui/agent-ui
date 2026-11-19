@@ -109,7 +109,9 @@ export const ThreadListRow = memo(function ThreadListRow({ children, ...props }:
         <parts.Editor value={props.value} type="text" />
       </parts.LinkCell>
       <parts.MoreCell value={props.value}>
-        <parts.More value={props.value}>{ELLIPSIS}</parts.More>
+        <parts.More value={props.value} data-kind-icon-button="">
+          {ELLIPSIS}
+        </parts.More>
       </parts.MoreCell>
     </parts.Row>
   );

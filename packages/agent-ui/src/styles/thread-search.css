@@ -24,12 +24,10 @@
 
   [data-thread-search-part="shortcut"] {
     flex-shrink: 0;
-    padding-inline: 4px;
-    border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) / 3);
+    border: 0;
     font: inherit;
     font-size: var(--kind-text-xs);
-    line-height: 1.125rem;
+    line-height: 1rem;
     color: var(--kind-color-muted);
 
     &:empty {
@@ -41,11 +39,45 @@
      out without moving the search field. */
   :where([data-kind="thread-search"]) [data-picker-part="content"]:where(:not([data-presentation="sheet"])) {
     position: fixed;
-    inset: 12vh 0 auto;
+    inset: var(--kind-dialog-top) 0 auto;
     width: var(--kind-thread-search-width, 36rem);
     max-width: calc(100vw - 32px);
     margin-inline: auto;
-    --kind-command-list-max-height: min(24rem, calc(76vh - var(--kind-command-input-height) - 2px));
+    border-radius: var(--kind-dialog-radius);
+    box-shadow: var(--kind-shadow-dialog);
+    --kind-command-list-max-height: min(
+      24rem,
+      calc(100vh - 2 * var(--kind-dialog-top) - var(--kind-command-input-height) - 2px)
+    );
+  }
+
+  :where([data-kind="thread-search"]) [data-picker-part="content"] {
+    &[data-presentation="sheet"] {
+      position: relative;
+    }
+
+    /* The trigger's search glyph leads the field, which indents its text past it, since its padding is a utility. */
+    &::before {
+      content: "";
+      position: absolute;
+      inset-block-start: calc((var(--kind-command-input-height) - 16px) / 2);
+      inset-inline-start: 12px;
+      width: 16px;
+      height: 16px;
+      background-color: var(--kind-color-muted);
+      mask: var(--kind-thread-search-icon) center / contain no-repeat;
+      pointer-events: none;
+    }
+    & input {
+      text-indent: 24px;
+    }
+  }
+
+  /* The status mark ends the row in the check's 14px column, so dates line up whether or not a row has one. */
+  :where([data-kind="thread-search"])
+    [data-picker-part="item"]:has([data-thread-search-part="status"])
+    [data-picker-mark] {
+    display: none;
   }
 
   /* Group labels and dates that read relative ("today") start with a capital. */
@@ -63,7 +95,6 @@
     position: fixed;
     inset: 0;
     z-index: 50;
-    background-color: color-mix(in oklab, var(--kind-color-shadow) 40%, transparent);
     transition: opacity var(--kind-duration-base) var(--kind-ease-out);
 
     /* On web the backdrop drops `data-ending-style` before it's hidden, so it stays clear while closed. */
@@ -93,7 +124,8 @@
   }
 
   @media (forced-colors: active) {
-    :where([data-kind="thread-search"]) [data-picker-part="trigger"]::before {
+    :where([data-kind="thread-search"])
+      :is([data-picker-part="trigger"], [data-picker-part="content"])::before {
       forced-color-adjust: none;
       background-color: ButtonText;
     }

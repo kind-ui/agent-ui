@@ -32,7 +32,7 @@ ConnectionStatus
 └── ConnectionStatusRetry
 ```
 
-`ConnectionStatus` renders these parts: a group named by its state's words. `ConnectionStatusMark` is the status mark, a spinner while connecting, reconnecting or resuming and a warning while offline. `ConnectionStatusText` shows the state's words, or the countdown while reconnecting, and `ConnectionStatusRetry` is the **Retry** button. To arrange the parts yourself, render them inside `ConnectionStatusRoot`.
+`ConnectionStatus` renders these parts: a group named by its state's words. `ConnectionStatusMark` is the status mark, a spinner while connecting, reconnecting, resuming or retrying and a warning while offline. `ConnectionStatusText` shows the state's words, or the countdown while reconnecting, and `ConnectionStatusRetry` is the **Retry** button. To arrange the parts yourself, render them inside `ConnectionStatusRoot`.
 
 ## Usage
 
@@ -65,7 +65,7 @@ While `reconnecting`, pass `retryAt`, an ISO 8601 time, to count down to the nex
 
 ### Retry
 
-Pass `onRetry` to show **Retry** while the connection is down. It isn't shown while `resuming`, since the connection is back, and a retry still pending then no longer holds **Retry** in the next outage. Return a promise to keep **Retry** disabled until it settles; change `state` once the connection is back. If **Retry** has focus when the pill leaves, focus moves on to the next element Tab reaches.
+Pass `onRetry` to show **Retry** while the connection is down. It isn't shown while `resuming`, since the connection is back, and a retry still pending then no longer holds **Retry** in the next outage. Return a promise to show **Reconnecting** in place of **Retry** until it settles; change `state` once the connection is back. If **Retry** has focus when it hides or the pill leaves, focus moves on to the next element Tab reaches.
 
 ```tsx
 <ConnectionStatus state={state} onRetry={() => reconnect()} />
@@ -90,5 +90,5 @@ An agent connected with `createAgent` finds the connection status by its state's
 <auto-type-table path="../../../../../packages/agent-ui/src/core/connection-status/connection-status.ts" name="ConnectionStatusAgentActions" type='Pick<ConnectionStatusApi, "retry">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-connection-status>`, props are kebab-case attributes (`state="offline"`, `retry-at`) and `labels` is a property. The element adds its mark, words and Retry. The `can-retry` attribute shows Retry, which fires `connectionretry`: call `event.detail.waitUntil(promise)` to keep it pending until the promise settles.
+  Runs in React and Web Components. On `<kind-connection-status>`, props are kebab-case attributes (`state="offline"`, `retry-at`) and `labels` is a property. The element adds its mark, words and Retry. The `can-retry` attribute shows Retry, which fires `connectionretry`: call `event.detail.waitUntil(promise)` to show **Reconnecting** until the promise settles.
 </Caption>

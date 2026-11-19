@@ -4,7 +4,9 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin: 0;
+    /* More room than between messages, so the break between days reads. */
+    margin-block: 0.5rem;
+    margin-inline: 0;
     color: var(--kind-color-muted);
     font-size: var(--kind-text-xs);
     font-weight: 500;
@@ -19,7 +21,8 @@
       content: "";
       flex: 1 1 0;
       min-width: 1rem;
-      border-top: 1px solid var(--kind-color-border);
+      /* Mixed from the text, so the rule reads in dark, where the border token is too close to the surface. */
+      border-top: 1px solid color-mix(in oklab, var(--kind-color-fg) 12%, transparent);
     }
   }
 

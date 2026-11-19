@@ -27,7 +27,7 @@ import {
 import { type DialogOpenChangeReason, dialogPreset } from "@ui-sdk/core/dialog";
 import { type PopoverOpenChangeReason, popoverPreset } from "@ui-sdk/core/popover";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
-import { fuzzyScore, type MatchSegment, matchRanges, matchSegments } from "@ui-sdk/core/text-match";
+import { type MatchSegment, matchRanges, matchSegments } from "@ui-sdk/core/text-match";
 import type { PickerAction, PickerItem } from "../../types/index.js";
 import { type ComposedHandler, hearComposed } from "../composed-events.js";
 import { memo } from "../memo.js";
@@ -195,8 +195,11 @@ export type PickerCommandState = {
   props: {
     /** The primitive's own, which it resets the search and pages through when the list opens. */
     controller: CommandController;
-    /** Typing keeps the rows with its letters in order, or `false` keeps every row, for the host's results. */
-    filter: "fuzzy" | false;
+    /**
+     * Typing keeps the rows with its letters in order, or with its text as typed (`"contains"`), or `false` keeps every
+     * row, for the host's results.
+     */
+    filter: "fuzzy" | "contains" | false;
     /** Whether the host's results are loading or failed. */
     status: AsyncOptionsStatus;
     /** What the search field holds as a Command mounts. */
@@ -338,6 +341,16 @@ export type PickerBaseConfig<Options extends PickerBaseOptions> = {
   search?: boolean;
   /** The rows the first page shows while the search is empty, in place of the items. */
   emptyItems?: (options: Options) => PickerItem<unknown>[] | undefined;
+  /**
+   * Orders the first page's rows for a search: the items best first and the footer actions as the search shows them,
+   * with whether any item holds the search. The search then keeps rows that hold its text as typed (Command's
+   * `"contains"`), not just its letters in order; while no item does, the status line says the empty text.
+   */
+  rank?: (
+    items: PickerItem<unknown>[],
+    actions: PickerAction<unknown>[],
+    query: string,
+  ) => { items: PickerItem<unknown>[]; actions: PickerAction<unknown>[]; matched: boolean };
   /** The footer rows and what running one calls, in place of the `actions` and `onAction` options. */
   actions?: {
     /** The footer rows, read whenever the options change. */
@@ -361,6 +374,7 @@ const noActions: PickerAction<unknown>[] = [];
  */
 export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBaseConfig<Options>) => {
   const select = config.select ?? false;
+  const match = config.rank ? "contains" : "fuzzy";
   const check = !select && (config.check ?? true);
   const searchOf = (options: Options) => options as Options & PickerSearchOptions;
   const statusText = (options: Options): string | undefined => {
@@ -553,13 +567,20 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
             for (const row of section.rows) byKey.set(row.option.value, row);
         return byKey;
       });
-      const pagesOf = (state: PickerBaseState) =>
-        pages(
-          state.query === "" && state.emptyItems ? state.emptyItems : state.items,
-          state.actions,
-          state.value,
-          state.backLabel,
-        );
+      const ranked = memo(
+        (items: PickerItem<unknown>[], actions: PickerAction<unknown>[], query: string) =>
+          config.rank?.(items, actions, query.trim()) ?? { items, actions, matched: true },
+      );
+      const rowsOf = (state: PickerBaseState) =>
+        !state.query.trim()
+          ? { items: state.emptyItems ?? state.items, actions: state.actions, matched: true }
+          : state.filter
+            ? ranked(state.items, state.actions, state.query)
+            : { items: state.items, actions: state.actions, matched: true };
+      const pagesOf = (state: PickerBaseState) => {
+        const { items, actions } = rowsOf(state);
+        return pages(items, actions, state.value, state.backLabel);
+      };
 
       const commandState = memo(
         (
@@ -574,7 +595,7 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
         ): PickerCommandState => ({
           props: {
             controller,
-            filter: filter ? "fuzzy" : false,
+            filter: filter ? match : false,
             status,
             defaultQuery,
             autoHighlight: true,
@@ -594,8 +615,8 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
       const items = new WeakMap<PickerRow, { marks: string; state: PickerItemState }>();
       const itemState = (row: PickerRow, query: string, value: string | null): PickerItemState => {
         const description =
-          row.description && query && !fuzzyScore(row.label, query)
-            ? matchSegments(row.description, matchRanges(row.description, query, "fuzzy"))
+          row.description && query && !matchRanges(row.label, query, match).length
+            ? matchSegments(row.description, matchRanges(row.description, query, match))
             : row.description
               ? [{ text: row.description, match: false }]
               : [];
@@ -694,7 +715,10 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
             state.emptyText,
             state.filter,
             state.status,
-            state.statusText,
+            // A ranked footer always shows, so Command's own empty text never does.
+            state.statusText === "" && state.canRun && !rowsOf(state).matched
+              ? state.emptyText
+              : state.statusText,
             openQuery,
           ),
         itemState: (state, key) => {
@@ -742,6 +766,7 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
             "data-kind-popup": "",
             "data-picker-part": "content",
             "data-motion": state.motion,
+            "data-kind-dialog": config.popup === "dialog" ? "" : undefined,
           }),
         }),
         // The full-screen element the content sits in while it presents as a sheet: render it around the content then.

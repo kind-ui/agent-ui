@@ -20,7 +20,7 @@ const messages = [
     id: "m2",
     role: "assistant",
     createdAt: "2026-11-16T17:41:00Z",
-    text: "Every run since Wednesday stopped after 30 seconds waiting on the reports service.",
+    text: "Every run since last week stopped after 30 seconds waiting on the reports service.",
   },
   { id: "m3", role: "user", createdAt: "2026-11-17T16:05:00Z", text: "Did last night's run go through?" },
   {

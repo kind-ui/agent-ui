@@ -28,10 +28,7 @@ export default function SharedViewExample() {
       <Notice
         label="This is a shared copy of a chat."
         actions={
-          <button
-            type="button"
-            className="self-start rounded-md border border-[var(--kind-color-border)] px-2.5 py-1 text-sm"
-          >
+          <button type="button" data-kind-button="" className="self-start">
             Continue this chat
           </button>
         }

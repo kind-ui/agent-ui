@@ -33,7 +33,7 @@ const text = (node: Element | null, value: string) => {
 /**
  * Write the chat inside a `kind-launcher-content`: `<kind-launcher label="Assistant"><kind-launcher-content>…`. The
  * element adds the floating button and the backdrop before it, unless it has a trigger of its own, and the header
- * with the title and Close at the start of the content, unless it has a title.
+ * with the title and Close (shown as a dialog or sheet) at the start of the content, unless it has a title.
  */
 export function defineLauncher(): void {
   if (customElements.get("kind-launcher")) return;

@@ -909,7 +909,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       selects: outsideRows,
       present: (state) => state.canNew,
       press: ({ api }, event) => api.newThread?.(event),
-      attrs: () => ({ type: "button" }),
+      attrs: () => ({ type: "button", "data-kind-button": "" }),
     }),
     viewport: slot({
       selects: outsideRows,
@@ -1108,7 +1108,11 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       focus: "native",
       selects: outsideRows,
       press: ({ api }, event) => api.cancelDelete(event),
-      attrs: (state) => ({ type: "button", "aria-disabled": state.deletePending ? "true" : undefined }),
+      attrs: (state) => ({
+        type: "button",
+        "aria-disabled": state.deletePending ? "true" : undefined,
+        "data-kind-button": "secondary",
+      }),
     }),
     "dialog-delete": slot<BaseSlotProps, { pending: boolean }>({
       role: "button",
@@ -1120,6 +1124,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         type: "button",
         "aria-disabled": state.deletePending ? "true" : undefined,
         "data-pending": state.deletePending ? "" : undefined,
+        "data-kind-button": "danger",
         // D4: an agent's `delete` opens the dialog, whose Delete needs a person whatever else is allowed.
         "data-agent-confirm": "Deletes the chat",
       }),
@@ -1137,7 +1142,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       selects: outsideRows,
       present: (state) => state.loadStatus === "error" && state.canLoadMore,
       press: ({ api }) => api.retry(),
-      attrs: () => ({ type: "button" }),
+      attrs: () => ({ type: "button", "data-kind-button": "" }),
     }),
   }),
   agent: {

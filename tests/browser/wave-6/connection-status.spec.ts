@@ -134,12 +134,14 @@ test("focus moves on from Retry when the connection comes back, and a pending re
 }) => {
   await open(page, "offline");
   await retryButton(page).focus();
-  await page.keyboard.press("Enter");
-  await expect(retryButton(page)).toHaveAttribute("aria-disabled", "true");
   await set(page, "online");
   await expect(page.locator('[data-slot="kind-conversation-viewport"]')).toBeFocused();
   await set(page, "offline");
-  await expect(retryButton(page)).not.toHaveAttribute("aria-disabled");
+  await retryButton(page).focus();
+  await page.keyboard.press("Enter");
+  await set(page, "online");
+  await set(page, "offline");
+  await expect(retryButton(page)).toBeVisible();
 });
 
 // Recovery follows the flat tree, as Tab does: a shadow root in its host's place, slotted elements in their slot's.
@@ -189,15 +191,21 @@ test("focus moves from a Retry slotted into a host to the host's shadow button a
   await expect(page.getByRole("button", { name: "Footer", exact: true })).toBeFocused();
 });
 
-test("Retry calls the host once and waits for it", async ({ page }) => {
+test("Retry calls the host once and shows Reconnecting in its place while it waits", async ({ page }) => {
   await open(page, "offline");
   await retryButton(page).focus();
   await page.keyboard.press("Enter");
-  await expect(retryButton(page)).toHaveAttribute("aria-disabled", "true");
+  await expect(pill(page)).toHaveText(/^Reconnecting/);
+  await expect(pill(page)).toHaveAccessibleName("Reconnecting");
+  await expect(pill(page).locator("[data-status-mark]")).toHaveAttribute("data-status", "running");
+  await expect(pill(page).getByRole("button")).toHaveCount(0);
+  await expect(page.locator('[data-slot="kind-conversation-viewport"]')).toBeFocused();
   await page.keyboard.press("Enter");
   expect(await retries(page)).toBe(1);
   await page.evaluate(() => (window as unknown as Fixture).kindHost.resolve());
-  await expect(retryButton(page)).not.toHaveAttribute("aria-disabled");
+  await expect(retryButton(page)).toBeVisible();
+  await expect(pill(page)).toHaveAccessibleName("Offline");
+  await retryButton(page).focus();
   await page.keyboard.press("Enter");
   await expect.poll(() => retries(page)).toBe(2);
 });

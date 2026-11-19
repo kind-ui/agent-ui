@@ -10,40 +10,16 @@
   [data-share-dialog-part="trigger"] {
     /* Lucide "share", see THIRD_PARTY_NOTICES.md. */
     --kind-share-dialog-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2v13'/%3E%3Cpath d='m16 6-4-4-4 4'/%3E%3Cpath d='M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8'/%3E%3C/svg%3E");
-    display: inline-flex;
-    flex-shrink: 0;
-    align-items: center;
-    gap: 6px;
-    box-sizing: border-box;
-    height: 2rem;
-    margin: 0;
-    padding-inline: 10px 12px;
-    border: 0;
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: transparent;
-    color: var(--kind-color-fg);
-    font: inherit;
-    font-size: var(--kind-text-sm);
-    font-weight: 500;
-    line-height: 1.25rem;
-    white-space: nowrap;
-    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+    padding-inline-start: 0.5rem;
 
-    &::before {
+    /* The shared button keeps `::before` for its touch hit area, so the glyph is drawn on `::after`, placed first. */
+    &::after {
       content: "";
-      flex-shrink: 0;
+      order: -1;
       width: 14px;
       height: 14px;
       background-color: currentColor;
       mask: var(--kind-share-dialog-icon) center / contain no-repeat;
-    }
-    &:hover,
-    &:where([data-open]) {
-      background-color: var(--kind-color-hover);
-    }
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
     }
   }
 
@@ -51,32 +27,24 @@
     position: fixed;
     inset: 0;
     z-index: 50;
-    background-color: color-mix(in oklab, var(--kind-color-shadow) 55%, transparent);
   }
 
   [data-share-dialog-part="content"] {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    box-sizing: border-box;
     padding: 16px;
-    border: 1px solid var(--kind-color-border);
-    border-radius: var(--kind-radius);
-    background-color: var(--kind-color-surface);
-    box-shadow: 0 16px 48px -12px color-mix(in oklab, var(--kind-color-shadow) 35%, transparent);
-    color: var(--kind-color-fg);
-    font-size: var(--kind-text-sm);
     line-height: 1.25rem;
     outline: none;
 
     /* A sheet is placed by UI SDK, in its viewport. */
     &:where(:not([data-presentation="sheet"])) {
       position: fixed;
-      inset: max(1rem, 15vh) 0 auto;
+      inset: max(1rem, var(--kind-dialog-top)) 0 auto;
       z-index: 50;
       width: min(28rem, 100vw - 2rem);
       height: fit-content;
-      max-height: calc(100dvh - max(1rem, 15vh) - 1rem);
+      max-height: calc(100dvh - max(1rem, var(--kind-dialog-top)) - 1rem);
       margin: 0 auto;
       overflow-y: auto;
     }
@@ -84,7 +52,7 @@
       width: 100%;
       max-width: none;
       padding-block-end: calc(16px + env(safe-area-inset-bottom, 0px));
-      border-radius: var(--kind-radius) var(--kind-radius) 0 0;
+      border-radius: var(--kind-dialog-radius) var(--kind-dialog-radius) 0 0;
     }
   }
 
@@ -93,13 +61,6 @@
     flex-direction: column;
     gap: 2px;
     min-width: 0;
-  }
-
-  [data-share-dialog-part="title"] {
-    margin: 0;
-    font-size: var(--kind-text-lg);
-    font-weight: 600;
-    line-height: 1.25rem;
   }
 
   /* One line, so swapping who can open the chat never changes the dialog's height. */
@@ -133,61 +94,15 @@
   [data-share-dialog-link-row] {
     display: flex;
     gap: 8px;
-    height: 2.25rem;
+    height: var(--kind-control-height);
   }
 
   :where([data-share-dialog-part="content"][data-visibility="private"]) [data-share-dialog-link-row] {
     display: none;
   }
 
-  :is(
-    [data-share-dialog-part="create"],
-    [data-share-dialog-part="copy"],
-    [data-share-dialog-part="revoke"],
-    [data-share-dialog-part="close"]
-  ) {
-    display: inline-flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    margin: 0;
-    padding-inline: 14px;
-    border: 1px solid transparent;
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: transparent;
-    color: var(--kind-color-fg);
-    font: inherit;
-    font-size: var(--kind-text-sm);
-    font-weight: 500;
-    line-height: 1.25rem;
-    white-space: nowrap;
-    transition:
-      background-color var(--kind-duration-fast) var(--kind-ease-out),
-      opacity var(--kind-duration-fast) var(--kind-ease-out);
-
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
-    }
-    &:where([aria-disabled="true"]) {
-      cursor: default;
-      opacity: 0.5;
-    }
-    &:where([data-pending]) {
-      cursor: progress;
-    }
-  }
-
   [data-share-dialog-part="create"] {
     flex: 1;
-    height: 100%;
-    background-color: var(--kind-color-accent);
-    color: var(--kind-color-on-accent);
-
-    &:where(:hover:not([aria-disabled="true"])) {
-      background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-fg));
-    }
   }
 
   [data-share-dialog-part="link"] {
@@ -208,7 +123,7 @@
       margin: 0;
       padding-inline: 10px;
       border: 1px solid var(--kind-color-border);
-      border-radius: calc(var(--kind-radius) / 2);
+      border-radius: var(--kind-radius-md);
       background-color: var(--kind-color-surface);
       color: var(--kind-color-fg);
       font: inherit;
@@ -224,13 +139,6 @@
   /* Wide enough for "Copy link", so "Copied" doesn't move the link. */
   [data-share-dialog-part="copy"] {
     min-width: 6.5rem;
-    height: 100%;
-    border-color: var(--kind-color-border);
-    background-color: var(--kind-color-surface);
-
-    &:hover {
-      background-color: var(--kind-color-hover);
-    }
   }
 
   /* The error at the start, then Stop sharing, with Done always last, so nothing arriving moves Done. */
@@ -239,7 +147,7 @@
     align-items: center;
     justify-content: flex-end;
     gap: 8px;
-    min-height: 2rem;
+    min-height: var(--kind-control-height);
   }
 
   [data-share-dialog-part="error"] {
@@ -251,30 +159,13 @@
     line-height: 1rem;
   }
 
-  :is([data-share-dialog-part="revoke"], [data-share-dialog-part="close"]) {
-    height: 2rem;
-  }
-
   [data-share-dialog-part="revoke"] {
     color: var(--kind-color-danger);
-
-    &:where(:hover:not([aria-disabled="true"])) {
-      background-color: var(--kind-color-hover);
-    }
-  }
-
-  [data-share-dialog-part="close"] {
-    border-color: var(--kind-color-border);
-    background-color: var(--kind-color-surface);
-
-    &:hover {
-      background-color: var(--kind-color-hover);
-    }
   }
 
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
-    [data-share-dialog-part="trigger"]::before {
+    [data-share-dialog-part="trigger"]::after {
       forced-color-adjust: none;
       background-color: ButtonText;
     }

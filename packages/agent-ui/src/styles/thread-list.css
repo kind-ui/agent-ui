@@ -54,30 +54,12 @@
     }
   }
 
-  :is([data-slot="kind-thread-list-new"], [data-slot="kind-thread-list-retry"]) {
-    display: inline-flex;
-    flex-shrink: 0;
-    align-items: center;
+  /* As tall as a row and aligned with the titles below it. */
+  [data-slot="kind-thread-list-new"] {
+    justify-content: flex-start;
     gap: 8px;
     height: var(--kind-thread-row-height);
     padding-inline: 8px;
-    border: 0;
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: transparent;
-    color: inherit;
-    font: inherit;
-    font-weight: 500;
-    text-align: start;
-    cursor: default;
-    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
-
-    &:hover {
-      background-color: var(--kind-color-hover);
-    }
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset-inset);
-    }
   }
 
   [data-slot="kind-thread-list-viewport"] {
@@ -122,15 +104,18 @@
   }
 
   [data-slot="kind-thread-list-row"] {
-    border-radius: calc(var(--kind-radius) / 2);
+    border-radius: var(--kind-radius-sm);
     transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
 
-    &:hover,
-    &[data-menu-open] {
+    &:hover {
       background-color: var(--kind-color-hover);
     }
-    &:where([data-current]) {
-      background-color: color-mix(in oklab, var(--kind-color-hover), var(--kind-color-fg) 6%);
+    &[data-menu-open] {
+      background-color: var(--kind-color-selected);
+    }
+    /* Hover and an open menu leave the current row as it is. */
+    &[data-current] {
+      background-color: var(--kind-color-current);
     }
   }
 
@@ -168,13 +153,25 @@
     white-space: nowrap;
   }
 
+  [data-thread-list-title]:where([data-current] *) {
+    font-weight: 500;
+  }
+
   [data-thread-list-title]:where([data-unread] *) {
     font-weight: 600;
   }
 
+  /* Muted, so the accent in this column is only ever the unread dot. */
   [data-slot="kind-thread-list-status"] {
     --kind-status-mark-size: 14px;
     flex-shrink: 0;
+
+    &[data-status="running"] {
+      border-color: color-mix(in oklab, var(--kind-color-muted) 25%, var(--kind-color-surface));
+      &::before {
+        border-top-color: var(--kind-color-muted);
+      }
+    }
   }
 
   [data-slot="kind-thread-list-unread"] {
@@ -192,7 +189,7 @@
     margin-inline: 3px;
     padding-inline: 5px;
     border: 1px solid var(--kind-color-ring);
-    border-radius: calc(var(--kind-radius) / 3);
+    border-radius: var(--kind-radius-sm);
     background-color: var(--kind-color-surface);
     color: inherit;
     font: inherit;
@@ -208,30 +205,15 @@
 
   /* Always laid out, so showing it moves nothing: on hover, focus, the current row and the row whose menu is open. */
   [data-slot="kind-thread-list-more"] {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    border: 0;
-    border-radius: calc(var(--kind-radius) / 3);
-    background-color: transparent;
-    color: var(--kind-color-muted);
     opacity: 0;
-    cursor: default;
     transition:
       opacity var(--kind-duration-fast) var(--kind-ease-out),
-      background-color var(--kind-duration-fast) var(--kind-ease-out);
+      background-color var(--kind-duration-fast),
+      color var(--kind-duration-fast);
 
-    &:hover,
-    &[aria-expanded="true"] {
+    /* Stronger than the row's own hover fill beneath it. */
+    &:hover:not([aria-expanded="true"]) {
       background-color: color-mix(in oklab, var(--kind-color-hover), var(--kind-color-fg) 8%);
-      color: var(--kind-color-fg);
-    }
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset-inset);
     }
   }
 
@@ -264,9 +246,7 @@
   }
 
   [data-slot="kind-thread-list-retry"] {
-    height: 28px;
     margin-inline-start: auto;
-    color: var(--kind-color-fg);
   }
 
   [data-slot="kind-thread-list-dialog"],
@@ -280,7 +260,7 @@
     align-items: center;
     justify-content: flex-end;
     gap: 8px;
-    min-height: 2rem;
+    min-height: var(--kind-control-height);
     margin-top: 12px;
   }
 
@@ -290,55 +270,6 @@
     font-size: var(--kind-text-xs);
     line-height: 1rem;
     color: var(--kind-color-danger);
-  }
-
-  :is([data-slot="kind-thread-list-dialog-cancel"], [data-slot="kind-thread-list-dialog-delete"]) {
-    display: inline-flex;
-    flex-shrink: 0;
-    align-items: center;
-    height: 2rem;
-    padding-inline: 14px;
-    border: 1px solid transparent;
-    border-radius: calc(var(--kind-radius) / 2);
-    font: inherit;
-    font-size: var(--kind-text-sm);
-    font-weight: 500;
-    transition:
-      background-color var(--kind-duration-fast) var(--kind-ease-out),
-      opacity var(--kind-duration-fast) var(--kind-ease-out);
-
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
-    }
-    &[aria-disabled="true"] {
-      cursor: default;
-    }
-    &[aria-disabled="true"]:not([data-pending]) {
-      opacity: 0.5;
-    }
-    &[data-pending] {
-      cursor: progress;
-    }
-  }
-
-  [data-slot="kind-thread-list-dialog-cancel"] {
-    border-color: var(--kind-color-border);
-    background-color: var(--kind-color-surface);
-    color: var(--kind-color-fg);
-
-    &:hover:not([aria-disabled="true"]) {
-      background-color: var(--kind-color-hover);
-    }
-  }
-
-  [data-slot="kind-thread-list-dialog-delete"] {
-    background-color: var(--kind-color-danger);
-    color: var(--kind-color-on-status);
-
-    &:hover:not([aria-disabled="true"]) {
-      background-color: color-mix(in oklab, var(--kind-color-danger) 88%, var(--kind-color-fg));
-    }
   }
 
   /* Motion: the dialog rises and fades in, and its backdrop fades. Reduced motion only fades, in 120 ms; `none`

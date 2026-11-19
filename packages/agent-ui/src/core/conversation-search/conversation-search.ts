@@ -22,7 +22,7 @@ import { type ConversationSearchMatch, rangesOf, searchText } from "./text.js";
 /** A message the search reads: its `text` is Markdown, searched as the text it renders. */
 export type ConversationSearchMessage = { id: string; text: string };
 
-/** `"input-change"`: typing or Clear. `"escape-key"`: Escape cleared it. `"imperative"`: an `api` call, like an agent's. */
+/** `"input-change"`: typing. `"escape-key"`: Escape cleared it. `"imperative"`: an `api` call, like an agent's. */
 export type ConversationSearchQueryChangeReason = "input-change" | "escape-key" | "imperative";
 
 /** `"shortcut"`: the `shortcut` opened it. `"escape-key"` and `"close-press"` closed it. `"imperative"`: an `api` call. */
@@ -121,7 +121,7 @@ export type ConversationSearchApi = {
   isOpen: () => boolean;
   /** Opens or closes the bar. Returns whether it was accepted. */
   setOpen: (open: boolean) => boolean;
-  /** "3 of 12", "No results", or empty without a search. */
+  /** "3 of 12", "0 of 0" without a match, or empty without a search. */
   countText: (state: ConversationSearchState) => string;
   /** Hands the Input its props. Called by the input part. */
   inputState: () => ConversationSearchInputState;
@@ -189,11 +189,7 @@ const countText = ({
   current,
   counted,
 }: Pick<ConversationSearchState, "query" | "matches" | "current" | "counted">) =>
-  !counted || !query.trim()
-    ? ""
-    : matches.length === 0
-      ? "No results"
-      : `${current + 1} of ${matches.length}`;
+  !counted || !query.trim() ? "" : `${current + 1} of ${matches.length}`;
 
 const sameNumbers = (a: readonly number[], b: readonly number[]) =>
   a.length === b.length && a.every((value, index) => value === b[index]);
@@ -467,7 +463,8 @@ export const conversationSearchPrimitive: ConversationSearchPrimitive = definePr
         clearTimeout(announceTimer);
         announceTimer = setTimeout(() => {
           const text = countText(store.get());
-          if (text && !destroyed && store.get().open) announce(text, { priority: "polite" });
+          if (!text || destroyed || !store.get().open) return;
+          announce(store.get().matches.length > 0 ? text : "No results", { priority: "polite" });
         }, ANNOUNCE_DELAY);
       }
     });
@@ -591,6 +588,7 @@ export const conversationSearchPrimitive: ConversationSearchPrimitive = definePr
       attrs: (state) => ({
         "aria-label": state.label,
         hidden: state.open ? undefined : "",
+        "data-kind-popup": "",
         "data-motion": state.motion,
       }),
       on: { keydown: (event, { api }) => api.keydown(event as KeyboardEvent) },
@@ -616,6 +614,7 @@ export const conversationSearchPrimitive: ConversationSearchPrimitive = definePr
       attrs: (state, part) => ({
         id: `${part.id}-count`,
         "data-empty": state.query.trim() ? undefined : "",
+        "data-none": state.counted && state.query.trim() && withoutMatches(state) ? "" : undefined,
       }),
     }),
     previous: slot({
@@ -626,6 +625,7 @@ export const conversationSearchPrimitive: ConversationSearchPrimitive = definePr
       attrs: (state) => ({
         type: "button",
         "aria-label": "Previous match",
+        "data-kind-icon-button": "",
         "aria-disabled": withoutMatches(state) ? "true" : undefined,
       }),
       bind: (el, part) => part.api.recovery.bind(el, part),
@@ -638,6 +638,7 @@ export const conversationSearchPrimitive: ConversationSearchPrimitive = definePr
       attrs: (state) => ({
         type: "button",
         "aria-label": "Next match",
+        "data-kind-icon-button": "",
         "aria-disabled": withoutMatches(state) ? "true" : undefined,
       }),
       bind: (el, part) => part.api.recovery.bind(el, part),
@@ -647,7 +648,7 @@ export const conversationSearchPrimitive: ConversationSearchPrimitive = definePr
       focus: "native",
       present: (state) => state.open,
       press: ({ api }, event) => api.closePress(event),
-      attrs: () => ({ type: "button", "aria-label": "Close search" }),
+      attrs: () => ({ type: "button", "aria-label": "Close search", "data-kind-icon-button": "" }),
       bind: (el, part) => part.api.recovery.bind(el, part),
     }),
   }),

@@ -5,10 +5,13 @@ import {
   type PopupPartState,
   popupBackdrop,
   type SlotDefinition,
+  toLocale,
 } from "@ui-sdk/core";
+import { formatDate } from "@ui-sdk/core/date";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { ariaKeyshortcuts, formatShortcut, registerShortcut } from "@ui-sdk/core/shortcuts";
-import type { PickerItem, Thread } from "../../types/index.js";
+import { fuzzyScore, matchRanges } from "@ui-sdk/core/text-match";
+import type { PickerAction, PickerItem, Thread } from "../../types/index.js";
 import {
   type PickerBaseApi,
   type PickerBaseOptions,
@@ -19,7 +22,7 @@ import {
   pickerBase,
 } from "../picker/base.js";
 import { threadGroups } from "../thread-groups.js";
-import { type DateGroupKey, dateGroup, todayKey } from "../time.js";
+import { type DateGroupKey, dateGroup, dayKey, todayKey } from "../time.js";
 
 /** `"item-press"`: a person chose a row. `"imperative"`: an `api` call, like an agent's `select` or `newThread`. */
 export type ThreadSearchSelectReason = PickerValueChangeReason;
@@ -40,13 +43,17 @@ export type ThreadSearchOptions = Omit<
   PickerSearchOptions & {
     /**
      * The threads to search. While the search is empty the newest 20 show; while it filters, every one does, grouped
-     * as Thread List groups them: pinned first, then each `group`, then by date from `updatedAt`.
+     * as Thread List groups them: pinned first, then each `group`, then by date from `updatedAt`, the groups and rows
+     * holding the search's text best first.
      * @default []
      */
     threads?: Thread[];
     /** Called when a person or `select` chooses a thread, by its `id`. Cancel it to keep the dialog open. */
     onSelect?: (id: string, details: ChangeDetails<ThreadSearchSelectReason>) => void;
-    /** Adds a "New chat" row after the threads, called with the search text when a person or `newThread` runs it. */
+    /**
+     * Adds a "New chat" row after the threads, which shows whatever the search and names it (`New chat: “text”`),
+     * called with the search text when a person or `newThread` runs it.
+     */
     onNew?: (query: string, details: ChangeDetails<ThreadSearchSelectReason>) => void;
     /**
      * Names the "New chat" row.
@@ -60,7 +67,7 @@ export type ThreadSearchOptions = Omit<
     label?: string;
     /**
      * Shown in the empty search field.
-     * @default "Search chats"
+     * @default "Search chats…"
      */
     placeholder?: string;
     /**
@@ -152,6 +159,18 @@ const itemOf = (
 const dateOf = (thread: Thread, grouping: Grouping) =>
   dateGroup(thread.updatedAt, { ...grouping, labels: grouping.groupLabels }).label;
 
+/** "Nov 2", with the year when it isn't `now`'s. */
+const shortDate = (thread: Thread, grouping: Grouping) => {
+  const day = thread.updatedAt ? dayKey(thread.updatedAt, grouping.timeZone) : undefined;
+  if (!day) return undefined;
+  const thisYear = dayKey(grouping.now, grouping.timeZone)?.slice(0, 4) === day.slice(0, 4);
+  return formatDate(day, toLocale(grouping.locale ?? "en") ?? "en", {
+    month: "short",
+    day: "numeric",
+    ...(thisYear ? {} : { year: "numeric" as const }),
+  });
+};
+
 /** Grouped as Thread List groups them; a row under a date group needs no date of its own. */
 const groupedItems = (threads: readonly Thread[], grouping: Grouping) =>
   threadGroups(threads, { ...grouping, labels: grouping.groupLabels }).flatMap((group) =>
@@ -159,7 +178,7 @@ const groupedItems = (threads: readonly Thread[], grouping: Grouping) =>
       itemOf(
         thread,
         group.label,
-        group.key === "pinned" || group.key.startsWith("group:") ? dateOf(thread, grouping) : undefined,
+        group.key === "pinned" || group.key.startsWith("group:") ? shortDate(thread, grouping) : undefined,
       ),
     ),
   );
@@ -205,14 +224,36 @@ const rows = (options: ThreadSearchOptions): Rows => {
   return made;
 };
 
+// How well a row holds the search as Command keeps it, as typed: 0 when it doesn't, else `fuzzyScore`'s, the title a
+// little ahead of the snippet.
+const score = (item: PickerItem<unknown>, query: string) =>
+  [item.label, item.description ?? ""].reduce(
+    (best, text, index) =>
+      matchRanges(text, query, "contains").length
+        ? Math.max(best, fuzzyScore(text, query) * (index ? 0.95 : 1))
+        : best,
+    0,
+  );
+
+/** The best matches first, so each group sits where its best row does, and "New chat" names the search. */
+const rank = (items: PickerItem<unknown>[], actions: PickerAction<unknown>[], query: string) => {
+  const scored = items.map((item) => ({ item, score: score(item, query) }));
+  return {
+    items: scored.sort((a, b) => b.score - a.score).map(({ item }) => item),
+    actions: actions.map((action) => ({ ...action, label: `${action.label}: “${query}”` })),
+    matched: scored[0] !== undefined && scored[0].score > 0,
+  };
+};
+
 const base = pickerBase<ThreadSearchOptions>({
   kind: "thread-search",
   label: "Search chats",
-  placeholder: "Search chats",
+  placeholder: "Search chats…",
   emptyText: "No chats found",
   popup: "dialog",
   select: true,
   search: true,
+  rank,
   toItems: (options) => rows(options).items,
   emptyItems: (options) => rows(options).recent,
   actions: {
@@ -291,6 +332,7 @@ export const threadSearchPrimitive: ThreadSearchPrimitive = definePrimitive<
   },
   slots: (slot) => {
     const picker = base.slots(slot);
+    const backdrop = popupBackdrop(slot);
     return {
       ...picker,
       root: slot({
@@ -332,7 +374,10 @@ export const threadSearchPrimitive: ThreadSearchPrimitive = definePrimitive<
           "aria-keyshortcuts": state.keyshortcuts,
         }),
       }),
-      backdrop: popupBackdrop(slot),
+      backdrop: slot({
+        ...backdrop,
+        attrs: (state, part) => ({ ...backdrop.attrs?.(state, part), "data-kind-scrim": "" }),
+      }),
       shortcut: slot<BaseSlotProps, { text: string }>({
         present: (state) => state.shortcut !== undefined,
         state: (state) => ({ text: state.shortcutText }),

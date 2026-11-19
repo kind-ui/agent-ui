@@ -80,7 +80,7 @@ export type PickerParts = Pick<typeof parts, "Trigger" | "Content" | "Viewport" 
  * The trigger, popover, list and rows of a picker, rendered through `parts`, for Model Selector and the other
  * components that spread `pickerBase` to share Picker's markup, each part named `<name><Part>` in React's tools.
  * `Default` is the trigger and the popover. `icon` draws a row's icon (an image URL or an element by default; `null`
- * draws none), and `trailing` what follows its text, before its `meta`.
+ * draws none), and `trailing` what follows its `meta`.
  */
 export function pickerParts(
   parts: PickerParts,
@@ -162,7 +162,9 @@ export function pickerParts(
         <KindCommandGroup>
           {section.label ? <KindCommandGroupLabel>{section.label}</KindCommandGroupLabel> : null}
           {section.rows.map((row) => (
-            <Fragment key={row.option.value}>{children(row)}</Fragment>
+            // Keyed by its label too: React Command filters a row by the label it mounted with, and a footer row's
+            // label can hold the search.
+            <Fragment key={`${row.option.value}\u0000${row.option.label}`}>{children(row)}</Fragment>
           ))}
         </KindCommandGroup>
       </>
@@ -191,8 +193,8 @@ export function pickerParts(
             </span>
           ) : null}
         </span>
-        {trailing?.(row)}
         {row.meta ? <span data-picker-meta="">{row.meta}</span> : null}
+        {trailing?.(row)}
         <span data-picker-mark="" />
       </>
     ),

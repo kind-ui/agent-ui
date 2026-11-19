@@ -62,8 +62,8 @@ export function defineThreadSearch(): void {
       } as RootOptions<P>["state"],
       api: ["isOpen", "setOpen"],
       drawTrigger: (button, state) => drawTrigger(button, state as ThreadSearchState),
-      // The status mark follows the title, since Command hides an item's icon from assistive technology and a status
-      // needs its words.
+      // The status mark ends the row, after the date, since Command hides an item's icon from assistive technology and
+      // a status needs its words.
       icon: () => [],
       trailing: (document, row) => (row.icon === undefined ? [] : statusMark(document, row)),
       parts: {

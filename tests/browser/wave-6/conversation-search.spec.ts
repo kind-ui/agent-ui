@@ -66,7 +66,8 @@ test("typing counts every match, paints them, marks their messages and announces
   await field(page).fill("résumé");
   await expect(count(page)).toHaveText("8 of 8");
   await field(page).fill("nothing like it");
-  await expect(count(page)).toHaveText("No results");
+  await expect(count(page)).toHaveText("0 of 0");
+  await expect(count(page)).toHaveAttribute("data-none", "");
   await expect(marks(page)).toHaveCount(0);
   await expect.poll(() => painted(page, "kind-search").then((ranges) => ranges?.length)).toBe(0);
 });

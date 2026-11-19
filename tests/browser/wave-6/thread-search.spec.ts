@@ -62,14 +62,19 @@ test("the trigger opens a modal dialog of the newest threads, grouped, with New 
   );
 });
 
-test("typing searches every thread and marks the title and snippet", async ({ page }) => {
+test("typing searches every thread, a title match first, and marks the title and snippet", async ({
+  page,
+}) => {
   await load(page);
   await open(page);
   await search(page).fill("lentil");
   await expect(options(page).filter({ hasNotText: "New chat" })).toHaveText([
-    /Weeknight recipes/,
     /Archived lentil soup/,
+    /Weeknight recipes/,
   ]);
+  await expect(
+    options(page).filter({ hasNotText: "New chat" }).locator('[data-slot="command-item-text"] mark'),
+  ).toHaveText(["lentil"]);
   await expect(dialog(page).locator("[data-picker-description] mark")).toHaveText(["lentil"]);
   expect((await calls(page)).filter((call) => call.name === "query").at(-1)).toMatchObject({
     value: "lentil",
@@ -117,15 +122,16 @@ test("a canceled onSelect keeps the dialog open", async ({ page }) => {
   await expect(dialog(page)).toBeVisible();
 });
 
-test("New chat filters like any row, and gets the search text", async ({ page }) => {
+test("New chat shows under the empty text whatever the search, named with it", async ({ page }) => {
   await load(page);
   await open(page);
-  await search(page).fill("zzzz");
+  // "Pricing" holds its letters, but apart, which doesn't match.
+  await search(page).fill("pin");
   await expect(dialog(page).getByText("No chats found")).toBeVisible();
-  await search(page).fill("new ch");
-  await expect(options(page)).toHaveText(["New chat"]);
+  await expect(options(page)).toHaveText(["New chat: “pin”"]);
+  await expect(options(page)).toHaveAccessibleName("New chat: “pin”");
   await page.keyboard.press("Enter");
-  expect(await calls(page)).toContainEqual(expect.objectContaining({ name: "new", value: "new ch" }));
+  expect(await calls(page)).toContainEqual(expect.objectContaining({ name: "new", value: "pin" }));
   await expect(dialog(page)).toBeHidden();
 });
 

@@ -57,8 +57,8 @@ export type ConnectionStatusOptions = {
   retryAt?: string;
   /**
    * Called when Retry is pressed. Shows Retry while set and the connection is down (not `online` or resuming).
-   * Return a promise to keep Retry pending until it settles; a rejection or a throw offers Retry again, and so does
-   * the next outage.
+   * Return a promise to show "Reconnecting", without Retry, until it settles; a rejection or a throw offers Retry
+   * again, and so does the next outage.
    */
   onRetry?: (details: ConnectionStatusRetryDetails) => unknown;
   /** The words to show and announce, for another language or tone. Each one left out keeps its English default. */
@@ -151,13 +151,15 @@ const isLost = (phase: ConnectionPhase) => phase === "reconnecting" || phase ===
 const isDown = (phase: ConnectionPhase) => phase !== "online" && phase !== "resuming";
 
 /**
- * The pill's words: the countdown while reconnecting with time left, else the state's. The default countdown ends in a
- * figure space, a digit wide, per digit it has lost, so "10 s" turning into "9 s" doesn't resize the pill.
+ * The pill's words: "Reconnecting" while a retry is pending, the countdown while reconnecting with time left, else the
+ * state's. The default countdown ends in a figure space, a digit wide, per digit it has lost, so "10 s" turning into
+ * "9 s" doesn't resize the pill.
  */
 export const connectionStatusText = (
   state: Pick<ConnectionStatusState, "shown" | "seconds" | "labels"> &
-    Partial<Pick<ConnectionStatusState, "spareDigits">>,
+    Partial<Pick<ConnectionStatusState, "spareDigits" | "pending">>,
 ): string => {
+  if (state.pending) return state.labels.reconnecting;
   if (state.shown !== "reconnecting" || state.seconds <= 0) return state.labels[state.shown];
   const text = state.labels.countdown(state.seconds);
   return state.labels.countdown === DEFAULT_LABELS.countdown
@@ -257,7 +259,7 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
     root: slot({
       role: "group",
       attrs: (state) => ({
-        "aria-label": state.labels[state.shown],
+        "aria-label": state.pending ? state.labels.reconnecting : state.labels[state.shown],
         "aria-busy": state.pending ? "true" : undefined,
         hidden: state.present ? undefined : "",
         "data-connection-status-part": "root",
@@ -316,7 +318,7 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
         "aria-hidden": "true",
         "data-connection-status-part": "mark",
         "data-status-mark": "",
-        "data-status": state.shown === "offline" ? "warning" : "running",
+        "data-status": state.shown === "offline" && !state.pending ? "warning" : "running",
         "data-motion": state.motion,
       }),
     }),
@@ -333,16 +335,17 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
       state: (state) => ({ pending: state.pending, label: state.labels.retry }),
       attrs: (state) => ({
         type: "button",
-        "aria-disabled": state.pending ? "true" : undefined,
         "data-connection-status-part": "retry",
+        "data-kind-button": "",
         "data-pending": state.pending ? "" : undefined,
       }),
       bind: (el, part) => {
-        // Unbound as the pill starts leaving, while Retry still holds focus, so focus moves on before the exit
-        // makes it inert.
+        // Unbound as the pill starts leaving or a retry starts, while Retry still holds focus, so focus moves on
+        // before the exit makes it inert or the pending retry hides it.
         let unbind: (() => void) | undefined;
         const follow = () => {
-          if (isDown(part.store.get().phase)) unbind ??= part.api.recovery.bind(el, part);
+          const { phase, pending } = part.store.get();
+          if (isDown(phase) && !pending) unbind ??= part.api.recovery.bind(el, part);
           else {
             unbind?.();
             unbind = undefined;

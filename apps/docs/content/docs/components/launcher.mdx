@@ -7,7 +7,7 @@ import LauncherExample from "../../../examples/launcher/basic";
 
 Use a launcher to offer an assistant on every page of an app. It's a round button in the page's bottom end corner, and pressing it opens your chat in a panel above it while the page stays usable. Close it and open it again later: the draft and the scroll position are where you left them.
 
-<Example caption="Press the button to open the chat, which puts focus in its composer. Press Escape or Close to close it, and the button again to reopen it with your draft kept.">
+<Example caption="Press the button to open the chat, which puts focus in its composer. Press Escape or the button to close it, and the button again to reopen it with your draft kept.">
   <LauncherExample />
 
   <include cwd lang="tsx">./examples/launcher/basic.tsx</include>
@@ -36,7 +36,7 @@ Launcher
     └── children
 ```
 
-`Launcher` renders these parts and puts its `children`, your chat, in the panel. `LauncherTrigger` is the floating button, a chat glyph that turns into a cross while the panel is open, and `LauncherBadge` shows the unread count on it. `LauncherBackdrop` dims the page behind a modal panel. `LauncherContent` is the panel: a header with `LauncherTitle` and `LauncherClose`, then the chat. Use `LauncherRoot` to arrange the parts yourself.
+`Launcher` renders these parts and puts its `children`, your chat, in the panel. `LauncherTrigger` is the floating button, a chat glyph that turns into a cross while the panel is open, and `LauncherBadge` shows the unread count on it. `LauncherBackdrop` dims the page behind a modal panel. `LauncherContent` is the panel: a header with `LauncherTitle` and, in a modal dialog or a sheet where the button is covered, `LauncherClose`, then the chat. Use `LauncherRoot` to arrange the parts yourself.
 
 ## Usage
 
@@ -59,7 +59,7 @@ Pass `unread` to show a badge with the count, "99+" past 99. Screen readers don'
 
 ### Opening
 
-Press the button, or focus it and press Enter or Space, to open the panel, and press it again, Close or Escape to close it. As it opens, focus moves to the first composer's editor inside, else to the panel; pass `initialFocus` to `LauncherContent` to choose another place. Closing returns focus to the button.
+Press the button, or focus it and press Enter or Space, to open the panel, and press it again or Escape to close it; a modal panel or a sheet, which covers the button, has its own Close. As it opens, focus moves to the first composer's editor inside, else to the panel; pass `initialFocus` to `LauncherContent` to choose another place. Closing returns focus to the button.
 
 Pass `shortcut`, like `"mod+j"`, to open and close it from anywhere on the page; `mod` is Command on macOS and Ctrl elsewhere. There's none by default. Pick keys the composer doesn't take for itself: its editor keeps `"mod+b"`, `"mod+i"` and `"mod+u"` for formatting, so those can't close the panel from inside it. The button's `aria-keyshortcuts` names it.
 
@@ -73,7 +73,7 @@ With `presentation="auto"`, the default, the panel fills the screen as a sheet o
 
 ### Motion
 
-At full motion the panel rises from the button and the glyph turns into the cross. Under `prefers-reduced-motion`, or with `motion="reduced"`, both only fade, over 120 ms, and with `motion="none"` nothing animates.
+At full motion the panel rises from the button and the glyph crossfades into the cross. Under `prefers-reduced-motion`, or with `motion="reduced"`, both only fade, over 120 ms, and with `motion="none"` nothing animates.
 
 ## API Reference
 

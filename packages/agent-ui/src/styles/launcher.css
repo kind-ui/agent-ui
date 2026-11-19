@@ -36,15 +36,13 @@
     color: var(--kind-color-on-accent);
     font: inherit;
     cursor: pointer;
-    box-shadow:
-      0 1px 2px color-mix(in oklab, var(--kind-color-shadow) 20%, transparent),
-      0 8px 24px -6px color-mix(in oklab, var(--kind-color-shadow) 35%, transparent);
+    box-shadow: var(--kind-shadow-popover);
     transition:
       scale var(--kind-duration-fast) var(--kind-ease-out),
       background-color var(--kind-duration-fast) var(--kind-ease-out);
 
     &:hover {
-      background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-on-accent));
+      background-color: var(--kind-color-accent-hover);
     }
     &:where([data-motion="auto"]):active {
       scale: 0.96;
@@ -55,7 +53,7 @@
     }
   }
 
-  /* Both glyphs share one box: the chat glyph turns away as the cross turns in. */
+  /* Both glyphs share one box: the chat glyph fades out as the cross fades in. */
   :where([data-launcher-part="trigger"]) [data-launcher-icon] {
     display: grid;
     inline-size: 1.5rem;
@@ -69,26 +67,22 @@
       mask: var(--kind-launcher-icon-open) center / contain no-repeat;
       transition:
         opacity var(--kind-duration-fast) var(--kind-ease-out),
-        rotate var(--kind-duration-base) var(--kind-ease),
-        scale var(--kind-duration-base) var(--kind-ease);
+        scale var(--kind-duration-fast) var(--kind-ease-out);
     }
     &::after {
       mask-image: var(--kind-launcher-icon-close);
       opacity: 0;
-      rotate: -90deg;
-      scale: 0.6;
+      scale: 0.8;
     }
   }
 
   :where([data-launcher-part="trigger"][data-open]) [data-launcher-icon] {
     &::before {
       opacity: 0;
-      rotate: 90deg;
-      scale: 0.6;
+      scale: 0.8;
     }
     &::after {
       opacity: 1;
-      rotate: 0deg;
       scale: 1;
     }
   }
@@ -103,10 +97,11 @@
     min-inline-size: 1.25rem;
     block-size: 1.25rem;
     padding-inline: 0.3125rem;
-    border: 2px solid var(--kind-color-surface);
+    /* The button floats over the host's page, whose background the ring should match. */
+    border: 2px solid var(--kind-launcher-badge-ring, var(--kind-color-surface));
     border-radius: 999px;
-    background-color: var(--kind-color-danger);
-    color: var(--kind-color-on-status);
+    background-color: var(--kind-color-fg);
+    color: var(--kind-color-surface);
     font-size: var(--kind-text-xs);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
@@ -124,13 +119,7 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
-    border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) * 1.5);
-    background-color: var(--kind-color-surface);
-    color: var(--kind-color-fg);
-    font-size: var(--kind-text-md);
     line-height: 1.25rem;
-    box-shadow: 0 16px 48px -12px color-mix(in oklab, var(--kind-color-shadow) 35%, transparent);
     transform-origin: var(--transform-origin, bottom right);
 
     &:dir(rtl) {
@@ -182,58 +171,29 @@
   [data-launcher-part="title"] {
     flex: 1 1 auto;
     min-inline-size: 0;
-    margin: 0;
     overflow: hidden;
-    font-size: var(--kind-text-md);
-    font-weight: 600;
-    line-height: 1.25rem;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  [data-launcher-part="close"] {
-    display: grid;
-    flex: none;
-    place-items: center;
-    inline-size: 2rem;
-    block-size: 2rem;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    border-radius: calc(var(--kind-radius) / 2);
-    background: transparent;
-    color: var(--kind-color-muted);
-    cursor: pointer;
-    transition:
-      color var(--kind-duration-fast) var(--kind-ease-out),
-      background-color var(--kind-duration-fast) var(--kind-ease-out);
-
-    &::before {
-      content: "";
-      inline-size: 1rem;
-      block-size: 1rem;
-      background-color: currentColor;
-      mask: var(--kind-launcher-icon-close) center / contain no-repeat;
-    }
-    &:hover {
-      background-color: var(--kind-color-hover);
-      color: var(--kind-color-fg);
-    }
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset-inset);
-    }
+  /* The shared icon button keeps `::before` for its touch hit area, so the cross is drawn on `::after`. */
+  [data-launcher-part="close"]::after {
+    content: "";
+    inline-size: 1rem;
+    block-size: 1rem;
+    background-color: currentColor;
+    mask: var(--kind-launcher-icon-close) center / contain no-repeat;
   }
 
   [data-slot="kind-launcher-backdrop"] {
     position: fixed;
     inset: 0;
-    background-color: color-mix(in oklab, var(--kind-color-shadow) 40%, transparent);
+    background-color: var(--kind-color-scrim);
   }
 
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
-    :is([data-launcher-icon]::before, [data-launcher-icon]::after, [data-launcher-part="close"]::before) {
+    :is([data-launcher-icon]::before, [data-launcher-icon]::after, [data-launcher-part="close"]::after) {
       forced-color-adjust: none;
       background-color: ButtonText;
     }
@@ -301,7 +261,6 @@
       }
       & [data-launcher-icon]::before,
       & [data-launcher-icon]::after {
-        rotate: none;
         scale: none;
         transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
       }
@@ -325,7 +284,6 @@
 
     & [data-launcher-icon]::before,
     & [data-launcher-icon]::after {
-      rotate: none;
       scale: none;
       transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
     }

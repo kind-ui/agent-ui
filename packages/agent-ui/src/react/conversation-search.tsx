@@ -1,7 +1,7 @@
 "use client";
 
 import { type ConversationSearchInputState, conversationSearchPrimitive } from "@kind-ui/agent-ui/core";
-import { Input, InputClear, InputGroup } from "@ui-sdk/react/input";
+import { Input, InputGroup } from "@ui-sdk/react/input";
 import { createParts } from "@ui-sdk/react/primitive";
 import type { ComponentProps } from "react";
 
@@ -32,24 +32,23 @@ const searchField = ({ controller, defaultValue, label, describedBy }: Conversat
       defaultValue={defaultValue}
       aria-label={label}
       aria-describedby={describedBy}
-      placeholder="Find"
+      placeholder="Find…"
       data-agent-hidden=""
     />
     <ConversationSearchCount />
-    <InputClear aria-label="Clear search" data-agent-hidden="" />
   </InputGroup>
 );
 
 export type ConversationSearchInputProps = ComponentProps<typeof parts.Input>;
 
-/** The search field with its count and a clear button, unless you pass children. Pass the state to UI SDK Input. */
+/** The search field with its count, unless you pass children. Pass the state to UI SDK Input. */
 export function ConversationSearchInput({ children = searchField, ...props }: ConversationSearchInputProps) {
   return <parts.Input {...props}>{children}</parts.Input>;
 }
 
 export type ConversationSearchCountProps = ComponentProps<typeof parts.Count>;
 
-/** "3 of 12" or "No results" while there's a search, unless you pass children. */
+/** "3 of 12", or "0 of 0" without a match, while there's a search, unless you pass children. */
 export function ConversationSearchCount({
   children = ({ text }) => text,
   ...props

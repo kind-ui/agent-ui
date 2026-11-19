@@ -16,7 +16,11 @@
     padding-inline: 0.625rem;
     border: 1px solid var(--kind-color-border);
     border-radius: 9999px;
-    background-color: var(--kind-color-surface);
+    /* A step above the conversation's surface in dark, where a shadow doesn't separate it. */
+    background-color: light-dark(
+      var(--kind-color-surface),
+      color-mix(in oklab, var(--kind-color-surface), var(--kind-color-fg) 5%)
+    );
     box-shadow:
       0 1px 2px color-mix(in oklab, var(--kind-color-shadow) 6%, transparent),
       0 4px 16px -4px color-mix(in oklab, var(--kind-color-shadow) 12%, transparent);
@@ -55,34 +59,42 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* A ghost button sized to fit inside the pill. While a retry is pending it keeps its room, unseen. */
   [data-connection-status-part="retry"] {
-    display: inline-flex;
-    align-items: center;
-    box-sizing: border-box;
     height: 1.375rem;
     padding-inline: calc(0.5rem - 1px);
-    /* Transparent, so forced colors draw the button's edge. */
-    border: 1px solid transparent;
     border-radius: 9999px;
-    background-color: var(--kind-color-hover);
-    font: inherit;
-    color: var(--kind-color-fg);
-    cursor: pointer;
-    transition: background-color var(--kind-duration-fast);
+    font-size: var(--kind-text-xs);
+    line-height: 1rem;
 
-    &:hover:not([aria-disabled="true"]) {
-      background-color: color-mix(in oklab, var(--kind-color-fg) 12%, transparent);
-    }
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
-    }
-    &[aria-disabled="true"] {
-      cursor: default;
-      opacity: 0.6;
+    &[data-pending] {
+      visibility: hidden;
     }
     &[hidden] {
       display: none;
+    }
+  }
+
+  /* While the pill shows, the conversation's top edge fades under it, so its text doesn't run into the pill. */
+  [data-slot="kind-conversation"]:has(> [data-connection-status-part="root"]:not([hidden]))
+    > [data-slot="kind-conversation-viewport"] {
+    mask-image: linear-gradient(to bottom, transparent, black 3.25rem);
+  }
+
+  /* The second layer repeats conversation.css's scroll fade, which the mask above would replace. */
+  @supports (animation-timeline: scroll()) {
+    [data-slot="kind-conversation"]:has(> [data-connection-status-part="root"]:not([hidden]))
+      > [data-slot="kind-conversation-viewport"] {
+      mask-image:
+        linear-gradient(to bottom, transparent, black 3.25rem),
+        linear-gradient(
+          to bottom,
+          transparent,
+          black var(--kind-conversation-fade-start),
+          black calc(100% - var(--kind-conversation-fade-end)),
+          transparent
+        );
+      mask-composite: intersect;
     }
   }
 

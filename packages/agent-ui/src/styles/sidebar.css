@@ -52,33 +52,24 @@
     flex: 1;
   }
 
-  [data-sidebar-part="trigger"] {
-    display: inline-flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
+  /* The shared button, unfilled while the panel is open, since that's its resting state. Without children it's the
+     icon button's square. */
+  [data-sidebar-part="trigger"][aria-expanded="true"]:not(:hover) {
+    background-color: transparent;
+  }
+
+  [data-sidebar-part="trigger"]:empty {
+    width: var(--kind-control-height);
     padding: 0;
-    border: 0;
-    border-radius: calc(var(--kind-radius) / 2);
-    background: transparent;
     color: var(--kind-color-muted);
-    cursor: pointer;
 
     &:hover {
-      background: var(--kind-color-hover);
       color: var(--kind-color-fg);
-    }
-
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
     }
   }
 
-  /* An empty trigger draws the panel icon. */
-  [data-sidebar-part="trigger"]:empty::before {
+  /* An empty trigger draws the panel icon, on `::after` since `::before` is the shared control's hit area. */
+  [data-sidebar-part="trigger"]:empty::after {
     content: "";
     width: 1rem;
     height: 1rem;
@@ -90,17 +81,17 @@
   :where(
     [data-sidebar-part="trigger"][data-side="end"],
     [data-sidebar-part="trigger"][data-side="start"]:dir(rtl)
-  )::before {
+  )::after {
     mask-image: var(--kind-sidebar-icon-right);
   }
 
-  :where([data-sidebar-part="trigger"][data-side="end"]:dir(rtl))::before {
+  :where([data-sidebar-part="trigger"][data-side="end"]:dir(rtl))::after {
     mask-image: var(--kind-sidebar-icon-left);
   }
 
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
-    [data-sidebar-part="trigger"]:empty::before {
+    [data-sidebar-part="trigger"]:empty::after {
       forced-color-adjust: none;
       background-color: ButtonText;
     }
@@ -154,14 +145,92 @@
     }
   }
 
-  /* The trigger, the shortcut and `api` calls slide the width at full motion; a drag never does (spec §6). */
+  /* The handle: the border line with a grip on it, in an 8px hit area. */
+  [data-sidebar-part="handle"] > [data-slot="resizable-handle"] {
+    z-index: 1;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset-block: 0;
+      inset-inline: -4px;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 4px;
+      height: 1.5rem;
+      translate: -50% -50%;
+      border-radius: 9999px;
+      background-color: var(--kind-color-border);
+      box-shadow: 0 0 0 1px var(--kind-color-surface);
+      transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+    }
+
+    &:is([data-hovering], [data-dragging])::after {
+      background-color: var(--kind-color-muted);
+    }
+
+    &:focus-visible::after {
+      background-color: var(--kind-color-ring);
+    }
+  }
+
+  @media (forced-colors: active) {
+    [data-sidebar-part="handle"] > [data-slot="resizable-handle"]::after {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+    }
+  }
+
+  /* Closed, the panel waits outside its frame, so opening slides it in; a drag shows it as the frame grows. A rail
+     (`collapsedSize` above 0) keeps the panel in view. */
+  :where([data-sidebar-part="root"]:not(:has([data-slot="resizable-handle"][data-dragging])))
+    [data-sidebar-part="panel"]:not([data-open], [data-overlay], [data-rail]) {
+    translate: -100%;
+
+    &:where([data-side="end"], :dir(rtl)) {
+      translate: 100%;
+    }
+
+    &:where([data-side="end"]:dir(rtl)) {
+      translate: -100%;
+    }
+  }
+
+  /* The trigger, the shortcut and `api` calls slide the panel at full motion; a drag never does (spec §6). Its
+     `translate` moves, and the frames change width once, at the start of opening and at the end of closing, so the
+     page's text wraps again once rather than every frame. A rail slides the width instead. Each root sets the
+     frames' transition, so a sidebar inside another's page keeps its own. */
+  [data-sidebar-part="root"] {
+    --kind-sidebar-frame-transition: none;
+  }
+
+  [data-sidebar-frame] {
+    transition: var(--kind-sidebar-frame-transition);
+  }
+
   @media (prefers-reduced-motion: no-preference) {
-    :where([data-sidebar-part="root"][data-animating][data-motion="auto"]) > [data-slot="resizable"] > *,
-    :where([data-sidebar-part="root"][data-animating][data-motion="auto"])
-      > kind-internal-resizable
-      > [data-slot="resizable"]
-      > * {
-      transition: flex-basis var(--kind-duration-panel) var(--kind-ease);
+    :where([data-sidebar-part="root"][data-animating][data-motion="auto"]) {
+      &:not([data-open]) {
+        --kind-sidebar-frame-transition: flex-basis 0s linear var(--kind-duration-panel);
+      }
+
+      &:has([data-sidebar-part="panel"][data-rail]) {
+        --kind-sidebar-frame-transition: flex-basis var(--kind-duration-panel) var(--kind-ease);
+      }
+
+      & [data-sidebar-part="panel"]:not([data-overlay], [data-rail]) {
+        transition: translate var(--kind-duration-panel) var(--kind-ease);
+      }
+
+      /* Closing accelerates away, so the panel leaves its frame just as the frame closes. */
+      & [data-sidebar-part="panel"]:not([data-open], [data-overlay], [data-rail]) {
+        transition-timing-function: ease-in;
+      }
     }
   }
 }

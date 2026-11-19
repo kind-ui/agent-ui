@@ -87,13 +87,13 @@ test("the keyboard opens the dialog, chooses who can open the chat, and Escape r
   await page.keyboard.press("Enter");
   await expect(dialog(page)).toBeVisible();
   await expect.poll(() => dialog(page).evaluate((el) => el.contains(document.activeElement))).toBe(true);
-  await expect(dialog(page)).toContainText("Only you can open this chat.");
+  await expect(dialog(page)).toContainText("Share a link to let others open this chat.");
   await expect(button(page, "Create link")).toHaveCount(0);
   await anyone(page).focus();
   await page.keyboard.press("Space");
   await expect(anyone(page)).toBeChecked();
   await expect(button(page, "Create link")).toBeVisible();
-  await expect(dialog(page)).toContainText("Anyone with the link can open this chat.");
+  await expect(dialog(page)).toContainText("The link shows this chat up to now.");
   expect(await host(page, "visibilities")).toMatchObject([{ value: "link", reason: "input-change" }]);
   await page.keyboard.press("Escape");
   await expect(dialog(page)).toBeHidden();
@@ -103,10 +103,15 @@ test("the keyboard opens the dialog, chooses who can open the chat, and Escape r
 test("Create link stays pending until the host makes the link, then shows it", async ({ page }) => {
   await load(page);
   await openForLink(page);
-  const create = button(page, "Create link");
-  await create.click();
+  const before = await button(page, "Create link").boundingBox();
+  await button(page, "Create link").click();
+  // A pending button keeps full opacity and its place, and says what it's doing beside a running mark.
+  const create = button(page, "Creating link");
   await expect(create).toHaveAttribute("aria-disabled", "true");
   await expect(create).toHaveAttribute("data-pending", "");
+  await expect(create).toHaveCSS("opacity", "1");
+  await expect(create.locator('[data-status-mark][data-status="running"]')).toHaveCount(1);
+  expect(await create.boundingBox()).toEqual(before);
   // `aria-disabled` keeps it focusable, so a second press reaches it and calls nothing.
   await create.click({ force: true });
   expect(await host(page, "calls")).toEqual([{ action: "create", reason: "create-press", source: "mouse" }]);
@@ -154,7 +159,7 @@ test("Stop sharing calls the host, which clears the link and makes the chat priv
   await host(page, "resolve");
   await expect(linkBox(page)).toHaveCount(0);
   await expect(button(page, "Stop sharing")).toHaveCount(0);
-  await expect(dialog(page)).toContainText("Only you can open this chat.");
+  await expect(dialog(page)).toContainText("Share a link to let others open this chat.");
   await expect(dialog(page).getByRole("radio", { name: "Only you" })).toBeChecked();
 });
 
@@ -190,7 +195,7 @@ test("a visibility the owner refuses is written back", async ({ page }) => {
   await anyone(page).click();
   expect(await host(page, "visibilities")).toMatchObject([{ value: "link" }]);
   await expect(dialog(page).getByRole("radio", { name: "Only you" })).toBeChecked();
-  await expect(dialog(page)).toContainText("Only you can open this chat.");
+  await expect(dialog(page)).toContainText("Share a link to let others open this chat.");
   await expect(button(page, "Create link")).toHaveCount(0);
 });
 

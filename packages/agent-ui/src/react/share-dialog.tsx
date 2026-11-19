@@ -85,8 +85,23 @@ export function ShareDialogLink({ children = LINK, ...props }: ShareDialogLinkPr
   return <parts.Link {...props}>{children}</parts.Link>;
 }
 
-/** Calls `onCreateLink`. "Create link", unless you pass children. */
-export function ShareDialogCreate({ children = "Create link", ...props }: ShareDialogCreateProps) {
+const pendingLabel =
+  (label: string, pending: string): ShareDialogCreateProps["children"] =>
+  (state) =>
+    state.pending ? (
+      <>
+        <span aria-hidden="true" data-status-mark="" data-status="running" data-motion={state.motion} />
+        {pending}
+      </>
+    ) : (
+      label
+    );
+
+const CREATE = pendingLabel("Create link", "Creating link");
+const REVOKE = pendingLabel("Stop sharing", "Stopping");
+
+/** Calls `onCreateLink`. "Create link", or "Creating link" with a running mark while pending, unless you pass children. */
+export function ShareDialogCreate({ children = CREATE, ...props }: ShareDialogCreateProps) {
   return <parts.Create {...props}>{children}</parts.Create>;
 }
 
@@ -98,8 +113,8 @@ export function ShareDialogCopy({
   return <parts.Copy {...props}>{children}</parts.Copy>;
 }
 
-/** Calls `onRevoke`. "Stop sharing", unless you pass children. */
-export function ShareDialogRevoke({ children = "Stop sharing", ...props }: ShareDialogRevokeProps) {
+/** Calls `onRevoke`. "Stop sharing", or "Stopping" with a running mark while pending, unless you pass children. */
+export function ShareDialogRevoke({ children = REVOKE, ...props }: ShareDialogRevokeProps) {
   return <parts.Revoke {...props}>{children}</parts.Revoke>;
 }
 

@@ -101,8 +101,8 @@ export type SidebarOptions = {
   /** A shortcut that opens and closes the panel, like `"mod+b"`. `mod` is Command on Apple platforms. */
   shortcut?: string;
   /**
-   * How the panel's width moves when its trigger, the shortcut or an `api` call opens or closes it: it slides at
-   * full motion and snaps under reduced motion, and never while a person drags the handle. `"auto"` follows
+   * How the panel moves when its trigger, the shortcut or an `api` call opens or closes it: it slides at full
+   * motion, while the page beside it changes width once, and snaps under reduced motion, and never while a person drags the handle. `"auto"` follows
    * `prefers-reduced-motion`.
    * @default "auto"
    */
@@ -122,7 +122,7 @@ export type SidebarState = {
   shortcut: string | undefined;
   /** Whether the root has bound, so platform-dependent text, like the shortcut's keys, can show. */
   bound: boolean;
-  /** Whether the panel's width is moving because its trigger, the shortcut or an `api` call changed `open`. */
+  /** Whether the panel is sliding because its trigger, the shortcut or an `api` call changed `open`. */
   animating: boolean;
   /** The `motion` option. */
   motion: MotionMode;
@@ -359,7 +359,7 @@ export const sidebarPrimitive: SidebarPrimitive = definePrimitive<
       return group && share !== undefined ? (share / 100) * group.clientWidth : panel.offsetWidth;
     };
 
-    // The width's transition needs `data-animating` in the page before the size changes, and React writes it a
+    // The slide's transitions need `data-animating` in the page before the size changes, and React writes it a
     // render later, so the change waits a frame and reads `open` then. A toggle mid-slide retargets the
     // transition from where it is, and `animating` clears once the latest one ends.
     let slide = 0;
@@ -378,7 +378,8 @@ export const sidebarPrimitive: SidebarPrimitive = definePrimitive<
         later(() => {
           const running = (context.element("root")?.getAnimations({ subtree: true }) ?? []).filter(
             (animation) =>
-              animation instanceof CSSTransition && animation.transitionProperty === "flex-basis",
+              animation instanceof CSSTransition &&
+              (animation.transitionProperty === "flex-basis" || animation.transitionProperty === "translate"),
           );
           void Promise.all(running.map((animation) => animation.finished.catch(() => undefined))).then(() => {
             if (!destroyed && current === slide) store.set({ animating: false, slideWidth: undefined });
@@ -594,6 +595,7 @@ export const sidebarPrimitive: SidebarPrimitive = definePrimitive<
         "data-side": state.side,
         "data-open": state.open ? "" : undefined,
         "data-overlay": state.overlay ? "" : undefined,
+        "data-rail": Number.parseFloat(String(state.collapsedSize)) > 0 ? "" : undefined,
         style: css({
           "--kind-sidebar-slide-width": state.slideWidth === undefined ? undefined : `${state.slideWidth}px`,
         }),
@@ -622,6 +624,7 @@ export const sidebarPrimitive: SidebarPrimitive = definePrimitive<
         "aria-controls": `${part.id}-panel`,
         "aria-keyshortcuts": state.bound && state.shortcut ? ariaKeyshortcuts(state.shortcut) : undefined,
         "data-sidebar-part": "trigger",
+        "data-kind-button": "",
         "data-side": state.side,
         "data-open": state.open ? "" : undefined,
       }),

@@ -59,7 +59,7 @@ export type LauncherContentProps = Omit<ComponentProps<typeof parts.Content>, "c
 };
 
 /**
- * The panel: a header with the title and Close, unless you pass children. It stays mounted while closed, and focus
+ * The panel: a header with the title and, as a dialog or sheet, Close, unless you pass children. It stays mounted while closed, and focus
  * moves to the first composer's editor inside as it opens.
  */
 export function LauncherContent({ children = DEFAULT_HEADER, render, ...props }: LauncherContentProps) {
@@ -89,7 +89,7 @@ export function LauncherTitle({ children = ({ label }) => label, ...props }: Lau
   return <parts.Title {...props}>{children}</parts.Title>;
 }
 
-/** Closes the panel and returns focus to the button. */
+/** Closes the panel and returns focus to the button. Rendered as a dialog or sheet: a popover's button closes it. */
 export const LauncherClose = parts.Close;
 
 // Shared, so an update doesn't render the default parts' wrappers again.

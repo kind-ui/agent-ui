@@ -46,13 +46,13 @@ ThreadSearch
 
 Pass `threads`, each with an `id` and a `title`, and optionally `updatedAt` (an ISO date-time), `pinned`, a `group`, a `snippet` (a second line under the title) and a `status` (`running`, `awaiting-input` or `error`, shown as a status mark named in words).
 
-Threads are grouped as Thread List groups them: pinned ones first, then each `group` in the order it first appears, then by date from `updatedAt`: Today, Yesterday, Previous 7 days, Previous 30 days, then months and years. A pinned or grouped thread shows its date at the end of its row. Pass `groupLabels` to rename the fixed groups, by key (`pinned`, `today`, `previous-7-days`, …).
+Threads are grouped as Thread List groups them: pinned ones first, then each `group` in the order it first appears, then by date from `updatedAt`: Today, Yesterday, Previous 7 days, Previous 30 days, then months and years. A pinned or grouped thread shows its date at the end of its row, like Nov 2. Pass `groupLabels` to rename the fixed groups, by key (`pinned`, `today`, `previous-7-days`, …).
 
 The date groups depend on today. Pass `now`, an ISO date or an instant, so a server and a browser group the same; without it, it's today in `timeZone`, which is UTC by default. Set `locale` for the groups' words.
 
 ### Searching
 
-While the search is empty, only the newest 20 threads show. Typing searches every thread, by its title and snippet, and marks the matching letters. When nothing matches, the list shows `emptyText` ("No chats found"). Set `placeholder` to change the field's "Search chats", and `label` to rename the button and the dialog.
+While the search is empty, only the newest 20 threads show. Typing searches every thread for the text as typed, in its title and snippet, and marks it. Threads whose title holds it come first, and each group moves to where its best match is. When nothing matches, the list shows `emptyText` ("No chats found"). Set `placeholder` to change the field's "Search chats…", and `label` to rename the button and the dialog.
 
 ### Choosing a Thread
 
@@ -60,7 +60,7 @@ Choosing a thread calls `onSelect` with its `id`, with the reason `item-press` w
 
 ### New Chat
 
-Pass `onNew` to add a **New chat** row after the threads (`newLabel` renames it). It gets the search text, so the new conversation can start with what the person typed, and closes the dialog unless you cancel it.
+Pass `onNew` to add a **New chat** row after the threads (`newLabel` renames it). It shows whatever the search, below "No chats found" when nothing matches, and names what was typed, like **New chat: “launch plan”**. It gets the search text, so the new conversation can start with what the person typed, and closes the dialog unless you cancel it.
 
 ### Shortcut
 

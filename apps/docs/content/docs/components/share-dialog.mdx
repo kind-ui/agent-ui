@@ -42,7 +42,7 @@ ShareDialog
     └── ShareDialogClose
 ```
 
-`ShareDialogTrigger` is the **Share** button, named by `label`. `ShareDialogContent` is a modal dialog over `ShareDialogBackdrop`, titled by `dialogLabel` ("Share chat") and described by `ShareDialogDescription`, which says who can open the chat. `ShareDialogVisibility` is a UI SDK Segmented Control with the two choices, and `ShareDialogLink` the link in a read-only UI SDK Input. `ShareDialogCreate`, `ShareDialogCopy` and `ShareDialogRevoke` are **Create link**, **Copy link** and **Stop sharing**, `ShareDialogError` says what went wrong, and `ShareDialogClose` is **Done**. To arrange the parts yourself, pass them as children of `ShareDialog`.
+`ShareDialogTrigger` is the **Share** button, named by `label`. `ShareDialogContent` is a modal dialog over `ShareDialogBackdrop`, titled by `dialogLabel` ("Share chat") and described by `ShareDialogDescription`, which says what the choice means. `ShareDialogVisibility` is a UI SDK Segmented Control with the two choices, and `ShareDialogLink` the link in a read-only UI SDK Input. `ShareDialogCreate`, `ShareDialogCopy` and `ShareDialogRevoke` are **Create link**, **Copy link** and **Stop sharing**, `ShareDialogError` says what went wrong, and `ShareDialogClose` is **Done**. To arrange the parts yourself, pass them as children of `ShareDialog`.
 
 ## Usage
 
@@ -64,13 +64,13 @@ The component never builds a URL. While `visibility` is `"link"`, there's no `li
 />
 ```
 
-Return a promise to keep **Create link** pending until it settles. If it rejects, the dialog shows "Couldn't create a link", tells screen readers, and offers **Create link** again.
+Return a promise to keep **Create link** pending until it settles: it reads **Creating link** beside a running mark. If it rejects, the dialog shows "Couldn't create a link", tells screen readers, and offers **Create link** again.
 
 Once there's a `link`, the dialog shows it with **Copy link**, which copies it and reads **Copied** for 2 seconds. `onCopy` runs first, and `details.cancel()` keeps it from writing to the clipboard.
 
 ### Stop Sharing
 
-**Stop sharing** shows while there's a `link` and `onRevoke` is set. Revoke the link in `onRevoke`, then clear `link`, and usually set `visibility` back to `"private"`, as the example does. A returned promise keeps it pending, and a rejection shows and announces "Couldn't stop sharing".
+**Stop sharing** shows while there's a `link` and `onRevoke` is set. Revoke the link in `onRevoke`, then clear `link`, and usually set `visibility` back to `"private"`, as the example does. A returned promise keeps it pending, reading **Stopping**, and a rejection shows and announces "Couldn't stop sharing".
 
 ### Presentation and Motion
 
