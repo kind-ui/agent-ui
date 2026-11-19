@@ -31,8 +31,15 @@ const parts = createParts(threadSearchPrimitive, {
 // its words.
 const picker = pickerParts(parts as unknown as PickerParts, "ThreadSearch", {
   icon: () => null,
-  trailing: (row) => (row.icon === undefined ? null : <parts.Status value={row.option.value} />),
+  trailing: (row) => (row.icon === undefined ? null : <ThreadSearchStatus value={row.option.value} />),
 });
+
+export type ThreadSearchStatusProps = ComponentProps<typeof parts.Status>;
+
+/** A row's status mark, named in words ("Running"), by its row's `value`. */
+export function ThreadSearchStatus(props: ThreadSearchStatusProps) {
+  return <parts.Status {...props} />;
+}
 
 export type ThreadSearchProps = Omit<ComponentProps<typeof parts.Root>, "children"> & {
   children?: ReactNode;

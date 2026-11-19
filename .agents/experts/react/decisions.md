@@ -55,6 +55,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **Model Control's trigger repeats `KindMenuItemContent`'s string-or-element icon code** (Wave 5 Task 9); one internal icon helper would serve both.
 - Sidebar: no fixture or spec for a controlled `open` that refuses or follows changes; core's write-back was checked by hand in review.
 - **A custom `ConversationSearchInput` without `ConversationSearchCount` leaves the field's `aria-describedby` naming a missing id** (Wave 6 Task 11), as the `StepTitle` and `QuestionPrompt` items do.
+- **A server render of a `defaultOpen` Thread Search names its dialog by a title id not in the markup** (Wave 6 Task 3): the client names it by `aria-label`; UI SDK's, like the `CommandGroup` one.
 
 ## Resolved
 

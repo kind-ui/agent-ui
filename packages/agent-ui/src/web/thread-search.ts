@@ -43,14 +43,14 @@ const statusMark = (document: Document, row: PickerRow) => {
 /**
  * `<kind-thread-search>` fills in its trigger and dialog when it has no children. Set `threads` as a property; with
  * `can-select`, choosing a thread fires `threadselect` with its id as `detail.value`, and with `can-new`, "New chat"
- * fires `threadnew` with the search text. Typing fires `querychange`.
+ * fires `threadnew` with the search text. Typing fires `threadquerychange`.
  */
 export function defineThreadSearch(): void {
   if (customElements.get(TAG)) return;
   defineInternalCommand();
   const elements = pickerElements<P>(
     TAG,
-    { onSelect: "threadselect", onNew: "threadnew", onQueryChange: "querychange" },
+    { onSelect: "threadselect", onNew: "threadnew", onQueryChange: "threadquerychange" },
     {
       template,
       can: { canSelect: "onSelect", canNew: "onNew" },
@@ -80,7 +80,7 @@ export function defineThreadSearch(): void {
 export type KindThreadSearchEvents = {
   threadselect: UiChangeEvent<string, ThreadSearchSelectReason>;
   threadnew: UiChangeEvent<string, ThreadSearchSelectReason>;
-  querychange: UiChangeEvent<string, CommandQueryChangeReason>;
+  threadquerychange: UiChangeEvent<string, CommandQueryChangeReason>;
   openchange: UiChangeEvent<boolean, PickerOpenChangeReason>;
 };
 

@@ -180,7 +180,7 @@ export function pickerParts(
   function Item({
     children = ({ row, description }) => (
       <>
-        <ItemIcon row={row} />
+        {iconOfRow(row)}
         <span data-picker-item-text="">
           <KindCommandItemText>{row.label}</KindCommandItemText>
           {description.length ? (
@@ -201,10 +201,10 @@ export function pickerParts(
     return <parts.Item {...props}>{children}</parts.Item>;
   }
 
-  function ItemIcon({ row }: { row: PickerRow }) {
+  const iconOfRow = (row: PickerRow) => {
     const drawn = row.icon === undefined ? null : icon(row);
     return drawn == null ? null : <KindCommandItemIcon>{drawn}</KindCommandItemIcon>;
-  }
+  };
 
   // Shared, so an update doesn't render the default parts' wrappers again.
   const DEFAULT_LIST = <List />;

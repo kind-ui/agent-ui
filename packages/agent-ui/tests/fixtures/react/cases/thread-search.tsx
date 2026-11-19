@@ -57,7 +57,20 @@ function Server() {
   );
 }
 
+/** Controls `query` and never takes a change. */
+function Owned() {
+  useEffect(() => {
+    Object.assign(window, { kindHost: host });
+  }, []);
+  return (
+    <div className="p-6">
+      <ThreadSearch id="search" threads={threads} now={NOW} query="" onQueryChange={record("query")} />
+    </div>
+  );
+}
+
 export const cases = {
+  owned: () => <Owned />,
   all: () => <Page />,
   reduced: () => <Page motion="reduced" />,
   refusing: () => <Page refusing />,

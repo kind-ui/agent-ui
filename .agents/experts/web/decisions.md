@@ -78,6 +78,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **Share Dialog's fixture has no moved or shadow-root case** (Wave 6 Task 8): both were checked by hand in review (state kept across a move, ids and focus return inside a shadow root); only the `written` case is tested.
 - **A Retry or Continue pending when a `kind-message` is moved comes back pressable (Wave 6 Task 9):** `outcomePending` isn't carried to the rebuilt instance, as with Plan's Accept and Subagent's Stop.
 - **`kind-conversation-search`'s `open` property doesn't reflect to the `open` attribute** (Wave 6 Task 11), the same class as the Picker and `menuBase` entry.
+- **`kind-thread-search` has no moved, shadow-root or written-parts fixture case** (Wave 6 Task 3): all three, and a removal while open, were checked by hand in review; add cases with Picker's. Its uncontrolled search text isn't root state, so a move while open may lose it (not reproduced).
 
 ## Resolved
 

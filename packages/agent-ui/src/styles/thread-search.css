@@ -7,7 +7,7 @@
     --kind-picker-row-height: 2.75rem;
   }
 
-  [data-kind="thread-search"] [data-picker-part="trigger"] {
+  :where([data-kind="thread-search"]) [data-picker-part="trigger"] {
     width: var(--kind-thread-search-trigger-width, 14rem);
     padding-inline: 8px;
     color: var(--kind-color-muted);
@@ -39,7 +39,7 @@
 
   /* The dialog sits a little above the middle of the page, so its height can grow downward as rows filter in and
      out without moving the search field. */
-  [data-kind="thread-search"] [data-picker-part="content"]:where(:not([data-presentation="sheet"])) {
+  :where([data-kind="thread-search"]) [data-picker-part="content"]:where(:not([data-presentation="sheet"])) {
     position: fixed;
     inset: 12vh 0 auto;
     width: var(--kind-thread-search-width, 36rem);
@@ -49,11 +49,12 @@
   }
 
   /* Group labels and dates that read relative ("today") start with a capital. */
-  [data-kind="thread-search"] :is([data-slot="command-group-label"], [data-picker-meta])::first-letter {
+  :where([data-kind="thread-search"])
+    :is([data-slot="command-group-label"], [data-picker-meta])::first-letter {
     text-transform: uppercase;
   }
 
-  [data-kind="thread-search"] [data-thread-search-part="status"] {
+  [data-thread-search-part="status"] {
     flex-shrink: 0;
     --kind-status-mark-size: 14px;
   }
@@ -65,7 +66,8 @@
     background-color: color-mix(in oklab, var(--kind-color-shadow) 40%, transparent);
     transition: opacity var(--kind-duration-base) var(--kind-ease-out);
 
-    &:is([data-starting-style], [data-ending-style]) {
+    /* On web the backdrop drops `data-ending-style` before it's hidden, so it stays clear while closed. */
+    &:is([data-starting-style], [data-ending-style], [data-closed]) {
       opacity: 0;
     }
     &[data-ending-style] {
@@ -91,7 +93,7 @@
   }
 
   @media (forced-colors: active) {
-    [data-kind="thread-search"] [data-picker-part="trigger"]::before {
+    :where([data-kind="thread-search"]) [data-picker-part="trigger"]::before {
       forced-color-adjust: none;
       background-color: ButtonText;
     }

@@ -335,6 +335,7 @@ export type PickerBaseConfig<Options extends PickerBaseOptions> = {
   emptyItems?: (options: Options) => PickerItem<unknown>[] | undefined;
   /** The footer rows and what running one calls, in place of the `actions` and `onAction` options. */
   actions?: {
+    /** The footer rows, read whenever the options change. */
     of: (options: Options) => PickerAction<unknown>[];
     /** Runs one, returning whether its callback was canceled. */
     run: (
@@ -366,6 +367,11 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
         ? (errorText ?? "Search failed")
         : "";
   };
+  // A web attribute can hold any word; one Command doesn't know reads as idle.
+  const statusOf = (options: Options): AsyncOptionsStatus => {
+    const status = config.search ? searchOf(options).status : undefined;
+    return status === "loading" || status === "error" ? status : "idle";
+  };
   const presentation = (options: Options) => {
     const actions = config.actions ? config.actions.of(options) : (options.actions ?? noActions);
     return {
@@ -379,7 +385,7 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
       canRun: config.actions ? actions.length > 0 : typeof options.onAction === "function",
       canSelect: select && typeof (options as PickerSelectOptions).onSelect === "function",
       filter: !config.search || searchOf(options).filter !== false,
-      status: (config.search && searchOf(options).status) || "idle",
+      status: statusOf(options),
       statusText: statusText(options),
       disabled: options.disabled ?? false,
       motion: options.motion ?? "auto",
@@ -455,12 +461,19 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
             if (controller.getQuery()) controller.setQuery("");
             store.set({ query: "", pages: [] });
           } else {
-            if (searchOf(context.options()).query === undefined && store.get().query)
-              changeQuery("query", "", { reason: "imperative" });
             store.set({ pages: [] });
             openQuery = store.get().query;
           }
         }
+        // A search clears as the list closes, so `defaultQuery` and a `search` made while closed show when it opens.
+        if (
+          config.search &&
+          !open &&
+          wasOpen &&
+          searchOf(context.options()).query === undefined &&
+          store.get().query
+        )
+          changeQuery("query", "", { reason: "imperative" });
         wasOpen = open;
         if (config.search) syncQuery();
       });
@@ -515,6 +528,8 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
         const reason = details?.reason ?? "input-change";
         const { event } = details ?? {};
         if (!changeQuery("query", query, event ? { reason, event } : { reason })) syncQuery();
+        // An owner that controls `query` and doesn't take the text has the field follow its `query` once it renders.
+        else if (searchOf(context.options()).query !== undefined) requestAnimationFrame(syncQuery);
       };
       const onPagesChange = (pages: string[]) => store.set({ pages: pages.map(keyValue) });
 

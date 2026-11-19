@@ -37,7 +37,7 @@ const page =
     if (presentation) search.presentation = presentation;
     listen(search, "threadselect", "select", refusing);
     listen(search, "threadnew", "new");
-    listen(search, "querychange", "query");
+    listen(search, "threadquerychange", "query");
     wrapper.append(above, search);
     root.append(wrapper);
     Object.assign(window, { kindHost: host });
@@ -54,7 +54,7 @@ const server = (root: HTMLElement) => {
   search.status = "loading";
   search.canSelect = true;
   listen(search, "threadselect", "select");
-  listen(search, "querychange", "query");
+  listen(search, "threadquerychange", "query");
   wrapper.append(search);
   root.append(wrapper);
   Object.assign(window, {
@@ -62,7 +62,21 @@ const server = (root: HTMLElement) => {
   });
 };
 
+const owned = (root: HTMLElement) => {
+  defineThreadSearch();
+  const search = document.createElement("kind-thread-search");
+  search.id = "search";
+  search.threads = threads;
+  search.now = NOW;
+  search.query = "";
+  listen(search, "threadquerychange", "query");
+  root.append(Object.assign(document.createElement("div"), { className: "p-6" }));
+  root.firstElementChild?.append(search);
+  Object.assign(window, { kindHost: host });
+};
+
 export const cases = {
+  owned,
   all: page(),
   reduced: page({ motion: "reduced" }),
   refusing: page({ refusing: true }),

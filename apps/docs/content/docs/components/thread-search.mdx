@@ -35,9 +35,10 @@ ThreadSearch
         └── ThreadSearchSectionRows
             └── ThreadSearchRowItem
                 └── ThreadSearchItem
+                    └── ThreadSearchStatus
 ```
 
-`ThreadSearchTrigger` is the button, with a search icon, the `label` and `ThreadSearchShortcut`, the `shortcut`'s keys. `ThreadSearchBackdrop` dims the page under the dialog, and a press on it closes the dialog. `ThreadSearchContent` is the dialog, and `ThreadSearchList` is UI SDK's Command inside it: the search field, its status line, the text shown while nothing matches, and the rows. To arrange the rows yourself, pass `ThreadSearchList` a function of its state that renders `ThreadSearchSectionRows` for each group. `ThreadSearchRowItem` is a row, and `ThreadSearchItem` is its content: a status mark, the title, the snippet and the date.
+`ThreadSearchTrigger` is the button, with a search icon, the `label` and `ThreadSearchShortcut`, the `shortcut`'s keys. `ThreadSearchBackdrop` dims the page under the dialog, and a press on it closes the dialog. `ThreadSearchContent` is the dialog, and `ThreadSearchList` is UI SDK's Command inside it: the search field, its status line, the text shown while nothing matches, and the rows. To arrange the rows yourself, pass `ThreadSearchList` a function of its state that renders `ThreadSearchSectionRows` for each group. `ThreadSearchRowItem` is a row, and `ThreadSearchItem` is its content: the title, the snippet, `ThreadSearchStatus` (the thread's status mark, named in words) and the date.
 
 ## Usage
 
@@ -100,5 +101,5 @@ An agent connected with `createAgent` finds the search by its label and reads `o
 <auto-type-table path="../../../../../packages/agent-ui/src/core/thread-search/thread-search.ts" name="ThreadSearchAgentActions" type='Pick<ThreadSearchApi, "open" | "close" | "search" | "select" | "newThread">' />
 
 <Caption>
-  Runs in React and Web Components. Call `defineThreadSearch()` from the web entry, then on `<kind-thread-search shortcut="mod+k" can-select can-new>` set `threads` and `query` as properties, and listen for `threadselect`, with the thread's `id` as `event.detail.value`, `threadnew`, with the search text, `querychange` and `openchange`. `can-select` and `can-new` offer choosing a thread and **New chat**.
+  Runs in React and Web Components. Call `defineThreadSearch()` from the web entry, then on `<kind-thread-search shortcut="mod+k" can-select can-new>` set `threads` and `query` as properties, and listen for `threadselect`, with the thread's `id` as `event.detail.value`, `threadnew`, with the search text, `threadquerychange` and `openchange`. `can-select` and `can-new` offer choosing a thread and **New chat**.
 </Caption>

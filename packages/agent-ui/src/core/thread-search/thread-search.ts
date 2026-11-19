@@ -24,6 +24,7 @@ import { type DateGroupKey, dateGroup, todayKey } from "../time.js";
 /** `"item-press"`: a person chose a row. `"imperative"`: an `api` call, like an agent's `select` or `newThread`. */
 export type ThreadSearchSelectReason = PickerValueChangeReason;
 
+/** Thread Search's options: Picker's, less the value and footer actions, with its search and the threads. */
 export type ThreadSearchOptions = Omit<
   PickerBaseOptions,
   | "actions"
@@ -79,6 +80,7 @@ export type ThreadSearchOptions = Omit<
     groupLabels?: Partial<Record<DateGroupKey | "pinned", string>>;
   };
 
+/** Picker's state, with the `shortcut` and how this platform shows it. */
 export type ThreadSearchState = PickerBaseState & {
   /** The `shortcut` option. */
   shortcut: string | undefined;
@@ -91,9 +93,12 @@ export type ThreadSearchState = PickerBaseState & {
 /** What a row's `icon` holds: the thread's status and its words, for a status mark. */
 export type ThreadSearchIcon = { status: NonNullable<Thread["status"]>; label: string };
 
+/** Picker's api, where `select` chooses a thread and `search` types into the field, with `newThread`. */
 export type ThreadSearchApi = PickerBaseApi & {
   /** Runs "New chat" with the search text, calling `onNew`. Offered only while `onNew` is set. */
   readonly newThread: (() => boolean) | undefined;
+  /** Every thread, for agents, without the "New chat" row. */
+  getThreads: () => { value: string; label: string; disabled?: boolean }[];
 };
 
 type ThreadSearchSlots = PickerBaseSlots<ThreadSearchState, ThreadSearchApi> & {
@@ -268,12 +273,20 @@ export const threadSearchPrimitive: ThreadSearchPrimitive = definePrimitive<
   controlled: ["open", "query"],
   api: (context) => {
     const api = base.api(context);
-    return Object.defineProperty(api, "newThread", {
-      get: () => {
-        const run = api.run;
-        return run ? () => run(NEW) : undefined;
+    const getThreads = () => {
+      const { actions, canRun } = context.store.get();
+      const choices = api.getChoices();
+      return canRun ? choices.slice(0, choices.length - actions.length) : choices;
+    };
+    return Object.defineProperties(api, {
+      newThread: {
+        get: () => {
+          const run = api.run;
+          return run ? () => run(NEW) : undefined;
+        },
+        enumerable: true,
       },
-      enumerable: true,
+      getThreads: { value: getThreads, enumerable: true },
     }) as ThreadSearchApi;
   },
   slots: (slot) => {
@@ -297,9 +310,13 @@ export const threadSearchPrimitive: ThreadSearchPrimitive = definePrimitive<
           // A page shortcut, which a modal pauses; the keys are read on each press.
           const unregister = registerShortcut(
             () => store.get().shortcut,
-            (event) => {
-              const { open, disabled } = store.get();
-              if (!open && !disabled) api.setOpen(true, { reason: "shortcut", event });
+            (event) => api.setOpen(true, { reason: "shortcut", event }),
+            {
+              // Checked before the key press is taken, so a disabled or open search leaves the keys to the page.
+              when: () => {
+                const { open, disabled } = store.get();
+                return !open && !disabled;
+              },
             },
           );
           return () => {
@@ -340,6 +357,6 @@ export const threadSearchPrimitive: ThreadSearchPrimitive = definePrimitive<
   agent: {
     actions: ["open", "close", "search", "select", "newThread"],
     // Not `closed`: the bridge would check `search`'s free text against the threads. `select` refuses an unknown id.
-    items: (api) => api.getChoices().filter((choice) => choice.value !== NEW),
+    items: (api) => api.getThreads(),
   },
 });

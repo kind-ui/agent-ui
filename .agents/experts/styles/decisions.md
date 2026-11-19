@@ -29,6 +29,7 @@ Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 - **A Status badge's width follows its label;** its height doesn't change, and the docs say to put it at the end of a row.
 - **Approval Mode's trigger width follows its mode (Wave 5 Task 6):** only a person's choice or the host changes it, and choosing closes the menu, so nothing moves while it's open; stacking every label as Settings Menu does would widen a composer row to the longest mode.
 - **Day Separator's `::first-letter` capitalizes a host's `DaySeparatorLabel` children too** (Wave 6 Task 6): by design, since a heading starts with a capital; a locale whose date shouldn't start with one passes `relative={false}` or its own text.
+- **Thread Search capitalizes its `meta` with `::first-letter`** (Wave 6 Task 3): every `meta` it writes is a date group's words ("today"); a host can't set `meta`.
 
 ## Known and open (don't report again, check whether fixed)
 

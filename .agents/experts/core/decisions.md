@@ -48,6 +48,9 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 
 - **Message's relative time doesn't roll over at midnight on its own (Wave 6 Task 9):** today is read when the time part binds and on each options change, D13's "once in the page"; a timer per message would cost more than a stale "9:41 AM" on a page left open overnight.
 - **`fromUIMessages` puts a chat error on the last message whatever its role (Wave 6 Task 9),** as its `status` already did in 0.5; a request that fails before the assistant answers marks the user's message. A host that wants Retry only on assistant messages passes `onRetry` to those.
+- **"New chat" filters like any row** (Thread Search, Wave 6 Task 3): Command exposes no way to keep a composed item through a search (its listbox `pinned` isn't a `CommandItem` prop), so New chat shows only while the search matches it, as Picker's footer actions do.
+- **Thread Search's `agent.items` isn't `closed`** (Wave 6 Task 3): the bridge would check `search`'s free text against the threads; `select` refuses an unknown id itself, as Transcript's `seek` does.
+
 ## Known and open (don't report again, check whether fixed)
 
 - **The waveform's default of 128 bars writes 128 `--kind-dictation-level-*` properties per level (Task 17):** not profiled; lower the default or size it to the box if it shows up.

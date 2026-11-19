@@ -99,6 +99,16 @@ test("Enter calls onSelect and closes, returning focus to the trigger; Escape cl
   await expect(trigger(page)).toBeFocused();
 });
 
+test("an owner that controls query and doesn't take a change keeps the field on its query", async ({
+  page,
+}) => {
+  await load(page, "owned");
+  await open(page);
+  await search(page).pressSequentially("lentil");
+  await expect(search(page)).toHaveValue("");
+  expect((await calls(page)).filter((call) => call.name === "query").length).toBeGreaterThan(0);
+});
+
 test("a canceled onSelect keeps the dialog open", async ({ page }) => {
   await load(page, "refusing");
   await open(page);
@@ -167,6 +177,23 @@ test.describe("on a small touch screen", () => {
       "sheet",
     );
   });
+});
+
+test("presentation sheet makes it a sheet on a desktop too", async ({ page }) => {
+  await load(page, "sheet");
+  await open(page);
+  await expect(page.locator('[data-slot="kind-thread-search-content"]')).toHaveAttribute(
+    "data-presentation",
+    "sheet",
+  );
+});
+
+test("with the motion option reduced the backdrop only fades, in 120 ms", async ({ page }) => {
+  await load(page, "reduced");
+  await open(page);
+  const backdrop = page.locator('[data-slot="kind-thread-search-backdrop"]');
+  await expect(backdrop).toBeVisible();
+  expect(await backdrop.evaluate((el) => getComputedStyle(el).transitionDuration)).toBe("0.12s");
 });
 
 for (const colorScheme of ["light", "dark"] as const) {
