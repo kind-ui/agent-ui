@@ -36,7 +36,7 @@
       transform: translateY(1px) rotate(-135deg);
     }
     &:hover {
-      background-color: color-mix(in oklab, var(--kind-notice-tone) 12%, transparent);
+      background-color: var(--kind-color-hover);
     }
     &:focus-visible {
       outline: var(--kind-focus-ring);

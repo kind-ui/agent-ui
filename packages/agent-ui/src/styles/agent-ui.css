@@ -196,6 +196,8 @@
   --kind-icon-size: 1rem;
   --kind-icon-size-lg: 1.125rem;
   --kind-hit-area: 2.75rem;
+  /* The dots of a reply on its way (Loader, Thinking and Typing Indicator). */
+  --kind-dot-size: 0.3125rem;
   /* A disabled control fades rather than greys out, so its label stays legible. */
   --kind-disabled-opacity: 0.64;
   --kind-chat-max-width: 48rem;

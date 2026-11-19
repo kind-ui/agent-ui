@@ -6,7 +6,14 @@ import { Uploader } from "@/components/ui/uploader";
 const uploads: UploadItem[] = [
   { id: "report", name: "quarterly-report.pdf", size: 2_400_000, progress: 42, status: "uploading" },
   { id: "photo", name: "team-offsite.jpg", size: 3_100_000, progress: 100, status: "done" },
-  { id: "dataset", name: "training-set.csv", size: 48_000_000, progress: 63, status: "error" },
+  {
+    id: "dataset",
+    name: "training-set.csv",
+    size: 48_000_000,
+    progress: 63,
+    status: "error",
+    error: "Connection lost",
+  },
 ];
 
 export default function UploaderExample() {

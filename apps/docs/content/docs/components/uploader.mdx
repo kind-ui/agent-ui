@@ -27,7 +27,7 @@ npx shadcn@latest add @kind-ui/uploader-web
 
 ### Uploads
 
-You upload the files and own `items`. `onFiles` gets the files someone chooses, drops or pastes; add an item for each, then update its `progress` (0 to 100) and `status` as it uploads: `queued`, `uploading`, `done`, `error` or `cancelled`. Each row's progress bar is named by the file, and the line under it shows what the upload is doing and the file's size. A failed row shows the item's `error`, or "Upload failed".
+You upload the files and own `items`. `onFiles` gets the files someone chooses, drops or pastes; add an item for each, then update its `progress` (0 to 100) and `status` as it uploads: `queued`, `uploading`, `done`, `error` or `cancelled`. Each row's progress bar is named by the file, and the line under it shows what the upload is doing and the file's size. A finished row hides its bar and reads "Uploaded" after the size. A failed row shows the item's `error`, or "Upload failed".
 
 When an upload finishes or fails, screen readers hear "report.pdf uploaded" or "report.pdf failed", once.
 

@@ -28,7 +28,7 @@
       gap: 0.75rem 0.25rem;
       padding: 1.5rem 1rem;
       border: 1px dashed color-mix(in oklab, var(--kind-color-muted) 40%, var(--kind-color-border));
-      border-radius: calc(var(--kind-radius) * 1.5);
+      border-radius: var(--kind-radius);
       background-color: var(--kind-color-surface);
       color: var(--kind-color-muted);
       transition:
@@ -37,35 +37,31 @@
 
       &[data-dragging] {
         border-color: var(--kind-color-accent);
-        background-color: color-mix(in oklab, var(--kind-color-accent) 6%, var(--kind-color-surface));
+        background-color: color-mix(
+          in oklab,
+          var(--kind-color-accent) var(--kind-tint-fill),
+          var(--kind-color-surface)
+        );
       }
 
       &[data-drag-reject] {
         border-color: var(--kind-color-danger);
-        background-color: color-mix(in oklab, var(--kind-color-danger) 6%, var(--kind-color-surface));
+        background-color: color-mix(
+          in oklab,
+          var(--kind-color-danger) var(--kind-tint-fill),
+          var(--kind-color-surface)
+        );
       }
 
       & > [data-upload-icon] {
-        position: relative;
         display: flex;
         flex-basis: 100%;
         justify-content: center;
 
-        &::before {
-          content: "";
-          width: 2.5rem;
-          height: 2.5rem;
-          border-radius: 999px;
-          background-color: var(--kind-color-hover);
-        }
-
         &::after {
           content: "";
-          position: absolute;
-          inset: 0;
-          width: 1.125rem;
-          height: 1.125rem;
-          margin: auto;
+          width: 1.25rem;
+          height: 1.25rem;
           background-color: currentColor;
           mask: var(--kind-uploader-upload-icon) center / contain no-repeat;
         }
@@ -75,7 +71,7 @@
     & [data-slot="file-input-trigger"] {
       padding: 0;
       border: 0;
-      border-radius: calc(var(--kind-radius) / 3);
+      border-radius: var(--kind-radius-sm);
       background: none;
       color: var(--kind-color-fg);
       font: inherit;
@@ -121,16 +117,16 @@
   [data-slot="kind-uploader-item"] {
     --kind-uploader-tone: var(--kind-color-accent);
 
+    /* The action column is kept when a row has no action, so every row's bar ends at the same place. */
     display: grid;
-    grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+    grid-template-columns: 1.125rem minmax(0, 1fr) var(--kind-control-height);
     grid-template-rows: auto auto;
     align-items: center;
     gap: 0.25rem 0.75rem;
-    padding: 0.625rem 0.75rem 0.625rem 0.625rem;
+    padding: 0.625rem 0.625rem 0.625rem 0.875rem;
     border: 1px solid var(--kind-color-border);
     border-radius: var(--kind-radius);
     background-color: var(--kind-color-surface);
-    transition: border-color var(--kind-duration-fast);
 
     &[data-status="queued"],
     &[data-status="cancelled"] {
@@ -143,22 +139,15 @@
 
     &[data-status="error"] {
       --kind-uploader-tone: var(--kind-color-danger);
-
-      border-color: color-mix(in oklab, var(--kind-color-danger) 45%, var(--kind-color-border));
     }
 
     & > [data-icon] {
       display: grid;
       grid-row: span 2;
       place-items: center;
-      width: 2.25rem;
-      height: 2.25rem;
-      border-radius: calc(var(--kind-radius) * 2 / 3);
-      background-color: var(--kind-color-hover);
+      height: 1.125rem;
       color: var(--kind-color-muted);
-      transition:
-        color var(--kind-duration-base),
-        background-color var(--kind-duration-base);
+      transition: color var(--kind-duration-base);
 
       &::before {
         content: "";
@@ -170,7 +159,6 @@
     }
 
     &:is([data-status="done"], [data-status="error"]) > [data-icon] {
-      background-color: color-mix(in oklab, var(--kind-uploader-tone) 12%, transparent);
       color: var(--kind-uploader-tone);
     }
 
@@ -214,8 +202,19 @@
         background-color var(--kind-duration-base);
     }
 
-    &[data-status="cancelled"] [data-slot="progress-indicator"] {
+    /* Only the mark says how it ended: a failed or cancelled bar stops where it was, in gray. */
+    &:is([data-status="error"], [data-status="cancelled"]) [data-slot="progress-indicator"] {
+      background-color: var(--kind-color-muted);
       opacity: 0.4;
+    }
+
+    /* The bar and its gap leave; the padding takes their 10px, so the row keeps its height. */
+    &[data-status="done"] {
+      padding-block: calc(0.625rem + 5px);
+
+      & [data-slot="progress-track"] {
+        display: none;
+      }
     }
 
     & > [data-detail] {
@@ -227,7 +226,7 @@
     }
 
     &[data-status="error"] > [data-detail] {
-      color: var(--kind-color-danger);
+      color: var(--kind-color-fg);
     }
   }
 
@@ -238,24 +237,13 @@
     }
   }
 
+  /* The shared icon button (controls.css). Its glyph is on `::after`, since a coarse pointer's hit area takes
+     `::before`. */
   [data-slot="kind-uploader-action"] {
-    display: grid;
     grid-column: 3;
     grid-row: 1 / span 2;
-    place-items: center;
-    width: 2rem;
-    height: 2rem;
-    padding: 0;
-    border: 0;
-    border-radius: 999px;
-    background: none;
-    color: var(--kind-color-muted);
-    cursor: pointer;
-    transition:
-      color var(--kind-duration-fast),
-      background-color var(--kind-duration-fast);
 
-    &::before {
+    &::after {
       content: "";
       width: 1rem;
       height: 1rem;
@@ -263,23 +251,13 @@
       mask: var(--kind-uploader-cancel-icon) center / contain no-repeat;
     }
 
-    &[data-action="retry"]::before {
+    &[data-action="retry"]::after {
       mask-image: var(--kind-uploader-retry-icon);
-    }
-
-    &:hover {
-      background-color: var(--kind-color-hover);
-      color: var(--kind-color-fg);
-    }
-
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
     }
   }
 
   @media (forced-colors: active) {
-    [data-slot="kind-uploader-action"]::before {
+    [data-slot="kind-uploader-action"]::after {
       forced-color-adjust: none;
       background-color: ButtonText;
     }

@@ -69,7 +69,8 @@
         background-color: var(--kind-color-warning);
         opacity: 1;
         transform: none;
-        animation: kind-pulse 1.6s ease-in-out infinite;
+        /* It waits on the person, so it calls three times, then holds still rather than nag. */
+        animation: kind-pulse 1.6s ease-in-out 3;
       }
     }
 

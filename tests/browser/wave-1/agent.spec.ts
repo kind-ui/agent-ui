@@ -272,8 +272,8 @@ test("one snapshot lists every Wave 1 component, named where it has a role", asy
   expect(named("kind-composer")).toEqual(["Compose"]);
   expect(named("kind-attachments")).toContain("Files");
   expect(named("kind-uploader")).toEqual(["Uploads"]);
-  expect(named("kind-loader")).toEqual(["Loading"]);
-  expect(named("kind-thinking-indicator")).toEqual(["Thinking"]);
+  expect(named("kind-loader")).toEqual(["Loading…"]);
+  expect(named("kind-thinking-indicator")).toEqual(["Thinking…"]);
   expect(named("kind-typing-indicator")).toEqual(["Typing"]);
   // Markdown and Streaming Text are content with no role, which ARIA doesn't let a name sit on.
   expect(named("kind-markdown")).toHaveLength(1);

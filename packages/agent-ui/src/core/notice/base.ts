@@ -222,7 +222,12 @@ export const noticeBase = <
         focus: "native",
         present: (state) => state.canDismiss,
         press: ({ api }) => api.dismiss?.(),
-        attrs: () => ({ type: "button", "aria-label": "Dismiss", "data-notice-part": "dismiss" }),
+        attrs: () => ({
+          type: "button",
+          "aria-label": "Dismiss",
+          "data-notice-part": "dismiss",
+          "data-kind-icon-button": "",
+        }),
       }),
     }),
     agent: { actions: ["dismiss"] },

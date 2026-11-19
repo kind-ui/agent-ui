@@ -5,7 +5,7 @@ description: Show that the agent is thinking before it answers.
 
 import ThinkingIndicatorExample from "../../../examples/thinking-indicator/basic";
 
-Use a thinking indicator between sending a message and the first word of the reply. Its label says what the agent is doing, and three small dots flow after it.
+Use a thinking indicator between sending a message and the first word of the reply. Its label says what the agent is doing, after three small dots that flow.
 
 <Example caption="The dots flow while the agent thinks. With reduced motion on, they hold still.">
   <ThinkingIndicatorExample />
@@ -27,7 +27,7 @@ npx shadcn@latest add @kind-ui/thinking-indicator-web
 
 ### Label
 
-Pass `label` to say what the agent is doing, like "Searching the docs". It shows before the dots and names the indicator, "Thinking" by default. The indicator is a polite status, so screen readers read a new label when it changes. The dots are hidden from them.
+Pass `label` to say what the agent is doing, like "Searching the docs". It shows after the dots and names the indicator, "Thinking…" by default. The indicator is a polite status, so screen readers read a new label when it changes. The dots are hidden from them.
 
 ### Motion
 

@@ -5,8 +5,8 @@ import { expectAgentActions } from "../agent-snapshot.js";
 type Fixture = { kindStream: { set(text: string): void } };
 
 const indicators = [
-  ["kind-loader", "Loading"],
-  ["kind-thinking-indicator", "Thinking"],
+  ["kind-loader", "Loading…"],
+  ["kind-thinking-indicator", "Thinking…"],
   ["kind-typing-indicator", "Typing"],
 ] as const;
 
@@ -113,7 +113,7 @@ test("the caret holds still", async ({ page }) => {
 
 test("indicators are listed for agents with no actions", async ({ page }) => {
   await open(page);
-  await expectAgentActions(page, "Thinking", []);
+  await expectAgentActions(page, "Thinking…", []);
 });
 
 test("axe reports no violations", async ({ page }) => {

@@ -30,22 +30,17 @@
     background-color: var(--kind-color-surface);
     font-size: var(--kind-text-sm);
     line-height: 1.125rem;
-    transition: border-color var(--kind-duration-fast);
 
     &:focus-visible {
       outline: var(--kind-focus-ring);
       outline-offset: var(--kind-focus-offset-inset);
     }
 
-    &[data-error] {
-      border-color: color-mix(in oklab, var(--kind-color-danger) 45%, var(--kind-color-border));
-    }
-
     & > :is([data-preview], [data-icon]) {
       grid-row: span 2;
       width: 2.25rem;
       height: 2.25rem;
-      border-radius: calc(var(--kind-radius) * 2 / 3);
+      border-radius: var(--kind-radius-lg);
     }
 
     & > [data-preview] {
@@ -56,7 +51,6 @@
     & > [data-icon] {
       display: grid;
       place-items: center;
-      background-color: var(--kind-color-hover);
       color: var(--kind-color-muted);
 
       &::before {
@@ -68,8 +62,8 @@
       }
     }
 
+    /* The red mark says it failed; the words beside it stay plain. */
     &[data-error] > [data-icon] {
-      background-color: color-mix(in oklab, var(--kind-color-danger) 12%, transparent);
       color: var(--kind-color-danger);
 
       &::before {
@@ -91,7 +85,7 @@
     }
 
     &[data-error] > [data-detail] {
-      color: var(--kind-color-danger);
+      color: var(--kind-color-fg);
     }
   }
 
@@ -149,8 +143,19 @@
     scale: 1;
   }
 
+  /* Without hover the remove button always shows, so it sits inside the chip as a quiet ×, not a badge on the
+     corner that crowds the next chip. */
   @media (hover: none) {
+    [data-slot="kind-attachments-item"]:has(> [data-slot="kind-attachments-remove"]:not([hidden])) {
+      padding-inline-end: 1.75rem;
+    }
+
     [data-slot="kind-attachments-remove"] {
+      top: 0.25rem;
+      right: 0.25rem;
+      border: 0;
+      background-color: transparent;
+      color: var(--kind-color-muted);
       opacity: 1;
       scale: 1;
     }

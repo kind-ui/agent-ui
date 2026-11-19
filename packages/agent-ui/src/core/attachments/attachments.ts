@@ -7,8 +7,8 @@ import {
   type Part,
   type SlotDefinition,
 } from "@ui-sdk/core";
-import { formatFileSize } from "@ui-sdk/core/file-input";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
+import { fileSize } from "../file-size.js";
 import { bindLeavingRow, createRowSlide, dropRow, type LeavingRow, leavingRows } from "../leaving.js";
 import { enter, type MotionMode } from "../motion/index.js";
 
@@ -28,7 +28,7 @@ export const ATTACHMENT_ERRORS = { type: "File type not accepted", size: "File i
 
 /** What a chip says under the name: its error, else its size. */
 export const attachmentDetail = (item: AttachmentItem): string =>
-  item.error ? ATTACHMENT_ERRORS[item.error] : item.size === undefined ? "" : formatFileSize(item.size);
+  item.error ? ATTACHMENT_ERRORS[item.error] : item.size === undefined ? "" : fileSize(item.size);
 
 export type AttachmentsOptions = {
   /**
