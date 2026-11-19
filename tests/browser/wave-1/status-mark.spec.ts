@@ -33,6 +33,7 @@ const consumers: Record<string, string> = {
   "thread-list/thread-list.ts": "kind-thread-list-status",
   "connection-status/connection-status.ts": "kind-connection-status-mark",
   "message/message.ts": "kind-message-outcome-icon",
+  "thread-search/thread-search.ts": "kind-thread-search-status",
 };
 
 type Fixture = {
@@ -105,6 +106,11 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
   },
   { url: "/?c=connection-status&case=offline", slots: ["kind-connection-status-mark"] },
   { url: "/?c=message&case=outcomes", slots: ["kind-message-outcome-icon"] },
+  {
+    url: "/?c=thread-search&case=all",
+    slots: ["kind-thread-search-status"],
+    show: (page) => page.getByRole("button", { name: "Search chats" }).click(),
+  },
 ];
 
 test("every mark size is an even whole number of pixels", () => {
