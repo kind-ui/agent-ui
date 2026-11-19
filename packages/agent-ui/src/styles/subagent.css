@@ -11,8 +11,8 @@
 
     & :where([data-slot="avatar"]) {
       display: inline-flex;
-      width: 16px;
-      height: 16px;
+      width: var(--kind-status-mark-size, 16px);
+      height: var(--kind-status-mark-size, 16px);
       overflow: hidden;
       border-radius: 9999px;
     }
@@ -27,7 +27,12 @@
   /* The steps' own triggers pad their marks by 6px, so the content sits 6px short of the title for those marks to
      line up with it. */
   [data-slot="kind-subagent-content"] {
-    padding-inline-start: calc(var(--kind-step-indent) - var(--kind-step-guide) - 1.5px - 6px);
+    padding-inline-start: calc(
+      var(--kind-step-indent) -
+      var(--kind-step-guide) -
+      var(--kind-step-guide-width) -
+      6px
+    );
 
     /* Steps a web host writes straight into the content sit as close as React's children part. */
     & > * {

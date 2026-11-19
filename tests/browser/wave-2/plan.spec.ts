@@ -79,6 +79,22 @@ test("a resolved accept leaves Accepted in its place, which takes focus", async 
   await expectAgentActions(page, "Migration plan", ["collapse", "expand", "press"]);
 });
 
+test("an accepted kind-plan put back in the page stays accepted", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await open(page);
+  await accept(page).click();
+  await page.evaluate(() => (window as unknown as Fixture).kindAccepts[0]?.resolve());
+  await expect(page.locator('#plan [data-slot="kind-plan-outcome"]')).toBeVisible();
+  await page.evaluate(() => {
+    const el = document.getElementById("plan");
+    const parent = el?.parentElement;
+    el?.remove();
+    if (el) parent?.prepend(el);
+  });
+  await expect(page.locator('#plan [data-slot="kind-plan-outcome"]')).toBeVisible();
+  await expect(accept(page)).toBeHidden();
+});
+
 test("when Accept leaves with focus, focus moves to the trigger", async ({ page }) => {
   await open(page);
   await accept(page).focus();

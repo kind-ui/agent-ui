@@ -55,6 +55,14 @@
     }
   }
 
+  /* One loop for one wait: while the list is open and an item in it runs, the summary's mark holds still. Between
+     items it spins again, so something always says the list is working. */
+  :where([data-step-part="root"]:has([data-step-part="item"][data-status="running"]))
+    > :where([data-step-part="trigger"][data-open])
+    > [data-step-part="icon"]::before {
+    animation: none;
+  }
+
   /* The line joining a list's marks, from this row's mark to the next row's, 2px clear of each: the marks center on
      the row's 4px padding plus half its line, and the list's gap is 2px. It runs past a Chain of Thought step's open
      content. */
@@ -64,7 +72,7 @@
     inset-inline-start: var(--kind-step-guide);
     top: calc(4px + 0.5lh + var(--kind-status-mark-size, 16px) / 2 + 2px);
     bottom: calc(-1 * (2px + 4px + 0.5lh - var(--kind-status-mark-size, 16px) / 2 - 2px));
-    width: 1.5px;
+    width: var(--kind-step-guide-width);
     background-color: var(--kind-color-border);
   }
 

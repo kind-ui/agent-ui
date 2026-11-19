@@ -27,6 +27,9 @@ const named = new WeakSet<Element>();
 // The question each item this element fills was drawn from, so a changed question is drawn again.
 const drawn = new WeakMap<Element, Question>();
 
+// The default buttons hold their running mark beside a label span; a button someone wrote takes the label itself.
+const label = (button: Element | null) => button?.querySelector("[data-kind-label]") ?? button;
+
 const fill = (part: Element | null | undefined, text: string) => {
   if (!part || !(owned.has(part) || !part.textContent)) return;
   owned.add(part);
@@ -259,8 +262,8 @@ export function defineQuestion(): void {
             }
           }
           api.syncAnswers();
-          fill(form.querySelector("kind-question-submit button [data-kind-label]"), state.submitLabel);
-          fill(form.querySelector("kind-question-skip button [data-kind-label]"), state.skipLabel);
+          fill(label(form.querySelector("kind-question-submit button")), state.submitLabel);
+          fill(label(form.querySelector("kind-question-skip button")), state.skipLabel);
           fill(
             form.querySelector("kind-question-status [data-question-label]"),
             state.pressed === "skip" ? "Skipping" : "Sending answers",

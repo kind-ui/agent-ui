@@ -49,7 +49,7 @@
       mask: var(--kind-checkpoint-icon) center / contain no-repeat;
     }
     &[data-open] {
-      background-color: var(--kind-color-hover);
+      background-color: var(--kind-color-selected);
       color: var(--kind-color-fg);
     }
   }

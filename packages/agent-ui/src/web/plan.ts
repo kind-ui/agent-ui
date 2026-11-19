@@ -104,6 +104,11 @@ export function definePlan(): void {
           get: (api) => api.isOpen(),
           set: (api, open) => api.setOpen(!!open),
         },
+        // An accepted plan put back in the page stays accepted.
+        accepted: {
+          get: (api) => api.isAccepted(),
+          set: (api, accepted) => api.setAccepted(!!accepted),
+        },
       },
       api: ["isOpen", "setOpen", "expand", "collapse", "toggle", "getItems"],
       render: (el, instance) => {
@@ -156,8 +161,9 @@ export type KindPlanEvents = {
 
 export interface KindPlanElement
   extends UiElement<KindPlanEvents>,
-    AttributeProperties<typeof planPrimitive, "api" | "open" | "items"> {
+    AttributeProperties<typeof planPrimitive, "api" | "open" | "accepted" | "items"> {
   open: boolean;
+  accepted: boolean;
   canAccept: boolean;
   items?: PlanOptions["items"];
   api: Pick<PlanApi, "isOpen" | "setOpen" | "expand" | "collapse" | "toggle" | "getItems">;

@@ -20,9 +20,15 @@
     position: relative;
   }
 
-  /* While open, the running step below spins, so the summary's mark holds still: one loop for one wait. */
-  [data-slot="kind-chain-of-thought-trigger"][data-open]
-    > [data-slot="kind-chain-of-thought-icon"][data-status="running"]::before {
+  /* One loop for one wait: while open with a step running, the summary's mark holds still. Between steps it spins
+     again, so something always says the chain is working. */
+  :where(
+      [data-slot="kind-chain-of-thought"]:has(
+        [data-slot="kind-chain-of-thought-item-icon"][data-status="running"]
+      )
+    )
+    > :where([data-slot="kind-chain-of-thought-trigger"][data-open])
+    > [data-slot="kind-chain-of-thought-icon"]::before {
     animation: none;
   }
 }

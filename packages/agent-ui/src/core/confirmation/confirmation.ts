@@ -335,12 +335,16 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
       },
       press: (choice, event) => {
         if (choice === "approve") return decide("approve", event);
-        if (store.get().reason && !store.get().composing && offered("canDeny")) return openReason();
+        // A person writes the reason; an agent's press decides at once, as its `deny` does.
+        const person = actionSource(event, "decision-press") !== "agent";
+        if (person && store.get().reason && !store.get().composing && offered("canDeny")) return openReason();
         deny(undefined, event);
       },
       cancelReason: () => {
         const state = store.get();
-        if (state.composing && !isLocked(state)) store.set({ composing: false, reasonClosing: true });
+        if (!state.composing || isLocked(state)) return;
+        // The box may already be gone, when the host turned `reason` or `onDeny` off while it was open.
+        store.set({ composing: false, reasonClosing: Boolean(showsReason(state)) });
       },
       reasonState: (state) => reasonState(!state.actionable || isLocked(state)),
       recovery: createFocusRecovery({
@@ -423,7 +427,7 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
     approve: slot<BaseSlotProps, ChoiceState>({
       role: "button",
       focus: "native",
-      present: (state) => state.canApprove && showsChoices(state) && !state.composing,
+      present: (state) => state.canApprove && showsChoices(state) && !showsReason(state),
       press: ({ api }, event) => api.press("approve", event),
       state: (state) => ({ label: state.approveLabel, pending: state.pressed === "approve" }),
       attrs: (state) => choiceAttrs(state, "approve"),
@@ -441,7 +445,7 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
     cancel: slot({
       role: "button",
       focus: "native",
-      present: (state) => state.composing && showsChoices(state),
+      present: (state) => Boolean(showsReason(state)) && showsChoices(state),
       press: ({ api }) => api.cancelReason(),
       attrs: (state) => ({
         type: "button",

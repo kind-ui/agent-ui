@@ -385,8 +385,13 @@
 
   /* A button's default markup holds its running mark, which shows only while the button is pending, in the button's
      own text color, so it reads on a filled button too. */
-  [data-kind-button]:not([data-pending]) > [data-kind-pending-mark] {
+  :where([data-kind-button]:not([data-pending])) > [data-kind-pending-mark] {
     display: none;
+  }
+  :where([data-motion="reduced"], [data-motion="none"])
+    [data-kind-button]
+    > [data-kind-pending-mark][data-status-mark]::before {
+    animation: none;
   }
   [data-kind-button] > [data-kind-pending-mark][data-status-mark] {
     border-color: color-mix(in oklab, currentColor 30%, transparent);

@@ -12,11 +12,13 @@
   }
 
   /* The trigger's mark already says the tool waits, so the outcome reads only words until it's decided. */
-  [data-slot="kind-tool-approval"]
-    [data-slot="kind-confirmation-outcome"]:is(
-      [data-state="requested"],
-      [data-state="submitting"],
-      [data-state="submit-failed"]
+  :where(
+      [data-slot="kind-tool-approval"]
+        [data-slot="kind-confirmation-outcome"]:is(
+          [data-state="requested"],
+          [data-state="submitting"],
+          [data-state="submit-failed"]
+        )
     )
     [data-slot="kind-confirmation-outcome-icon"] {
     display: none;
@@ -32,12 +34,12 @@
   }
 
   /* The tool is the container, so its payloads are bare code under their heading. */
-  :is([data-slot="kind-tool-input"], [data-slot="kind-tool-output"]) > [data-slot="kind-code-block"] {
+  :where([data-slot="kind-tool-input"], [data-slot="kind-tool-output"]) > [data-slot="kind-code-block"] {
     border: 0;
     border-radius: 0;
     background-color: transparent;
 
-    & [data-slot="kind-code-block-code"] {
+    & :where([data-slot="kind-code-block-code"]) {
       padding: 0 0 0.25rem;
     }
   }
@@ -81,6 +83,10 @@
     }
     &[data-copied]::after {
       mask-image: var(--kind-icon-check);
+    }
+    /* The content clips, and this button sits at its inline end. */
+    &:focus-visible {
+      outline-offset: var(--kind-focus-offset-inset);
     }
   }
   :is([data-slot="kind-tool-input"], [data-slot="kind-tool-output"]):is(:hover, :focus-within)

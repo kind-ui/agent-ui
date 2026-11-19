@@ -45,6 +45,10 @@ export type PlanState = ItemListState<PlanItem> & {
 export type PlanApi = ItemListApi<PlanItem, PlanState> & {
   /** Calls `onAccept`. Offered only while it's set, not pending and the plan isn't accepted. */
   readonly accept: (() => void) | undefined;
+  /** Whether the plan reads as accepted. */
+  isAccepted: () => boolean;
+  /** Marks the plan accepted, or not, unless the host passes `accepted`. A web element put back keeps it this way. */
+  setAccepted: (accepted: boolean) => void;
   /** Moves focus to "Accepted", else the trigger, when Accept leaves while focused. Called by the accept slot. */
   acceptRecovery: ReturnType<typeof createFocusRecovery>;
 };
@@ -86,27 +90,53 @@ const list = itemList<PlanItem, PlanState, PlanApi, PlanOptions>({
 const presentation = (options: PlanOptions) => ({
   canAccept: options.onAccept !== undefined,
   agentConfirm: options.agentConfirm ?? true,
-  ...(options.accepted !== undefined && { accepted: options.accepted }),
 });
+
+// A plan is the same plan while its item ids are, so an accept of an earlier one doesn't count for it.
+const planKey = (options: PlanOptions) => (options.items ?? []).map((item) => item.id).join("\n");
 
 export const planPrimitive: PlanPrimitive = definePrimitive<PlanOptions, PlanState, PlanApi, PlanSlots>({
   name: "kind-plan",
   ...list,
   options: { ...list.options, onAccept: "action", accepted: "boolean", agentConfirm: "boolean" },
-  state: (options) => ({ ...list.state(options), accepted: false, ...presentation(options), pending: false }),
+  state: (options) => ({
+    ...list.state(options),
+    ...presentation(options),
+    accepted: options.accepted ?? false,
+    pending: false,
+  }),
   sync: (options) => ({ ...list.sync(options), ...presentation(options) }),
   api: (context) => {
     const { store } = context;
-    const pendingAccept = createPendingAction(context, { state: "pending" });
+    let key = planKey(context.options());
+    // Whether a call to `onAccept` resolved for this plan, which counts while the host doesn't pass `accepted`.
+    let called = false;
+    const pendingAccept = createPendingAction(context, { state: "pending", key: () => key });
+    context.onOptions((options) => {
+      const next = planKey(options);
+      if (next !== key) {
+        key = next;
+        called = false;
+        pendingAccept.release();
+      }
+      const accepted = options.accepted ?? called;
+      if (accepted !== store.get().accepted) store.set({ accepted });
+    });
+    const setAccepted = (accepted: boolean) => {
+      called = accepted;
+      store.set({ accepted: context.options().accepted ?? called });
+    };
     const accept = () => {
       const { onAccept } = context.options();
       if (!onAccept) return;
       void pendingAccept.run(onAccept)?.then((outcome) => {
-        if (outcome === "done" && context.options().accepted === undefined) store.set({ accepted: true });
+        if (outcome === "done") setAccepted(true);
       });
     };
     return {
       ...list.api(context),
+      isAccepted: () => store.get().accepted,
+      setAccepted,
       acceptRecovery: createFocusRecovery({
         fallback: () => context.element("outcome") ?? context.element("trigger"),
       }),
