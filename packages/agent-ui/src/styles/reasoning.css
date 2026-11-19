@@ -2,7 +2,7 @@
 @layer components {
   [data-slot="kind-reasoning-content"] {
     --kind-markdown-font-size: var(--kind-text-md);
-    --kind-markdown-line-height: 1.6;
+    --kind-markdown-line-height: 1.5;
     --kind-markdown-color: var(--kind-color-muted);
   }
 

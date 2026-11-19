@@ -1,4 +1,5 @@
-/* Chain of Thought (spec §7): the Step base's look for the summary and each step, with the steps joined into a line. */
+/* Chain of Thought (spec §7): the Step base's look for the summary and each step, with the steps joined into a line
+   by item-list.css's connector. */
 @layer components {
   [data-slot="kind-chain-of-thought-list"] {
     margin: 0;
@@ -17,17 +18,11 @@
 
   [data-slot="kind-chain-of-thought-item"] {
     position: relative;
+  }
 
-    /* Runs from this step's mark, past its open content, to the next step's mark, 2px clear of each: the marks
-       center on the trigger's 4px padding plus half its line, and the list's gap is 2px. */
-    &:not(:last-child)::before {
-      content: "";
-      position: absolute;
-      inset-inline-start: 13.25px;
-      top: calc(4px + 0.5lh + 8px + 2px);
-      bottom: calc(-1 * (2px + 4px + 0.5lh - 8px - 2px));
-      width: 1.5px;
-      background-color: var(--kind-color-border);
-    }
+  /* While open, the running step below spins, so the summary's mark holds still: one loop for one wait. */
+  [data-slot="kind-chain-of-thought-trigger"][data-open]
+    > [data-slot="kind-chain-of-thought-icon"][data-status="running"]::before {
+    animation: none;
   }
 }

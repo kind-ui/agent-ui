@@ -1,20 +1,16 @@
 import { createFocusRecovery, definePrimitive, type SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { StepStatus } from "../../types/index.js";
-import { avatarInitials } from "../avatar.js";
 import { stepDuration } from "../chain-of-thought/open-steps.js";
 import { createPendingAction } from "../pending.js";
 import { type StepApi, type StepOptions, type StepState, stepAnnouncement, stepBase } from "../step/base.js";
 
-export { avatarInitials };
+export { avatarInitials } from "../avatar.js";
 
 export type SubagentOptions = StepOptions & {
-  /**
-   * The subagent's name: the title, unless `label` replaces it, and the avatar's initials. Without one, the title
-   * is "Subagent" and the avatar shows "?".
-   */
+  /** The subagent's name: the title, unless `label` replaces it. Without one, the title is "Subagent". */
   agentName?: string;
-  /** The avatar image. Without it, or until it loads, the avatar shows the name's initials. */
+  /** A small round image after the status mark. Without it, the header shows no avatar. */
   avatarSrc?: string;
   /** The subagent's final answer, as markdown, shown once the status is `complete`. */
   result?: string;
@@ -65,7 +61,7 @@ type Slot<Public extends object = Record<never, never>> = SlotDefinition<
 type SubagentSlots = {
   root: Slot;
   trigger: Slot;
-  avatar: Slot<{ name: string; initials: string; src: string | undefined }>;
+  avatar: Slot<{ name: string; src: string | undefined }>;
   icon: Slot;
   title: Slot<{ title: string }>;
   meta: Slot<{ label: string }>;
@@ -163,12 +159,9 @@ export const subagentPrimitive: SubagentPrimitive = definePrimitive<
           "data-agent-confirm": state.agentConfirm ? "Stops the subagent for you" : undefined,
         }),
       }),
-      avatar: slot<BaseSlotProps, { name: string; initials: string; src: string | undefined }>({
-        state: (state) => ({
-          name: state.agentName,
-          initials: avatarInitials(state.agentName),
-          src: state.avatarSrc,
-        }),
+      avatar: slot<BaseSlotProps, { name: string; src: string | undefined }>({
+        present: (state) => state.avatarSrc !== undefined,
+        state: (state) => ({ name: state.agentName, src: state.avatarSrc }),
         // The title beside it names the subagent.
         attrs: () => ({ "aria-hidden": "true", "data-step-part": "avatar" }),
       }),
@@ -185,6 +178,7 @@ export const subagentPrimitive: SubagentPrimitive = definePrimitive<
         state: (state) => ({ pending: state.pending }),
         attrs: (state) => ({
           type: "button",
+          "data-kind-button": "secondary",
           "aria-disabled": state.pending ? "true" : undefined,
           "data-step-part": "cancel",
           "data-pending": state.pending ? "" : undefined,

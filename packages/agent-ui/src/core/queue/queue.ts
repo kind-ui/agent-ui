@@ -541,12 +541,19 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
     }),
     "item-icon": slot<InnerProps>({
       props: fromItem,
-      attrs: (state, { key }) => ({
-        "aria-hidden": "true",
-        "data-status-mark": "",
-        "data-status": state.rowsById[key]?.item.status,
-        "data-motion": state.motion,
-      }),
+      // Completed rows keep the check. Every queued row is pending, so a mark there says nothing: the grip takes its
+      // place, drawn only while rows can move.
+      attrs: (state, { key }) => {
+        const status = state.rowsById[key]?.item.status;
+        const complete = status === "complete";
+        return {
+          "aria-hidden": "true",
+          "data-status-mark": complete ? "" : undefined,
+          "data-status": complete ? status : undefined,
+          "data-queue-grip": complete ? undefined : "",
+          "data-motion": state.motion,
+        };
+      },
     }),
     "item-title": slot<InnerProps, { title: string }>({
       props: fromItem,

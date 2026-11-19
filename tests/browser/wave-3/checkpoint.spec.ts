@@ -89,11 +89,16 @@ test("a restore that rejects keeps the dialog open with the error, then works ag
   await confirm(page).click();
   await expect(confirm(page)).toHaveAttribute("aria-disabled", "true");
   await expect(cancel(page)).toHaveAttribute("aria-disabled", "true");
+  // A pending Restore holds its running mark, and the dialog says it's busy.
+  await expect(confirm(page).locator("[data-kind-pending-mark]")).toBeVisible();
+  await expect(dialog(page)).toHaveAttribute("aria-busy", "true");
   await page.keyboard.press("Escape");
   await cancel(page).evaluate((button) => (button as HTMLElement).click());
   await expect(dialog(page)).toBeVisible();
   await settle(page, 0, "reject");
   await expect(dialog(page).getByText("Couldn't restore. Try again.")).toBeVisible();
+  await expect(confirm(page).locator("[data-kind-pending-mark]")).toBeHidden();
+  await expect(dialog(page)).not.toHaveAttribute("aria-busy");
   await expect(confirm(page)).not.toHaveAttribute("aria-disabled");
   await expect.poll(() => announced(page)).toContain("Checkpoint not restored");
   await confirm(page).click();

@@ -12,8 +12,8 @@ import { defineConfirmation, type KindConfirmationEvents } from "./confirmation.
 import { defineMarkdown, type KindMarkdownElement } from "./markdown.js";
 
 const DEFAULT_PARTS = `<kind-tool-trigger><button><kind-tool-icon></kind-tool-icon><kind-tool-title></kind-tool-title></button></kind-tool-trigger><kind-tool-content><kind-tool-input></kind-tool-input><kind-tool-output></kind-tool-output><kind-tool-error></kind-tool-error></kind-tool-content><kind-tool-approval></kind-tool-approval>`;
-const INPUT_PARTS = `<div data-tool-heading>Input<span data-tool-badge>Partial</span><kind-tool-input-copy><button></button></kind-tool-input-copy></div><kind-code-block headerless language="json"></kind-code-block>`;
-const OUTPUT_PARTS = `<div data-tool-heading>Output<span data-tool-badge>Preliminary</span><kind-tool-output-copy><button></button></kind-tool-output-copy></div><kind-code-block headerless language="json"></kind-code-block><kind-markdown></kind-markdown>`;
+const INPUT_PARTS = `<div data-tool-heading>Input<span data-tool-badge data-kind-badge>Partial</span><kind-tool-input-copy><button></button></kind-tool-input-copy></div><kind-code-block headerless language="json"></kind-code-block>`;
+const OUTPUT_PARTS = `<div data-tool-heading>Output<span data-tool-badge data-kind-badge>Preliminary</span><kind-tool-output-copy><button></button></kind-tool-output-copy></div><kind-code-block headerless language="json"></kind-code-block><kind-markdown></kind-markdown>`;
 
 // Parts this element wrote text into, and code blocks it wrote. A part someone wrote into keeps what they wrote, as
 // React's children do. Kept across instances, because UI SDK rebuilds one when the element returns to the page.

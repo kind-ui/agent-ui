@@ -29,12 +29,16 @@ const open = async (page: Page, name = "all") => {
   await expect(page.getByRole("button", { name: "read_file" })).toBeVisible();
 };
 
-test("shows the subagent's name, initials, status and nested steps", async ({ page }) => {
+test("shows the subagent's status mark, name, status and nested steps", async ({ page }) => {
   await open(page);
   const root = page.locator("#subagent");
   await expect(root).toHaveAttribute("data-kind", "subagent");
   await expect(root).toHaveAccessibleName("Code reviewer");
-  await expect(part(page, "subagent", "avatar")).toHaveText("CR");
+  const trigger = part(page, "subagent", "trigger");
+  const order = await trigger.evaluate((el) =>
+    [...el.querySelectorAll("[data-step-part]")].map((node) => node.getAttribute("data-step-part")),
+  );
+  expect(order.filter((name) => name !== "avatar")).toEqual(["icon", "title", "meta"]);
   await expect(part(page, "subagent", "meta")).toHaveText("Working");
   await expect(part(page, "subagent", "result")).toBeHidden();
 });
@@ -133,11 +137,30 @@ for (const colorScheme of ["light", "dark"] as const) {
   });
 }
 
-test("the avatar shows its image once loaded, and initials without one", async ({ page }) => {
+test("the avatar shows only with avatarSrc, after the mark and before the title", async ({ page }) => {
   await open(page);
-  await expect(part(page, "quick", "avatar").locator("img")).toBeVisible();
+  const image = part(page, "quick", "avatar").locator("img");
+  await expect(image).toBeVisible();
+  const box = (slot: string) =>
+    part(page, "quick", slot).evaluate((el) => el.getBoundingClientRect().toJSON());
+  const [icon, avatar, title] = [await box("icon"), await box("avatar"), await box("title")];
+  expect(avatar.width).toBe(16);
+  expect(icon.right).toBeLessThan(avatar.left);
+  expect(avatar.right).toBeLessThan(title.left);
+  await expect(part(page, "readonly", "avatar")).toBeHidden();
   await expect(part(page, "readonly", "avatar").locator("img")).toHaveCount(0);
-  await expect(part(page, "readonly", "avatar")).toHaveText("TR");
+});
+
+test("nested steps' marks line up with the title, and Stop with both", async ({ page }) => {
+  await open(page);
+  const left = (locator: ReturnType<Page["locator"]>) =>
+    locator.evaluate((el) => Math.round(el.getBoundingClientRect().left));
+  const title = await left(part(page, "subagent", "title"));
+  const nested = page
+    .locator('#subagent [data-slot="kind-subagent-content"] [data-step-part="icon"]')
+    .first();
+  expect(await left(nested)).toBe(title);
+  expect(await left(cancel(page))).toBe(title);
 });
 
 test("a complete subagent without a result shows no result part", async ({ page }) => {

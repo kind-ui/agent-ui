@@ -151,6 +151,7 @@ const presentation = ({ call, label, error, highlight, onApprove, onDeny, approv
 
 const copyAttrs = (name: string, copied: boolean) => ({
   type: "button",
+  "data-kind-icon-button": "",
   "aria-label": `Copy ${name}`,
   "data-copied": copied ? "" : undefined,
 });

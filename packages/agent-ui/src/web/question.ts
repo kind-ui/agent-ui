@@ -14,7 +14,8 @@ import { defineInternalTextarea } from "./internal/textarea.js";
 
 type Question = NonNullable<QuestionOptions["questions"]>[number];
 
-const DEFAULT_PARTS = `<kind-question-actions><kind-question-submit><button></button></kind-question-submit><kind-question-skip><button></button></kind-question-skip><kind-question-status><kind-question-status-icon></kind-question-status-icon><span data-question-label></span></kind-question-status><kind-question-error>Answers not sent. Try again.</kind-question-error></kind-question-actions><kind-question-summary><span data-question-outcome><kind-question-summary-icon></kind-question-summary-icon><span data-question-label></span></span><dl></dl></kind-question-summary>`;
+const PENDING_MARK = `<span data-kind-pending-mark="" data-status-mark="" data-status="running" aria-hidden="true"></span>`;
+const DEFAULT_PARTS = `<kind-question-actions><kind-question-submit><button>${PENDING_MARK}<span data-kind-label></span></button></kind-question-submit><kind-question-skip><button>${PENDING_MARK}<span data-kind-label></span></button></kind-question-skip><kind-question-status><span data-question-label></span></kind-question-status><kind-question-error>Answers not sent. Try again.</kind-question-error></kind-question-actions><kind-question-summary><span data-question-outcome><kind-question-summary-icon></kind-question-summary-icon><span data-question-label></span></span><dl></dl></kind-question-summary>`;
 const CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>`;
 
 // Parts this element wrote text into, and questions it added. A part someone wrote text into keeps it, and a question
@@ -258,8 +259,8 @@ export function defineQuestion(): void {
             }
           }
           api.syncAnswers();
-          fill(form.querySelector("kind-question-submit button"), state.submitLabel);
-          fill(form.querySelector("kind-question-skip button"), state.skipLabel);
+          fill(form.querySelector("kind-question-submit button [data-kind-label]"), state.submitLabel);
+          fill(form.querySelector("kind-question-skip button [data-kind-label]"), state.skipLabel);
           fill(
             form.querySelector("kind-question-status [data-question-label]"),
             state.pressed === "skip" ? "Skipping" : "Sending answers",

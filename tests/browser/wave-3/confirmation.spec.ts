@@ -66,6 +66,7 @@ const open = async (page: Page, name = "all") => {
 test("a group named by its label offers the host's choices", async ({ page }) => {
   await open(page);
   await expect(page.getByRole("group", { name: "Run search_docs?" })).toBeVisible();
+  await expect(part(page, "title")).toHaveText("Run search_docs?");
   await expect(deny(page)).toBeVisible();
   await expect(confirmation(page)).toHaveAttribute("data-agent-confirm", /.+/);
   await expect(approve(page, "approve-only")).toBeVisible();
@@ -136,6 +137,7 @@ test("deciding moves nothing above or below, and the outcome stays", async ({ pa
   expect(await boxes()).toEqual(before);
   await setApproval(page, request("responded", 1, { approved: true }));
   await expect(part(page, "outcome")).toHaveText("Approved");
+  await expect(part(page, "title")).toHaveText("Run search_docs?");
   await expect(confirmation(page).getByRole("button")).toHaveCount(0);
   expect(await boxes()).toEqual(before);
   await expect.poll(() => announced(page)).toEqual(["Approved"]);
@@ -149,7 +151,7 @@ test("when the choices leave with focus, focus moves to the outcome", async ({ p
   await expect(part(page, "outcome")).toBeFocused();
 });
 
-test("an agent's deny needs a person, then sends its reason", async ({ page }) => {
+test("an agent's deny needs a person, then sends its reason without opening the box", async ({ page }) => {
   await open(page);
   await expectAgentActions(page, "Run search_docs?", ["approve", "deny"]);
   expect(await act(page, "Delete notes.md?", "deny", ["Too broad"])).toContain("The person said no");
@@ -161,14 +163,20 @@ test("an agent's deny needs a person, then sends its reason", async ({ page }) =
   expect(await decisions(page)).toEqual([
     { choice: "deny", decision: { approvalId: "a1", generation: 1, reason: "Too broad" }, source: "agent" },
   ]);
-  await expect(confirmation(page, "reason").getByRole("textbox", { name: "Reason for denying" })).toHaveValue(
-    "Too broad",
-  );
+  await expect(confirmation(page, "reason").getByRole("textbox")).toHaveCount(0);
 });
 
-test("Deny sends what the person typed", async ({ page }) => {
+test("with reason, Deny opens the box and calls nothing, then sends what the person typed", async ({
+  page,
+}) => {
   await open(page);
-  await confirmation(page, "reason").getByRole("textbox").fill("  Wrong file ");
+  await expect(confirmation(page, "reason").getByRole("textbox")).toHaveCount(0);
+  await deny(page, "reason").click();
+  const box = confirmation(page, "reason").getByRole("textbox", { name: "Reason for denying" });
+  await expect(box).toBeFocused();
+  await expect(approve(page, "reason")).toHaveCount(0);
+  expect(await decisions(page)).toEqual([]);
+  await box.fill("  Wrong file ");
   await deny(page, "reason").click();
   expect((await decisions(page))[0]?.decision).toEqual({
     approvalId: "a1",
@@ -177,10 +185,24 @@ test("Deny sends what the person typed", async ({ page }) => {
   });
 });
 
+test("Cancel closes the reason box and returns focus to Deny", async ({ page }) => {
+  await open(page);
+  await deny(page, "reason").focus();
+  await page.keyboard.press("Enter");
+  await expect(confirmation(page, "reason").getByRole("textbox")).toBeFocused();
+  await confirmation(page, "reason").getByRole("button", { name: "Cancel" }).click();
+  await expect(confirmation(page, "reason").getByRole("textbox")).toHaveCount(0);
+  await expect(confirmation(page, "reason").getByRole("button", { name: "Cancel" })).toHaveCount(0);
+  await expect(approve(page, "reason")).toBeVisible();
+  await expect(deny(page, "reason")).toBeFocused();
+  expect(await decisions(page)).toEqual([]);
+});
+
 test("the reason box collapses once the decision is recorded, and the outcome keeps the reason", async ({
   page,
 }) => {
   await open(page);
+  await deny(page, "reason").click();
   await confirmation(page, "reason").getByRole("textbox").fill("Wrong file");
   await deny(page, "reason").click();
   await page.evaluate(() => (window as unknown as Fixture).kindHost.decisions[0]?.resolve());

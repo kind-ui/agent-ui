@@ -87,6 +87,20 @@ test("splits the items into Queued and Completed, with counts", async ({ page })
   await expect(row(page, "Read the schema")).toBeVisible();
 });
 
+test("queued rows show a grip in the mark's place, and completed rows keep the check", async ({ page }) => {
+  await open(page);
+  const icon = (name: string) => row(page, name).locator('[data-slot="kind-queue-item-icon"]');
+  await expect(icon("Write the migration")).toHaveAttribute("data-queue-grip", "");
+  await expect(icon("Write the migration")).not.toHaveAttribute("data-status-mark");
+  expect(
+    await icon("Write the migration").evaluate((el) => getComputedStyle(el, "::after").maskImage),
+  ).toContain("url(");
+  await page.getByRole("button", { name: "Completed" }).click();
+  await expect(icon("Read the schema")).toHaveAttribute("data-status-mark", "");
+  await expect(icon("Read the schema")).toHaveAttribute("data-status", "complete");
+  await expect(icon("Read the schema")).not.toHaveAttribute("data-queue-grip");
+});
+
 test("Space, ArrowDown, Space moves an item and announces it; Escape puts it back", async ({ page }) => {
   await open(page);
   await row(page, "Write the migration").focus();

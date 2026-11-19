@@ -11,7 +11,8 @@ import { createParts, type UiActionDetail, wrappedButton } from "@ui-sdk/web";
 import type { AttributeProperties, UiElement } from "@ui-sdk/web/events";
 import { defineInternalTextarea } from "./internal/textarea.js";
 
-const DEFAULT_PARTS = `<kind-confirmation-reason><kind-internal-textarea><ui-textarea><textarea aria-label="Reason for denying" placeholder="Add a reason (optional)" rows="2"></textarea></ui-textarea></kind-internal-textarea></kind-confirmation-reason><kind-confirmation-choices><kind-confirmation-approve><button></button></kind-confirmation-approve><kind-confirmation-deny><button></button></kind-confirmation-deny><kind-confirmation-error>Decision not sent. Try again.</kind-confirmation-error></kind-confirmation-choices><kind-confirmation-outcome><kind-confirmation-outcome-icon></kind-confirmation-outcome-icon><span data-confirmation-label></span><span data-confirmation-reason></span></kind-confirmation-outcome>`;
+const PENDING_MARK = `<span data-kind-pending-mark="" data-status-mark="" data-status="running" aria-hidden="true"></span>`;
+const DEFAULT_PARTS = `<kind-confirmation-title></kind-confirmation-title><kind-confirmation-reason><kind-internal-textarea><ui-textarea><textarea aria-label="Reason for denying" placeholder="Add a reason (optional)" rows="2"></textarea></ui-textarea></kind-internal-textarea></kind-confirmation-reason><kind-confirmation-choices><kind-confirmation-approve><button>${PENDING_MARK}<span data-kind-label></span></button></kind-confirmation-approve><kind-confirmation-deny><button>${PENDING_MARK}<span data-kind-label></span></button></kind-confirmation-deny><kind-confirmation-cancel><button>Cancel</button></kind-confirmation-cancel><kind-confirmation-error>Decision not sent. Try again.</kind-confirmation-error></kind-confirmation-choices><kind-confirmation-outcome><kind-confirmation-outcome-icon></kind-confirmation-outcome-icon><span data-confirmation-label></span><span data-confirmation-reason></span></kind-confirmation-outcome>`;
 
 // Parts this element wrote text into. A part someone wrote text into keeps it, as React's children do. Kept across
 // instances, because UI SDK rebuilds one when the element returns to the page.
@@ -23,6 +24,9 @@ const fill = (part: Element | null | undefined, text: string) => {
   if (part.textContent !== text) part.textContent = text;
 };
 
+// A button the host wrote takes its label as its text.
+const label = (button: Element | null) => button?.querySelector("[data-kind-label]") ?? button;
+
 const write = <Target extends object, Key extends keyof Target>(
   target: Target | null,
   key: Key,
@@ -32,7 +36,7 @@ const write = <Target extends object, Key extends keyof Target>(
 };
 
 /**
- * `<kind-confirmation label="Run search_docs?">` fills in its reason box, choices and outcome when it has no
+ * `<kind-confirmation label="Run search_docs?">` fills in its title, reason box, choices and outcome when it has no
  * children. Set `approval` as a property. The `can-approve` and `can-deny` attributes show Approve and Deny, which
  * fire `approve` and `deny` with the decision as `detail.value`: call `event.detail.waitUntil(promise)` to keep both
  * choices disabled until it settles.
@@ -59,8 +63,9 @@ export function defineConfirmation(): void {
         const api = instance.api as ConfirmationApi;
         const draw = () => {
           const state = instance.get() as ConfirmationState;
-          fill(el.querySelector("kind-confirmation-approve button"), state.approveLabel);
-          fill(el.querySelector("kind-confirmation-deny button"), state.denyLabel);
+          fill(el.querySelector("kind-confirmation-title"), state.title ?? "");
+          fill(label(el.querySelector("kind-confirmation-approve button")), state.approveLabel);
+          fill(label(el.querySelector("kind-confirmation-deny button")), state.denyLabel);
           fill(el.querySelector("kind-confirmation-outcome [data-confirmation-label]"), state.outcome ?? "");
           fill(
             el.querySelector("kind-confirmation-outcome [data-confirmation-reason]"),
@@ -91,10 +96,12 @@ export function defineConfirmation(): void {
         };
       },
     },
+    title: "kind-confirmation-title",
     reason: "kind-confirmation-reason",
     choices: "kind-confirmation-choices",
     approve: { tag: "kind-confirmation-approve", target: wrappedButton, display: "contents" },
     deny: { tag: "kind-confirmation-deny", target: wrappedButton, display: "contents" },
+    cancel: { tag: "kind-confirmation-cancel", target: wrappedButton, display: "contents" },
     error: "kind-confirmation-error",
     outcome: "kind-confirmation-outcome",
     "outcome-icon": "kind-confirmation-outcome-icon",
@@ -121,10 +128,12 @@ export interface KindConfirmationElement
 declare global {
   interface HTMLElementTagNameMap {
     "kind-confirmation": KindConfirmationElement;
+    "kind-confirmation-title": HTMLElement;
     "kind-confirmation-reason": HTMLElement;
     "kind-confirmation-choices": HTMLElement;
     "kind-confirmation-approve": HTMLElement;
     "kind-confirmation-deny": HTMLElement;
+    "kind-confirmation-cancel": HTMLElement;
     "kind-confirmation-error": HTMLElement;
     "kind-confirmation-outcome": HTMLElement;
     "kind-confirmation-outcome-icon": HTMLElement;

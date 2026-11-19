@@ -6,7 +6,12 @@
     gap: 2px;
   }
 
+  /* The indent under a title and the guide line under the mark follow the mark's size: the trigger's 6px padding,
+     the mark and the 8px gap; the guide is centered on the mark. */
   [data-step-part="root"] {
+    --kind-step-indent: calc(6px + var(--kind-status-mark-size, 16px) + 8px);
+    --kind-step-guide: calc(6px + var(--kind-status-mark-size, 16px) / 2 - 0.75px);
+
     display: flex;
     flex-direction: column;
     font-size: var(--kind-text-md);
@@ -19,7 +24,7 @@
     width: 100%;
     align-items: center;
     gap: 8px;
-    border-radius: calc(var(--kind-radius) / 2);
+    border-radius: var(--kind-radius-sm);
     padding: 4px 6px;
     text-align: left;
     color: var(--kind-color-muted);
@@ -67,7 +72,8 @@
     white-space: nowrap;
     font-weight: 500;
 
-    &[data-status="running"] {
+    /* What's running or waiting on the person reads at full contrast; done and not started stay quiet. */
+    &:is([data-status="running"], [data-status="awaiting-input"], [data-status="error"]) {
       color: var(--kind-color-fg);
     }
   }
@@ -82,8 +88,8 @@
   /* Indented under the title, with a guide line under the status mark. */
   [data-step-part="content"],
   [data-step-part="children"] {
-    margin-inline-start: 13.25px;
-    padding-inline-start: 15.25px;
+    margin-inline-start: var(--kind-step-guide);
+    padding-inline-start: calc(var(--kind-step-indent) - var(--kind-step-guide) - 1.5px);
     border-inline-start: 1.5px solid var(--kind-color-border);
   }
 

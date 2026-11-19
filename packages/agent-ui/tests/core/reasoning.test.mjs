@@ -10,7 +10,11 @@ test("thinking until done", () => {
 test("rounds the duration, at least 1 s", () => {
   assert.equal(reasoningTitle("complete", 2.6), "Thought for 3 s");
   assert.equal(reasoningTitle("complete", 0.2), "Thought for 1 s");
-  assert.equal(reasoningTitle("error", 5), "Thought for 5 s");
+});
+
+test("a failure or a stop says so", () => {
+  assert.equal(reasoningTitle("error", 5), "Thinking failed");
+  assert.equal(reasoningTitle("cancelled"), "Thinking stopped");
 });
 
 test("no duration, or one that isn't a number", () => {

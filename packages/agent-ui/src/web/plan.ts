@@ -11,7 +11,7 @@ import type { AttributeProperties, UiChangeEvent, UiElement, UiPartElement } fro
 
 type PlanItem = PlanState["items"][number];
 
-const DEFAULT_PARTS = `<kind-plan-trigger><button><kind-plan-icon></kind-plan-icon><kind-plan-title></kind-plan-title></button></kind-plan-trigger><kind-plan-progress></kind-plan-progress><kind-plan-content><kind-plan-list></kind-plan-list></kind-plan-content><kind-plan-accept><button>Accept plan</button></kind-plan-accept>`;
+const DEFAULT_PARTS = `<kind-plan-trigger><button><kind-plan-icon></kind-plan-icon><kind-plan-title></kind-plan-title><kind-plan-meta></kind-plan-meta></button></kind-plan-trigger><kind-plan-content><kind-plan-list></kind-plan-list></kind-plan-content><kind-plan-accept><button><span data-kind-pending-mark data-status-mark data-status="running" aria-hidden="true"></span>Accept plan</button></kind-plan-accept><kind-plan-outcome><kind-plan-outcome-icon></kind-plan-outcome-icon>Accepted</kind-plan-outcome>`;
 const PROGRESS_PARTS = `<ui-progress><ui-progress-label></ui-progress-label><ui-progress-track><ui-progress-indicator></ui-progress-indicator></ui-progress-track></ui-progress>`;
 const ITEM_PARTS = `<kind-plan-item-icon></kind-plan-item-icon><kind-plan-item-title></kind-plan-item-title><kind-plan-item-description></kind-plan-item-description>`;
 
@@ -84,8 +84,8 @@ const drawProgress = (part: Element | null, { done, total, percent }: PlanState[
 };
 
 /**
- * `<kind-plan label="…">` fills in its trigger, progress bar, content and Accept button when it has no children,
- * and an empty `kind-plan-progress` with a UI SDK Progress. Set `items` as a property: its list gets a
+ * `<kind-plan label="…">` fills in its trigger, content, Accept button and "Accepted" when it has no children, and
+ * an empty `kind-plan-progress` you write with a UI SDK Progress. Set `items` as a property: its list gets a
  * `kind-plan-item` for each item it lacks, in order, and every item's empty parts get the item's mark, title and
  * description. Write a `<kind-plan-item value="…">` to render an item yourself. The `can-accept` attribute
  * shows Accept, which fires `accept`: call `event.detail.waitUntil(promise)` to keep it pending.
@@ -144,6 +144,8 @@ export function definePlan(): void {
     "item-title": "kind-plan-item-title",
     "item-description": "kind-plan-item-description",
     accept: { tag: "kind-plan-accept", target: wrappedButton, display: "contents" },
+    outcome: "kind-plan-outcome",
+    "outcome-icon": "kind-plan-outcome-icon",
   });
 }
 
@@ -176,5 +178,7 @@ declare global {
     "kind-plan-item-title": HTMLElement;
     "kind-plan-item-description": HTMLElement;
     "kind-plan-accept": HTMLElement;
+    "kind-plan-outcome": HTMLElement;
+    "kind-plan-outcome-icon": HTMLElement;
   }
 }

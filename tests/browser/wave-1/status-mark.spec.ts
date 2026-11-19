@@ -28,6 +28,7 @@ const consumers: Record<string, string> = {
   "question/question.ts": "kind-question-summary-icon",
   "queue/queue.ts": "kind-queue-item-icon",
   "item-list.ts": "kind-task-item-icon",
+  "plan/plan.ts": "kind-plan-outcome-icon",
   "test-results/test-results.ts": "kind-test-results-item-status",
   "dictation-button/dictation-button.ts": "kind-dictation-status-icon",
 
@@ -85,7 +86,6 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
       "kind-plan-icon",
       "kind-plan-item-icon",
       "kind-subagent-icon",
-      "kind-queue-item-icon",
       "kind-notice-icon",
       "kind-guardrail-notice-icon",
     ],
@@ -105,6 +105,18 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
     },
   },
   { url: "/?c=confirmation&case=all", slots: ["kind-confirmation-outcome-icon"] },
+  // Only a completed row draws a mark; a queued one shows its grip.
+  { url: "/?c=queue&case=all", slots: ["kind-queue-item-icon"] },
+  {
+    url: "/?c=plan&case=all",
+    slots: ["kind-plan-outcome-icon"],
+    show: async (page) => {
+      await page.locator('#plan [data-slot="kind-plan-accept"]').click();
+      await page.evaluate(() =>
+        (window as unknown as { kindAccepts: { resolve(): void }[] }).kindAccepts[0]?.resolve(),
+      );
+    },
+  },
   {
     url: "/?c=question&case=all",
     slots: ["kind-question-summary-icon"],

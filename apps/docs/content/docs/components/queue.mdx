@@ -39,7 +39,7 @@ Queue
 └── QueueInstructions
 ```
 
-`Queue` renders a Queued section and a Completed section when you pass no children, then the instructions. Each `QueueSection` takes a `value` of `pending` or `complete`, and hides while it has no items. Its trigger is a native button that shows or hides the section, with the section's title and count. `QueueList` renders an item for each of the section's items when you pass it no children, and each item shows its status mark, title, description and remove button unless you give it children. `QueueInstructions` holds the keys that move and remove items: it's hidden from sight, and screen readers read it with each item.
+`Queue` renders a Queued section and a Completed section when you pass no children, then the instructions. Each `QueueSection` takes a `value` of `pending` or `complete`, and hides while it has no items. Its trigger is a native button that shows or hides the section, with the section's title and count. `QueueList` renders an item for each of the section's items when you pass it no children, and each item shows its mark, title, description and remove button unless you give it children. A completed item's mark is a check; a queued item's is a grip while `onReorder` lets people move it, and empty otherwise, since every queued item is pending. `QueueInstructions` holds the keys that move and remove items: it's hidden from sight, and screen readers read it with each item.
 
 ## Usage
 

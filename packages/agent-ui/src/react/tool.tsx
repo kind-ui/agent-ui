@@ -67,7 +67,10 @@ export function ToolInput({
   children = ({ label, code, streaming, highlight }) => (
     <>
       <div data-tool-heading="">
-        Input<span data-tool-badge="">Partial</span>
+        Input
+        <span data-tool-badge="" data-kind-badge="">
+          Partial
+        </span>
         <ToolInputCopy />
       </div>
       <CodeBlock
@@ -95,7 +98,10 @@ export function ToolOutput({
   children = ({ label, kind, text, preliminary, highlight }) => (
     <>
       <div data-tool-heading="">
-        Output<span data-tool-badge="">Preliminary</span>
+        Output
+        <span data-tool-badge="" data-kind-badge="">
+          Preliminary
+        </span>
         <ToolOutputCopy />
       </div>
       {kind === "markdown" ? (

@@ -54,7 +54,7 @@ Pass `onRestore` to show **Restore checkpoint**. Pressing it opens the dialog, w
 />
 ```
 
-Only the dialog's **Restore** calls `onRestore`, with `details.source` saying how it was pressed. Return a promise to keep the dialog open until it settles: both answers are disabled meanwhile, a second press calls nothing, and Escape waits. When it resolves, the dialog closes and focus returns to **Restore checkpoint**. A rejection keeps the dialog open with "Couldn't restore. Try again." beside the answers, and screen readers hear "Checkpoint not restored".
+Only the dialog's **Restore** calls `onRestore`, with `details.source` saying how it was pressed. Return a promise to keep the dialog open until it settles: **Restore** shows a running mark beside its label and the dialog is marked busy, both answers are disabled meanwhile, a second press calls nothing, and Escape waits. When it resolves, the dialog closes and focus returns to **Restore checkpoint**. A rejection keeps the dialog open with "Couldn't restore. Try again." beside the answers, and screen readers hear "Checkpoint not restored".
 
 ### Restored
 

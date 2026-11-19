@@ -47,7 +47,7 @@ Pass the thoughts so far as `text`, and set `status` as the model works. While t
 
 ### Summary
 
-When the status turns `complete`, the title becomes "Thought for N s", from `durationSeconds` rounded to the nearest second and never less than 1, or "Thought" without one. The content closes on its own, unless someone opened or closed it while the model thought. Pass `label` to replace the title with your own words.
+When the status turns `complete`, the title becomes "Thought for N s", from `durationSeconds` rounded to the nearest second and never less than 1, or "Thought" without one. A failure reads "Thinking failed" and a cancelled run "Thinking stopped". The content closes on its own, unless someone opened or closed it while the model thought. Pass `label` to replace the title with your own words.
 
 A reasoning that goes straight from `pending` to `complete`, like a cached answer, stays closed.
 

@@ -5,9 +5,9 @@ description: Show the steps an agent plans to take, how far it's got, and let pe
 
 import PlanExample from "../../../examples/plan/basic";
 
-Use a plan when an agent lays out its steps before it starts, and to follow them as it works. It shows each step with its status, a progress bar of the steps done, and an Accept button while you offer one.
+Use a plan when an agent lays out its steps before it starts, and to follow them as it works. It shows each step with its status, how many are done, and an Accept button while you offer one, which "Accepted" replaces once the plan is accepted.
 
-<Example caption="Press Accept plan. The button goes away, and the plan and its second step start running.">
+<Example caption="Press Accept plan. Accepted takes the button's place, and the plan and its second step start running.">
   <PlanExample />
 
   <include cwd lang="tsx">./examples/plan/basic.tsx</include>
@@ -31,17 +31,18 @@ Plan
 │   ├── PlanIcon
 │   ├── PlanTitle
 │   └── PlanMeta
-├── PlanProgress
 ├── PlanContent
 │   └── PlanList
 │       └── PlanItem
 │           ├── PlanItemIcon
 │           ├── PlanItemTitle
 │           └── PlanItemDescription
-└── PlanAccept
+├── PlanAccept
+└── PlanOutcome
+    └── PlanOutcomeIcon
 ```
 
-`Plan` renders the trigger, progress bar, content and Accept button when you pass no children; the default trigger leaves out `PlanMeta`, since the progress bar says the same. Its trigger is a native button that shows or hides the list. `PlanTitle` shows the `label`, or "Plan" without one, and `PlanMeta` how many steps are done, like "2 of 5". `PlanProgress` is a UI SDK Progress labeled "2 of 5 steps", and it stays in view while the plan is closed. `PlanList` renders an item for each of the `items` when you pass it no children, and each item shows its status mark, title and description. `PlanAccept` renders only while `onAccept` is set.
+`Plan` renders the trigger, content, Accept button and outcome when you pass no children. Its trigger is a native button that shows or hides the list. `PlanTitle` shows the `label`, or "Plan" without one, and `PlanMeta` how many steps are done, like "2 of 5". `PlanList` renders an item for each of the `items` when you pass it no children, and each item shows its status mark, title and description. `PlanAccept` renders only while `onAccept` is set and the plan isn't accepted, and `PlanOutcome` only once it is. `PlanProgress`, a UI SDK Progress labeled "2 of 5 steps" that stays in view while the plan is closed, isn't in the default parts; compose it under the trigger if you want a bar.
 
 ## Usage
 
@@ -53,7 +54,7 @@ Without a `status` of its own, the plan's status is what the items add up to: `c
 
 ### Accepting
 
-Pass `onAccept` to show **Accept plan**. Return a promise to keep the button pending until it settles: a second press does nothing meanwhile, and a rejection makes it available again. Once the plan is accepted, leave `onAccept` out, and the button goes away. If it had focus, focus moves to the trigger.
+Pass `onAccept` to show **Accept plan**. Return a promise to keep the button pending until it settles: it keeps its label beside a running mark, a second press does nothing meanwhile, and a rejection makes it available again. Once the call resolves, **Accepted** takes the button's place at its height, and focus moves to it if the button had it. Pass `accepted` to say so yourself, for a plan accepted earlier or elsewhere. Leaving `onAccept` out instead removes the button with nothing in its place, and focus moves to the trigger.
 
 ### Opening and Closing
 
@@ -65,11 +66,11 @@ The items are one Tab stop. The arrow keys move between them, and Home and End g
 
 ### Streaming
 
-A new item fades in once as it arrives, at the end of the list. A status change morphs only the item's mark and fills the progress bar, so the rows never shift. A removed item leaves at once. Screen readers hear an item's title and its outcome when it completes, and the plan's when it needs input or completes, in one message.
+A new item fades in once as it arrives, at the end of the list. A status change morphs only the item's mark and counts it in the meta, so the rows never shift. A removed item leaves at once. Screen readers hear an item's title and its outcome when it completes, and the plan's when it needs input or completes, in one message.
 
 ### Motion
 
-Marks morph between statuses, the progress bar slides, and the list grows open and shut. Under `prefers-reduced-motion`, or with `motion="reduced"`, the list and marks fade over 120 ms instead and nothing moves or spins, and with `motion="none"` everything changes at once.
+Marks morph between statuses, and the list grows open and shut. Under `prefers-reduced-motion`, or with `motion="reduced"`, the list and marks fade over 120 ms instead and nothing moves or spins, and with `motion="none"` everything changes at once.
 
 ## API Reference
 

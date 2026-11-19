@@ -6,13 +6,12 @@
     display: block;
   }
 
-  /* Plain text, so the selection's line breaks stay. */
+  /* Plain text, so the selection's line breaks stay. No bar of its own: the guide line beside it already sets it apart. */
   [data-slot="kind-action-quote"] {
     margin: 4px 0;
-    padding-block: 0;
-    padding-inline-start: 0.75rem;
-    border-inline-start: 2px solid var(--kind-color-border);
+    padding: 0;
     color: var(--kind-color-muted);
+    font-style: italic;
     font-size: var(--kind-text-sm);
     line-height: 1.25rem;
     white-space: pre-wrap;
@@ -21,7 +20,7 @@
 
   [data-slot="kind-action-result"] {
     --kind-markdown-font-size: var(--kind-text-md);
-    --kind-markdown-line-height: 1.6;
+    --kind-markdown-line-height: 1.5;
     --kind-markdown-color: var(--kind-color-fg);
   }
 

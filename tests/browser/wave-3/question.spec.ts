@@ -135,6 +135,10 @@ test("Submit then Skip within one task calls the host once", async ({ page }) =>
   await expect(submit(page)).toHaveAttribute("aria-disabled", "true");
   await expect(skip(page)).toHaveAttribute("aria-disabled", "true");
   await expect(part(page, "status")).toHaveText("Sending answers");
+  // One running mark for one wait: the pressed button's, not the status's.
+  await expect(submit(page).locator("[data-kind-pending-mark]")).toBeVisible();
+  await expect(skip(page).locator("[data-kind-pending-mark]")).toBeHidden();
+  await expect(part(page, "status").locator("[data-status-mark]")).toHaveCount(0);
   expect((await calls(page)).map((call) => call.action)).toEqual(["submit"]);
 });
 

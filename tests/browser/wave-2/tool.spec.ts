@@ -58,7 +58,7 @@ test("shows the input as partial while it streams, then as ready", async ({ page
   await expect(search).toHaveAttribute("data-open", "");
   await expect(part(page, "search", "input")).toHaveAttribute("data-state", "streaming");
   await expect(part(page, "search", "input").getByText("Partial")).toBeVisible();
-  await expect(part(page, "search", "input").locator("code")).toHaveText('{  "query": "ste"}');
+  await expect(part(page, "search", "input").locator("code")).toHaveText('{ "query": "ste" }');
   await setCall(page, "search", { input: { state: "ready", value: { query: "steps" } } });
   await expect(part(page, "search", "input").getByText("Partial")).toBeHidden();
   await expect(part(page, "search", "output")).toBeHidden();
@@ -102,7 +102,7 @@ test("copy writes the input and output as shown", async ({ page, context, browse
   await allowClipboard(context, browserName);
   await open(page);
   await part(page, "read", "input-copy").click();
-  await expect.poll(() => readClipboard(page, browserName)).toBe('{\n  "path": "README.md"\n}');
+  await expect.poll(() => readClipboard(page, browserName)).toBe('{ "path": "README.md" }');
   await setCall(page, "read", { output: { state: "preliminary", value: false } });
   await part(page, "read", "output-copy").click();
   await expect.poll(() => readClipboard(page, browserName)).toBe("false");
@@ -115,6 +115,7 @@ test("the header keeps its height from running through approval to complete", as
   const before = await height();
   await setCall(page, "run", { approval: { approvalId: "a2", generation: 1, state: "requested" } });
   await expect(outcome(page, "run")).toHaveText("Waiting for approval");
+  await expect(outcome(page, "run").locator('[data-slot="kind-confirmation-outcome-icon"]')).toBeHidden();
   expect(await height()).toBe(before);
   await setCall(page, "run", {
     approval: { approvalId: "a2", generation: 1, state: "responded", decision: { approved: true } },
@@ -260,7 +261,7 @@ test("kind-tool fills in input and output parts written empty", async ({ page },
     });
   });
   await expect(trigger(page, "written")).toHaveText("Search");
-  await expect(part(page, "written", "input").locator("code")).toHaveText('{  "query": "steps"}');
+  await expect(part(page, "written", "input").locator("code")).toHaveText('{ "query": "steps" }');
   await expect(part(page, "written", "output").locator("code")).toHaveText("0");
   await expect(part(page, "written", "output").locator('[data-slot="kind-code-block-header"]')).toHaveCount(
     0,
