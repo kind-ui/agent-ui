@@ -12,8 +12,8 @@ import {
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { actionSource } from "../action-source.js";
 import type { MotionMode } from "../motion/index.js";
-import { nearestTabStop } from "../tab-stop.js";
 import { createPendingAction } from "../pending.js";
+import { nearestTabStop } from "../tab-stop.js";
 
 /** Where the app's connection to its server stands. */
 export type ConnectionState = "online" | "connecting" | "reconnecting" | "offline";
