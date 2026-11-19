@@ -651,6 +651,18 @@ export {
 
 // wave-6-task-5: Launcher
 
+export {
+  LAUNCHER_INITIAL_FOCUS,
+  type LauncherApi,
+  type LauncherOpenChangeReason,
+  type LauncherOptions,
+  type LauncherPresentation,
+  type LauncherPrimitive,
+  type LauncherState,
+  launcherPrimitive,
+  launcherTriggerName,
+} from "./launcher/index.js";
+
 // wave-6-task-6: Day Separator
 
 // wave-6-task-7: Connection Status

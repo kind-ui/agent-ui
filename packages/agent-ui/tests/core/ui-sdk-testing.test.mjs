@@ -244,6 +244,8 @@ const cases = {
 
   // wave-6-task-5: Launcher
 
+  launcher: { options: { label: "Assistant", unread: 2, shortcut: "mod+i" } },
+
   // wave-6-task-6: Day Separator
 
   // wave-6-task-7: Connection Status

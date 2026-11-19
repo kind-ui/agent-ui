@@ -77,6 +77,8 @@ import {
 
 // wave-6-task-5: Launcher
 
+import { Launcher } from "./components/ui/launcher.js";
+
 // wave-6-task-6: Day Separator
 
 // wave-6-task-7: Connection Status
@@ -360,6 +362,12 @@ const items = {
   ),
 
   // wave-6-task-5: Launcher
+
+  launcher: (
+    <Launcher>
+      <p>How can I help?</p>
+    </Launcher>
+  ),
 
   // wave-6-task-6: Day Separator
 

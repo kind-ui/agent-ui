@@ -1,0 +1,90 @@
+---
+title: Launcher
+description: Open a chat from a floating button in the corner of the page, without leaving what's on it.
+---
+
+import LauncherExample from "../../../examples/launcher/basic";
+
+Use a launcher to offer an assistant on every page of an app. It's a round button in the page's bottom end corner, and pressing it opens your chat in a panel above it while the page stays usable. Close it and open it again later: the draft and the scroll position are where you left them.
+
+<Example caption="Press the button to open the chat, which puts focus in its composer. Press Escape or Close to close it, and the button again to reopen it with your draft kept.">
+  <LauncherExample />
+
+  <include cwd lang="tsx">./examples/launcher/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/launcher
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/launcher-web
+```
+
+## Composition
+
+```text
+Launcher
+├── LauncherTrigger
+│   └── LauncherBadge
+├── LauncherBackdrop
+└── LauncherContent
+    ├── LauncherTitle
+    ├── LauncherClose
+    └── children
+```
+
+`Launcher` renders these parts and puts its `children`, your chat, in the panel. `LauncherTrigger` is the floating button, a chat glyph that turns into a cross while the panel is open, and `LauncherBadge` shows the unread count on it. `LauncherBackdrop` dims the page behind a modal panel. `LauncherContent` is the panel: a header with `LauncherTitle` and `LauncherClose`, then the chat. Use `LauncherRoot` to arrange the parts yourself.
+
+## Usage
+
+### The Chat
+
+Pass the chat as `children`, usually a Conversation and a Composer. The conversation fills the panel and the composer keeps its height at the end. The panel stays mounted while it's closed, so a half-written draft, the conversation's scroll and anything streaming in survive closing it.
+
+```tsx
+<Launcher label="Support">
+  <Conversation aria-label="Conversation" messageCount={messages.length}>…</Conversation>
+  <Composer aria-label="Message" onSubmit={send}>…</Composer>
+</Launcher>
+```
+
+### The Button
+
+The button sits `--kind-launcher-inset` (1.5rem) from the page's bottom end corner, clear of a phone's safe areas. `label` names the panel and its title, "Assistant" by default, and the button reads "Open Assistant" or "Close Assistant".
+
+Pass `unread` to show a badge with the count, "99+" past 99. Screen readers don't read the badge; the button's name ends in ", 2 unread" instead.
+
+### Opening
+
+Press the button, or focus it and press Enter or Space, to open the panel, and press it again, Close or Escape to close it. As it opens, focus moves to the first composer's editor inside, else to the panel; pass `initialFocus` to `LauncherContent` to choose another place. Closing returns focus to the button.
+
+Pass `shortcut`, like `"mod+i"`, to open and close it from anywhere on the page; `mod` is Command on macOS and Ctrl elsewhere. There's none by default. The button's `aria-keyshortcuts` names it.
+
+Pass `open` and `onOpenChange` to control the panel, or `defaultOpen` to start with it open. `onOpenChange` gets what caused the change, like `trigger-press`, `escape-key` or `shortcut`.
+
+### Modal and Sheet
+
+By default the panel is a popover above the button, and the page around it stays usable. Pass `modal` to open it as a dialog in the middle of the screen instead, with a backdrop, which makes the rest of the page inert until it closes. `modal` is read when the launcher mounts.
+
+With `presentation="auto"`, the default, the panel fills the screen as a sheet on small touch screens. Pass `"popover"`, `"dialog"` or `"sheet"` to choose one. Set `--kind-launcher-width` and `--kind-launcher-height` to size the panel; it never grows past the screen.
+
+### Motion
+
+At full motion the panel rises from the button and the glyph turns into the cross. Under `prefers-reduced-motion`, or with `motion="reduced"`, both only fade, over 120 ms, and with `motion="none"` nothing animates.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/launcher/launcher.ts" name="LauncherOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the launcher by its `label` and reads whether it's open. `open` is offered while the panel is closed and `close` while it's open; both report `details.source` as `"agent"` to `onOpenChange`. Like any component with a button, it also has UI SDK's generic `press`. The chat inside is its own components, which the agent sees on their own.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/launcher/launcher.ts" name="LauncherAgentActions" type='Pick<LauncherApi, "open" | "close">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-launcher>`, props are kebab-case attributes and `open` is a property too; `onOpenChange` is the `openchange` event. Write the chat inside a `<kind-launcher-content>`, and the element adds the button and the panel's header around it.
+</Caption>

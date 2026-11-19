@@ -1,0 +1,324 @@
+/* Launcher (spec §7, D9): a round button fixed in the page's bottom end corner that opens a chat panel above it, a
+   centered dialog with `modal`, or a full-screen sheet on small touch screens. Keyed on `data-launcher-part`, so both
+   render layers draw the same. The panel stays mounted while closed, so nothing inside it lays out again on open. */
+@layer components {
+  [data-launcher-part="root"],
+  [data-launcher-part="content"] {
+    /* Lucide "message-circle" and "x", see THIRD_PARTY_NOTICES.md. */
+    --kind-launcher-icon-open: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.9 20A9 9 0 1 0 4 16.1L2 22Z'/%3E%3C/svg%3E");
+    --kind-launcher-icon-close: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E");
+    color: var(--kind-color-fg);
+  }
+
+  [data-launcher-part="root"] {
+    position: fixed;
+    inset-block-end: calc(var(--kind-launcher-inset, 1.5rem) + env(safe-area-inset-bottom, 0px));
+    inset-inline-end: calc(var(--kind-launcher-inset, 1.5rem) + env(safe-area-inset-right, 0px));
+    z-index: 50;
+  }
+
+  [data-launcher-part="trigger"] {
+    position: relative;
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    inline-size: var(--kind-launcher-size, 3.5rem);
+    block-size: var(--kind-launcher-size, 3.5rem);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background-color: var(--kind-color-accent);
+    color: var(--kind-color-on-accent);
+    font: inherit;
+    cursor: pointer;
+    box-shadow:
+      0 1px 2px color-mix(in oklab, var(--kind-color-shadow) 20%, transparent),
+      0 8px 24px -6px color-mix(in oklab, var(--kind-color-shadow) 35%, transparent);
+    transition:
+      scale var(--kind-duration-fast) var(--kind-ease-out),
+      background-color var(--kind-duration-fast) var(--kind-ease-out);
+
+    &:hover {
+      background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-on-accent));
+    }
+    &:active {
+      scale: 0.96;
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 3px;
+    }
+  }
+
+  /* Both glyphs share one box: the chat glyph turns away as the cross turns in. */
+  [data-launcher-part="trigger"] [data-launcher-icon] {
+    display: grid;
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+
+    &::before,
+    &::after {
+      content: "";
+      grid-area: 1 / 1;
+      background-color: currentColor;
+      mask: var(--kind-launcher-icon-open) center / contain no-repeat;
+      transition:
+        opacity var(--kind-duration-fast) var(--kind-ease-out),
+        rotate var(--kind-duration-base) var(--kind-ease),
+        scale var(--kind-duration-base) var(--kind-ease);
+    }
+    &::after {
+      mask-image: var(--kind-launcher-icon-close);
+      opacity: 0;
+      rotate: -90deg;
+      scale: 0.6;
+    }
+  }
+
+  [data-launcher-part="trigger"]:where([data-open]) [data-launcher-icon] {
+    &::before {
+      opacity: 0;
+      rotate: 90deg;
+      scale: 0.6;
+    }
+    &::after {
+      opacity: 1;
+      rotate: 0deg;
+      scale: 1;
+    }
+  }
+
+  [data-launcher-part="badge"] {
+    position: absolute;
+    inset-block-start: -0.125rem;
+    inset-inline-end: -0.125rem;
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    min-inline-size: 1.25rem;
+    block-size: 1.25rem;
+    padding-inline: 0.3125rem;
+    border: 2px solid var(--kind-color-surface);
+    border-radius: 999px;
+    background-color: var(--kind-color-danger);
+    color: var(--kind-color-on-status);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  [data-launcher-part="content"] {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    inline-size: var(--kind-launcher-width, 24rem);
+    max-inline-size: calc(100vw - 2 * var(--kind-launcher-inset, 1.5rem));
+    block-size: var(--kind-launcher-height, 40rem);
+    max-block-size: min(var(--available-height, 100vh), calc(100vh - 2 * var(--kind-launcher-inset, 1.5rem)));
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--kind-color-border);
+    border-radius: calc(var(--kind-radius) * 1.5);
+    background-color: var(--kind-color-surface);
+    color: var(--kind-color-fg);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    box-shadow: 0 16px 48px -12px color-mix(in oklab, var(--kind-color-shadow) 35%, transparent);
+    transform-origin: var(--transform-origin, bottom right);
+
+    /* A dialog sits in the middle of the screen; UI SDK places a popover beside the button. */
+    &:where([data-modal]:not([data-presentation="sheet"])) {
+      position: fixed;
+      inset: 0;
+      margin: auto;
+      max-block-size: calc(100vh - 2 * var(--kind-launcher-inset, 1.5rem));
+    }
+    /* The sheet's viewport is taller than the screen while the browser's bars show, so the sheet takes the screen. */
+    &:where([data-presentation="sheet"]) {
+      inline-size: 100%;
+      max-inline-size: none;
+      block-size: 100dvh;
+      max-block-size: none;
+      border: 0;
+      border-radius: 0;
+      padding-block-end: env(safe-area-inset-bottom, 0px);
+    }
+  }
+
+  /* The chat fills what the header leaves; a composer keeps its height at the end. */
+  [data-launcher-part="content"] > :where(:not([data-launcher-header])) {
+    flex: none;
+    min-block-size: 0;
+  }
+  [data-launcher-part="content"] > :where([data-slot="kind-conversation"]) {
+    flex: 1 1 auto;
+  }
+  [data-launcher-part="content"] > :where([data-slot="kind-composer"]) {
+    margin: 0 0.75rem 0.75rem;
+  }
+
+  [data-launcher-header] {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.5rem;
+    box-sizing: border-box;
+    block-size: 3rem;
+    padding-inline: 1rem 0.5rem;
+    border-block-end: 1px solid var(--kind-color-border);
+  }
+
+  [data-launcher-part="title"] {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    margin: 0;
+    overflow: hidden;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  [data-launcher-part="close"] {
+    display: grid;
+    flex: none;
+    place-items: center;
+    inline-size: 2rem;
+    block-size: 2rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--kind-radius) / 2);
+    background: transparent;
+    color: var(--kind-color-muted);
+    cursor: pointer;
+    transition:
+      color var(--kind-duration-fast) var(--kind-ease-out),
+      background-color var(--kind-duration-fast) var(--kind-ease-out);
+
+    &::before {
+      content: "";
+      inline-size: 1rem;
+      block-size: 1rem;
+      background-color: currentColor;
+      mask: var(--kind-launcher-icon-close) center / contain no-repeat;
+    }
+    &:hover {
+      background-color: var(--kind-color-hover);
+      color: var(--kind-color-fg);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: -2px;
+    }
+  }
+
+  [data-slot="kind-launcher-backdrop"] {
+    position: fixed;
+    inset: 0;
+    background-color: color-mix(in oklab, var(--kind-color-shadow) 40%, transparent);
+  }
+
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    :is([data-launcher-icon]::before, [data-launcher-icon]::after, [data-launcher-part="close"]::before) {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+    [data-launcher-part="trigger"] {
+      forced-color-adjust: none;
+      border: 1px solid ButtonText;
+      background-color: ButtonFace;
+      color: ButtonText;
+    }
+    [data-launcher-part="badge"] {
+      forced-color-adjust: none;
+      border-color: ButtonFace;
+      background-color: Highlight;
+      color: HighlightText;
+    }
+  }
+
+  /* Motion: the panel rises from the button and the backdrop fades. Reduced motion only fades, in 120 ms; `none`
+     doesn't animate. A sheet is UI SDK's, which slides whatever the motion settings. */
+  [data-launcher-part="content"]:where(:not([data-presentation="sheet"])) {
+    transition:
+      opacity var(--kind-duration-fast) var(--kind-ease-out),
+      translate var(--kind-duration-base) var(--kind-ease),
+      scale var(--kind-duration-base) var(--kind-ease);
+
+    &:where([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+      translate: 0 8px;
+      scale: 0.96;
+    }
+    &:where([data-ending-style]) {
+      transition-duration: var(--kind-duration-fast);
+    }
+  }
+
+  [data-slot="kind-launcher-backdrop"] {
+    transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+
+    &:where([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-launcher-part="content"]:where([data-motion="auto"]) {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+      &:where([data-starting-style], [data-ending-style]) {
+        translate: none;
+        scale: none;
+      }
+    }
+    [data-launcher-part="trigger"]:where([data-motion="auto"]) {
+      &,
+      & [data-launcher-icon]::before,
+      & [data-launcher-icon]::after {
+        rotate: none;
+        scale: none;
+        transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+      }
+    }
+  }
+
+  [data-launcher-part="content"]:where([data-motion="reduced"]) {
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+    &:where([data-starting-style], [data-ending-style]) {
+      translate: none;
+      scale: none;
+    }
+  }
+
+  [data-launcher-part="trigger"]:where([data-motion="reduced"]) {
+    &,
+    & [data-launcher-icon]::before,
+    & [data-launcher-icon]::after {
+      rotate: none;
+      scale: none;
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+    }
+  }
+
+  [data-launcher-part="content"]:where([data-motion="none"]),
+  [data-launcher-part="trigger"]:where([data-motion="none"]),
+  :where([data-launcher-part="trigger"][data-motion="none"]) [data-launcher-icon]::before,
+  :where([data-launcher-part="trigger"][data-motion="none"]) [data-launcher-icon]::after,
+  :where([data-launcher-part="root"][data-motion="none"]) [data-slot="kind-launcher-backdrop"] {
+    transition: none;
+  }
+
+  /* Web keeps parts that aren't present in the page, with `hidden`; the popup content is UI SDK's to show and hide. */
+  [data-launcher-part]:where([hidden]):where(:not([data-launcher-part="content"])),
+  [data-slot="kind-launcher-backdrop"]:where([hidden]) {
+    display: none;
+  }
+}

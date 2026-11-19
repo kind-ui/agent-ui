@@ -43,6 +43,8 @@
 
 <!-- wave-6-task-5: Launcher -->
 
+- `packages/agent-ui/src/styles/launcher.css` (the launcher's button and Close): `message-circle` and `x`, unchanged; both derive from Feather.
+
 <!-- wave-6-task-6: Day Separator -->
 
 <!-- wave-6-task-7: Connection Status -->
