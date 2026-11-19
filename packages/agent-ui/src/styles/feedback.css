@@ -22,31 +22,9 @@
     gap: 2px;
   }
 
-  /* Quiet until pressed: muted and bare, then the thumb fills in the foreground color on a soft fill. */
-  :where([data-slot="kind-feedback"]) [data-slot="toggle"] {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    padding: 0;
-    border: 0;
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: transparent;
-    color: inherit;
-    transition:
-      background-color var(--kind-duration-fast) var(--kind-ease-out),
-      color var(--kind-duration-fast) var(--kind-ease-out);
-
-    &:hover,
-    &[data-pressed] {
-      background-color: var(--kind-color-hover);
-      color: var(--kind-color-fg);
-    }
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
-    }
+  /* Shared icon buttons, quiet until pressed: then the thumb fills in, in the foreground color. */
+  :where([data-slot="kind-feedback"]) [data-slot="toggle"][data-pressed] {
+    color: var(--kind-color-fg);
   }
 
   :where([data-slot="kind-feedback"]) [data-feedback-icon] {
@@ -70,35 +48,30 @@
     mask-image: var(--kind-feedback-thumb-pressed);
   }
 
-  /* "Add a comment" and the thanks share one place at the thumbs' height, so swapping them moves nothing above or
-     below; the row grows by the thanks' wider text. */
-  :is([data-slot="kind-feedback-comment"], [data-slot="kind-feedback-thanks"]) {
+  /* "Add a comment" (a shared button, in the row's muted type until hovered or open) and the thanks share one place
+     at the thumbs' height, so swapping them moves nothing above or below; the row grows by the thanks' wider text. */
+  [data-slot="kind-feedback-comment"] {
+    padding-inline: 8px;
+    color: inherit;
+    font-size: inherit;
+    line-height: inherit;
+
+    &:hover,
+    &[aria-expanded="true"] {
+      color: var(--kind-color-fg);
+    }
+  }
+
+  [data-slot="kind-feedback-thanks"] {
     display: inline-flex;
     align-items: center;
-    height: 1.75rem;
+    height: var(--kind-control-height);
     padding-inline: 8px;
-    border-radius: calc(var(--kind-radius) / 2);
-    font: inherit;
-    color: inherit;
+    border-radius: var(--kind-radius-md);
 
     &:focus-visible {
       outline: var(--kind-focus-ring);
       outline-offset: var(--kind-focus-offset);
-    }
-  }
-
-  [data-slot="kind-feedback-comment"] {
-    border: 0;
-    background-color: transparent;
-    font-weight: 500;
-    transition:
-      background-color var(--kind-duration-fast) var(--kind-ease-out),
-      color var(--kind-duration-fast) var(--kind-ease-out);
-
-    &:hover,
-    &[data-open] {
-      background-color: var(--kind-color-hover);
-      color: var(--kind-color-fg);
     }
   }
 
@@ -109,26 +82,27 @@
     width: 18rem;
     max-width: calc(100vw - 16px);
     padding: 12px;
-    border: 1px solid var(--kind-color-border);
-    border-radius: var(--kind-radius);
-    background-color: var(--kind-color-surface);
-    box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 20%, transparent);
-    color: var(--kind-color-fg);
     font-size: var(--kind-text-sm);
     line-height: 1.25rem;
     outline: none;
     transform-origin: var(--transform-origin);
   }
 
+  /* Names the box for assistive technology; on screen it would repeat the button that opened it. */
   [data-slot="kind-feedback-title"] {
-    display: block;
-    margin: 0;
-    font-size: var(--kind-text-sm);
-    font-weight: 600;
-    line-height: 1.25rem;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
+  /* The ring takes the field's border's place, rather than drawing a line around it. */
   [data-slot="kind-feedback-comment-text"] {
+    --kind-focus-offset: var(--kind-focus-offset-inset);
     display: block;
   }
 
@@ -157,39 +131,9 @@
     font-size: var(--kind-text-xs);
   }
 
+  /* The shared primary button: empty text dims it, a pending send keeps it solid beside its status. */
   [data-slot="kind-feedback-comment-send"] {
-    display: inline-flex;
-    align-items: center;
-    height: 1.75rem;
     margin-inline-start: auto;
-    padding-inline: 12px;
-    border: 0;
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: var(--kind-color-accent);
-    color: var(--kind-color-on-accent);
-    font: inherit;
-    font-weight: 500;
-    transition:
-      background-color var(--kind-duration-fast),
-      opacity var(--kind-duration-fast);
-
-    &:hover:not([aria-disabled="true"]) {
-      background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-fg));
-    }
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
-    }
-    &[aria-disabled="true"] {
-      cursor: default;
-    }
-    /* Empty text dims Send; a pending send keeps it solid beside its status. */
-    &[aria-disabled="true"]:not([data-pending]) {
-      opacity: 0.5;
-    }
-    &[data-pending] {
-      cursor: progress;
-    }
   }
 
   /* Motion: the box rises in. Reduced motion only fades, in 120 ms; `none` doesn't animate. */

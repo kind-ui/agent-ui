@@ -116,6 +116,7 @@ for (const motion of ["reduced", "none"] as const)
       "0.6",
     );
     expect(await scales(page)).toEqual(["1 0.35", "1 0.35", "1 0.35"]);
+    await expect(page.locator('[data-dictation-part="bar"]:visible')).toHaveCount(16);
   });
 
 test("prefers-reduced-motion holds the bars still too", async ({ page }) => {

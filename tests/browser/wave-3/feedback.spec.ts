@@ -65,6 +65,18 @@ test("a group named Feedback with two thumbs, neither pressed, and no comment bu
   expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
 });
 
+test("the comment box asks what went well after a thumbs up, what could be better after a thumbs down", async ({
+  page,
+}) => {
+  await open(page);
+  await openBox(page);
+  await expect(text(page)).toHaveAttribute("placeholder", "What went well…");
+  await page.keyboard.press("Escape");
+  await down(page).click();
+  await addComment(page).click();
+  await expect(text(page)).toHaveAttribute("placeholder", "What could be better…");
+});
+
 test("the thumbs are one Tab stop with arrow keys between them", async ({ page }) => {
   await open(page);
   await page.locator("#above").click();

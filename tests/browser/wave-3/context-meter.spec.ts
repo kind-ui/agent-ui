@@ -48,7 +48,7 @@ test("a press opens the details with each count and the cost, and Escape closes 
   await open(page);
   await trigger(page).click();
   await expect(details(page)).toBeVisible();
-  await expect(details(page)).toHaveAccessibleDescription(VALUE);
+  await expect(details(page)).toHaveAccessibleDescription("57,600 of 128,000 tokens");
   await expect(details(page).locator("dt")).toHaveText(["Input", "Output", "Reasoning", "Cached", "Cost"]);
   await expect(details(page).locator("dd")).toHaveText(["40,000", "12,000", "5,600", "20,000", "$0.42"]);
   await expect(trigger(page)).toHaveAttribute("aria-expanded", "true");

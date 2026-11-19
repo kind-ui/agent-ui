@@ -62,7 +62,7 @@ export default function ModelSelectorExample() {
   return (
     <Composer aria-label="Message" className="w-full max-w-xl" onSubmit={() => undefined}>
       <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
-      <div className="flex items-center gap-2" style={{ gridArea: "attach" }}>
+      <div className="flex min-w-0 flex-wrap items-center gap-2" style={{ gridArea: "attach" }}>
         <ModelSelector
           models={showAll ? allModels : models}
           value={model}

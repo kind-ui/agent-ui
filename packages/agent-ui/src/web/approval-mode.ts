@@ -52,19 +52,33 @@ const drawHeader = (group: Element, state: ApprovalModeContentState) => {
   place(group, header, group.firstElementChild);
   const title = header.querySelector(":scope > ui-menu-group-label");
   if (title && title.textContent !== state.label) title.textContent = state.label;
-  let learnMore = header.querySelector(":scope > [data-approval-mode-learn-more]");
+};
+
+/** Learn more, after the modes behind a separator, so opening the menu with a key lands on the modes. */
+const drawLearnMore = (content: Element, group: Element, state: ApprovalModeContentState) => {
+  const document = content.ownerDocument;
+  let separator = content.querySelector(":scope > ui-menu-separator[data-approval-mode-learn-more]");
+  let learnMore = content.querySelector(":scope > ui-menu-item[data-approval-mode-learn-more]");
   const link = state.learnMoreHref !== undefined;
   if (learnMore && (!state.learnMore || learnMore.hasAttribute("as-child") !== link)) {
     learnMore.remove();
     learnMore = null;
   }
-  if (!state.learnMore) return;
-  if (!learnMore) {
-    const attributes = { value: APPROVAL_MODE_LEARN_MORE, "data-approval-mode-learn-more": "" };
-    learnMore = element(document, "ui-menu-item", link ? { "as-child": "", ...attributes } : attributes);
-    learnMore.append(link ? element(document, "a", {}, "Learn more") : "Learn more");
-    header.append(learnMore);
+  if (!state.learnMore) {
+    separator?.remove();
+    return;
   }
+  separator ??= element(document, "ui-menu-separator", { "data-approval-mode-learn-more": "" });
+  if (!learnMore) {
+    // With `as-child` the link is the item, so the inset goes on it.
+    const attributes = { value: APPROVAL_MODE_LEARN_MORE, "data-approval-mode-learn-more": "" };
+    learnMore = link
+      ? element(document, "ui-menu-item", { "as-child": "", ...attributes })
+      : element(document, "ui-menu-item", { ...attributes, "data-menu-inset": "" }, "Learn more");
+    if (link) learnMore.append(element(document, "a", { "data-menu-inset": "" }, "Learn more"));
+  }
+  place(content, separator, group.nextElementSibling);
+  place(content, learnMore, separator.nextElementSibling);
   const anchor = learnMore.querySelector(":scope > a");
   if (anchor && state.learnMoreHref && anchor.getAttribute("href") !== state.learnMoreHref)
     anchor.setAttribute("href", state.learnMoreHref);
@@ -87,8 +101,7 @@ const drawRow = (document: Document, el: Element | undefined, row: ApprovalModeR
   if (indicator) place(item, indicator, item.firstElementChild);
   if (row.danger) {
     if (!risk) {
-      risk = element(document, "span", { "data-approval-mode-risk": "" });
-      risk.append(warningMark(document), "Risky");
+      risk = element(document, "span", { "data-approval-mode-risk": "" }, "Risky");
     }
     place(item, risk, null);
   } else risk?.remove();
@@ -119,13 +132,14 @@ const drawContent = (content: Element, state: ApprovalModeContentState) => {
   }
   for (const item of existing.values()) item.remove();
   if (group.value !== state.value) group.value = state.value;
+  drawLearnMore(content, group, state);
 };
 
 /**
  * `<kind-approval-mode>` fills in its trigger and menu when it has no children. Set `modes` as a property and `value`
  * as a property or attribute; a person's choice fires `modechange`. With `can-learn-more`, Learn more fires
  * `learnmore`. Markup you write puts the `ui-menu` inside a `kind-internal-menu`, which styles it, and an empty
- * `ui-menu-content` in `kind-approval-mode-content` gets the header and the modes.
+ * `ui-menu-content` in `kind-approval-mode-content` gets the header, the modes and Learn more.
  */
 export function defineApprovalMode(): void {
   if (customElements.get("kind-approval-mode")) return;
@@ -168,6 +182,7 @@ export function defineApprovalMode(): void {
           const button = trigger?.querySelector("button");
           if (button) {
             if (button.ariaLabel !== props["aria-label"]) button.ariaLabel = props["aria-label"];
+            button.toggleAttribute("data-kind-trigger", props["data-kind-trigger"] === "");
             if (!button.firstChild) owned.add(button);
             // By content, since every new `modes` array makes new rows.
             const { mode } = props;

@@ -13,9 +13,9 @@ import "@ui-sdk/web/toggle";
 import { defineInternalTextarea } from "./internal/textarea.js";
 
 const THUMB = (value: "up" | "down", label: string) =>
-  `<ui-toggle value="${value}"><button aria-label="${label}"><ui-toggle-icon data-feedback-icon="${value}"></ui-toggle-icon></button></ui-toggle>`;
+  `<ui-toggle value="${value}"><button aria-label="${label}" data-kind-icon-button><ui-toggle-icon data-feedback-icon="${value}"></ui-toggle-icon></button></ui-toggle>`;
 
-const DEFAULT_PARTS = `<kind-feedback-thumbs><ui-toggle-group data-agent-hidden>${THUMB("up", "Good response")}${THUMB("down", "Bad response")}</ui-toggle-group></kind-feedback-thumbs><kind-feedback-comment><button>Add a comment</button></kind-feedback-comment><kind-feedback-thanks>Thanks for your feedback</kind-feedback-thanks><kind-feedback-content hidden><kind-feedback-title><h2>Add a comment</h2></kind-feedback-title><kind-feedback-comment-text><kind-internal-textarea><ui-textarea><textarea aria-label="Comment" placeholder="What could be better?" rows="3"></textarea></ui-textarea></kind-internal-textarea></kind-feedback-comment-text><div data-feedback-actions><kind-feedback-comment-status><kind-feedback-comment-status-icon></kind-feedback-comment-status-icon>Sending</kind-feedback-comment-status><kind-feedback-comment-error>Comment not sent. Try again.</kind-feedback-comment-error><kind-feedback-comment-send><button>Send</button></kind-feedback-comment-send></div></kind-feedback-content>`;
+const DEFAULT_PARTS = `<kind-feedback-thumbs><ui-toggle-group data-agent-hidden>${THUMB("up", "Good response")}${THUMB("down", "Bad response")}</ui-toggle-group></kind-feedback-thumbs><kind-feedback-comment><button>Add a comment</button></kind-feedback-comment><kind-feedback-thanks>Thanks for your feedback</kind-feedback-thanks><kind-feedback-content hidden><kind-feedback-title><h2>Add a comment</h2></kind-feedback-title><kind-feedback-comment-text><kind-internal-textarea><ui-textarea><textarea rows="3"></textarea></ui-textarea></kind-internal-textarea></kind-feedback-comment-text><div data-feedback-actions><kind-feedback-comment-status><kind-feedback-comment-status-icon></kind-feedback-comment-status-icon>Sending</kind-feedback-comment-status><kind-feedback-comment-error>Comment not sent. Try again.</kind-feedback-comment-error><kind-feedback-comment-send><button>Send</button></kind-feedback-comment-send></div></kind-feedback-content>`;
 
 const write = <Target extends object, Key extends keyof Target>(
   target: Target | null,
@@ -69,11 +69,10 @@ export function defineFeedback(): void {
             "controller",
             text.controller,
           );
-          write(
-            el.querySelector<HTMLTextAreaElement>("kind-feedback-comment-text textarea"),
-            "readOnly",
-            text.readOnly,
-          );
+          const textarea = el.querySelector<HTMLTextAreaElement>("kind-feedback-comment-text textarea");
+          write(textarea, "readOnly", text.readOnly);
+          write(textarea, "placeholder", text.placeholder);
+          write(textarea, "ariaLabel", text["aria-label"]);
         };
         draw();
         return instance.subscribe(draw);

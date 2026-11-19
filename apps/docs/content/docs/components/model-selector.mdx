@@ -42,7 +42,7 @@ ModelSelector
 
 ### Models
 
-Pass `models`, each with an `id` and a `name`, and optionally a `group` (its provider), a `description`, an `icon` and `disabled`. The list shows the groups in the order they first appear, and each model with its description under its name. A disabled model stays in the list, dimmed, and can't be chosen by pointer, keyboard or `setValue`.
+Pass `models`, each with an `id` and a `name`, and optionally a `group` (its provider), a `description`, an `icon` and `disabled`. The list shows the groups in the order they first appear, and each model with its description under its name. A disabled model stays in the list, its name dimmed and its description readable, and can't be chosen by pointer, keyboard or `setValue`.
 
 ```tsx
 <ModelSelector
@@ -57,7 +57,7 @@ Pass `models`, each with an `id` and a `name`, and optionally a `group` (its pro
 
 Pass `value` and `onValueChange` to control the chosen model, or `defaultValue` to start with one. `onValueChange` gets the model's `id`, with the reason `item-press` when a person chose it, or `imperative` from `setValue`. Choosing a model closes the list, unless you cancel the change with `details.cancel()`.
 
-The button keeps its width whatever the model's name, so choosing a longer one moves nothing beside it; a long name is cut short with an ellipsis. Set `--kind-model-selector-width` to change the width.
+The button is as wide as the model's name, up to `--kind-model-selector-width` (14rem by default), past which the name is cut short with an ellipsis. In a composer under 28rem wide, a model with an icon shows only its icon.
 
 ### Icons
 
@@ -96,7 +96,7 @@ Pass `pages="groups"` to list each provider as a row, shown with the first icon 
 
 ### Searching
 
-Typing in the search field filters the list as you type. A model matches when its name, provider or description holds the letters in order, so "son55" finds Claude Sonnet 5.5 and "google" finds every Google model. Rows keep the order you gave them, and the best match is highlighted, so Enter chooses it. The letters that matched the name are marked, and the description's only when the name didn't match. When nothing matches, the list shows `emptyText` ("No models found"). Set `placeholder` to change the field's "Search models".
+Typing in the search field filters the list as you type. A model matches when its name, provider or description holds the letters in order, so "son55" finds Claude Sonnet 5.5 and "google" finds every Google model. Rows keep the order you gave them, and the best match is highlighted, so Enter chooses it. The letters that matched the name are marked, and the description's only when the name didn't match. When nothing matches, the list shows `emptyText` ("No models found"). Set `placeholder` to change the field's "Search models…".
 
 ### Keyboard
 

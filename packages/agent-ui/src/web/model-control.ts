@@ -107,6 +107,7 @@ export function defineModelControl(): void {
           trigger?.toggleAttribute("disabled", props.disabled);
           const button = trigger?.querySelector("button");
           if (button && button.ariaLabel !== props["aria-label"]) button.ariaLabel = props["aria-label"];
+          button?.toggleAttribute("data-kind-trigger", props["data-kind-trigger"] === "");
           // A button written empty fills itself in, as React's bare `ModelControlTrigger` does.
           if (button && !button.firstChild) owned.add(button);
           if (button && owned.has(button)) drawTrigger(button, props);

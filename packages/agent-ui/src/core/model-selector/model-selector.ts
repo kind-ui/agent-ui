@@ -34,7 +34,7 @@ export type ModelSelectorOptions = Omit<PickerBaseOptions, "label" | "placeholde
   label?: string;
   /**
    * Shown in the empty search field.
-   * @default "Search models"
+   * @default "Search models…"
    */
   placeholder?: string;
   /**
@@ -109,8 +109,9 @@ const toItems = (models: ModelOption<unknown>[], pages: "flat" | "groups") =>
 const base = pickerBase<ModelSelectorOptions>({
   kind: "model-selector",
   label: "Model",
-  placeholder: "Search models",
+  placeholder: "Search models…",
   emptyText: "No models found",
+  sharedTrigger: true,
   toItems: (options) => toItems(options.models ?? noModels, options.pages ?? "flat"),
 });
 

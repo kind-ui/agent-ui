@@ -49,7 +49,7 @@ test("a group and a button named Model and the chosen model", async ({ page }) =
   await expect(page.getByRole("group", { name: "Model, GPT-5" })).toBeVisible();
   await expect(trigger(page)).toHaveAttribute("aria-haspopup", "dialog");
   await openList(page);
-  await expect(search(page)).toHaveAttribute("placeholder", "Search models");
+  await expect(search(page)).toHaveAttribute("placeholder", "Search models…");
   await expect(option(page, /^GPT-5(?! mini)/)).toHaveAttribute("aria-checked", "true");
 });
 
@@ -145,19 +145,37 @@ test("a web host moving a model into a new group or switching pages redraws the 
   await expect(options(page)).toHaveText([/^Azure/, /^OpenAI/, /^Anthropic/, /^Google/, "More models"]);
 });
 
-test("the trigger keeps its width when a longer name is chosen", async ({ page }) => {
+test("the trigger grows with the chosen name up to its widest, then cuts the name short", async ({
+  page,
+}) => {
   await load(page);
-  const boxes = () =>
-    page.evaluate(() =>
-      ["model", "effort", "beside"].map((id) =>
-        document.getElementById(id)?.getBoundingClientRect().toJSON(),
-      ),
-    );
-  const before = await boxes();
+  const width = () => trigger(page).evaluate((el) => el.getBoundingClientRect().width);
+  expect(await width()).toBeLessThan(224);
   await openList(page);
   await option(page, /Gemini/).click();
   await expect(trigger(page)).toHaveAccessibleName("Model, Gemini 2.5 Pro with a very long name");
-  expect(await boxes()).toEqual(before);
+  expect(await width()).toBe(224);
+  const text = trigger(page).locator("[data-picker-text]");
+  expect(await text.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
+});
+
+test.describe("in a composer at 390px", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+  test("the trigger shows only its icon, keeps its name, and nothing overflows", async ({ page }) => {
+    await page.goto("/?c=model-selector&case=composer");
+    await expect(trigger(page)).toHaveAccessibleName("Model, Claude Sonnet 5.5");
+    await expect(trigger(page).locator("[data-picker-text]")).toBeHidden();
+    expect(await trigger(page).evaluate((el) => el.getBoundingClientRect().width)).toBe(32);
+    const overflow = await page.evaluate(() => {
+      const dropzone = document.querySelector('[data-slot="file-input-dropzone"]') as HTMLElement;
+      return [
+        document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        dropzone.scrollWidth - dropzone.clientWidth,
+      ];
+    });
+    expect(overflow).toEqual([0, 0]);
+  });
 });
 
 test("ArrowUp from the first row reaches More models, and Enter runs it", async ({ page }) => {

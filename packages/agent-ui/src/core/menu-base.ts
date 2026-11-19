@@ -80,7 +80,7 @@ export type MenuPartState = {
 };
 
 /** What the trigger slot hands UI SDK's `MenuTrigger`: pass every key to it. */
-export type MenuTriggerState = { "aria-label": string; disabled: boolean };
+export type MenuTriggerState = { "aria-label": string; disabled: boolean; "data-kind-trigger"?: "" };
 
 /** What ran a plain item: the click or key press, and who, and `keepOpen`, which refuses the close that follows. */
 export type MenuRun = { event?: Event | undefined; source: ChangeSource; keepOpen: () => void };
@@ -142,6 +142,8 @@ export type MenuBaseConfig<Options extends MenuBaseOptions> = {
   toData: (options: Options) => MenuData;
   /** Whether the menu may open now, beside `disabled`. */
   canOpen?: (options: Options) => boolean;
+  /** Whether the trigger is the shared `data-kind-trigger`, rather than a button the host's markup styles. */
+  sharedTrigger?: boolean;
   /** A plain item ran. A returned promise keeps the item pending and the menu open until it settles. */
   onAction?: (value: string, details: MenuRun, context: Context<Options>) => unknown;
   /** A checkbox item, by its value, wants to toggle. */
@@ -268,6 +270,7 @@ export const menuBase = <Options extends MenuBaseOptions>(config: MenuBaseConfig
         (label: string, disabled: boolean): MenuTriggerState => ({
           "aria-label": label,
           disabled,
+          ...(config.sharedTrigger && { "data-kind-trigger": "" as const }),
         }),
       );
 

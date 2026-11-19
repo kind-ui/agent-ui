@@ -66,10 +66,10 @@ const drawLabels = (document: Document, value: Element, options: SettingsMenuCho
 };
 
 /**
- * The submenu's radio group, holding a labelled group per option `group`, then a separator and the actions. Radio
- * items and actions are reused by `value`, so a focused one keeps focus.
+ * A choice's radio group, holding a labelled group per option `group`, then the actions, behind a separator unless
+ * the row is `inline`. Radio items and actions are reused by `value`, so a focused one keeps focus.
  */
-const drawSubmenu = (document: Document, content: Element, row: SettingsMenuChoiceRow) => {
+const drawChoices = (document: Document, content: Element, row: SettingsMenuChoiceRow) => {
   const items = new Map<string, Element>();
   for (const item of content.querySelectorAll("ui-menu-radio-item, :scope > ui-menu-item"))
     items.set(item.getAttribute("value") ?? "", item);
@@ -119,8 +119,8 @@ const drawSubmenu = (document: Document, content: Element, row: SettingsMenuChoi
   }
   if (radios.value !== (row.value ?? null)) radios.value = row.value ?? null;
   let after: Element | null = radios;
-  let separator = content.querySelector(":scope > ui-menu-separator");
-  if (row.actions.length) {
+  let separator = content.querySelector(":scope > ui-menu-separator:not([data-section-end])");
+  if (row.actions.length && !row.inline) {
     separator ??= element(document, "ui-menu-separator");
     after = next(content, separator, after);
   } else separator?.remove();
@@ -129,6 +129,7 @@ const drawSubmenu = (document: Document, content: Element, row: SettingsMenuChoi
     items.delete(action.value);
     item ??= element(document, "ui-menu-item", { value: action.value });
     item.setAttribute("label", action.label);
+    item.toggleAttribute("data-menu-inset", row.inline);
     drawMenuItemContent(item, action);
     after = next(content, item, after);
   }
@@ -158,11 +159,32 @@ const drawChoice = (
   if (drawnRows.get(sub) !== row) {
     drawnRows.set(sub, row);
     drawLabels(document, value, row.options);
-    drawSubmenu(document, content, row);
+    drawChoices(document, content, row);
   }
   for (const [index, label] of [...value.children].entries())
     label.toggleAttribute("data-current", row.options[index]?.value === row.value);
   return sub;
+};
+
+/** An inline choice: its options in the menu itself, and a separator after them unless it's the last row. */
+const drawSection = (
+  document: Document,
+  el: Element | undefined,
+  row: SettingsMenuChoiceRow,
+  last: boolean,
+) => {
+  const section = el ?? element(document, "div", { "data-row": row.id, "data-settings-menu-section": "" });
+  if (drawnRows.get(section) !== row) {
+    drawnRows.set(section, row);
+    drawChoices(document, section, row);
+  }
+  let end = section.querySelector(":scope > ui-menu-separator[data-section-end]");
+  if (last) end?.remove();
+  else if (!end || end !== section.lastElementChild) {
+    end ??= element(document, "ui-menu-separator", { "data-section-end": "" });
+    section.append(end);
+  }
+  return section;
 };
 
 /**
@@ -176,15 +198,20 @@ export const drawSettingsRows = (parent: Element, rows: SettingsMenuRow[]) => {
   for (const row of parent.querySelectorAll(":scope > [data-row]"))
     existing.set(row.getAttribute("data-row") ?? "", row);
   let previous: Element | null = null;
-  for (const row of rows) {
+  for (const [index, row] of rows.entries()) {
     let el = existing.get(row.id);
     existing.delete(row.id);
-    const tag = row.type === "toggle" ? "ui-menu-checkbox-item" : "ui-menu-sub";
+    const tag = row.type === "toggle" ? "ui-menu-checkbox-item" : row.inline ? "div" : "ui-menu-sub";
     if (el && el.localName !== tag) {
       el.remove();
       el = undefined;
     }
-    el = row.type === "toggle" ? drawToggle(document, el, row) : drawChoice(document, el, row);
+    el =
+      row.type === "toggle"
+        ? drawToggle(document, el, row)
+        : row.inline
+          ? drawSection(document, el, row, index === rows.length - 1)
+          : drawChoice(document, el, row);
     place(parent, el, previous ? previous.nextElementSibling : parent.firstElementChild);
     previous = el;
   }
@@ -231,6 +258,7 @@ export function defineSettingsMenu(): void {
           trigger?.toggleAttribute("disabled", props.disabled);
           const button = trigger?.querySelector("button");
           if (button && button.ariaLabel !== props["aria-label"]) button.ariaLabel = props["aria-label"];
+          button?.toggleAttribute("data-kind-trigger", props["data-kind-trigger"] === "");
           const content = el.querySelector("kind-settings-menu-content > ui-menu-content");
           const rows = api.contentState(state);
           // A content written empty fills itself in, as React's bare `SettingsMenuContent` does.

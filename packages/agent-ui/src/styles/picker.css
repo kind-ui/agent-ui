@@ -16,28 +16,50 @@
     --kind-picker-icon-chevron-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     --kind-picker-icon-chevron-right: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E");
     display: inline-flex;
+    min-width: min(8rem, 100%);
+    max-width: 100%;
     font-size: var(--kind-text-md);
     color: var(--kind-color-fg);
   }
 
-  /* One width whatever the chosen item's label, so choosing another moves nothing beside it. */
+  /* As wide as its label, at least 8rem (the root's) and at most `--kind-picker-trigger-width`, past which the label is
+     cut short with the chevron right after it. */
   [data-picker-part="trigger"] {
+    flex: 1 1 auto;
+    justify-content: flex-start;
+    min-width: 0;
+    max-width: min(var(--kind-picker-trigger-width, 14rem), 100%);
+    text-align: start;
+
+    & [data-picker-text] {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    & [data-picker-chevron] {
+      flex-shrink: 0;
+      width: 14px;
+      height: 14px;
+      background-color: var(--kind-color-muted);
+      mask: var(--kind-picker-icon-chevron-down) center / contain no-repeat;
+    }
+  }
+
+  /* A trigger that isn't the shared one (Thread Search's) reads as a field. */
+  [data-picker-part="trigger"]:not([data-kind-trigger]) {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    width: var(--kind-picker-trigger-width, 14rem);
-    height: 2rem;
+    height: var(--kind-trigger-height);
     padding-inline: 8px 6px;
     border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) / 2);
+    border-radius: var(--kind-radius-md);
     background-color: var(--kind-color-surface);
     color: var(--kind-color-fg);
     font: inherit;
-    text-align: start;
     cursor: default;
-    transition:
-      border-color var(--kind-duration-fast) var(--kind-ease-out),
-      background-color var(--kind-duration-fast) var(--kind-ease-out);
+    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
 
     &:hover {
       background-color: var(--kind-color-hover);
@@ -52,17 +74,6 @@
     }
     & [data-picker-text] {
       flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    & [data-picker-chevron] {
-      flex-shrink: 0;
-      width: 14px;
-      height: 14px;
-      background-color: var(--kind-color-muted);
-      mask: var(--kind-picker-icon-chevron-down) center / contain no-repeat;
     }
   }
 
@@ -87,11 +98,6 @@
     max-width: calc(100vw - 16px);
     padding: 0;
     overflow: hidden;
-    border: 1px solid var(--kind-color-border);
-    border-radius: var(--kind-radius);
-    background-color: var(--kind-color-surface);
-    color: var(--kind-color-fg);
-    box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 25%, transparent);
     /* The list takes what room the window leaves below the search field. `--available-height` isn't inherited, so
        it's read here, on the popup. */
     --kind-command-list-max-height: min(
@@ -102,7 +108,7 @@
     &[data-presentation="sheet"] {
       width: 100%;
       max-width: none;
-      border-radius: var(--kind-radius) var(--kind-radius) 0 0;
+      border-radius: var(--kind-popup-radius) var(--kind-popup-radius) 0 0;
     }
   }
 
@@ -136,6 +142,15 @@
       color: var(--kind-color-muted);
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+    /* A disabled row dims its icon and label, not the reason it gives. The internal Command dims the whole row with a
+       Tailwind utility, which only `!important` in this layer outranks. */
+    & [data-slot="command-item"][data-disabled] {
+      opacity: 1 !important;
+
+      & :is([data-slot="command-item-icon"], [data-slot="command-item-text"]) {
+        opacity: 0.5;
+      }
     }
     & [data-picker-description] mark {
       background: none;

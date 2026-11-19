@@ -83,6 +83,8 @@
 
 - `packages/agent-ui/src/styles/conversation-search.css` (Conversation Search): `search`, `chevron-up`, `chevron-down` and `x`, unchanged; all derive from Feather.
 
+- `apps/docs/examples/context-bar/basic.tsx` (Context Bar example's chip icons, not shipped in the package): `file`, `folder`, `square-dashed-text` and `link`, unchanged; `file`, `folder` and `link` derive from Feather.
+
 ## Lobe Icons
 
 - Source: https://github.com/lobehub/lobe-icons, npm `@lobehub/icons-static-svg@1.103.0`, the `anthropic`, `openai`, `microsoft-color` and `xai` icons.

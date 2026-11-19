@@ -22,6 +22,9 @@
     --kind-context-chip-max-width: 12rem;
     --kind-context-chip-height: 1.75rem;
     --kind-context-bar-gap: 0.375rem;
+    /* Chips sit inside the composer's box, so they're filled, not outlined. */
+    --kind-context-chip-fill: var(--kind-color-selected);
+    --kind-context-chip-fill-hover: color-mix(in oklab, var(--kind-color-fg) 8%, var(--kind-color-selected));
     /* Registered as a `<length>`, so core reads it in pixels. */
     --kind-context-bar-more-width: 2.5rem;
     display: flex;
@@ -36,7 +39,7 @@
     /* Chips past the fit stay laid out; clipping keeps them from widening the page. Focus rings sit inside, since
        WebKit has no `overflow-clip-margin`. */
     overflow: clip;
-    font-size: var(--kind-text-xs);
+    font-size: var(--kind-text-sm);
     line-height: 1rem;
   }
 
@@ -61,12 +64,9 @@
     max-inline-size: var(--kind-context-chip-max-width, 12rem);
     block-size: var(--kind-context-chip-height, 1.75rem);
     padding-inline: 0.5rem;
-    border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: var(--kind-color-surface);
+    border-radius: var(--kind-radius-md);
+    background-color: var(--kind-context-chip-fill);
     color: var(--kind-color-fg);
-    font-size: var(--kind-text-xs);
-    line-height: 1rem;
     white-space: nowrap;
 
     &:focus-visible {
@@ -129,7 +129,8 @@
     cursor: pointer;
     transition:
       color var(--kind-duration-fast) var(--kind-ease-out),
-      background-color var(--kind-duration-fast) var(--kind-ease-out);
+      background-color var(--kind-duration-fast) var(--kind-ease-out),
+      opacity var(--kind-duration-fast) var(--kind-ease-out);
 
     &::before {
       content: "";
@@ -144,61 +145,72 @@
       inset: -0.25rem;
     }
     &:hover {
-      background-color: var(--kind-color-hover);
+      background-color: color-mix(in oklab, var(--kind-color-fg) 10%, transparent);
       color: var(--kind-color-fg);
     }
   }
 
-  /* One width whatever the count, which core reserves before it fits the chips. */
+  /* In an overflow row, the remove control shows with the row's hover or focus, and always on touch screens. */
+  :where([data-context-bar-part="item"]) [data-context-bar-part="remove"] {
+    opacity: 0;
+  }
+  :where([data-context-bar-part="item"]:is(:hover, :focus-within)) [data-context-bar-part="remove"] {
+    opacity: 1;
+  }
+  @media (hover: none) {
+    :where([data-context-bar-part="item"]) [data-context-bar-part="remove"] {
+      opacity: 1;
+    }
+  }
+
+  /* A touch's remove target grows into the chip and half the wider gap, so it never reaches the next chip. */
+  @media (pointer: coarse) {
+    [data-context-bar-part="root"] {
+      --kind-context-bar-gap: 0.75rem;
+    }
+    :where([data-context-bar-part="chip"]) [data-context-bar-part="remove"]::after {
+      inset-block: -0.375rem;
+      inset-inline: -0.5rem calc(-0.125rem - var(--kind-context-bar-gap) / 2);
+    }
+    [data-context-bar-part="item"] {
+      block-size: 2.75rem;
+    }
+    :where([data-context-bar-part="item"]) [data-context-bar-part="remove"]::after {
+      inset: -0.75rem;
+    }
+  }
+
+  /* The shared trigger, drawn as a chip, at one width whatever the count, which core reserves before it fits the
+     chips. */
   [data-context-bar-part="overflow"] {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
     inline-size: var(--kind-context-bar-more-width);
     block-size: var(--kind-context-chip-height, 1.75rem);
-    margin: 0;
     padding: 0;
-    border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: var(--kind-color-surface);
-    color: var(--kind-color-fg);
-    font: inherit;
-    font-weight: 500;
+    background-color: var(--kind-context-chip-fill);
+    font-size: inherit;
     font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-    cursor: default;
-    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
 
     &:hover,
-    &:where([data-open]) {
-      background-color: var(--kind-color-hover);
+    &[aria-expanded="true"] {
+      background-color: var(--kind-context-chip-fill-hover);
     }
     &:focus-visible {
-      outline: var(--kind-focus-ring);
       outline-offset: var(--kind-focus-offset-inset);
     }
   }
 
   [data-context-bar-part="content"] {
-    box-sizing: border-box;
     inline-size: var(--kind-context-bar-content-width, 16rem);
     max-inline-size: calc(100vw - 16px);
     padding: 0;
     overflow: hidden;
-    border: 1px solid var(--kind-color-border);
-    border-radius: var(--kind-radius);
-    background-color: var(--kind-color-surface);
-    font-size: var(--kind-text-sm);
     line-height: 1.25rem;
-    box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 25%, transparent);
 
     &:where([data-presentation="sheet"]) {
       inline-size: 100%;
       max-inline-size: none;
       padding-block-end: env(safe-area-inset-bottom, 0px);
-      border-radius: var(--kind-radius) var(--kind-radius) 0 0;
+      border-radius: var(--kind-popup-radius) var(--kind-popup-radius) 0 0;
     }
   }
 
@@ -235,7 +247,7 @@
     inline-size: 100%;
     block-size: 2rem;
     padding-inline: 0.5rem 0.25rem;
-    border-radius: max(0px, calc(var(--kind-radius) - 4px));
+    border-radius: var(--kind-radius-sm);
     color: var(--kind-color-fg);
     white-space: nowrap;
     transition: background-color var(--kind-duration-fast) var(--kind-ease-out);

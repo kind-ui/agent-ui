@@ -50,7 +50,7 @@ test("opening focuses the search; Escape clears the query, then closes and retur
 }) => {
   await load(page);
   await openList(page);
-  await expect(search(page)).toHaveAttribute("placeholder", "Search");
+  await expect(search(page)).toHaveAttribute("placeholder", "Search…");
   await search(page).fill("bra");
   await expect(options(page)).toHaveCount(1);
   await page.keyboard.press("Escape");

@@ -31,6 +31,7 @@ const noItems: PickerItem<unknown>[] = [];
 const base = pickerBase<PickerOptions>({
   kind: "picker",
   label: "Choose",
+  sharedTrigger: true,
   toItems: (options) => options.items ?? noItems,
 });
 

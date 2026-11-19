@@ -150,6 +150,7 @@ export function defineAddMenu(): void {
           trigger?.toggleAttribute("disabled", props.disabled);
           const button = trigger?.querySelector("button");
           if (button && button.ariaLabel !== props["aria-label"]) button.ariaLabel = props["aria-label"];
+          button?.toggleAttribute("data-kind-trigger", props["data-kind-trigger"] === "");
           const content = el.querySelector("kind-add-menu-content > ui-menu-content");
           const rows = api.contentState(state);
           // A content written empty fills itself in, as React's bare `AddMenuContent` does.

@@ -23,7 +23,7 @@ import type { TokenUsage } from "../../types/index.js";
 import { hoverPopupPreset, withHover } from "../hover-popup.js";
 import { memo } from "../memo.js";
 import type { MotionMode } from "../motion/index.js";
-import { type ContextRow, contextRatio, contextRows, contextValueText } from "./format.js";
+import { type ContextRow, contextCountText, contextRatio, contextRows, contextValueText } from "./format.js";
 
 /** `"normal"` below 80%, `"high"` from 80% and `"full"` from 95%. */
 export type ContextLevel = "normal" | "high" | "full";
@@ -130,6 +130,8 @@ export type ContextMeterApi = Omit<Popup, "open" | "close"> & {
   readonly close: (() => boolean) | undefined;
   /** What screen readers hear for the value, like "57,600 of 128,000 tokens, 45%". */
   valueText: (state: ContextMeterState) => string;
+  /** The details' description, like "57,600 of 128,000 tokens": the button already shows the percentage. */
+  countText: (state: ContextMeterState) => string;
   /** Hands the Meter its props. Called by the value slot. */
   valueState: (state: ContextMeterState) => ContextMeterValueState;
   /** The details' lines. Called by the rows slot. */
@@ -147,7 +149,7 @@ type ContextMeterSlots = {
   value: Slot<BaseSlotProps, ContextMeterValueState>;
   content: Slot<PopupContentProps & BaseSlotProps, PopupContentState>;
   title: Slot<BaseSlotProps, { label: string }>;
-  description: Slot<BaseSlotProps, { valueText: string }>;
+  description: Slot<BaseSlotProps, { countText: string }>;
   rows: Slot<BaseSlotProps, { rows: ContextRow[] }>;
 };
 
@@ -215,6 +217,7 @@ export const contextMeterPrimitive: ContextMeterPrimitive = definePrimitive<
     // Server markup is English, as UI SDK Meter's is, so it never disagrees with the client's.
     const localeOf = (state: ContextMeterState) => state.locale ?? state.pageLocale ?? "en-US";
     const valueText = memo(contextValueText);
+    const countText = memo(contextCountText);
     const valueState = memo(
       (value: number, max: number, locale: string, label: string, valueText: string) => ({
         value,
@@ -244,6 +247,7 @@ export const contextMeterPrimitive: ContextMeterPrimitive = definePrimitive<
         return store.get().open ? () => popup.setOpen(false) : undefined;
       },
       valueText: (state) => valueText(state.used, state.total, localeOf(state)),
+      countText: (state) => countText(state.used, state.total, localeOf(state)),
       valueState: (state) =>
         valueState(
           state.used,
@@ -266,6 +270,7 @@ export const contextMeterPrimitive: ContextMeterPrimitive = definePrimitive<
   },
   slots: (slot) => {
     const trigger = popupTrigger(slot);
+    const content = popupContent(slot);
     return {
       root: slot({
         role: "group",
@@ -285,16 +290,20 @@ export const contextMeterPrimitive: ContextMeterPrimitive = definePrimitive<
           ...trigger.attrs?.(state, part),
           type: "button",
           "aria-label": part.api.valueText(state),
+          "data-kind-trigger": "",
         }),
       }),
       value: slot<BaseSlotProps, ContextMeterValueState>({
         state: (state, { api }) => api.valueState(state),
       }),
-      content: popupContent(slot),
+      content: slot({
+        ...content,
+        attrs: (state, part) => ({ ...content.attrs?.(state, part), "data-kind-popup": "" }),
+      }),
       title: slot({ ...popupTitle(slot), state: (state) => ({ label: state.label }) }),
       description: slot({
         ...popupDescription(slot),
-        state: (state, { api }) => ({ valueText: api.valueText(state) }),
+        state: (state, { api }) => ({ countText: api.countText(state) }),
       }),
       rows: slot<BaseSlotProps, { rows: ContextRow[] }>({
         present: (state, { api }) => api.rows(state).length > 0,

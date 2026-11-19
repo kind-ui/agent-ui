@@ -1,6 +1,8 @@
 import type { MotionMode } from "@kind-ui/agent-ui/core";
+import { defineComposer } from "../../../../src/web/composer.js";
 import { defineModelSelector } from "../../../../src/web/model-selector.js";
 import { defineReasoningEffort } from "../../../../src/web/reasoning-effort.js";
+import { controls } from "../../shared/full-composer.js";
 import { iconModels, levels, modelActions, models, selectionHost } from "../../shared/model-selector.js";
 
 const { host, record } = selectionHost();
@@ -87,6 +89,41 @@ const logos = (root: HTMLElement) => {
   Object.assign(window, { kindHost: host });
 };
 
+const inComposer = (root: HTMLElement) => {
+  defineComposer();
+  defineModelSelector();
+  defineReasoningEffort();
+  root.innerHTML = `
+    <div class="p-4">
+      <kind-composer>
+        <form aria-label="Message">
+          <ui-file-input>
+            <ui-file-input-dropzone>
+              <kind-composer-input>
+                <ui-token-input>
+                  <ui-token-input-editor aria-label="Prompt" placeholder="Ask anything"></ui-token-input-editor>
+                </ui-token-input>
+              </kind-composer-input>
+              <div data-controls></div>
+              <kind-composer-submit><button></button></kind-composer-submit>
+            </ui-file-input-dropzone>
+          </ui-file-input>
+        </form>
+      </kind-composer>
+    </div>`;
+  const model = document.createElement("kind-model-selector");
+  model.id = "model";
+  model.models = iconModels(logo);
+  model.defaultValue = "claude-sonnet-5.5";
+  const effort = document.createElement("kind-reasoning-effort");
+  effort.id = "effort";
+  effort.levels = levels;
+  effort.defaultValue = "medium";
+  const row = root.querySelector("[data-controls]") as HTMLElement;
+  Object.assign(row.style, controls);
+  row.append(model, effort);
+};
+
 export const cases = {
   all: toolbar(),
   plain: toolbar({ plain: true }),
@@ -94,4 +131,5 @@ export const cases = {
   reduced: toolbar({ motion: "reduced" }),
   refusing: toolbar({ refusing: true }),
   logos,
+  composer: inComposer,
 };

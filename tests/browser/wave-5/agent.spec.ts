@@ -231,9 +231,7 @@ const conformance: Conformance[] = [
     ignore: menuContent,
     pointer: async (page) => {
       await openMenu("model-control", control.label)(page);
-      await menuRow("model-control", "menuitem", /^Model/)(page);
       await menuRow("model-control", "menuitemradio", /^GPT-6\.1 Terra/)(page);
-      await page.keyboard.press("Escape");
       await page.keyboard.press("Escape");
     },
   },
@@ -244,9 +242,7 @@ const conformance: Conformance[] = [
     ignore: menuContent,
     pointer: async (page) => {
       await openMenu("model-control", control.label)(page);
-      await menuRow("model-control", "menuitem", /^Effort/)(page);
       await menuRow("model-control", "menuitemradio", /^High/)(page);
-      await page.keyboard.press("Escape");
       await page.keyboard.press("Escape");
     },
   },
@@ -257,7 +253,6 @@ const conformance: Conformance[] = [
     ignore: menuContent,
     pointer: async (page) => {
       await openMenu("model-control", control.label)(page);
-      await menuRow("model-control", "menuitem", /^Model/)(page);
       await menuRow("model-control", "menuitem", /^More models/)(page);
     },
   },

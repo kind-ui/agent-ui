@@ -72,8 +72,8 @@ export function defineContextMeter(): void {
           const title = el.querySelector("kind-context-meter-title > h2");
           if (owns(title) && title.textContent !== state.label) title.textContent = state.label;
           const description = el.querySelector("kind-context-meter-description");
-          const valueText = api.valueText(state);
-          if (owns(description) && description.textContent !== valueText) description.textContent = valueText;
+          const countText = api.countText(state);
+          if (owns(description) && description.textContent !== countText) description.textContent = countText;
           const rows = api.rows(state);
           const list = el.querySelector("kind-context-meter-rows > dl");
           if (rows !== drawnRows && owns(list)) {

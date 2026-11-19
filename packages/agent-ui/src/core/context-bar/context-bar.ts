@@ -577,6 +577,7 @@ export const contextBarPrimitive: ContextBarPrimitive = definePrimitive<
           ...trigger.attrs?.(state, part),
           type: "button",
           "aria-label": `${state.overflowCount} more`,
+          "data-kind-trigger": "",
           "data-context-bar-part": "overflow",
         }),
         bind: (el, part) => {
@@ -592,6 +593,7 @@ export const contextBarPrimitive: ContextBarPrimitive = definePrimitive<
         ...content,
         attrs: (state, part) => ({
           ...content.attrs?.(state, part),
+          "data-kind-popup": "",
           "data-context-bar-part": "content",
           "data-motion": state.motion,
         }),

@@ -47,7 +47,7 @@ export default function PickerExample() {
   return (
     <Picker
       label="Work in"
-      placeholder="Search projects"
+      placeholder="Search projects…"
       items={projects}
       actions={[{ id: "new-project", label: "New project", icon: <PlusIcon /> }]}
       value={project}

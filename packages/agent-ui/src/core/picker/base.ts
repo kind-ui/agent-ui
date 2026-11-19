@@ -61,7 +61,7 @@ export type PickerBaseOptions = {
   label?: string;
   /**
    * Shown in the empty search field.
-   * @default "Search"
+   * @default "Search…"
    */
   placeholder?: string;
   /**
@@ -161,7 +161,7 @@ export type PickerBaseState = PopupState & {
   value: string | null;
   /** The `label`, else the component's. */
   label: string;
-  /** The `placeholder`, else the component's (Picker: "Search"). */
+  /** The `placeholder`, else the component's (Picker: "Search…"). */
   placeholder: string;
   /** The `emptyText`, else the component's (Picker: "No matches"). */
   emptyText: string;
@@ -301,7 +301,7 @@ export type PickerBaseConfig<Options extends PickerBaseOptions> = {
   label: string;
   /**
    * The `placeholder` when the options have none.
-   * @default "Search"
+   * @default "Search…"
    */
   placeholder?: string;
   /**
@@ -319,6 +319,8 @@ export type PickerBaseConfig<Options extends PickerBaseOptions> = {
    * @default "popover"
    */
   popup?: "popover" | "dialog";
+  /** Whether the trigger is the shared `data-kind-trigger`, rather than a button the component's stylesheet draws. */
+  sharedTrigger?: boolean;
   /**
    * Choosing a row calls the `onSelect` option (`PickerSelectOptions`) and closes the list instead of choosing it, so
    * nothing is chosen and no row shows a check.
@@ -379,7 +381,7 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
       emptyItems: config.emptyItems?.(options),
       actions,
       label: options.label ?? config.label,
-      placeholder: options.placeholder ?? config.placeholder ?? "Search",
+      placeholder: options.placeholder ?? config.placeholder ?? "Search…",
       emptyText: options.emptyText ?? config.emptyText ?? "No matches",
       backLabel: options.backLabel ?? "Back",
       canRun: config.actions ? actions.length > 0 : typeof options.onAction === "function",
@@ -726,6 +728,7 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
             ...trigger.attrs?.(state, part),
             type: "button",
             "aria-label": part.api.name(state),
+            "data-kind-trigger": config.sharedTrigger ? "" : undefined,
             "data-picker-part": "trigger",
           }),
         }),
@@ -733,6 +736,7 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
           ...content,
           attrs: (state, part) => ({
             ...content.attrs?.(state, part),
+            "data-kind-popup": "",
             "data-picker-part": "content",
             "data-motion": state.motion,
           }),

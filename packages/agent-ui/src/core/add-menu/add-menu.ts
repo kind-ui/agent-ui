@@ -149,6 +149,7 @@ const toData = (sections: AddMenuSection[]) => {
 const canRunOf = (options: AddMenuOptions) => typeof options.onAction === "function";
 
 const base = menuBase<AddMenuOptions>({
+  sharedTrigger: true,
   kind: "add-menu",
   label: "Add",
   toData: (options) => toData(sectionsOf(options.items ?? NO_ENTRIES, canRunOf(options))),

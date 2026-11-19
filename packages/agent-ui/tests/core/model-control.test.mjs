@@ -21,7 +21,7 @@ test("modelEffort keeps a supported level, else falls back to the highest suppor
   assert.equal(modelEffort([], undefined, "low"), null);
 });
 
-test("Model and Effort sit after the host's toggles; unsupported levels are disabled and refused", () => {
+test("Model and Effort sit inline before the host's choices and toggles; unsupported levels are disabled and refused", () => {
   const changes = [];
   const instance = modelControlPrimitive({
     models,
@@ -35,7 +35,11 @@ test("Model and Effort sit after the host's toggles; unsupported levels are disa
     onEffortChange: (value, details) => changes.push([value, details.reason]),
   });
   const ids = () => instance.api.contentState(instance.get()).rows.map((row) => row.id);
-  assert.deepEqual(ids(), ["fast", "model", "effort", "context"]);
+  assert.deepEqual(ids(), ["model", "effort", "context", "fast"]);
+  assert.deepEqual(
+    instance.api.contentState(instance.get()).rows.map((row) => row.type === "choice" && row.inline),
+    [true, true, false, false],
+  );
   assert.equal(instance.api.name(instance.get()), "Model, Big, High effort");
   instance.api.setModel("small");
   assert.deepEqual(changes, [["medium", "model-change"]]);
@@ -67,7 +71,7 @@ test("an uncontrolled effort starts on, and follows models to, the level the cho
   instance.destroy();
 });
 
-test("a model without effort levels has no Effort row or setEffort", () => {
+test("a model without effort levels keeps the Effort section dimmed, with no setEffort", () => {
   const instance = modelControlPrimitive({
     models: [{ id: "tiny", name: "Tiny", efforts: [] }],
     levels,
@@ -75,8 +79,10 @@ test("a model without effort levels has no Effort row or setEffort", () => {
   });
   assert.deepEqual(
     instance.api.contentState(instance.get()).rows.map((row) => row.id),
-    ["model"],
+    ["model", "effort"],
   );
+  const effort = instance.api.contentState(instance.get()).rows[1];
+  assert.ok(effort.options.every((option) => option.disabled));
   assert.equal(instance.api.setEffort, undefined);
   assert.equal(instance.api.name(instance.get()), "Model, Tiny");
   instance.destroy();
@@ -96,7 +102,7 @@ test("setValues keeps Model and Effort out of the host's values, and host settin
   });
   assert.deepEqual(
     instance.api.contentState(instance.get()).rows.map((row) => row.id),
-    ["fast", "model", "effort"],
+    ["model", "effort", "fast"],
   );
   assert.equal(instance.api.setValues({ model: "small", fast: true }), true);
   assert.deepEqual(changes, [{ fast: true }]);

@@ -116,6 +116,10 @@ export type FeedbackCommentTextState = {
   defaultValue: string;
   /** True while a comment is being sent. */
   readOnly: boolean;
+  /** Asks for what went well after a thumbs up, what could be better after a thumbs down. */
+  placeholder: string;
+  /** Names the box "Comment". */
+  "aria-label": string;
 };
 
 type Popup = ReturnType<typeof createPopup<FeedbackOptions, FeedbackState, PopupPreset>>;
@@ -187,6 +191,12 @@ const presentation = (options: FeedbackOptions) => ({
   commentSent: options.commentSent ?? false,
   motion: options.motion ?? "auto",
 });
+
+const PLACEHOLDERS = {
+  up: "What went well…",
+  down: "What could be better…",
+  none: "Add details…",
+} as const;
 
 const showsComment = (state: FeedbackState) =>
   state.rating !== null && state.canComment && !state.commentSent;
@@ -296,10 +306,12 @@ export const feedbackPrimitive: FeedbackPrimitive = definePrimitive<
       "aria-label": "Rating",
     };
     const commentTextState = memo(
-      (readOnly: boolean, defaultValue: string): FeedbackCommentTextState => ({
+      (readOnly: boolean, defaultValue: string, rating: FeedbackRating): FeedbackCommentTextState => ({
         controller: input,
         defaultValue,
         readOnly,
+        placeholder: PLACEHOLDERS[rating ?? "none"],
+        "aria-label": "Comment",
       }),
     );
 
@@ -339,7 +351,7 @@ export const feedbackPrimitive: FeedbackPrimitive = definePrimitive<
         if (kept && kept !== store.get().commentText) store.set({ commentText: kept });
       },
       thumbsState: () => thumbsState,
-      commentTextState: (state) => commentTextState(state.pending, state.commentText),
+      commentTextState: (state) => commentTextState(state.pending, state.commentText, state.rating),
       recovery: createFocusRecovery({
         fallback: () =>
           context.element("thanks") ??
@@ -360,6 +372,7 @@ export const feedbackPrimitive: FeedbackPrimitive = definePrimitive<
   },
   slots: (slot) => {
     const trigger = popupTrigger(slot);
+    const content = popupContent(slot);
     return {
       root: slot({
         role: "group",
@@ -379,7 +392,7 @@ export const feedbackPrimitive: FeedbackPrimitive = definePrimitive<
       comment: slot({
         ...trigger,
         present: showsComment,
-        attrs: (state, part) => ({ ...trigger.attrs?.(state, part), type: "button" }),
+        attrs: (state, part) => ({ ...trigger.attrs?.(state, part), type: "button", "data-kind-button": "" }),
         bind: (el, part) => {
           const unbindTrigger = trigger.bind?.(el, part);
           const unbindRecovery = part.api.recovery.bind(el, part);
@@ -397,7 +410,10 @@ export const feedbackPrimitive: FeedbackPrimitive = definePrimitive<
         attrs: () => ({ tabindex: "0" }),
         bind: (el, { api }) => api.enterSwap(el),
       }),
-      content: popupContent(slot),
+      content: slot({
+        ...content,
+        attrs: (state, part) => ({ ...content.attrs?.(state, part), "data-kind-popup": "" }),
+      }),
       title: popupTitle(slot),
       "comment-text": slot<BaseSlotProps, FeedbackCommentTextState>({
         state: (state, { api }) => api.commentTextState(state),
@@ -414,6 +430,7 @@ export const feedbackPrimitive: FeedbackPrimitive = definePrimitive<
         state: (state) => ({ pending: state.pending }),
         attrs: (state) => ({
           type: "button",
+          "data-kind-button": "primary",
           "aria-disabled": state.pending || !state.commentText.trim() ? "true" : undefined,
           "data-pending": state.pending ? "" : undefined,
         }),

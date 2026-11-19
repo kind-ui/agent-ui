@@ -24,28 +24,17 @@
     --kind-context-color: var(--kind-color-danger);
   }
 
+  /* The shared trigger, in the meter's quieter type until hovered or open. */
   [data-slot="kind-context-meter-trigger"] {
-    display: inline-flex;
-    align-items: center;
-    height: 1.75rem;
     padding-inline: 6px;
-    border: 0;
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: transparent;
     color: inherit;
-    font: inherit;
-    transition:
-      background-color var(--kind-duration-fast) var(--kind-ease-out),
-      color var(--kind-duration-fast) var(--kind-ease-out);
+    font-size: inherit;
+    font-weight: 400;
+    line-height: inherit;
 
     &:hover,
-    &[data-open] {
-      background-color: var(--kind-color-hover);
+    &[aria-expanded="true"] {
       color: var(--kind-color-fg);
-    }
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
     }
   }
 
@@ -76,7 +65,11 @@
       border-radius: 50%;
     }
     &::before {
-      background: conic-gradient(var(--kind-context-color) var(--meter-value), var(--kind-color-border) 0);
+      /* A track as visible as the arc's start, so a part-full ring reads as a gauge and not a spinner. */
+      background: conic-gradient(
+        var(--kind-context-color) var(--meter-value),
+        color-mix(in oklab, var(--kind-color-muted) 35%, transparent) 0
+      );
       mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
     }
   }
@@ -116,11 +109,6 @@
     width: 15rem;
     max-width: calc(100vw - 16px);
     padding: 12px;
-    border: 1px solid var(--kind-color-border);
-    border-radius: var(--kind-radius);
-    background-color: var(--kind-color-surface);
-    box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 20%, transparent);
-    color: var(--kind-color-fg);
     font-size: var(--kind-text-xs);
     line-height: 1rem;
     outline: none;

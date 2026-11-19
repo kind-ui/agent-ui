@@ -12,44 +12,21 @@
     display: contents;
   }
 
-  /* The menus' own trigger, an icon button whatever icon it holds; `[data-menu-trigger-icon]` draws the menu's
-     `--kind-menu-trigger-icon`. A menu whose trigger shows text widens it in its own stylesheet. */
-  :where(
-      [data-kind="add-menu"],
-      [data-kind="settings-menu"],
-      [data-kind="approval-mode"],
-      [data-kind="model-control"]
-    )
-    :where([data-menu-part="trigger"])
-    [data-slot="menu-trigger"] {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
+  /* A menu whose trigger shows only its icon: a square shared trigger. One that shows text widens it in its own
+     stylesheet. */
+  :where([data-kind="add-menu"], [data-kind="settings-menu"]) [data-kind-trigger] {
+    width: var(--kind-trigger-height);
     padding: 0;
-    border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: var(--kind-color-surface);
-    color: var(--kind-color-fg);
-    cursor: default;
-    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+    color: var(--kind-color-muted);
 
-    &:hover,
-    &[data-open] {
-      background-color: var(--kind-color-hover);
+    &:where(:hover, [aria-expanded="true"]) {
+      color: var(--kind-color-fg);
     }
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
-    }
-    &:is(:disabled, [data-disabled]) {
-      opacity: 0.5;
-    }
-    & > :is(svg, img) {
-      width: 16px;
-      height: 16px;
-    }
+  }
+
+  :where([data-menu-part="trigger"]) [data-kind-trigger] > :is(svg, img) {
+    width: 1rem;
+    height: 1rem;
   }
 
   [data-menu-trigger-icon] {
@@ -103,6 +80,11 @@
       &[data-checked]:dir(rtl) {
         --kind-menu-switch-shift: -14px;
       }
+      /* Level with the label's first line when a description follows it. */
+      :where([data-slot="menu-checkbox-item"]:has([data-menu-description])) > & {
+        align-self: start;
+        margin-block-start: 1px;
+      }
       & > [data-menu-switch-thumb] {
         width: 14px;
         height: 14px;
@@ -112,6 +94,27 @@
         translate: var(--kind-menu-switch-shift, 0) 0;
         transition: translate var(--kind-duration-fast) var(--kind-ease-out);
       }
+    }
+    /* A group's label and a plain row start at the text column of the rows beside them: past the check and the
+       icon each takes, at the rows' 0.5rem gap. */
+    & [data-slot="menu-group"]:has(> * > [data-slot="menu-item-indicator"]) {
+      --kind-menu-check-inset: 1.5rem;
+    }
+    & [data-slot="menu-group"]:has(> * > [data-slot="menu-item-icon"]) {
+      --kind-menu-icon-inset: 1.5rem;
+    }
+    /* `text-indent`, since the internal Menu's padding is a utility. */
+    & [data-slot="menu-group-label"] {
+      text-indent: calc(var(--kind-menu-check-inset, 0px) + var(--kind-menu-icon-inset, 0px));
+    }
+    /* A plain row among checked ones, like "More models", starts past the check column. */
+    & [data-menu-inset]::before {
+      content: "";
+      flex-shrink: 0;
+      width: 1rem;
+    }
+    & [data-settings-menu-section] {
+      display: contents;
     }
     & [data-slot="menu-item-icon"] > :is(img, svg) {
       width: 16px;

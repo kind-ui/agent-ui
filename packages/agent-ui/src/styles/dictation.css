@@ -26,61 +26,44 @@
     line-height: 1.25rem;
   }
 
+  /* Shared ghost icon buttons, round and as tall as the box. The glyph is `::after`, since a coarse pointer's hit
+     area is a shared control's `::before`. */
   :is([data-dictation-part="start"], [data-dictation-part="stop"], [data-dictation-part="cancel"]) {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
     inline-size: var(--kind-dictation-height);
     block-size: var(--kind-dictation-height);
-    margin: 0;
-    padding: 0;
-    border: 1px solid transparent;
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: transparent;
-    color: var(--kind-color-fg);
-    cursor: default;
-    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+    border-radius: 999px;
 
-    &::before {
+    &::after {
       content: "";
       inline-size: 16px;
       block-size: 16px;
       background-color: currentColor;
       mask: var(--kind-dictation-icon) center / contain no-repeat;
     }
-    &:hover:where(:not([data-pending])) {
-      background-color: var(--kind-color-hover);
-    }
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
-    }
   }
 
   [data-dictation-part="start"] {
     --kind-dictation-icon: var(--kind-dictation-icon-mic);
-    border-color: var(--kind-color-border);
-    background-color: var(--kind-color-surface);
   }
 
   [data-dictation-part="cancel"] {
     --kind-dictation-icon: var(--kind-dictation-icon-cancel);
-    color: var(--kind-color-muted);
   }
 
-  [data-dictation-part="stop"] {
+  /* Solid, so beside a composer's Send, which has nothing to send while Dictation listens, it doesn't read as
+     unavailable too. A root above the part outranks the composer's own rules for it. */
+  [data-dictation-part="root"] [data-dictation-part="stop"] {
     --kind-dictation-icon: var(--kind-dictation-icon-stop);
-    background-color: var(--kind-color-accent);
-    color: var(--kind-color-on-accent);
+    background-color: var(--kind-color-fg);
+    color: var(--kind-color-surface);
 
-    &::before {
+    &::after {
       inline-size: 12px;
       block-size: 12px;
     }
     &:hover:where(:not([data-pending])) {
-      background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-fg));
+      background-color: color-mix(in oklab, var(--kind-color-fg) 85%, var(--kind-color-surface));
+      color: var(--kind-color-surface);
     }
     &:where([data-pending]) {
       opacity: 0.6;
@@ -120,16 +103,25 @@
     transition: scale var(--kind-dictation-bar-smoothing) linear;
   }
 
-  /* Held still: the waveform shows that the microphone is on, not how loud it is. */
+  /* Held still: the waveform shows that the microphone is on, not how loud it is. A short run of still bars at the
+     end of the baseline says so; a full row of them would read as a stripe. */
   :where([data-dictation-part="waveform"]:is([data-motion="reduced"], [data-motion="none"]))
     [data-dictation-part="bar"] {
     scale: 1 0.35;
     transition: none;
+
+    &:not(:nth-last-child(-n + 16)) {
+      display: none;
+    }
   }
   @media (prefers-reduced-motion: reduce) {
     :where([data-dictation-part="waveform"][data-motion="auto"]) [data-dictation-part="bar"] {
       scale: 1 0.35;
       transition: none;
+
+      &:not(:nth-last-child(-n + 16)) {
+        display: none;
+      }
     }
   }
 
@@ -166,7 +158,7 @@
   }
 
   @media (forced-colors: active) {
-    :is([data-dictation-part="start"], [data-dictation-part="stop"], [data-dictation-part="cancel"])::before {
+    :is([data-dictation-part="start"], [data-dictation-part="stop"], [data-dictation-part="cancel"])::after {
       forced-color-adjust: none;
       background-color: ButtonText;
     }
@@ -174,7 +166,7 @@
       forced-color-adjust: none;
       color: CanvasText;
     }
-    [data-dictation-part="stop"]:where([data-pending])::before {
+    [data-dictation-part="stop"]:where([data-pending])::after {
       background-color: GrayText;
     }
   }
