@@ -46,8 +46,6 @@ const pages = [
 
   // wave-6-task-9: Message author, time and outcomes
 
-  "message&case=outcomes",
-
   // wave-6-task-10: Conversation states
 
   // wave-6-task-11: Conversation Search
