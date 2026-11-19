@@ -44,6 +44,9 @@ test("each indicator is a named status whose dots are hidden from assistive tech
     await expect(page.getByRole("status", { name: label })).toBeVisible();
     await expect(page.locator(`[data-slot="${slot}-dots"]`)).toHaveAttribute("aria-hidden", "true");
   }
+  for (const slot of ["kind-loader", "kind-thinking-indicator"]) {
+    await expect(page.locator(`[data-slot="${slot}-dots"] + [data-slot="${slot}-label"]`)).toHaveCount(1);
+  }
 });
 
 test("dots flow with a stagger instead of blinking together", async ({ page }) => {

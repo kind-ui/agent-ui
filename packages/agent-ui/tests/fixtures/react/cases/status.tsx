@@ -17,7 +17,7 @@ function Live() {
 
 export const cases = {
   all: () => (
-    <div className="flex flex-col items-start gap-3 p-6">
+    <div className="flex flex-col items-start gap-3 bg-[var(--kind-color-surface)] p-6">
       {statuses.map((status) => (
         <Status key={status} status={status} />
       ))}

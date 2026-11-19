@@ -94,6 +94,12 @@
     }
   }
 
+  /* The shared hover fill is lighter than a light tint, so on one a hover darkens whatever is under it. */
+  [data-notice-part="root"]:is([data-variant="warning"], [data-variant="error"])
+    > :is([data-notice-part="dismiss"], [data-notice-part="detail-trigger"]):hover {
+    background-color: color-mix(in oklab, var(--kind-color-fg) 6%, transparent);
+  }
+
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
     [data-notice-part="dismiss"]::after {

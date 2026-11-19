@@ -481,7 +481,7 @@ Behavior requirements:
 - **Message:** `data-role` and `data-status` attributes. When `branchCount > 1`, a branch switcher shows "n of m" with previous and next buttons. User messages edit in place with `createInlineEdit`: Escape cancels, commit calls `onEdit`.
 - **Composer:** a real `<form>`. Typing `@` opens mentions and `/` opens commands through Trigger Menu; choices insert Token Input tokens. Attachments come from choose, drop, or paste through File Input, with host-supplied `accept` and `maxSize` validation errors shown inline. `submitOn: "enter" | "mod-enter"` defaults to `"enter"` (Shift+Enter inserts a newline); IME composition never submits. ArrowUp in an empty field recalls earlier prompts via `createInputHistory`. Submit snapshots the draft and blocks duplicate activation. If `onSubmit` rejects, the draft stays; when it resolves, only the submitted snapshot clears, never newer edits. Controlled (`value` + `onValueChange`) and uncontrolled (`defaultValue`) drafts are mutually exclusive. The full composer contract is in §4.1.
 - **Uploader:** per-file progress, error, cancel, and retry from host-supplied state and callbacks.
-- **Indicators:** `role="status"` with an accessible label (defaults: "Loading", "Thinking", "Typing"); visual dots are `aria-hidden`. Streaming Text fades in each appended chunk and shows an optional caret; reduced motion appends instantly.
+- **Indicators:** `role="status"` with an accessible label (defaults: "Loading…", "Thinking…", "Typing"); visual dots are `aria-hidden`. Streaming Text fades in each appended chunk and shows an optional caret; reduced motion appends instantly.
 
 ### Wave 2 (0.2): agent activity
 

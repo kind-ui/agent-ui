@@ -100,7 +100,7 @@
   [data-slot="kind-attachments-remove"] {
     position: absolute;
     top: -0.4375rem;
-    right: -0.4375rem;
+    inset-inline-end: -0.4375rem;
     display: grid;
     place-items: center;
     width: 1.25rem;
@@ -146,13 +146,13 @@
   /* Without hover the remove button always shows, so it sits inside the chip as a quiet ×, not a badge on the
      corner that crowds the next chip. */
   @media (hover: none) {
-    [data-slot="kind-attachments-item"]:has(> [data-slot="kind-attachments-remove"]:not([hidden])) {
+    [data-slot="kind-attachments-item"]:where(:has(> [data-slot="kind-attachments-remove"]:not([hidden]))) {
       padding-inline-end: 1.75rem;
     }
 
     [data-slot="kind-attachments-remove"] {
       top: 0.25rem;
-      right: 0.25rem;
+      inset-inline-end: 0.25rem;
       border: 0;
       background-color: transparent;
       color: var(--kind-color-muted);

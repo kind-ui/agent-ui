@@ -123,7 +123,8 @@
     grid-template-rows: auto auto;
     align-items: center;
     gap: 0.25rem 0.75rem;
-    padding: 0.625rem 0.625rem 0.625rem 0.875rem;
+    padding-block: 0.625rem;
+    padding-inline: 0.875rem 0.625rem;
     border: 1px solid var(--kind-color-border);
     border-radius: var(--kind-radius);
     background-color: var(--kind-color-surface);
@@ -208,13 +209,9 @@
       opacity: 0.4;
     }
 
-    /* The bar and its gap leave; the padding takes their 10px, so the row keeps its height. */
-    &[data-status="done"] {
-      padding-block: calc(0.625rem + 5px);
-
-      & [data-slot="progress-track"] {
-        display: none;
-      }
+    /* A finished row hides its bar but keeps its place, so nothing moves. */
+    &[data-status="done"] [data-slot="progress-track"] {
+      visibility: hidden;
     }
 
     & > [data-detail] {
