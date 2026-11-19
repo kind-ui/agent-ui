@@ -61,7 +61,7 @@ Pass `unread` to show a badge with the count, "99+" past 99. Screen readers don'
 
 Press the button, or focus it and press Enter or Space, to open the panel, and press it again, Close or Escape to close it. As it opens, focus moves to the first composer's editor inside, else to the panel; pass `initialFocus` to `LauncherContent` to choose another place. Closing returns focus to the button.
 
-Pass `shortcut`, like `"mod+i"`, to open and close it from anywhere on the page; `mod` is Command on macOS and Ctrl elsewhere. There's none by default. The button's `aria-keyshortcuts` names it.
+Pass `shortcut`, like `"mod+j"`, to open and close it from anywhere on the page; `mod` is Command on macOS and Ctrl elsewhere. There's none by default. Pick keys the composer doesn't take for itself: its editor keeps `"mod+b"`, `"mod+i"` and `"mod+u"` for formatting, so those can't close the panel from inside it. The button's `aria-keyshortcuts` names it.
 
 Pass `open` and `onOpenChange` to control the panel, or `defaultOpen` to start with it open. `onOpenChange` gets what caused the change, like `trigger-press`, `escape-key` or `shortcut`.
 

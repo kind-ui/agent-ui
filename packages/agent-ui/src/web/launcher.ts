@@ -79,7 +79,10 @@ export function defineLauncher(): void {
             "beforebegin",
             `${TRIGGER}<kind-launcher-backdrop hidden></kind-launcher-backdrop>`,
           );
-        if (!content.querySelector("kind-launcher-title")) content.insertAdjacentHTML("afterbegin", HEADER);
+        const title = content.querySelector("kind-launcher-title");
+        if (!title) content.insertAdjacentHTML("afterbegin", HEADER);
+        else if (!title.firstElementChild && !title.textContent?.trim())
+          title.replaceChildren(el.ownerDocument.createElement("h2"));
         // As React's `LauncherContent` places it, unless the author wrote their own.
         for (const [name, value] of [
           ["initial-focus", LAUNCHER_INITIAL_FOCUS],

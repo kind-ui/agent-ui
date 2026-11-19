@@ -7,7 +7,19 @@ import { launcherHost, messages } from "../../shared/launcher.js";
 const { record, click } = launcherHost();
 
 const page =
-  ({ unread, modal, motion }: { unread?: number; modal?: boolean; motion?: MotionMode } = {}) =>
+  ({
+    unread,
+    modal,
+    motion,
+    shortcut,
+    title = "",
+  }: {
+    unread?: number;
+    modal?: boolean;
+    motion?: MotionMode;
+    shortcut?: string;
+    title?: string;
+  } = {}) =>
   (root: HTMLElement) => {
     defineConversation();
     defineComposer();
@@ -16,7 +28,7 @@ const page =
       <div class="p-6">
         <button id="page-button" type="button">Page button</button>
         <kind-launcher id="launcher"${modal ? " modal" : ""}>
-          <kind-launcher-content>
+          <kind-launcher-content>${title}
             <kind-conversation aria-label="Chat" message-count="${messages.length}" class="h-48">
               <kind-conversation-viewport>
                 <kind-conversation-content>
@@ -51,12 +63,14 @@ const page =
     if (!launcher) return;
     if (unread !== undefined) launcher.unread = unread;
     if (motion) launcher.motion = motion;
+    if (shortcut) launcher.shortcut = shortcut;
     launcher.addEventListener("openchange", (event) => record(event.detail.value, event.detail));
   };
 
 export const cases = {
-  all: page({ unread: 2 }),
+  all: page({ unread: 2, shortcut: "mod+j" }),
   modal: page({ unread: 2, modal: true }),
   read: page(),
   reduced: page({ unread: 2, motion: "reduced" }),
+  written: page({ title: "<kind-launcher-title></kind-launcher-title>" }),
 };

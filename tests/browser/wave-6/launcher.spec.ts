@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerOf } from "../layer.js";
 
 type Change = { open: boolean; reason: string; source: string };
 type Fixture = { kindHost: { changes: Change[]; pageClicks: number } };
@@ -113,6 +114,36 @@ test.describe("on a small touch screen", () => {
       .poll(() => content(page).evaluate((el) => el.getBoundingClientRect().toJSON()))
       .toMatchObject({ left: 0, right: 390 });
   });
+});
+
+test("the shortcut opens and closes the panel from the keyboard, also from the composer inside", async ({
+  page,
+}) => {
+  await load(page);
+  await expect(trigger(page)).toHaveAttribute("aria-keyshortcuts", /^(Meta|Control)\+J$/);
+  await page.keyboard.press("ControlOrMeta+j");
+  await expect(editor(page)).toBeFocused();
+  await page.keyboard.press("ControlOrMeta+j");
+  await expect(content(page)).toBeHidden();
+  expect((await host(page)).changes).toEqual([
+    { open: true, reason: "shortcut", source: "keyboard" },
+    { open: false, reason: "shortcut", source: "keyboard" },
+  ]);
+});
+
+test("reduced motion only fades the panel", async ({ page }) => {
+  await load(page, "reduced");
+  await trigger(page).click();
+  await expect(content(page)).toHaveAttribute("data-motion", "reduced");
+  await settled(page);
+  expect(await content(page).evaluate((el) => getComputedStyle(el).transitionProperty)).toBe("opacity");
+});
+
+test("an empty title someone writes is filled in and names the panel", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web fills in parts written empty");
+  await load(page, "written");
+  await trigger(page).click();
+  await expect(page.getByRole("dialog", { name: "Assistant" })).toBeVisible();
 });
 
 test("an agent opens and closes the panel", async ({ page }) => {

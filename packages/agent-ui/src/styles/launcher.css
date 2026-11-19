@@ -15,6 +15,10 @@
     inset-block-end: calc(var(--kind-launcher-inset, 1.5rem) + env(safe-area-inset-bottom, 0px));
     inset-inline-end: calc(var(--kind-launcher-inset, 1.5rem) + env(safe-area-inset-right, 0px));
     z-index: 50;
+
+    &:dir(rtl) {
+      inset-inline-end: calc(var(--kind-launcher-inset, 1.5rem) + env(safe-area-inset-left, 0px));
+    }
   }
 
   [data-launcher-part="trigger"] {
@@ -42,7 +46,7 @@
     &:hover {
       background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-on-accent));
     }
-    &:active {
+    &:where([data-motion="auto"]):active {
       scale: 0.96;
     }
     &:focus-visible {
@@ -52,7 +56,7 @@
   }
 
   /* Both glyphs share one box: the chat glyph turns away as the cross turns in. */
-  [data-launcher-part="trigger"] [data-launcher-icon] {
+  :where([data-launcher-part="trigger"]) [data-launcher-icon] {
     display: grid;
     inline-size: 1.5rem;
     block-size: 1.5rem;
@@ -76,7 +80,7 @@
     }
   }
 
-  [data-launcher-part="trigger"]:where([data-open]) [data-launcher-icon] {
+  :where([data-launcher-part="trigger"][data-open]) [data-launcher-icon] {
     &::before {
       opacity: 0;
       rotate: 90deg;
@@ -128,6 +132,10 @@
     line-height: 1.25rem;
     box-shadow: 0 16px 48px -12px color-mix(in oklab, var(--kind-color-shadow) 35%, transparent);
     transform-origin: var(--transform-origin, bottom right);
+
+    &:dir(rtl) {
+      transform-origin: var(--transform-origin, bottom left);
+    }
 
     /* A dialog sits in the middle of the screen; UI SDK places a popover beside the button. */
     &:where([data-modal]:not([data-presentation="sheet"])) {
@@ -234,6 +242,13 @@
       border: 1px solid ButtonText;
       background-color: ButtonFace;
       color: ButtonText;
+
+      &:hover {
+        background-color: ButtonFace;
+      }
+      &:focus-visible {
+        outline-color: Highlight;
+      }
     }
     [data-launcher-part="badge"] {
       forced-color-adjust: none;
@@ -262,7 +277,7 @@
   }
 
   [data-slot="kind-launcher-backdrop"] {
-    transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-fast) var(--kind-ease-out);
 
     &:where([data-starting-style], [data-ending-style]) {
       opacity: 0;
@@ -279,13 +294,20 @@
       }
     }
     [data-launcher-part="trigger"]:where([data-motion="auto"]) {
-      &,
+      transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+
+      &:active {
+        scale: none;
+      }
       & [data-launcher-icon]::before,
       & [data-launcher-icon]::after {
         rotate: none;
         scale: none;
         transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
       }
+    }
+    :where([data-launcher-part="root"][data-motion="auto"]) [data-slot="kind-launcher-backdrop"] {
+      transition-duration: var(--kind-duration-reduced);
     }
   }
 
@@ -299,7 +321,8 @@
   }
 
   [data-launcher-part="trigger"]:where([data-motion="reduced"]) {
-    &,
+    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+
     & [data-launcher-icon]::before,
     & [data-launcher-icon]::after {
       rotate: none;
@@ -308,12 +331,20 @@
     }
   }
 
+  :where([data-launcher-part="root"][data-motion="reduced"]) [data-slot="kind-launcher-backdrop"] {
+    transition-duration: var(--kind-duration-reduced);
+  }
+
   [data-launcher-part="content"]:where([data-motion="none"]),
-  [data-launcher-part="trigger"]:where([data-motion="none"]),
   :where([data-launcher-part="trigger"][data-motion="none"]) [data-launcher-icon]::before,
   :where([data-launcher-part="trigger"][data-motion="none"]) [data-launcher-icon]::after,
   :where([data-launcher-part="root"][data-motion="none"]) [data-slot="kind-launcher-backdrop"] {
     transition: none;
+  }
+
+  /* Until the element is defined, its chat would show in the page. */
+  kind-launcher:not(:defined) > kind-launcher-content {
+    display: none;
   }
 
   /* Web keeps parts that aren't present in the page, with `hidden`; the popup content is UI SDK's to show and hide. */

@@ -26,7 +26,10 @@ export function Launcher({ children, ...props }: LauncherProps) {
     <parts.Root {...props}>
       <LauncherTrigger />
       <LauncherBackdrop />
-      <LauncherContent>{children}</LauncherContent>
+      <LauncherContent>
+        {DEFAULT_HEADER}
+        {children}
+      </LauncherContent>
     </parts.Root>
   );
 }
@@ -56,10 +59,10 @@ export type LauncherContentProps = Omit<ComponentProps<typeof parts.Content>, "c
 };
 
 /**
- * The panel: a header with the title and Close, then `children`. It stays mounted while closed, and focus moves to
- * the first composer's editor inside as it opens.
+ * The panel: a header with the title and Close, unless you pass children. It stays mounted while closed, and focus
+ * moves to the first composer's editor inside as it opens.
  */
-export function LauncherContent({ children, render, ...props }: LauncherContentProps) {
+export function LauncherContent({ children = DEFAULT_HEADER, render, ...props }: LauncherContentProps) {
   return (
     <parts.Content
       initialFocus={LAUNCHER_INITIAL_FOCUS}
@@ -74,7 +77,6 @@ export function LauncherContent({ children, render, ...props }: LauncherContentP
         return state.presentation === "sheet" ? <parts.Viewport>{element}</parts.Viewport> : element;
       }}
     >
-      {DEFAULT_HEADER}
       {children}
     </parts.Content>
   );

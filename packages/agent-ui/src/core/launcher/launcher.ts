@@ -43,7 +43,10 @@ export type LauncherOptions = {
    * @default "Assistant"
    */
   label?: string;
-  /** How many messages are unread. Above 0, a badge shows it and the button's name ends in ", N unread". */
+  /**
+   * How many messages are unread. Above 0, a badge shows it and the button's name ends in ", N unread".
+   * @default 0
+   */
   unread?: number;
   /**
    * Opens the panel as a modal dialog in the middle of the screen, which makes the page inert. Without it, the panel
@@ -53,11 +56,17 @@ export type LauncherOptions = {
   modal?: boolean;
   /** Whether the panel is open. Passing it controls it. */
   open?: boolean;
-  /** Whether the panel starts open, when `open` isn't passed. */
+  /**
+   * Whether the panel starts open, when `open` isn't passed.
+   * @default false
+   */
   defaultOpen?: boolean;
   /** Called when the panel opens or closes, with what caused it. */
   onOpenChange?: (open: boolean, details: ChangeDetails<LauncherOpenChangeReason>) => void;
-  /** Keys that open and close the panel from anywhere on the page, like `"mod+i"`. None by default. */
+  /**
+   * Keys that open and close the panel from anywhere on the page, like `"mod+j"`. None by default. Keys the composer's
+   * editor takes for itself, like `"mod+i"` for italics, can't close the panel from inside it.
+   */
   shortcut?: string;
   /**
    * `"auto"` is a full-screen sheet on small touch screens, and a popover or dialog elsewhere.
@@ -202,19 +211,19 @@ export const launcherPrimitive: LauncherPrimitive = definePrimitive<
         bind: (el, part) => {
           const unbindTrigger = trigger.bind?.(el, part);
           const { store, api } = part;
-          let keys: string | undefined;
+          let registered: string | undefined;
           let unregister: (() => void) | undefined;
           const follow = () => {
-            const { shortcut } = store.get();
-            if (shortcut === keys) return;
-            keys = shortcut;
+            const { shortcut, label } = store.get();
+            if (`${shortcut} ${label}` === registered) return;
+            registered = `${shortcut} ${label}`;
             unregister?.();
             unregister = undefined;
             store.set({ keyshortcuts: shortcut && ariaKeyshortcuts(shortcut) });
             if (!shortcut) return;
-            unregister = registerShortcut(shortcut, () => api.toggle({ reason: "shortcut" }), {
+            unregister = registerShortcut(shortcut, (event) => api.toggle({ reason: "shortcut", event }), {
               layer: el,
-              description: `Open ${store.get().label}`,
+              description: `Open or close ${label}`,
             });
           };
           follow();

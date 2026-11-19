@@ -11,13 +11,30 @@ import { launcherHost, messages } from "../../shared/launcher.js";
 
 const { record, click } = launcherHost();
 
-function Page({ unread, modal, motion }: { unread?: number; modal?: boolean; motion?: MotionMode }) {
+function Page({
+  unread,
+  modal,
+  motion,
+  shortcut,
+}: {
+  unread?: number;
+  modal?: boolean;
+  motion?: MotionMode;
+  shortcut?: string;
+}) {
   return (
     <div className="p-6">
       <button id="page-button" type="button" onClick={click}>
         Page button
       </button>
-      <Launcher id="launcher" unread={unread} modal={modal} motion={motion} onOpenChange={record}>
+      <Launcher
+        id="launcher"
+        unread={unread}
+        modal={modal}
+        motion={motion}
+        shortcut={shortcut}
+        onOpenChange={record}
+      >
         <Conversation aria-label="Chat" messageCount={messages.length} className="h-48">
           <ConversationViewport>
             <ConversationContent>
@@ -39,7 +56,7 @@ function Page({ unread, modal, motion }: { unread?: number; modal?: boolean; mot
 }
 
 export const cases = {
-  all: () => <Page unread={2} />,
+  all: () => <Page unread={2} shortcut="mod+j" />,
   modal: () => <Page unread={2} modal />,
   read: () => <Page />,
   reduced: () => <Page unread={2} motion="reduced" />,
