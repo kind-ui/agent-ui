@@ -280,6 +280,12 @@ const components = {
 
   // wave-6-task-6: Day Separator
 
+  "day-separator": {
+    title: "Day Separator",
+    description: "A heading between days that reads Today or Yesterday.",
+    uses: [],
+  },
+
   // wave-6-task-7: Connection Status
 
   // wave-6-task-8: Share Dialog

@@ -201,6 +201,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- wave-6-task-6: Day Separator -->
 
+- **Day Separator (Wave 6 Task 6):** `daySeparatorPrimitive`'s root is a `role: "heading"` with `aria-level` from `level` (1 to 6, else 3), holding a `<time datetime>` label (React `time`; web `kind-day-separator-label` targets its `time` through `wrappedChild`). Its words are `dayLabel` over `today` and `pageLocale`, which are `null` in `state` and read in the root's `bind`, so server markup shows the date in `locale` or English and hydrates before the words change (D13). One page-wide one-minute `setInterval`, started by the first bound separator and cleared with the last, reads `todayKey(timeZone)` again, so a page left open past midnight moves "Today" to "Yesterday"; a store subscription reads it again when `timeZone` changes. The label's `::first-letter` capitalizes "today", which works because a flex item is blockified. It has no agent actions: it's content.
+
 <!-- wave-6-task-7: Connection Status -->
 
 <!-- wave-6-task-8: Share Dialog -->

@@ -68,6 +68,8 @@ import { defineLauncher } from "./components/ui/web/launcher.js";
 
 // wave-6-task-6: Day Separator
 
+import { defineDaySeparator } from "./components/ui/web/day-separator.js";
+
 // wave-6-task-7: Connection Status
 
 // wave-6-task-8: Share Dialog
@@ -149,6 +151,8 @@ for (const define of [
   defineLauncher,
 
   // wave-6-task-6: Day Separator
+
+  defineDaySeparator,
 
   // wave-6-task-7: Connection Status
 
@@ -259,6 +263,8 @@ const items = {
   launcher: `<kind-launcher><kind-launcher-content><p>How can I help?</p></kind-launcher-content></kind-launcher>`,
 
   // wave-6-task-6: Day Separator
+
+  "day-separator": `<kind-day-separator date="2026-11-18"></kind-day-separator>`,
 
   // wave-6-task-7: Connection Status
 

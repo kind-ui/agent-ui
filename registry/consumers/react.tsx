@@ -81,6 +81,8 @@ import { Launcher } from "./components/ui/launcher.js";
 
 // wave-6-task-6: Day Separator
 
+import { DaySeparator } from "./components/ui/day-separator.js";
+
 // wave-6-task-7: Connection Status
 
 // wave-6-task-8: Share Dialog
@@ -370,6 +372,8 @@ const items = {
   ),
 
   // wave-6-task-6: Day Separator
+
+  "day-separator": <DaySeparator date="2026-11-18" />,
 
   // wave-6-task-7: Connection Status
 

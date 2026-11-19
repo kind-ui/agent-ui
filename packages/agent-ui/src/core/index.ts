@@ -665,6 +665,14 @@ export {
 
 // wave-6-task-6: Day Separator
 
+export {
+  type DaySeparatorLabelState,
+  type DaySeparatorOptions,
+  type DaySeparatorPrimitive,
+  type DaySeparatorState,
+  daySeparatorPrimitive,
+} from "./day-separator/index.js";
+
 // wave-6-task-7: Connection Status
 
 // wave-6-task-8: Share Dialog

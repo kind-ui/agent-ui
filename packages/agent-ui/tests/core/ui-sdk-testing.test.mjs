@@ -248,6 +248,8 @@ const cases = {
 
   // wave-6-task-6: Day Separator
 
+  daySeparator: { options: { date: "2026-11-18T09:30:00Z" } },
+
   // wave-6-task-7: Connection Status
 
   // wave-6-task-8: Share Dialog

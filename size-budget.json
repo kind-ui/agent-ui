@@ -30,6 +30,7 @@
     "dictationButtonPrimitive": 8000,
     "threadListPrimitive": 22000,
     "sidebarPrimitive": 11000,
-    "launcherPrimitive": 44000
+    "launcherPrimitive": 44000,
+    "daySeparatorPrimitive": 5500
   }
 }
