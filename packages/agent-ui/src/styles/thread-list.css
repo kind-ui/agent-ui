@@ -104,7 +104,7 @@
   }
 
   [data-slot="kind-thread-list-row"] {
-    border-radius: var(--kind-radius-sm);
+    border-radius: var(--kind-radius-md);
     transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
 
     &:hover {

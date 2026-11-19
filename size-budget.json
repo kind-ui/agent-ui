@@ -30,11 +30,11 @@
     "dictationButtonPrimitive": 8000,
     "threadListPrimitive": 22000,
     "sidebarPrimitive": 11000,
-    "launcherPrimitive": 44000,
+    "launcherPrimitive": 44500,
     "daySeparatorPrimitive": 5500,
     "connectionStatusPrimitive": 7300,
-    "shareDialogPrimitive": 39000,
-    "conversationSearchPrimitive": 61500,
-    "threadSearchPrimitive": 54000
+    "shareDialogPrimitive": 39500,
+    "conversationSearchPrimitive": 62000,
+    "threadSearchPrimitive": 54500
   }
 }
