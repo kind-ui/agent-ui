@@ -132,7 +132,7 @@
     &::after {
       content: attr(data-duration);
       flex-shrink: 0;
-      font-size: 0.75rem;
+      font-size: var(--kind-text-xs);
       font-variant-numeric: tabular-nums;
       color: var(--kind-color-muted);
     }

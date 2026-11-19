@@ -5,7 +5,7 @@ import { withKindClass } from "./kind-class.js";
 
 export const KindAvatar = withKindClass(
   Avatar,
-  "relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--kind-color-hover)] text-xs font-medium text-[var(--kind-color-fg)]",
+  "relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--kind-color-hover)] text-[length:var(--kind-text-xs)]/4 font-medium text-[var(--kind-color-fg)]",
   "KindAvatar",
 );
 export const KindAvatarImage = withKindClass(AvatarImage, "size-full object-cover", "KindAvatarImage");

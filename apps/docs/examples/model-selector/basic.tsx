@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Composer, ComposerInput, ComposerSubmit } from "@/components/ui/composer";
 import { ModelSelector } from "@/components/ui/model-selector";
 import { ReasoningEffort } from "@/components/ui/reasoning-effort";
-import { AnthropicLogo, GeminiLogo, MicrosoftLogo, OpenAILogo, XAILogo } from "./logos";
+import { AnthropicLogo, GoogleMonogram, MicrosoftLogo, OpenAILogo, XAILogo } from "./logos";
 
 const models = [
   {
@@ -41,14 +41,14 @@ const models = [
     name: "Gemini 4 Argon",
     group: "Google",
     description: "Long context",
-    icon: <GeminiLogo />,
+    icon: <GoogleMonogram />,
   },
 ];
 
 const moreModels = [
   { id: "gpt-6-astra", name: "GPT-6 Astra", group: "OpenAI", icon: <OpenAILogo /> },
   { id: "gpt-5.6-sol", name: "GPT-5.6 Sol", group: "OpenAI", icon: <OpenAILogo /> },
-  { id: "gemini-3.8-flash", name: "Gemini 3.8 Flash", group: "Google", icon: <GeminiLogo /> },
+  { id: "gemini-3.8-flash", name: "Gemini 3.8 Flash", group: "Google", icon: <GoogleMonogram /> },
   { id: "grok-4.7", name: "Grok 4.7", group: "xAI", icon: <XAILogo /> },
 ];
 

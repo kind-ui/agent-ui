@@ -1,52 +1,15 @@
-/* Generated Image (spec §7): a frame of the image's shape where grain over a drifting field, then over a preview that
-   sharpens with progress, denoises into the image, and a dialog that shows it full size. */
-@property --kind-generated-image-dissolve {
-  syntax: "<number>";
-  inherits: false;
-  initial-value: 0;
-}
-
-/* The field turns slowly; its layer only transforms, so it never repaints. */
-@keyframes kind-generated-image-drift {
-  to {
-    rotate: 1turn;
-  }
-}
-
-@keyframes kind-generated-image-breathe {
-  from {
-    opacity: 0.65;
-  }
-}
-
-/* Film grain: the noise layer jumps between offsets within one tile, so it flickers without moving. */
-@keyframes kind-generated-image-grain {
-  25% {
-    translate: -40px -90px;
-  }
-  50% {
-    translate: -110px -30px;
-  }
-  75% {
-    translate: -70px -140px;
-  }
-}
-
+/* Generated Image (spec §7): a frame of the image's shape that holds a flat fill, then a preview that sharpens with
+   progress, then crossfades to the image, and a dialog that shows it full size. */
 @layer components {
   [data-slot="kind-generated-image"] {
     /* Lucide "download", "maximize-2" and "image-off", see THIRD_PARTY_NOTICES.md. */
     --kind-generated-image-download-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 15V3'/%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
     --kind-generated-image-zoom-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h6v6'/%3E%3Cpath d='m21 3-7 7'/%3E%3Cpath d='m3 21 7-7'/%3E%3Cpath d='M9 21H3v-6'/%3E%3C/svg%3E");
     --kind-generated-image-error-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 2 20 20'/%3E%3Cpath d='M10.41 10.41a2 2 0 1 1-2.83-2.83'/%3E%3Cpath d='M13.5 13.5 6 21'/%3E%3Cpath d='m18 12 3 3'/%3E%3Cpath d='M3.59 3.59A1.99 1.99 0 0 0 3 5v14a2 2 0 0 0 2 2h14c.55 0 1.052-.22 1.41-.59'/%3E%3Cpath d='M21 15V5a2 2 0 0 0-2-2H9'/%3E%3C/svg%3E");
-    /* Grey film grain for the overlay, and a speckled alpha noise the image dissolves in through. */
-    --kind-generated-image-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1.6 0 0 0 -0.3 1.6 0 0 0 -0.3 1.6 0 0 0 -0.3 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    --kind-generated-image-speckle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 6 0 0 0 -3.4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    --kind-generated-image-reveal: calc(var(--kind-duration-panel) * 2.5);
-    --kind-generated-image-dissolve-duration: calc(var(--kind-generated-image-reveal) * 1.4);
 
     display: block;
     color: var(--kind-color-fg);
-    font-size: 0.875rem;
+    font-size: var(--kind-text-md);
     line-height: 1.25rem;
   }
 
@@ -61,59 +24,7 @@
     border-radius: var(--kind-radius);
     outline: 1px solid color-mix(in oklab, var(--kind-color-fg) 10%, transparent);
     outline-offset: -1px;
-    background-color: color-mix(in oklab, var(--kind-color-accent) 6%, var(--kind-color-surface));
-
-    /* While the image is on its way: soft fields of the accent, painted once on an oversized layer that turns and
-       breathes. */
-    &::before {
-      content: "";
-      position: absolute;
-      inset: -50%;
-      z-index: 0;
-      pointer-events: none;
-      background:
-        radial-gradient(
-          circle at 40% 42%,
-          color-mix(in oklab, var(--kind-color-accent) 55%, transparent),
-          transparent 30%
-        ),
-        radial-gradient(
-          circle at 62% 60%,
-          color-mix(in oklab, var(--kind-color-accent) 35%, transparent),
-          transparent 32%
-        ),
-        radial-gradient(
-          circle at 56% 36%,
-          color-mix(in oklab, var(--kind-color-surface) 70%, transparent),
-          transparent 22%
-        );
-      opacity: 0;
-      transition: opacity var(--kind-generated-image-reveal) var(--kind-ease);
-    }
-    &:where([data-phase="generating"], [data-phase="loading"])::before {
-      opacity: 1;
-      animation:
-        kind-generated-image-drift 18s linear infinite,
-        kind-generated-image-breathe 4s ease-in-out infinite alternate;
-    }
-
-    /* Grain over the field or the preview: heavy at first, thinning as `progress` rises, and gone as the image lands. */
-    &::after {
-      content: "";
-      position: absolute;
-      inset: -160px;
-      z-index: 3;
-      pointer-events: none;
-      background: var(--kind-generated-image-grain) 0 0 / 160px;
-      mix-blend-mode: overlay;
-      opacity: calc(0.6 - 0.4 * var(--kind-generated-image-resolve, 0));
-      animation: kind-generated-image-grain 0.5s steps(1) infinite;
-      transition: opacity var(--kind-generated-image-reveal) var(--kind-ease);
-    }
-    &:where([data-phase="loaded"], [data-phase="error"])::after {
-      opacity: 0;
-      animation: none;
-    }
+    background-color: var(--kind-color-hover);
   }
 
   :is([data-slot="kind-generated-image-preview"], [data-slot="kind-generated-image-image"]) {
@@ -126,53 +37,28 @@
   }
 
   /* Blurred and muted at first, sharpening toward 4px and full color as `progress` rises. It keeps the image's box,
-     so its composition doesn't jump when the image lands; its edges soften into the field like a vignette. */
+     so its composition doesn't jump when the image lands; the slight scale keeps its blurred edges inside the frame. */
   [data-slot="kind-generated-image-preview"] {
     z-index: 1;
     filter: blur(calc(24px - 20px * var(--kind-generated-image-resolve, 0)))
       saturate(calc(0.6 + 0.4 * var(--kind-generated-image-resolve, 0)));
     scale: 1.04;
-    transition:
-      opacity var(--kind-generated-image-reveal) var(--kind-ease),
-      filter var(--kind-generated-image-reveal) var(--kind-ease),
-      scale var(--kind-generated-image-reveal) var(--kind-ease);
+    transition: filter var(--kind-duration-panel) var(--kind-ease);
   }
-  /* Sharp under the image as it settles in, then gone, so a transparent image doesn't show it. */
+  /* Gone once the image has faded in over it, so a transparent image doesn't show it. */
   :where([data-slot="kind-generated-image-frame"][data-phase="loaded"])
     [data-slot="kind-generated-image-preview"] {
-    filter: none;
-    scale: 1;
     opacity: 0;
-    transition:
-      filter var(--kind-generated-image-reveal) var(--kind-ease),
-      scale var(--kind-generated-image-reveal) var(--kind-ease),
-      opacity 0s linear var(--kind-generated-image-dissolve-duration);
+    transition: opacity 0s linear var(--kind-duration-base);
   }
 
-  /* Dissolves in over the preview through a noise mask, grain first, while the last of the grain clears, and settles.
-     The mask's solid layer fills in with `--kind-generated-image-dissolve`. */
   [data-slot="kind-generated-image-image"] {
-    --kind-generated-image-dissolve: 0;
-
     z-index: 2;
     opacity: 0;
-    scale: 1.02;
-    mask-image:
-      var(--kind-generated-image-speckle),
-      linear-gradient(rgb(0 0 0 / var(--kind-generated-image-dissolve)) 0 0);
-    mask-size:
-      240px 240px,
-      100% 100%;
-    transition:
-      opacity calc(var(--kind-generated-image-reveal) / 3) linear,
-      --kind-generated-image-dissolve var(--kind-generated-image-dissolve-duration) linear,
-      scale var(--kind-generated-image-reveal) var(--kind-ease);
+    transition: opacity var(--kind-duration-base) var(--kind-ease-out);
 
     &[data-loaded] {
-      --kind-generated-image-dissolve: 1;
-
       opacity: 1;
-      scale: 1;
     }
   }
 
@@ -187,11 +73,10 @@
     max-inline-size: calc(100% - 20px);
     padding: 2px 8px;
     border-radius: 999px;
-    background-color: color-mix(in oklab, var(--kind-color-surface) 90%, transparent);
-    backdrop-filter: blur(8px);
+    background-color: var(--kind-color-surface);
     box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--kind-color-fg) 8%, transparent);
     color: var(--kind-color-fg);
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     line-height: 1.25rem;
   }
 
@@ -233,7 +118,7 @@
     gap: 8px;
     padding: 16px;
     color: var(--kind-color-muted);
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     text-align: center;
     text-wrap: balance;
 
@@ -262,8 +147,8 @@
     cursor: zoom-in;
 
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: -2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
     }
     /* A pill and the glyph on it, in the corner. */
     &::before,
@@ -305,7 +190,7 @@
     background-color: var(--kind-color-surface);
     color: var(--kind-color-fg);
     font: inherit;
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     font-weight: 500;
     transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
 
@@ -313,8 +198,8 @@
       background-color: var(--kind-color-hover);
     }
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
     &[data-pending] {
       cursor: progress;
@@ -417,16 +302,16 @@
     min-width: 0;
     margin: 0;
     overflow: hidden;
-    font-size: 0.875rem;
+    font-size: var(--kind-text-md);
     font-weight: 600;
     line-height: 1.25rem;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  /* Motion: the field turns and breathes, the grain flickers, the preview sharpens with progress, and the image dissolves in; the dialog rises in over a fading backdrop. Reduced motion holds the
-     field and grain still, steps the preview's blur, and only fades the image and dialog, in 120 ms; `none` doesn't
-     animate. */
+  /* Motion: the preview sharpens with progress, the image fades in over it, and the dialog rises in over a fading
+     backdrop. Reduced motion steps the preview's blur and only fades the image and dialog, in 120 ms; `none`
+     doesn't animate. */
   :where([data-slot="kind-generated-image"]) {
     & [data-slot="kind-generated-image-content"] {
       transition:
@@ -457,23 +342,10 @@
 
   @media (prefers-reduced-motion: reduce) {
     :where([data-slot="kind-generated-image"][data-motion="auto"]) {
-      & [data-slot="kind-generated-image-frame"]::before,
-      & [data-slot="kind-generated-image-frame"]::after {
-        animation: none;
-      }
-      & [data-slot="kind-generated-image-frame"]::before,
       & [data-slot="kind-generated-image-trigger"]::before,
       & [data-slot="kind-generated-image-trigger"]::after,
       & :is([data-slot="kind-generated-image-preview"], [data-slot="kind-generated-image-download"]) {
         transition: none;
-      }
-      & [data-slot="kind-generated-image-preview"] {
-        scale: none;
-      }
-      & [data-slot="kind-generated-image-image"] {
-        --kind-generated-image-dissolve: 1;
-
-        scale: none;
       }
       &
         :where([data-slot="kind-generated-image-frame"][data-phase="loaded"])
@@ -498,23 +370,10 @@
   }
 
   :where([data-slot="kind-generated-image"][data-motion="reduced"]) {
-    & [data-slot="kind-generated-image-frame"]::before,
-    & [data-slot="kind-generated-image-frame"]::after {
-      animation: none;
-    }
-    & [data-slot="kind-generated-image-frame"]::before,
     & [data-slot="kind-generated-image-trigger"]::before,
     & [data-slot="kind-generated-image-trigger"]::after,
     & :is([data-slot="kind-generated-image-preview"], [data-slot="kind-generated-image-download"]) {
       transition: none;
-    }
-    & [data-slot="kind-generated-image-preview"] {
-      scale: none;
-    }
-    & [data-slot="kind-generated-image-image"] {
-      --kind-generated-image-dissolve: 1;
-
-      scale: none;
     }
     &
       :where([data-slot="kind-generated-image-frame"][data-phase="loaded"])
@@ -538,11 +397,6 @@
   }
 
   :where([data-slot="kind-generated-image"][data-motion="none"]) {
-    & [data-slot="kind-generated-image-frame"]::before,
-    & [data-slot="kind-generated-image-frame"]::after {
-      animation: none;
-    }
-    & [data-slot="kind-generated-image-frame"]::before,
     & [data-slot="kind-generated-image-trigger"]::before,
     & [data-slot="kind-generated-image-trigger"]::after,
     &

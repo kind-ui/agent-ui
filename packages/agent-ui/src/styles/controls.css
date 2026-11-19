@@ -1,0 +1,201 @@
+/* Shared controls (docs/design-principles.md "System"). A part opts in with one attribute its core slot writes, so both
+   render layers draw it the same; every selector is `:where()`, so a component stylesheet or a consumer class wins.
+
+   - `data-kind-button`: a text button, ghost by default; `="secondary"` adds a border, `="primary"` and `="danger"`
+     fill it. While pending it keeps its label and holds a running status mark (`[data-status-mark]`).
+   - `data-kind-icon-button`: a square ghost button holding one icon.
+   - `data-kind-trigger`: what opens a menu, picker or popover; ghost, filled while open.
+   - `data-kind-badge`: a tinted pill; `="success" | "warning" | "danger" | "accent"` picks the tone.
+   - `data-kind-popup`, `data-kind-dialog` (with `data-kind-dialog-title`), `data-kind-scrim`: surfaces.
+   - `data-kind-code`: a block of code or output.
+
+   Under a coarse pointer, a button's `::before` grows its hit area to `--kind-hit-area`, so a component doesn't draw on
+   `::before` of a shared control. */
+@layer components {
+  :where([data-kind-button], [data-kind-icon-button], [data-kind-trigger]) {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    box-sizing: border-box;
+    height: var(--kind-control-height);
+    margin: 0;
+    padding: 0 0.75rem;
+    border: 1px solid transparent;
+    border-radius: var(--kind-radius-md);
+    background-color: transparent;
+    color: var(--kind-color-fg);
+    font: inherit;
+    font-size: var(--kind-text-md);
+    font-weight: 500;
+    line-height: 1.25rem;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition:
+      background-color var(--kind-duration-fast),
+      border-color var(--kind-duration-fast),
+      color var(--kind-duration-fast);
+
+    &:hover:not(:disabled, [data-disabled], [aria-disabled="true"]) {
+      background-color: var(--kind-color-hover);
+    }
+
+    &:is([aria-pressed="true"], [aria-expanded="true"], [data-pressed], [data-popup-open]) {
+      background-color: var(--kind-color-selected);
+    }
+
+    &:focus-visible {
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
+    }
+
+    &:is(:disabled, [data-disabled], [aria-disabled="true"]) {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    &[data-pending] {
+      cursor: progress;
+      opacity: 1;
+    }
+
+    & > [data-status-mark] {
+      --kind-status-mark-size: 14px;
+    }
+
+    & > svg {
+      flex-shrink: 0;
+      width: 1rem;
+      height: 1rem;
+    }
+  }
+
+  :where([data-kind-button="secondary"]) {
+    border-color: var(--kind-color-border);
+  }
+
+  :where([data-kind-button="primary"]) {
+    background-color: var(--kind-color-accent);
+    color: var(--kind-color-on-accent);
+
+    &:hover:not(:disabled, [data-disabled], [aria-disabled="true"]) {
+      background-color: var(--kind-color-accent-hover);
+    }
+  }
+
+  :where([data-kind-button="danger"]) {
+    background-color: var(--kind-color-danger);
+    color: var(--kind-color-on-status);
+
+    &:hover:not(:disabled, [data-disabled], [aria-disabled="true"]) {
+      background-color: color-mix(in oklab, var(--kind-color-danger) 88%, var(--kind-color-fg));
+    }
+  }
+
+  :where([data-kind-icon-button]) {
+    width: var(--kind-control-height);
+    padding: 0;
+    color: var(--kind-color-muted);
+
+    &:hover:not(:disabled, [data-disabled], [aria-disabled="true"]) {
+      color: var(--kind-color-fg);
+    }
+  }
+
+  :where([data-kind-trigger]) {
+    height: var(--kind-trigger-height);
+    padding: 0 0.5rem;
+  }
+
+  @media (pointer: coarse) {
+    :where([data-kind-button], [data-kind-icon-button], [data-kind-trigger])::before {
+      content: "";
+      position: absolute;
+      inset: 50% auto auto 50%;
+      width: max(100%, var(--kind-hit-area));
+      height: max(100%, var(--kind-hit-area));
+      translate: -50% -50%;
+    }
+  }
+
+  :where([data-kind-badge]) {
+    --kind-badge-tone: var(--kind-color-muted);
+
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.25rem;
+    box-sizing: border-box;
+    height: var(--kind-badge-height);
+    padding: 0 0.375rem;
+    border-radius: 999px;
+    background-color: color-mix(in oklab, var(--kind-badge-tone) var(--kind-tint-fill), transparent);
+    color: color-mix(in oklab, var(--kind-badge-tone) 60%, var(--kind-color-fg));
+    font-size: var(--kind-text-xs);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  :where([data-kind-badge="success"]) {
+    --kind-badge-tone: var(--kind-color-success);
+  }
+  :where([data-kind-badge="warning"]) {
+    --kind-badge-tone: var(--kind-color-warning);
+  }
+  :where([data-kind-badge="danger"]) {
+    --kind-badge-tone: var(--kind-color-danger);
+  }
+  :where([data-kind-badge="accent"]) {
+    --kind-badge-tone: var(--kind-color-accent);
+  }
+
+  :where([data-kind-popup]) {
+    box-sizing: border-box;
+    padding: 0.25rem;
+    border: 1px solid var(--kind-color-border);
+    border-radius: var(--kind-popup-radius);
+    background-color: var(--kind-color-surface);
+    color: var(--kind-color-fg);
+    box-shadow: var(--kind-shadow-popover);
+    font-size: var(--kind-text-md);
+  }
+
+  :where([data-kind-dialog]) {
+    box-sizing: border-box;
+    border: 1px solid var(--kind-color-border);
+    border-radius: var(--kind-dialog-radius);
+    background-color: var(--kind-color-surface);
+    color: var(--kind-color-fg);
+    box-shadow: var(--kind-shadow-dialog);
+    font-size: var(--kind-text-md);
+  }
+
+  :where([data-kind-dialog-title]) {
+    margin: 0;
+    font-size: var(--kind-text-lg);
+    font-weight: 600;
+    line-height: 1.5rem;
+  }
+
+  :where([data-kind-scrim]) {
+    background-color: var(--kind-color-scrim);
+  }
+
+  /* UI SDK draws every sheet's backdrop from this variable, which a backdrop inherits from its sheet. */
+  :where(:root) {
+    --sheet-backdrop: var(--kind-color-scrim);
+  }
+
+  :where([data-kind-code]) {
+    border-radius: var(--kind-code-radius);
+    background-color: var(--kind-code-surface);
+    font-family: var(--kind-font-mono);
+    font-size: var(--kind-code-font-size);
+    line-height: var(--kind-code-line-height);
+  }
+}

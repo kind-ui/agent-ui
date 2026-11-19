@@ -22,7 +22,7 @@
     max-inline-size: 100%;
     block-size: var(--kind-dictation-height);
     color: var(--kind-color-fg);
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     line-height: 1.25rem;
   }
 
@@ -54,8 +54,8 @@
       background-color: var(--kind-color-hover);
     }
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
   }
 

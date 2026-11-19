@@ -6,11 +6,11 @@ import { withKindClass } from "./kind-class.js";
 export const KindCollapsible = withKindClass(Collapsible, "flex flex-col gap-1", "KindCollapsible");
 export const KindCollapsibleTrigger = withKindClass(
   CollapsibleTrigger,
-  "inline-flex items-center gap-1.5 self-start rounded-[calc(var(--kind-radius)/2)] px-2 py-1 text-sm font-medium text-[var(--kind-color-fg)] hover:bg-[var(--kind-color-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--kind-color-ring)] data-disabled:opacity-50",
+  "inline-flex items-center gap-1.5 self-start rounded-[var(--kind-radius-md)] px-2 py-1 text-[length:var(--kind-text-md)]/5 font-medium text-[var(--kind-color-fg)] hover:bg-[var(--kind-color-hover)] focus-visible:[outline:var(--kind-focus-ring)] focus-visible:[outline-offset:var(--kind-focus-offset)] data-disabled:opacity-50",
   "KindCollapsibleTrigger",
 );
 export const KindCollapsiblePanel = withKindClass(
   CollapsiblePanel,
-  "overflow-hidden px-2 text-sm text-[var(--kind-color-fg)]",
+  "overflow-hidden px-2 text-[length:var(--kind-text-md)]/5 text-[var(--kind-color-fg)]",
   "KindCollapsiblePanel",
 );

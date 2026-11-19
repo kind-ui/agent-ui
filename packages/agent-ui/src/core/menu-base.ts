@@ -279,12 +279,20 @@ export const menuBase = <Options extends MenuBaseOptions>(config: MenuBaseConfig
         source: detail.source,
         cancel: () => event.preventDefault(),
       });
+      // While `ui-menu` reports its own open change, `partState.menu` keeps the open it had: writing `open` onto it
+      // then is a script's `setOpen`, which focuses the first item even when a pointer opened the menu.
+      let applying: boolean | undefined;
       const composedEvents: Record<string, ComposedHandler> = {
         openchange: (detail, event) => {
           if ((event.target as Element).localName !== "ui-menu") return;
           const { value, ...rest } = detail as Detail;
           const details = { ...rest, cancel: () => event.preventDefault() };
-          onOpenChange(value as boolean, details as ChangeDetails<MenuOpenChangeReason>);
+          applying = !value;
+          try {
+            onOpenChange(value as boolean, details as ChangeDetails<MenuOpenChangeReason>);
+          } finally {
+            applying = undefined;
+          }
         },
         action: (detail, event) => {
           if ((event.target as Element).localName !== "ui-menu") return;
@@ -334,7 +342,7 @@ export const menuBase = <Options extends MenuBaseOptions>(config: MenuBaseConfig
         },
         getItems: () => (store.get().disabled ? [] : store.get().items),
         partState: {
-          menu: (state) => menu(state.presentation, state.open),
+          menu: (state) => menu(state.presentation, applying ?? state.open),
           trigger: (state) => trigger(state.label, state.disabled),
         },
         composedEvents,

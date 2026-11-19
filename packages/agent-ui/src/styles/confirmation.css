@@ -4,7 +4,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     line-height: 1.25rem;
     color: var(--kind-color-fg);
   }
@@ -29,7 +29,7 @@
     padding-inline: 12px;
     border: 1px solid transparent;
     border-radius: calc(var(--kind-radius) / 2);
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     font-weight: 500;
     transition:
       background-color var(--kind-duration-fast),
@@ -37,8 +37,8 @@
       opacity var(--kind-duration-fast);
 
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
     /* The pressed choice stays solid while its decision is sent; the other dims. */
     &[aria-disabled="true"] {
@@ -76,7 +76,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     color: var(--kind-color-danger);
   }
 
@@ -84,8 +84,8 @@
     border-radius: calc(var(--kind-radius) / 2);
 
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
     &[data-state="submitting"] {
       color: var(--kind-color-muted);

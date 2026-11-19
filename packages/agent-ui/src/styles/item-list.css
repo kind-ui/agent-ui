@@ -19,15 +19,15 @@
     align-items: start;
     border-radius: calc(var(--kind-radius) / 2);
     padding: 4px 6px;
-    font-size: 0.875rem;
+    font-size: var(--kind-text-md);
     line-height: 1.25rem;
     color: var(--kind-color-fg);
     transition: background-color var(--kind-duration-fast);
 
     &:focus-visible {
       background-color: var(--kind-color-hover);
-      outline: 1.5px solid color-mix(in oklab, var(--kind-color-ring) 50%, transparent);
-      outline-offset: -1.5px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
     }
 
     /* Centered on the first line. */
@@ -79,24 +79,16 @@
       border-radius: calc(var(--kind-radius) / 3);
       padding: 0 5px;
       font-family: var(--kind-font-mono);
-      font-size: 0.75rem;
+      font-size: var(--kind-text-xs);
       line-height: 1.125rem;
       color: var(--kind-color-muted);
     }
   }
 
   [data-step-part="description"] {
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     line-height: 1.125rem;
     color: var(--kind-color-muted);
-  }
-
-  /* Open, the running item shows the activity, so the title above it holds still. */
-  :is([data-slot="kind-task"], [data-slot="kind-plan"])[data-open]
-    :is([data-slot="kind-task-title"], [data-slot="kind-plan-title"])[data-status="running"] {
-    color: var(--kind-color-fg);
-    background: none;
-    animation: none;
   }
 
   /* Web keeps parts that aren't present in the page, with `hidden`. */

@@ -55,7 +55,7 @@
       &:has(input:focus-visible) {
         box-shadow: 0 0 0 1.5px var(--kind-color-ring);
         /* Shows in forced colors, where the shadow doesn't. */
-        outline: 1.5px solid transparent;
+        outline: var(--kind-focus-ring-width) solid transparent;
       }
     }
 
@@ -68,7 +68,7 @@
       background: none;
       color: var(--kind-color-fg);
       font: inherit;
-      font-size: 0.875rem;
+      font-size: var(--kind-text-md);
       outline: none;
 
       &::placeholder {
@@ -103,8 +103,8 @@
         background-color: color-mix(in oklab, var(--kind-color-fg) 6%, transparent);
       }
       &:focus-visible {
-        outline: 1.5px solid var(--kind-color-ring);
-        outline-offset: -1.5px;
+        outline: var(--kind-focus-ring);
+        outline-offset: var(--kind-focus-offset-inset);
       }
       &[hidden] {
         display: none;
@@ -114,7 +114,7 @@
 
   [data-slot="kind-transcript-count"] {
     flex-shrink: 0;
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
@@ -129,8 +129,8 @@
     scrollbar-color: var(--kind-color-border) transparent;
 
     &:focus-visible {
-      outline: 1.5px solid color-mix(in oklab, var(--kind-color-ring) 50%, transparent);
-      outline-offset: -1.5px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
       border-radius: 0 0 var(--kind-radius) var(--kind-radius);
     }
   }
@@ -197,14 +197,14 @@
   [data-slot="kind-transcript-speaker"] {
     min-width: 0;
     overflow: hidden;
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     font-weight: 600;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   [data-slot="kind-transcript-time"] {
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     font-variant-numeric: tabular-nums;
     color: var(--kind-color-muted);
   }
@@ -225,14 +225,14 @@
       text-underline-offset: 2px;
     }
     &:focus-visible {
-      outline: 1.5px solid var(--kind-color-ring);
+      outline: var(--kind-focus-ring);
       outline-offset: 0;
     }
   }
 
   [data-slot="kind-transcript-text"] {
     margin: 0;
-    font-size: 0.875rem;
+    font-size: var(--kind-text-md);
     line-height: 1.5rem;
     overflow-wrap: anywhere;
   }

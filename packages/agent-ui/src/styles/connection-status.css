@@ -20,7 +20,7 @@
     box-shadow:
       0 1px 2px color-mix(in oklab, var(--kind-color-shadow) 6%, transparent),
       0 4px 16px -4px color-mix(in oklab, var(--kind-color-shadow) 12%, transparent);
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     font-weight: 500;
     line-height: 1rem;
     white-space: nowrap;
@@ -74,7 +74,7 @@
       background-color: color-mix(in oklab, var(--kind-color-fg) 12%, transparent);
     }
     &:focus-visible {
-      outline: 1.5px solid var(--kind-color-ring);
+      outline: var(--kind-focus-ring);
       outline-offset: 1px;
     }
     &[aria-disabled="true"] {

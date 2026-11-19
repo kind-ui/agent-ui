@@ -18,7 +18,7 @@
     border-radius: calc(var(--kind-radius) * 2 / 3);
     background-color: color-mix(in oklab, var(--kind-notice-tone) 6%, var(--kind-color-surface));
     color: var(--kind-color-fg);
-    font-size: 0.875rem;
+    font-size: var(--kind-text-md);
     line-height: 1.25rem;
 
     &[data-variant="success"] {
@@ -95,7 +95,7 @@
     }
     &:focus-visible {
       color: var(--kind-color-fg);
-      outline: 2px solid var(--kind-color-ring);
+      outline: var(--kind-focus-ring);
       outline-offset: 1px;
     }
   }

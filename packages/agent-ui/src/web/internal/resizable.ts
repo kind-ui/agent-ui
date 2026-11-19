@@ -16,9 +16,8 @@ const classes = [
   "[&_[data-slot=resizable-handle]]:data-[hovering]:bg-[var(--kind-color-ring)]",
   "[&_[data-slot=resizable-handle]]:data-[dragging]:bg-[var(--kind-color-ring)]",
   "[&_[data-slot=resizable-handle]]:focus-visible:bg-[var(--kind-color-ring)]",
-  "[&_[data-slot=resizable-handle]]:focus-visible:outline-2",
-  "[&_[data-slot=resizable-handle]]:focus-visible:outline-offset-1",
-  "[&_[data-slot=resizable-handle]]:focus-visible:outline-[var(--kind-color-ring)]",
+  "[&_[data-slot=resizable-handle]]:focus-visible:[outline:var(--kind-focus-ring)]",
+  "[&_[data-slot=resizable-handle]]:focus-visible:[outline-offset:var(--kind-focus-offset)]",
   "[&_[data-slot=resizable-handle]]:motion-reduce:transition-none",
   "[&_[data-slot=resizable-handle]]:forced-colors:bg-[CanvasText]",
 ];

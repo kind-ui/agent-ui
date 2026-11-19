@@ -6,7 +6,7 @@
     flex-direction: column;
     gap: 16px;
     margin: 0;
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     line-height: 1.25rem;
     color: var(--kind-color-fg);
   }
@@ -27,7 +27,7 @@
 
     & [data-question-required] {
       margin-inline-start: 4px;
-      font-size: 0.6875rem;
+      font-size: var(--kind-text-xs);
       font-weight: 400;
       color: var(--kind-color-muted);
     }
@@ -74,7 +74,7 @@
   }
 
   [data-question-option-description] {
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     color: var(--kind-color-muted);
   }
 
@@ -114,7 +114,7 @@
     padding-inline: 12px;
     border: 1px solid transparent;
     border-radius: calc(var(--kind-radius) / 2);
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     font-weight: 500;
     transition:
       background-color var(--kind-duration-fast),
@@ -122,8 +122,8 @@
       opacity var(--kind-duration-fast);
 
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
     /* The pressed button stays solid while its call is pending; a disabled one dims. */
     &[aria-disabled="true"] {
@@ -170,7 +170,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     color: var(--kind-color-danger);
   }
 
@@ -181,8 +181,8 @@
     border-radius: calc(var(--kind-radius) / 2);
 
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
 
     & [data-question-outcome] {
@@ -204,7 +204,7 @@
       display: none;
     }
     & dt {
-      font-size: 0.75rem;
+      font-size: var(--kind-text-xs);
       color: var(--kind-color-muted);
     }
     & dd {

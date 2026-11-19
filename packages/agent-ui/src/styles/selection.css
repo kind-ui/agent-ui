@@ -10,7 +10,7 @@
     outline: none;
 
     &:focus-visible {
-      outline: 1.5px solid var(--kind-color-ring);
+      outline: var(--kind-focus-ring);
       outline-offset: 4px;
     }
   }
@@ -31,7 +31,7 @@
       0 1px 2px color-mix(in oklab, var(--kind-color-shadow) 6%, transparent),
       0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 20%, transparent);
     color: var(--kind-color-fg);
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     line-height: 1.25rem;
     transition:
       opacity var(--kind-duration-base) var(--kind-ease-out),

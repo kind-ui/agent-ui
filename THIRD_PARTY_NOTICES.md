@@ -85,9 +85,9 @@
 
 ## Lobe Icons
 
-- Source: https://github.com/lobehub/lobe-icons, npm `@lobehub/icons-static-svg@1.103.0`, the `anthropic`, `openai`, `microsoft-color`, `gemini-color` and `xai` icons.
+- Source: https://github.com/lobehub/lobe-icons, npm `@lobehub/icons-static-svg@1.103.0`, the `anthropic`, `openai`, `microsoft-color` and `xai` icons.
 - Used in: `apps/docs/examples/model-selector/logos.tsx` (the Model Selector example and the Human Input showcase) and `packages/agent-ui/tests/fixtures/shared/model-logos.ts`. Not shipped in the package.
-- Changes: path data unchanged; dropped `width`, `height`, `style` and `<title>`, added `aria-hidden`, and renamed Gemini's gradient ids.
+- Changes: path data unchanged; dropped `width`, `height`, `style` and `<title>`, and added `aria-hidden`.
 - The logos are trademarks of their owners, used here only to name their models.
 - Copyright (c) 2023 LobeHub. Licensed under the MIT License.
 

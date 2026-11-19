@@ -28,13 +28,13 @@
     border: 1px solid var(--kind-color-border);
     border-radius: var(--kind-radius);
     background-color: var(--kind-color-surface);
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     line-height: 1.125rem;
     transition: border-color var(--kind-duration-fast);
 
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
 
     &[data-error] {
@@ -86,7 +86,7 @@
 
     & > [data-detail] {
       color: var(--kind-color-muted);
-      font-size: 0.75rem;
+      font-size: var(--kind-text-xs);
       font-variant-numeric: tabular-nums;
     }
 

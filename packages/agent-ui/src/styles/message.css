@@ -59,7 +59,7 @@
     resize: none;
 
     &:focus-visible {
-      outline: 1.5px solid var(--kind-color-ring);
+      outline: var(--kind-focus-ring);
       outline-offset: 1px;
     }
   }
@@ -125,7 +125,7 @@
   [data-slot="kind-message-branch"] {
     display: inline-flex;
     align-items: center;
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     font-variant-numeric: tabular-nums;
   }
 
@@ -160,8 +160,8 @@
       background-color: var(--kind-color-hover);
     }
     &:focus-visible {
-      outline: 1.5px solid var(--kind-color-ring);
-      outline-offset: -1.5px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
     }
     &[aria-disabled="true"] {
       opacity: 0.4;
@@ -191,15 +191,17 @@
   [data-slot="kind-message-avatar"]:where([data-author]) :where([data-slot="avatar"]) {
     position: relative;
     display: inline-flex;
-    width: 1.75rem;
-    height: 1.75rem;
+    --kind-message-avatar-size: 1.75rem;
+    width: var(--kind-message-avatar-size);
+    height: var(--kind-message-avatar-size);
     align-items: center;
     justify-content: center;
     overflow: hidden;
     border-radius: 9999px;
     background-color: color-mix(in oklab, var(--kind-color-accent) 18%, var(--kind-color-surface));
     color: var(--kind-color-fg);
-    font-size: 0.6875rem;
+    /* Initials scale with the avatar, not the type scale. */
+    font-size: calc(var(--kind-message-avatar-size) * 0.4);
     font-weight: 600;
     line-height: 1;
     user-select: none;
@@ -232,7 +234,7 @@
     min-height: 1.75rem;
     align-content: center;
     color: var(--kind-color-muted);
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     line-height: 1.25rem;
   }
 
@@ -262,7 +264,7 @@
     min-height: 1.75rem;
     margin-top: 0.375rem;
     color: var(--kind-color-muted);
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
   }
 
   :where([data-slot="kind-message-outcome"][data-outcome="failed"]) [data-slot="kind-message-outcome-text"] {
@@ -286,7 +288,7 @@
       background-color: var(--kind-color-hover);
     }
     &:focus-visible {
-      outline: 1.5px solid var(--kind-color-ring);
+      outline: var(--kind-focus-ring);
       outline-offset: 1px;
     }
     &[aria-disabled="true"] {

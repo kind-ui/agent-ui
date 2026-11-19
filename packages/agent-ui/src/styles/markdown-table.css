@@ -10,7 +10,7 @@
     border: 1px solid var(--kind-color-border);
     border-radius: var(--kind-radius);
     color: var(--kind-color-fg);
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     line-height: 1.5;
   }
 
@@ -52,8 +52,8 @@
     }
     &:focus-visible {
       color: var(--kind-color-fg);
-      outline: 1.5px solid var(--kind-color-ring);
-      outline-offset: -1.5px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
     }
     &[data-copied] {
       color: var(--kind-color-success);

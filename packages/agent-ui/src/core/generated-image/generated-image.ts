@@ -48,8 +48,8 @@ export type GeneratedImageOptions = {
    */
   status?: GeneratedImageStatus;
   /**
-   * How far generation has come, from 0 to 100. The preview sharpens and the grain thins as it rises, and the corner
-   * reads it, like "Creating image · 42%". Without it, both stay where they start and the corner reads "Creating image".
+   * How far generation has come, from 0 to 100. The preview sharpens as it rises, and the corner reads it, like
+   * "Creating image · 42%". Without it, both stay where they start and the corner reads "Creating image".
    */
   progress?: number;
   /** A partial image's URL while generating. It shows blurred, sharpening with `progress`, until the image loads. */
@@ -83,8 +83,8 @@ export type GeneratedImageOptions = {
   /** Called when the full size view opens or closes, with what caused it. */
   onOpenChange?: (open: boolean, details: ChangeDetails<DialogOpenChangeReason>) => void;
   /**
-   * At full motion the placeholder drifts and its grain flickers, the image settles in over it and the
-   * full size view rises in. Reduced motion holds the placeholder still and only fades, in 120 ms. `"auto"` follows
+   * At full motion the preview sharpens smoothly, the image fades in over it and the full size view rises in.
+   * Reduced motion sharpens the preview in steps and only fades, in 120 ms. `"none"` doesn't animate. `"auto"` follows
    * `prefers-reduced-motion`.
    * @default "auto"
    */

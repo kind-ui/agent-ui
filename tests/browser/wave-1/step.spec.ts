@@ -105,7 +105,7 @@ const setSingleStatus = (page: Page, status: string) =>
     status,
   );
 
-test("reduced motion stops the chevron, spinner and shimmer", async ({ page }) => {
+test("reduced motion stops the chevron and spinner, and a running title never loops", async ({ page }) => {
   const stillness = (name: string) =>
     trigger(page, name).evaluate((el) => {
       const icon = el.querySelector('[data-slot="kind-step-icon"]') as Element;

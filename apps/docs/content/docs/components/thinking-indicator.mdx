@@ -5,9 +5,9 @@ description: Show that the agent is thinking before it answers.
 
 import ThinkingIndicatorExample from "../../../examples/thinking-indicator/basic";
 
-Use a thinking indicator between sending a message and the first word of the reply. Its label shimmers, and three small dots flow after it.
+Use a thinking indicator between sending a message and the first word of the reply. Its label says what the agent is doing, and three small dots flow after it.
 
-<Example caption="The label shimmers and the dots flow while the agent thinks. With reduced motion on, both hold still.">
+<Example caption="The dots flow while the agent thinks. With reduced motion on, they hold still.">
   <ThinkingIndicatorExample />
 
   <include cwd lang="tsx">./examples/thinking-indicator/basic.tsx</include>
@@ -31,7 +31,7 @@ Pass `label` to say what the agent is doing, like "Searching the docs". It shows
 
 ### Motion
 
-The label shimmers and the dots flow one after another. Under `prefers-reduced-motion`, or with `motion="reduced"` or `"none"`, both hold still. The indicator takes no focus and has no keys.
+The dots flow one after another; the label stays still. Under `prefers-reduced-motion`, or with `motion="reduced"` or `"none"`, the dots hold still too. The indicator takes no focus and has no keys.
 
 ## API Reference
 

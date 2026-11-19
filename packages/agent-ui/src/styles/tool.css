@@ -2,7 +2,7 @@
 @layer components {
   [data-slot="kind-tool-title"] {
     font-family: var(--kind-font-mono);
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
   }
 
   /* Aligned with the title: the trigger's 6px padding, the 16px mark and the 8px gap. */
@@ -26,7 +26,7 @@
     align-items: center;
     gap: 0.375rem;
     height: 1.75rem;
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     font-weight: 500;
   }
 
@@ -72,8 +72,8 @@
     }
     &:focus-visible {
       color: var(--kind-color-fg);
-      outline: 1.5px solid var(--kind-color-ring);
-      outline-offset: -1.5px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
     }
     &[data-copied] {
       color: var(--kind-color-success);
@@ -92,7 +92,7 @@
   }
 
   [data-slot="kind-tool-output"][data-kind="markdown"] {
-    --kind-markdown-font-size: 0.875rem;
+    --kind-markdown-font-size: var(--kind-text-md);
     --kind-markdown-color: var(--kind-color-fg);
   }
 
@@ -105,7 +105,7 @@
     border-radius: calc(var(--kind-radius) * 2 / 3);
     background-color: color-mix(in oklab, var(--kind-color-danger) 8%, var(--kind-color-surface));
     color: var(--kind-color-fg);
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     line-height: 1.25rem;
     overflow-wrap: anywhere;
   }

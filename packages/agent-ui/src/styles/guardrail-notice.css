@@ -39,7 +39,7 @@
       background-color: color-mix(in oklab, var(--kind-notice-tone) 12%, transparent);
     }
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
+      outline: var(--kind-focus-ring);
       outline-offset: 1px;
     }
   }

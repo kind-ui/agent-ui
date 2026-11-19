@@ -28,7 +28,7 @@
     border: 1px solid var(--kind-color-border);
     border-radius: calc(var(--kind-radius) / 3);
     font: inherit;
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     line-height: 1.125rem;
     color: var(--kind-color-muted);
 

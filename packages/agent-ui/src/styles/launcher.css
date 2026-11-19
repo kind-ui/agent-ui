@@ -50,7 +50,7 @@
       scale: 0.96;
     }
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
+      outline: var(--kind-focus-ring);
       outline-offset: 3px;
     }
   }
@@ -107,7 +107,7 @@
     border-radius: 999px;
     background-color: var(--kind-color-danger);
     color: var(--kind-color-on-status);
-    font-size: 0.6875rem;
+    font-size: var(--kind-text-xs);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -128,7 +128,7 @@
     border-radius: calc(var(--kind-radius) * 1.5);
     background-color: var(--kind-color-surface);
     color: var(--kind-color-fg);
-    font-size: 0.875rem;
+    font-size: var(--kind-text-md);
     line-height: 1.25rem;
     box-shadow: 0 16px 48px -12px color-mix(in oklab, var(--kind-color-shadow) 35%, transparent);
     transform-origin: var(--transform-origin, bottom right);
@@ -184,7 +184,7 @@
     min-inline-size: 0;
     margin: 0;
     overflow: hidden;
-    font-size: 0.875rem;
+    font-size: var(--kind-text-md);
     font-weight: 600;
     line-height: 1.25rem;
     text-overflow: ellipsis;
@@ -220,8 +220,8 @@
       color: var(--kind-color-fg);
     }
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: -2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
     }
   }
 

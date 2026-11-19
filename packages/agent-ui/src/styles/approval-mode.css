@@ -12,7 +12,7 @@
     gap: 0.375rem;
     width: auto;
     padding-inline: 0.625rem;
-    font-size: 0.875rem;
+    font-size: var(--kind-text-md);
     font-weight: 500;
     white-space: nowrap;
   }
@@ -46,7 +46,7 @@
   /* On web the link is inside `ui-menu-item as-child`, so the item isn't the header's child. */
   :where([data-approval-mode-header]) [data-slot="menu-item"] {
     color: var(--kind-color-accent);
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     text-decoration: none;
   }
 
@@ -63,7 +63,7 @@
     margin-inline-start: auto;
     padding-inline-start: 1rem;
     color: var(--kind-color-danger);
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     font-weight: 500;
   }
 }

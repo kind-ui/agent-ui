@@ -3,7 +3,7 @@
   [data-slot="kind-markdown"] {
     display: block;
     min-width: 0;
-    font-size: var(--kind-markdown-font-size, 0.9375rem);
+    font-size: var(--kind-markdown-font-size, var(--kind-text-lg));
     line-height: var(--kind-markdown-line-height, 1.7);
     color: var(--kind-markdown-color, var(--kind-color-fg));
     overflow-wrap: break-word;
@@ -79,8 +79,8 @@
         text-decoration-color: currentColor;
       }
       &:focus-visible {
-        outline: 1.5px solid var(--kind-color-ring);
-        outline-offset: 2px;
+        outline: var(--kind-focus-ring);
+        outline-offset: var(--kind-focus-offset);
         border-radius: 2px;
       }
     }

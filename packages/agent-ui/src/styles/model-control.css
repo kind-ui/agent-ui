@@ -7,7 +7,7 @@
     gap: 0.375rem;
     width: auto;
     padding-inline: 0.625rem 0.5rem;
-    font-size: 0.875rem;
+    font-size: var(--kind-text-md);
     font-weight: 500;
     white-space: nowrap;
   }

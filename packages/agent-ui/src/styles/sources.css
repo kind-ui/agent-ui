@@ -5,7 +5,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    font-size: 0.875rem;
+    font-size: var(--kind-text-md);
     line-height: 1.25rem;
     color: var(--kind-color-fg);
   }
@@ -73,8 +73,8 @@
     text-decoration: none;
 
     &[href]:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
   }
 
@@ -85,15 +85,17 @@
     & :where([data-slot="avatar"]) {
       position: relative;
       display: inline-flex;
-      width: 16px;
-      height: 16px;
+      --kind-sources-avatar-size: 16px;
+      width: var(--kind-sources-avatar-size);
+      height: var(--kind-sources-avatar-size);
       align-items: center;
       justify-content: center;
       overflow: hidden;
       border-radius: calc(var(--kind-radius) / 3);
       background-color: color-mix(in oklab, var(--kind-color-muted) 16%, var(--kind-color-surface));
       color: var(--kind-color-fg);
-      font-size: 0.625rem;
+      /* The initial scales with the avatar, not the type scale. */
+      font-size: calc(var(--kind-sources-avatar-size) * 0.625);
       font-weight: 600;
       line-height: 1;
     }
@@ -112,7 +114,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     color: var(--kind-color-muted);
   }
 
@@ -125,7 +127,7 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     line-height: 1.125rem;
     color: var(--kind-color-muted);
   }

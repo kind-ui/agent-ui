@@ -14,7 +14,7 @@
     border-radius: 9999px;
     background-color: color-mix(in oklab, var(--kind-status-tone) 8%, var(--kind-color-surface));
     color: var(--kind-color-fg);
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     font-weight: 500;
     line-height: 1rem;
     white-space: nowrap;

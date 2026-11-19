@@ -18,15 +18,17 @@
     & :where([data-slot="avatar"]) {
       position: relative;
       display: inline-flex;
-      width: 20px;
-      height: 20px;
+      --kind-subagent-avatar-size: 20px;
+      width: var(--kind-subagent-avatar-size);
+      height: var(--kind-subagent-avatar-size);
       align-items: center;
       justify-content: center;
       overflow: hidden;
       border-radius: 9999px;
       background-color: color-mix(in oklab, var(--kind-color-accent) 18%, var(--kind-color-surface));
       color: var(--kind-color-fg);
-      font-size: 0.5625rem;
+      /* Initials scale with the avatar, not the type scale. */
+      font-size: calc(var(--kind-subagent-avatar-size) * 0.45);
       font-weight: 600;
       line-height: 1;
     }
@@ -70,7 +72,7 @@
     border: 1px solid var(--kind-color-border);
     border-radius: calc(var(--kind-radius) / 2);
     padding: 1px 10px;
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     font-weight: 500;
     line-height: 1.25rem;
     color: var(--kind-color-fg);
@@ -82,8 +84,8 @@
       background-color: var(--kind-color-hover);
     }
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
     &[aria-disabled="true"] {
       opacity: 0.6;
@@ -98,7 +100,7 @@
     display: block;
     padding-block: 2px 4px;
     padding-inline: 34px 6px;
-    --kind-markdown-font-size: 0.875rem;
+    --kind-markdown-font-size: var(--kind-text-md);
     --kind-markdown-line-height: 1.6;
 
     &[hidden],

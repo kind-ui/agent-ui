@@ -40,8 +40,8 @@
       background-color: var(--kind-color-hover);
     }
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
     &:is(:disabled, [data-disabled]) {
       opacity: 0.5;

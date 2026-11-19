@@ -39,7 +39,7 @@ Reasoning
 
 ### Streaming Thoughts
 
-Pass the thoughts so far as `text`, and set `status` as the model works. While the status is `running`, the title shimmers, the content stays open and `text` renders as streaming Markdown: each chunk parses only the blocks it changed, and the trigger above never moves.
+Pass the thoughts so far as `text`, and set `status` as the model works. While the status is `running`, its mark spins, the content stays open and `text` renders as streaming Markdown: each chunk parses only the blocks it changed, and the trigger above never moves.
 
 ```tsx
 <Reasoning status={isThinking ? "running" : "complete"} durationSeconds={seconds} text={reasoningText} />

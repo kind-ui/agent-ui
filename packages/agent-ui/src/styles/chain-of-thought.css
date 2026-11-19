@@ -30,12 +30,4 @@
       background-color: var(--kind-color-border);
     }
   }
-
-  /* Open, the running step shows the activity, so the summary above it holds still. */
-  [data-slot="kind-chain-of-thought"][data-open]
-    [data-slot="kind-chain-of-thought-title"][data-status="running"] {
-    color: var(--kind-color-fg);
-    background: none;
-    animation: none;
-  }
 }

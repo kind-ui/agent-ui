@@ -17,7 +17,7 @@
       min-inline-size: 13ch;
       text-align: end;
       flex-shrink: 0;
-      font-size: 0.75rem;
+      font-size: var(--kind-text-xs);
       line-height: 1rem;
       font-variant-numeric: tabular-nums;
       color: var(--kind-color-muted);
@@ -66,7 +66,7 @@
     margin-inline-start: 30px;
     border-radius: calc(var(--kind-radius) / 2);
     padding: 4px 10px;
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     font-weight: 500;
     line-height: 1.25rem;
     background-color: var(--kind-color-accent);
@@ -79,8 +79,8 @@
       background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-fg));
     }
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
     &[aria-disabled="true"] {
       opacity: 0.6;

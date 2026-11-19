@@ -17,7 +17,7 @@
     width: var(--kind-status-mark-size, 16px);
     height: var(--kind-status-mark-size, 16px);
     border-radius: 9999px;
-    border: var(--kind-status-mark-ring) dashed color-mix(in oklab, var(--kind-color-muted) 70%, transparent);
+    border: var(--kind-status-mark-ring) dashed color-mix(in oklab, var(--kind-color-muted) 80%, transparent);
     background-color: transparent;
     transition:
       border-color var(--kind-duration-base),

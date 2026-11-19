@@ -27,10 +27,9 @@ const classes = [
   "[&_[data-slot=slider-thumb]]:bg-[var(--kind-color-surface)]",
   "[&_[data-slot=slider-thumb]]:shadow-sm",
   "[&_[data-slot=slider-thumb]]:shadow-[color:var(--kind-color-shadow)]/10",
-  "[&_[data-slot=slider-thumb]]:has-[:focus-visible]:outline-2",
-  "[&_[data-slot=slider-thumb]]:has-[:focus-visible]:outline-offset-2",
-  "[&_[data-slot=slider-thumb]]:has-[:focus-visible]:outline-[var(--kind-color-ring)]",
-  "[&_[data-slot=slider-value]]:text-xs",
+  "[&_[data-slot=slider-thumb]]:has-[:focus-visible]:[outline:var(--kind-focus-ring)]",
+  "[&_[data-slot=slider-thumb]]:has-[:focus-visible]:[outline-offset:var(--kind-focus-offset)]",
+  "[&_[data-slot=slider-value]]:text-[length:var(--kind-text-xs)]/4",
   "[&_[data-slot=slider-value]]:tabular-nums",
   "[&_[data-slot=slider-value]]:text-[var(--kind-color-muted)]",
 ];

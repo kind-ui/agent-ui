@@ -2,7 +2,7 @@
    each run of library frames folds into one row. The trigger comes from step.css, through `data-step-part`. */
 @layer components {
   [data-slot="kind-stack-trace"] {
-    --kind-stack-trace-font-size: 0.8125rem;
+    --kind-stack-trace-font-size: var(--kind-code-font-size);
     --kind-stack-trace-row-height: 1.75rem;
   }
 
@@ -102,8 +102,8 @@
       background-color: color-mix(in oklab, var(--kind-color-fg) 6%, transparent);
     }
     &:focus-visible {
-      outline: 1.5px solid color-mix(in oklab, var(--kind-color-ring) 50%, transparent);
-      outline-offset: -1.5px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
     }
   }
 
@@ -175,8 +175,8 @@
     }
     &:focus-visible {
       color: var(--kind-color-fg);
-      outline: 1.5px solid color-mix(in oklab, var(--kind-color-ring) 50%, transparent);
-      outline-offset: -1.5px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
     }
     &:where([data-motion="reduced"], [data-motion="none"])::before {
       transition: none;
@@ -242,8 +242,8 @@
     }
     &:focus-visible {
       color: var(--kind-color-fg);
-      outline: 1.5px solid var(--kind-color-ring);
-      outline-offset: -1.5px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
     }
     &[data-copied] {
       color: var(--kind-color-success);

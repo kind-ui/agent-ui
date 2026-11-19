@@ -8,7 +8,7 @@
     display: inline-flex;
     align-items: center;
     gap: 2px;
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     line-height: 1rem;
     color: var(--kind-color-muted);
   }
@@ -44,8 +44,8 @@
       color: var(--kind-color-fg);
     }
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
   }
 
@@ -82,8 +82,8 @@
     color: inherit;
 
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
   }
 
@@ -114,7 +114,7 @@
     background-color: var(--kind-color-surface);
     box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 20%, transparent);
     color: var(--kind-color-fg);
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     line-height: 1.25rem;
     outline: none;
     transform-origin: var(--transform-origin);
@@ -123,7 +123,7 @@
   [data-slot="kind-feedback-title"] {
     display: block;
     margin: 0;
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     font-weight: 600;
     line-height: 1.25rem;
   }
@@ -145,7 +145,7 @@
     align-items: center;
     gap: 6px;
     color: var(--kind-color-muted);
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
   }
 
   [data-slot="kind-feedback-comment-error"] {
@@ -154,7 +154,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     color: var(--kind-color-danger);
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
   }
 
   [data-slot="kind-feedback-comment-send"] {
@@ -177,8 +177,8 @@
       background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-fg));
     }
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
     &[aria-disabled="true"] {
       cursor: default;

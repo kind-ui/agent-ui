@@ -164,6 +164,25 @@ test("a value change or an equal settings copy redraws no row, and focus stays",
   await expect(toggle(page, /^Web search/)).toHaveAttribute("aria-checked", "true");
 });
 
+test("a pointer open highlights no item; a keyboard open highlights the first", async ({ page }) => {
+  await load(page);
+  const first = toggle(page, /^Web search/);
+  const background = () => first.evaluate((el) => getComputedStyle(el).backgroundColor);
+  await trigger(page).click();
+  await expect(menu(page)).toBeVisible();
+  await settled(page);
+  await expect(page.locator('[role^="menuitem"][data-highlighted]')).toHaveCount(0);
+  await expect(trigger(page)).not.toBeFocused();
+  expect(await background()).toBe("rgba(0, 0, 0, 0)");
+  await page.keyboard.press("Escape");
+  await expect(menu(page)).toBeHidden();
+  await expect(trigger(page)).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(first).toBeFocused();
+  await expect(first).toHaveAttribute("data-highlighted", "");
+  expect(await background()).not.toBe("rgba(0, 0, 0, 0)");
+});
+
 test("with reduced motion the menu only fades and the switch doesn't slide", async ({ page }) => {
   await load(page, "reduced");
   await trigger(page).click();

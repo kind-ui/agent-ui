@@ -9,7 +9,7 @@
     gap: 8px;
     /* Restore and "Restored" share this height, so swapping them moves nothing. */
     min-height: 1.5rem;
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     line-height: 1rem;
     color: var(--kind-color-muted);
   }
@@ -67,8 +67,8 @@
       color: var(--kind-color-fg);
     }
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
   }
 
@@ -90,8 +90,8 @@
     border-radius: calc(var(--kind-radius) / 2);
 
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
   }
 
@@ -108,7 +108,7 @@
   [data-slot="kind-checkpoint-error"] {
     flex: 1;
     min-width: 0;
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     /* Two lines still fit the row, on a narrow screen. */
     line-height: 1rem;
     color: var(--kind-color-danger);
@@ -122,15 +122,15 @@
     padding-inline: 14px;
     border: 1px solid transparent;
     border-radius: calc(var(--kind-radius) / 2);
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     font-weight: 500;
     transition:
       background-color var(--kind-duration-fast),
       opacity var(--kind-duration-fast);
 
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
     &[aria-disabled="true"] {
       cursor: default;

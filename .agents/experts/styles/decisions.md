@@ -6,6 +6,8 @@ Last reviewed: `7269a46` (Wave 6 Task 12 agent conformance)
 
 ## Settled
 
+- **One system (Design Wave 0):** text sizes come from `--kind-text-*` (avatar initials scale with their avatar through `calc()`), focus rings from `--kind-focus-ring` and its offsets, state fills from `--kind-color-selected` and `--kind-color-current` (hover is for hover only), and shared controls from `controls.css`'s `data-kind-*` attributes; `scripts/tests/styles.test.mjs` enforces the first two and the token contrasts. Shimmering text is banned outright (`docs/design-principles.md`), so a running title is plain `--kind-color-fg`. The internal wrappers stay Tailwind utilities over the tokens rather than moving into `controls.css`: moving them into `@layer components` would change which side wins against every component that styles a wrapped part.
+
 - **Dictation's idle box keeps its full width (Wave 5 Task 11):** the mic button, waveform and status share one box so nothing beside it moves (plan Design bar); hosts size it with `--kind-dictation-width`. Inside a Composer (Task 17) the box gives way to the composer's grid instead: idle is just the mic, and an active Dictation is a subgrid over the editor and actions rows.
 - **An active Dictation in a Composer hides what it covers with `visibility` (Task 17):** the editor and controls keep their tracks so the box keeps its size; Send stays shown and pressable under the root (`pointer-events: none`, parts `auto`).
 - **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.
@@ -42,7 +44,6 @@ Last reviewed: `7269a46` (Wave 6 Task 12 agent conformance)
 - **`forced-colors.spec.ts` doesn't reach the Queue remove badge on web.**
 - **A Selection toolbar with many actions may spill past its border on a narrow screen** (Wave 4 Task 11): it doesn't wrap; not reproduced with three actions.
 - **A file added to a folder while it opens may be clipped until the open ends** (Wave 4 Task 6): `--tree-group-height` is measured as the open starts. Not reproduced.
-- **The shimmer's band snaps to its start as it fades out when the image loads** (Wave 4 Task 5, suspected, not measured frame by frame): the animation stops with the phase; the image fades in over it.
 - **An expanded Document whose content resizes after streaming ends eases to the new height over `--kind-duration-panel`** (suspected, not reproduced), so its last lines could be clipped that long.
 - **On web, a step's content that starts closed can fade its parts' colors in the first time it opens** (Wave 3 Task 11): `hidden="until-found"` skips style updates, so parts styled bare by a bind's style read before their attributes landed keep that style until the reveal, after `data-mounting` is gone. Rows and roots hold through their first frames; ending the hold at a part's first styled frame needs UI SDK binds not to read style while parts connect (upstream).
 - **Feedback's thanks is wider than "Add a comment",** so the row grows sideways by its text when it appears; height holds. Feedback ends a message's actions, so nothing usually sits after it.

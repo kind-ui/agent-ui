@@ -36,7 +36,7 @@
     /* Chips past the fit stay laid out; clipping keeps them from widening the page. Focus rings sit inside, since
        WebKit has no `overflow-clip-margin`. */
     overflow: clip;
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     line-height: 1rem;
   }
 
@@ -65,13 +65,13 @@
     border-radius: calc(var(--kind-radius) / 2);
     background-color: var(--kind-color-surface);
     color: var(--kind-color-fg);
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     line-height: 1rem;
     white-space: nowrap;
 
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: -2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
     }
     /* Laid out so core keeps its width, but takes no room and can't be reached. */
     &:where([data-overflow]) {
@@ -176,8 +176,8 @@
       background-color: var(--kind-color-hover);
     }
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: -2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
     }
   }
 
@@ -190,7 +190,7 @@
     border: 1px solid var(--kind-color-border);
     border-radius: var(--kind-radius);
     background-color: var(--kind-color-surface);
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     line-height: 1.25rem;
     box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 25%, transparent);
 
@@ -245,8 +245,8 @@
       background-color: var(--kind-color-hover);
     }
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: -2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
     }
   }
 

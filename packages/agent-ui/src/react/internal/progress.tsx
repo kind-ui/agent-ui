@@ -9,7 +9,11 @@ import {
 } from "@ui-sdk/react/progress";
 import { withKindClass } from "./kind-class.js";
 
-export const KindProgress = withKindClass(Progress, "flex flex-col gap-1 text-sm", "KindProgress");
+export const KindProgress = withKindClass(
+  Progress,
+  "flex flex-col gap-1 text-[length:var(--kind-text-md)]/5",
+  "KindProgress",
+);
 export const KindProgressLabel = withKindClass(
   ProgressLabel,
   "font-medium text-[var(--kind-color-fg)]",
