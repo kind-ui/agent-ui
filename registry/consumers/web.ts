@@ -54,6 +54,8 @@ import { defineUploader } from "./components/ui/web/uploader.js";
 
 // wave-6-task-2: Thread List
 
+import { defineThreadList } from "./components/ui/web/thread-list.js";
+
 // wave-6-task-3: Thread Search
 
 // wave-6-task-4: Sidebar
@@ -129,6 +131,8 @@ for (const define of [
   // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its define function right below its own line.
 
   // wave-6-task-2: Thread List
+
+  defineThreadList,
 
   // wave-6-task-3: Thread Search
 
@@ -233,6 +237,8 @@ const items = {
   // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its item right below its own line.
 
   // wave-6-task-2: Thread List
+
+  "thread-list": `<kind-thread-list can-new></kind-thread-list>`,
 
   // wave-6-task-3: Thread Search
 

@@ -252,6 +252,12 @@ const components = {
 
   // wave-6-task-2: Thread List
 
+  "thread-list": {
+    title: "Thread List",
+    description: "Threads grouped by date, with one menu to rename, pin, share and delete.",
+    uses: ["internal-menu", "internal-alert-dialog"],
+  },
+
   // wave-6-task-3: Thread Search
 
   // wave-6-task-4: Sidebar

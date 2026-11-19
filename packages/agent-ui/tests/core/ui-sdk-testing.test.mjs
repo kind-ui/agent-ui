@@ -216,6 +216,26 @@ const cases = {
 
   // wave-6-task-2: Thread List
 
+  threadList: {
+    options: {
+      threads: [{ id: "a", title: "A", href: "#a", pinned: true, status: "running", unread: true }],
+      now: "2026-11-18",
+      onSelect: noop,
+      onRename: noop,
+      onDelete: noop,
+    },
+    keys: {
+      heading: ["heading:pinned"],
+      "heading-cell": ["heading:pinned"],
+      ...Object.fromEntries(
+        ["row", "link-cell", "link", "status", "unread", "editor", "more-cell", "more"].map((slot) => [
+          slot,
+          ["a"],
+        ]),
+      ),
+    },
+  },
+
   // wave-6-task-3: Thread Search
 
   // wave-6-task-4: Sidebar

@@ -26,6 +26,12 @@ const BUDGETS = {
 
   // wave-6-task-2: Thread List
 
+  // Rows are 36px in a 600px column, so as many are in view at 10 threads as at 1,000, whatever the fonts. Pinning
+  // moves every row in view down one; appending to 10 threads fills the column with new rows.
+  threadSelect: { writes: 5, renders: 11, notified: 16, layoutReads: 2 },
+  threadPin: { writes: 115, renders: 38, notified: 182, layoutReads: 2 },
+  threadAppend: { writes: 185, renders: 77, notified: 78, layoutReads: 2 },
+
   // wave-6-task-11: Conversation Search
 };
 const SIZES = [10, 500];
@@ -311,6 +317,25 @@ for (const chips of [10, 200]) {
 // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its tests right below its own line.
 
 // wave-6-task-2: Thread List
+
+// Selecting, pinning and loading more reach the rows they change and the rows in view, at 10 threads as at 1,000.
+const THREAD_ACTIONS = {
+  threadSelect: `kindThreadList.setValue((window.kindSelected = window.kindSelected === "m3" ? "m1" : "m3"))`,
+  threadPin: `kindThreadList.setThreads((threads) =>
+    threads.map((thread) => (thread.id === "m5" ? { ...thread, pinned: !thread.pinned } : thread)))`,
+  threadAppend: `kindThreadList.setThreads((threads) => [...threads, ...kindThreadList.manyThreads(20, threads.length)])`,
+} as const;
+for (const threads of ["ten", "thousand"])
+  for (const [name, action] of Object.entries(THREAD_ACTIONS) as [keyof typeof THREAD_ACTIONS, string][])
+    test(`${name} among ${threads} threads`, async ({ page }) => {
+      await page.goto(`/?c=thread-list&case=${threads}`);
+      await expect(page.getByRole("link", { name: "Thread 1", exact: true })).toBeVisible();
+      const counts = await most(page, 4, action);
+      expect(counts.writes).toBeLessThanOrEqual(BUDGETS[name].writes);
+      expect(counts.renders).toBeLessThanOrEqual(BUDGETS[name].renders);
+      expect(counts.notified).toBeLessThanOrEqual(BUDGETS[name].notified);
+      expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS[name].layoutReads);
+    });
 
 // wave-6-task-11: Conversation Search
 

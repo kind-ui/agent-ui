@@ -61,6 +61,8 @@ import { Uploader } from "./components/ui/uploader.js";
 
 // wave-6-task-2: Thread List
 
+import { ThreadList } from "./components/ui/thread-list.js";
+
 // wave-6-task-3: Thread Search
 
 // wave-6-task-4: Sidebar
@@ -330,6 +332,10 @@ const items = {
   // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its item right below its own line.
 
   // wave-6-task-2: Thread List
+
+  "thread-list": (
+    <ThreadList threads={[{ id: "a", title: "First chat", href: "#a" }]} now="2026-11-18" onNew={() => {}} />
+  ),
 
   // wave-6-task-3: Thread Search
 

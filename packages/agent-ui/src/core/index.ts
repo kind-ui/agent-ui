@@ -612,6 +612,23 @@ export {
 
 // wave-6-task-2: Thread List
 
+export {
+  type ThreadListAction,
+  type ThreadListApi,
+  type ThreadListDialogState,
+  type ThreadListEntry,
+  type ThreadListGridState,
+  type ThreadListLoadReason,
+  type ThreadListMenuContentState,
+  type ThreadListOptions,
+  type ThreadListPrimitive,
+  type ThreadListReason,
+  type ThreadListRow,
+  type ThreadListState,
+  threadListPrimitive,
+  threadListRows,
+} from "./thread-list/index.js";
+
 // wave-6-task-3: Thread Search
 
 // wave-6-task-4: Sidebar
