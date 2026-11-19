@@ -6,6 +6,7 @@ Last reviewed: `7269a46` (Wave 6 Task 12 agent conformance)
 
 ## Settled
 
+- **Derived tokens follow overrides on `:root` only** (Design Wave 0): `--kind-radius-md`, `--kind-focus-ring`, `--kind-code-font-size` and the like resolve where `@theme` declares them, as Tailwind's own derived theme values do, so a `--kind-radius` set on a container reaches components' `calc()`s but not the wrappers. Override the derived token there too. Tokens nothing uses yet (`--kind-color-current`, `-bubble`, `--kind-tint-border`, `--kind-dialog-top`) are emitted once a stylesheet Tailwind scans uses them.
 - **One system (Design Wave 0):** text sizes come from `--kind-text-*` (avatar initials scale with their avatar through `calc()`), focus rings from `--kind-focus-ring` and its offsets, state fills from `--kind-color-selected` and `--kind-color-current` (hover is for hover only), and shared controls from `controls.css`'s `data-kind-*` attributes; `scripts/tests/styles.test.mjs` enforces the first two and the token contrasts. Shimmering text is banned outright (`docs/design-principles.md`), so a running title is plain `--kind-color-fg`. The internal wrappers stay Tailwind utilities over the tokens rather than moving into `controls.css`: moving them into `@layer components` would change which side wins against every component that styles a wrapped part.
 
 - **Dictation's idle box keeps its full width (Wave 5 Task 11):** the mic button, waveform and status share one box so nothing beside it moves (plan Design bar); hosts size it with `--kind-dictation-width`. Inside a Composer (Task 17) the box gives way to the composer's grid instead: idle is just the mic, and an active Dictation is a subgrid over the editor and actions rows.
@@ -35,6 +36,7 @@ Last reviewed: `7269a46` (Wave 6 Task 12 agent conformance)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **`KindFileInputTrigger` and `KindScrollAreaScrollToEnd` stay 32px, bordered and filled** (Design Wave 0): their adopters own the look; Wave 1 moves them onto the shared controls.
 - **Connection Status's pill narrows when the countdown ends at "Reconnecting"** (Wave 6 Task 7): the words change, so the width does; centred by `translate`, both edges move. Nothing else moves.
 - **Every one of the 128 bars transitions its `scale` on each level, clipped ones too (Task 17):** cost not profiled.
 - **The unchecked switch is about 1.3:1 thumb to track, in both schemes (Wave 5 Task 5):** D6 copies UI SDK Switch's look; fix it on `internal-switch` and `menu.css` together.
@@ -66,6 +68,7 @@ Last reviewed: `7269a46` (Wave 6 Task 12 agent conformance)
 
 ## Resolved
 
+- **Design Wave 0 review:** Generated Image's preview no longer scales, so it and the image match through the crossfade; `controls.css` states sit inside `:where()`, so a component rule wins and primary and danger keep their fill while open or pressed; every focus ring's offset is a token; the tree's selected row uses `--kind-color-selected`; dark `--kind-color-selected` is no longer the border color.
 - **Connection Status's pill narrowed as its countdown lost a digit (Wave 6 Task 7, fixed in Task 12):** the default countdown words end in one figure space (U+2007, a tabular digit's width) per digit lost since the countdown began (`spareDigits`, live), so "10 s" to "9 s" keeps the width within a layout unit. A host's `countdown` or web words a host wrote get no padding, since their digits are theirs. A minimum width can't know a host's words, and `ch` isn't a tabular digit's width (off by 0.05px). `connection-status.spec.ts` measures it.
 - **Dictation (Wave 5 Task 11):** words heard were cut at the end (now cut at the start, newest in view), the unsupported error didn't fit ("Not supported in this browser"), the bars' timing is `--kind-dictation-bar-smoothing`, a large `bars` overflowed the box (the waveform shrinks and clips), two selectors gained `:where()`, a pending Stop no longer hovers and reads `GrayText` in forced colors. `dictation.spec.ts` pins the box across phases and `prefers-reduced-motion`; `forced-colors.spec.ts` lists Dictation.
 - **Context Bar (Wave 5 Task 10):** WebKit has no `overflow-clip-margin`, so the clipped bar hid focus rings on chips and "+N"; the rings now sit inside (`outline-offset: -2px`). `motion="none"` and the remove icon in forced colors are tested.

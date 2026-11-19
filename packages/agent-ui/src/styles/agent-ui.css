@@ -99,7 +99,7 @@
   /* Pointer hover only. A state that has to read (chosen, open, pressed, current) takes its own token. */
   --kind-color-hover: light-dark(oklch(0.967 0.001 286), oklch(0.27 0.006 286));
   /* The chosen item in a set: a pressed toggle, the highlighted row of an open list, an open trigger. */
-  --kind-color-selected: light-dark(oklch(0.933 0.004 286), oklch(0.32 0.006 286));
+  --kind-color-selected: light-dark(oklch(0.933 0.004 286), oklch(0.34 0.006 286));
   /* Where the person is: the current thread, page or segment. */
   --kind-color-current: light-dark(oklch(0.933 0.035 262), oklch(0.33 0.05 262));
   --kind-color-bubble: light-dark(oklch(0.955 0.002 286), oklch(0.31 0.006 286));

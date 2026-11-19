@@ -67,7 +67,7 @@ function contrast(a, b) {
 function scheme(name) {
   const theme = statements.find(({ prelude }) => /^@theme\s+default$/.test(prelude)).body;
   const value = theme.match(new RegExp(`--kind-color-${name}:\\s*light-dark\\(([^;]+)\\);`))?.[1];
-  assert.ok(value, name);
+  assert.ok(value, `--kind-color-${name} isn't light-dark(oklch(…), oklch(…))`);
   const colors = [...value.matchAll(/oklch\(([\d.]+) ([\d.]+) ([\d.]+)/g)].map((match) =>
     match.slice(1).map(Number),
   );
@@ -104,7 +104,7 @@ const stylesheets = readdirSync(new URL("styles/", source)).filter(
 test("component stylesheets size text from the type scale", () => {
   for (const name of stylesheets) {
     const text = withoutComments(readFileSync(new URL(`styles/${name}`, source), "utf8"));
-    for (const [declaration] of text.matchAll(/(?:font-size|--[\w-]*font-size)\s*:[^;]*;/g))
+    for (const [declaration] of text.matchAll(/(?:font-size|font|--[\w-]*font-size)\s*:[^;]*;/g))
       assert.doesNotMatch(
         declaration,
         /\d(?:px|rem)\b/,
@@ -116,17 +116,31 @@ test("component stylesheets size text from the type scale", () => {
 test("focus rings go through --kind-focus-ring", () => {
   for (const name of stylesheets) {
     const text = withoutComments(readFileSync(new URL(`styles/${name}`, source), "utf8"));
-    for (const [declaration] of text.matchAll(/outline\s*:[^;]*--kind-color-ring[^;]*;/g))
+    for (const [declaration] of text.matchAll(/outline(?:-color)?\s*:[^;]*--kind-color-ring[^;]*;/g))
       assert.fail(`${name}: ${declaration} (use var(--kind-focus-ring))`);
+    for (const [block] of text.matchAll(/\{[^{}]*\}/g)) {
+      if (!block.includes("var(--kind-focus-ring")) continue;
+      for (const [offset] of block.matchAll(/outline-offset\s*:[^;]*;/g))
+        assert.match(
+          offset,
+          /var\(--kind-focus-offset(?:-inset)?\)/,
+          `${name}: ${offset} (use a --kind-focus-offset token)`,
+        );
+    }
   }
 });
 
-test("render files never use outline-none, which hides a focus-visible ring in Tailwind v4", () => {
+test("render files draw focus with the ring token and never outline-none, which hides a focus-visible ring in Tailwind v4", () => {
   for (const layer of ["react", "web"]) {
     for (const name of readdirSync(new URL(`${layer}/`, source), { recursive: true })) {
       if (!/\.tsx?$/.test(name)) continue;
       const text = readFileSync(new URL(`${layer}/${name}`, source), "utf8");
       assert.doesNotMatch(text, /(?:^|[\s":])outline-none\b/m, `${layer}/${name} (use outline-hidden)`);
+      assert.doesNotMatch(
+        text,
+        /outline-\[(?:color:)?var\(--kind-color-ring\)\]/,
+        `${layer}/${name} (use [outline:var(--kind-focus-ring)])`,
+      );
     }
   }
 });

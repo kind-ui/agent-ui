@@ -279,8 +279,9 @@ export const menuBase = <Options extends MenuBaseOptions>(config: MenuBaseConfig
         source: detail.source,
         cancel: () => event.preventDefault(),
       });
-      // While `ui-menu` reports its own open change, `partState.menu` keeps the open it had: writing `open` onto it
-      // then is a script's `setOpen`, which focuses the first item even when a pointer opened the menu.
+      // A UI SDK bug: writing `open` onto a `ui-menu` during its own `openchange` makes a pointer open highlight the
+      // first item and leave focus on the trigger. So `partState.menu` keeps the open it had until the event ends;
+      // remove this once UI SDK handles the write.
       let applying: boolean | undefined;
       const composedEvents: Record<string, ComposedHandler> = {
         openchange: (detail, event) => {

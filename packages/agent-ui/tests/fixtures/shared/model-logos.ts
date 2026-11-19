@@ -7,6 +7,6 @@ export const logos = {
   microsoft:
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M11.49 2H2v9.492h9.492V2h-.002z" fill="#F25022"/><path d="M22 2h-9.492v9.492H22V2z" fill="#7FBA00"/><path d="M11.49 12.508H2V22h9.492v-9.492h-.002z" fill="#00A4EF"/><path d="M22 12.508h-9.492V22H22v-9.492z" fill="#FFB900"/></svg>',
   google:
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#5f6368" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18.5 7.5A7.5 7.5 0 1 0 19.5 13h-7"/></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="url(#g)" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><defs><linearGradient id="g" x2="1"><stop stop-color="#5f6368"/><stop offset="1" stop-color="#80868b"/></linearGradient></defs><path d="M18.5 7.5A7.5 7.5 0 1 0 19.5 13h-7"/></svg>',
   xai: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor" fill-rule="evenodd"><path d="M6.469 8.776L16.512 23h-4.464L2.005 8.776H6.47zm-.004 7.9l2.233 3.164L6.467 23H2l4.465-6.324zM22 2.582V23h-3.659V7.764L22 2.582zM22 1l-9.952 14.095-2.233-3.163L17.533 1H22z"/></svg>',
 };

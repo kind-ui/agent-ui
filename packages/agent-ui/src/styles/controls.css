@@ -29,34 +29,34 @@
       border-color var(--kind-duration-fast),
       color var(--kind-duration-fast);
 
-    &:hover:not(:disabled, [data-disabled], [aria-disabled="true"]) {
+    &:where(:hover:not(:disabled, [data-disabled], [aria-disabled="true"])) {
       background-color: var(--kind-color-hover);
     }
 
-    &:is([aria-pressed="true"], [aria-expanded="true"], [data-pressed], [data-popup-open]) {
+    &:where([aria-pressed="true"], [aria-expanded="true"], [data-pressed], [data-popup-open]) {
       background-color: var(--kind-color-selected);
     }
 
-    &:focus-visible {
+    &:where(:focus-visible) {
       outline: var(--kind-focus-ring);
       outline-offset: var(--kind-focus-offset);
     }
 
-    &:is(:disabled, [data-disabled], [aria-disabled="true"]) {
+    &:where(:disabled, [data-disabled], [aria-disabled="true"]) {
       cursor: not-allowed;
       opacity: 0.5;
     }
 
-    &[data-pending] {
+    &:where([data-pending]) {
       cursor: progress;
       opacity: 1;
     }
 
-    & > [data-status-mark] {
+    & > :where([data-status-mark]) {
       --kind-status-mark-size: 14px;
     }
 
-    & > svg {
+    & > :where(svg) {
       flex-shrink: 0;
       width: 1rem;
       height: 1rem;
@@ -71,7 +71,13 @@
     background-color: var(--kind-color-accent);
     color: var(--kind-color-on-accent);
 
-    &:hover:not(:disabled, [data-disabled], [aria-disabled="true"]) {
+    &:where(
+        :hover:not(:disabled, [data-disabled], [aria-disabled="true"]),
+        [aria-pressed="true"],
+        [aria-expanded="true"],
+        [data-pressed],
+        [data-popup-open]
+      ) {
       background-color: var(--kind-color-accent-hover);
     }
   }
@@ -80,7 +86,13 @@
     background-color: var(--kind-color-danger);
     color: var(--kind-color-on-status);
 
-    &:hover:not(:disabled, [data-disabled], [aria-disabled="true"]) {
+    &:where(
+        :hover:not(:disabled, [data-disabled], [aria-disabled="true"]),
+        [aria-pressed="true"],
+        [aria-expanded="true"],
+        [data-pressed],
+        [data-popup-open]
+      ) {
       background-color: color-mix(in oklab, var(--kind-color-danger) 88%, var(--kind-color-fg));
     }
   }
@@ -90,7 +102,7 @@
     padding: 0;
     color: var(--kind-color-muted);
 
-    &:hover:not(:disabled, [data-disabled], [aria-disabled="true"]) {
+    &:where(:hover:not(:disabled, [data-disabled], [aria-disabled="true"])) {
       color: var(--kind-color-fg);
     }
   }

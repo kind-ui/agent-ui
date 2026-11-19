@@ -54,6 +54,7 @@ Last reviewed: `7269a46` (Wave 6 Task 12 agent conformance)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **`menuBase` holds `partState.menu`'s `open` while a `ui-menu` reports its own `openchange`** (Design Wave 0): UI SDK web highlights the first item and leaves focus on the trigger when `open` is written back during that event, as its own controlled example does. Ask upstream; remove `applying` once fixed.
 - **The waveform's default of 128 bars writes 128 `--kind-dictation-level-*` properties per level (Task 17):** not profiled; lower the default or size it to the box if it shows up.
 - **Transcript with a controlled `query` reads `window` and `navigator` on a server (found in Wave 5 Task 15):** `searchSegments` runs UI SDK's `fuzzyScore`, whose text folding reads the user's locale, so a server and a browser with different locales may filter differently. The server case covers default options only; a fix needs `fuzzyScore` to take a locale.
 - **A web single-choice Question names its radio group with its prompt's text (Wave 5 Task 15):** React points `aria-labelledby` at the prompt (`choicesState.labelledBy`), but a web render file can't write an `aria-*` attribute and `checkPattern` reads attributes, so web sets `ariaLabel` from the prompt's text; a screen reader may hear the prompt twice there (item group and radio group).
@@ -109,6 +110,7 @@ Last reviewed: `7269a46` (Wave 6 Task 12 agent conformance)
 
 ## Resolved
 
+- **Style guards missed `outline-color`, `font` shorthands, offsets and Tailwind ring classes** (Design Wave 0 review): `scripts/tests/styles.test.mjs` now checks all four.
 - **`nearestTabStop` missed shadow roots (Wave 3 Task 10, fixed in Wave 6 Task 12):** it walks the flat tree, as Tab does: an open shadow root in its host's place, a slot's assigned elements where the slot is, and an inert ancestor of the lost element counts as passing it. It stops at the first stop after the lost element, so it reads less than the old whole-page filter. `connection-status.spec.ts` moves focus into a shadow root, to a slotted child, and out of a slot to the shadow button after it.
 - **Message's relative time didn't roll over at midnight (Wave 6 Task 9, fixed in Task 12):** the time part now joins Day Separator's page-wide minute clock (`core/today.ts`, `everyMinute`), one timer for the page however many messages; a `now` option still replaces the clock. `message.spec.ts` runs the clock past midnight.
 - **`checkServer` (`tests/core/ui-sdk-testing.test.mjs`):** destroying a Context Bar, Feedback, File Tree, Question, Reasoning Effort, Test Results or Transcript on a server threw (`cancelAnimationFrame` isn't defined there); each cancels a frame only when it asked for one. Dictation read `document` as it was created (`sourceOf()`); it starts input tracking as its root binds.

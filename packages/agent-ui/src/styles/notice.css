@@ -96,7 +96,7 @@
     &:focus-visible {
       color: var(--kind-color-fg);
       outline: var(--kind-focus-ring);
-      outline-offset: 1px;
+      outline-offset: var(--kind-focus-offset);
     }
   }
 

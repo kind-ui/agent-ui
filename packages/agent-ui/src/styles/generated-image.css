@@ -37,12 +37,11 @@
   }
 
   /* Blurred and muted at first, sharpening toward 4px and full color as `progress` rises. It keeps the image's box,
-     so its composition doesn't jump when the image lands; the slight scale keeps its blurred edges inside the frame. */
+     so its composition doesn't jump when the image lands; the frame clips its blurred edges. */
   [data-slot="kind-generated-image-preview"] {
     z-index: 1;
     filter: blur(calc(24px - 20px * var(--kind-generated-image-resolve, 0)))
       saturate(calc(0.6 + 0.4 * var(--kind-generated-image-resolve, 0)));
-    scale: 1.04;
     transition: filter var(--kind-duration-panel) var(--kind-ease);
   }
   /* Gone once the image has faded in over it, so a transparent image doesn't show it. */

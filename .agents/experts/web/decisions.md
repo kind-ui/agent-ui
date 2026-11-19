@@ -9,7 +9,7 @@ Last reviewed: `7269a46` (Wave 6 Task 12 agent conformance)
 - **`kind-connection-status` fires `connectionretry`, not `retry`** (Wave 6 Task 7): it sits inside a `kind-conversation`, which fires its own `retry` for its error state, and a capture listener on the conversation hears both (UI SDK events don't bubble, but capture still passes ancestors). A distinct name, as `uploadretry` is, keeps them apart without checking `event.target`.
 - **A Dictation in a shadow root nested inside the Composer doesn't reach it (Task 17):** `insertText` walks `parentElement`, as a button in a shadow root doesn't submit an outer form.
 - **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.
-- **A `kind-model-selector` element icon is cloned with its ids** (Wave 4 Task 12b): rewriting ids inside each copy would be fragile; the `models` JSDoc says to pass a logo with `defs` as an image URL, and the fixture's Gemini logo is one.
+- **A `kind-model-selector` element icon is cloned with its ids** (Wave 4 Task 12b): rewriting ids inside each copy would be fragile; the `models` JSDoc says to pass a logo with `defs` as an image URL, and the fixture's Google monogram, with a gradient in `defs`, is one.
 - **`drawIcon` compares icons by identity** (suspected, Wave 4 Task 12b): a host that builds new elements on every `models` write re-copies its icons, which is harmless.
 - **A hand-written empty `kind-inline-citation-content` stays empty** (Wave 4 Task 3), as React's bare `InlineCitationContent` does: the element fills in only the content it wrote.
 - **`kind-sources`' `api` leaves out `expand` and `collapse`** (Wave 4 Task 2): they are availability getters, and a web root's `api` list copies methods once, as Guardrail Notice's does; `open` and `setOpen` cover them.
@@ -28,6 +28,7 @@ Last reviewed: `7269a46` (Wave 6 Task 12 agent conformance)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Only Settings Menu pins the pointer-open highlight fix** (Design Wave 0): Add Menu, Approval Mode, Model Control and Message's regenerate menu share `menuBase` and passed a probe, but have no test of their own.
 - **Dictation's web `draw` runs on every level (Wave 5 Task 11):** cheap and guarded; no `written` or `moved` fixture case yet.
 - **An empty `<kind-dictation>` takes no room until defined (Wave 5 Task 11):** a `:not(:defined)` rule from its size variables would hold it.
 - **`kind-composer` removed and put back a tick later forgets "Draft restored"** (Wave 5 Task 13): the draft text comes back through `defaultValue`, but `@ui-sdk/web` carries a mapped root state only through a `default<Key>` option, and `restored` has none; a same-tick move keeps it. Fixing it needs a public `defaultRestored`-style option.

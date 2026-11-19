@@ -49,7 +49,7 @@ export type GeneratedImageOptions = {
   status?: GeneratedImageStatus;
   /**
    * How far generation has come, from 0 to 100. The preview sharpens as it rises, and the corner reads it, like
-   * "Creating image · 42%". Without it, both stay where they start and the corner reads "Creating image".
+   * "Creating image · 42%". Without it, the preview stays blurred and the corner reads "Creating image".
    */
   progress?: number;
   /** A partial image's URL while generating. It shows blurred, sharpening with `progress`, until the image loads. */

@@ -1,4 +1,3 @@
-"use client";
 // Logos from Lobe Icons (@lobehub/icons-static-svg 1.103.0, MIT), see THIRD_PARTY_NOTICES.md, but the Google monogram.
 
 export function AnthropicLogo() {

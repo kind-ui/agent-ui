@@ -60,7 +60,7 @@
 
     &:focus-visible {
       outline: var(--kind-focus-ring);
-      outline-offset: 1px;
+      outline-offset: var(--kind-focus-offset);
     }
   }
 
@@ -289,7 +289,7 @@
     }
     &:focus-visible {
       outline: var(--kind-focus-ring);
-      outline-offset: 1px;
+      outline-offset: var(--kind-focus-offset);
     }
     &[aria-disabled="true"] {
       opacity: 0.6;
