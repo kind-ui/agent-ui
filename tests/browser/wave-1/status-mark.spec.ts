@@ -59,6 +59,8 @@ const consumers: Record<string, string> = {
 
   // wave-6-task-10: Conversation states
 
+  "conversation/conversation.ts": "kind-conversation-error-icon",
+
   // wave-6-task-11: Conversation Search
 };
 
@@ -161,6 +163,8 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
   { url: "/?c=message&case=outcomes", slots: ["kind-message-outcome-icon"] },
 
   // wave-6-task-10: Conversation states
+
+  { url: "/?c=conversation&case=error", slots: ["kind-conversation-error-icon"] },
 
   // wave-6-task-11: Conversation Search
 ];

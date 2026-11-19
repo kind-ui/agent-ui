@@ -59,6 +59,29 @@ test("edits a user message in place: Escape restores it, Enter saves it", async 
   expect(await calls(page)).toEqual(["edit:How do I retry safely?"]);
 });
 
+test("Cancel and Save take the toolbar's place while editing; Tab reaches them without saving", async ({
+  page,
+}) => {
+  await open(page, "all");
+  const editor = page.getByRole("textbox", { name: "Edit message" });
+  const edit = page.getByRole("button", { name: "Edit" });
+  await edit.click();
+  await expect(edit).toBeHidden();
+  await editor.fill("Something else");
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Cancel" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(editor).toBeHidden();
+  await expect(edit).toBeFocused();
+  expect(await calls(page)).toEqual([]);
+  await edit.click();
+  await editor.fill("How do I retry safely?");
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(editor).toBeHidden();
+  await expect(user(page)).toContainText("How do I retry safely?");
+  expect(await calls(page)).toEqual(["edit:How do I retry safely?"]);
+});
+
 test("copy writes the text to the clipboard and announces it", async ({ page, context, browserName }) => {
   await allowClipboard(context, browserName);
   await open(page, "all");

@@ -517,6 +517,22 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       commit: (_id, value, details) => !dispatch(context, "onEdit", value, details),
     });
 
+    // Back to Edit once the toolbar shows again, which can take a few frames on web, unless focus moved on. Web keeps
+    // the parts that left in the page, hidden, and focus stays on them until the browser lets it go.
+    const focusEdit = (left: (Element | undefined)[], tries = 3) =>
+      requestAnimationFrame(() => {
+        const active = document.activeElement;
+        const moved = active && active !== document.body && active.isConnected;
+        if (moved && !left.some((part) => part?.contains(active))) return;
+        const edit = context.element("edit")?.querySelector<HTMLElement>("button:not([disabled])");
+        edit?.focus();
+        if (edit && document.activeElement !== edit && tries > 1) focusEdit(left, tries - 1);
+      });
+    const editParts = () => [
+      context.element("editor") ?? undefined,
+      context.element("edit-actions") ?? undefined,
+    ];
+
     const setBranch = (index: number, event?: Event) => {
       const { branchIndex, branchCount } = store.get();
       if (!Number.isInteger(index) || index < 0 || index >= branchCount || index === branchIndex) return;
@@ -592,8 +608,15 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
         state.author ? avatarState(state.author.name, state.author.avatarUrl || undefined) : NO_AVATAR,
       timeState: (state) => timeState(state.createdAt ?? "", state.locale, state.timeZone, state.now),
       inlineEdit,
-      saveEdit: (event) => void inlineEdit.end("imperative", event),
-      cancelEdit: () => inlineEdit.cancel(),
+      saveEdit: (event) => {
+        const left = editParts();
+        if (inlineEdit.end("imperative", event)) focusEdit(left);
+      },
+      cancelEdit: () => {
+        const left = editParts();
+        inlineEdit.cancel();
+        focusEdit(left);
+      },
       editFocusOut: (event) => {
         const next = event.relatedTarget;
         const within = (name: "editor" | "edit-actions") =>
