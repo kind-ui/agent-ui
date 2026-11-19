@@ -123,6 +123,13 @@ export function agentHost() {
   return host;
 }
 
+// Wave 6: the messages Conversation Search finds "rollout" in.
+export const shellMessages = [
+  { id: "s1", text: "Plan the rollout for Friday." },
+  { id: "s2", text: "Docs are ready." },
+  { id: "s3", text: "The rollout starts with 5% of traffic." },
+];
+
 // Wave 5: the Composer's saved draft, written again on every page load so each run starts with "Draft restored".
 export const draftKey = "agent-draft";
 export const savedDraft = "Pick up where I left off";

@@ -52,8 +52,8 @@ export async function act(
   );
 }
 
-// Every animation but the endless loops (spinners, dots) has finished. Firefox never advances a transition inside
-// hidden content, so those are skipped.
+// Every animation but the endless loops (spinners, dots) and scroll-driven ones (a conversation's edge fades) has
+// finished. Firefox never advances a transition inside hidden content, so those are skipped.
 export const settled = (page: Page) =>
   page.waitForFunction(() =>
     document
@@ -61,6 +61,7 @@ export const settled = (page: Page) =>
       .every(
         (animation) =>
           animation.playState !== "running" ||
+          !(animation.timeline instanceof DocumentTimeline) ||
           animation.effect?.getComputedTiming().iterations === Number.POSITIVE_INFINITY ||
           (animation.effect as KeyframeEffect | null)?.target?.checkVisibility() === false,
       ),

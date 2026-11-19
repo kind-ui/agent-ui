@@ -11,7 +11,7 @@ import { createParts, wrappedButton } from "@ui-sdk/web";
 import type { AttributeProperties, UiChangeEvent, UiElement } from "@ui-sdk/web/events";
 
 const defaultParts = (describedBy: string) =>
-  `<kind-conversation-search-input><ui-input-group><ui-input><input type="search" placeholder="Find" aria-describedby="${describedBy}" data-agent-hidden></ui-input><kind-conversation-search-count></kind-conversation-search-count><ui-input-clear><button type="button" aria-label="Clear search" data-agent-hidden></button></ui-input-clear></ui-input-group></kind-conversation-search-input><kind-conversation-search-previous><button></button></kind-conversation-search-previous><kind-conversation-search-next><button></button></kind-conversation-search-next><kind-conversation-search-close><button></button></kind-conversation-search-close>`;
+  `<kind-conversation-search-input><ui-input-group><ui-input data-agent-hidden><input type="search" placeholder="Find" aria-describedby="${describedBy}"></ui-input><kind-conversation-search-count></kind-conversation-search-count><ui-input-clear><button type="button" aria-label="Clear search" data-agent-hidden></button></ui-input-clear></ui-input-group></kind-conversation-search-input><kind-conversation-search-previous><button></button></kind-conversation-search-previous><kind-conversation-search-next><button></button></kind-conversation-search-next><kind-conversation-search-close><button></button></kind-conversation-search-close>`;
 
 /**
  * `<kind-conversation-search>` fills in its parts when it has no children, and points the field's description at the

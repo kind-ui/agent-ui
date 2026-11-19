@@ -48,7 +48,7 @@ export function SidebarPanel({ render, ...props }: SidebarPanelProps) {
           <KindResizablePanel {...state.resizablePanel}>
             {state.overlay ? (
               <KindDrawer {...state.drawer}>
-                <KindDrawerBackdrop />
+                <KindDrawerBackdrop data-agent-hidden="" />
                 <KindDrawerContent {...state.drawerContent}>{element}</KindDrawerContent>
               </KindDrawer>
             ) : (
@@ -65,7 +65,9 @@ export function SidebarPanel({ render, ...props }: SidebarPanelProps) {
 export function SidebarHandle({ className, ...props }: SidebarHandleProps) {
   return (
     <parts.Handle {...props}>
-      {(state) => <KindResizableHandle aria-label={state["aria-label"]} className={className} />}
+      {(state) => (
+        <KindResizableHandle aria-label={state["aria-label"]} className={className} data-agent-hidden="" />
+      )}
     </parts.Handle>
   );
 }

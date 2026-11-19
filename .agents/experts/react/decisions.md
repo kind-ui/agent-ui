@@ -56,6 +56,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - Sidebar: no fixture or spec for a controlled `open` that refuses or follows changes; core's write-back was checked by hand in review.
 - **A custom `ConversationSearchInput` without `ConversationSearchCount` leaves the field's `aria-describedby` naming a missing id** (Wave 6 Task 11), as the `StepTitle` and `QuestionPrompt` items do.
 - **A server render of a `defaultOpen` Thread Search names its dialog by a title id not in the markup** (Wave 6 Task 3): the client names it by `aria-label`; UI SDK's, like the `CommandGroup` one.
+- **A narrow React Sidebar lists its Resizable in the agent snapshot** (Wave 6 Task 12). The Resizable stays mounted under `overlayBelow`, so the inset's page never mounts again, but the handle, whose `data-agent-hidden` keeps the Resizable out of the snapshot on wide screens, isn't rendered then, and every other Resizable part holds a Sidebar part. Web takes the Resizable out instead. Fixing it means keeping a hidden handle in the group while narrow, or a UI SDK way to hide a component that holds another's parts.
 
 ## Resolved
 

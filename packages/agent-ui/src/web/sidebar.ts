@@ -61,7 +61,7 @@ const draw = (el: HTMLElement, api: SidebarApi, state: SidebarState) => {
   if (state.overlay) {
     made.drawer ??= make(
       doc,
-      `<kind-internal-drawer><ui-drawer><ui-drawer-backdrop hidden></ui-drawer-backdrop><ui-drawer-content hidden keep-mounted></ui-drawer-content></ui-drawer></kind-internal-drawer>`,
+      `<kind-internal-drawer><ui-drawer><ui-drawer-backdrop hidden data-agent-hidden></ui-drawer-backdrop><ui-drawer-content hidden keep-mounted></ui-drawer-content></ui-drawer></kind-internal-drawer>`,
     );
     const drawer = made.drawer.querySelector("ui-drawer") as Element;
     const content = made.drawer.querySelector("ui-drawer-content") as Element;
@@ -83,7 +83,7 @@ const draw = (el: HTMLElement, api: SidebarApi, state: SidebarState) => {
   );
   made.handle ??= make(
     doc,
-    `<kind-sidebar-handle><ui-resizable-handle></ui-resizable-handle></kind-sidebar-handle>`,
+    `<kind-sidebar-handle><ui-resizable-handle data-agent-hidden></ui-resizable-handle></kind-sidebar-handle>`,
   );
   const group = made.resizable.querySelector("ui-resizable") as Element;
   const [first, second] = [...group.querySelectorAll(":scope > ui-resizable-panel")] as [Element, Element];
