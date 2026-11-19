@@ -1,16 +1,6 @@
-/* Shared controls (docs/design-principles.md "System"). A part opts in with one attribute its core slot writes, so both
-   render layers draw it the same; every selector is `:where()`, so a component stylesheet or a consumer class wins.
-
-   - `data-kind-button`: a text button, ghost by default; `="secondary"` adds a border, `="primary"` and `="danger"`
-     fill it. While pending it keeps its label and holds a running status mark (`[data-status-mark]`).
-   - `data-kind-icon-button`: a square ghost button holding one icon.
-   - `data-kind-trigger`: what opens a menu, picker or popover; ghost, filled while open.
-   - `data-kind-badge`: a tinted pill; `="success" | "warning" | "danger" | "accent"` picks the tone.
-   - `data-kind-popup`, `data-kind-dialog` (with `data-kind-dialog-title`), `data-kind-scrim`: surfaces.
-   - `data-kind-code`: a block of code or output.
-
-   Under a coarse pointer, a button's `::before` grows its hit area to `--kind-hit-area`, so a component doesn't draw on
-   `::before` of a shared control. */
+/* Shared controls, listed in docs/design-principles.md "System". A part opts in with the `data-kind-*` attribute its
+   core slot writes; every selector is `:where()`, so a component stylesheet or a consumer class wins. Under a coarse
+   pointer `::before` is the hit area, so a component doesn't draw on `::before` of a shared control. */
 @layer components {
   :where([data-kind-button], [data-kind-icon-button], [data-kind-trigger]) {
     position: relative;
