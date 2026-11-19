@@ -122,13 +122,13 @@ function wireAssistant(el: HTMLElement & { canRegenerate?: boolean }, callbacks:
   el.addEventListener("regenerate", () => calls.push("regenerate"));
 }
 
-function authorCase(root: HTMLElement) {
+const authorCase = (clock: boolean) => (root: HTMLElement) => {
   define();
   root.innerHTML = `<div class="m-4 flex w-[36rem] flex-col gap-2">${authored
     .map(
       ({ id, text, createdAt, durationSeconds, continued }) => `
       <kind-message id="${id}" aria-label="Message ${id}" text="${text}" created-at="${createdAt}"
-        now="${timing.now}" time-zone="${timing.timeZone}"${durationSeconds ? ` duration-seconds="${durationSeconds}"` : ""}${continued ? " continued" : ""}>
+        ${clock ? "" : `now="${timing.now}" `}time-zone="${timing.timeZone}"${durationSeconds ? ` duration-seconds="${durationSeconds}"` : ""}${continued ? " continued" : ""}>
         <kind-message-avatar></kind-message-avatar>
         <kind-message-header></kind-message-header>
         <kind-message-content>${text}</kind-message-content>
@@ -136,7 +136,7 @@ function authorCase(root: HTMLElement) {
     )
     .join("")}</div>`;
   for (const el of root.querySelectorAll("kind-message")) el.author = author;
-}
+};
 
 function outcomesCase(root: HTMLElement) {
   define();
@@ -153,7 +153,7 @@ function outcomesCase(root: HTMLElement) {
         <kind-message-outcome></kind-message-outcome>
       </kind-message>`,
     )
-    .join("")}</div>`;
+    .join("")}<input aria-label="Reply" class="w-full"></div>`;
   const deferred: { resolve(): void; reject(): void }[] = [];
   for (const el of root.querySelectorAll("kind-message"))
     for (const name of ["retry", "continue"] as const)
@@ -224,7 +224,8 @@ export const cases = {
       },
     });
   },
-  author: authorCase,
+  author: authorCase(false),
+  "author-clock": authorCase(true),
   outcomes: outcomesCase,
   options: optionsCase(false),
   refusing: optionsCase(true),

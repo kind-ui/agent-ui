@@ -76,6 +76,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - Sidebar: `open` set as an attribute or property follows the `open` option, not the root `state` setter, so it changes silently and a present `open="false"` doesn't follow presses (same as the Picker and `menuBase` item above). A React-rendered `kind-sidebar` isn't supported, since the element moves the host's panel and inset.
 - **A Day Separator inside a shadow root doesn't read its host's `lang`** (Wave 6 Task 6): UI SDK `pageLocale` uses `closest("[lang]")`, which stops at the shadow boundary; report upstream. `locale` works around it.
 - **Share Dialog's fixture has no moved or shadow-root case** (Wave 6 Task 8): both were checked by hand in review (state kept across a move, ids and focus return inside a shadow root); only the `written` case is tested.
+- **A Retry or Continue pending when a `kind-message` is moved comes back pressable (Wave 6 Task 9):** `outcomePending` isn't carried to the rebuilt instance, as with Plan's Accept and Subagent's Stop.
 
 ## Resolved
 
@@ -133,6 +134,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **Approval Mode (Wave 5 Task 6):** the `value` JSDoc claimed a `modechange` and typed a setter that took `undefined`; the trigger redrew on every new `modes` array (now keyed by content); `approval-mode.spec.ts` gained a zero-removal redraw test and a `learnmore` case.
 - **Model Control's `effort` reflected to a stale attribute (Wave 5 Task 9):** it is a property-only `value` option now, as `model` is; the property JSDoc says setting fires no event.
 - **Day Separator (Wave 6 Task 6):** host text inside the element is kept (the fill-in checks `textContent`, and appends rather than writing `innerHTML`); a label written after connecting, or a `<time>` holding only whitespace, is filled in through a `MutationObserver`, as Status does.
+- **Message (Wave 6 Task 9):** clearing `author` left the old initials in an avatar the element filled (now emptied); an empty `kind-message-header` moved the content down when it filled in (`:empty` holds its line). Moved, shadow-root and adopted elements were checked by hand.
 
 ## Revisit
 

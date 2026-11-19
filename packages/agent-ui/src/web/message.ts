@@ -44,7 +44,11 @@ const fill = (part: Element | null | undefined, text: string) => {
 
 /** Fills an empty avatar part with a UI SDK Avatar of the author, and keeps the one it wrote current. */
 const drawAvatar = (part: Element, { name, initials, src }: MessageAvatarState) => {
-  if (!name || !claim(part)) return;
+  if (!name) {
+    if (filled.has(part)) part.replaceChildren();
+    return;
+  }
+  if (!claim(part)) return;
   const document = part.ownerDocument;
   let avatar = part.querySelector("ui-avatar");
   if (!avatar) {

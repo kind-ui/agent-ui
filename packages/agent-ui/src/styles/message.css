@@ -188,7 +188,7 @@
     visibility: hidden;
   }
 
-  [data-slot="kind-message-avatar"][data-author] :where([data-slot="avatar"]) {
+  [data-slot="kind-message-avatar"]:where([data-author]) :where([data-slot="avatar"]) {
     position: relative;
     display: inline-flex;
     width: 1.75rem;
@@ -218,6 +218,12 @@
     grid-column: -2;
   }
 
+  /* Holds its line before a web header fills itself in, so the content below doesn't move. */
+  kind-message-header:empty {
+    display: block;
+    min-height: 1.75rem;
+  }
+
   [data-slot="kind-message-header"] {
     display: flex;
     flex-wrap: wrap;
@@ -239,9 +245,10 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* "Today" and "yesterday" come from Intl in lower case. */
-  [data-slot="kind-message-time"]::first-letter {
-    text-transform: uppercase;
+  :where([data-slot="kind-message-header"]:has([data-slot="kind-message-time"]:not([hidden])))
+    [data-slot="kind-message-duration"]::before {
+    content: "·" / "";
+    margin-inline-end: 0.5rem;
   }
 
   /* After the content, so the streamed text above never moves. */
@@ -258,7 +265,7 @@
     font-size: 0.8125rem;
   }
 
-  [data-slot="kind-message-outcome"][data-outcome="failed"] [data-slot="kind-message-outcome-text"] {
+  :where([data-slot="kind-message-outcome"][data-outcome="failed"]) [data-slot="kind-message-outcome-text"] {
     color: var(--kind-color-fg);
   }
 

@@ -225,7 +225,7 @@ function Chat() {
   );
 }
 
-function Authored() {
+function Authored({ clock }: { clock?: boolean }) {
   return (
     <div className="m-4 flex w-[36rem] flex-col gap-2">
       {authored.map(({ id, text, ...rest }) => (
@@ -235,7 +235,8 @@ function Authored() {
           aria-label={`Message ${id}`}
           text={text}
           author={author}
-          {...timing}
+          timeZone={timing.timeZone}
+          {...(clock ? {} : { now: timing.now })}
           {...rest}
         >
           <MessageAvatar />
@@ -287,6 +288,7 @@ function Outcomes() {
           <MessageOutcome />
         </Message>
       ))}
+      <input aria-label="Reply" className="w-full" />
     </div>
   );
 }
@@ -315,6 +317,7 @@ export const cases = {
     </div>
   ),
   author: () => <Authored />,
+  "author-clock": () => <Authored clock />,
   outcomes: () => <Outcomes />,
   "custom-rows": () => (
     <div className="m-4 w-[36rem]">

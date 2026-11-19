@@ -287,6 +287,34 @@ test.describe("author and time", () => {
     await expect(yesterday).toHaveText("Nov 17, 9:41 AM");
     await expect(yesterday).toHaveAttribute("datetime", "2026-11-17T09:41:00Z");
   });
+
+  test("without `now`, reads today from the browser's clock", async ({ page }, testInfo) => {
+    const errors: string[] = [];
+    page.on("console", (entry) => {
+      if (entry.type() === "error") errors.push(entry.text());
+    });
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.clock.setFixedTime(new Date("2026-11-18T12:00:00Z"));
+    await open(page, "author-clock");
+    const today = message(page, "today").locator("time");
+    await expect(today).toHaveText("9:41 AM");
+    await expect(today).toHaveAttribute("datetime", "2026-11-18T09:41:00Z");
+    const yesterday = message(page, "yesterday").locator("time");
+    await expect(yesterday).toHaveText("Nov 17, 9:41 AM");
+    await expect(yesterday).toHaveAttribute("datetime", "2026-11-17T09:41:00Z");
+    if (layerOf(testInfo) === "react") expect(errors).toEqual([]);
+  });
+
+  test("clearing the author empties the avatar it filled", async ({ page }, testInfo) => {
+    test.skip(layerOf(testInfo) !== "web", "web fills its avatar part itself");
+    await open(page, "author");
+    const avatar = message(page, "today").locator('[data-slot="kind-message-avatar"]');
+    await expect(avatar).toHaveText("AL");
+    await page.evaluate(() => {
+      (document.querySelector("#today") as HTMLElement & { author?: unknown }).author = undefined;
+    });
+    await expect(avatar).toBeEmpty();
+  });
 });
 
 test.describe("an answer that stops or fails", () => {
@@ -352,6 +380,18 @@ test.describe("an answer that stops or fails", () => {
     await settle(page, true);
     await expect(resume).not.toHaveAttribute("aria-disabled");
     expect(await outcomeCalls(page)).toEqual(["retry:retry-press:mouse", "continue:continue-press:mouse"]);
+  });
+
+  test("when Retry leaves holding focus, focus moves to the next tab stop after the message", async ({
+    page,
+  }) => {
+    await openOutcomes(page);
+    const retry = answer(page, "Earlier answer").getByRole("button", { name: "Retry" });
+    await retry.focus();
+    await page.keyboard.press("Enter");
+    expect(await outcomeCalls(page)).toEqual(["retry:retry-press:keyboard"]);
+    await status(page, "earlier", "submitted");
+    await expect(page.getByRole("textbox", { name: "Reply" })).toBeFocused();
   });
 
   test("agents retry a failed answer and continue a stopped one", async ({ page }) => {

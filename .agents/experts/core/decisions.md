@@ -46,6 +46,8 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **Thread List has no core unit test** (Wave 6 Task 2): its pure part is `threadGroups`, which `time`/`thread-groups` tests cover; its delete lock, load-more retry and focus moves need a grid, a virtualizer and focus, so `wave-6/thread-list.spec.ts` checks them in both layers.
 - **Day Separator joins the page's minute clock with `relative: false` too** (Wave 6 Task 6): it reads today again and renders its root once at midnight for nothing, since the label is memoized; skipping it would need the subscription to follow `relative` changes.
 
+- **Message's relative time doesn't roll over at midnight on its own (Wave 6 Task 9):** today is read when the time part binds and on each options change, D13's "once in the page"; a timer per message would cost more than a stale "9:41 AM" on a page left open overnight.
+- **`fromUIMessages` puts a chat error on the last message whatever its role (Wave 6 Task 9),** as its `status` already did in 0.5; a request that fails before the assistant answers marks the user's message. A host that wants Retry only on assistant messages passes `onRetry` to those.
 ## Known and open (don't report again, check whether fixed)
 
 - **The waveform's default of 128 bars writes 128 `--kind-dictation-level-*` properties per level (Task 17):** not profiled; lower the default or size it to the box if it shows up.
@@ -171,6 +173,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **Approval Mode `value` outside `modes` (Wave 5 Task 6):** the snapshot showed a mode the trigger didn't; `state`/`sync` keep only a known value and `onOptions` drops an uncontrolled one whose mode left. `tests/core/approval-mode.test.mjs` pins it with `setValue`'s refusals.
 - **Model Control (Wave 5 Task 9):** `setValues` keeps Model and Effort out of the host's `values` (`owned`); host settings with the ids `model`/`effort` are left out; `getItems` reads the rows; a controlled effort's fallback is chosen against the stored value; model lookups are cached per `models` array. `tests/core/model-control.test.mjs` pins them.
 - **Day Separator (Wave 6 Task 6):** an undated or invalid `date` hides the heading (`hidden`, so no empty heading); the root's `bind` writes `pageLocale` and `today` in one `store.set`; `level` and the state keys have JSDoc.
+- **Message (Wave 6 Task 9):** Retry and Continue dropped focus to the body as the new response started (now the toolbar, else the next tab stop after the message, `core/tab-stop.ts`); a web `status` of `"toString"` read as an outcome; the avatar's state changed with each new `author` object (now keyed by name and image); state JSDoc. Pinned in `message.spec.ts`.
 
 ## Revisit
 

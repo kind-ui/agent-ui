@@ -29,6 +29,7 @@ import {
 } from "../menu-base.js";
 import { enter, type MotionMode } from "../motion/index.js";
 import { createPendingAction } from "../pending.js";
+import { nearestTabStop } from "../tab-stop.js";
 import { durationLabel, timeLabel, todayKey } from "../time.js";
 
 /** The branch switcher's text: `"2 of 3"` for the second of three. */
@@ -111,7 +112,10 @@ export type MessageOptions = {
   onEdit?: (text: string, details: ChangeDetails<InlineEditReason>) => void;
   /** Who wrote it. Fills the avatar part with their image or initials, and the author part with their name. */
   author?: MessageAuthor;
-  /** Whether it follows its author's previous message, so it leaves out the avatar and the name. */
+  /**
+   * Whether it follows its author's previous message, so it leaves out the avatar and the name.
+   * @default false
+   */
   continued?: boolean;
   /**
    * When it was written, as an ISO 8601 date-time. The time part reads its time of day, with the date when it isn't
@@ -167,11 +171,17 @@ export type MessageState = MenuBaseState & {
   /** Whether it's a user message with `onEdit`. */
   canEdit: boolean;
   motion: MotionMode;
+  /** The `author` option, while it has a `name`. */
   author: MessageAuthor | undefined;
+  /** The `continued` option. */
   continued: boolean;
+  /** The `createdAt` option, or `undefined` while empty. */
   createdAt: string | undefined;
+  /** The `durationSeconds` option, in seconds. */
   durationSeconds: number | undefined;
+  /** The `locale` option, or `undefined` for English. */
   locale: string | undefined;
+  /** The `timeZone` option, or `undefined` for UTC. */
   timeZone: string | undefined;
   /** Today: the `now` option, else the browser's clock once bound, else `undefined`, as on a server. */
   now: string | undefined;
@@ -179,7 +189,9 @@ export type MessageState = MenuBaseState & {
   outcome: MessageOutcome | null;
   /** The `error` option's words, or the default. */
   errorText: string;
+  /** Whether `onRetry` is set. Retry shows while this is true and `outcome` is `"failed"`. */
   canRetry: boolean;
+  /** Whether `onContinue` is set. Continue shows while this is true and `outcome` is `"stopped"`. */
   canContinue: boolean;
   /** Whether a promise `onRetry` or `onContinue` returned is still pending. */
   outcomePending: boolean;
@@ -225,7 +237,14 @@ export type MessageApi = {
 };
 
 /** What the avatar slot hands render functions: the `author`'s, or empty strings without one. */
-export type MessageAvatarState = { name: string; initials: string; src: string | undefined };
+export type MessageAvatarState = {
+  /** The author's name. */
+  name: string;
+  /** Up to two letters of the name, or "?". */
+  initials: string;
+  /** The author's `avatarUrl`. */
+  src: string | undefined;
+};
 
 /** What the time slot hands render functions: its words and its `datetime`. */
 export type MessageTimeState = { label: string; dateTime: string };
@@ -286,7 +305,8 @@ const EDITING = "message";
 
 const settled = (status: MessageStatus) => status !== "submitted" && status !== "streaming";
 
-const OUTCOMES: Partial<Record<MessageStatus, MessageOutcome>> = { aborted: "stopped", error: "failed" };
+const outcomeOf = (status: string): MessageOutcome | null =>
+  status === "aborted" ? "stopped" : status === "error" ? "failed" : null;
 const ANNOUNCEMENTS: Record<MessageOutcome, string> = {
   stopped: "Response stopped",
   failed: "Response failed",
@@ -367,7 +387,7 @@ const presentation = (options: MessageOptions) => {
     locale: options.locale || undefined,
     timeZone: options.timeZone || undefined,
     // A web `status` attribute can hold any string.
-    outcome: OUTCOMES[status] ?? null,
+    outcome: outcomeOf(status),
     errorText: options.error || "Something went wrong",
     canRetry: options.onRetry !== undefined,
     canContinue: options.onContinue !== undefined,
@@ -447,7 +467,7 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       status = next;
       // A new status answers a pending Retry or Continue.
       pendingOutcome.release();
-      const outcome = OUTCOMES[next];
+      const outcome = outcomeOf(next);
       // Only for a response this instance saw being written, so a page of earlier messages is quiet.
       if (outcome && streamed) announce(ANNOUNCEMENTS[outcome], { priority: "polite" });
     });
@@ -461,11 +481,12 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       const reason = event ? press : "imperative";
       void pendingOutcome.run(() => call({ reason, source: actionSource(event, reason) }));
     };
+    // Keyed by the fields, so a host passing a new `author` object each render keeps the avatar's state.
     const avatarState = memo(
-      (author: MessageAuthor): MessageAvatarState => ({
-        name: author.name,
-        initials: avatarInitials(author.name),
-        src: author.avatarUrl || undefined,
+      (name: string, src: string | undefined): MessageAvatarState => ({
+        name,
+        initials: avatarInitials(name),
+        src,
       }),
     );
     const timeState = memo(
@@ -539,12 +560,17 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
         const now = today(context.options());
         if (now !== store.get().now) store.set({ now });
       },
-      // The toolbar takes focus when it's there; Retry and Continue leave as a new response starts.
+      // Retry and Continue leave as a new response starts, before the toolbar is back, so focus moves past the
+      // message, usually to the composer.
       outcomeRecovery: createFocusRecovery({
-        fallback: () =>
-          context.element("toolbar")?.querySelector<HTMLElement>("button:not([disabled])") ?? null,
+        fallback: () => {
+          const toolbar = context.element("toolbar")?.querySelector<HTMLElement>("button:not([disabled])");
+          const root = context.element("root");
+          return toolbar ?? (root?.isConnected ? nearestTabStop(root) : undefined);
+        },
       }),
-      avatarState: (state) => (state.author ? avatarState(state.author) : NO_AVATAR),
+      avatarState: (state) =>
+        state.author ? avatarState(state.author.name, state.author.avatarUrl || undefined) : NO_AVATAR,
       timeState: (state) => timeState(state.createdAt ?? "", state.locale, state.timeZone, state.now),
       inlineEdit,
       enterToolbar: (el) => {
@@ -588,7 +614,7 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     time: slot<BaseSlotProps, MessageTimeState>({
       present: (state) => state.createdAt !== undefined && timeLabel(state.createdAt) !== "",
       state: (state, { api }) => api.timeState(state),
-      attrs: (state) => ({ datetime: state.createdAt }),
+      attrs: (state) => ({ dateTime: state.createdAt }),
       bind: (_el, { api }) => api.readClock(),
     }),
     duration: slot<BaseSlotProps, { label: string }>({

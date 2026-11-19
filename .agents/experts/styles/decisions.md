@@ -116,6 +116,7 @@ Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 - **Approval Mode styles (Wave 5 Task 6):** web's Learn more missed its rule (`as-child` puts the link a level down), the selectors were 3–4 attributes deep (now `:where()`), and light `--kind-color-danger` was 4.34:1 on `--kind-color-hover`; it is now `oklch(0.55 0.21 27)`.
 - **Model Control's trigger chevron pointed up in right-to-left text (Wave 5 Task 9):** its rotation turns off `menu.css`'s mirror; a menu trigger's chevron reads `ButtonText` in forced colors.
 - **Day Separator overflowed a narrow container** (Wave 6 Task 6): the label now ellipsizes (`min-width: 0`), and `[hidden]` sets `display: none` over the root's `display: flex`.
+- **Message (Wave 6 Task 9):** `::first-letter` on the time capitalized lower-case months (Hungarian "nov."); the avatar and failed-outcome rules weighed two and three attributes (now `:where()`).
 
 ## Revisit
 

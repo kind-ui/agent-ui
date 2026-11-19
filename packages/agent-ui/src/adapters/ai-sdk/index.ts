@@ -14,6 +14,7 @@ export { fromChatStatus } from "./status.js";
 
 /** What the chat says about its in-flight turn: `useChat`'s `status` and `error`. */
 export interface UIChatState {
+  /** The chat's status, which becomes the last message's. */
   status?: ChatStatus;
   /** The chat's error. Its `message` becomes the last message's `error`. */
   error?: { message: string } | undefined;

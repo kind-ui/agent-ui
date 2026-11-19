@@ -106,6 +106,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **`<Status>{false}</Status>` and `<Status>{null}</Status>` differed (Wave 2 Task 2).** Fixed: any `children` replace the default parts.
 - **Approval Mode fixtures (Wave 5 Task 6):** `onLearnMore` had no case and the fixtures carried an unused `id`; a `learning` case and spec test cover it, and the `id` is gone.
 - **A choice option's `icon` was `unknown` in React's `settings` props (Wave 5 Task 9):** `SettingsMenuSetting` narrows the options' icons too, and Model Control's `settings` use it.
+- **`MessageTime` warned "Invalid DOM property `datetime`" (Wave 6 Task 9):** UI SDK's React props don't rename it, so the core slot writes `dateTime`; the clock path (no `now`) is pinned in `message.spec.ts` with no console errors.
 
 ## Revisit
 
