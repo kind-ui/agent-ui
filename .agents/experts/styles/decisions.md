@@ -2,13 +2,14 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `3e87640` (Wave 4 Task 13 Test Results first-style fix)
+Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 
 ## Settled
 
+- **Dictation's idle box keeps its full width (Wave 5 Task 11):** the mic button, waveform and status share one box so nothing beside it moves (plan Design bar); hosts size it with `--kind-dictation-width`. Inside a Composer (Task 17) the box gives way to the composer's grid instead: idle is just the mic, and an active Dictation is a subgrid over the editor and actions rows.
+- **An active Dictation in a Composer hides what it covers with `visibility` (Task 17):** the editor and controls keep their tracks so the box keeps its size; Send stays shown and pressable under the root (`pointer-events: none`, parts `auto`).
+- **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.
 - **A Transcript segment's header has a set `height: 1.25rem`** (Wave 4 Task 13): baseline alignment of the speaker and time made it as tall as the font's metrics (22px on macOS), so segment heights and the Transcript budgets differed on Linux CI. The search budget rose to 72 writes, 201 renders and 140 re-reads because 62px segments put one more in view, the count Linux CI already measured.
-- **Choosing a Model Selector model without an icon moves the field's text toward the start** (suspected, Wave 4 Task 12b): the field keeps its width, so nothing outside it moves.
-- **The Model Selector icon rule must stay after the trigger's `& svg` rule** (Wave 4 Task 12b): both are one attribute and one element, so the later 16px rule wins over 14px.
 - **The Transcript match count changes width as you type** (Wave 4 Task 10): it sits inside the search field after the input, which only shrinks; nothing outside the field moves.
 - **Switching the Test Results filter plays the rows' entrance again** (Wave 4 Task 9): the filter mounts the rows it lets through, which is a mount; reduced motion keeps it to a 120 ms fade.
 - **Terminal's Copy hover fade runs under every `motion`** (Wave 4 Task 7), as the Step trigger's and Tool's copy buttons' do: a 150 ms color change on hover isn't movement.
@@ -26,9 +27,14 @@ Last reviewed: `3e87640` (Wave 4 Task 13 Test Results first-style fix)
 - **Inline code's radius is `calc(var(--kind-radius) / 2)` in rem, not `0.375em`:** CSS can't divide by a unit, and following `--kind-radius` (0 squares it) matters more than scaling with heading size.
 - **Radii scale from `--kind-radius` by `/ 3`, `/ 2`, `* 2 / 3`, `1` and `* 1.5`;** pills and 1–2 px detail radii stay fixed. Nested corners subtract the inset, floored at 0.
 - **A Status badge's width follows its label;** its height doesn't change, and the docs say to put it at the end of a row.
+- **Approval Mode's trigger width follows its mode (Wave 5 Task 6):** only a person's choice or the host changes it, and choosing closes the menu, so nothing moves while it's open; stacking every label as Settings Menu does would widen a composer row to the longest mode.
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Every one of the 128 bars transitions its `scale` on each level, clipped ones too (Task 17):** cost not profiled.
+- **The unchecked switch is about 1.3:1 thumb to track, in both schemes (Wave 5 Task 5):** D6 copies UI SDK Switch's look; fix it on `internal-switch` and `menu.css` together.
+- **`--kind-picker-trigger-width` set on an ancestor doesn't reach Model Selector** (Wave 5 Task 3): its trigger maps `--kind-model-selector-width` (default 14rem) onto it, so 0.4's variable works on the trigger too; no CSS keeps both names working at every level. `picker.mdx` doesn't document the variable yet.
+- **UI SDK's scroll-snap sheet slides in at full motion under reduced motion (Wave 5 Task 2):** its `open()` doesn't check `reducedMotion()` (its `nudge()` does), and a component's `motion` option never reaches it, so a Picker sheet slides about 446px whatever the settings. UI SDK's; report upstream.
 - **A selected composer token and Checkpoint's open Restore lose their state in forced colors** (suspected, Wave 4 Task 12): both are drawn by a background forced colors replaces; no fixture renders a token.
 - **`forced-colors.spec.ts` doesn't reach the Queue remove badge on web.**
 - **A Selection toolbar with many actions may spill past its border on a narrow screen** (Wave 4 Task 11): it doesn't wrap; not reproduced with three actions.
@@ -55,6 +61,11 @@ Last reviewed: `3e87640` (Wave 4 Task 13 Test Results first-style fix)
 
 ## Resolved
 
+- **Dictation (Wave 5 Task 11):** words heard were cut at the end (now cut at the start, newest in view), the unsupported error didn't fit ("Not supported in this browser"), the bars' timing is `--kind-dictation-bar-smoothing`, a large `bars` overflowed the box (the waveform shrinks and clips), two selectors gained `:where()`, a pending Stop no longer hovers and reads `GrayText` in forced colors. `dictation.spec.ts` pins the box across phases and `prefers-reduced-motion`; `forced-colors.spec.ts` lists Dictation.
+- **Context Bar (Wave 5 Task 10):** WebKit has no `overflow-clip-margin`, so the clipped bar hid focus rings on chips and "+N"; the rings now sit inside (`outline-offset: -2px`). `motion="none"` and the remove icon in forced colors are tested.
+- **Settings Menu switch and icon trigger (Wave 5 Task 5):** the switch had a transition under `motion="none"` and its track faded under reduced motion; the icon trigger lost its look with custom children, as Add Menu's did. Both fixed; the spec checks the reduced track and thumb.
+- **Menu exit ran 150 ms under reduced motion, and the Add Menu trigger rule was two attributes deep (Wave 5 Task 4):** the base exit rule and the trigger's context moved into `:where()`; the spec checks the 120 ms exit.
+- **Model Selector's field icon rules** (Wave 5 Task 3): Model Selector moved onto Picker and is styled by `picker.css` through `data-picker-part`; the field and its icon rules are gone.
 - **Model Selector's icon selectors outranked a consumer class** (Wave 4 Task 12b): the row spacer's context is in `:where()`, and the field icon is a single-attribute selector on its own part.
 - **Mask-drawn icons vanish in forced colors** (Wave 4 Task 12): every mask icon has a `forced-color-adjust: none` rule (`ButtonText` in buttons, `CanvasText` elsewhere), the Context Meter ring is redrawn in system colors, disabled Send reads `GrayText` and a pressed Wrap `SelectedItem`. Pinned in `forced-colors.spec.ts`.
 - **Selection toolbar** (Wave 4 Task 11): state and motion rules sit at one attribute with their context in `:where()`, so a consumer's class wins; a triple-clicked quote no longer ends in an empty line (core trims `quote`); `selection.spec.ts` pins full, reduced and no motion.
@@ -100,6 +111,8 @@ Last reviewed: `3e87640` (Wave 4 Task 13 Test Results first-style fix)
 - **An interrupted run left stray inline styles** (motion's `stop()` commits a frame later). Fixed: runs are cancelled with values held inline, and a finished run resolves in motion's render step.
 - **`expand` snapped for bordered elements.** Fixed: it starts from the computed `height` and ends at the `height` that `box-sizing` needs, for `border-box` and `content-box`.
 - **The Status mark sat 1px off-center in its pill (Wave 2 Task 2).** Fixed: the start padding is worked out from the pill's height.
+- **Approval Mode styles (Wave 5 Task 6):** web's Learn more missed its rule (`as-child` puts the link a level down), the selectors were 3–4 attributes deep (now `:where()`), and light `--kind-color-danger` was 4.34:1 on `--kind-color-hover`; it is now `oklch(0.55 0.21 27)`.
+- **Model Control's trigger chevron pointed up in right-to-left text (Wave 5 Task 9):** its rotation turns off `menu.css`'s mirror; a menu trigger's chevron reads `ButtonText` in forced colors.
 
 ## Revisit
 

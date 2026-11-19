@@ -1,27 +1,78 @@
 import "@ui-sdk/web/menu";
 
+/** An element with attributes and text, built without parsing markup. */
+export const menuElement = (
+  document: Document,
+  tag: string,
+  attributes: Record<string, string> = {},
+  text?: string,
+): HTMLElement => {
+  const el = document.createElement(tag);
+  for (const [name, value] of Object.entries(attributes)) el.setAttribute(name, value);
+  if (text !== undefined) el.textContent = text;
+  return el;
+};
+
+type Movable = Element & { moveBefore?: (node: Node, child: Node | null) => void };
+
+/**
+ * Puts `child` before `before` in `parent` only when it isn't there, so a focused row keeps focus. `moveBefore` doesn't
+ * reconnect, where the browser has it.
+ */
+export const placeMenuChild = (parent: Movable, child: Element, before: Element | null): void => {
+  if (child.parentElement === parent && (child === before || child.nextElementSibling === before)) return;
+  if (parent.moveBefore && child.isConnected && parent.isConnected) parent.moveBefore(child, before);
+  else parent.insertBefore(child, before);
+};
+
+/** A data row's icon, label and description. An `icon` is an image URL, or an element that is copied. */
+export type MenuItemContent = { label: string; description?: string | undefined; icon?: unknown };
+
+// What each row was last drawn from, so an update that keeps it leaves its nodes alone.
+const drawnContent = new WeakMap<Element, MenuItemContent>();
+
+/**
+ * Fills `target` with a row's icon and text, the label over an optional description, then `extra`, as menus built on
+ * `menuBase` draw their rows. Does nothing while the row's content is unchanged.
+ */
+export const drawMenuItemContent = (target: Element, row: MenuItemContent, extra: Node[] = []): void => {
+  const last = drawnContent.get(target);
+  if (last?.label === row.label && last.description === row.description && last.icon === row.icon) return;
+  drawnContent.set(target, { label: row.label, description: row.description, icon: row.icon });
+  const document = target.ownerDocument;
+  const text = menuElement(document, "span", { "data-menu-text": "" });
+  text.append(menuElement(document, "span", {}, row.label));
+  if (row.description)
+    text.append(menuElement(document, "span", { "data-menu-description": "" }, row.description));
+  const icon = row.icon === undefined ? [] : [menuElement(document, "ui-menu-item-icon")];
+  if (typeof row.icon === "string") icon[0]?.append(menuElement(document, "img", { alt: "", src: row.icon }));
+  else if (row.icon instanceof Element) icon[0]?.append(row.icon.cloneNode(true));
+  target.replaceChildren(...icon, text, ...extra);
+};
+
+// A Kind menu's own trigger, inside its `[data-menu-part=trigger]`, takes its look from the component's stylesheet.
 const classes = [
   "contents",
-  "[&_[data-slot=menu-trigger]]:inline-flex",
-  "[&_[data-slot=menu-trigger]]:h-8",
-  "[&_[data-slot=menu-trigger]]:items-center",
-  "[&_[data-slot=menu-trigger]]:justify-center",
-  "[&_[data-slot=menu-trigger]]:gap-1.5",
-  "[&_[data-slot=menu-trigger]]:rounded-[calc(var(--kind-radius)/2)]",
-  "[&_[data-slot=menu-trigger]]:border",
-  "[&_[data-slot=menu-trigger]]:border-[var(--kind-color-border)]",
-  "[&_[data-slot=menu-trigger]]:bg-[var(--kind-color-surface)]",
-  "[&_[data-slot=menu-trigger]]:px-3",
-  "[&_[data-slot=menu-trigger]]:text-sm",
-  "[&_[data-slot=menu-trigger]]:font-medium",
-  "[&_[data-slot=menu-trigger]]:text-[var(--kind-color-fg)]",
-  "[&_[data-slot=menu-trigger]]:hover:bg-[var(--kind-color-hover)]",
-  "[&_[data-slot=menu-trigger]]:focus-visible:outline-2",
-  "[&_[data-slot=menu-trigger]]:focus-visible:outline-offset-2",
-  "[&_[data-slot=menu-trigger]]:focus-visible:outline-[var(--kind-color-ring)]",
-  "[&_[data-slot=menu-trigger]]:data-disabled:cursor-not-allowed",
-  "[&_[data-slot=menu-trigger]]:data-disabled:opacity-50",
-  "[&_[data-slot=menu-trigger]]:data-pending:cursor-wait",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:inline-flex",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:h-8",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:items-center",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:justify-center",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:gap-1.5",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:rounded-[calc(var(--kind-radius)/2)]",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:border",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:border-[var(--kind-color-border)]",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:bg-[var(--kind-color-surface)]",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:px-3",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:text-sm",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:font-medium",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:text-[var(--kind-color-fg)]",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:hover:bg-[var(--kind-color-hover)]",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:focus-visible:outline-2",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:focus-visible:outline-offset-2",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:focus-visible:outline-[var(--kind-color-ring)]",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:data-disabled:cursor-not-allowed",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:data-disabled:opacity-50",
+  "[&_[data-slot=menu-trigger]:not(ui-menu-sub-trigger,[data-menu-part=trigger]_*)]:data-pending:cursor-wait",
   "[&_[data-slot=menu-content]]:z-50",
   "[&_[data-slot=menu-content]]:min-w-40",
   "[&_[data-slot=menu-content]]:rounded-[calc(var(--kind-radius)/2)]",
@@ -34,6 +85,11 @@ const classes = [
   "[&_[data-slot=menu-content]]:shadow-md",
   "[&_[data-slot=menu-content]]:shadow-[color:var(--kind-color-shadow)]/10",
   "[&_[data-slot=menu-content]]:outline-none",
+  "[&_[data-slot=menu-content][data-presentation=sheet]]:w-full",
+  "[&_[data-slot=menu-content][data-presentation=sheet]]:max-w-none",
+  "[&_[data-slot=menu-content][data-presentation=sheet]]:rounded-b-none",
+  "[&_[data-slot=menu-content][data-presentation=sheet]]:pb-[max(0.5rem,env(safe-area-inset-bottom))]",
+  "[&_[data-slot=menu-content][data-presentation=sheet]_:is([data-slot=menu-item],[data-slot=menu-checkbox-item],[data-slot=menu-radio-item],[data-slot=menu-trigger])]:py-2.5",
   "[&_[data-slot=menu-item]]:flex",
   "[&_[data-slot=menu-item]]:cursor-default",
   "[&_[data-slot=menu-item]]:select-none",
@@ -46,6 +102,76 @@ const classes = [
   "[&_[data-slot=menu-item]]:focus-visible:bg-[var(--kind-color-hover)]",
   "[&_[data-slot=menu-item]]:data-highlighted:bg-[var(--kind-color-hover)]",
   "[&_[data-slot=menu-item]]:data-disabled:opacity-50",
+  "[&_[data-slot=menu-item]]:has-[[data-menu-description]]:items-start",
+  "[&_[data-slot=menu-item]]:data-destructive:text-[var(--kind-color-danger)]",
+  "[&_[data-menu-text]]:flex",
+  "[&_[data-menu-text]]:min-w-0",
+  "[&_[data-menu-text]]:flex-col",
+  "[&_[data-menu-description]]:text-xs",
+  "[&_[data-menu-description]]:text-[var(--kind-color-muted)]",
+  "[&_[data-slot=menu-checkbox-item]]:flex",
+  "[&_[data-slot=menu-checkbox-item]]:cursor-default",
+  "[&_[data-slot=menu-checkbox-item]]:select-none",
+  "[&_[data-slot=menu-checkbox-item]]:items-center",
+  "[&_[data-slot=menu-checkbox-item]]:gap-2",
+  "[&_[data-slot=menu-checkbox-item]]:rounded-[calc(var(--kind-radius)/3)]",
+  "[&_[data-slot=menu-checkbox-item]]:px-2",
+  "[&_[data-slot=menu-checkbox-item]]:py-1.5",
+  "[&_[data-slot=menu-checkbox-item]]:outline-none",
+  "[&_[data-slot=menu-checkbox-item]]:focus-visible:bg-[var(--kind-color-hover)]",
+  "[&_[data-slot=menu-checkbox-item]]:data-highlighted:bg-[var(--kind-color-hover)]",
+  "[&_[data-slot=menu-checkbox-item]]:data-disabled:opacity-50",
+  "[&_[data-slot=menu-checkbox-item]]:has-[[data-menu-description]]:items-start",
+  "[&_[data-slot=menu-radio-item]]:flex",
+  "[&_[data-slot=menu-radio-item]]:cursor-default",
+  "[&_[data-slot=menu-radio-item]]:select-none",
+  "[&_[data-slot=menu-radio-item]]:items-center",
+  "[&_[data-slot=menu-radio-item]]:gap-2",
+  "[&_[data-slot=menu-radio-item]]:rounded-[calc(var(--kind-radius)/3)]",
+  "[&_[data-slot=menu-radio-item]]:px-2",
+  "[&_[data-slot=menu-radio-item]]:py-1.5",
+  "[&_[data-slot=menu-radio-item]]:outline-none",
+  "[&_[data-slot=menu-radio-item]]:focus-visible:bg-[var(--kind-color-hover)]",
+  "[&_[data-slot=menu-radio-item]]:data-highlighted:bg-[var(--kind-color-hover)]",
+  "[&_[data-slot=menu-radio-item]]:data-disabled:opacity-50",
+  "[&_[data-slot=menu-radio-item]]:has-[[data-menu-description]]:items-start",
+  "[&_ui-menu-sub-trigger[data-slot=menu-trigger]]:flex",
+  "[&_ui-menu-sub-trigger[data-slot=menu-trigger]]:cursor-default",
+  "[&_ui-menu-sub-trigger[data-slot=menu-trigger]]:select-none",
+  "[&_ui-menu-sub-trigger[data-slot=menu-trigger]]:items-center",
+  "[&_ui-menu-sub-trigger[data-slot=menu-trigger]]:gap-2",
+  "[&_ui-menu-sub-trigger[data-slot=menu-trigger]]:rounded-[calc(var(--kind-radius)/3)]",
+  "[&_ui-menu-sub-trigger[data-slot=menu-trigger]]:px-2",
+  "[&_ui-menu-sub-trigger[data-slot=menu-trigger]]:py-1.5",
+  "[&_ui-menu-sub-trigger[data-slot=menu-trigger]]:outline-none",
+  "[&_ui-menu-sub-trigger[data-slot=menu-trigger]]:focus-visible:bg-[var(--kind-color-hover)]",
+  "[&_ui-menu-sub-trigger[data-slot=menu-trigger]]:data-highlighted:bg-[var(--kind-color-hover)]",
+  "[&_ui-menu-sub-trigger[data-slot=menu-trigger]]:data-disabled:opacity-50",
+  "[&_ui-menu-sub-trigger[data-slot=menu-trigger]]:has-[[data-menu-description]]:items-start",
+  "[&_ui-menu-sub-trigger[data-slot=menu-trigger]]:data-open:bg-[var(--kind-color-hover)]",
+  "[&_[data-slot=menu-item-indicator]:not([data-menu-switch])]:inline-flex",
+  "[&_[data-slot=menu-item-indicator]:not([data-menu-switch])]:h-5",
+  "[&_[data-slot=menu-item-indicator]:not([data-menu-switch])]:w-4",
+  "[&_[data-slot=menu-item-indicator]:not([data-menu-switch])]:shrink-0",
+  "[&_[data-slot=menu-item-indicator]:not([data-menu-switch])]:items-center",
+  "[&_[data-slot=menu-item-indicator]:not([data-menu-switch])]:justify-center",
+  "[&_[data-slot=menu-item-indicator]:not([data-menu-switch])]:text-[var(--kind-color-accent)]",
+  "[&_[data-slot=menu-item-indicator]:not([data-menu-switch])]:data-unchecked:invisible",
+  "[&_[data-slot=menu-item-icon]]:inline-flex",
+  "[&_[data-slot=menu-item-icon]]:h-5",
+  "[&_[data-slot=menu-item-icon]]:w-4",
+  "[&_[data-slot=menu-item-icon]]:shrink-0",
+  "[&_[data-slot=menu-item-icon]]:items-center",
+  "[&_[data-slot=menu-item-icon]]:justify-center",
+  "[&_[data-slot=menu-item-icon]]:text-[var(--kind-color-muted)]",
+  "[&_[data-slot=menu-item-icon]]:[&_svg]:size-4",
+  "[&_[data-slot=menu-group]]:py-0.5",
+  "[&_[data-slot=menu-group-label]]:px-2",
+  "[&_[data-slot=menu-group-label]]:pt-1.5",
+  "[&_[data-slot=menu-group-label]]:pb-1",
+  "[&_[data-slot=menu-group-label]]:text-xs",
+  "[&_[data-slot=menu-group-label]]:font-medium",
+  "[&_[data-slot=menu-group-label]]:text-[var(--kind-color-muted)]",
   "[&_[data-slot=menu-separator]]:-mx-1",
   "[&_[data-slot=menu-separator]]:my-1",
   "[&_[data-slot=menu-separator]]:h-px",

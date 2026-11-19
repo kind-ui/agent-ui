@@ -1,21 +1,49 @@
 import {
   type ChangeDetails,
+  type ChangeSource,
   createInlineEdit,
   definePrimitive,
   dispatch,
   type InlineEdit,
   type InlineEditReason,
+  type PrimitiveContext,
   type SlotDefinition,
 } from "@ui-sdk/core";
+import type { MenuData } from "@ui-sdk/core/menu";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
-import type { MessageStatus, Role } from "../../types/index.js";
+import type { MessageStatus, RegenerateOption, Role } from "../../types/index.js";
 import { createCopy } from "../clipboard.js";
+import { hearComposed } from "../composed-events.js";
+import { memo } from "../memo.js";
+import {
+  type MenuBaseApi,
+  type MenuBaseState,
+  type MenuPartState,
+  type MenuPresentation,
+  menuBase,
+  menuItems,
+} from "../menu-base.js";
 import { enter, type MotionMode } from "../motion/index.js";
 
 /** The branch switcher's text: `"2 of 3"` for the second of three. */
 export const branchLabel = (index: number, count: number): string => `${index + 1} of ${count}`;
 
 export type MessageBranchChangeReason = "previous-press" | "next-press" | "imperative";
+
+/**
+ * `"regenerate-press"`: the Regenerate button. `"item-press"`: a row of the regenerate menu. `"imperative"`: an `api`
+ * call, like an agent's `regenerate`.
+ */
+export type MessageRegenerateReason = "regenerate-press" | "item-press" | "imperative";
+
+/** `onRegenerate`'s details: the change details and the regenerate option chosen, if any. */
+export type MessageRegenerateDetails = ChangeDetails<MessageRegenerateReason> & {
+  /** The chosen option's `id`, or `undefined` for a plain regenerate or "Try again". */
+  optionId: string | undefined;
+};
+
+/** The id of the regenerate menu's first row, "Try again", which regenerates with no option. */
+export const MESSAGE_TRY_AGAIN = "try-again";
 
 export type MessageOptions = {
   /**
@@ -47,8 +75,22 @@ export type MessageOptions = {
   onBranchChange?: (index: number, details: ChangeDetails<MessageBranchChangeReason>) => void;
   /** Called before `text` is copied. Cancel it to copy something else yourself. */
   onCopy?: (text: string, details: ChangeDetails<"copy-press" | "imperative">) => void;
-  /** Called to ask for a new response. Shows the regenerate action while set. */
-  onRegenerate?: (text: string, details: ChangeDetails<"regenerate-press" | "imperative">) => void;
+  /**
+   * Called to ask for a new response. Shows the regenerate action while set. `details.optionId` is the
+   * `regenerateOptions` row chosen, or `undefined` for a plain regenerate or "Try again".
+   */
+  onRegenerate?: (text: string, details: MessageRegenerateDetails) => void;
+  /**
+   * Ways to regenerate, like "More concise". With any, Regenerate opens a menu whose first row is "Try again", then
+   * these; one with `items` opens a submenu of them. Every `id` is unique across all levels and isn't `"try-again"`.
+   * The primitive passes each `icon` through to the render layer untouched.
+   */
+  regenerateOptions?: RegenerateOption<unknown>[];
+  /**
+   * How the regenerate menu presents. `"auto"` is a bottom sheet on small touch screens and a popover elsewhere.
+   * @default "auto"
+   */
+  presentation?: MenuPresentation;
   /** Called with the new text when someone saves an edit. Shows the edit action on user messages while set. */
   onEdit?: (text: string, details: ChangeDetails<InlineEditReason>) => void;
   /**
@@ -58,7 +100,7 @@ export type MessageOptions = {
   motion?: MotionMode;
 };
 
-export type MessageState = {
+export type MessageState = MenuBaseState & {
   /** The `messageRole` option. */
   role: Role;
   status: MessageStatus;
@@ -66,6 +108,8 @@ export type MessageState = {
   branchCount: number;
   /** Whether `onRegenerate` is set. */
   canRegenerate: boolean;
+  /** The host's `regenerateOptions` as passed, icons included. */
+  regenerateOptions: RegenerateOption<unknown>[];
   /** Whether it's a user message with `onEdit`. */
   canEdit: boolean;
   motion: MotionMode;
@@ -77,8 +121,11 @@ export type MessageState = {
 export type MessageApi = {
   /** Copies `text` and resolves with whether it worked. */
   copy: (event?: Event) => Promise<boolean>;
-  /** Calls `onRegenerate`. Offered once the message settles, while `onRegenerate` is set. */
-  readonly regenerate: ((event?: Event) => void) | undefined;
+  /**
+   * Calls `onRegenerate`, with a `regenerateOptions` id or none. Offered once the message settles, while
+   * `onRegenerate` is set. Returns whether it ran: `false` for an unknown id, or one the owner cancelled.
+   */
+  readonly regenerate: ((optionId?: string, event?: Event) => boolean) | undefined;
   /** Starts editing in place. Offered once a user message with `onEdit` settles. */
   readonly edit: ((event?: Event) => void) | undefined;
   /** Asks `onBranchChange` for the response at an index, from 0. Offered when there's more than one. */
@@ -86,6 +133,20 @@ export type MessageApi = {
   inlineEdit: InlineEdit;
   /** Plays the toolbar's entrance when the message settles while mounted, not when it mounts settled. */
   enterToolbar: (el: HTMLElement) => void;
+  /** The regenerate menu, built on `menuBase`. */
+  regenerateMenu: MenuBaseApi;
+  /** The regenerate and regenerate-content slots' states, memoized. */
+  regenerateState: (state: MessageState) => MessageRegenerateState;
+  regenerateContentState: (state: MessageState) => MessageRegenerateContentState;
+};
+
+/** What the regenerate slot hands render functions: UI SDK Menu's props while there are `regenerateOptions`. */
+export type MessageRegenerateState = { menu: MenuPartState | undefined };
+
+/** What the regenerate-content slot hands render functions: "Try again", then the host's options. */
+export type MessageRegenerateContentState = {
+  tryAgain: RegenerateOption<unknown>;
+  options: RegenerateOption<unknown>[];
 };
 
 type MessageSlot<Public extends object = Record<never, never>> = SlotDefinition<
@@ -108,19 +169,78 @@ export type MessagePrimitive = ReturnType<
       | "editor"
       | "toolbar"
       | "copy"
-      | "regenerate"
+      | "regenerate-trigger"
       | "edit"
       | "branch"
       | "branch-previous"
       | "branch-next",
       MessageSlot
-    > & { "branch-label": MessageSlot<{ label: string }> }
+    > & {
+      "branch-label": MessageSlot<{ label: string }>;
+      regenerate: MessageSlot<MessageRegenerateState>;
+      "regenerate-content": MessageSlot<MessageRegenerateContentState>;
+    }
   >
 >;
 
 const EDITING = "message";
 
 const settled = (status: MessageStatus) => status !== "submitted" && status !== "streaming";
+
+const TRY_AGAIN: RegenerateOption<unknown> = { id: MESSAGE_TRY_AGAIN, label: "Try again" };
+const NO_OPTIONS: RegenerateOption<unknown>[] = [];
+const NO_DATA: MenuData = [];
+
+const entry = (option: RegenerateOption<unknown>): MenuData[number] =>
+  option.items
+    ? { type: "submenu", label: option.label, items: option.items.map(entry) }
+    : { value: option.id, label: option.label };
+
+// Built once per `regenerateOptions` array, since `menuBase` asks for one array per input.
+const built = new WeakMap<RegenerateOption<unknown>[], MenuData>();
+const toData = (options: RegenerateOption<unknown>[] | undefined): MenuData => {
+  if (!options?.length) return NO_DATA;
+  let data = built.get(options);
+  if (!data) {
+    data = [entry(TRY_AGAIN), { type: "separator" }, ...options.map(entry)];
+    built.set(options, data);
+  }
+  return data;
+};
+
+type Context = PrimitiveContext<MessageOptions, MessageState, string>;
+
+const runRegenerate = (
+  context: Context,
+  optionId: string | undefined,
+  details: { reason: MessageRegenerateReason; event?: Event | undefined; source?: ChangeSource },
+) => {
+  const { canRegenerate, status, items } = context.store.get();
+  if (!canRegenerate || !settled(status)) return false;
+  const chosen = optionId === MESSAGE_TRY_AGAIN ? undefined : optionId;
+  if (chosen !== undefined && !menuItems(items).some((item) => item.value === chosen)) return false;
+  const { event, ...rest } = details;
+  return !dispatch(context, "onRegenerate", context.options().text ?? "", {
+    ...rest,
+    ...(event && { event }),
+    optionId: chosen,
+  });
+};
+
+const menu = menuBase<MessageOptions>({
+  kind: "message-regenerate",
+  label: "Regenerate",
+  toData: (options) => toData(options.regenerateOptions),
+  // Web markup keeps its menu without options, when the trigger regenerates instead.
+  canOpen: (options) =>
+    !!options.regenerateOptions?.length &&
+    options.onRegenerate !== undefined &&
+    settled(options.status ?? "complete"),
+  onAction: (value, { event, source, keepOpen }, context) => {
+    // `menuBase` types the context with its own state; it's Message's.
+    if (!runRegenerate(context as Context, value, { reason: "item-press", event, source })) keepOpen();
+  },
+});
 
 const presentation = (options: MessageOptions) => {
   const role = options.messageRole ?? "assistant";
@@ -130,6 +250,7 @@ const presentation = (options: MessageOptions) => {
     branchIndex: options.branchIndex ?? 0,
     branchCount: options.branchCount ?? 1,
     canRegenerate: options.onRegenerate !== undefined,
+    regenerateOptions: options.regenerateOptions ?? NO_OPTIONS,
     canEdit: role === "user" && options.onEdit !== undefined,
     motion: options.motion ?? "auto",
   };
@@ -146,18 +267,31 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     onBranchChange: "callback",
     onCopy: "callback",
     onRegenerate: "callback",
+    regenerateOptions: "value",
+    presentation: "string",
     onEdit: "callback",
     motion: "string",
   },
   state: (options: MessageOptions): MessageState => ({
+    ...menu.state(options),
     ...presentation(options),
     editing: null,
     copied: false,
   }),
-  sync: presentation,
+  sync: (options) => ({ ...menu.sync(options), ...presentation(options) }),
   controlled: ["branchIndex", "branchCount", "status"],
   api: (context): MessageApi => {
     const { store } = context;
+    const regenerateMenu = menu.api(context);
+    const regenerateState = memo(
+      (part: MenuPartState, shown: boolean): MessageRegenerateState => ({ menu: shown ? part : undefined }),
+    );
+    const regenerateContentState = memo(
+      (options: RegenerateOption<unknown>[]): MessageRegenerateContentState => ({
+        tryAgain: TRY_AGAIN,
+        options,
+      }),
+    );
     const copy = createCopy(context);
     const text = () => context.options().text ?? "";
     let streamed = !settled(store.get().status);
@@ -195,13 +329,13 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       get regenerate() {
         const { canRegenerate, status } = store.get();
         if (!canRegenerate || !settled(status)) return undefined;
-        return (event?: Event) =>
-          void dispatch(
-            context,
-            "onRegenerate",
-            text(),
-            event ? { reason: "regenerate-press", event } : { reason: "imperative" },
-          );
+        return (optionId?: string, event?: Event) => {
+          if (!runRegenerate(context, optionId, { reason: event ? "regenerate-press" : "imperative", event }))
+            return false;
+          // A row closes the menu itself; an agent's call closes it as the row would.
+          regenerateMenu.setOpen(false);
+          return true;
+        };
       },
       get edit() {
         const { canEdit, status } = store.get();
@@ -216,6 +350,10 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       enterToolbar: (el) => {
         if (streamed) void enter(el, "fade", { motion: store.get().motion });
       },
+      regenerateMenu,
+      regenerateState: (state) =>
+        regenerateState(regenerateMenu.partState.menu(state), state.items.length > 0),
+      regenerateContentState: (state) => regenerateContentState(state.regenerateOptions),
     };
   },
   slots: (slot) => ({
@@ -253,9 +391,30 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       attrs: (state) => ({ "data-copied": state.copied ? "" : undefined }),
       on: { click: (event, { api }) => void api.copy(event) },
     }),
-    regenerate: slot({
+    // With options it holds UI SDK Menu, whose choices reach `menuBase` (web: through `hearComposed`); its trigger's
+    // and rows' clicks bubble here too, and aren't a plain regenerate.
+    regenerate: slot<BaseSlotProps, MessageRegenerateState>({
       present: (state) => state.canRegenerate,
-      on: { click: (event, { api }) => api.regenerate?.(event) },
+      state: (state, { api }) => api.regenerateState(state),
+      attrs: (state) => ({
+        "data-kind": "message-regenerate",
+        "data-menu-part": "root",
+        "data-open": state.open ? "" : undefined,
+        "data-motion": state.motion,
+      }),
+      on: {
+        click: (event, { api, store }) => {
+          if (!store.get().items.length) api.regenerate?.(undefined, event);
+        },
+      },
+      bind: (el, { api }) => hearComposed(el, api.regenerateMenu.composedEvents),
+    }),
+    "regenerate-trigger": slot({
+      attrs: (state) => ({ "data-menu-part": "trigger", "data-open": state.open ? "" : undefined }),
+    }),
+    "regenerate-content": slot<BaseSlotProps, MessageRegenerateContentState>({
+      state: (state, { api }) => api.regenerateContentState(state),
+      attrs: (state) => ({ "data-menu-part": "content", "data-motion": state.motion }),
     }),
     edit: slot({
       present: (state) => state.canEdit,
@@ -300,5 +459,10 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       }),
     }),
   }),
-  agent: { actions: ["copy", "regenerate", "edit", "setBranch"] },
+  agent: {
+    actions: ["copy", "regenerate", "edit", "setBranch"],
+    items: (api) =>
+      menuItems(api.regenerateMenu.getItems()).filter((item) => item.value !== MESSAGE_TRY_AGAIN),
+    closed: true,
+  },
 });

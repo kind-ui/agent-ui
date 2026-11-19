@@ -1,5 +1,6 @@
 import type { PlanItem, QueueItem, SelectionActionItem, TaskItem, ToolCall } from "@kind-ui/agent-ui";
 import type { AttachmentItem, ChainOfThoughtStep, UploadItem } from "@kind-ui/agent-ui/core";
+import { createSessionStorage } from "@ui-sdk/core";
 import { uploadHost } from "./uploader.js";
 
 export const steps = [
@@ -121,3 +122,12 @@ export function agentHost() {
   Object.assign(window, { kindAgent: host });
   return host;
 }
+
+// Wave 5: the Composer's saved draft, written again on every page load so each run starts with "Draft restored".
+export const draftKey = "agent-draft";
+export const savedDraft = "Pick up where I left off";
+export const agentDrafts = () => {
+  const storage = createSessionStorage("kind-agent-drafts");
+  storage.set(JSON.stringify({ [draftKey]: { text: savedDraft, tokens: [] } }));
+  return storage;
+};

@@ -1,6 +1,6 @@
 {
   ".": 265,
-  "./core": 209000,
+  "./core": 218000,
   "./adapters/ai-sdk": 1345,
   "imports": {
     "stepBase": 5500,
@@ -17,6 +17,16 @@
     "testResultsPrimitive": 12000,
     "transcriptPrimitive": 19000,
     "selectionPrimitive": 12500,
-    "actionPrimitive": 8000
+    "actionPrimitive": 8000,
+    "menuBase": 4000,
+    "pickerPrimitive": 49500,
+    "modelSelectorPrimitive": 49500,
+    "addMenuPrimitive": 7500,
+    "settingsMenuPrimitive": 8000,
+    "approvalModePrimitive": 7500,
+    "messagePrimitive": 42500,
+    "modelControlPrimitive": 9500,
+    "contextBarPrimitive": 80000,
+    "dictationButtonPrimitive": 8000
   }
 }

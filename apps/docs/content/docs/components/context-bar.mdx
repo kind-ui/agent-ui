@@ -1,0 +1,88 @@
+---
+title: Context Bar
+description: Show the context a prompt carries as a row of chips, with the ones that don't fit behind a "+N" button.
+---
+
+import ContextBarExample from "../../../examples/context-bar/basic";
+
+Use a context bar above a [composer](./composer.mdx)'s editor to show what the next prompt will carry, like files, folders, a selection or a URL, and let people remove what they don't want. It keeps to one row however many chips there are: the ones that don't fit go behind a "+N" button whose popover lists them.
+
+<Example caption="Press Tab to focus the chips, move between them with the arrow keys, and press Delete to remove one. Press +N to see the chips that don't fit, and remove one from there.">
+  <ContextBarExample />
+
+  <include cwd lang="tsx">./examples/context-bar/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/context-bar
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/context-bar-web
+```
+
+## Composition
+
+```text
+ContextBar
+├── ContextBarList
+│   └── ContextBarChip
+├── ContextBarOverflow
+└── ContextBarContent
+    ├── ContextBarTitle
+    └── ContextBarOverflowList
+        └── ContextBarItem
+```
+
+`ContextBar` is a group named by its `label`. `ContextBarList` is the row of chips, and each `ContextBarChip` shows a chip's icon, its label and a remove control. `ContextBarOverflow` is the "+N" button, present only while some chips don't fit, and named "N more". `ContextBarContent` is its popover: `ContextBarTitle` names it for assistive technology only, and `ContextBarOverflowList` holds a `ContextBarItem` for each chip that didn't fit. `ContextBar` renders the list, the button and the popover, and each of them its parts, when you pass no children.
+
+## Usage
+
+### Chips
+
+Pass `chips`, in order, each with an `id` and a `label`. Add a `kind`, like `"file"` or `"folder"`, to style chips by what they hold: it's written as `data-kind`. In React, a chip's `icon` is an image URL or an element such as an inline `svg`. A chip added later fades up once; the ones there at first don't.
+
+### Overflow
+
+The bar measures its width and its chips' widths, and the chips that don't fit go behind "+N", which counts them and updates as chips come and go. A long label is cut short at `--kind-context-chip-max-width` (12rem by default), and the room kept for the button is `--kind-context-bar-more-width`; set either on the bar or an ancestor. The bar stays one row, so adding or removing a chip never moves what's below it.
+
+### Removing
+
+Pass `onRemove` to let people remove chips. It gets the chip's `id`, and you take the chip out of `chips`. Delete or Backspace removes the focused chip, and each chip shows a remove control for the pointer, which is hidden from assistive technology, as [Attachments](./attachments.mdx)' is. The reason is `remove-press` from either, or `imperative` from the api, like an agent's `remove`. Call `details.cancel()` to keep the chip.
+
+```tsx
+<ContextBar
+  chips={chips}
+  onRemove={(id) => setChips((current) => current.filter((chip) => chip.id !== id))}
+/>
+```
+
+A removed chip fades out, then the chips after it slide into its place. When it held focus, focus moves to a neighbor, else to "+N", else to `focusFallback`. Pass the composer's editor there, so focus isn't lost when the last chip goes.
+
+### Opening
+
+"+N" opens the popover with focus on its first chip, and each chip there is removable the same way. Escape closes it with focus back on "+N", and removing the last chip that didn't fit closes it. Pass `open` and `onOpenChange` to control whether it's open, or `defaultOpen` to start open. `onOpenChange` gets UI SDK Popover's reason, like `trigger-press` or `escape-key`.
+
+### Keyboard
+
+The row of chips is one Tab stop, and the arrow keys move between them. Tab moves on to "+N" when it's present. The popover's list is one Tab stop too, with the arrow keys between its chips.
+
+### Presentation and Motion
+
+With `presentation="auto"`, the default, the popover is a bottom sheet on small touch screens; pass `"popover"` or `"sheet"` to choose one. `motion` sets how chips enter, leave and slide: `"auto"`, the default, follows `prefers-reduced-motion`; `"reduced"` only fades, and `"none"` moves nothing.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/context-bar/context-bar.ts" name="ContextBarOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the context bar by its `label`, "Context" by default, and reads `open`. It lists every chip by `id` and label. `remove` takes a chip's `id` and refuses one that isn't there; it's offered while `onRemove` is set. `open` is offered while some chips don't fit and the popover is closed, and `close` while it's open. None needs a person to confirm.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/context-bar/context-bar.ts" name="ContextBarAgentActions" type='Pick<ContextBarApi, "remove" | "open" | "close">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-context-bar>`, set `chips` as a property and `label` and `presentation` as attributes, and listen for `openchange`. Add the `can-remove` attribute to listen for `contextremove`, with the chip's `id` as `event.detail.value`. The element fills in its parts when it has no children.
+</Caption>

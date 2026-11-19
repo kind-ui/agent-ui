@@ -29,11 +29,13 @@ const consumers: Record<string, string> = {
   "queue/queue.ts": "kind-queue-item-icon",
   "item-list.ts": "kind-task-item-icon",
   "test-results/test-results.ts": "kind-test-results-item-status",
+  "dictation-button/dictation-button.ts": "kind-dictation-status-icon",
 };
 
 type Fixture = {
   kindCheckpoint: { restore(restored: boolean): void };
   kindQuestion: { record(answers: unknown): void };
+  kindDictation: { push(event: { error: string }): void };
 };
 
 const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unknown> }[] = [
@@ -87,6 +89,14 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
       await page.getByRole("button", { name: "Add a comment" }).click();
       await page.getByRole("textbox", { name: "Comment" }).fill("Too long");
       await page.getByRole("button", { name: "Send" }).click();
+    },
+  },
+  {
+    url: "/?c=dictation&case=default",
+    slots: ["kind-dictation-status-icon"],
+    show: async (page) => {
+      await page.getByRole("button", { name: "Dictate" }).click();
+      await page.evaluate(() => (window as unknown as Fixture).kindDictation.push({ error: "denied" }));
     },
   },
 ];

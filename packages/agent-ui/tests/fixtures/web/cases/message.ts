@@ -4,6 +4,7 @@ import { defineInternalToolbar } from "../../../../src/web/internal/toolbar.js";
 import { defineMarkdown } from "../../../../src/web/markdown.js";
 import { defineMessage } from "../../../../src/web/message.js";
 import { answer } from "../../shared/markdown.js";
+import { regenerateOptions } from "../../shared/message.js";
 
 const replies = [
   "Retry with exponential backoff, and cap the number of attempts.",
@@ -50,6 +51,35 @@ const assistant = (branches: boolean) => `
       ${actions(button("regenerate", "Regenerate"))}
     </kind-message-toolbar>
   </kind-message>`;
+
+const withOptions = `
+  <kind-message aria-label="Assistant message" can-regenerate text="${replies[0]}">
+    <kind-message-content>${replies[0]}</kind-message-content>
+    <kind-message-toolbar>${actions(`
+      <kind-message-regenerate><kind-internal-menu><ui-menu>
+        <kind-message-regenerate-trigger><ui-toolbar-button><ui-menu-trigger><button aria-label="Regenerate"></button></ui-menu-trigger></ui-toolbar-button></kind-message-regenerate-trigger>
+        <kind-message-regenerate-content><ui-menu-content side-offset="6" align="start" data-agent-hidden></ui-menu-content></kind-message-regenerate-content>
+      </ui-menu></kind-internal-menu></kind-message-regenerate>`)}
+    </kind-message-toolbar>
+  </kind-message>`;
+
+const optionsCase =
+  (refusing: boolean, empty = false) =>
+  (root: HTMLElement) => {
+    define();
+    root.innerHTML = `<div class="m-4 w-[36rem]">${withOptions}</div>`;
+    const el = root.querySelector("kind-message");
+    if (!el) return;
+    el.regenerateOptions = empty ? [] : regenerateOptions;
+    Object.assign(window, {
+      kindRegenerate: { status: (value: string) => el.setAttribute("status", value) },
+    });
+    el.addEventListener("regenerate", (event) => {
+      const { optionId, reason, source } = event.detail;
+      calls.push(`regenerate:${optionId ?? ""}:${reason}:${source}`);
+      if (refusing) event.preventDefault();
+    });
+  };
 
 function wireUser(el: HTMLElement) {
   const content = el.querySelector("kind-message-content") as HTMLElement;
@@ -138,4 +168,7 @@ export const cases = {
       },
     });
   },
+  options: optionsCase(false),
+  refusing: optionsCase(true),
+  "no-options": optionsCase(false, true),
 };

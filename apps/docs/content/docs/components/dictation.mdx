@@ -1,0 +1,141 @@
+---
+title: Dictation
+description: Turn speech into text with a mic button, a live waveform and the words heard so far.
+---
+
+import DictationExample from "../../../examples/dictation/basic";
+
+Use dictation inside a [composer](./composer.mdx) to let people speak a prompt instead of typing it. It never picks where the audio goes: you pass a `source` that turns speech into text, like the browser's speech recognition or your own transcription endpoint, and Dictation shows the microphone's level and the words heard so far. Inside a composer, it adds the final text to the draft. Anywhere else, it hands the text to you.
+
+<Example caption="Press the mic button beside Send to start. The waveform takes the prompt's place while the words arrive. Press Stop to add them to the prompt, or Cancel to drop them. This example plays back a recording, so it never opens your microphone.">
+  <DictationExample />
+
+  <include cwd lang="tsx">./examples/dictation/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/dictation
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/dictation-web
+```
+
+## Composition
+
+```text
+Dictation
+├── DictationWaveform
+│   └── DictationBar
+├── DictationStatus
+│   └── DictationStatusIcon
+├── DictationStart
+├── DictationCancel
+└── DictationStop
+```
+
+`Dictation` is a group named by its `label`. `DictationStart` is the mic button. While listening, `DictationWaveform` draws one `DictationBar` per level, `DictationStatus` shows "Listening" or the words heard so far, and `DictationCancel` and `DictationStop` end the dictation. `DictationStatusIcon` is the mark beside the status: running while transcribing, an error after one. `Dictation` renders every part when you pass no children.
+
+## Usage
+
+### Sources
+
+Pass a `source`, an object whose `start(signal)` returns an async iterable of events: `{ level }` for the waveform (0 to 1), `{ text, final }` for recognized text, and `{ error }` when it fails. It listens until `signal` aborts. Stop aborts it without a reason, and the source reports the text still to come and ends. Cancel, or the component unmounting, aborts it with the reason `"cancel"`: nothing more is read, so the source can drop what it heard. Without a `source` there's no mic button.
+
+`createSpeechDictation` is a source over the browser's speech recognition, with levels from the microphone. Pass `lang` for the language spoken; it defaults to the page's `lang`. Chrome's speech recognition sends audio to a speech service, and browsers without speech recognition show "Not supported in this browser".
+
+```tsx
+import { createSpeechDictation } from "@kind-ui/agent-ui/core";
+
+const speech = createSpeechDictation({ lang: "en-US" });
+
+<Composer aria-label="Message">
+  <ComposerInput aria-label="Prompt" />
+  <Dictation source={speech} />
+  <ComposerSubmit />
+</Composer>;
+```
+
+To keep audio on your own servers, write a source. This one records with `MediaRecorder` and posts the recording to your endpoint once Stop is pressed, but not after Cancel:
+
+```tsx
+import type { DictationEvent, DictationSource } from "@kind-ui/agent-ui/core";
+
+const recorded: DictationSource = {
+  async *start(signal): AsyncGenerator<DictationEvent> {
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      yield { error: "denied" };
+      return;
+    }
+    const recorder = new MediaRecorder(stream);
+    const chunks: Blob[] = [];
+    recorder.ondataavailable = (event) => chunks.push(event.data);
+    const stopped = new Promise((resolve) => (recorder.onstop = resolve));
+    recorder.start();
+    if (!signal.aborted) await new Promise((resolve) => signal.addEventListener("abort", resolve, { once: true }));
+    recorder.stop();
+    for (const track of stream.getTracks()) track.stop();
+    await stopped;
+    if (signal.reason === "cancel") return;
+    const response = await fetch("/api/transcribe", {
+      method: "POST",
+      body: new Blob(chunks, { type: recorder.mimeType }),
+    });
+    if (!response.ok) {
+      yield { error: "network" };
+      return;
+    }
+    const { text } = await response.json();
+    yield { text, final: true };
+  },
+};
+```
+
+It reports no levels, so its waveform stays flat; yield `{ level }` from Web Audio for one that moves.
+
+### Inserting the Text
+
+Place Dictation as a direct child of a `Composer`, beside `ComposerInput`, and it adds its final text to the end of the draft, after a space, with no code of your own. The composer reports the change to `onValueChange` with the reason `dictation` and the source of the press that stopped it, and a disabled composer takes nothing. The composer's api does the same through `appendText(text, source?)`.
+
+`onText` is called first, once when a dictation ends, with its final texts joined, and never for one that was canceled, failed or heard nothing. The reason is `stop-press` from Stop, `imperative` from the api, like an agent's `stop`, or `source-end` when the source ended on its own. Call `details.cancel()` to keep the text out of the draft and handle it yourself.
+
+Outside a composer, Dictation inserts nothing, so pass `onText` and put the text where it belongs:
+
+```tsx
+<Dictation source={source} onText={(text) => setNote((note) => `${note} ${text}`.trim())} />
+```
+
+### Phases
+
+The mic button starts listening. While listening, the waveform follows the levels, the status shows the words heard so far, and Cancel and Stop take the button's place. Stop moves to transcribing, which shows "Transcribing", with the waveform holding its last levels, until the source reports its last text. Then Dictation goes back to the mic button and inserts the text. Cancel goes straight back and inserts nothing.
+
+Inside a composer, the mic button is a round icon just before Send. While listening and transcribing, Dictation takes over the composer: the waveform fills the place of the prompt, Cancel takes the place of the controls at the start of the actions row, the status sits in the middle of the row, and Stop sits beside Send. The composer keeps its size, so nothing around it moves.
+
+When a source fails, the mic button comes back with the reason beside it, like "Microphone blocked", "No speech heard" or "Speech service unreachable", and the reason is announced. The words heard while listening aren't announced.
+
+### Keyboard
+
+The mic button, Cancel and Stop are buttons, so Enter or Space presses them. When the mic button starts a dictation, focus moves to Stop, which stays (unavailable) through transcribing, and back to the mic button when it ends.
+
+### Size and Motion
+
+On its own, Dictation keeps one size in every phase, so nothing beside it moves: `--kind-dictation-width` (16rem by default) and `--kind-dictation-height` (2rem). Set either on the component. Inside a composer, it takes the composer's size instead. The waveform draws one bar per level, the newest at the end, so the bars flow toward the start. `bars` sets how many levels it keeps, from 1 to 256 (128 by default), and bars that don't fit are cut at the start. `motion` sets how the waveform moves: `"auto"`, the default, follows `prefers-reduced-motion`; under reduced motion and `"none"` the waveform holds still.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/dictation-button/dictation-button.ts" name="DictationOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds Dictation by its `label`, "Dictate" by default, and reads its `phase`. `start` is offered with a `source` while idle or after an error, `stop` while listening, and `cancel` while listening or transcribing. Starting opens the microphone, so while `agentConfirm` is on, the default, `start` waits for a person to confirm: an agent never opens the microphone without one. `stop` and `cancel` don't ask.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/dictation-button/dictation-button.ts" name="DictationAgentActions" type='Pick<DictationApi, "start" | "stop" | "cancel">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-dictation>`, set `source` as a property and `label`, `bars`, `agent-confirm` and `motion` as attributes, and listen for `dictationtext`, with the text as `event.detail.value`. Inside a `<kind-composer>`, the text goes into the draft. The element fills in its parts when it has no children.
+</Caption>

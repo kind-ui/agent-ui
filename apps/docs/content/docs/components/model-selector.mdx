@@ -4,10 +4,11 @@ description: Let people pick the model that answers, from a searchable list grou
 ---
 
 import ModelSelectorExample from "../../../examples/model-selector/basic";
+import ModelSelectorGroupsExample from "../../../examples/model-selector/groups";
 
-Use a model selector in a prompt's toolbar when people can choose which model answers. The field shows the chosen model and its provider in one compact row, and typing in it filters the list, best match first, with the matching letters marked. Place [Reasoning Effort](./reasoning-effort.mdx) beside it when the model can think harder.
+Use a model selector in a prompt's toolbar when people can choose which model answers. It's a [Picker](./picker.mdx) for models: a button that shows the chosen model and opens a search field over the list, grouped by provider. Place [Reasoning Effort](./reasoning-effort.mdx) beside it when the model can think harder. To pick the model and its effort from one button, use [Model Control](./model-control.mdx).
 
-<Example caption="Type son55 in the Model field to find Claude Sonnet 5.5, then press Enter. Claude Opus 5.5 is disabled, so it can't be chosen.">
+<Example caption="Press Model, type son55 to find Claude Sonnet 5.5, then press Enter. Choose More models to list every model. Claude Opus 5.5 is disabled, so it can't be chosen.">
   <ModelSelectorExample />
 
   <include cwd lang="tsx">./examples/model-selector/basic.tsx</include>
@@ -28,21 +29,20 @@ npx shadcn@latest add @kind-ui/model-selector-web
 ```text
 ModelSelector
 ├── ModelSelectorTrigger
-│   ├── ModelSelectorIcon
-│   └── ModelSelectorInput
 └── ModelSelectorContent
-    ├── ModelSelectorEmpty
-    └── ModelSelectorGroup
-        └── ModelSelectorItem
+    └── ModelSelectorList
+        └── ModelSelectorSectionRows
+            └── ModelSelectorRowItem
+                └── ModelSelectorItem
 ```
 
-`ModelSelector` is a group named by its `label` that holds UI SDK's Combobox. `ModelSelectorTrigger` is the field: the chosen model's icon (`ModelSelectorIcon`), the search field, the chosen model's group and a button that opens the list. `ModelSelectorInput` is the search field, which shows the chosen model's name while the list is closed. `ModelSelectorContent` is the list, with a `ModelSelectorGroup` for each provider, a `ModelSelectorItem` for each model and `ModelSelectorEmpty` while nothing matches.
+`ModelSelector` is a group named by its `label` and the chosen model. `ModelSelectorTrigger` is the button, named "Model, Claude Sonnet 5.5", with the chosen model's icon and name and a chevron, or the `label` while none is chosen. `ModelSelectorContent` is the popover, and `ModelSelectorList` is UI SDK's Command inside it: the search field, the text shown while nothing matches, and every page of rows. To arrange the list yourself, pass `ModelSelectorList` a function of its state that renders `ModelSelectorSectionRows` for each section of `pages`. `ModelSelectorRowItem` is a row, and `ModelSelectorItem` is its content: the model's icon, name, description and a check on the chosen model. The parts are Picker's, so they take the same props.
 
 ## Usage
 
 ### Models
 
-Pass `models`, each with an `id` and a `name`, and optionally a `group`, a `description`, an `icon` and `disabled`. The list shows the groups in the order they first appear, and each model with its description under its name. A disabled model stays in the list, dimmed, and can't be chosen by pointer, keyboard or `setValue`.
+Pass `models`, each with an `id` and a `name`, and optionally a `group` (its provider), a `description`, an `icon` and `disabled`. The list shows the groups in the order they first appear, and each model with its description under its name. A disabled model stays in the list, dimmed, and can't be chosen by pointer, keyboard or `setValue`.
 
 ```tsx
 <ModelSelector
@@ -55,11 +55,13 @@ Pass `models`, each with an `id` and a `name`, and optionally a `group`, a `desc
 />
 ```
 
-Pass `value` and `onValueChange` to control the chosen model, or `defaultValue` to start with one. `onValueChange` gets the model's `id`, with the reason `input-change` when a person chose it, or `imperative` from `setValue`.
+Pass `value` and `onValueChange` to control the chosen model, or `defaultValue` to start with one. `onValueChange` gets the model's `id`, with the reason `item-press` when a person chose it, or `imperative` from `setValue`. Choosing a model closes the list, unless you cancel the change with `details.cancel()`.
+
+The button keeps its width whatever the model's name, so choosing a longer one moves nothing beside it; a long name is cut short with an ellipsis. Set `--kind-model-selector-width` to change the width.
 
 ### Icons
 
-Give a model an `icon` to show it before the name, in its list row and, once it's chosen, in the field before the search text. In React, `icon` is an image URL or an element, like an inline `<svg>`:
+Give a model an `icon` to show it before the name, in its row and, once it's chosen, in the button. In React, `icon` is an image URL or an element, like an inline `<svg>`:
 
 ```tsx
 const models = [
@@ -68,21 +70,55 @@ const models = [
 ];
 ```
 
-Icons render at 16px. A monochrome SVG drawn with `currentColor` takes the text color, so it reads in light and dark. Icons are decorative and hidden from assistive technology, so the model's name stays its label. Rows keep one height and their names line up, whether or not a model has an icon. The package ships no logos; you pass your own.
+Icons render at 16px. A monochrome SVG drawn with `currentColor` takes the text color, so it reads in light and dark. Icons are decorative and hidden from assistive technology, so the model's name stays its label. The package ships no logos; you pass your own.
+
+### Actions
+
+Pass `actions`, each with an `id` and a `label`, for footer rows after the models, like **More models**. They show on the first page, and the arrow keys reach them like any row: Up Arrow from the first model wraps to the last action. Pressing one calls `onAction` with its `id` and closes the list; cancel it with `details.cancel()` to keep the list open. Without `onAction`, the actions can't run.
+
+```tsx
+<ModelSelector
+  models={models}
+  actions={[{ id: "more", label: "More models" }]}
+  onAction={(id) => openModelSettings()}
+/>
+```
+
+### Pages by Provider
+
+Pass `pages="groups"` to list each provider as a row, shown with the first icon among its models, that opens a page of its models. Typing a model's name on the first page finds its provider. A model `id` mustn't start with `group:`, which provider rows use. Models without a `group` stay on the first page. Backspace in the empty search field, or the **Back** row (`backLabel`), returns to the providers. `setValue` reaches a model on any page.
+
+<Example caption="Press Model, choose OpenAI to see its models, then press Backspace to go back.">
+  <ModelSelectorGroupsExample />
+
+  <include cwd lang="tsx">./examples/model-selector/groups.tsx</include>
+</Example>
 
 ### Searching
 
-Typing in the field filters the list as you type. A model matches when its name, group or description holds the letters in order, so "son55" finds Claude Sonnet 5.5. Within each group, the best match comes first, and a group with no match is hidden. The letters that matched the name are marked. When nothing matches, the list says "No models found.".
-
-The field keeps its width whatever the model's name, so choosing a longer one moves nothing beside it; a long name is cut short with an ellipsis. Set `--kind-model-selector-width` to change the width.
+Typing in the search field filters the list as you type. A model matches when its name, provider or description holds the letters in order, so "son55" finds Claude Sonnet 5.5 and "google" finds every Google model. Rows keep the order you gave them, and the best match is highlighted, so Enter chooses it. The letters that matched the name are marked, and the description's only when the name didn't match. When nothing matches, the list shows `emptyText` ("No models found"). Set `placeholder` to change the field's "Search models".
 
 ### Keyboard
 
-The field is one Tab stop. Typing or Down Arrow opens the list. While you type, the best match is highlighted, so Enter chooses it; the arrow keys move the highlight, skipping disabled models. Escape closes the list and puts the chosen model's name back, with focus still in the field.
+The button is one Tab stop. Enter or Space opens the list with focus in the search field. The arrow keys move the highlight, skipping disabled models, and Enter chooses. Escape clears the search, then closes the list, and focus returns to the button.
 
 ### Motion
 
-The list rises and fades in below the field. Under `prefers-reduced-motion`, or with `motion="reduced"`, it only fades, over 120 ms, and with `motion="none"` it opens at once.
+The list opens as a popover below the button. With `presentation="auto"`, the default, it's a bottom sheet on small touch screens instead; pass `"popover"` or `"sheet"` to choose one. The popover rises and fades in. Under `prefers-reduced-motion`, or with `motion="reduced"`, it only fades, over 120 ms, and with `motion="none"` it opens at once.
+
+## Changes in 0.5
+
+Model Selector is now built on Picker, so the search moved from a field beside the button into the list. If you used 0.4:
+
+- The parts are `ModelSelectorTrigger`, `ModelSelectorContent`, `ModelSelectorList`, `ModelSelectorSectionRows`, `ModelSelectorRowItem` and `ModelSelectorItem`. `ModelSelectorIcon`, `ModelSelectorInput`, `ModelSelectorGroup`, `ModelSelectorEmpty` and the `ModelSelectorListItem` type are gone. `ModelSelectorItem` is now a row's content and takes the row's `value`, not a `model`.
+- On Web Components, `kind-model-selector-trigger` holds a `button`, `kind-model-selector-content` is the popover, and `kind-model-selector-command`, `kind-model-selector-item` and `kind-model-selector-viewport` are new, as on `kind-picker`. `kind-model-selector-icon` and `kind-model-selector-input` are gone.
+- Styles hook onto Picker's `data-picker-*` attributes and `--kind-picker-*` variables; `data-model-selector-field` is gone. `--kind-model-selector-width` still sets the button's width.
+- A person's choice reaches `onValueChange` with the reason `item-press`, not `input-change`.
+- `openLabel` is gone, and the empty text is the `emptyText` option.
+- On Web Components, set `el.value` instead of calling `el.api.setValue`.
+- From `@kind-ui/agent-ui/core`, `filterModels`, `ModelGroup`, `ModelSelectorComboboxState`, `ModelSelectorContentState` and `ModelSelectorItem` are gone, and so are the api's `getModels`, `read`, `search`, `follow`, `syncValue`, `comboboxState` and `contentState`. The state's `models` is now `items`, as Picker's is.
+
+`models`, their icons, `value`, `defaultValue`, `onValueChange`, `label`, `placeholder`, `disabled`, `motion` and `modelchange` work as before.
 
 ## API Reference
 
@@ -90,10 +126,10 @@ The list rises and fades in below the field. Under `prefers-reduced-motion`, or 
 
 ### Agent
 
-An agent connected with `createAgent` finds the model selector by its label and reads the chosen model's `id`. Its `setValue` takes a model's `id` or its name, the same as a person choosing it, and refuses a model that isn't listed. A disabled model returns `false` and changes nothing. It needs no person to confirm.
+An agent connected with `createAgent` finds the model selector by its label and reads `open` and the chosen model's `id`. Its `setValue` takes a model's `id` or its name on any page, the same as a person choosing it, and refuses a model that isn't listed or is disabled. `run` takes an action's `id` and is offered only while `onAction` is set. Neither closes the list, and neither is offered while the model selector is `disabled`. It needs no person to confirm.
 
-<auto-type-table path="../../../../../packages/agent-ui/src/core/model-selector/model-selector.ts" name="ModelSelectorAgentActions" type='Pick<ModelSelectorApi, "setValue">' />
+<auto-type-table path="../../../../../packages/agent-ui/src/core/model-selector/model-selector.ts" name="ModelSelectorAgentActions" type='Pick<ModelSelectorApi, "open" | "close" | "setValue" | "run">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-model-selector>`, set `models` and `value` as properties, and listen for `modelchange`, with the model's `id` as `event.detail.value`. A model's `icon` is an image URL or an Element, which the element clones into each row. The element fills in its field and list when it has no children.
+  Runs in React and Web Components. On `<kind-model-selector can-run>`, set `models`, `actions` and `value` as properties, and listen for `modelchange`, with the model's `id` as `event.detail.value`, `modelaction`, with the action's `id`, and `openchange`. A model's `icon` is an image URL or an Element, which the element copies into its row and the button. The element fills in its button and list when it has no children.
 </Caption>

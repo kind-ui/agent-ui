@@ -128,11 +128,11 @@ const rendered = fromUIMessages(messages, status);
 | Component | Description |
 | --- | --- |
 | [Conversation](https://kindui.dev/docs/agent-ui/components/conversation/) | A message log that follows new content and offers a jump to the latest. |
-| [Message](https://kindui.dev/docs/agent-ui/components/message/) | A chat message with copy, regenerate, edit and branch controls. |
+| [Message](https://kindui.dev/docs/agent-ui/components/message/) | A chat message with copy, regenerate, edit and branch controls, and a menu of ways to regenerate. |
 | [Markdown](https://kindui.dev/docs/agent-ui/components/markdown/) | Streaming markdown that parses only the blocks that changed. |
 | [Code Block](https://kindui.dev/docs/agent-ui/components/code-block/) | A code block with its language, a wrap toggle and a copy button. |
 | [Markdown Table](https://kindui.dev/docs/agent-ui/components/markdown-table/) | A table that scrolls sideways instead of squeezing its columns, with a copy button. |
-| [Composer](https://kindui.dev/docs/agent-ui/components/composer/) | A prompt input with mentions, commands, attachments, submit and stop. |
+| [Composer](https://kindui.dev/docs/agent-ui/components/composer/) | A prompt input with mentions, commands, attachments, submit and stop, saved drafts, and a layout for narrow screens. |
 | [Attachments](https://kindui.dev/docs/agent-ui/components/attachments/) | A removable list of attached files. |
 | [Uploader](https://kindui.dev/docs/agent-ui/components/uploader/) | File uploads with progress, cancel and retry. |
 | [Loader](https://kindui.dev/docs/agent-ui/components/loader/) | A labeled loading indicator. |
@@ -161,7 +161,7 @@ const rendered = fromUIMessages(messages, status);
 | [Confirmation](https://kindui.dev/docs/agent-ui/components/confirmation/) | Approve or deny what the agent wants to do, and keep the decision in view. |
 | [Question](https://kindui.dev/docs/agent-ui/components/question/) | Single choice, multiple choice and free text questions in one form. |
 | [Checkpoint](https://kindui.dev/docs/agent-ui/components/checkpoint/) | A point in the conversation a person can go back to, after a dialog asks first. |
-| [Model Selector](https://kindui.dev/docs/agent-ui/components/model-selector/) | Pick the model that answers, from a searchable list grouped by provider. |
+| [Model Selector](https://kindui.dev/docs/agent-ui/components/model-selector/) | Pick the model that answers, from a button that opens a searchable list grouped by provider. |
 | [Reasoning Effort](https://kindui.dev/docs/agent-ui/components/reasoning-effort/) | Choose how hard the model thinks, from a row of levels. |
 | [Suggestion](https://kindui.dev/docs/agent-ui/components/suggestion/) | Prompts a person can send in one press. |
 | [Context Meter](https://kindui.dev/docs/agent-ui/components/context-meter/) | How full the context window is, with token counts and cost. |
@@ -184,6 +184,18 @@ const rendered = fromUIMessages(messages, status);
 | [Transcript](https://kindui.dev/docs/agent-ui/components/transcript/) | Speaker-labelled, timed segments with search and playback seeking. |
 | [Selection](https://kindui.dev/docs/agent-ui/components/selection/) | A small toolbar of actions above text a person selects in a reply. |
 | [Action](https://kindui.dev/docs/agent-ui/components/action/) | An action run on selected text, shown as a step. |
+
+### Composer controls
+
+| Component | Description |
+| --- | --- |
+| [Picker](https://kindui.dev/docs/agent-ui/components/picker/) | A button that opens a searchable list of choices, with groups, two-line rows, pages and footer actions. |
+| [Add Menu](https://kindui.dev/docs/agent-ui/components/add-menu/) | A plus button that opens a menu of what can be added, with icons, descriptions, groups and submenus. |
+| [Settings Menu](https://kindui.dev/docs/agent-ui/components/settings-menu/) | A menu of settings: toggles drawn as switches, and choices in submenus showing their value. |
+| [Approval Mode](https://kindui.dev/docs/agent-ui/components/approval-mode/) | How much the agent may do without asking, chosen from a menu with the risky mode marked. |
+| [Model Control](https://kindui.dev/docs/agent-ui/components/model-control/) | The model and its effort in one button, with Model and Effort submenus. |
+| [Context Bar](https://kindui.dev/docs/agent-ui/components/context-bar/) | Removable context chips, the ones that don't fit behind a +N button that lists them. |
+| [Dictation](https://kindui.dev/docs/agent-ui/components/dictation/) | A mic button that turns speech into text through a source the host chooses, with a live waveform. |
 
 ## Showcases
 

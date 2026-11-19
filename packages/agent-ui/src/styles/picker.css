@@ -1,0 +1,247 @@
+/* Picker (spec §7): a button that shows the chosen item, and a popover holding a search field over a list of
+   two-line rows, grouped, with pages and footer actions. Keyed on `data-picker-part`, so every component that
+   spreads `pickerBase` (Model Selector, …) draws the same. Rows keep one height whether or not they have a
+   description, so the list doesn't jump as a search marks one. */
+@layer components {
+  [data-picker-part="root"] {
+    --kind-picker-row-height: 2.75rem;
+    /* Read by the internal Command, whose Tailwind utilities a component layer can't override. */
+    --kind-command-input-height: 2.5rem;
+    --kind-command-item-padding-block: 0px;
+    --kind-command-icon-color: var(--kind-color-fg);
+    --kind-command-mark-color: var(--kind-color-accent);
+    --kind-command-mark-weight: 600;
+    --kind-picker-icon-check: var(--kind-icon-check);
+    /* Lucide "chevron-down" and "chevron-right", see THIRD_PARTY_NOTICES.md. */
+    --kind-picker-icon-chevron-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    --kind-picker-icon-chevron-right: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E");
+    display: inline-flex;
+    font-size: 0.875rem;
+    color: var(--kind-color-fg);
+  }
+
+  /* One width whatever the chosen item's label, so choosing another moves nothing beside it. */
+  [data-picker-part="trigger"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: var(--kind-picker-trigger-width, 14rem);
+    height: 2rem;
+    padding-inline: 8px 6px;
+    border: 1px solid var(--kind-color-border);
+    border-radius: calc(var(--kind-radius) / 2);
+    background-color: var(--kind-color-surface);
+    color: var(--kind-color-fg);
+    font: inherit;
+    text-align: start;
+    cursor: default;
+    transition:
+      border-color var(--kind-duration-fast) var(--kind-ease-out),
+      background-color var(--kind-duration-fast) var(--kind-ease-out);
+
+    &:hover {
+      background-color: var(--kind-color-hover);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+    &:disabled,
+    &[aria-disabled="true"] {
+      opacity: 0.5;
+    }
+    & [data-picker-text] {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    & [data-picker-chevron] {
+      flex-shrink: 0;
+      width: 14px;
+      height: 14px;
+      background-color: var(--kind-color-muted);
+      mask: var(--kind-picker-icon-chevron-down) center / contain no-repeat;
+    }
+  }
+
+  :where([data-picker-part="root"]) :is([data-picker-icon], [data-slot="command-item-icon"]) {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    color: var(--kind-color-fg);
+
+    & > :is(img, svg) {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  }
+
+  [data-picker-part="content"] {
+    width: var(--kind-picker-content-width, 20rem);
+    max-width: calc(100vw - 16px);
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--kind-color-border);
+    border-radius: var(--kind-radius);
+    background-color: var(--kind-color-surface);
+    color: var(--kind-color-fg);
+    box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 25%, transparent);
+    /* The list takes what room the window leaves below the search field. `--available-height` isn't inherited, so
+       it's read here, on the popup. */
+    --kind-command-list-max-height: min(
+      20rem,
+      calc(var(--available-height, 22.5rem) - var(--kind-command-input-height) - 2px)
+    );
+
+    &[data-presentation="sheet"] {
+      width: 100%;
+      max-width: none;
+      border-radius: var(--kind-radius) var(--kind-radius) 0 0;
+    }
+  }
+
+  [data-picker-part="command"] {
+    display: contents;
+  }
+
+  :where([data-picker-part="root"]) {
+    & [data-slot="command-item"] {
+      height: var(--kind-picker-row-height);
+    }
+    & [data-picker-part="item"] {
+      display: flex;
+      flex: 1;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    & [data-picker-item-text] {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+      line-height: 1.25rem;
+    }
+    & [data-picker-description] {
+      overflow: hidden;
+      font-size: 0.75rem;
+      line-height: 1rem;
+      color: var(--kind-color-muted);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    & [data-picker-description] mark {
+      background: none;
+      color: var(--kind-color-accent);
+      font-weight: 600;
+    }
+    & [data-picker-meta] {
+      flex-shrink: 0;
+      font-size: 0.75rem;
+      color: var(--kind-color-muted);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    /* The check on the chosen item and the chevron on a row that opens a page share one place at the end. */
+    & [data-picker-mark] {
+      flex-shrink: 0;
+      width: 14px;
+      height: 14px;
+    }
+    & [data-chosen] [data-picker-mark] {
+      background-color: var(--kind-color-fg);
+      mask: var(--kind-picker-icon-check) center / contain no-repeat;
+    }
+    & [data-opens] [data-picker-mark] {
+      background-color: var(--kind-color-muted);
+      mask: var(--kind-picker-icon-chevron-right) center / contain no-repeat;
+
+      &:dir(rtl) {
+        scale: -1 1;
+      }
+    }
+    & [data-row="back"] [data-picker-mark] {
+      order: -1;
+      background-color: var(--kind-color-muted);
+      mask: var(--kind-picker-icon-chevron-right) center / contain no-repeat;
+      scale: -1 1;
+
+      &:dir(rtl) {
+        scale: none;
+      }
+    }
+    /* A row without an icon keeps its place, so labels line up. */
+    & :where([data-has-icons]) [data-slot="command-item"]:where(:not([data-has-icon]))::before {
+      content: "";
+      flex-shrink: 0;
+      width: 16px;
+    }
+    & :where([data-has-icons]) [data-slot="command-item"]:where(:has([data-row="back"]))::before {
+      display: none;
+    }
+  }
+
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    [data-picker-part="root"] [data-picker-chevron] {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+    [data-picker-part="root"] :is([data-chosen], [data-opens], [data-row="back"]) [data-picker-mark] {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+    }
+  }
+
+  /* Motion: the list rises and fades in from the button. Reduced motion only fades, in 120 ms; `none` doesn't
+     animate. A sheet is UI SDK's, which slides whatever the motion settings. */
+  [data-picker-part="content"]:where(:not([data-presentation="sheet"])) {
+    transition:
+      opacity var(--kind-duration-fast) var(--kind-ease-out),
+      translate var(--kind-duration-base) var(--kind-ease),
+      scale var(--kind-duration-base) var(--kind-ease);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+      translate: 0 -4px;
+      scale: 0.98;
+    }
+    &[data-ending-style] {
+      transition-duration: var(--kind-duration-fast);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-picker-part="content"][data-motion="auto"] {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+      &:is([data-starting-style], [data-ending-style]) {
+        translate: none;
+        scale: none;
+      }
+    }
+  }
+
+  [data-picker-part="content"][data-motion="reduced"] {
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      translate: none;
+      scale: none;
+    }
+  }
+
+  :is(
+    [data-picker-part="content"][data-motion="none"],
+    [data-picker-part="root"][data-motion="none"] [data-picker-part="trigger"]
+  ) {
+    transition: none;
+  }
+}

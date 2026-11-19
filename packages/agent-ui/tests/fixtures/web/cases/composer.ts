@@ -5,6 +5,7 @@ import {
   attachmentItems,
   attachmentsHost,
   commands,
+  draftOptions,
   history,
   mentions,
   recorder,
@@ -36,6 +37,7 @@ const markup = (attributes: string) => `
               </ui-token-input>
             </kind-composer-input>
             <ui-file-input-trigger><button type="button" aria-label="Attach files"></button></ui-file-input-trigger>
+            <kind-composer-restored></kind-composer-restored>
             <kind-composer-submit><button></button></kind-composer-submit>
             <kind-composer-stop><button></button></kind-composer-stop>
           </ui-file-input-dropzone>
@@ -49,7 +51,13 @@ function full(root: HTMLElement, submitOn: "enter" | "mod-enter") {
   root.innerHTML = markup(`accept="image/*,.txt,.md" max-size="3072" submit-on="${submitOn}"`);
   const composer = root.querySelector("kind-composer") as KindComposerElement;
   const { onSubmit, onStop } = recorder();
-  Object.assign(composer, { mentions, commands, history, canStop: params.has("stop") });
+  Object.assign(composer, {
+    mentions,
+    commands,
+    history,
+    canStop: params.has("stop"),
+    ...draftOptions(params),
+  });
   if (params.has("motion")) composer.setAttribute("motion", params.get("motion") as string);
   composer.addEventListener("stop", onStop);
   composer.addEventListener("composersubmit", ({ detail }) => detail.waitUntil(onSubmit(detail.value)));
@@ -61,7 +69,11 @@ function full(root: HTMLElement, submitOn: "enter" | "mod-enter") {
       event.preventDefault();
     }
   });
-  Object.assign(window, { unmountComposer: () => composer.remove() });
+  Object.assign(window, {
+    unmountComposer: () => composer.remove(),
+    remountComposer: () => full(root, submitOn),
+    setDraftKey: (key: string) => composer.setAttribute("draft-key", key),
+  });
 }
 
 export const cases = {

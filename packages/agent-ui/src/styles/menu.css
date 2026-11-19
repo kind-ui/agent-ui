@@ -1,0 +1,216 @@
+/* Menus built on `menuBase` (Add Menu, Settings Menu, …): UI SDK Menu inside a root keyed on `data-menu-part`, whose
+   items take the internal Menu's look. This adds what such menus share: an icon trigger, a submenu's chevron, a radio
+   item's check, a checkbox item drawn as a switch and the popup's motion. */
+@layer components {
+  [data-menu-part="root"] {
+    /* Lucide "chevron-right", see THIRD_PARTY_NOTICES.md. */
+    --kind-menu-icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E");
+    display: inline-flex;
+  }
+
+  :is([data-menu-part="trigger"], [data-menu-part="content"]) {
+    display: contents;
+  }
+
+  /* The menus' own trigger, an icon button whatever icon it holds; `[data-menu-trigger-icon]` draws the menu's
+     `--kind-menu-trigger-icon`. A menu whose trigger shows text widens it in its own stylesheet. */
+  :where(
+      [data-kind="add-menu"],
+      [data-kind="settings-menu"],
+      [data-kind="approval-mode"],
+      [data-kind="model-control"]
+    )
+    :where([data-menu-part="trigger"])
+    [data-slot="menu-trigger"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 1px solid var(--kind-color-border);
+    border-radius: calc(var(--kind-radius) / 2);
+    background-color: var(--kind-color-surface);
+    color: var(--kind-color-fg);
+    cursor: default;
+    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+
+    &:hover,
+    &[data-open] {
+      background-color: var(--kind-color-hover);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+    &:is(:disabled, [data-disabled]) {
+      opacity: 0.5;
+    }
+    & > :is(svg, img) {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  [data-menu-trigger-icon] {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    background-color: currentColor;
+    mask: var(--kind-menu-trigger-icon) center / contain no-repeat;
+  }
+
+  :where([data-menu-part="root"]) {
+    & [data-slot="menu-content"] {
+      max-width: min(20rem, calc(100vw - 16px));
+    }
+    & [data-menu-chevron] {
+      flex-shrink: 0;
+      align-self: center;
+      width: 14px;
+      height: 14px;
+      margin-inline-start: auto;
+      background-color: var(--kind-color-muted);
+      mask: var(--kind-menu-icon-chevron) center / contain no-repeat;
+    }
+    &:dir(rtl) [data-menu-chevron] {
+      scale: -1 1;
+    }
+    & [data-menu-check] {
+      width: 14px;
+      height: 14px;
+      background-color: currentColor;
+      mask: var(--kind-icon-check) center / contain no-repeat;
+    }
+    /* A checkbox item's indicator drawn as a switch, with UI SDK Switch's look; the item says it's checked. */
+    & [data-menu-switch] {
+      display: inline-flex;
+      flex-shrink: 0;
+      align-self: center;
+      align-items: center;
+      width: 2rem;
+      height: 18px;
+      margin-inline-start: auto;
+      padding: 2px;
+      border-radius: 999px;
+      background-color: var(--kind-color-border);
+      transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+
+      &[data-checked] {
+        --kind-menu-switch-shift: 14px;
+        background-color: var(--kind-color-accent);
+      }
+      &[data-checked]:dir(rtl) {
+        --kind-menu-switch-shift: -14px;
+      }
+      & > [data-menu-switch-thumb] {
+        width: 14px;
+        height: 14px;
+        border-radius: 999px;
+        background-color: var(--kind-color-surface);
+        box-shadow: 0 1px 2px color-mix(in srgb, var(--kind-color-shadow) 10%, transparent);
+        translate: var(--kind-menu-switch-shift, 0) 0;
+        transition: translate var(--kind-duration-fast) var(--kind-ease-out);
+      }
+    }
+    & [data-slot="menu-item-icon"] > :is(img, svg) {
+      width: 16px;
+      height: 16px;
+      object-fit: contain;
+    }
+  }
+
+  /* Forced colors replace a background, which is all a mask and a switch draw. */
+  @media (forced-colors: active) {
+    [data-menu-part="root"] :is([data-menu-chevron], [data-menu-check]) {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+    }
+    [data-menu-part="trigger"] [data-menu-chevron] {
+      background-color: ButtonText;
+    }
+    [data-menu-trigger-icon] {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+    [data-menu-part="root"] [data-menu-switch] {
+      forced-color-adjust: none;
+      outline: 1px solid CanvasText;
+      outline-offset: -1px;
+      background-color: Canvas;
+
+      &[data-checked] {
+        background-color: Highlight;
+      }
+      & > [data-menu-switch-thumb] {
+        background-color: CanvasText;
+      }
+      &[data-checked] > [data-menu-switch-thumb] {
+        background-color: HighlightText;
+      }
+    }
+  }
+
+  /* Motion: a menu rises and fades in from its trigger. Reduced motion only fades, in 120 ms; `none` doesn't
+     animate. A sheet is UI SDK's, which slides whatever the motion settings. */
+  :where([data-menu-part="root"]) [data-slot="menu-content"]:where(:not([data-presentation="sheet"])) {
+    transition:
+      opacity var(--kind-duration-fast) var(--kind-ease-out),
+      translate var(--kind-duration-base) var(--kind-ease),
+      scale var(--kind-duration-base) var(--kind-ease);
+    transform-origin: var(--transform-origin);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+      translate: 0 -4px;
+      scale: 0.98;
+    }
+    &:where([data-ending-style]) {
+      transition-duration: var(--kind-duration-fast);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-menu-part="root"][data-motion="auto"])
+      [data-slot="menu-content"]:where(:not([data-presentation="sheet"])) {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+      &:is([data-starting-style], [data-ending-style]) {
+        translate: none;
+        scale: none;
+      }
+    }
+  }
+
+  :where([data-menu-part="root"][data-motion="reduced"])
+    [data-slot="menu-content"]:where(:not([data-presentation="sheet"])) {
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      translate: none;
+      scale: none;
+    }
+  }
+
+  /* A switch moves and fades only at full motion. */
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-menu-part="root"][data-motion="auto"])
+      :is([data-menu-switch], [data-menu-switch] > [data-menu-switch-thumb]) {
+      transition: none;
+    }
+  }
+  :where([data-menu-part="root"]:is([data-motion="reduced"], [data-motion="none"]))
+    :is([data-menu-switch], [data-menu-switch] > [data-menu-switch-thumb]) {
+    transition: none;
+  }
+
+  :where([data-menu-part="root"][data-motion="none"])
+    :is(
+      [data-slot="menu-content"],
+      [data-menu-part="trigger"] *,
+      [data-menu-switch],
+      [data-menu-switch-thumb]
+    ) {
+    transition: none;
+  }
+}

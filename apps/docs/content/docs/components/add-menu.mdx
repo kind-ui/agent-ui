@@ -1,0 +1,86 @@
+---
+title: Add Menu
+description: Offer what can be added to a prompt, like files, context or a plugin's commands, from a plus button.
+---
+
+import AddMenuExample from "../../../examples/add-menu/basic";
+
+Use an add menu in a [composer](./composer.mdx) when there are several kinds of things to add and each needs a word of explanation. It's an icon button that opens a menu of items with icons and descriptions, grouped under labels, where an item can open a submenu of its own.
+
+<Example caption="Press Add, then choose Add context to mention a file, or open Plugins, GitHub and choose Link issue. Upload file opens the file picker and attaches what you choose.">
+  <AddMenuExample />
+
+  <include cwd lang="tsx">./examples/add-menu/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/add-menu
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/add-menu-web
+```
+
+## Composition
+
+```text
+AddMenu
+├── AddMenuTrigger
+└── AddMenuContent
+    └── AddMenuRows
+```
+
+`AddMenu` is a group named by its `label`, around UI SDK's Menu. `AddMenuTrigger` is UI SDK's `MenuTrigger`, an icon button named by the `label` that shows a plus unless you pass children. `AddMenuContent` is UI SDK's `MenuContent`, and `AddMenuRows` draws one level of rows inside it: each group under its label, separated from the others, and a submenu for each item with `items`. `AddMenu` renders the trigger and content when you pass no children.
+
+## Usage
+
+### Items
+
+Pass `items`, each with an `id` and a `label`, and optionally a `description` (a second line under the label), an `icon`, a `group` and `disabled`. Items gather by `group`, in the order each group first appears, each under its label and separated from the next. Items without a `group` gather the same way, with no label. A disabled item stays in the menu, dimmed, and can't run. Every `id` must be unique, across submenus too.
+
+In React, `icon` is an image URL or an element, like an inline `<svg>`. Icons are hidden from assistive technology, so the label names the row.
+
+### Running Items
+
+Pressing an item calls `onAction` with its `id` and closes the menu, with the reason `item-press` and `details.source` saying how it was pressed. Cancel it with `details.cancel()` to keep the menu open. Without `onAction`, every item is disabled.
+
+```tsx
+<AddMenu
+  items={[{ id: "upload", label: "Upload file" }]}
+  onAction={(id) => fileInput.current?.click()}
+/>
+```
+
+The Add Menu doesn't attach anything itself. In the example above, the composer's draft is controlled with `value` and `onValueChange`, so **Upload file** adds the files a hidden file input picked to its attachments, and the other items add text to it.
+
+### Submenus
+
+Give an item `items` to make it open a submenu of them, marked with a chevron, like a plugin and its commands. Its `items` group the same way. An item with `items` opens its submenu and never calls `onAction`.
+
+### Opening
+
+Pass `open` and `onOpenChange` to control whether the menu is open, or `defaultOpen` to start open. `onOpenChange` gets UI SDK Menu's reason, like `trigger-press` or `escape-key`. Set `disabled` to keep the button from opening the menu; it also closes an open one.
+
+### Keyboard
+
+The button is one Tab stop. Enter, Space or Down Arrow opens the menu with focus on the first item, and the arrow keys move between items, skipping separators. Typing a letter moves to the next item whose label starts with it. Right Arrow opens a submenu, and Left Arrow or Escape closes only the submenu. Enter or Space runs an item, and Escape closes the menu, with focus back on the button.
+
+### Presentation and Motion
+
+The menu opens as a popover below the button. With `presentation="auto"`, the default, it's a bottom sheet on small touch screens instead, where a submenu replaces the level and Left Arrow or Escape goes back; pass `"popover"` or `"sheet"` to choose one. The popover rises and fades in. Under `prefers-reduced-motion`, or with `motion="reduced"`, it only fades, over 120 ms, and with `motion="none"` it opens at once. The sheet slides up whatever the motion settings.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/add-menu/add-menu.ts" name="AddMenuOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the add menu by its label and reads `open`. It lists every item it could run, in submenus too, by `id` and label. `run` takes an item's `id` and refuses an unknown or disabled one, or one that opens a submenu. It's offered only while `onAction` is set and the menu is enabled, and it leaves the menu open or closed as it was. `open` is offered while the menu is closed and enabled, and `close` while it's open. None needs a person to confirm.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/add-menu/add-menu.ts" name="AddMenuAgentActions" type='Pick<AddMenuApi, "open" | "close" | "run">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-add-menu label="Add" can-run>`, set `items` and `open` as properties, and listen for `addaction`, with the item's `id` as `event.detail.value`, and `openchange`. An item's `icon` is an image URL or an Element, which the element copies into its row. The element fills in its button and menu when it has no children.
+</Caption>

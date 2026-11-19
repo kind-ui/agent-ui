@@ -416,7 +416,9 @@ export const testResultsPrimitive: TestResultsPrimitive = definePrimitive<
     const treeController = createTreeController();
     const initial = store.get();
     let resync = 0;
-    context.onDestroy(() => cancelAnimationFrame(resync));
+    context.onDestroy(() => {
+      if (resync) cancelAnimationFrame(resync);
+    });
 
     // A suite or test that starts failing opens, so a live run shows its failures as they come, and one that's
     // gone closes, so `expanded` only holds rows that can be closed again.

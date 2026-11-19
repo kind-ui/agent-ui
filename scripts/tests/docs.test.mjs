@@ -32,6 +32,23 @@ test("the sidebar lists every component page", () => {
   assert.deepEqual([...meta.pages].sort(), [...components].sort());
 });
 
+test("the docs index links every composer control page", () => {
+  const meta = JSON.parse(readFileSync(new URL("components/meta.json", content), "utf8"));
+  const index = readFileSync(new URL("index.mdx", content), "utf8");
+  for (const name of [
+    "picker",
+    "add-menu",
+    "settings-menu",
+    "approval-mode",
+    "model-control",
+    "context-bar",
+    "dictation",
+  ]) {
+    assert.ok(meta.pages.includes(name), `${name} is missing from components/meta.json`);
+    assert.ok(index.includes(`](./components/${name}.mdx)`), `index.mdx doesn't link components/${name}.mdx`);
+  }
+});
+
 const showcases = {
   "agent-activity": "AgentActivityShowcase",
   "human-input": "HumanInputShowcase",

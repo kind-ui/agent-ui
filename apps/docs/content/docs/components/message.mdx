@@ -4,6 +4,7 @@ description: Show one turn of a chat, with copy, regenerate, edit and a switcher
 ---
 
 import MessageExample from "../../../examples/message/basic";
+import MessageRegenerateOptionsExample from "../../../examples/message/regenerate-options";
 
 Use a message for each turn in a conversation, from the person or the assistant. Its toolbar holds the actions you handle, and shows once the message is done streaming.
 
@@ -38,10 +39,12 @@ Message
     └── KindToolbar
         ├── MessageCopy
         ├── MessageRegenerate
+        │   └── MessageRegenerateContent
+        │       └── MessageRegenerateRows
         └── MessageEdit
 ```
 
-The content holds the message, rendered however you like, for example with Markdown. The editor is a text area that takes the content's place while a user message is edited. `MessageCopy`, `MessageRegenerate` and `MessageEdit` each wrap a `KindToolbarButton` and give it its icon and action. The toolbar they sit in is one Tab stop, and the arrow keys move between its buttons. `MessageBranch` switches between responses, with a label like "2 of 3".
+The content holds the message, rendered however you like, for example with Markdown. The editor is a text area that takes the content's place while a user message is edited. `MessageCopy`, `MessageRegenerate` and `MessageEdit` each wrap a `KindToolbarButton` and give it its icon and action. The toolbar they sit in is one Tab stop, and the arrow keys move between its buttons. `MessageBranch` switches between responses, with a label like "2 of 3". While the message has `regenerateOptions`, `MessageRegenerate` turns its button into UI SDK's `MenuTrigger` and adds `MessageRegenerateContent`, UI SDK's `MenuContent`, with `MessageRegenerateRows` inside it.
 
 ## Usage
 
@@ -56,6 +59,22 @@ Pass the message's `text`, which copy writes to the clipboard. The icon turns in
 ### Regenerate and Edit
 
 Each action shows only when you handle it. Pass `onRegenerate` to show regenerate. Pass `onEdit` to show edit on a user message: pressing it swaps the content for the editor, filled with `text`. Enter or moving focus away saves, and Escape cancels. `onEdit` gets the new text, and isn't called when the text didn't change.
+
+### Regenerate With
+
+Pass `regenerateOptions` to offer ways to regenerate, like a shorter reply or another model. Regenerate then opens a menu: **Try again** first, a separator, then your options, each with an `id`, a `label` and optionally a `description` and an `icon`. Give an option `items` to make it open a submenu of them.
+
+<Example caption="Press Regenerate, then choose More concise, or open Try with another model and choose a model. Try again regenerates with no option.">
+  <MessageRegenerateOptionsExample />
+
+  <include cwd lang="tsx">./examples/message/regenerate-options.tsx</include>
+</Example>
+
+`onRegenerate` keeps its signature, and `details.optionId` says which option was chosen: its `id`, or `undefined` for **Try again** or a plain regenerate. `details.reason` is `regenerate-press` for the button, `item-press` for a menu row and `imperative` for a call through the api. Cancel a menu choice with `details.cancel()` to keep the menu open. Without `regenerateOptions`, Regenerate stays a plain button.
+
+The button keeps its place in the toolbar, so the arrow keys still reach it, and Enter, Space or Down Arrow opens the menu. The menu works like the [Add Menu](./add-menu.mdx)'s: arrow keys move between rows, Right Arrow opens a submenu, and Escape closes it with focus back on the button. It's a popover, or a bottom sheet on small touch screens with `presentation="auto"`, the default; pass `"popover"` or `"sheet"` to choose one.
+
+To change the rows, pass `MessageRegenerate` a `menuContent`: a `MessageRegenerateContent` whose children are a function of `{ tryAgain, options }`, rendering `MessageRegenerateRows` or rows of your own.
 
 ### Responses
 
@@ -87,10 +106,10 @@ The switcher shows only when `branchCount` is more than 1.
 
 ### Agent
 
-An agent connected with `createAgent` reads each message's `status`, `branchIndex` and `branchCount`. It can run these actions, and press the buttons like a person would. Each one is offered only while the message shows it:
+An agent connected with `createAgent` reads each message's `status`, `branchIndex` and `branchCount`. It can run these actions, and press the buttons like a person would. Each one is offered only while the message shows it. `regenerate` takes a regenerate option's `id` or label, refuses an unknown one, and is **Try again** without one:
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/message/message.ts" name="MessageAgentActions" type='Pick<MessageApi, "copy" | "regenerate" | "edit" | "setBranch">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-message>`, each prop is a kebab-case attribute, so `messageRole` is `message-role`, and each callback is a lowercase event, so `onBranchChange` fires `branchchange`. `onCopy` fires `messagecopy`, since `copy` is a native event. Add the `can-regenerate` and `can-edit` attributes to offer those actions, which then fire `regenerate` and `edit`.
+  Runs in React and Web Components. On `<kind-message>`, each prop is a kebab-case attribute, so `messageRole` is `message-role`, and each callback is a lowercase event, so `onBranchChange` fires `branchchange`. `onCopy` fires `messagecopy`, since `copy` is a native event. Add the `can-regenerate` and `can-edit` attributes to offer those actions, which then fire `regenerate` and `edit`. Set `regenerateOptions` as a property, and read the chosen option from the `regenerate` event's `detail.optionId`. With options, write Regenerate as a UI SDK Menu inside `<kind-message-regenerate>`: a `<kind-message-regenerate-trigger>` holding the `<ui-toolbar-button>`, with `<ui-menu-trigger>` and its `<button>` inside it, and a `<kind-message-regenerate-content>` holding an empty `<ui-menu-content data-agent-hidden>`, which the element fills with the rows.
 </Caption>

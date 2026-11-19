@@ -1,0 +1,94 @@
+---
+title: Model Control
+description: Pick the model and how hard it thinks from one button, with your own settings in the same menu.
+---
+
+import ModelControlExample from "../../../examples/model-control/basic";
+
+Use a model control in a [composer](./composer.mdx) when people choose both the model and its effort, and you'd rather show one button than a [Model Selector](./model-selector.mdx) beside [Reasoning Effort](./reasoning-effort.mdx). It's a [Settings Menu](./settings-menu.mdx) with two rows of its own: a button reading "Claude Opus 5.5 · Medium" that opens a menu with a Model submenu, an Effort submenu and any toggles and choices you add.
+
+<Example caption="Press Claude Opus 5.5 · Medium, open Model and choose GPT-6.1 Terra; the menu stays open and Effort shows the level it uses. Open Effort to see the levels Terra doesn't support dimmed. Choose More models to list another model.">
+  <ModelControlExample />
+
+  <include cwd lang="tsx">./examples/model-control/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/model-control
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/model-control-web
+```
+
+## Composition
+
+```text
+ModelControl
+├── ModelControlTrigger
+└── ModelControlContent
+    └── SettingsMenuRows
+```
+
+`ModelControl` is a group named by its `label`, the model and the effort, around UI SDK's Menu. `ModelControlTrigger` is UI SDK's `MenuTrigger`, a button with the model's icon and name, a "·" and the effort, unless you pass children; they can be a function of `{ model, effort }`. `ModelControlContent` is UI SDK's `MenuContent`, and draws its rows with Settings Menu's `SettingsMenuRows` unless you pass children. `ModelControl` renders the trigger and content when you pass no children.
+
+## Usage
+
+### Models
+
+Pass `models`, each with an `id` and a `name`. A model's `group` lists it under that label in the Model submenu, its `icon` shows before its name there and on the button, and `disabled` dims it so it can't be chosen. In React, an icon is an image URL or an element, like an inline `<svg>`. Icons are hidden from assistive technology, so the name names the row.
+
+Pass `model` and `onModelChange` to control the model, or `defaultModel` to start with one. Choosing a model keeps the menu open, as a choice in a Settings Menu does, so the Effort row already shows the level the new model uses. `onModelChange` gets the model's `id` with the reason `item-press`. Call `details.cancel()` to keep the old model.
+
+### Effort
+
+Pass `levels`, in order from least to most effort, each a `value` and a `label`. Without levels there's no Effort row. Pass `effort` and `onEffortChange` to control the level, or `defaultEffort` to start with one; it's the middle level by default.
+
+A model's `efforts` names the level values it supports. Without it, a model supports every level, and with `[]` it supports none and the Effort row is hidden. Levels a model doesn't support show dimmed in the Effort submenu and can't be chosen. When the chosen model doesn't support the effort, it falls back to the highest level it supports at or below it: the button shows that level, and `onEffortChange` reports it with the reason `model-change`. An uncontrolled effort starts on the level the starting model uses.
+
+```tsx
+const models = [
+  { id: "gpt-6.1-sol", name: "GPT-6.1 Sol" },
+  { id: "gpt-6.1-terra", name: "GPT-6.1 Terra", efforts: ["low", "medium"] },
+];
+```
+
+The Model Control doesn't send anything. When your app sends a request, `modelEffort(levels, model, effort)` from `@kind-ui/agent-ui/core` returns the level that model uses, or `null` when it has none.
+
+The button keeps its width when the effort changes, since every level's label shares one place and only the chosen one shows. It's named by the `label`, the model and the effort, like "Model, Claude Opus 5.5, Medium effort", or "Model, Claude Opus 5.5" without an effort. `modelLabel` and `effortLabel` name the two rows, "Model" and "Effort" by default, and `effortLabel` ends the button's name in lowercase.
+
+### Actions
+
+Pass `actions` and `onAction` to add items after the models in the Model submenu, below a separator, like **More models**. They show only while `onAction` is set. Choosing one closes the menu, and `onAction` gets its `id` with the reason `item-press`; call `details.cancel()` to keep the menu open.
+
+### Settings
+
+Pass `settings` to add rows, as in a [Settings Menu](./settings-menu.mdx): toggles go above Model and Effort, and choices below them. Their values work the same way, through `values`, `defaultValues` and `onValuesChange`, whose `details.id` names the setting that changed. The ids `model` and `effort` are reserved, so a setting can't use them.
+
+### Opening
+
+Pass `open` and `onOpenChange` to control whether the menu is open, or `defaultOpen` to start open. `onOpenChange` gets UI SDK Menu's reason, like `trigger-press` or `escape-key`. Set `disabled` to keep the button from opening the menu; it also closes an open one.
+
+### Keyboard
+
+The button is one Tab stop. Enter, Space or Down Arrow opens the menu, and the arrow keys move between rows. Right Arrow or Enter opens a submenu with focus on its first item, and Left Arrow or Escape closes only that submenu. Enter or Space chooses a model or level, and Space flips a toggle. Dimmed models and levels can be focused, as the menu pattern asks, but not chosen. Escape closes the menu, with focus back on the button.
+
+### Presentation and Motion
+
+The menu opens as a popover below the button. With `presentation="auto"`, the default, it's a bottom sheet on small touch screens instead; pass `"popover"` or `"sheet"` to choose one. The popover rises and fades in. Under `prefers-reduced-motion`, or with `motion="reduced"`, it only fades, over 120 ms, and with `motion="none"` it opens at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/model-control/model-control.ts" name="ModelControlOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the model control by its name, like "Model, Claude Opus 5.5, Medium effort", and reads `open`, `values`, `model` and `effort`. It lists every row by `id`, with the models, levels and action ids. `setModel` takes a model's `id`, and `setEffort` a level's `value`; it refuses an unknown level or one the model doesn't support, and it's offered only while the model has levels. `setValue` takes any choice row's `id`, `model` and `effort` included, and one of its values, and `toggle` takes a toggle's `id`. `run` takes an action's `id`, offered while there are actions and `onAction`. They change things whether the menu is open or closed. `open` is offered while the menu is closed and enabled, and `close` while it's open. None needs a person to confirm.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/model-control/model-control.ts" name="ModelControlAgentActions" type='Pick<ModelControlApi, "open" | "close" | "toggle" | "setValue" | "setModel" | "setEffort" | "run">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-model-control>`, set `models`, `levels`, `actions`, `settings`, `defaultModel` and `defaultValues` as properties; `model`, `effort` and `values` are live properties. Set `default-effort`, `label`, `model-label`, `effort-label` and `presentation` as attributes, and listen for `modelchange`, `effortchange`, `valueschange`, with the setting as `event.detail.id`, and `openchange`. Add the `can-run` attribute to listen for `modelaction`. A model's `icon` is an image URL or an Element. The element fills in its button and menu when it has no children.
+</Caption>

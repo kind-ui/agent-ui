@@ -100,7 +100,7 @@ export type QuestionState = {
   motion: MotionMode;
 };
 
-/** What a choice group's render function gets: pass `controller`, `defaultValue` and `readOnly` to the group. */
+/** What a choice group's render function gets: pass `controller`, `defaultValue` and `readOnly` to the group, and name a radio group with `labelledBy`. */
 export type QuestionChoicesState =
   | {
       kind: "single";
@@ -108,6 +108,8 @@ export type QuestionChoicesState =
       controller: RadioGroupController;
       defaultValue: string | null;
       readOnly: boolean;
+      /** The id of the question's prompt, which names the radio group through `aria-labelledby`. */
+      labelledBy: string;
     }
   | {
       kind: "multiple";
@@ -288,10 +290,18 @@ const noOptions: QuestionOption[] = [];
 const choicesOf = (
   current: Control,
   options: QuestionOption[],
+  labelledBy: string,
   readOnly: boolean,
 ): QuestionChoicesState | undefined =>
   current.kind === "single"
-    ? { kind: "single", options, controller: current.controller, defaultValue: current.initial, readOnly }
+    ? {
+        kind: "single",
+        options,
+        controller: current.controller,
+        defaultValue: current.initial,
+        readOnly,
+        labelledBy,
+      }
     : current.kind === "multiple"
       ? { kind: "multiple", options, controller: current.controller, defaultValue: current.initial, readOnly }
       : undefined;
@@ -433,7 +443,9 @@ export const questionPrimitive: QuestionPrimitive = definePrimitive<
     };
     store.subscribe(syncAnswers);
     let resync = 0;
-    context.onDestroy(() => cancelAnimationFrame(resync));
+    context.onDestroy(() => {
+      if (resync) cancelAnimationFrame(resync);
+    });
 
     const write = (
       questionId: string,
@@ -547,7 +559,12 @@ export const questionPrimitive: QuestionPrimitive = definePrimitive<
           build = memo(choicesOf);
           choiceStates.set(questionId, build);
         }
-        return build(control(question), question.options ?? noOptions, isLocked(state));
+        return build(
+          control(question),
+          question.options ?? noOptions,
+          promptId(context.id, questionId),
+          isLocked(state),
+        );
       },
       textState: (questionId, state) => {
         const question = questionOf(state, questionId);

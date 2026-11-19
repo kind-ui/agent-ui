@@ -450,3 +450,141 @@ test("kind-composer wires content added after it connects", async ({ page }, tes
     .poll(() => page.locator("kind-composer").evaluate((c: KindComposer) => c.value.text))
     .toBe("late");
 });
+
+const saved = (page: Page) =>
+  page.evaluate(
+    () => JSON.parse(localStorage.getItem("kind-drafts") ?? "{}") as Record<string, { text: string }>,
+  );
+const remount = async (page: Page) => {
+  await page.evaluate(() => (window as unknown as Fixture).unmountComposer());
+  await expect(form(page)).toHaveCount(0);
+  await page.evaluate(() => (window as unknown as { remountComposer(): void }).remountComposer());
+};
+const restoredStatus = (page: Page) => page.locator("[data-slot=kind-composer-restored][role=status]");
+
+test("a remount with the same draftKey restores text and tokens and announces it; the next edit hides it", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const texts: string[] = [];
+    Object.assign(window, { kindAnnounced: texts });
+    new MutationObserver((mutations) => {
+      for (const { target } of mutations) {
+        if (target instanceof Element && target.hasAttribute("aria-live") && target.textContent)
+          texts.push(target.textContent);
+      }
+    }).observe(document, { childList: true, subtree: true });
+  });
+  let editor = await open(page, "case=full&draft");
+  await expect(restoredStatus(page)).toBeHidden();
+  await editor.click();
+  await page.keyboard.type("Ask @gra");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("now");
+  await expect
+    .poll(() => saved(page))
+    .toEqual({ "chat-1": expect.objectContaining({ text: expect.any(String) }) });
+  await remount(page);
+  editor = page.getByRole("textbox", { name: "Prompt" });
+  await expect(editor).toContainText(/^Ask .*Grace Hopper.* now$/);
+  await expect(editor.locator("[data-slot=token-input-token]")).toHaveCount(1);
+  await expect(restoredStatus(page)).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { kindAnnounced: string[] }).kindAnnounced))
+    .toContain("Draft restored");
+  await expectAgentActions(page, "Message", [
+    "discardDraft",
+    "insertToken",
+    "removeAttachment",
+    "setValue",
+    "submit",
+  ]);
+  await editor.click();
+  await page.keyboard.type("!");
+  await expect(restoredStatus(page)).toBeHidden();
+});
+
+test("Discard empties a restored draft and its storage, and focus moves to the editor", async ({ page }) => {
+  let editor = await open(page, "case=full&draft");
+  await editor.click();
+  await page.keyboard.type("keep me");
+  await remount(page);
+  editor = page.getByRole("textbox", { name: "Prompt" });
+  await expect(editor).toHaveText("keep me");
+  await page.getByRole("button", { name: "Discard" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(editor).toHaveText("");
+  await expect(restoredStatus(page)).toBeHidden();
+  await expect(editor).toBeFocused();
+  expect(await saved(page)).toEqual({});
+});
+
+test("a resolved submission clears only the submitted snapshot from storage", async ({ page }) => {
+  let editor = await open(page, "case=full&draft");
+  await editor.click();
+  await page.keyboard.type("sent");
+  await page.keyboard.press("Enter");
+  await settle(page, "resolve");
+  await expect(editor).toHaveText("");
+  expect(await saved(page)).toEqual({});
+
+  await page.keyboard.type("first");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type(" and more");
+  await settle(page, "resolve");
+  await expect(editor).toHaveText("first and more");
+  await remount(page);
+  editor = page.getByRole("textbox", { name: "Prompt" });
+  await expect(editor).toHaveText("first and more");
+});
+
+test("a changed draftKey restores its draft into an empty editor, never over text", async ({ page }) => {
+  await page.addInitScript(() =>
+    localStorage.setItem("kind-drafts", JSON.stringify({ "chat-2": { text: "other chat", tokens: [] } })),
+  );
+  const setDraftKey = (key: string) =>
+    page.evaluate((k) => (window as unknown as { setDraftKey(key: string): void }).setDraftKey(k), key);
+  let editor = await open(page, "case=full&draft");
+  await setDraftKey("chat-2");
+  await expect(editor).toHaveText("other chat");
+  await expect(restoredStatus(page)).toBeVisible();
+
+  await page.evaluate(() => (window as unknown as Fixture).unmountComposer());
+  editor = await open(page, "case=full&draft&draftKey=chat-3");
+  await editor.click();
+  await page.keyboard.type("typed");
+  await setDraftKey("chat-2");
+  await expect(editor).toHaveText("typed");
+  await expect(restoredStatus(page)).toBeHidden();
+  await page.keyboard.type("!");
+  await expect
+    .poll(() => saved(page))
+    .toMatchObject({ "chat-2": { text: "other chat" }, "chat-3": { text: "typed!" } });
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.press("Backspace");
+  await expect(editor).toHaveText("other chat");
+  expect(Object.keys(await saved(page))).toEqual(["chat-2"]);
+});
+
+test("a storage whose writes throw leaves typing working", async ({ page }) => {
+  const editor = await open(page, "case=full&draft=throws");
+  await editor.click();
+  await page.keyboard.type("still works");
+  await expect(editor).toHaveText("still works");
+  await page.keyboard.press("Enter");
+  expect(await drafts(page)).toEqual(["still works"]);
+});
+
+test("a controlled composer with draftKey never touches storage", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "react", "controlled value is a React prop");
+  await page.addInitScript(() =>
+    localStorage.setItem("kind-drafts", JSON.stringify({ "chat-1": { text: "stale", tokens: [] } })),
+  );
+  const editor = await open(page, "case=full&draft&controlled");
+  await editor.click();
+  await page.keyboard.type("owned");
+  await expect(editor).toHaveText("owned");
+  expect(
+    await page.evaluate(() => (window as unknown as { kindDrafts: { calls: string[] } }).kindDrafts.calls),
+  ).toEqual([]);
+});

@@ -1,0 +1,93 @@
+---
+title: Settings Menu
+description: Gather a prompt's settings, like switches and choices of one option, behind a settings button.
+---
+
+import SettingsMenuExample from "../../../examples/settings-menu/basic";
+
+Use a settings menu in a [composer](./composer.mdx) for settings someone changes now and then, like turning web search on or picking how long answers are. It's an icon button that opens a menu of switches, and of choices that each open a submenu of their options.
+
+<Example caption="Press Settings, then press Memory to turn it on; the menu stays open. Open Response style and choose Detailed, and the row shows the new option.">
+  <SettingsMenuExample />
+
+  <include cwd lang="tsx">./examples/settings-menu/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/settings-menu
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/settings-menu-web
+```
+
+## Composition
+
+```text
+SettingsMenu
+├── SettingsMenuTrigger
+└── SettingsMenuContent
+    └── SettingsMenuRows
+```
+
+`SettingsMenu` is a group named by its `label`, around UI SDK's Menu. `SettingsMenuTrigger` is UI SDK's `MenuTrigger`, an icon button named by the `label` that shows a settings icon unless you pass children. `SettingsMenuContent` is UI SDK's `MenuContent`, and `SettingsMenuRows` draws the rows inside it: a switch for each toggle, and a submenu for each choice. `SettingsMenu` renders the trigger and content when you pass no children.
+
+## Usage
+
+### Settings
+
+Pass `settings`, the rows in order. Each has a `type`, an `id` and a `label`, and every `id` must be unique.
+
+- A `toggle` is a switch, with an optional `description` (a second line under the label). A screen reader hears it as a menu item that's checked or not.
+- A `choice` has `options`, each a `value` and a `label`. Its row shows the chosen option's label after its own, and opens a submenu of the options, one of them checked. An option can also have an `icon`, a `group`, under whose label it's listed, and `disabled`, which shows it dimmed: it can still be focused but not chosen.
+
+Either can have an `icon`. In React, it's an image URL or an element, like an inline `<svg>`. Icons are hidden from assistive technology, so the label names the row. The `label` names the button, "Settings" by default.
+
+To pick the model and its effort from the same kind of menu, use [Model Control](./model-control.mdx), a Settings Menu with Model and Effort rows of its own.
+
+### Values
+
+Pass `values` and `onValuesChange` to control the values, or `defaultValues` to start with some. They're keyed by setting `id`: `true` or `false` for a toggle, an option's `value` for a choice. A toggle without a value is off, and a choice without one shows no option.
+
+Pressing a toggle flips it, and choosing an option sets its choice. Either way the menu stays open, so someone can change several settings at once. `onValuesChange` gets every value and `details.id`, the setting that changed, once per change, with the reason `item-press`. Call `details.cancel()` to refuse it, and the row keeps its old value.
+
+```tsx
+<SettingsMenu
+  settings={settings}
+  values={values}
+  onValuesChange={(values, details) => {
+    if (details.id === "memory" && !canRemember) details.cancel();
+    else setValues(values);
+  }}
+/>
+```
+
+The Settings Menu doesn't act on its values. In the example above, they're kept in state for the app to read when it sends the prompt.
+
+### Opening
+
+Pass `open` and `onOpenChange` to control whether the menu is open, or `defaultOpen` to start open. `onOpenChange` gets UI SDK Menu's reason, like `trigger-press` or `escape-key`. Set `disabled` to keep the button from opening the menu; it also closes an open one.
+
+### Keyboard
+
+The button is one Tab stop. Enter, Space or Down Arrow opens the menu with focus on the first row, and the arrow keys move between rows. Typing a letter moves to the next row whose label starts with it. Enter or Space flips a toggle. Right Arrow opens a choice's submenu, Enter or Space chooses an option, and Left Arrow or Escape closes only the submenu. Escape closes the menu, with focus back on the button.
+
+### Presentation and Motion
+
+The menu opens as a popover below the button. With `presentation="auto"`, the default, it's a bottom sheet on small touch screens instead, where a choice's submenu replaces the level and Left Arrow or Escape goes back; pass `"popover"` or `"sheet"` to choose one. The popover rises and fades in. Under `prefers-reduced-motion`, or with `motion="reduced"`, it only fades, over 120 ms, and with `motion="none"` it opens at once. The sheet slides up whatever the motion settings.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/settings-menu/settings-menu.ts" name="SettingsMenuOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the settings menu by its label and reads `open` and `values`. It lists every setting by `id` and label. `toggle` takes a toggle's `id` and turns it on or off, or flips it without `on`. `setValue` takes a choice's `id` and one of its option values. Both refuse an unknown `id` or value, or a setting of the other type, and each is offered only while the menu is enabled and holds a setting of its type. They change values whether the menu is open or closed and leave it as it was. `open` is offered while the menu is closed and enabled, and `close` while it's open. None needs a person to confirm.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/settings-menu/settings-menu.ts" name="SettingsMenuAgentActions" type='Pick<SettingsMenuApi, "open" | "close" | "toggle" | "setValue">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-settings-menu>`, set `settings`, `values` and `open` as properties, and listen for `valueschange`, with every value as `event.detail.value` and the setting as `event.detail.id`, and `openchange`. A setting's `icon` is an image URL or an Element, which the element copies into its row. The element fills in its button and menu when it has no children.
+</Caption>

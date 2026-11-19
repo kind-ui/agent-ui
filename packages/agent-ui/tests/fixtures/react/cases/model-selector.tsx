@@ -6,11 +6,21 @@ import {
   ModelSelectorTrigger,
 } from "../../../../src/react/model-selector.js";
 import { ReasoningEffort } from "../../../../src/react/reasoning-effort.js";
-import { iconModels, levels, models, selectionHost } from "../../shared/model-selector.js";
+import { iconModels, levels, modelActions, models, selectionHost } from "../../shared/model-selector.js";
 
 const { host, record } = selectionHost();
 
-function Toolbar({ motion, refusing }: { motion?: MotionMode; refusing?: boolean }) {
+function Toolbar({
+  motion,
+  refusing,
+  plain,
+  pages,
+}: {
+  motion?: MotionMode;
+  refusing?: boolean;
+  plain?: boolean;
+  pages?: "groups";
+}) {
   useEffect(() => {
     Object.assign(window, { kindHost: host });
   }, []);
@@ -21,8 +31,21 @@ function Toolbar({ motion, refusing }: { motion?: MotionMode; refusing?: boolean
         <ModelSelector
           id="model"
           models={models}
+          pages={pages}
           {...(refusing ? { value: "gpt-5" } : { defaultValue: "gpt-5" })}
-          onValueChange={record("model")}
+          onValueChange={(value, details) => {
+            record("model")(value, details);
+            if (refusing) details.cancel();
+          }}
+          {...(plain
+            ? {}
+            : {
+                actions: modelActions,
+                onAction: (id: string, details: { reason: string; cancel(): void }) => {
+                  record("action")(id, details);
+                  if (refusing) details.cancel();
+                },
+              })}
           motion={motion}
         />
         <ReasoningEffort
@@ -83,6 +106,8 @@ function Logos() {
 
 export const cases = {
   all: () => <Toolbar />,
+  plain: () => <Toolbar plain />,
+  groups: () => <Toolbar pages="groups" />,
   logos: () => <Logos />,
   reduced: () => <Toolbar motion="reduced" />,
   refusing: () => <Toolbar refusing />,

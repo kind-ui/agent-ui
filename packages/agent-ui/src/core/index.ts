@@ -4,8 +4,35 @@ export {
   type ActionState,
   actionPrimitive,
 } from "./action/index.js";
+export {
+  type AddMenuActionReason,
+  type AddMenuApi,
+  type AddMenuContentState,
+  type AddMenuOptions,
+  type AddMenuPrimitive,
+  type AddMenuRow,
+  type AddMenuSection,
+  type AddMenuState,
+  addMenuPrimitive,
+  addMenuSections,
+} from "./add-menu/index.js";
 export { type AnsiLine, type AnsiLines, type AnsiSpan, createAnsiLines } from "./ansi.js";
 export { approvalKey, approvalLabel, isActionable } from "./approval.js";
+export {
+  APPROVAL_MODE_GROUP,
+  APPROVAL_MODE_LEARN_MORE,
+  type ApprovalModeApi,
+  type ApprovalModeChangeReason,
+  type ApprovalModeContentState,
+  type ApprovalModeOptions,
+  type ApprovalModePrimitive,
+  type ApprovalModeRow,
+  type ApprovalModeState,
+  type ApprovalModeTriggerState,
+  approvalModeName,
+  approvalModePrimitive,
+  approvalModeRows,
+} from "./approval-mode/index.js";
 export {
   ATTACHMENT_ERRORS,
   type AttachmentItem,
@@ -47,6 +74,7 @@ export {
   type Highlight,
   type Token,
 } from "./code-block/index.js";
+export { type ComposedHandler, hearComposed } from "./composed-events.js";
 export {
   type ComposerApi,
   type ComposerAttachment,
@@ -76,6 +104,20 @@ export {
   confirmationPrimitive,
 } from "./confirmation/index.js";
 export {
+  CONTEXT_BAR_FIRST_ITEM,
+  type ContextBarApi,
+  type ContextBarChipState,
+  type ContextBarListState,
+  type ContextBarOptions,
+  type ContextBarOverflowState,
+  type ContextBarPresentation,
+  type ContextBarPrimitive,
+  type ContextBarRemoveReason,
+  type ContextBarState,
+  contextBarPrimitive,
+  fitChips,
+} from "./context-bar/index.js";
+export {
   type ContextLevel,
   type ContextMeterApi,
   type ContextMeterOpenChangeReason,
@@ -100,6 +142,23 @@ export {
   type FollowState,
   nextFollowState,
 } from "./conversation/index.js";
+export {
+  createSpeechDictation,
+  type DictationEvent,
+  type DictationSource,
+  type SpeechDictationOptions,
+} from "./dictation.js";
+export {
+  type DictationApi,
+  type DictationOptions,
+  type DictationPhase,
+  type DictationPrimitive,
+  type DictationState,
+  type DictationStatusState,
+  type DictationTextReason,
+  type DictationWaveformState,
+  dictationButtonPrimitive,
+} from "./dictation-button/index.js";
 export {
   type DocumentApi,
   type DocumentContentState,
@@ -197,21 +256,48 @@ export {
   markdownViewPrimitive,
 } from "./markdown-view/index.js";
 export {
+  type MenuBaseApi,
+  type MenuBaseConfig,
+  type MenuBaseOptions,
+  type MenuBaseSlots,
+  type MenuBaseState,
+  type MenuChoice,
+  type MenuPartState,
+  type MenuPresentation,
+  type MenuRun,
+  type MenuTriggerState,
+  menuBase,
+  menuItems,
+} from "./menu-base.js";
+export {
   branchLabel,
+  MESSAGE_TRY_AGAIN,
   type MessageApi,
   type MessageBranchChangeReason,
   type MessageOptions,
   type MessagePrimitive,
+  type MessageRegenerateContentState,
+  type MessageRegenerateDetails,
+  type MessageRegenerateReason,
+  type MessageRegenerateState,
   type MessageState,
   messagePrimitive,
 } from "./message/index.js";
 export {
-  filterModels,
-  type ModelGroup,
+  MODEL_CONTROL_EFFORT,
+  MODEL_CONTROL_MODEL,
+  type ModelControlApi,
+  type ModelControlChangeReason,
+  type ModelControlEffortChangeReason,
+  type ModelControlOptions,
+  type ModelControlPrimitive,
+  type ModelControlState,
+  type ModelControlTriggerState,
+  modelControlPrimitive,
+  modelEffort,
+} from "./model-control/index.js";
+export {
   type ModelSelectorApi,
-  type ModelSelectorComboboxState,
-  type ModelSelectorContentState,
-  type ModelSelectorItem,
   type ModelSelectorOptions,
   type ModelSelectorPrimitive,
   type ModelSelectorState,
@@ -238,6 +324,31 @@ export {
   noticePrimitive,
 } from "./notice/index.js";
 export { createPendingAction, type PendingAction, type PendingActionOptions } from "./pending.js";
+export {
+  type PickerApi,
+  type PickerBaseApi,
+  type PickerBaseConfig,
+  type PickerBaseOptions,
+  type PickerBaseSlots,
+  type PickerBaseState,
+  type PickerCommandState,
+  type PickerItemState,
+  type PickerOpenChangeReason,
+  type PickerOption,
+  type PickerOptions,
+  type PickerPage,
+  type PickerPresentation,
+  type PickerPrimitive,
+  type PickerRow,
+  type PickerRowKind,
+  type PickerSection,
+  type PickerState,
+  type PickerTriggerState,
+  type PickerValueChangeReason,
+  pickerBase,
+  pickerPages,
+  pickerPrimitive,
+} from "./picker/index.js";
 export {
   type PlanApi,
   type PlanOptions,
@@ -302,6 +413,31 @@ export {
   type SelectionToolbarState,
   selectionPrimitive,
 } from "./selection/index.js";
+export {
+  type SettingsBaseApi,
+  type SettingsBaseConfig,
+  type SettingsBaseOptions,
+  type SettingsBaseSlots,
+  type SettingsBaseState,
+  type SettingsCause,
+  type SettingsMenuAction,
+  type SettingsMenuApi,
+  type SettingsMenuChangeDetails,
+  type SettingsMenuChangeReason,
+  type SettingsMenuChoiceRow,
+  type SettingsMenuContentState,
+  type SettingsMenuOptionGroup,
+  type SettingsMenuOptions,
+  type SettingsMenuPrimitive,
+  type SettingsMenuRow,
+  type SettingsMenuState,
+  type SettingsMenuToggleRow,
+  settingsBase,
+  settingsChoiceRow,
+  settingsData,
+  settingsMenuPrimitive,
+  settingsMenuRows,
+} from "./settings-menu/index.js";
 export {
   type SourceEntry,
   type SourcesApi,

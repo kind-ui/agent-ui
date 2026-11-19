@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `cd5d555` (Wave 4 Task 12b Model Selector icons)
+Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 
 ## Settled
 
+- **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.
 - **Fixture `main` files carry no comment for the case `<script type="module">`** (Wave 4 Task 12): fixtures hold no comments; the reason is in AGENTS.md "Fixture servers".
 - **A streamed Reasoning chunk renders its step parts once each** (`text` lives in step state): a fixed cost per chunk that doesn't grow with the text, so `budgets.spec.ts` has no Reasoning case. The default parts are one shared element tree.
 - **Count budgets render counting** (`budgets.spec.ts`) follows DevTools: a render that bails out on equal state isn't counted, and a compare-`memo` wrapper (tag 14) is left out so its component counts once.
@@ -15,14 +16,19 @@ Last reviewed: `cd5d555` (Wave 4 Task 12b Model Selector icons)
 
 ## Known and open (don't report again, check whether fixed)
 
-- **UI SDK's `ComboboxValueIcon` has no server markup and keeps an icon copied before its content changed in place** (Wave 4 Task 12b): Model Selector draws its field icon from data instead (its own `icon` part); report upstream.
+- **No fixture covers a controlled Composer taking dictated text (Task 17):** a throwaway case passed in both React projects; the docs examples are uncontrolled now.
+- **checkPattern counts React's hidden form radios** (`@ui-sdk/core/testing`): React Radio group and Segmented Control keep an `aria-hidden` native radio per item for forms, which `checkPattern("radio-group")` counts as radios (it skips `aria-hidden` options in a listbox, not radios in a radio group), so it reports two checked radios and arrows that "skip" an input. Web has none. `wave-5/aria-patterns.spec.ts` accepts those problems; report to UI SDK.
+- **Context Bar server markup shows every chip until the bar measures** (Wave 5 Task 10): widths exist only in the browser, so hydration swaps the chip clipped at the edge for "+N" (nothing below moves; the root has a fixed height), and the server markup exposes every chip to assistive technology until then.
+- **Adding or removing `regenerateOptions` while mounted remounts Message's Regenerate button and drops its focus** (Wave 5 Task 7): the button sits inside `KindMenu` only while there are options. Keeping the menu mounted would make a plain button a menu trigger.
+- **A Settings Menu choice row's typeahead text includes every option label (Wave 5 Task 5):** `MenuSubTrigger` takes no `label`, so it matches its text; typing from the row's label still finds it.
+- **Add Menu sheet: re-entering a submenu right after going back sometimes closes the sheet (Wave 5 Task 4):** reason `swipe` from UI SDK's sheet swipe-to-dismiss, React only, about 1 in 200; the spec no longer re-enters. Report upstream.
+- **UI SDK `CommandGroup` renders `hidden` without `aria-labelledby` on the server (Wave 5 Task 1):** a server-rendered Kind Command shows an empty group until hydration. UI SDK's; matters once Command renders outside a closed popup. Picker (Wave 5 Task 2) renders Command only while its list is open, so needs no workaround.
 - **A streamed Test Results update renders every row's UI SDK Tree parts and item parts** (Wave 4 Task 9): the known options-change cost (as Chain of Thought, Task and Sources). Our `TestResultsRow` components skip suites the host kept, since core caches tree items per suite.
 - **File Tree: the root `group` and the Tree are both named "Files"** (Wave 4 Task 6), so a screen reader may say it twice; and a function `className` on the root gets the Tree's props. Not checked with a screen reader.
 - **A server-rendered ready Generated Image shows "Loading image" and a shimmer until it hydrates** (Wave 4 Task 5): the phase comes from the `<img>`'s `load`, which only the client hears; the frame keeps its size. Each progress tick renders every part (UI SDK options change), as Chain of Thought's steps do.
 - **Sources re-renders every item's parts on any `sources` change** (Wave 4 Task 2), once per update, not per token: the same UI SDK options-change behavior as Chain of Thought, Task and Plan items despite `selects`.
 - **A Context Meter root `className` or `render` function gets `{}`,** as Status's root does (Wave 3 Task 8): style by `data-level`. The docs should say this covers every root.
-- **Renaming the chosen model leaves its old name in Model Selector's field** (Wave 3 Task 6): UI SDK's Combobox keeps the label it showed when `itemToLabel` or the item's label changes, even a bare `<Combobox>`; report upstream. The group beside it updates.
-- **Question's radio and checkbox groups have no name of their own:** the item's group, named by its prompt, names them, as UI SDK Field's "Groups in a Field Set" says; Radio's own docs point the group at the legend too. Not checked with a screen reader.
+- **Question's checkbox groups have no name of their own:** the item's group, named by its prompt, names them, as UI SDK Field's "Groups in a Field Set" says. A radio group points `aria-labelledby` at the prompt (Wave 5 Task 15), since `checkPattern` requires its name. Not checked with a screen reader.
 - **A custom `QuestionItem` without `QuestionPrompt` has a dangling `aria-labelledby`,** as Step's group does without `StepTitle`.
 - **Two calls of the same tool share their copy-button and code-block names** ("search_docs input"): names come from the title, and a `toolCallId` isn't a name a person can read. A host can tell them apart with `label`.
 - **A keyboard move in a React Queue blurs and refocuses the picked-up row on each step:** React moves the keyed `li` with `insertBefore`, and UI SDK's reorder focuses it again (web uses `moveBefore`). It follows UI SDK's documented React pattern, so it belongs upstream.
@@ -44,9 +50,16 @@ Last reviewed: `cd5d555` (Wave 4 Task 12b Model Selector icons)
 - **A consumer cancels a key with `onKeyDownCapture`, not `onKeyDown`:** the Token Input handles keys on its element before React's bubbling handlers (UI SDK; report upstream). Documented on `ComposerInput`.
 - **An attachment chip plays its entrance twice under StrictMode** (its bind runs twice); it ends in place, so only a click during it is affected.
 - **Chain of Thought: a host `steps` update renders every step's parts (Wave 2 Task 5),** 609 renders for one status change among 100 steps; `memo` on the items doesn't help, as the parts re-render from UI SDK's options change. A press reaches one step. Report to UI SDK; no budget, since it's per step, not per token.
+- **UI SDK Menu rendered open on the server leaves its radio group unnamed (Wave 5 Task 6):** `role="group"` has no `aria-labelledby` though its label is in the markup, like the known `CommandGroup` one; the client names it. UI SDK's; report upstream.
+- **Model Control's trigger repeats `KindMenuItemContent`'s string-or-element icon code** (Wave 5 Task 9); one internal icon helper would serve both.
 
 ## Resolved
 
+- **Dictation spec read `--kind-dictation-level-23` after the default went to 16 bars (Wave 5 Task 11):** it reads the last bar's index now.
+- **Context Bar (Wave 5 Task 10):** `ContextBarChip` and `ContextBarItem` take `children` (a function of the chip, by default its icon, label and remove control), and `ContextBarRemove` / `ContextBarItemRemove` are exported, so a custom chip keeps its remove control as on web.
+- **`MessageRegenerate` cloned its child and had no way to replace the rows (Wave 5 Task 7):** the child is now `MenuTrigger`'s `render` (its own `render` kept), `menuContent` replaces `MessageRegenerateContent`, and `Message` types `regenerateOptions` icons as `string | ReactElement`; `custom-rows` case in `message.spec.ts`.
+- **`<AddMenuContent>{null}</AddMenuContent>` still drew the rows (Wave 5 Task 4):** children now default to a function of the content's state, as `sources.tsx` does. Fixtures dropped the unused sheet case and added `inert`.
+- **Model Selector's Combobox field (`ComboboxValueIcon` without server markup, an old name kept after a rename)** (Wave 5 Task 3): Model Selector moved onto Picker; its trigger draws the chosen model's icon and name from data.
 - **Model Selector's field icon went stale and was missing from server markup** (Wave 4 Task 12b): `ComboboxValueIcon` was replaced by the primitive's `icon` part, drawn from the chosen model, and `keepMounted` is gone.
 - **`ModelSelectorItem`'s `model.icon` was `unknown`** (Wave 4 Task 12b): `ModelSelectorListItem` types it `string | ReactElement`, as `ModelSelectorModel` does.
 - **The `logos` fixture camelCased `aria-hidden`** (Wave 4 Task 12b): `logo()` keeps `aria-*` and `data-*` names.
@@ -89,7 +102,9 @@ Last reviewed: `cd5d555` (Wave 4 Task 12b Model Selector icons)
 - **The first attachment skipped its entrance in React.** Fixed: the composer's attachments part stays mounted while empty (`data-empty`).
 - **Two Kind wrappers composed through `render` stacked both base class lists.** Fixed: `withKindClass` renders a Kind `render` target as its bare UI SDK part, so the outer base applies once, for element and function `render` targets and nested targets alike.
 - **`<Status>{false}</Status>` and `<Status>{null}</Status>` differed (Wave 2 Task 2).** Fixed: any `children` replace the default parts.
+- **Approval Mode fixtures (Wave 5 Task 6):** `onLearnMore` had no case and the fixtures carried an unused `id`; a `learning` case and spec test cover it, and the `id` is gone.
+- **A choice option's `icon` was `unknown` in React's `settings` props (Wave 5 Task 9):** `SettingsMenuSetting` narrows the options' icons too, and Model Control's `settings` use it.
 
 ## Revisit
 
-Nothing yet.
+- **`MessageRegenerateContent` is `keepMounted` (Wave 5 Task 15)** so a closed Menu stays inside `data-agent-hidden`: server markup for a Message with three options grows from 707 to 4,474 bytes, per message. Marking the `regenerate` part `data-agent-hidden` while there are options would avoid mounting the rows, once checked that the bridge still offers the Message's `regenerate`.

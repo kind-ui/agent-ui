@@ -310,7 +310,9 @@ export const fileTreePrimitive: FileTreePrimitive = definePrimitive<
     const controller = createTreeController();
     const initial = store.get();
     let resync = 0;
-    context.onDestroy(() => cancelAnimationFrame(resync));
+    context.onDestroy(() => {
+      if (resync) cancelAnimationFrame(resync);
+    });
 
     // Web hosts can only set `entries` once the element exists, so rows in the first frame count as known and don't
     // play the entrance.

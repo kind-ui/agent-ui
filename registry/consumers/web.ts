@@ -1,13 +1,17 @@
 // The Web Components registry consumer's entry: every component, as `shadcn add` copies it, one section each.
 import { defineAction } from "./components/ui/web/action.js";
+import { defineAddMenu } from "./components/ui/web/add-menu.js";
+import { defineApprovalMode } from "./components/ui/web/approval-mode.js";
 import { defineAttachments } from "./components/ui/web/attachments.js";
 import { defineChainOfThought } from "./components/ui/web/chain-of-thought.js";
 import { defineCheckpoint } from "./components/ui/web/checkpoint.js";
 import { defineCodeBlock } from "./components/ui/web/code-block.js";
 import { defineComposer } from "./components/ui/web/composer.js";
 import { defineConfirmation } from "./components/ui/web/confirmation.js";
+import { defineContextBar } from "./components/ui/web/context-bar.js";
 import { defineContextMeter } from "./components/ui/web/context-meter.js";
 import { defineConversation } from "./components/ui/web/conversation.js";
+import { defineDictation } from "./components/ui/web/dictation.js";
 import { defineDocument } from "./components/ui/web/document.js";
 import { defineFeedback } from "./components/ui/web/feedback.js";
 import { defineFileTree } from "./components/ui/web/file-tree.js";
@@ -19,14 +23,17 @@ import { defineLoader } from "./components/ui/web/loader.js";
 import { defineMarkdown } from "./components/ui/web/markdown.js";
 import { defineMarkdownTable } from "./components/ui/web/markdown-table.js";
 import { defineMessage } from "./components/ui/web/message.js";
+import { defineModelControl } from "./components/ui/web/model-control.js";
 import { defineModelSelector } from "./components/ui/web/model-selector.js";
 import { defineNotice } from "./components/ui/web/notice.js";
+import { definePicker } from "./components/ui/web/picker.js";
 import { definePlan } from "./components/ui/web/plan.js";
 import { defineQuestion } from "./components/ui/web/question.js";
 import { defineQueue } from "./components/ui/web/queue.js";
 import { defineReasoning } from "./components/ui/web/reasoning.js";
 import { defineReasoningEffort } from "./components/ui/web/reasoning-effort.js";
 import { defineSelection } from "./components/ui/web/selection.js";
+import { defineSettingsMenu } from "./components/ui/web/settings-menu.js";
 import { defineSources } from "./components/ui/web/sources.js";
 import { defineStackTrace } from "./components/ui/web/stack-trace.js";
 import { defineStatus } from "./components/ui/web/status.js";
@@ -75,6 +82,13 @@ for (const define of [
   defineTranscript,
   defineSelection,
   defineAction,
+  definePicker,
+  defineAddMenu,
+  defineSettingsMenu,
+  defineApprovalMode,
+  defineModelControl,
+  defineContextBar,
+  defineDictation,
   defineConversation,
   defineMessage,
   defineInternalToolbar,
@@ -128,6 +142,13 @@ const items = {
   transcript: `<kind-transcript can-seek current-time="1"></kind-transcript>`,
   selection: `<kind-selection can-run><kind-selection-content><p>Retry with backoff.</p></kind-selection-content></kind-selection>`,
   action: `<kind-action label="Explain" quote="Retry with backoff." result="Wait, then try again." status="complete"></kind-action>`,
+  picker: `<kind-picker label="Work in"></kind-picker>`,
+  "add-menu": `<kind-add-menu can-run></kind-add-menu>`,
+  "settings-menu": `<kind-settings-menu></kind-settings-menu>`,
+  "approval-mode": `<kind-approval-mode></kind-approval-mode>`,
+  "model-control": `<kind-model-control></kind-model-control>`,
+  "context-bar": `<kind-context-bar></kind-context-bar>`,
+  dictation: `<kind-dictation></kind-dictation>`,
   terminal: `<kind-terminal command="npm test" exit-code="0" default-open></kind-terminal>`,
   conversation: `<kind-conversation aria-label="Chat" message-count="1" class="h-40">
       <kind-conversation-viewport>
@@ -222,6 +243,21 @@ Object.assign(main.querySelector("kind-transcript") as HTMLElement, {
 });
 Object.assign(main.querySelector("kind-selection") as HTMLElement, {
   actions: [{ id: "ask", label: "Ask" }],
+});
+Object.assign(main.querySelector("kind-picker") as HTMLElement, {
+  items: [{ value: "agent-ui", label: "agent-ui", description: "~/code/agent-ui" }],
+  value: "agent-ui",
+});
+Object.assign(main.querySelector("kind-add-menu") as HTMLElement, {
+  items: [{ id: "upload", label: "Upload file" }],
+});
+Object.assign(main.querySelector("kind-settings-menu") as HTMLElement, {
+  settings: [{ type: "toggle", id: "search", label: "Web search" }],
+  values: { search: true },
+});
+Object.assign(main.querySelector("kind-approval-mode") as HTMLElement, {
+  modes: [{ value: "ask", label: "Ask every time" }],
+  value: "ask",
 });
 Object.assign(main.querySelector("kind-file-tree") as HTMLElement, {
   entries: [{ path: "src/index.ts", change: "modified", additions: 2 }],

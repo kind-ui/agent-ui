@@ -2,10 +2,12 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `cd5d555` (Wave 4 Task 12b Model Selector icons)
+Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 
 ## Settled
 
+- **A Dictation in a shadow root nested inside the Composer doesn't reach it (Task 17):** `insertText` walks `parentElement`, as a button in a shadow root doesn't submit an outer form.
+- **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.
 - **A `kind-model-selector` element icon is cloned with its ids** (Wave 4 Task 12b): rewriting ids inside each copy would be fragile; the `models` JSDoc says to pass a logo with `defs` as an image URL, and the fixture's Gemini logo is one.
 - **`drawIcon` compares icons by identity** (suspected, Wave 4 Task 12b): a host that builds new elements on every `models` write re-copies its icons, which is harmless.
 - **A hand-written empty `kind-inline-citation-content` stays empty** (Wave 4 Task 3), as React's bare `InlineCitationContent` does: the element fills in only the content it wrote.
@@ -20,10 +22,17 @@ Last reviewed: `cd5d555` (Wave 4 Task 12b Model Selector icons)
 - **WebKit presses Uploader's Cancel and Retry with Enter in `uploader.spec.ts`:** WebKit doesn't focus a button on click, so focus recovery can only be checked from the keyboard there; Chromium and Firefox cover the click.
 - **Internal host classes stay per file.** A shared `defineHost` helper in `src/web/internal/` would be a render file that neither calls `createParts` nor wraps a component, which the guard rejects.
 - **A status change while a `kind-status` is out of the document isn't announced when it returns:** nobody could see the change.
+- **`kind-model-control`'s `model` and `effort` setters refuse while disabled, and `effort` while the model has no levels,** as Settings Menu's `values` refuses while disabled (Wave 5 Task 9).
 
 ## Known and open (don't report again, check whether fixed)
 
-- **`@ui-sdk/web`'s Combobox content `anchor` stringifies an element** (Wave 4 Task 12b): only a selector works, so Model Selector anchors through `data-model-selector-field`; report upstream.
+- **Dictation's web `draw` runs on every level (Wave 5 Task 11):** cheap and guarded; no `written` or `moved` fixture case yet.
+- **An empty `<kind-dictation>` takes no room until defined (Wave 5 Task 11):** a `:not(:defined)` rule from its size variables would hold it.
+- **`kind-composer` removed and put back a tick later forgets "Draft restored"** (Wave 5 Task 13): the draft text comes back through `defaultValue`, but `@ui-sdk/web` carries a mapped root state only through a `default<Key>` option, and `restored` has none; a same-tick move keeps it. Fixing it needs a public `defaultRestored`-style option.
+- **An `addaction` (and `pickeraction`) listener can't keep an item pending (Wave 5 Task 4):** `onAction` is a `"callback"`, so no `waitUntil`; decide `"action"` for Picker and Add Menu together.
+- **The `open` attribute of `kind-picker` and every `menuBase` element doesn't reflect (Wave 5 Task 4; Task 6 adds `kind-approval-mode`, where it does control the menu):** the docs say to set the property; reflect it or stop observing it with Picker's root state.
+- **`kind-model-selector` has no moved or shadow-root fixture case** (Wave 5 Task 3): both paths were checked by hand in review (a moved element redraws and keeps working; in a shadow root focus, `aria-controls` and `modelchange` behave); add cases when Picker gains its own.
+- **A `kind-picker` removed while open and put back stays `open` with its popover hidden (Wave 5 Task 2):** it takes two clicks to reopen; a bare `ui-popover` does the same, so it's UI SDK's to report. An empty `kind-picker` also draws its trigger only once upgraded, the layout shift already listed for other elements.
 - **Closing a Step or Guardrail Notice panel inside a shadow root leaves focus on a hidden button** (Wave 4 Task 12): the trigger lookup is now `context.element`, but UI SDK's `bindPanel` asks for it only when `el.contains(document.activeElement)`, which is the shadow host there. Add to the upstream report beside `focus-recovery.js`; a shadow-root test comes with the fix.
 - **Checkpoint's Alert Dialog is named differently by layer in the snapshot:** "Restore checkpoint" in React, "Restore this checkpoint?" on web (Wave 3, seen in Task 12).
 - **The Transcript web fixture has no shadow-root, moved or written-parts case** (Wave 4 Task 10): checked by hand in review, not in the spec, as for Inline Citation and Sources.
@@ -59,9 +68,17 @@ Last reviewed: `cd5d555` (Wave 4 Task 12b Model Selector icons)
 - **Inside a shadow root, Enter with the Trigger Menu open submits the form** instead of choosing the item (UI SDK; report upstream).
 - **An unknown `motion` attribute matches no `data-motion` rule,** so reduced motion stops applying. Every animated component shares it; validate `motion` once for all of them.
 - **An empty `<kind-chain-of-thought>` inserts its parts on upgrade** (same class as `kind-reasoning`), which can shift layout before the element is defined.
+- **No moved or shadow-root fixture case for `kind-model-control`;** checked by hand in review (Wave 5 Task 9), as Model Selector's gap.
 
 ## Resolved
 
+- **An empty written `<kind-dictation-status>` showed nothing (Wave 5 Task 11):** `draw` fills in its mark and `[data-dictation-text]`.
+- **Context Bar (Wave 5 Task 10):** a list written with only whitespace inside is filled in; new chip objects with the same content keep their rows; the content's `initial-focus`, `side-offset` and `align` are set on every draw, so content added later opens as React's does (`written` case).
+- **A `kind-message` written with menu markup and no `regenerateOptions` both regenerated and opened a menu of "Try again" (Wave 5 Task 7):** the root now always controls its `ui-menu`, which refuses to open without options, and empties a content it owns; `message.spec.ts` has a `no-options` case.
+- **`hearComposed` didn't tell nested components apart (Wave 5 Task 1, fixed in Task 7):** an element nearer the event's target that hears the same event name now takes it, so an outer root no longer hears a nested component's `ui-*` events; `composed-events.spec.ts` nests one `kind-test-menu` in another and fails without the fix.
+- **`placeMenuChild` re-added every row on each redraw (Wave 5 Task 5):** a row already in place was moved before itself, which in WebKit (no `moveBefore`) dropped focus and closed a submenu; Task 4's Add Menu fix only held in Chromium. It now leaves the row, and Settings Menu draws a choice's options by value; `settings-menu.spec.ts` counts zero removals on a value change and an equal `settings` copy.
+- **`kind-add-menu` rebuilt every row on an `items` change, dropping focus (Wave 5 Task 4):** rows are now drawn by `id` and moved only when out of place; a written empty `ui-menu-content` fills itself in. Spec covers both.
+- **Model Selector's Combobox `anchor` through `data-model-selector-field`** (Wave 5 Task 3): Model Selector moved onto Picker, whose popup anchors to its own trigger; the field and its anchor are gone.
 - **Wave 4 agent conformance** (Wave 4 Task 12): the web `case=wave-4` page draws the same text as React for all eleven Wave 4 components, and its `can-*` attributes add and remove their actions (`agent.spec.ts`).
 - **Selection and Action** (Wave 4 Task 11): empty written `kind-action-quote`, `kind-action-result` and `kind-selection-item` parts are filled in as React's defaults are; a `kind-selection` in a shadow root opens (core reads `getComposedRanges`); web fixtures use the tag map's element types.
 - **A web Transcript shorter than its viewport raised a ResizeObserver loop error** (Wave 4 Task 10): fixed; the viewport has a fixed `--kind-transcript-height`, so measuring segments never resizes it, and the spec fails on any window `error`.
@@ -106,6 +123,8 @@ Last reviewed: `cd5d555` (Wave 4 Task 12b Model Selector icons)
 - **Updating an attachment in place left a stale chip.** Fixed: `kind-attachments` refills an item whenever its item object or preview changes.
 - **`kind-step` and `kind-composer` exposed no `api` or live state.** Fixed: `state: { open }` / `state: { value }` and `api` lists, as `@ui-sdk/web` roots do (`StepApi.isOpen`, `ComposerApi.getValue`). A host write to `open` (property or `setOpen`) doesn't count as a toggle (spec §5: a person or agent); `expand`/`collapse` and the trigger do.
 - **`kind-status` overwrote text written into its `<kind-status-label>`, and missed a label added later (Wave 2 Task 2).** Fixed: it writes only into a label that was empty, and redraws when parts arrive.
+- **Approval Mode (Wave 5 Task 6):** the `value` JSDoc claimed a `modechange` and typed a setter that took `undefined`; the trigger redrew on every new `modes` array (now keyed by content); `approval-mode.spec.ts` gained a zero-removal redraw test and a `learnmore` case.
+- **Model Control's `effort` reflected to a stale attribute (Wave 5 Task 9):** it is a property-only `value` option now, as `model` is; the property JSDoc says setting fires no event.
 
 ## Revisit
 

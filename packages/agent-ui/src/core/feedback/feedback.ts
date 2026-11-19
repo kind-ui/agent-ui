@@ -238,7 +238,9 @@ export const feedbackPrimitive: FeedbackPrimitive = definePrimitive<
     const initial = store.get().rating;
     let mounting = true;
     let resync = 0;
-    context.onDestroy(() => cancelAnimationFrame(resync));
+    context.onDestroy(() => {
+      if (resync) cancelAnimationFrame(resync);
+    });
 
     const syncRating = () => {
       const { rating } = store.get();

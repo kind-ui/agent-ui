@@ -62,8 +62,9 @@ const components = {
   },
   "model-selector": {
     title: "Model Selector",
-    description: "A searchable list of models grouped by provider, with the matching letters marked.",
-    uses: ["internal-combobox"],
+    description:
+      "A button that opens a searchable list of models grouped by provider, with their logos and footer actions.",
+    uses: ["picker"],
   },
   "reasoning-effort": {
     title: "Reasoning Effort",
@@ -161,6 +162,48 @@ const components = {
     description: "An action run on selected text as a step, quoting the text above its streamed result.",
     uses: ["markdown"],
   },
+  picker: {
+    title: "Picker",
+    description:
+      "A button that opens a searchable list of choices, with groups, two-line rows, pages and footer actions.",
+    uses: ["internal-command"],
+  },
+  "add-menu": {
+    title: "Add Menu",
+    description:
+      "A plus button that opens a menu of what can be added, with icons, descriptions, groups and submenus.",
+    uses: ["internal-menu"],
+  },
+  "settings-menu": {
+    title: "Settings Menu",
+    description:
+      "An icon button that opens a menu of settings: toggles drawn as switches, and choices in submenus showing their value.",
+    uses: ["internal-menu"],
+  },
+  "approval-mode": {
+    title: "Approval Mode",
+    description:
+      "A button showing how much the agent may do without asking, opening a menu of modes with a risky one marked.",
+    uses: ["internal-menu"],
+  },
+  "model-control": {
+    title: "Model Control",
+    description:
+      "A button showing the model and its effort, opening a settings menu with Model and Effort submenus.",
+    uses: ["settings-menu", "internal-menu"],
+  },
+  "context-bar": {
+    title: "Context Bar",
+    description:
+      "A row of removable context chips, the ones that don't fit behind a +N button that lists them.",
+    uses: [],
+  },
+  dictation: {
+    title: "Dictation",
+    description:
+      "A mic button that turns speech into text through a source the host chooses, with a live waveform.",
+    uses: [],
+  },
   conversation: {
     title: "Conversation",
     description: "A message log that follows new content and offers a jump to the latest.",
@@ -169,7 +212,7 @@ const components = {
   message: {
     title: "Message",
     description: "A chat message with copy, regenerate, edit and branch controls.",
-    uses: ["internal-toolbar"],
+    uses: ["internal-toolbar", "internal-menu"],
   },
   markdown: {
     title: "Markdown",
@@ -214,13 +257,15 @@ const internals = [
   "carousel",
   "checkbox",
   "collapsible",
-  "combobox",
+  "command",
   "file-input",
   "menu",
   "progress",
   "radio",
   "scroll-area",
   "segmented-control",
+  "slider",
+  "switch",
   "textarea",
   "toggle",
   "token-input",

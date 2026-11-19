@@ -6,6 +6,8 @@
 @import "./reasoning-effort.css";
 @import "./confirmation.css";
 @import "./context-meter.css";
+@import "./context-bar.css";
+@import "./dictation.css";
 @import "./feedback.css";
 @import "./notice.css";
 @import "./guardrail-notice.css";
@@ -21,6 +23,12 @@
 @import "./question.css";
 @import "./checkpoint.css";
 @import "./model-selector.css";
+@import "./picker.css";
+@import "./menu.css";
+@import "./add-menu.css";
+@import "./settings-menu.css";
+@import "./approval-mode.css";
+@import "./model-control.css";
 @import "./selection.css";
 @import "./suggestion.css";
 @import "./tool.css";
@@ -59,7 +67,7 @@
   --kind-color-on-warning: light-dark(oklch(0.21 0.006 286), oklch(0.18 0.006 286));
   --kind-color-success: light-dark(oklch(0.6 0.15 155), oklch(0.74 0.15 155));
   --kind-color-warning: light-dark(oklch(0.72 0.16 65), oklch(0.8 0.14 70));
-  --kind-color-danger: light-dark(oklch(0.58 0.21 27), oklch(0.7 0.18 25));
+  --kind-color-danger: light-dark(oklch(0.55 0.21 27), oklch(0.7 0.18 25));
   --kind-radius: 0.75rem;
   --kind-font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
   /* Lucide "copy" and "check", see THIRD_PARTY_NOTICES.md. */

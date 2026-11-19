@@ -1,4 +1,5 @@
 import type { FileInputValueChangeReason, FileRejection } from "@ui-sdk/core/file-input";
+import { hearComposed } from "./composed-events.js";
 
 /** What a composer or uploader does with files File Input took in or turned down. */
 export type FileIntake = {
@@ -8,26 +9,20 @@ export type FileIntake = {
 
 type Detail<Value> = { value: Value; added: File[]; reason: FileInputValueChangeReason };
 
-/**
- * Hands `<ui-file-input>`'s `valuechange` and `reject` events to `intake`, as React's props do.
- * `@ui-sdk/web` fires them on the file input alone, without bubbling, so `container` hears them as they capture.
- */
+const fromFileInput = (event: Event) => (event.target as Element).localName === "ui-file-input";
+
+/** Hands `<ui-file-input>`'s `valuechange` and `reject` events to `intake`, as React's props do. */
 export function forwardFileInputEvents(container: HTMLElement, intake: FileIntake): () => void {
-  const fromFileInput = (event: Event) => (event.target as Element).localName === "ui-file-input";
-  const valueChange = (event: Event) => {
-    if (!fromFileInput(event)) return;
-    const { added, reason } = (event as CustomEvent<Detail<File[]>>).detail;
-    intake.accept(added, reason, () => event.preventDefault());
-  };
-  const reject = (event: Event) => {
-    if (!fromFileInput(event)) return;
-    const { value, reason } = (event as CustomEvent<Detail<FileRejection[]>>).detail;
-    intake.reject(value, reason);
-  };
-  container.addEventListener("valuechange", valueChange, true);
-  container.addEventListener("reject", reject, true);
-  return () => {
-    container.removeEventListener("valuechange", valueChange, true);
-    container.removeEventListener("reject", reject, true);
-  };
+  return hearComposed(container, {
+    valuechange: (detail, event) => {
+      if (!fromFileInput(event)) return;
+      const { added, reason } = detail as Detail<File[]>;
+      intake.accept(added, reason, () => event.preventDefault());
+    },
+    reject: (detail, event) => {
+      if (!fromFileInput(event)) return;
+      const { value, reason } = detail as Detail<FileRejection[]>;
+      intake.reject(value, reason);
+    },
+  });
 }

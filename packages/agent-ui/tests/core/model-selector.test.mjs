@@ -1,35 +1,46 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { filterModels } from "@kind-ui/agent-ui/core";
+import { modelSelectorPrimitive } from "@kind-ui/agent-ui/core";
 
 const models = [
-  { id: "gpt-5", name: "GPT-5", group: "OpenAI" },
-  { id: "sonnet-3", name: "Sonnet 3.7", group: "Anthropic" },
-  { id: "gpt-5-mini", name: "GPT-5 mini", group: "OpenAI" },
-  { id: "sonnet-4", name: "Sonnet 4", group: "Anthropic", description: "Fast and capable" },
-  { id: "gemini", name: "Gemini 2.5 Pro", group: "Google" },
+  { id: "gpt-5", name: "GPT-5", group: "OpenAI", icon: "openai.svg" },
+  { id: "sonnet", name: "Sonnet", group: "Anthropic", description: "Fast" },
+  { id: "opus", name: "Opus", group: "Anthropic", icon: "anthropic.svg" },
+  { id: "local", name: "Local" },
 ];
 
-const ids = (groups) => groups.map(({ group, models }) => [group, models.map((model) => model.id)]);
-
-test("an empty query keeps every model, grouped in the order groups first appear", () => {
-  assert.deepEqual(ids(filterModels(models, "")), [
-    ["OpenAI", ["gpt-5", "gpt-5-mini"]],
-    ["Anthropic", ["sonnet-3", "sonnet-4"]],
-    ["Google", ["gemini"]],
-  ]);
+test("flat models keep their group and are found by it", () => {
+  const { items } = modelSelectorPrimitive({ models }).get();
+  assert.deepEqual(items[1], {
+    value: "sonnet",
+    label: "Sonnet",
+    description: "Fast",
+    group: "Anthropic",
+    keywords: ["Anthropic"],
+  });
+  assert.deepEqual(items[3], { value: "local", label: "Local" });
 });
 
-test("ranks the best match first within its group", () => {
-  assert.deepEqual(ids(filterModels(models, "son4")), [["Anthropic", ["sonnet-4"]]]);
-  assert.deepEqual(ids(filterModels(models, "sonnet")), [["Anthropic", ["sonnet-4", "sonnet-3"]]]);
+test("groups become rows found by their models' names, with the first icon among them", () => {
+  const { items } = modelSelectorPrimitive({ models, pages: "groups" }).get();
+  assert.deepEqual(
+    items.map(({ value, icon, keywords }) => [value, icon, keywords]),
+    [
+      ["group:OpenAI", "openai.svg", ["GPT-5"]],
+      ["group:Anthropic", "anthropic.svg", ["Sonnet", "Fast", "Opus"]],
+      ["local", undefined, undefined],
+    ],
+  );
+  assert.deepEqual(items[1].items[0], { value: "sonnet", label: "Sonnet", description: "Fast" });
 });
 
-test("matches a model's group and description too", () => {
-  assert.deepEqual(ids(filterModels(models, "google")), [["Google", ["gemini"]]]);
-  assert.deepEqual(ids(filterModels(models, "capable")), [["Anthropic", ["sonnet-4"]]]);
-});
-
-test("drops models and groups that score zero", () => {
-  assert.deepEqual(filterModels(models, "zzz"), []);
+test("an agent chooses any model by id, never a group row", () => {
+  const instance = modelSelectorPrimitive({ models, pages: "groups" });
+  assert.deepEqual(
+    instance.api.getChoices().map(({ value }) => value),
+    ["gpt-5", "sonnet", "opus", "local"],
+  );
+  assert.equal(instance.api.setValue("group:OpenAI"), false);
+  assert.equal(instance.api.setValue("opus"), true);
+  assert.equal(instance.api.name(instance.get()), "Model, Opus");
 });

@@ -1,12 +1,15 @@
 // The React registry consumer's entry: every component, as `shadcn add` copies it, one section each.
 import { createRoot } from "react-dom/client";
 import { Action } from "./components/ui/action.js";
+import { AddMenu } from "./components/ui/add-menu.js";
+import { ApprovalMode } from "./components/ui/approval-mode.js";
 import { Attachments } from "./components/ui/attachments.js";
 import { ChainOfThought } from "./components/ui/chain-of-thought.js";
 import { Checkpoint } from "./components/ui/checkpoint.js";
 import { CodeBlock } from "./components/ui/code-block.js";
 import { Composer, ComposerInput, ComposerStop, ComposerSubmit } from "./components/ui/composer.js";
 import { Confirmation } from "./components/ui/confirmation.js";
+import { ContextBar } from "./components/ui/context-bar.js";
 import { ContextMeter } from "./components/ui/context-meter.js";
 import {
   Conversation,
@@ -15,6 +18,7 @@ import {
   ConversationRow,
   ConversationViewport,
 } from "./components/ui/conversation.js";
+import { Dictation } from "./components/ui/dictation.js";
 import { Document } from "./components/ui/document.js";
 import { Feedback } from "./components/ui/feedback.js";
 import { FileTree } from "./components/ui/file-tree.js";
@@ -26,14 +30,17 @@ import { Loader } from "./components/ui/loader.js";
 import { Markdown } from "./components/ui/markdown.js";
 import { MarkdownTable } from "./components/ui/markdown-table.js";
 import { Message, MessageContent, MessageCopy, MessageToolbar } from "./components/ui/message.js";
+import { ModelControl } from "./components/ui/model-control.js";
 import { ModelSelector } from "./components/ui/model-selector.js";
 import { Notice } from "./components/ui/notice.js";
+import { Picker } from "./components/ui/picker.js";
 import { Plan } from "./components/ui/plan.js";
 import { Question } from "./components/ui/question.js";
 import { Queue } from "./components/ui/queue.js";
 import { Reasoning } from "./components/ui/reasoning.js";
 import { ReasoningEffort } from "./components/ui/reasoning-effort.js";
 import { Selection } from "./components/ui/selection.js";
+import { SettingsMenu } from "./components/ui/settings-menu.js";
 import { Sources } from "./components/ui/sources.js";
 import { StackTrace } from "./components/ui/stack-trace.js";
 import { Status } from "./components/ui/status.js";
@@ -208,6 +215,30 @@ const items = {
   action: (
     <Action label="Explain" quote="Retry with backoff." result="Wait, then try again." status="complete" />
   ),
+  picker: (
+    <Picker
+      label="Work in"
+      items={[{ value: "agent-ui", label: "agent-ui", description: "~/code/agent-ui" }]}
+      defaultValue="agent-ui"
+    />
+  ),
+  "add-menu": <AddMenu items={[{ id: "upload", label: "Upload file" }]} onAction={() => {}} />,
+  "settings-menu": (
+    <SettingsMenu
+      settings={[{ type: "toggle", id: "search", label: "Web search" }]}
+      defaultValues={{ search: true }}
+    />
+  ),
+  "approval-mode": <ApprovalMode modes={[{ value: "ask", label: "Ask every time" }]} defaultValue="ask" />,
+  "model-control": (
+    <ModelControl
+      models={[{ id: "gpt-5", name: "GPT-5" }]}
+      levels={[{ value: "high", label: "High" }]}
+      defaultModel="gpt-5"
+    />
+  ),
+  "context-bar": <ContextBar chips={[{ id: "readme", label: "README.md", kind: "file" }]} />,
+  dictation: <Dictation source={{ async *start() {} }} />,
   terminal: <Terminal command="npm test" output={"\x1b[32m✓\x1b[0m 22 passed"} exitCode={0} defaultOpen />,
   conversation: (
     <Conversation aria-label="Chat" messageCount={1} className="h-40">
