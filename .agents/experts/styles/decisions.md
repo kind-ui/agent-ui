@@ -36,6 +36,7 @@ Last reviewed: `1b12785` (Design Wave 0)
 - **Approval Mode's trigger width follows its mode (Wave 5 Task 6):** only a person's choice or the host changes it, and choosing closes the menu, so nothing moves while it's open; stacking every label as Settings Menu does would widen a composer row to the longest mode.
 - **Day Separator's `::first-letter` capitalizes a host's `DaySeparatorLabel` children too** (Wave 6 Task 6): by design, since a heading starts with a capital; a locale whose date shouldn't start with one passes `relative={false}` or its own text.
 - **Thread Search capitalizes its `meta` with `::first-letter`** (Wave 6 Task 3): every `meta` it writes is a date group's words ("today"); a host can't set `meta`.
+- **A Context Bar chip's remove target stays under 44px on a coarse pointer (Design Wave 1 Batch B):** it grows to about 32×28px, since the bar is one 28px row that clips and a larger target would reach the next chip; the gap widens instead. The rule for 44px names shared controls, which a chip's remove isn't.
 
 ## Known and open (don't report again, check whether fixed)
 

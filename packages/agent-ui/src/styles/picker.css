@@ -47,7 +47,7 @@
   }
 
   /* A trigger that isn't the shared one (Thread Search's) reads as a field. */
-  [data-picker-part="trigger"]:not([data-kind-trigger]) {
+  [data-picker-part="trigger"]:where(:not([data-kind-trigger])) {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -94,6 +94,9 @@
   }
 
   [data-picker-part="content"] {
+    /* A disabled row dims its icon and label, not the reason it gives. Set here, since a sheet's content leaves the
+       root. */
+    --kind-command-item-disabled-opacity: 1;
     width: var(--kind-picker-content-width, 20rem);
     max-width: calc(100vw - 16px);
     padding: 0;
@@ -143,11 +146,7 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    /* A disabled row dims its icon and label, not the reason it gives. The internal Command dims the whole row with a
-       Tailwind utility, which only `!important` in this layer outranks. */
     & [data-slot="command-item"][data-disabled] {
-      opacity: 1 !important;
-
       & :is([data-slot="command-item-icon"], [data-slot="command-item-text"]) {
         opacity: 0.5;
       }

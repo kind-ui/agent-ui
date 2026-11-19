@@ -26,10 +26,12 @@
   }
 
   /* Until UI SDK has measured the chosen level (on the server, before hydration), the level fills in its place. */
-  :where([data-slot="kind-reasoning-effort"]):not(
-      :has([data-slot="segmented-control-indicator"][style*="--segmented-control-indicator-width"])
+  :where(
+      [data-slot="kind-reasoning-effort"]:not(
+        :has([data-slot="segmented-control-indicator"][style*="--segmented-control-indicator-width"])
+      )
     )
-    [data-slot="segmented-control-item"][data-checked] {
+    [data-slot="segmented-control-item"]:where([data-checked]) {
     background-color: var(--kind-color-surface);
     box-shadow: inset 0 0 0 1px var(--kind-color-border);
   }

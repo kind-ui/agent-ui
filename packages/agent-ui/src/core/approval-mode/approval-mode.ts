@@ -178,7 +178,6 @@ const instances = new WeakMap<
 >();
 
 const base = menuBase<ApprovalModeOptions>({
-  sharedTrigger: true,
   kind: "approval-mode",
   label: "Approvals",
   toData: (options) => toData(options.modes ?? NO_MODES),

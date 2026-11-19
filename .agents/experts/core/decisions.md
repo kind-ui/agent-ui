@@ -8,7 +8,7 @@ Last reviewed: `1b12785` (Design Wave 0)
 
 - **`appendText` returns `true` for a controlled composer before the owner applies the value (Task 17):** it goes through `createChange`, as `setValue` does.
 - **Dictation keeps its run when the host passes a new `source` object (Wave 5 Task 11):** only dropping `source` cancels, since React hosts often write the source inline, a new object each render; the new source is used from the next start.
-- **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.
+- **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio group in Model Control, a Settings Menu (`settingsBase`), listed in the menu itself after the models since Design Wave 1 Batch B (`inline` choice rows). Don't propose a slider, a submenu or a nested popover for effort.
 - **Model Selector's `icon` is `unknown` in core, so each render layer casts once where core hands it over** (Wave 4 Task 12b): `definePrimitive` can't be generic per instance, and each layer types its own public `models` (`string | ReactElement` in React, `string | Element` on web), so no other value reaches the cast.
 - **Selection's `onDismiss` hears Escape, an outside press and `dismiss`, not a selection collapsing** (Wave 4 Task 11): a collapse is the reader moving on, not a dismissal; the JSDoc says so.
 - **Selection's root is a `group` named by `label`, which names its Toolbar too** (Wave 4 Task 11): the bridge names a component by its root, and a generic `div` can't carry a name; the same name twice is the cost of one "Selection actions" agent entry.

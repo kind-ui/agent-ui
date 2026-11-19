@@ -5,15 +5,12 @@
     --kind-picker-trigger-width: var(--kind-model-selector-width, 14rem);
   }
 
-  /* In a narrow composer a model with an icon shows only its icon; the trigger's name still reads the model. Both
-     selectors name `data-picker-part` to outrank `picker.css`, which loads after this file. */
+  /* In a narrow composer a model with an icon shows only its icon; the trigger's name still reads the model. */
   @container kind-composer (width < 28rem) {
-    [data-kind="model-selector"][data-picker-part="root"]:where(
-        :has([data-slot="kind-model-selector-trigger"] > [data-picker-icon])
-      ) {
+    [data-kind="model-selector"]:where(:has([data-slot="kind-model-selector-trigger"] > [data-picker-icon])) {
       min-width: 0;
     }
-    [data-slot="kind-model-selector-trigger"][data-picker-part="trigger"]:where(:has(> [data-picker-icon])) {
+    [data-slot="kind-model-selector-trigger"]:where(:has(> [data-picker-icon])) {
       flex: none;
       width: var(--kind-trigger-height);
       padding-inline: 0;

@@ -319,7 +319,10 @@ export type PickerBaseConfig<Options extends PickerBaseOptions> = {
    * @default "popover"
    */
   popup?: "popover" | "dialog";
-  /** Whether the trigger is the shared `data-kind-trigger`, rather than a button the component's stylesheet draws. */
+  /**
+   * Whether the trigger is the shared `data-kind-trigger`, rather than a button the component's stylesheet draws.
+   * @default false
+   */
   sharedTrigger?: boolean;
   /**
    * Choosing a row calls the `onSelect` option (`PickerSelectOptions`) and closes the list instead of choosing it, so

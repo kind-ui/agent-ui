@@ -190,8 +190,7 @@
     font-size: inherit;
     font-variant-numeric: tabular-nums;
 
-    &:hover,
-    &[aria-expanded="true"] {
+    &:where(:hover, [aria-expanded="true"]) {
       background-color: var(--kind-context-chip-fill-hover);
     }
     &:focus-visible {

@@ -142,7 +142,10 @@ export type MenuBaseConfig<Options extends MenuBaseOptions> = {
   toData: (options: Options) => MenuData;
   /** Whether the menu may open now, beside `disabled`. */
   canOpen?: (options: Options) => boolean;
-  /** Whether the trigger is the shared `data-kind-trigger`, rather than a button the host's markup styles. */
+  /**
+   * Whether the trigger is the shared `data-kind-trigger`, rather than a button the host's markup styles.
+   * @default false
+   */
   sharedTrigger?: boolean;
   /** A plain item ran. A returned promise keeps the item pending and the menu open until it settles. */
   onAction?: (value: string, details: MenuRun, context: Context<Options>) => unknown;

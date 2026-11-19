@@ -52,7 +52,7 @@
 
   /* Solid, so beside a composer's Send, which has nothing to send while Dictation listens, it doesn't read as
      unavailable too. A root above the part outranks the composer's own rules for it. */
-  [data-dictation-part="root"] [data-dictation-part="stop"] {
+  [data-dictation-part="stop"] {
     --kind-dictation-icon: var(--kind-dictation-icon-stop);
     background-color: var(--kind-color-fg);
     color: var(--kind-color-surface);

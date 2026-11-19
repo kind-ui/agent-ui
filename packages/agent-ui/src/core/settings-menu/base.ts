@@ -215,6 +215,7 @@ export const settingsChoiceRow = (
   setting: Pick<SettingsMenuChoiceRow, "id" | "label" | "options"> & {
     icon?: unknown;
     actions?: SettingsMenuAction[];
+    /** Whether the options sit in the menu itself. @default false */
     inline?: boolean;
   },
   value: unknown,

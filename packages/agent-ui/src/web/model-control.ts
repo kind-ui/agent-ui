@@ -153,7 +153,7 @@ export interface KindModelControlElement
   models?: (Omit<NonNullable<ModelControlOptions["models"]>[number], "icon"> & { icon?: Icon })[];
   levels?: ModelControlOptions["levels"];
   actions?: (Omit<NonNullable<ModelControlOptions["actions"]>[number], "icon"> & { icon?: Icon })[];
-  /** More rows: toggles above Model and Effort, choices below. */
+  /** More rows after Model and Effort: choices, then toggles. */
   settings?: (NonNullable<ModelControlOptions["settings"]>[number] & { icon?: Icon })[];
   /** The chosen model's `id`. Setting it chooses one and fires no event, as a native `value` does. */
   get model(): string | null;

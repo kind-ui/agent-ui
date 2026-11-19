@@ -49,7 +49,7 @@ function Choices({ row }: { row: ChoiceRow }) {
   return (
     <>
       <KindMenuRadioGroup name={row.id} value={row.value ?? null}>
-        {row.groups.map((group) => {
+        {row.groups.map((group, index) => {
           const radios = group.options.map((option) => (
             <KindMenuRadioItem
               key={option.value}
@@ -67,7 +67,8 @@ function Choices({ row }: { row: ChoiceRow }) {
           return group.label === undefined ? (
             radios
           ) : (
-            <KindMenuGroup key={group.label}>
+            // By position: an inline row's own label can match a host group's.
+            <KindMenuGroup key={index}>
               <KindMenuGroupLabel>{group.label}</KindMenuGroupLabel>
               {radios}
             </KindMenuGroup>
