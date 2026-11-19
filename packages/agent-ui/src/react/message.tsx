@@ -5,6 +5,7 @@ import {
   type MessageRegenerateContentState,
   messagePrimitive,
 } from "@kind-ui/agent-ui/core";
+import { Avatar, AvatarFallback, AvatarImage } from "@ui-sdk/react/avatar";
 import { MenuTrigger } from "@ui-sdk/react/menu";
 import { createParts } from "@ui-sdk/react/primitive";
 import { type ComponentProps, isValidElement, type ReactElement, type ReactNode } from "react";
@@ -34,6 +35,15 @@ const message = createParts(messagePrimitive, {
   "branch-previous": "button",
   "branch-label": "span",
   "branch-next": "button",
+  header: "div",
+  author: "span",
+  time: "time",
+  duration: "span",
+  outcome: "div",
+  "outcome-icon": "span",
+  "outcome-text": "span",
+  retry: "button",
+  continue: "button",
 });
 
 /** A regenerate option, whose `icon` is an image URL or an element such as an inline `svg`. */
@@ -53,7 +63,78 @@ export type MessageProps = Omit<ComponentProps<typeof message.Root>, "regenerate
 export function Message(props: MessageProps) {
   return <message.Root {...props} />;
 }
-export const MessageAvatar = message.Avatar;
+
+export type MessageAvatarProps = ComponentProps<typeof message.Avatar>;
+
+/** With an `author`, a UI SDK Avatar of their image, showing their initials until it loads, unless you pass children. */
+export function MessageAvatar({
+  children = ({ name, initials, src }) =>
+    name ? (
+      <Avatar>
+        {src ? <AvatarImage src={src} alt="" /> : null}
+        <AvatarFallback>{initials}</AvatarFallback>
+      </Avatar>
+    ) : null,
+  ...props
+}: MessageAvatarProps) {
+  return <message.Avatar {...props}>{children}</message.Avatar>;
+}
+
+/** Holds the author, time and duration, while any of them shows. */
+export const MessageHeader = message.Header;
+
+/** The `author`'s name, unless the message is `continued`. */
+export function MessageAuthor(props: Omit<ComponentProps<typeof message.Author>, "children">) {
+  return <message.Author {...props}>{({ name }) => name}</message.Author>;
+}
+
+/** A `<time>` of `createdAt`: the time of day, with the date when it isn't today. */
+export function MessageTime(props: Omit<ComponentProps<typeof message.Time>, "children">) {
+  return <message.Time {...props}>{({ label }) => label}</message.Time>;
+}
+
+/** How long the response took, like "1 min 12 sec". */
+export function MessageDuration(props: Omit<ComponentProps<typeof message.Duration>, "children">) {
+  return <message.Duration {...props}>{({ label }) => label}</message.Duration>;
+}
+
+export const MessageOutcomeIcon = message.OutcomeIcon;
+
+/** "Stopped", or the `error` option's words. */
+export function MessageOutcomeText(props: Omit<ComponentProps<typeof message.OutcomeText>, "children">) {
+  return <message.OutcomeText {...props}>{({ text }) => text}</message.OutcomeText>;
+}
+
+/** Shown while `onRetry` is set and the message failed. */
+export function MessageRetry({ children = "Retry", ...props }: ComponentProps<typeof message.Retry>) {
+  return <message.Retry {...props}>{children}</message.Retry>;
+}
+
+/** Shown while `onContinue` is set and the message stopped. */
+export function MessageContinue({
+  children = "Continue",
+  ...props
+}: ComponentProps<typeof message.Continue>) {
+  return <message.Continue {...props}>{children}</message.Continue>;
+}
+
+const OUTCOME = (
+  <>
+    <MessageOutcomeIcon />
+    <MessageOutcomeText />
+    <MessageRetry />
+    <MessageContinue />
+  </>
+);
+
+/**
+ * Shown after the content once the response stopped or failed: its mark, its words, then Retry or Continue, unless
+ * you pass children.
+ */
+export function MessageOutcome({ children = OUTCOME, ...props }: ComponentProps<typeof message.Outcome>) {
+  return <message.Outcome {...props}>{children}</message.Outcome>;
+}
+
 export const MessageContent = message.Content;
 /** Shown in place of the content while a user message is edited. */
 export const MessageEditor = message.Editor;

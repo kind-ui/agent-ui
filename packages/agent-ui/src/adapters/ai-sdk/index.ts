@@ -12,11 +12,20 @@ export type { PartContext } from "./parts.js";
 export { fromUIMessagePart } from "./parts.js";
 export { fromChatStatus } from "./status.js";
 
+/** What the chat says about its in-flight turn: `useChat`'s `status` and `error`. */
+export interface UIChatState {
+  status?: ChatStatus;
+  /** The chat's error. Its `message` becomes the last message's `error`. */
+  error?: { message: string } | undefined;
+}
+
 /**
- * Maps AI SDK UI messages to neutral messages. The chat `status` describes the in-flight turn, so it applies to
- * the last message; every earlier message is `"complete"`.
+ * Maps AI SDK UI messages to neutral messages. The chat's `status` describes the in-flight turn, so it applies to
+ * the last message, as does its `error`; every earlier message is `"complete"`. Takes the `status` alone too.
  */
-export function fromUIMessages(messages: readonly UIMessage[], status?: ChatStatus): Message[] {
+export function fromUIMessages(messages: readonly UIMessage[], chat?: ChatStatus | UIChatState): Message[] {
+  const { status, error } =
+    typeof chat === "object" && chat !== null ? chat : { status: chat, error: undefined };
   const last = messages.length - 1;
   return messages.map((message, messageIndex) => {
     const parts: Part[] = message.parts.flatMap(
@@ -28,6 +37,7 @@ export function fromUIMessages(messages: readonly UIMessage[], status?: ChatStat
       status: messageIndex === last && status !== undefined ? fromChatStatus(status) : "complete",
       parts,
     };
+    if (messageIndex === last && error) neutral.error = { message: error.message };
     const metadata: unknown = message.metadata;
     if (typeof metadata === "object" && metadata !== null && !Array.isArray(metadata)) {
       neutral.metadata = metadata as Record<string, unknown>;

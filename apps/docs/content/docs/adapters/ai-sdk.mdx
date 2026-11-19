@@ -9,20 +9,20 @@ Use the AI SDK adapter to turn the AI SDK's `UIMessage`s into the message, part,
 import { useChat } from "@ai-sdk/react";
 import { fromUIMessages, toApprovalResponse } from "@kind-ui/agent-ui/adapters/ai-sdk";
 
-const { messages, status, addToolApprovalResponse } = useChat();
-const rendered = fromUIMessages(messages, status);
+const { messages, status, error, addToolApprovalResponse } = useChat();
+const rendered = fromUIMessages(messages, { status, error });
 
 // When someone approves a tool call, with the `approval` from its step's tool call:
 addToolApprovalResponse(toApprovalResponse(approval, { approved: true }));
 ```
 
-`fromUIMessages` gives the last message the chat's status and marks earlier ones complete. Each tool call becomes a step with a status. A part type the components don't have becomes a `data` part named after its type, so nothing is dropped.
+`fromUIMessages` gives the last message the chat's status and error, and marks earlier ones complete. Each tool call becomes a step with a status. A part type the components don't have becomes a `data` part named after its type, so nothing is dropped.
 
 ## API Reference
 
 | Export | Maps |
 | --- | --- |
-| `fromUIMessages(messages, status?)` | `UIMessage[]` to `Message[]` |
+| `fromUIMessages(messages, { status, error }?)` | `UIMessage[]` to `Message[]` |
 | `fromUIMessagePart(part, { messageId, index })` | One part; `null` only for `step-start` |
 | `fromChatStatus(status)` | `submitted`, `streaming`, `ready` and `error` to a message status |
 | `toApprovalResponse(approval, decision)` | The argument for `addToolApprovalResponse` |

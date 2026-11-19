@@ -63,7 +63,7 @@ Tailwind writes the defaults on `:root, :host`, so inside a shadow root that loa
 
 | Export | Maps |
 | --- | --- |
-| `fromUIMessages(messages, status?)` | `UIMessage[]` to `Message[]`. `status` applies to the last message, and earlier messages are `"complete"`. |
+| `fromUIMessages(messages, { status, error }?)` | `UIMessage[]` to `Message[]`. `status` and `error` apply to the last message, and earlier messages are `"complete"`. Takes `status` alone too. |
 | `fromUIMessagePart(part, { messageId, index })` | One part. Returns `null` only for `step-start`. |
 | `fromChatStatus(status)` | `submitted`, `streaming`, `ready` → `complete`, `error` |
 | `toApprovalResponse(approval, decision)` | The argument for `addToolApprovalResponse`: `{ id: approval.approvalId, approved, reason? }` |

@@ -1,6 +1,8 @@
 import {
+  announce,
   type ChangeDetails,
   type ChangeSource,
+  createFocusRecovery,
   createInlineEdit,
   definePrimitive,
   dispatch,
@@ -11,7 +13,9 @@ import {
 } from "@ui-sdk/core";
 import type { MenuData } from "@ui-sdk/core/menu";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
-import type { MessageStatus, RegenerateOption, Role } from "../../types/index.js";
+import type { MessageAuthor, MessageStatus, RegenerateOption, Role } from "../../types/index.js";
+import { actionSource } from "../action-source.js";
+import { avatarInitials } from "../avatar.js";
 import { createCopy } from "../clipboard.js";
 import { hearComposed } from "../composed-events.js";
 import { memo } from "../memo.js";
@@ -24,6 +28,8 @@ import {
   menuItems,
 } from "../menu-base.js";
 import { enter, type MotionMode } from "../motion/index.js";
+import { createPendingAction } from "../pending.js";
+import { durationLabel, timeLabel, todayKey } from "../time.js";
 
 /** The branch switcher's text: `"2 of 3"` for the second of three. */
 export const branchLabel = (index: number, count: number): string => `${index + 1} of ${count}`;
@@ -40,6 +46,16 @@ export type MessageRegenerateReason = "regenerate-press" | "item-press" | "imper
 export type MessageRegenerateDetails = ChangeDetails<MessageRegenerateReason> & {
   /** The chosen option's `id`, or `undefined` for a plain regenerate or "Try again". */
   optionId: string | undefined;
+};
+
+/** `"stopped"` for an `aborted` message, `"failed"` for an `error` one. */
+export type MessageOutcome = "stopped" | "failed";
+
+/** What Retry and Continue pass their callbacks. */
+export type MessageOutcomeDetails = {
+  reason: "retry-press" | "continue-press" | "imperative";
+  /** Who pressed it, like `"mouse"`, `"keyboard"` or `"agent"`. */
+  source: ChangeSource;
 };
 
 /** The id of the regenerate menu's first row, "Try again", which regenerates with no option. */
@@ -93,6 +109,44 @@ export type MessageOptions = {
   presentation?: MenuPresentation;
   /** Called with the new text when someone saves an edit. Shows the edit action on user messages while set. */
   onEdit?: (text: string, details: ChangeDetails<InlineEditReason>) => void;
+  /** Who wrote it. Fills the avatar part with their image or initials, and the author part with their name. */
+  author?: MessageAuthor;
+  /** Whether it follows its author's previous message, so it leaves out the avatar and the name. */
+  continued?: boolean;
+  /**
+   * When it was written, as an ISO 8601 date-time. The time part reads its time of day, with the date when it isn't
+   * today. Server markup shows the date; the browser reads today from its clock.
+   */
+  createdAt?: string;
+  /** Today, as an ISO date or instant, in place of the browser's clock. */
+  now?: string;
+  /** How long the response took, in seconds: "4 sec", "1 min 12 sec". */
+  durationSeconds?: number;
+  /**
+   * The language dates and durations read in, a BCP 47 tag.
+   * @default "en"
+   */
+  locale?: string;
+  /**
+   * The IANA time zone times read in, like `"Europe/Paris"`.
+   * @default "UTC"
+   */
+  timeZone?: string;
+  /**
+   * What went wrong, shown while the status is `error`.
+   * @default "Something went wrong"
+   */
+  error?: string;
+  /**
+   * Called to try a failed response again. Shows Retry while set and the status is `error`. Return a promise to keep
+   * it pending until it settles: a rejection makes it available again.
+   */
+  onRetry?: (details: MessageOutcomeDetails) => unknown;
+  /**
+   * Called to continue a stopped response. Shows Continue while set and the status is `aborted`. Return a promise to
+   * keep it pending until it settles.
+   */
+  onContinue?: (details: MessageOutcomeDetails) => unknown;
   /**
    * `"auto"` follows `prefers-reduced-motion`.
    * @default "auto"
@@ -113,6 +167,23 @@ export type MessageState = MenuBaseState & {
   /** Whether it's a user message with `onEdit`. */
   canEdit: boolean;
   motion: MotionMode;
+  /** The `author` option. */
+  author: MessageAuthor | undefined;
+  continued: boolean;
+  createdAt: string | undefined;
+  durationSeconds: number | undefined;
+  locale: string | undefined;
+  timeZone: string | undefined;
+  /** Today: the `now` option, else the browser's clock once bound, else `undefined`, as on a server. */
+  now: string | undefined;
+  /** `"stopped"` or `"failed"` once the response stopped or failed, else `null`. */
+  outcome: MessageOutcome | null;
+  /** The `error` option's words, or the default. */
+  errorText: string;
+  canRetry: boolean;
+  canContinue: boolean;
+  /** Whether a promise `onRetry` or `onContinue` returned is still pending. */
+  outcomePending: boolean;
   /** `"message"` while the text is being edited, else `null`. */
   editing: string | null;
   copied: boolean;
@@ -131,14 +202,34 @@ export type MessageApi = {
   /** Asks `onBranchChange` for the response at an index, from 0. Offered when there's more than one. */
   readonly setBranch: ((index: number, event?: Event) => void) | undefined;
   inlineEdit: InlineEdit;
-  /** Plays the toolbar's entrance when the message settles while mounted, not when it mounts settled. */
+  /** Calls `onRetry`. Offered while it's set, the message failed and nothing is pending. */
+  readonly retry: ((event?: Event) => void) | undefined;
+  /** Calls `onContinue`. Offered while it's set, the message stopped and nothing is pending. */
+  readonly continue: ((event?: Event) => void) | undefined;
+  /**
+   * Plays the toolbar's or the outcome's entrance when the message settles while mounted, not when it mounts
+   * settled.
+   */
   enterToolbar: (el: HTMLElement) => void;
+  /** Reads today from the browser's clock, unless `now` is set. Called by the time part's `bind`. */
+  readClock: () => void;
+  /** Moves focus out of the outcome when Retry or Continue leaves while focused. */
+  outcomeRecovery: ReturnType<typeof createFocusRecovery>;
+  /** The avatar and time parts' states, memoized. */
+  avatarState: (state: MessageState) => MessageAvatarState;
+  timeState: (state: MessageState) => MessageTimeState;
   /** The regenerate menu, built on `menuBase`. */
   regenerateMenu: MenuBaseApi;
   /** The regenerate and regenerate-content slots' states, memoized. */
   regenerateState: (state: MessageState) => MessageRegenerateState;
   regenerateContentState: (state: MessageState) => MessageRegenerateContentState;
 };
+
+/** What the avatar slot hands render functions: the `author`'s, or empty strings without one. */
+export type MessageAvatarState = { name: string; initials: string; src: string | undefined };
+
+/** What the time slot hands render functions: its words and its `datetime`. */
+export type MessageTimeState = { label: string; dateTime: string };
 
 /** What the regenerate slot hands render functions: UI SDK Menu's props while there are `regenerateOptions`. */
 export type MessageRegenerateState = { menu: MenuPartState | undefined };
@@ -164,7 +255,7 @@ export type MessagePrimitive = ReturnType<
     MessageApi,
     Record<
       | "root"
-      | "avatar"
+      | "header"
       | "content"
       | "editor"
       | "toolbar"
@@ -173,9 +264,18 @@ export type MessagePrimitive = ReturnType<
       | "edit"
       | "branch"
       | "branch-previous"
-      | "branch-next",
+      | "branch-next"
+      | "outcome"
+      | "outcome-icon"
+      | "retry"
+      | "continue",
       MessageSlot
     > & {
+      avatar: MessageSlot<MessageAvatarState>;
+      author: MessageSlot<{ name: string }>;
+      time: MessageSlot<MessageTimeState>;
+      duration: MessageSlot<{ label: string }>;
+      "outcome-text": MessageSlot<{ text: string }>;
       "branch-label": MessageSlot<{ label: string }>;
       regenerate: MessageSlot<MessageRegenerateState>;
       "regenerate-content": MessageSlot<MessageRegenerateContentState>;
@@ -186,6 +286,21 @@ export type MessagePrimitive = ReturnType<
 const EDITING = "message";
 
 const settled = (status: MessageStatus) => status !== "submitted" && status !== "streaming";
+
+const OUTCOMES: Partial<Record<MessageStatus, MessageOutcome>> = { aborted: "stopped", error: "failed" };
+const ANNOUNCEMENTS: Record<MessageOutcome, string> = {
+  stopped: "Response stopped",
+  failed: "Response failed",
+};
+/** The outcome's words: "Stopped", or the `error` option's words. Empty while there's no outcome. */
+export const messageOutcomeText = (state: Pick<MessageState, "outcome" | "errorText">): string =>
+  state.outcome === "stopped" ? "Stopped" : state.outcome === "failed" ? state.errorText : "";
+const NO_AVATAR: MessageAvatarState = { name: "", initials: "", src: undefined };
+
+const hasHeader = (state: MessageState) =>
+  (state.author !== undefined && !state.continued) ||
+  (state.createdAt !== undefined && timeLabel(state.createdAt) !== "") ||
+  durationLabel(state.durationSeconds) !== "";
 
 const TRY_AGAIN: RegenerateOption<unknown> = { id: MESSAGE_TRY_AGAIN, label: "Try again" };
 const NO_OPTIONS: RegenerateOption<unknown>[] = [];
@@ -244,7 +359,19 @@ const menu = menuBase<MessageOptions>({
 
 const presentation = (options: MessageOptions) => {
   const role = options.messageRole ?? "assistant";
+  const status = options.status ?? "complete";
   return {
+    author: options.author?.name ? options.author : undefined,
+    continued: options.continued ?? false,
+    createdAt: options.createdAt || undefined,
+    durationSeconds: options.durationSeconds,
+    locale: options.locale || undefined,
+    timeZone: options.timeZone || undefined,
+    // A web `status` attribute can hold any string.
+    outcome: OUTCOMES[status] ?? null,
+    errorText: options.error || "Something went wrong",
+    canRetry: options.onRetry !== undefined,
+    canContinue: options.onContinue !== undefined,
     role,
     status: options.status ?? "complete",
     branchIndex: options.branchIndex ?? 0,
@@ -270,16 +397,28 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     regenerateOptions: "value",
     presentation: "string",
     onEdit: "callback",
+    author: "value",
+    continued: "boolean",
+    createdAt: "string",
+    now: "string",
+    durationSeconds: "number",
+    locale: "string",
+    timeZone: "string",
+    error: "string",
+    onRetry: "action",
+    onContinue: "action",
     motion: "string",
   },
   state: (options: MessageOptions): MessageState => ({
     ...menu.state(options),
     ...presentation(options),
+    now: options.now || undefined,
+    outcomePending: false,
     editing: null,
     copied: false,
   }),
   sync: (options) => ({ ...menu.sync(options), ...presentation(options) }),
-  controlled: ["branchIndex", "branchCount", "status"],
+  controlled: ["branchIndex", "branchCount", "status", "outcome"],
   api: (context): MessageApi => {
     const { store } = context;
     const regenerateMenu = menu.api(context);
@@ -295,9 +434,47 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     const copy = createCopy(context);
     const text = () => context.options().text ?? "";
     let streamed = !settled(store.get().status);
+    let clock = false;
+    const today = (options: MessageOptions) =>
+      options.now || (clock ? todayKey(options.timeZone || undefined) : undefined);
+    const pendingOutcome = createPendingAction(context, { state: "outcomePending" });
+    let status = store.get().status;
     context.onOptions((options) => {
-      if (!settled(options.status ?? "complete")) streamed = true;
+      const next = options.status ?? "complete";
+      if (!settled(next)) streamed = true;
+      const now = today(options);
+      if (now !== store.get().now) store.set({ now });
+      if (next === status) return;
+      status = next;
+      // A new status answers a pending Retry or Continue.
+      pendingOutcome.release();
+      const outcome = OUTCOMES[next];
+      // Only for a response this instance saw being written, so a page of earlier messages is quiet.
+      if (outcome && streamed) announce(ANNOUNCEMENTS[outcome], { priority: "polite" });
     });
+    const runOutcome = (
+      name: "onRetry" | "onContinue",
+      press: "retry-press" | "continue-press",
+      event?: Event,
+    ) => {
+      const call = context.options()[name];
+      if (!call) return;
+      const reason = event ? press : "imperative";
+      void pendingOutcome.run(() => call({ reason, source: actionSource(event, reason) }));
+    };
+    const avatarState = memo(
+      (author: MessageAuthor): MessageAvatarState => ({
+        name: author.name,
+        initials: avatarInitials(author.name),
+        src: author.avatarUrl || undefined,
+      }),
+    );
+    const timeState = memo(
+      (createdAt: string, locale?: string, timeZone?: string, now?: string): MessageTimeState => ({
+        label: timeLabel(createdAt, { locale, timeZone, now }),
+        dateTime: createdAt,
+      }),
+    );
 
     const inlineEdit = createInlineEdit(context, {
       key: "editing",
@@ -346,6 +523,30 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       get setBranch() {
         return store.get().branchCount > 1 ? setBranch : undefined;
       },
+      get retry() {
+        const { canRetry, outcome, outcomePending } = store.get();
+        return canRetry && outcome === "failed" && !outcomePending
+          ? (event?: Event) => runOutcome("onRetry", "retry-press", event)
+          : undefined;
+      },
+      get continue() {
+        const { canContinue, outcome, outcomePending } = store.get();
+        return canContinue && outcome === "stopped" && !outcomePending
+          ? (event?: Event) => runOutcome("onContinue", "continue-press", event)
+          : undefined;
+      },
+      readClock: () => {
+        clock = true;
+        const now = today(context.options());
+        if (now !== store.get().now) store.set({ now });
+      },
+      // The toolbar takes focus when it's there; Retry and Continue leave as a new response starts.
+      outcomeRecovery: createFocusRecovery({
+        fallback: () =>
+          context.element("toolbar")?.querySelector<HTMLElement>("button:not([disabled])") ?? null,
+      }),
+      avatarState: (state) => (state.author ? avatarState(state.author) : NO_AVATAR),
+      timeState: (state) => timeState(state.createdAt ?? "", state.locale, state.timeZone, state.now),
       inlineEdit,
       enterToolbar: (el) => {
         if (streamed) void enter(el, "fade", { motion: store.get().motion });
@@ -363,10 +564,37 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
         "data-role": state.role,
         "data-status": state.status,
         "data-editing": state.editing === null ? undefined : "",
+        "data-continued": state.continued ? "" : undefined,
+        "aria-busy": state.outcomePending ? "true" : undefined,
       }),
     }),
-    avatar: slot({
+    avatar: slot<BaseSlotProps, MessageAvatarState>({
+      state: (state, { api }) => api.avatarState(state),
+      // With an `author`, the name beside it says who wrote it.
+      attrs: (state) => ({
+        "data-role": state.role,
+        "data-continued": state.continued ? "" : undefined,
+        "aria-hidden": state.author ? "true" : undefined,
+        "data-author": state.author ? "" : undefined,
+      }),
+    }),
+    header: slot({
+      present: hasHeader,
       attrs: (state) => ({ "data-role": state.role }),
+    }),
+    author: slot<BaseSlotProps, { name: string }>({
+      present: (state) => state.author !== undefined && !state.continued,
+      state: (state) => ({ name: state.author?.name ?? "" }),
+    }),
+    time: slot<BaseSlotProps, MessageTimeState>({
+      present: (state) => state.createdAt !== undefined && timeLabel(state.createdAt) !== "",
+      state: (state, { api }) => api.timeState(state),
+      attrs: (state) => ({ datetime: state.createdAt }),
+      bind: (_el, { api }) => api.readClock(),
+    }),
+    duration: slot<BaseSlotProps, { label: string }>({
+      present: (state) => durationLabel(state.durationSeconds) !== "",
+      state: (state) => ({ label: durationLabel(state.durationSeconds, state.locale) }),
     }),
     content: slot({
       present: (state) => state.editing === null,
@@ -380,6 +608,46 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
         focusout: (event, { api }) => api.inlineEdit.end("focus-out", event),
       },
       bind: (el, { api }) => api.inlineEdit.bindInput(el as HTMLTextAreaElement),
+    }),
+    outcome: slot({
+      present: (state) => state.outcome !== null,
+      attrs: (state) => ({ "data-outcome": state.outcome ?? undefined, "data-motion": state.motion }),
+      bind: (el, { api }) => api.enterToolbar(el),
+    }),
+    "outcome-icon": slot({
+      attrs: (state) => ({
+        "aria-hidden": "true",
+        "data-status-mark": "",
+        "data-status": state.outcome === "failed" ? "error" : "cancelled",
+        "data-motion": state.motion,
+      }),
+    }),
+    "outcome-text": slot<BaseSlotProps, { text: string }>({
+      state: (state) => ({ text: messageOutcomeText(state) }),
+    }),
+    retry: slot({
+      role: "button",
+      focus: "native",
+      present: (state) => state.canRetry && state.outcome === "failed",
+      press: ({ api }, event) => api.retry?.(event),
+      attrs: (state) => ({
+        type: "button",
+        "aria-disabled": state.outcomePending ? "true" : undefined,
+        "data-pending": state.outcomePending ? "" : undefined,
+      }),
+      bind: (el, part) => part.api.outcomeRecovery.bind(el, part),
+    }),
+    continue: slot({
+      role: "button",
+      focus: "native",
+      present: (state) => state.canContinue && state.outcome === "stopped",
+      press: ({ api }, event) => api.continue?.(event),
+      attrs: (state) => ({
+        type: "button",
+        "aria-disabled": state.outcomePending ? "true" : undefined,
+        "data-pending": state.outcomePending ? "" : undefined,
+      }),
+      bind: (el, part) => part.api.outcomeRecovery.bind(el, part),
     }),
     toolbar: slot({
       present: (state) => settled(state.status),
@@ -460,7 +728,7 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     }),
   }),
   agent: {
-    actions: ["copy", "regenerate", "edit", "setBranch"],
+    actions: ["copy", "regenerate", "edit", "setBranch", "retry", "continue"],
     items: (api) =>
       menuItems(api.regenerateMenu.getItems()).filter((item) => item.value !== MESSAGE_TRY_AGAIN),
     closed: true,

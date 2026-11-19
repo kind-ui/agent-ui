@@ -1,12 +1,17 @@
+import "@ui-sdk/web/avatar";
 import {
+  durationLabel,
   type MessageApi,
+  type MessageAvatarState,
   type MessageBranchChangeReason,
   type MessageOptions,
+  type MessageOutcomeDetails,
   type MessageRegenerateContentState,
   type MessageState,
+  messageOutcomeText,
   messagePrimitive,
 } from "@kind-ui/agent-ui/core";
-import { createParts, wrappedButton, wrappedChild } from "@ui-sdk/web";
+import { createParts, type UiActionDetail, wrappedButton, wrappedChild } from "@ui-sdk/web";
 import type {
   AttributeProperties,
   UiChangeEvent,
@@ -21,6 +26,60 @@ import {
 } from "./internal/menu.js";
 
 type RegenerateOption = MessageRegenerateContentState["options"][number];
+
+const HEADER = `<kind-message-author></kind-message-author><kind-message-time><time></time></kind-message-time><kind-message-duration></kind-message-duration>`;
+const OUTCOME = `<kind-message-outcome-icon></kind-message-outcome-icon><kind-message-outcome-text></kind-message-outcome-text><kind-message-retry><button>Retry</button></kind-message-retry><kind-message-continue><button>Continue</button></kind-message-continue>`;
+
+// Header, outcome and text parts this element filled in. A part someone wrote into keeps what they wrote, as
+// React's children do. Kept across instances, because UI SDK rebuilds one when the element returns to the page.
+const filled = new WeakSet<Element>();
+const claim = (part: Element | null | undefined): part is Element => {
+  if (!part || !(filled.has(part) || !part.firstChild)) return false;
+  filled.add(part);
+  return true;
+};
+const fill = (part: Element | null | undefined, text: string) => {
+  if (claim(part) && part.textContent !== text) part.textContent = text;
+};
+
+/** Fills an empty avatar part with a UI SDK Avatar of the author, and keeps the one it wrote current. */
+const drawAvatar = (part: Element, { name, initials, src }: MessageAvatarState) => {
+  if (!name || !claim(part)) return;
+  const document = part.ownerDocument;
+  let avatar = part.querySelector("ui-avatar");
+  if (!avatar) {
+    avatar = document.createElement("ui-avatar");
+    avatar.append(document.createElement("ui-avatar-fallback"));
+    part.replaceChildren(avatar);
+  }
+  let image = avatar.querySelector(":scope > img");
+  if (src) {
+    if (!image) {
+      image = document.createElement("img");
+      image.setAttribute("alt", "");
+      avatar.prepend(image);
+    }
+    if (image.getAttribute("src") !== src) image.setAttribute("src", src);
+  } else image?.remove();
+  const fallback = avatar.querySelector("ui-avatar-fallback");
+  if (fallback && fallback.textContent !== initials) fallback.textContent = initials;
+};
+
+/** Writes the header, avatar and outcome parts of `el`, filling in any written empty. */
+const drawDetails = (el: Element, api: MessageApi, state: MessageState) => {
+  const own = (selector: string) =>
+    [...el.querySelectorAll(selector)].filter((part) => part.closest("kind-message") === el);
+  for (const part of own("kind-message-header")) if (claim(part) && !part.firstChild) part.innerHTML = HEADER;
+  for (const part of own("kind-message-outcome"))
+    if (claim(part) && !part.firstChild) part.innerHTML = OUTCOME;
+  for (const part of own("kind-message-avatar")) drawAvatar(part, api.avatarState(state));
+  for (const part of own("kind-message-author")) fill(part, state.author?.name ?? "");
+  const { label } = api.timeState(state);
+  for (const part of own("kind-message-time > time")) fill(part, label);
+  for (const part of own("kind-message-duration"))
+    fill(part, durationLabel(state.durationSeconds, state.locale));
+  for (const part of own("kind-message-outcome-text")) fill(part, messageOutcomeText(state));
+};
 
 // Contents this element filled in, and so draws the rows of. A content someone wrote keeps its rows, as React's
 // children do. Kept across instances, because UI SDK rebuilds one when the element returns to the page.
@@ -76,8 +135,9 @@ const drawLevel = (parent: Element, options: RegenerateOption[], first?: Regener
 };
 
 /**
- * The `can-regenerate` and `can-edit` attributes offer those actions. Callbacks are events: `regenerate`, `edit`,
- * `branchchange` and `messagecopy`. Write each action as a wrapper around a toolbar button,
+ * The `can-regenerate`, `can-edit`, `can-retry` and `can-continue` attributes offer those actions. Callbacks are
+ * events: `regenerate`, `edit`, `branchchange`, `messagecopy`, `retry` and `continue` (call
+ * `event.detail.waitUntil(promise)` to keep Retry or Continue pending). Write each action as a wrapper around a toolbar button,
  * `<kind-message-copy><ui-toolbar-button><button aria-label="Copy">`, inside a
  * `<kind-internal-toolbar><ui-toolbar aria-label="Message actions">`, and the editor as
  * `<kind-message-editor><textarea hidden></textarea></kind-message-editor>`.
@@ -94,13 +154,20 @@ export function defineMessage(): void {
   createParts(messagePrimitive, {
     root: {
       tag: "kind-message",
-      kinds: { canRegenerate: "boolean", canEdit: "boolean" },
+      kinds: {
+        canRegenerate: "boolean",
+        canEdit: "boolean",
+        canRetry: "boolean",
+        canContinue: "boolean",
+      },
       // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
       options: (el) => {
-        const { canRegenerate, canEdit } = el as KindMessageElement;
+        const { canRegenerate, canEdit, canRetry, canContinue } = el as KindMessageElement;
         return {
           ...(!canRegenerate && { onRegenerate: undefined }),
           ...(!canEdit && { onEdit: undefined }),
+          ...(!canRetry && { onRetry: undefined }),
+          ...(!canContinue && { onContinue: undefined }),
         };
       },
       events: { onCopy: "messagecopy" },
@@ -109,6 +176,7 @@ export function defineMessage(): void {
         const api = instance.api as MessageApi;
         const draw = () => {
           const state = instance.get() as MessageState;
+          drawDetails(el, api, state);
           for (const part of el.querySelectorAll("kind-message-regenerate")) {
             if (part.closest("kind-message") !== el) continue;
             // Controlled even without options, when the menu stays closed.
@@ -148,6 +216,15 @@ export function defineMessage(): void {
     "branch-previous": { tag: "kind-message-branch-previous", target: wrappedButton, display: "contents" },
     "branch-label": "kind-message-branch-label",
     "branch-next": { tag: "kind-message-branch-next", target: wrappedButton, display: "contents" },
+    header: "kind-message-header",
+    author: "kind-message-author",
+    time: { tag: "kind-message-time", target: wrappedChild("time"), display: "contents" },
+    duration: "kind-message-duration",
+    outcome: "kind-message-outcome",
+    "outcome-icon": "kind-message-outcome-icon",
+    "outcome-text": "kind-message-outcome-text",
+    retry: { tag: "kind-message-retry", target: wrappedButton, display: "contents" },
+    continue: { tag: "kind-message-continue", target: wrappedButton, display: "contents" },
   });
 }
 
@@ -156,11 +233,15 @@ export type KindMessageEvents = {
   messagecopy: UiDetailedChangeEvent<string, Parameters<NonNullable<MessageOptions["onCopy"]>>[1]>;
   regenerate: UiDetailedChangeEvent<string, Parameters<NonNullable<MessageOptions["onRegenerate"]>>[1]>;
   edit: UiDetailedChangeEvent<string, Parameters<NonNullable<MessageOptions["onEdit"]>>[1]>;
+  retry: CustomEvent<MessageOutcomeDetails & Pick<UiActionDetail, "waitUntil">>;
+  continue: CustomEvent<MessageOutcomeDetails & Pick<UiActionDetail, "waitUntil">>;
 };
 
 export interface KindMessageElement
   extends UiElement<KindMessageEvents>,
-    AttributeProperties<typeof messagePrimitive, "api" | "regenerateOptions"> {
+    AttributeProperties<typeof messagePrimitive, "api" | "regenerateOptions" | "author"> {
+  /** Who wrote it: `{ id, name, avatarUrl? }`. */
+  author?: MessageOptions["author"];
   /**
    * An option's `icon` is an image URL, or an element (such as an `svg`) copied into its row. A copy keeps the
    * element's ids, so pass an icon that uses `defs` (gradients, masks) as an image URL.
@@ -171,6 +252,8 @@ export interface KindMessageElement
   })[];
   canRegenerate: boolean;
   canEdit: boolean;
+  canRetry: boolean;
+  canContinue: boolean;
   api: Pick<MessageApi, "copy">;
 }
 
@@ -190,5 +273,14 @@ declare global {
     "kind-message-branch-previous": HTMLElement;
     "kind-message-branch-label": HTMLElement;
     "kind-message-branch-next": HTMLElement;
+    "kind-message-header": HTMLElement;
+    "kind-message-author": HTMLElement;
+    "kind-message-time": HTMLElement;
+    "kind-message-duration": HTMLElement;
+    "kind-message-outcome": HTMLElement;
+    "kind-message-outcome-icon": HTMLElement;
+    "kind-message-outcome-text": HTMLElement;
+    "kind-message-retry": HTMLElement;
+    "kind-message-continue": HTMLElement;
   }
 }
