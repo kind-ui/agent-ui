@@ -8,6 +8,7 @@ import {
   dispatch,
   type InlineEdit,
   type InlineEditReason,
+  keepFocus,
   type PrimitiveContext,
   type SlotDefinition,
 } from "@ui-sdk/core";
@@ -336,6 +337,24 @@ const hasHeader = (state: MessageState) =>
   (state.createdAt !== undefined && timeLabel(state.createdAt) !== "") ||
   durationLabel(state.durationSeconds) !== "";
 
+// Web keeps Cancel and Save in the page, hidden, once the edit ends, so their focus recovery lets go as it ends.
+const bindEditAction: NonNullable<MessageSlot["bind"]> = (el, part) => {
+  let unbind: (() => void) | undefined;
+  const follow = () => {
+    if (part.store.get().editing !== null) unbind ??= part.api.editRecovery.bind(el, part);
+    else {
+      unbind?.();
+      unbind = undefined;
+    }
+  };
+  follow();
+  const unsubscribe = part.store.subscribe(follow);
+  return () => {
+    unsubscribe();
+    unbind?.();
+  };
+};
+
 const TRY_AGAIN: RegenerateOption<unknown> = { id: MESSAGE_TRY_AGAIN, label: "Try again" };
 const NO_OPTIONS: RegenerateOption<unknown>[] = [];
 const NO_DATA: MenuData = [];
@@ -517,21 +536,8 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       commit: (_id, value, details) => !dispatch(context, "onEdit", value, details),
     });
 
-    // Back to Edit once the toolbar shows again, which can take a few frames on web, unless focus moved on. Web keeps
-    // the parts that left in the page, hidden, and focus stays on them until the browser lets it go.
-    const focusEdit = (left: (Element | undefined)[], tries = 3) =>
-      requestAnimationFrame(() => {
-        const active = document.activeElement;
-        const moved = active && active !== document.body && active.isConnected;
-        if (moved && !left.some((part) => part?.contains(active))) return;
-        const edit = context.element("edit")?.querySelector<HTMLElement>("button:not([disabled])");
-        edit?.focus();
-        if (edit && document.activeElement !== edit && tries > 1) focusEdit(left, tries - 1);
-      });
-    const editParts = () => [
-      context.element("editor") ?? undefined,
-      context.element("edit-actions") ?? undefined,
-    ];
+    const editButton = () =>
+      context.element("edit")?.querySelector<HTMLElement>("button:not([disabled])") ?? undefined;
 
     const setBranch = (index: number, event?: Event) => {
       const { branchIndex, branchCount } = store.get();
@@ -608,14 +614,13 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
         state.author ? avatarState(state.author.name, state.author.avatarUrl || undefined) : NO_AVATAR,
       timeState: (state) => timeState(state.createdAt ?? "", state.locale, state.timeZone, state.now),
       inlineEdit,
+      // React renders the toolbar back after the recovery has looked for Edit, so Edit takes focus once it's there.
       saveEdit: (event) => {
-        const left = editParts();
-        if (inlineEdit.end("imperative", event)) focusEdit(left);
+        if (inlineEdit.end("imperative", event)) keepFocus(editButton);
       },
       cancelEdit: () => {
-        const left = editParts();
         inlineEdit.cancel();
-        focusEdit(left);
+        keepFocus(editButton);
       },
       editFocusOut: (event) => {
         const next = event.relatedTarget;
@@ -623,10 +628,7 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
           next instanceof Node && Boolean(context.element(name)?.contains(next));
         if (!within("editor") && !within("edit-actions")) inlineEdit.end("focus-out", event);
       },
-      editRecovery: createFocusRecovery({
-        fallback: () =>
-          context.element("edit")?.querySelector<HTMLElement>("button:not([disabled])") ?? undefined,
-      }),
+      editRecovery: createFocusRecovery({ fallback: editButton }),
       enterToolbar: (el) => {
         if (streamed) void enter(el, "fade", { motion: store.get().motion });
       },
@@ -712,14 +714,14 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       focus: "native",
       press: ({ api }) => api.cancelEdit(),
       attrs: () => ({ type: "button", "data-kind-button": "" }),
-      bind: (el, part) => part.api.editRecovery.bind(el, part),
+      bind: bindEditAction,
     }),
     "edit-save": slot({
       role: "button",
       focus: "native",
       press: ({ api }, event) => api.saveEdit(event),
       attrs: () => ({ type: "button", "data-kind-button": "primary" }),
-      bind: (el, part) => part.api.editRecovery.bind(el, part),
+      bind: bindEditAction,
     }),
     outcome: slot({
       present: (state) => state.outcome !== null,
@@ -763,8 +765,9 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       }),
       bind: (el, part) => part.api.outcomeRecovery.bind(el, part),
     }),
+    // Cancel and Save take its place while the message is edited.
     toolbar: slot({
-      present: (state) => settled(state.status),
+      present: (state) => settled(state.status) && state.editing === null,
       attrs: (state) => ({ "data-role": state.role }),
       bind: (el, { api }) => api.enterToolbar(el),
     }),
