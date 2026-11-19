@@ -205,6 +205,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- wave-6-task-7: Connection Status -->
 
+- **Connection Status (Wave 6 Task 7):** `connectionStatusPrimitive`'s root stays rendered while `online` and writes `hidden` once its exit ends (`present`), so the pill's `animateIn`/`animateOut` (CSS on `data-starting-style`/`data-ending-style`, as Terminal's Jump to latest) plays in both layers and the web element never leaves. `phase` and `shown` (the last phase other than `online`, whose words the pill keeps as it fades) are set in `onOptions`, not `sync`, so a change and the exit it starts land in one store write. `seconds` is `live`: the root's `bind` counts down to `retryAt` with a `setTimeout` that wakes on each whole second (server markup shows "Reconnecting", so hydration agrees), and only the `text` part's `state` reads it, so a tick renders one React part and web writes one text node; `connectionStatusText` gives both layers the words. `labels` is a `"value"` option (its `countdown` is a function), so `labels` is a web property. `onRetry(details)` gets `{ reason: "retry-press" | "imperative", source }` through `actionSource`, which `@ui-sdk/web` flattens into the `retry` event's `detail`. "Reconnected" is announced on `online` and on `resuming`. Retry's focus recovery unbinds as the pill starts leaving and falls back to Notice's `nearestTabStop` (now exported from `core/notice/base.ts`). The mark is the status mark (running, else warning while offline), so no glyph joins `THIRD_PARTY_NOTICES.md`.
+
 <!-- wave-6-task-8: Share Dialog -->
 
 <!-- wave-6-task-9: Message author, time and outcomes -->
