@@ -34,7 +34,11 @@ export default function GeneratedImageExample() {
         onDownload={save}
         className="w-full"
       />
-      <button type="button" className="text-sm underline" onClick={() => setProgress(0)}>
+      <button
+        type="button"
+        className="rounded-md border border-[var(--kind-color-border)] px-2.5 py-1 text-sm hover:bg-[var(--kind-color-hover)]"
+        onClick={() => setProgress(0)}
+      >
         Replay
       </button>
     </div>

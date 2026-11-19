@@ -26,7 +26,8 @@ export type TerminalCopyReason = "copy-press" | "imperative";
 
 export type TerminalOptions = Omit<StepOptions, "status" | "label"> & {
   /**
-   * The command that ran, shown after the prompt. Also the title, unless `label` is set.
+   * The command that ran, shown as the title. With a `label`, the label is the title and the command shows after a
+   * prompt above the output.
    * @default ""
    */
   command?: string;
@@ -36,7 +37,7 @@ export type TerminalOptions = Omit<StepOptions, "status" | "label"> & {
    * @default ""
    */
   output?: string;
-  /** The command's exit code, once it has finished. Shown as "Exit N". */
+  /** The command's exit code, once it has finished. Shown as "exit N" beside the duration. */
   exitCode?: number;
   /** Defaults to `running` without an `exitCode`, then `complete` for 0 and `error` for any other code. */
   status?: StepStatus;
@@ -89,7 +90,8 @@ export type TerminalApi = StepApi & {
   recovery: FocusRecovery;
 };
 
-type LineProps = { index: number };
+// `value` keys the part, so each line's element is measured at its own index. React's `TerminalLine` sets it.
+type LineProps = { index: number; value?: string };
 
 type TerminalSlot<
   Props extends object = BaseSlotProps,
@@ -285,11 +287,16 @@ export const terminalPrimitive: TerminalPrimitive = definePrimitive<
         ...title,
         selects: outsideOutput,
         state: (state) => ({ title: state.title }),
+        // The command is literal code, so only it is mono; a `label` reads as words.
+        attrs: (state, part) => ({
+          ...title.attrs?.(state, part),
+          "data-command": state.title === state.command ? "" : undefined,
+        }),
       }),
       exit: slot<BaseSlotProps, { text: string }>({
         selects: outsideOutput,
         present: (state) => state.exitCode !== undefined,
-        state: (state) => ({ text: `Exit ${state.exitCode}` }),
+        state: (state) => ({ text: `exit ${state.exitCode}` }),
         attrs: (state) => ({ "data-exit": state.exitCode === 0 ? "success" : "failure" }),
       }),
       meta: slot<BaseSlotProps, { duration: string }>({
@@ -298,8 +305,10 @@ export const terminalPrimitive: TerminalPrimitive = definePrimitive<
         state: (state) => ({ duration: state.duration }),
       }),
       content: slot({ ...content, selects: outsideOutput }),
+      // The title is the command unless a `label` replaced it, so the command shows here only then.
       command: slot<BaseSlotProps, { command: string }>({
         selects: outsideOutput,
+        present: (state) => state.command !== "" && state.title !== state.command,
         state: (state) => ({ command: state.command }),
       }),
       copy: slot({
@@ -311,6 +320,7 @@ export const terminalPrimitive: TerminalPrimitive = definePrimitive<
         attrs: (state) => ({
           type: "button",
           "aria-label": "Copy output",
+          "data-kind-icon-button": "",
           "data-copied": state.copied ? "" : undefined,
         }),
       }),
@@ -334,7 +344,7 @@ export const terminalPrimitive: TerminalPrimitive = definePrimitive<
         attrs: (state) => ({ style: css({ "--kind-terminal-size": `${state.size}px` }) }),
       }),
       line: slot<LineProps, { spans: readonly AnsiSpan[] }>({
-        props: { index: "number" },
+        props: { index: "number", value: "string" },
         selects: ownLine,
         state: (state, { props }) => ({ spans: state.lines[props.index]?.spans ?? [] }),
         attrs: (state, { props }) => {

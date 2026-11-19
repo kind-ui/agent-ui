@@ -59,7 +59,7 @@
     }
   }
 
-  :where([data-file-tree-part="item"], [data-file-tree-part="badge"]) {
+  :where([data-file-tree-part="item"]) {
     &[data-change="added"] {
       --kind-file-tree-change: var(--kind-color-success);
     }
@@ -71,6 +71,10 @@
     }
     &[data-change="renamed"] {
       --kind-file-tree-change: var(--kind-color-accent);
+    }
+    /* Red on a folder reads as broken; the deleted file's own badge says it. */
+    &[data-kind="folder"][data-change="deleted"] {
+      --kind-file-tree-change: var(--kind-color-muted);
     }
   }
 
@@ -108,20 +112,11 @@
     }
   }
 
+  /* The shared badge (`data-kind-badge`), as wide as it is tall, so every letter lines up. */
   [data-file-tree-part="badge"] {
-    display: inline-flex;
-    flex-shrink: 0;
-    width: 18px;
-    height: 18px;
-    align-items: center;
+    min-width: var(--kind-badge-height);
     justify-content: center;
-    border-radius: calc(var(--kind-radius) / 3);
-    background-color: color-mix(in oklab, var(--kind-file-tree-change) 14%, transparent);
-    color: color-mix(in oklab, var(--kind-file-tree-change) 55%, var(--kind-color-fg));
-    font-family: var(--kind-font-mono);
-    font-size: var(--kind-text-xs);
-    font-weight: 600;
-    line-height: 1;
+    padding: 0 4px;
 
     &::before {
       content: attr(data-letter);

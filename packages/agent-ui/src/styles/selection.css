@@ -16,23 +16,13 @@
   }
 
   /* A top-layer popover that UI SDK `position` places: it writes `position`, `inset`, `margin`, `left` and `top`
-     inline, so this resets only the rest of the popover's UA box. Motion uses `translate`, which `position` measures
-     around. */
+     inline, and the shared popup (`data-kind-popup`) draws its box, so this resets only the rest of the UA box.
+     Motion uses `translate`, which `position` measures around. */
   [data-slot="kind-selection-toolbar"] {
     display: block;
     width: max-content;
     max-width: calc(100vw - 16px);
     overflow: visible;
-    padding: 4px;
-    border: 1px solid var(--kind-color-border);
-    border-radius: var(--kind-radius);
-    background-color: var(--kind-color-surface);
-    box-shadow:
-      0 1px 2px color-mix(in oklab, var(--kind-color-shadow) 6%, transparent),
-      0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 20%, transparent);
-    color: var(--kind-color-fg);
-    font-size: var(--kind-text-sm);
-    line-height: 1.25rem;
     transition:
       opacity var(--kind-duration-base) var(--kind-ease-out),
       translate var(--kind-duration-base) var(--kind-ease);

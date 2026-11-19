@@ -64,7 +64,7 @@ export type SourcesApi = {
   toggle: (event?: Event) => boolean;
   /** Opens the list for find in page. Called by the content slot. */
   reveal: (event: Event) => void;
-  /** Plays a source's entrance when it arrives after the first frame. Called by the item slot. */
+  /** Plays a source's entrance when it arrives after the first frame into a shown list. Called by the item slot. */
   bindItem: (el: HTMLElement, id: string) => void;
   /** Starts counting sources as new after the first frame. Called by the root slot. */
   bindRoot: (el: HTMLElement) => () => void;
@@ -86,7 +86,7 @@ type SourcesSlots = {
   list: Slot<BaseSlotProps, { sources: Source[] }>;
   item: Slot<ItemProps & BaseSlotProps>;
   link: ItemSlot;
-  icon: ItemSlot<{ favicon: string | undefined; initial: string }>;
+  icon: ItemSlot<{ favicon: string | undefined }>;
   title: ItemSlot<{ title: string }>;
   host: ItemSlot<{ host: string }>;
   snippet: ItemSlot<{ snippet: string }>;
@@ -104,7 +104,6 @@ const noEntry: SourceEntry = {
   host: "",
   snippet: "",
   favicon: undefined,
-  initial: "",
 };
 // Own keys only, so an item `value` like "constructor" doesn't find `Object`'s.
 const entryAt = ({ entries }: SourcesState, key: string) =>
@@ -196,7 +195,9 @@ export const sourcesPrimitive: SourcesPrimitive = definePrimitive<
       bindItem: (el, id) => {
         if (known.has(id)) return;
         known.add(id);
-        if (!mounting) void enter(el, "fade-up", { motion: store.get().motion });
+        // A closed list has nothing to show, and opening it is its own motion.
+        const { open, exiting, motion } = store.get();
+        if (!mounting && open && !exiting) void enter(el, "fade-up", { motion });
       },
       bindRoot: (el) => {
         const release = holdTransitions(el);
@@ -287,13 +288,10 @@ export const sourcesPrimitive: SourcesPrimitive = definePrimitive<
         };
       },
     }),
-    icon: slot<ItemPartProps & BaseSlotProps, { favicon: string | undefined; initial: string }>({
+    icon: slot<ItemPartProps & BaseSlotProps, { favicon: string | undefined }>({
       props: fromItem,
       selects: own,
-      state: (state, { key }) => {
-        const { favicon, initial } = entryAt(state, key);
-        return { favicon, initial };
-      },
+      state: (state, { key }) => ({ favicon: entryAt(state, key).favicon }),
       attrs: () => ({ "aria-hidden": "true", "data-sources-part": "icon" }),
     }),
     title: slot<ItemPartProps & BaseSlotProps, { title: string }>({

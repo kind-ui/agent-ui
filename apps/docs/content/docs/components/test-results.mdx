@@ -5,7 +5,7 @@ description: Show a test run's counts and a filterable tree of suites, with each
 
 import TestResultsExample from "../../../examples/test-results/basic";
 
-Use test results when the agent runs a test suite, so readers see how many tests passed, failed and were skipped, and why a test failed. It's a step: a header with the counts and the run's duration, over a filter and a tree of suites and tests, in which a failed test opens to its message and a [Stack Trace](./stack-trace.mdx).
+Use test results when the agent runs a test suite, so readers see how many tests passed, failed and were skipped, and why a test failed. It's a step: a header with the run's duration and its counts, which filter the tests, over a tree of suites and tests, in which a failed test opens to its message and a [Stack Trace](./stack-trace.mdx).
 
 <Example caption="Choose Failed to show only the failing tests. Focus a row and use the arrow keys to move between rows, Right Arrow and Left Arrow to open and close one, then press Tab to reach the stack trace inside a failure.">
   <TestResultsExample />
@@ -31,9 +31,10 @@ TestResults
 │   ├── TestResultsIcon
 │   ├── TestResultsTitle
 │   └── TestResultsMeta
+├── TestResultsFilter
+│   └── TestResultsCount
 └── TestResultsContent
     └── div[data-test-results-panel]
-        ├── TestResultsFilter
         ├── TestResultsTree
         │   └── TestResultsRows
         │       ├── TestResultsItem
@@ -42,7 +43,7 @@ TestResults
         └── TestResultsEmpty
 ```
 
-`TestResultsTrigger` opens and closes the run, with its status mark in `TestResultsIcon`, the `label` in `TestResultsTitle`, and the counts and duration in `TestResultsMeta`. `TestResultsContent` holds the panel, a `div` with `data-test-results-panel`. In it, `TestResultsFilter` renders a UI SDK Segmented Control, and `TestResultsTree` a UI SDK Tree whose rows `TestResultsRows` draws. Each row's `TestResultsItem` shows its name, its status mark in `TestResultsItemStatus` and its duration. A failed test holds a `TestResultsFailure`, which renders a Stack Trace. `TestResultsEmpty` shows when the filter lets no test through.
+`TestResultsTrigger` opens and closes the run, with its status mark in `TestResultsIcon`, the `label` in `TestResultsTitle`, and the duration in `TestResultsMeta`. Beside it, `TestResultsFilter` holds a `TestResultsCount` toggle button for passed, failed and skipped tests. `TestResultsContent` holds the panel, a `div` with `data-test-results-panel`. In it, `TestResultsTree` renders a UI SDK Tree whose rows `TestResultsRows` draws. Each row's `TestResultsItem` shows its name, its status mark in `TestResultsItemStatus` and its duration. A failed test holds a `TestResultsFailure`, which renders a Stack Trace. `TestResultsEmpty` shows when the filter lets no test through.
 
 ## Usage
 
@@ -68,11 +69,11 @@ A failed test is a row that opens to its error, shown as a Stack Trace with the 
 
 ### Filtering
 
-**All**, **Failed**, **Passed** and **Skipped** show every test or only those with that status. A suite with no test to show is left out, and "No failed tests" or the like shows when none is left. Pass `defaultFilter` to start on one, or control it with `filter` and `onFilterChange`.
+The counts beside the header are toggle buttons: press "1 failed" to show only failed tests, opening the run if it's closed, and press it again to show every test. A suite with no test to show is left out, and "No failed tests" or the like shows when none is left. Pass `defaultFilter` to start on one, or control it with `filter` and `onFilterChange`.
 
 ### Keyboard and Motion
 
-The filter and the tree are one Tab stop each. In the filter, the arrow keys choose a status. In the tree, Up Arrow and Down Arrow move between rows, Right Arrow and Left Arrow open and close a suite or failure, Home and End go to the first and last row, and typing a name moves to it. Tab from an open failure's row reaches its stack trace, whose keys stay its own. Rows fade in as they arrive and suites open by height; under `prefers-reduced-motion`, or with `motion="reduced"`, they fade over 120 ms and the filter's mark stops sliding, and with `motion="none"` nothing moves.
+Tab reaches each count, then the tree, which is one Tab stop. In the tree, Up Arrow and Down Arrow move between rows, Right Arrow and Left Arrow open and close a suite or failure, Home and End go to the first and last row, and typing a name moves to it. Tab from an open failure's row reaches its stack trace, whose keys stay its own. Rows fade in as they arrive and suites open by height; under `prefers-reduced-motion`, or with `motion="reduced"`, they fade over 120 ms, and with `motion="none"` nothing moves.
 
 ## API Reference
 

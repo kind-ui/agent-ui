@@ -162,7 +162,7 @@
       transition: opacity var(--kind-duration-fast) var(--kind-ease-out);
     }
     &::before {
-      border-radius: calc(var(--kind-radius) / 2);
+      border-radius: var(--kind-radius-md);
       background-color: color-mix(in oklab, var(--kind-color-surface) 88%, transparent);
       box-shadow: inset 0 0 0 1px var(--kind-color-border);
     }
@@ -176,38 +176,11 @@
     }
   }
 
-  [data-slot="kind-generated-image-download"],
-  [data-slot="kind-generated-image-close"] {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    height: 2rem;
-    padding-inline: 12px;
-    border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: var(--kind-color-surface);
-    color: var(--kind-color-fg);
-    font: inherit;
-    font-size: var(--kind-text-sm);
-    font-weight: 500;
-    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
-
-    &:hover {
-      background-color: var(--kind-color-hover);
-    }
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
-    }
-    &[data-pending] {
-      cursor: progress;
-      opacity: 0.6;
-    }
-  }
-
-  [data-slot="kind-generated-image-download"]::before {
+  /* Download and Close are shared ghost buttons (`data-kind-button`). Download's glyph is on `::after`, since a shared
+     control's `::before` is its touch target. */
+  [data-slot="kind-generated-image-download"]::after {
     content: "";
+    order: -1;
     flex: none;
     width: 0.875rem;
     height: 0.875rem;
@@ -224,6 +197,8 @@
     width: 1.75rem;
     height: 1.75rem;
     padding: 0;
+    border-color: var(--kind-color-border);
+    border-radius: var(--kind-radius-md);
     background-color: color-mix(in oklab, var(--kind-color-surface) 88%, transparent);
     opacity: 0;
     transition:
@@ -248,7 +223,6 @@
     position: fixed;
     inset: 0;
     z-index: 50;
-    background-color: color-mix(in oklab, var(--kind-color-shadow) 55%, transparent);
   }
 
   [data-slot="kind-generated-image-content"] {
@@ -265,11 +239,6 @@
     max-height: calc(100dvh - 2rem);
     margin: auto;
     padding: 10px;
-    border: 1px solid var(--kind-color-border);
-    border-radius: var(--kind-radius);
-    background-color: var(--kind-color-surface);
-    box-shadow: 0 16px 48px -12px color-mix(in oklab, var(--kind-color-shadow) 35%, transparent);
-    color: var(--kind-color-fg);
     outline: none;
   }
 
@@ -415,7 +384,7 @@
   }
 
   @media (forced-colors: active) {
-    [data-slot="kind-generated-image-download"]::before,
+    [data-slot="kind-generated-image-download"]::after,
     [data-slot="kind-generated-image-trigger"]::after,
     [data-slot="kind-generated-image-error"]::before {
       forced-color-adjust: none;

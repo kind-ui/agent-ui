@@ -9,7 +9,7 @@ import {
 import { createParts, wrappedButton } from "@ui-sdk/web";
 import type { AttributeProperties, UiChangeEvent, UiElement } from "@ui-sdk/web/events";
 
-const DEFAULT_PARTS = `<kind-terminal-trigger><button><kind-terminal-icon></kind-terminal-icon><kind-terminal-title></kind-terminal-title><kind-terminal-exit></kind-terminal-exit><kind-terminal-meta></kind-terminal-meta></button></kind-terminal-trigger><kind-terminal-content><div data-terminal-screen><div data-terminal-header><kind-terminal-command></kind-terminal-command><kind-terminal-copy><button></button></kind-terminal-copy></div><kind-terminal-viewport><kind-terminal-output></kind-terminal-output></kind-terminal-viewport><kind-terminal-jump><button hidden>Jump to latest</button></kind-terminal-jump></div></kind-terminal-content>`;
+const DEFAULT_PARTS = `<kind-terminal-trigger><button><kind-terminal-icon></kind-terminal-icon><kind-terminal-title></kind-terminal-title><kind-terminal-exit></kind-terminal-exit><kind-terminal-meta></kind-terminal-meta></button></kind-terminal-trigger><kind-terminal-content><div data-terminal-screen data-kind-code><div data-terminal-header><kind-terminal-command></kind-terminal-command><kind-terminal-copy><button></button></kind-terminal-copy></div><kind-terminal-viewport><kind-terminal-output></kind-terminal-output></kind-terminal-viewport><kind-terminal-jump><button hidden>Jump to latest</button></kind-terminal-jump></div></kind-terminal-content>`;
 
 // Parts this element wrote text into. A part someone wrote into keeps what they wrote, as React's children do. Kept
 // across instances, because UI SDK rebuilds one when the element returns to the page.
@@ -97,7 +97,7 @@ export function defineTerminal(): void {
           const state = instance.get() as TerminalState;
           fill(el.querySelector("kind-terminal-title"), state.title);
           if (state.exitCode !== undefined)
-            fill(el.querySelector("kind-terminal-exit"), `Exit ${state.exitCode}`);
+            fill(el.querySelector("kind-terminal-exit"), `exit ${state.exitCode}`);
           fill(el.querySelector("kind-terminal-meta"), state.duration);
           fill(el.querySelector("kind-terminal-command"), state.command);
           const output = el.querySelector("kind-terminal-output");

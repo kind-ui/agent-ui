@@ -140,5 +140,6 @@ test("in forced colors a pressed Wrap lines keeps its icon visible", async ({ pa
   await wrap.click();
   await expect(wrap).toHaveAttribute("aria-pressed", "true");
   expect(await backdrop(wrap)).not.toBe(off);
-  expect(await iconColor(wrap)).not.toBe(await backdrop(wrap));
+  const icon = await wrap.evaluate((el) => getComputedStyle(el, "::after").backgroundColor);
+  expect(icon).not.toBe(await backdrop(wrap));
 });

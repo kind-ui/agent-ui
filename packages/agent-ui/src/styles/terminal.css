@@ -1,14 +1,14 @@
-/* Terminal (spec §7): the Step base's header with the command, its exit code and duration, over a screen with the
-   prompt and the output in its ANSI colors. The trigger and the panel's motion come from step.css, through
-   `data-step-part`. */
+/* Terminal (spec §7): the Step base's header with the command, its exit code and duration, over a code surface
+   (`data-kind-code`, controls.css) with the output in its ANSI colors. The trigger and the panel's motion come from
+   step.css, through `data-step-part`. */
 @layer components {
   [data-slot="kind-terminal"] {
     --kind-terminal-max-height: 20rem;
     --kind-terminal-font-size: var(--kind-code-font-size);
-    --kind-terminal-line-height: 1.25rem;
+    --kind-terminal-line-height: var(--kind-code-line-height);
   }
 
-  [data-slot="kind-terminal-title"] {
+  [data-slot="kind-terminal-title"]:where([data-command]) {
     font-family: var(--kind-font-mono);
     font-size: var(--kind-terminal-font-size);
   }
@@ -23,20 +23,20 @@
     display: block;
   }
 
+  /* Plain words beside the duration: the status mark already carries the outcome's color. */
   [data-slot="kind-terminal-exit"] {
     flex-shrink: 0;
-    padding-inline: 0.375rem;
-    border-radius: 9999px;
     font-size: var(--kind-text-xs);
-    font-weight: 500;
     font-variant-numeric: tabular-nums;
-    line-height: 1.125rem;
-    color: color-mix(in oklab, var(--kind-color-success) 55%, var(--kind-color-fg));
-    background-color: color-mix(in oklab, var(--kind-color-success) 12%, transparent);
+    color: var(--kind-color-muted);
+  }
 
-    &:where([data-exit="failure"]) {
-      color: color-mix(in oklab, var(--kind-color-danger) 60%, var(--kind-color-fg));
-      background-color: color-mix(in oklab, var(--kind-color-danger) 12%, transparent);
+  [data-slot="kind-terminal-exit"]:where(:not([hidden]))
+    + [data-slot="kind-terminal-meta"]:where(:not(:empty)) {
+    margin-inline-start: -0.25rem;
+
+    &::before {
+      content: "· ";
     }
   }
 
@@ -56,25 +56,16 @@
     position: relative;
     overflow: hidden;
     border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) * 2 / 3);
-    background-color: var(--kind-color-hover);
-    font-family: var(--kind-font-mono);
-    font-size: var(--kind-terminal-font-size);
-    line-height: var(--kind-terminal-line-height);
   }
 
+  /* Copy sits in the screen's corner, so the command (when shown) and the output start at the top. */
   [data-terminal-header] {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    padding-block: 0.5rem 0;
-    padding-inline: 0.75rem 0.375rem;
+    display: contents;
   }
 
   [data-slot="kind-terminal-command"] {
-    flex: 1;
-    min-width: 0;
-    padding-block: 0.25rem;
+    padding-block: 0.5rem 0;
+    padding-inline: 0.75rem 2.5rem;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     font-weight: 500;
@@ -86,48 +77,51 @@
     }
   }
 
+  /* Shown while the screen is hovered or holds focus, and always without hover. Its fill at rest keeps the output
+     it covers from showing through. */
   [data-slot="kind-terminal-copy"] {
-    display: inline-grid;
-    flex-shrink: 0;
-    place-items: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    padding: 0;
-    border: 0;
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: transparent;
-    color: var(--kind-color-muted);
+    position: absolute;
+    z-index: 1;
+    top: 0.25rem;
+    inset-inline-end: 0.25rem;
+    opacity: 0;
     transition:
+      opacity var(--kind-duration-fast),
       color var(--kind-duration-fast),
       background-color var(--kind-duration-fast);
 
-    &::before {
+    &:where(:not(:hover)) {
+      background-color: var(--kind-code-surface);
+    }
+    &:where([data-copied]) {
+      color: var(--kind-color-success);
+    }
+    &::after {
       content: "";
       width: 0.875rem;
       height: 0.875rem;
       background-color: currentColor;
       mask: var(--kind-icon-copy) center / contain no-repeat;
     }
-    &:hover {
-      color: var(--kind-color-fg);
-      background-color: color-mix(in oklab, var(--kind-color-fg) 6%, transparent);
-    }
-    &:focus-visible {
-      color: var(--kind-color-fg);
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset-inset);
-    }
-    &[data-copied] {
-      color: var(--kind-color-success);
-    }
-    &[data-copied]::before {
+    &[data-copied]::after {
       mask-image: var(--kind-icon-check);
+    }
+  }
+
+  [data-terminal-screen]:where(:hover, :focus-within) [data-slot="kind-terminal-copy"],
+  [data-slot="kind-terminal-copy"]:where([data-copied]) {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    [data-slot="kind-terminal-copy"] {
+      opacity: 1;
     }
   }
 
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
-    [data-slot="kind-terminal-copy"]::before {
+    [data-slot="kind-terminal-copy"]::after {
       forced-color-adjust: none;
       background-color: ButtonText;
     }
@@ -139,7 +133,7 @@
     max-height: var(--kind-terminal-max-height);
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding-block-end: 0.5rem;
+    padding-block: 0.5rem;
     line-height: var(--kind-terminal-line-height);
     scrollbar-width: thin;
     scrollbar-color: var(--kind-color-border) transparent;
@@ -192,8 +186,7 @@
   /* A cursor after the last line while the command runs. It overhangs into the line's padding, so it never wraps a
      full line. */
   [data-slot="kind-terminal-line"]:where(
-    [data-slot="kind-terminal"][data-status="running"] *,
-    [data-last]
+    [data-slot="kind-terminal"][data-status="running"] [data-last]
   )::after {
     content: "";
     display: inline-block;
@@ -273,7 +266,11 @@
   }
 
   /* Web keeps parts that aren't present in the page, with `hidden`. */
-  :is([data-slot="kind-terminal-jump"], [data-slot="kind-terminal-exit"])[hidden] {
+  :is(
+    [data-slot="kind-terminal-jump"],
+    [data-slot="kind-terminal-exit"],
+    [data-slot="kind-terminal-command"]
+  )[hidden] {
     display: none;
   }
 

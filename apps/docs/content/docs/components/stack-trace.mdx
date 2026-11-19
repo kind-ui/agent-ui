@@ -45,7 +45,7 @@ StackTrace
         └── StackTraceCopy
 ```
 
-`StackTraceTrigger` opens and closes the trace, with the error mark in `StackTraceIcon` and the message's first line in `StackTraceTitle`, the error's name set apart. `StackTraceContent` holds the panel, a `div` with `data-stack-trace-panel` that the stylesheet draws. In it, `StackTraceMessage` shows the message's other lines, and `StackTraceList` renders a `StackTraceFrame` for each app frame and a `StackTraceGroup` for each run of library frames. A frame shows its function in `StackTraceFrameFunction` and its file in `StackTraceFrameLocation`, inside a `StackTraceFrameOpen` button while you pass `onOpenFrame`. A group's `StackTraceLibrary` shows or folds the frames in its `StackTraceLibraryFrames`. `StackTraceCopy` sits in the panel's corner.
+`StackTraceTrigger` opens and closes the trace, with the error mark in `StackTraceIcon` and the message's first line in `StackTraceTitle`, the error's name set apart. `StackTraceContent` holds the panel, a `div` with `data-stack-trace-panel` and `data-kind-code` that the stylesheet draws as a code surface. In it, `StackTraceMessage` shows the message's other lines, and `StackTraceList` renders a `StackTraceFrame` for each app frame and a `StackTraceGroup` for each run of library frames. A frame shows its function in `StackTraceFrameFunction` and its file in `StackTraceFrameLocation`, inside a `StackTraceFrameOpen` button while you pass `onOpenFrame`. A group's `StackTraceLibrary` shows or folds the frames in its `StackTraceLibraryFrames`. `StackTraceCopy` sits in the panel's corner.
 
 ## Usage
 
@@ -73,7 +73,7 @@ Pass `onOpenFrame` and each frame becomes a button. Pressing one, or Enter on a 
 
 ### Status and Copying
 
-The status is `error` unless you pass `status`, and the trace starts open; pass `defaultOpen={false}` to show just its header. **Copy stack trace** shows once there's a message or a frame, copies the message and the frames' raw lines, and shows a check for 2 seconds. Pass `onCopy` to hear about it; cancel its `details` to copy something else yourself.
+The status is `error` unless you pass `status`, and the trace starts open; pass `defaultOpen={false}` to show just its header. **Copy stack trace** shows once there's a message or a frame, in the panel's corner while you point at the panel or focus inside it, copies the message and the frames' raw lines, and shows a check for 2 seconds. Pass `onCopy` to hear about it; cancel its `details` to copy something else yourself.
 
 ### Keyboard and Motion
 

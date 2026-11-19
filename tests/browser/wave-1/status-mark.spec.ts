@@ -92,7 +92,7 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
   },
   {
     url: "/?c=test-results&case=all",
-    slots: ["kind-test-results-icon", "kind-test-results-item-status", "kind-stack-trace-icon"],
+    slots: ["kind-test-results-icon", "kind-test-results-item-status"],
   },
   { url: "/?c=stack-trace&case=all", slots: ["kind-stack-trace-icon"] },
   { url: "/?c=terminal&case=all", slots: ["kind-terminal-icon"] },

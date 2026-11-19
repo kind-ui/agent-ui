@@ -191,7 +191,7 @@ const cases = {
         },
       ],
     },
-    keys: { item: ["s", "s/t"], failure: ["s/t"] },
+    keys: { item: ["s", "s/t"], failure: ["s/t"], count: ["pass", "fail", "skip"] },
   },
   thinkingIndicator: { options: { label: "Thinking" } },
   tool: { options: { call, onApprove: noop, onDeny: noop } },

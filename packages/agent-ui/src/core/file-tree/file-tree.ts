@@ -186,6 +186,12 @@ const noRow: FileTreeRow = {
   deletions: undefined,
 };
 const letters: Record<FileTreeChange, string> = { added: "A", modified: "M", deleted: "D", renamed: "R" };
+const tones: Record<FileTreeChange, string> = {
+  added: "success",
+  modified: "warning",
+  deleted: "danger",
+  renamed: "accent",
+};
 // What a folder shows when files inside it changed differently: the first of these it holds.
 const significance: FileTreeChange[] = ["deleted", "added", "modified", "renamed"];
 
@@ -496,6 +502,7 @@ export const fileTreePrimitive: FileTreePrimitive = definePrimitive<
         return {
           "aria-label": row.change,
           "data-file-tree-part": "badge",
+          "data-kind-badge": row.change && tones[row.change],
           "data-change": row.change,
           "data-letter": row.letter,
         };

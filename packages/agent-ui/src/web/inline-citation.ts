@@ -8,6 +8,7 @@ import {
 import { createParts, wrappedButton, wrappedChild } from "@ui-sdk/web";
 import type { CarouselController } from "@ui-sdk/web/carousel";
 import type { AttributeProperties, UiChangeEvent, UiElement, UiPartElement } from "@ui-sdk/web/events";
+import "@ui-sdk/web/avatar";
 import "@ui-sdk/web/carousel";
 
 // Lucide "chevron-left" and "chevron-right", see THIRD_PARTY_NOTICES.md.
@@ -17,8 +18,8 @@ const chevron = (path: string) =>
 const DEFAULT_PARTS = `<kind-inline-citation-trigger><button></button></kind-inline-citation-trigger><kind-inline-citation-content hidden></kind-inline-citation-content>`;
 // Previous and Next are hidden from agents, which takes the Carousel out of their snapshot: an agent pages with the
 // citation's own `next` and `previous`.
-const CAROUSEL_PARTS = `<ui-carousel aria-label="Sources" drag="false"><ui-carousel-viewport><ui-carousel-content></ui-carousel-content></ui-carousel-viewport><span data-inline-citation-controls><ui-carousel-previous><button aria-label="Previous source" data-agent-hidden>${chevron("m15 18-6-6 6-6")}</button></ui-carousel-previous><kind-inline-citation-index></kind-inline-citation-index><ui-carousel-next><button aria-label="Next source" data-agent-hidden>${chevron("m9 18 6-6-6-6")}</button></ui-carousel-next></span></ui-carousel>`;
-const ITEM_PARTS = `<kind-inline-citation-link><a><kind-inline-citation-host></kind-inline-citation-host><kind-inline-citation-source-title></kind-inline-citation-source-title></a></kind-inline-citation-link><kind-inline-citation-snippet></kind-inline-citation-snippet>`;
+const CAROUSEL_PARTS = `<ui-carousel aria-label="Sources" drag="false"><ui-carousel-viewport><ui-carousel-content></ui-carousel-content></ui-carousel-viewport><span data-inline-citation-controls><ui-carousel-previous><button aria-label="Previous source" data-agent-hidden data-kind-icon-button>${chevron("m15 18-6-6 6-6")}</button></ui-carousel-previous><kind-inline-citation-index></kind-inline-citation-index><ui-carousel-next><button aria-label="Next source" data-agent-hidden data-kind-icon-button>${chevron("m9 18 6-6-6-6")}</button></ui-carousel-next></span></ui-carousel>`;
+const ITEM_PARTS = `<kind-inline-citation-link><a><kind-inline-citation-icon></kind-inline-citation-icon><kind-inline-citation-source-title></kind-inline-citation-source-title><kind-inline-citation-host></kind-inline-citation-host></a></kind-inline-citation-link><kind-inline-citation-snippet></kind-inline-citation-snippet>`;
 
 // Parts this element wrote into. A part someone wrote into keeps what they wrote, as React's children do. Kept across
 // instances, because UI SDK rebuilds one when the element returns to the page.
@@ -32,6 +33,26 @@ const claim = (part: Element | null): part is Element => {
 
 const fill = (part: Element | null, text: string) => {
   if (claim(part) && part.textContent !== text) part.textContent = text;
+};
+
+/** Fills an empty icon part with a UI SDK Avatar, and keeps the one it wrote current. */
+const drawIcon = (part: Element | null, favicon: string | undefined) => {
+  if (!claim(part)) return;
+  let avatar = part.querySelector("ui-avatar");
+  if (!avatar) {
+    avatar = part.ownerDocument.createElement("ui-avatar");
+    avatar.append(part.ownerDocument.createElement("ui-avatar-fallback"));
+    part.replaceChildren(avatar);
+  }
+  let image = avatar.querySelector(":scope > img");
+  if (favicon) {
+    if (!image) {
+      image = part.ownerDocument.createElement("img");
+      image.setAttribute("alt", "");
+      avatar.prepend(image);
+    }
+    if (image.getAttribute("src") !== favicon) image.setAttribute("src", favicon);
+  } else image?.remove();
 };
 
 type Movable = Element & { moveBefore?: (node: Node, child: Node | null) => void };
@@ -49,13 +70,14 @@ const createItem = (doc: Document, id: string) => {
   return item;
 };
 
-/** Fills each item's empty parts with its source's host name, title and snippet. */
+/** Fills each item's empty parts with its source's icon, title, host name and snippet. */
 const fillItems = (content: Element, { entries }: InlineCitationState) => {
   for (const item of content.querySelectorAll("kind-inline-citation-item")) {
     const entry = entries[item.getAttribute("value") ?? ""];
     if (!entry) continue;
-    fill(item.querySelector("kind-inline-citation-host"), entry.host);
+    drawIcon(item.querySelector("kind-inline-citation-icon"), entry.favicon);
     fill(item.querySelector("kind-inline-citation-source-title"), entry.title);
+    fill(item.querySelector("kind-inline-citation-host"), entry.host);
     fill(item.querySelector("kind-inline-citation-snippet"), entry.snippet);
   }
 };
@@ -158,6 +180,7 @@ export function defineInlineCitation(): void {
     carousel: "kind-inline-citation-carousel",
     item: "kind-inline-citation-item",
     link: { tag: "kind-inline-citation-link", target: wrappedChild("a"), display: "contents" },
+    icon: "kind-inline-citation-icon",
     host: "kind-inline-citation-host",
     "source-title": "kind-inline-citation-source-title",
     snippet: "kind-inline-citation-snippet",
@@ -185,6 +208,7 @@ declare global {
     "kind-inline-citation-carousel": HTMLElement;
     "kind-inline-citation-item": UiPartElement<typeof inlineCitationPrimitive, "item", "value">;
     "kind-inline-citation-link": HTMLElement;
+    "kind-inline-citation-icon": HTMLElement;
     "kind-inline-citation-host": HTMLElement;
     "kind-inline-citation-source-title": HTMLElement;
     "kind-inline-citation-snippet": HTMLElement;

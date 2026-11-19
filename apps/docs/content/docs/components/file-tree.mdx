@@ -5,7 +5,7 @@ description: Show the files a change touched as a folder tree, with each file's 
 
 import FileTreeExample from "../../../examples/file-tree/basic";
 
-Use a file tree beside a diff or a summary of what the agent edited, so readers can see which files changed and how much. Each file shows its change as a letter and the lines it added and removed; a folder shows a dot in the color of the most significant change inside it.
+Use a file tree beside a diff or a summary of what the agent edited, so readers can see which files changed and how much. Each file shows its change as a letter and the lines it added and removed; a folder shows a dot in the color of the most significant change inside it, gray when that's a deleted file, so it doesn't read as an error.
 
 <Example caption="Press a folder, or focus a row and press the Right and Left arrow keys, to open and close it. Up and Down move between rows, and typing a name moves to it.">
   <FileTreeExample />

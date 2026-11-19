@@ -144,7 +144,7 @@ const components = {
     title: "Test Results",
     description:
       "A test run's pass, fail and skip counts over a filterable tree of suites, each failure open to its stack trace.",
-    uses: ["stack-trace", "internal-tree", "internal-segmented-control"],
+    uses: ["stack-trace", "internal-tree"],
   },
   transcript: {
     title: "Transcript",

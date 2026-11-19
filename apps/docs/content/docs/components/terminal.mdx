@@ -5,7 +5,7 @@ description: Show a command the agent ran and its output, in color, as it stream
 
 import TerminalExample from "../../../examples/terminal/basic";
 
-Use a terminal when the agent runs a shell command, so readers can follow its output while it runs and check its exit code once it's done. It's a step: a header with the command, its exit code and how long it took, over a screen with the prompt and the output.
+Use a terminal when the agent runs a shell command, so readers can follow its output while it runs and check its exit code once it's done. It's a step: a header with the command, its exit code and how long it took, over a screen with the output.
 
 <Example caption="Press npm test, or focus it and press Enter or Space, to hide and show the output. Focus the output and use the arrow keys to scroll it.">
   <TerminalExample />
@@ -43,7 +43,7 @@ Terminal
         └── TerminalJump
 ```
 
-`TerminalTrigger` opens and closes the run, with its status mark in `TerminalIcon`, the command in `TerminalTitle`, "Exit N" in `TerminalExit` and the duration in `TerminalMeta`. `TerminalContent` holds the screen, a `div` with `data-terminal-screen` that the stylesheet draws and places **Jump to latest** in. In its header row (`data-terminal-header`), `TerminalCommand` shows the command after a `$` prompt, `TerminalCopy` copies the output, and `TerminalViewport` scrolls `TerminalOutput`, which renders a `TerminalLine` for each line in view. `TerminalJump` shows while you've scrolled away from the end.
+`TerminalTrigger` opens and closes the run, with its status mark in `TerminalIcon`, the command in `TerminalTitle`, "exit N" in `TerminalExit` and the duration in `TerminalMeta`. `TerminalContent` holds the screen, a `div` with `data-terminal-screen` and `data-kind-code` that the stylesheet draws as a code surface and places **Jump to latest** in. In it, `TerminalCommand` shows the command after a `$` prompt, only when a `label` takes its place as the title, `TerminalCopy` copies the output from the screen's corner, and `TerminalViewport` scrolls `TerminalOutput`, which renders a `TerminalLine` for each line in view. `TerminalJump` shows while you've scrolled away from the end.
 
 ## Usage
 
@@ -67,7 +67,7 @@ While new output arrives, the view stays at the end. Scroll up and it stays wher
 
 ### Copying
 
-**Copy output** shows once there's output, copies it without its escapes and shows a check for 2 seconds. Pass `onCopy` to hear about it; cancel its `details` to copy something else yourself.
+**Copy output** shows once there's output, in the screen's corner while you point at the screen or focus inside it, copies it without its escapes and shows a check for 2 seconds. Pass `onCopy` to hear about it; cancel its `details` to copy something else yourself.
 
 ### Keyboard and Motion
 

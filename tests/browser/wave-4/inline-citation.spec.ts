@@ -101,7 +101,8 @@ test("Next and Previous page through three sources, and the unsafe one is text",
   await expect(index).toHaveAttribute("aria-live", "off");
   const previous = many.getByRole("button", { name: "Previous source" });
   const next = many.getByRole("button", { name: "Next source" });
-  await expect(previous).toHaveAttribute("aria-disabled", "true");
+  // At an end the button with no page that way hides in place, unless it holds focus.
+  await expect(previous).toBeHidden();
   await settled(page);
   const height = await many.evaluate((el) => el.getBoundingClientRect().height);
   await next.click();

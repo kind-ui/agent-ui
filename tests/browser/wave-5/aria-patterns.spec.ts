@@ -184,14 +184,6 @@ const checks: Check[] = [
     known: hiddenRadios,
   },
   {
-    name: "test-results filter",
-    page: "test-results&case=all",
-    pattern: "radio-group",
-    target: (page) => part(page, "kind-test-results").getByRole("radiogroup"),
-    rtl: true,
-    known: hiddenRadios,
-  },
-  {
     name: "test-results tree",
     page: "test-results&case=all",
     pattern: "tree",

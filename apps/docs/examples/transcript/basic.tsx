@@ -41,7 +41,11 @@ export default function TranscriptExample() {
 
   return (
     <div className="flex w-full max-w-xl flex-col gap-2">
-      <button type="button" className="self-start text-sm underline" onClick={() => setPlaying(!playing)}>
+      <button
+        type="button"
+        className="self-start rounded-md border border-[var(--kind-color-border)] px-2.5 py-1 text-sm hover:bg-[var(--kind-color-hover)]"
+        onClick={() => setPlaying(!playing)}
+      >
         {playing ? "Pause" : "Play"}
       </button>
       <Transcript segments={segments} currentTime={time} onSeek={(start) => setTime(start)} />

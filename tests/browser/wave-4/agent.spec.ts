@@ -110,18 +110,36 @@ const conformance: Conformance[] = [
     before: click("sources", "sources-trigger"),
     pointer: click("sources", "sources-trigger"),
   },
-  { target: citation, action: "open", pointer: click("citation", "inline-citation-trigger") },
-  { target: citation, action: "next", before: openCard, pointer: button("citation", "Next source") },
+  {
+    target: citation,
+    action: "open",
+    ignore: favicon,
+    pointer: click("citation", "inline-citation-trigger"),
+  },
+  {
+    target: citation,
+    action: "next",
+    ignore: favicon,
+    before: openCard,
+    pointer: button("citation", "Next source"),
+  },
   {
     target: citation,
     action: "previous",
+    ignore: favicon,
     before: async (page) => {
       await openCard(page);
       await button("citation", "Next source")(page);
     },
     pointer: button("citation", "Previous source"),
   },
-  { target: citation, action: "close", before: openCard, pointer: (page) => page.keyboard.press("Escape") },
+  {
+    target: citation,
+    action: "close",
+    ignore: favicon,
+    before: openCard,
+    pointer: (page) => page.keyboard.press("Escape"),
+  },
   { target: documentTarget, action: "copy", pointer: button("document", "Copy") },
   {
     target: documentTarget,
@@ -197,7 +215,10 @@ const conformance: Conformance[] = [
     target: testResults,
     action: "setFilter",
     args: ["fail"],
-    pointer: (page) => byId("test-results")(page).getByRole("radio", { name: "Failed" }).click(),
+    pointer: (page) =>
+      byId("test-results")(page)
+        .getByRole("button", { name: / failed$/ })
+        .click(),
   },
   {
     target: testResults,

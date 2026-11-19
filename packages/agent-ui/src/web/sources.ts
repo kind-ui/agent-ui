@@ -28,7 +28,7 @@ const fill = (part: Element | null, text: string) => {
 };
 
 /** Fills an empty icon part with a UI SDK Avatar, and keeps the one it wrote current. */
-const drawIcon = (part: Element | null, { favicon, initial }: SourcesState["entries"][string]) => {
+const drawIcon = (part: Element | null, { favicon }: SourcesState["entries"][string]) => {
   if (!claim(part)) return;
   let avatar = part.querySelector("ui-avatar");
   if (!avatar) {
@@ -45,7 +45,6 @@ const drawIcon = (part: Element | null, { favicon, initial }: SourcesState["entr
     }
     if (image.getAttribute("src") !== favicon) image.setAttribute("src", favicon);
   } else image?.remove();
-  fill(avatar.querySelector("ui-avatar-fallback"), initial);
 };
 
 type Movable = Element & { moveBefore?: (node: Node, child: Node | null) => void };

@@ -33,21 +33,22 @@ InlineCitation
     └── InlineCitationCarousel
         ├── InlineCitationItem
         │   ├── InlineCitationLink
-        │   │   ├── InlineCitationHost
-        │   │   └── InlineCitationSourceTitle
+        │   │   ├── InlineCitationIcon
+        │   │   ├── InlineCitationSourceTitle
+        │   │   └── InlineCitationHost
         │   └── InlineCitationSnippet
         ├── InlineCitationPrevious
         ├── InlineCitationIndex
         └── InlineCitationNext
 ```
 
-`InlineCitationTrigger` is the marker, a native button that shows the `label`. `InlineCitationContent` is the card. With one source it holds that source's `InlineCitationItem`; with more, `InlineCitationCarousel` is UI SDK's Carousel with a slide per source and **Previous**, the page ("1 of 3") and **Next** below. `InlineCitationLink` links to the source's `url` and opens it in a new tab. `InlineCitationHost` shows the host name without `www.`, `InlineCitationSourceTitle` the `title`, up to two lines, and `InlineCitationSnippet` the `snippet`, up to three. Every part renders a `span`, so a citation is valid inside a `p`. To arrange the parts yourself, pass them as children of `InlineCitation`.
+`InlineCitationTrigger` is the marker, a native button that shows the `label`. `InlineCitationContent` is the card. With one source it holds that source's `InlineCitationItem`; with more, `InlineCitationCarousel` is UI SDK's Carousel with a slide per source and **Previous**, the page ("1 of 3") and **Next** below. `InlineCitationLink` links to the source's `url` and opens it in a new tab. Each source reads as it does in [Sources](./sources): `InlineCitationIcon` shows the source's `favicon`, or a link glyph until the image loads or without one, `InlineCitationSourceTitle` the `title`, up to two lines, `InlineCitationHost` the host name without `www.`, and `InlineCitationSnippet` the `snippet`, up to three. Every part renders a `span`, so a citation is valid inside a `p`. To arrange the parts yourself, pass them as children of `InlineCitation`.
 
 ## Usage
 
 ### Sources
 
-Pass `sources`, each with an `id` and a `title`, and optionally a `url` and `snippet`. Links accept `http`, `https`, `mailto` and relative URLs. A source with any other URL, like `javascript:`, shows as text with no link and no host name.
+Pass `sources`, each with an `id` and a `title`, and optionally a `url`, `favicon` and `snippet`. Links accept `http`, `https`, `mailto` and relative URLs. A source with any other URL, like `javascript:`, shows as text with no link and no host name.
 
 ```tsx
 <p>
@@ -67,11 +68,11 @@ Pass `open` and `onOpenChange` to control it, or `defaultOpen` to start with it 
 
 ### Paging
 
-With more than one source, **Previous** and **Next** page through them, as do the arrow keys while the slides are focused, and the page below reads "1 of 3". Every source takes the card's full width and the card is as tall as its tallest source, so paging never moves the controls. Swiping and dragging are off, so a scroll inside the card never pages it. The card opens again on the source it last showed.
+With more than one source, **Previous** and **Next** page through them, as do the arrow keys while the slides are focused, and the page below reads "1 of 3". On the first source **Previous** hides, and on the last **Next**, in place, so nothing moves. Every source takes the card's full width and the card is as tall as its tallest source, so paging never moves the controls. Swiping and dragging are off, so a scroll inside the card never pages it. The card opens again on the source it last showed.
 
 ### Motion
 
-The card rises and fades in. Under `prefers-reduced-motion`, or with `motion="reduced"`, it only fades, over 120 ms, and with `motion="none"` it shows at once. Paging scrolls smoothly unless the reader prefers reduced motion.
+The card grows out of its marker and fades in, and leaves a little faster. Under `prefers-reduced-motion`, or with `motion="reduced"`, it only fades, over 120 ms, and with `motion="none"` it shows at once. Paging scrolls smoothly unless the reader prefers reduced motion.
 
 ## API Reference
 

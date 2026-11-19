@@ -26,8 +26,7 @@
   }
 
   [data-slot="kind-transcript-search"] {
-    padding: 0.5rem;
-    border-block-end: 1px solid var(--kind-color-border);
+    padding: 0.25rem 0.25rem 0;
 
     & :where(ui-input) {
       display: contents;
@@ -38,11 +37,9 @@
       align-items: center;
       gap: 0.25rem;
       height: 2rem;
-      padding-inline: 0.5rem 0.25rem;
+      padding-inline: 0.75rem 0.25rem;
       border-radius: calc(var(--kind-radius) * 2 / 3);
-      background-color: var(--kind-color-hover);
       color: var(--kind-color-muted);
-      transition: box-shadow var(--kind-duration-fast);
 
       &::before {
         content: "";
@@ -85,7 +82,7 @@
       height: 1.5rem;
       padding: 0;
       border: 0;
-      border-radius: calc(var(--kind-radius) / 2);
+      border-radius: var(--kind-radius-sm);
       background-color: transparent;
       color: var(--kind-color-muted);
 
@@ -98,7 +95,7 @@
       }
       &:hover {
         color: var(--kind-color-fg);
-        background-color: color-mix(in oklab, var(--kind-color-fg) 6%, transparent);
+        background-color: var(--kind-color-hover);
       }
       &:focus-visible {
         outline: var(--kind-focus-ring);
@@ -160,9 +157,6 @@
     }
     &:where([data-can-seek]:hover) {
       background-color: var(--kind-color-hover);
-    }
-    &:where([aria-current]) {
-      background-color: color-mix(in oklab, var(--kind-color-accent) 8%, transparent);
     }
 
     /* The playing segment's bar, on the side its text starts. */
@@ -231,7 +225,7 @@
   [data-slot="kind-transcript-text"] {
     margin: 0;
     font-size: var(--kind-text-md);
-    line-height: 1.5rem;
+    line-height: 1.25rem;
     overflow-wrap: anywhere;
   }
 

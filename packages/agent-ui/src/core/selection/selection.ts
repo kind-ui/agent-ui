@@ -324,7 +324,7 @@ export const selectionPrimitive: SelectionPrimitive = definePrimitive<
     toolbar: slot<BaseSlotProps, SelectionToolbarState>({
       present: (state) => state.open || state.exiting,
       state: (state) => ({ label: state.label, actions: state.actions }),
-      attrs: (state) => ({ "data-motion": state.motion }),
+      attrs: (state) => ({ "data-motion": state.motion, "data-kind-popup": "" }),
       // A press keeps the selection and focus where they are.
       on: { mousedown: (event) => event.preventDefault() },
       bind: (el, part) => part.api.bindToolbar(el, part),

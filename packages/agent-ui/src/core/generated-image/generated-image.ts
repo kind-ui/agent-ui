@@ -311,6 +311,8 @@ export const generatedImagePrimitive: GeneratedImagePrimitive = definePrimitive<
   slots: (slot) => {
     const trigger = popupTrigger(slot);
     const close = popupClose(slot);
+    const backdrop = popupBackdrop(slot);
+    const content = popupContent(slot);
     return {
       root: slot({
         role: "figure",
@@ -383,11 +385,18 @@ export const generatedImagePrimitive: GeneratedImagePrimitive = definePrimitive<
         attrs: (state) => ({
           type: "button",
           "aria-label": "Download",
+          "data-kind-button": "",
           "data-pending": state.pending ? "" : undefined,
         }),
       }),
-      backdrop: popupBackdrop(slot),
-      content: popupContent(slot),
+      backdrop: slot({
+        ...backdrop,
+        attrs: (state, part) => ({ ...backdrop.attrs?.(state, part), "data-kind-scrim": "" }),
+      }),
+      content: slot({
+        ...content,
+        attrs: (state, part) => ({ ...content.attrs?.(state, part), "data-kind-dialog": "" }),
+      }),
       // The image that last loaded, so a view an owner keeps open while the next one generates isn't blank.
       "full-image": slot({
         attrs: (state) => ({
@@ -400,7 +409,7 @@ export const generatedImagePrimitive: GeneratedImagePrimitive = definePrimitive<
       title: slot({ ...popupTitle(slot), state: (state) => ({ alt: state.alt }) }),
       close: slot({
         ...close,
-        attrs: (state, part) => ({ ...close.attrs?.(state, part), type: "button" }),
+        attrs: (state, part) => ({ ...close.attrs?.(state, part), type: "button", "data-kind-button": "" }),
       }),
     };
   },

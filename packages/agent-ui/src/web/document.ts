@@ -74,7 +74,12 @@ const label = (part: Element, text: string | undefined) => {
   if (!button) return;
   const name = text ? `Download ${text}` : "Download";
   if (button.ariaLabel !== name) button.ariaLabel = name;
-  if (button.textContent !== (text ?? "")) button.textContent = text ?? "";
+  if (button.textContent === (text ?? "")) return;
+  button.replaceChildren();
+  if (!text) return;
+  const span = button.appendChild(button.ownerDocument.createElement("span"));
+  span.dataset.documentDownloadLabel = "";
+  span.textContent = text;
 };
 
 /**

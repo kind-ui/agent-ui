@@ -1,5 +1,6 @@
-/* Stack Trace (spec §7): the Step base's header with the error's name and message, over a panel of frames in which
-   each run of library frames folds into one row. The trigger comes from step.css, through `data-step-part`. */
+/* Stack Trace (spec §7): the Step base's header with the error's name and message, over a code surface
+   (`data-kind-code`, controls.css) of frames in which each run of library frames folds into one row. The trigger comes
+   from step.css, through `data-step-part`. */
 @layer components {
   [data-slot="kind-stack-trace"] {
     --kind-stack-trace-font-size: var(--kind-code-font-size);
@@ -37,17 +38,19 @@
     color: var(--kind-color-fg);
   }
 
-  /* Tall enough for Copy when the panel holds nothing else. */
+  /* Tall enough for Copy when the panel holds nothing else. Only the message and frames are code, so the library
+     rows keep the page's font. */
   [data-stack-trace-panel] {
     position: relative;
     min-height: 2.5rem;
     border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) * 2 / 3);
-    background-color: var(--kind-color-hover);
     padding-block: 0.375rem;
-    font-family: var(--kind-font-mono);
+    font-family: inherit;
     font-size: var(--kind-stack-trace-font-size);
-    line-height: 1.25rem;
+  }
+
+  :is([data-slot="kind-stack-trace-message"], [data-slot="kind-stack-trace-frame"]) {
+    font-family: var(--kind-font-mono);
   }
 
   /* Rows leave room for Copy at the panel's corner, so nothing runs under it. */
@@ -109,14 +112,17 @@
 
   [data-slot="kind-stack-trace-frame-function"] {
     min-width: 0;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
     font-weight: 500;
     color: var(--kind-color-fg);
   }
 
+  /* One line, cut at its end: the frame's `title` holds the full path. */
   [data-slot="kind-stack-trace-frame-location"] {
     min-width: 0;
-    overflow-wrap: anywhere;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-variant-numeric: tabular-nums;
     color: var(--kind-color-muted);
 
@@ -142,7 +148,6 @@
     border-radius: calc(var(--kind-radius) / 2);
     background-color: transparent;
     font: inherit;
-    font-style: italic;
     text-align: start;
     color: var(--kind-color-muted);
     transition:
@@ -212,50 +217,46 @@
     padding-inline-start: 0;
   }
 
+  /* Shown while the panel is hovered or holds focus, and always without hover. */
   [data-slot="kind-stack-trace-copy"] {
     position: absolute;
     top: 0.375rem;
     inset-inline-end: 0.375rem;
-    display: inline-grid;
-    place-items: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    padding: 0;
-    border: 0;
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: transparent;
-    color: var(--kind-color-muted);
+    opacity: 0;
     transition:
+      opacity var(--kind-duration-fast),
       color var(--kind-duration-fast),
       background-color var(--kind-duration-fast);
 
-    &::before {
+    &:where([data-copied]) {
+      color: var(--kind-color-success);
+    }
+    &::after {
       content: "";
       width: 0.875rem;
       height: 0.875rem;
       background-color: currentColor;
       mask: var(--kind-icon-copy) center / contain no-repeat;
     }
-    &:hover {
-      color: var(--kind-color-fg);
-      background-color: color-mix(in oklab, var(--kind-color-fg) 6%, transparent);
-    }
-    &:focus-visible {
-      color: var(--kind-color-fg);
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset-inset);
-    }
-    &[data-copied] {
-      color: var(--kind-color-success);
-    }
-    &[data-copied]::before {
+    &[data-copied]::after {
       mask-image: var(--kind-icon-check);
+    }
+  }
+
+  [data-stack-trace-panel]:where(:hover, :focus-within) [data-slot="kind-stack-trace-copy"],
+  [data-slot="kind-stack-trace-copy"]:where([data-copied]) {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    [data-slot="kind-stack-trace-copy"] {
+      opacity: 1;
     }
   }
 
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
-    [data-slot="kind-stack-trace-copy"]::before {
+    [data-slot="kind-stack-trace-copy"]::after {
       forced-color-adjust: none;
       background-color: ButtonText;
     }

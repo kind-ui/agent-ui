@@ -1,6 +1,13 @@
 /* Markdown Table (spec §7), shared by both render layers. */
 @layer components {
   [data-slot="kind-markdown-table"] {
+    --kind-markdown-table-head-fill: color-mix(
+      in oklab,
+      var(--kind-color-hover) 55%,
+      var(--kind-color-surface)
+    );
+    --kind-markdown-table-head-height: 2.25rem;
+
     position: relative;
     display: flex;
     flex-direction: column;
@@ -11,63 +18,100 @@
     border-radius: var(--kind-radius);
     color: var(--kind-color-fg);
     font-size: var(--kind-text-sm);
-    line-height: 1.5;
+    line-height: 1.25rem;
+
+    /* The viewport's mask clips its own ring, so the table draws it. */
+    &:has([data-slot="scroll-area-viewport"]:focus-visible) {
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
+    }
   }
 
-  /* The copy button sits over the header row's end, which keeps room for it. */
+  /* Copy shows over the header row's end on hover or focus, fading the cell text under it. */
   [data-slot="kind-markdown-table-header"] {
     position: absolute;
     z-index: 1;
-    top: 0.25rem;
-    inset-inline-end: 0.25rem;
+    top: 0;
+    inset-inline-end: 0;
     display: flex;
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: color-mix(in oklab, var(--kind-color-hover) 55%, var(--kind-color-surface));
+    align-items: center;
+    height: var(--kind-markdown-table-head-height);
+    padding-inline: 1.5rem 0.25rem;
+    background-image: linear-gradient(
+      to left,
+      var(--kind-markdown-table-head-fill) calc(100% - 1.5rem),
+      transparent
+    );
+    opacity: 0;
+    transition: opacity var(--kind-duration-fast);
+
+    &:dir(rtl) {
+      background-image: linear-gradient(
+        to right,
+        var(--kind-markdown-table-head-fill) calc(100% - 1.5rem),
+        transparent
+      );
+    }
+  }
+
+  :is([data-slot="kind-markdown-table"]:hover, [data-slot="kind-markdown-table"]:focus-within)
+    > [data-slot="kind-markdown-table-header"] {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    [data-slot="kind-markdown-table-header"] {
+      opacity: 1;
+    }
   }
 
   [data-slot="kind-markdown-table-copy"] {
-    display: inline-grid;
-    padding: 0;
-    border: 0;
-    background-color: transparent;
-    place-items: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    border-radius: calc(var(--kind-radius) / 2);
-    color: var(--kind-color-muted);
-    transition:
-      color var(--kind-duration-fast),
-      background-color var(--kind-duration-fast);
-
-    &::before {
+    &::after {
       content: "";
       width: 0.875rem;
       height: 0.875rem;
       background-color: currentColor;
       mask: var(--kind-icon-copy) center / contain no-repeat;
     }
-    &:hover {
-      color: var(--kind-color-fg);
-      background-color: var(--kind-color-hover);
-    }
-    &:focus-visible {
-      color: var(--kind-color-fg);
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset-inset);
-    }
     &[data-copied] {
       color: var(--kind-color-success);
     }
-    &[data-copied]::before {
+    &[data-copied]::after {
       mask-image: var(--kind-icon-check);
     }
   }
 
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
-    [data-slot="kind-markdown-table-copy"]::before {
+    [data-slot="kind-markdown-table-copy"]::after {
       forced-color-adjust: none;
       background-color: ButtonText;
+    }
+  }
+
+  /* Columns cut at an edge fade out there, so a reader sees there's more. */
+  [data-slot="kind-markdown-table"]
+    [data-slot="scroll-area"][data-overflow-x]
+    > [data-slot="scroll-area-viewport"] {
+    --scroll-area-overflow-x-start: inherit;
+    --scroll-area-overflow-x-end: inherit;
+
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 min(2rem, var(--scroll-area-overflow-x-start, 0px)),
+      #000 calc(100% - min(2rem, var(--scroll-area-overflow-x-end, 0px))),
+      transparent
+    );
+
+    &:dir(rtl) {
+      mask-image: linear-gradient(
+        to left,
+        transparent,
+        #000 min(2rem, var(--scroll-area-overflow-x-start, 0px)),
+        #000 calc(100% - min(2rem, var(--scroll-area-overflow-x-end, 0px))),
+        transparent
+      );
     }
   }
 
@@ -81,19 +125,18 @@
 
     & :where(th, td) {
       padding: 0.5rem 0.875rem;
+      box-sizing: border-box;
       text-align: start;
       vertical-align: top;
     }
     & :where(th) {
+      height: var(--kind-markdown-table-head-height);
       font-weight: 600;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       border-bottom: 1px solid var(--kind-color-border);
-      background-color: color-mix(in oklab, var(--kind-color-hover) 55%, var(--kind-color-surface));
-    }
-    & :where(th:last-child) {
-      padding-inline-end: 2.5rem;
+      background-color: var(--kind-markdown-table-head-fill);
     }
     & :where(tbody tr + tr) {
       border-top: 1px solid color-mix(in oklab, var(--kind-color-border) 70%, transparent);
