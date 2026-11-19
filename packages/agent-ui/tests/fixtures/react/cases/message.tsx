@@ -14,6 +14,7 @@ import { KindToolbar, KindToolbarButton } from "../../../../src/react/internal/t
 import { Markdown } from "../../../../src/react/markdown.js";
 import {
   Message,
+  MessageAuthor,
   MessageAvatar,
   MessageBranch,
   MessageBranchLabel,
@@ -21,14 +22,25 @@ import {
   MessageBranchPrevious,
   MessageContent,
   MessageCopy,
+  MessageDuration,
   MessageEdit,
   MessageEditor,
+  MessageHeader,
+  MessageOutcome,
   MessageRegenerate,
   MessageRegenerateContent,
+  MessageTime,
   MessageToolbar,
 } from "../../../../src/react/message.js";
 import { answer } from "../../shared/markdown.js";
-import { regenerateOptions } from "../../shared/message.js";
+import {
+  author,
+  authored,
+  outcomeError,
+  outcomeText,
+  regenerateOptions,
+  timing,
+} from "../../shared/message.js";
 
 const replies = [
   "Retry with exponential backoff, and cap the number of attempts.",
@@ -213,6 +225,72 @@ function Chat() {
   );
 }
 
+function Authored() {
+  return (
+    <div className="m-4 flex w-[36rem] flex-col gap-2">
+      {authored.map(({ id, text, ...rest }) => (
+        <Message
+          key={id}
+          id={id}
+          aria-label={`Message ${id}`}
+          text={text}
+          author={author}
+          {...timing}
+          {...rest}
+        >
+          <MessageAvatar />
+          <MessageHeader>
+            <MessageAuthor />
+            <MessageTime />
+            <MessageDuration />
+          </MessageHeader>
+          <MessageContent>{text}</MessageContent>
+        </Message>
+      ))}
+    </div>
+  );
+}
+
+type Deferred = { resolve(): void; reject(): void };
+
+function Outcomes() {
+  const [statuses, setStatuses] = useState<Record<string, MessageStatus>>({
+    stopped: "streaming",
+    failed: "streaming",
+    earlier: "error",
+  });
+  const [deferred] = useState<Deferred[]>([]);
+  useEffect(() => {
+    Object.assign(window, {
+      kindOutcome: {
+        calls,
+        status: (id: string, value: MessageStatus) =>
+          flushSync(() => setStatuses((current) => ({ ...current, [id]: value }))),
+        settle: (ok: boolean) => deferred.shift()?.[ok ? "resolve" : "reject"](),
+      },
+    });
+  }, [deferred]);
+  const wait = (name: string) => (details: { reason: string; source: string }) => {
+    calls.push(`${name}:${details.reason}:${details.source}`);
+    return new Promise<void>((resolve, reject) => deferred.push({ resolve, reject }));
+  };
+  const rows = [
+    { id: "stopped", label: "Stopped answer", props: { onContinue: wait("continue") } },
+    { id: "failed", label: "Failed answer", props: { onRetry: wait("retry"), error: outcomeError } },
+    { id: "earlier", label: "Earlier answer", props: { onRetry: wait("retry") } },
+  ];
+  return (
+    <div className="m-4 flex w-[36rem] flex-col gap-6">
+      {rows.map(({ id, label, props }) => (
+        <Message key={id} id={id} aria-label={label} status={statuses[id]} text={outcomeText} {...props}>
+          <MessageContent>{outcomeText}</MessageContent>
+          <MessageOutcome />
+        </Message>
+      ))}
+    </div>
+  );
+}
+
 export const cases = {
   all: () => (
     <div className="m-4 flex w-[36rem] flex-col gap-6">
@@ -236,6 +314,8 @@ export const cases = {
       <WithOptions refusing />
     </div>
   ),
+  author: () => <Authored />,
+  outcomes: () => <Outcomes />,
   "custom-rows": () => (
     <div className="m-4 w-[36rem]">
       <WithOptions custom />

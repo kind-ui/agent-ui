@@ -213,6 +213,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- wave-6-task-9: Message author, time and outcomes -->
 
+- **Message author, time and outcomes (Wave 6 Task 9):** the author, time and duration sit in a `header` part the plan left out, present while any of them shows, so they share one line above the content; the outcome's mark is its own `outcome-icon` part (the status mark, `aria-hidden`), since `[data-status-mark]` draws on an element without text. D13's relative day is state, not a DOM write: `now` starts as the `now` option (else `undefined`, so server and hydration render the absolute date) and the time part's `bind` sets it from `todayKey(timeZone)`, so React renders the relative text itself after hydrating; a `now` option replaces the clock (fixtures pass one). The error's words are `errorText` in state, because the bridge reads any non-null `error` in state as a failed action. Retry and Continue share one `createPendingAction` (`outcomePending`), released when the status changes, since a new status answers the request. The avatar fills itself from `author` only when the host gives it no children (React default children; web an empty `kind-message-avatar`), so 0.5 avatars stay as written, and the default Avatar styles key on `data-author`. `avatarInitials` moved to `core/avatar.ts`, so Message doesn't bundle Subagent. `fromUIMessages` takes `{ status, error }` or the status alone, as in 0.5. Web fills an empty `kind-message-header` and `kind-message-outcome`; events `retry` and `continue`, offered by `can-retry` and `can-continue`.
+
 <!-- wave-6-task-10: Conversation states -->
 
 <!-- wave-6-task-11: Conversation Search -->

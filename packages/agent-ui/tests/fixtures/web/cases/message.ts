@@ -2,9 +2,16 @@ import { defineConversation } from "../../../../src/web/conversation.js";
 import { defineInternalAvatar } from "../../../../src/web/internal/avatar.js";
 import { defineInternalToolbar } from "../../../../src/web/internal/toolbar.js";
 import { defineMarkdown } from "../../../../src/web/markdown.js";
-import { defineMessage } from "../../../../src/web/message.js";
+import { defineMessage, type KindMessageEvents } from "../../../../src/web/message.js";
 import { answer } from "../../shared/markdown.js";
-import { regenerateOptions } from "../../shared/message.js";
+import {
+  author,
+  authored,
+  outcomeError,
+  outcomeText,
+  regenerateOptions,
+  timing,
+} from "../../shared/message.js";
 
 const replies = [
   "Retry with exponential backoff, and cap the number of attempts.",
@@ -115,6 +122,55 @@ function wireAssistant(el: HTMLElement & { canRegenerate?: boolean }, callbacks:
   el.addEventListener("regenerate", () => calls.push("regenerate"));
 }
 
+function authorCase(root: HTMLElement) {
+  define();
+  root.innerHTML = `<div class="m-4 flex w-[36rem] flex-col gap-2">${authored
+    .map(
+      ({ id, text, createdAt, durationSeconds, continued }) => `
+      <kind-message id="${id}" aria-label="Message ${id}" text="${text}" created-at="${createdAt}"
+        now="${timing.now}" time-zone="${timing.timeZone}"${durationSeconds ? ` duration-seconds="${durationSeconds}"` : ""}${continued ? " continued" : ""}>
+        <kind-message-avatar></kind-message-avatar>
+        <kind-message-header></kind-message-header>
+        <kind-message-content>${text}</kind-message-content>
+      </kind-message>`,
+    )
+    .join("")}</div>`;
+  for (const el of root.querySelectorAll("kind-message")) el.author = author;
+}
+
+function outcomesCase(root: HTMLElement) {
+  define();
+  const rows = [
+    { id: "stopped", label: "Stopped answer", status: "streaming", attrs: "can-continue" },
+    { id: "failed", label: "Failed answer", status: "streaming", attrs: `can-retry error="${outcomeError}"` },
+    { id: "earlier", label: "Earlier answer", status: "error", attrs: "can-retry" },
+  ];
+  root.innerHTML = `<div class="m-4 flex w-[36rem] flex-col gap-6">${rows
+    .map(
+      ({ id, label, status, attrs }) => `
+      <kind-message id="${id}" aria-label="${label}" status="${status}" text="${outcomeText}" ${attrs}>
+        <kind-message-content>${outcomeText}</kind-message-content>
+        <kind-message-outcome></kind-message-outcome>
+      </kind-message>`,
+    )
+    .join("")}</div>`;
+  const deferred: { resolve(): void; reject(): void }[] = [];
+  for (const el of root.querySelectorAll("kind-message"))
+    for (const name of ["retry", "continue"] as const)
+      el.addEventListener(name, (event) => {
+        const { reason, source, waitUntil } = (event as KindMessageEvents[typeof name]).detail;
+        calls.push(`${name}:${reason}:${source}`);
+        waitUntil(new Promise<void>((resolve, reject) => deferred.push({ resolve, reject })));
+      });
+  Object.assign(window, {
+    kindOutcome: {
+      calls,
+      status: (id: string, value: string) => root.querySelector(`#${id}`)?.setAttribute("status", value),
+      settle: (ok: boolean) => deferred.shift()?.[ok ? "resolve" : "reject"](),
+    },
+  });
+}
+
 export const cases = {
   all: (root: HTMLElement) => {
     define();
@@ -168,6 +224,8 @@ export const cases = {
       },
     });
   },
+  author: authorCase,
+  outcomes: outcomesCase,
   options: optionsCase(false),
   refusing: optionsCase(true),
   "no-options": optionsCase(false, true),

@@ -261,3 +261,125 @@ test.describe("with regenerate options", () => {
       expect(violations).toEqual([]);
     });
 });
+
+test.describe("author and time", () => {
+  const message = (page: Page, id: string) => page.getByRole("article", { name: `Message ${id}` });
+
+  test("shows the author's name and initials, and a continued message hides both", async ({ page }) => {
+    await open(page, "author");
+    const first = message(page, "today");
+    await expect(first.locator('[data-slot="kind-message-author"]')).toHaveText("Ada Lovelace");
+    await expect(first.locator('[data-slot="kind-message-avatar"]')).toHaveText("AL");
+    const next = message(page, "continued");
+    await expect(next.locator('[data-slot="kind-message-author"]')).toBeHidden();
+    await expect(next.locator('[data-slot="kind-message-avatar"]')).toHaveCSS("visibility", "hidden");
+  });
+
+  test("reads the time of day today, the date otherwise, and how long it took", async ({ page }) => {
+    await open(page, "author");
+    const today = message(page, "today").locator("time");
+    await expect(today).toHaveText("9:41 AM");
+    await expect(today).toHaveAttribute("datetime", "2026-11-18T09:41:00Z");
+    await expect(message(page, "today").locator('[data-slot="kind-message-duration"]')).toHaveText(
+      "1 min 12 sec",
+    );
+    const yesterday = message(page, "yesterday").locator("time");
+    await expect(yesterday).toHaveText("Nov 17, 9:41 AM");
+    await expect(yesterday).toHaveAttribute("datetime", "2026-11-17T09:41:00Z");
+  });
+});
+
+test.describe("an answer that stops or fails", () => {
+  type Outcomes = {
+    kindOutcome: { calls: string[]; status(id: string, value: string): void; settle(ok: boolean): void };
+    kindAnnounced: string[];
+  };
+  const openOutcomes = async (page: Page) => {
+    // Records each text UI SDK's live regions are given.
+    await page.addInitScript(() => {
+      const announced: string[] = [];
+      Object.assign(window, { kindAnnounced: announced });
+      new MutationObserver((mutations) => {
+        for (const { target } of mutations)
+          if (target instanceof Element && target.hasAttribute("aria-live") && target.textContent)
+            announced.push(target.textContent);
+      }).observe(document, { childList: true, subtree: true });
+    });
+    await open(page, "outcomes");
+    await expect(page.getByRole("article", { name: "Earlier answer" })).toHaveAttribute(
+      "data-status",
+      "error",
+    );
+  };
+  const status = (page: Page, id: string, value: string) =>
+    page.evaluate(([name, next]) => (window as unknown as Outcomes).kindOutcome.status(name, next), [
+      id,
+      value,
+    ] as const);
+  const settle = (page: Page, ok: boolean) =>
+    page.evaluate((value) => (window as unknown as Outcomes).kindOutcome.settle(value), ok);
+  const outcomeCalls = (page: Page) => page.evaluate(() => (window as unknown as Outcomes).kindOutcome.calls);
+  const announced = (page: Page) => page.evaluate(() => (window as unknown as Outcomes).kindAnnounced);
+  const answer = (page: Page, name: string) => page.getByRole("article", { name });
+
+  test("announces each outcome once, without moving the text above it", async ({ page }) => {
+    await openOutcomes(page);
+    const content = answer(page, "Stopped answer").locator('[data-slot="kind-message-content"]');
+    const before = await content.boundingBox();
+    await status(page, "stopped", "aborted");
+    await expect(answer(page, "Stopped answer").getByText("Stopped", { exact: true })).toBeVisible();
+    expect(await content.boundingBox()).toEqual(before);
+    await expect.poll(() => announced(page)).toEqual(["Response stopped"]);
+    await status(page, "failed", "error");
+    await expect(answer(page, "Failed answer").getByText("The model is overloaded")).toBeVisible();
+    await expect.poll(() => announced(page)).toEqual(["Response stopped", "Response failed"]);
+  });
+
+  test("Retry and Continue lock while pending and unlock once their promise settles", async ({ page }) => {
+    await openOutcomes(page);
+    await status(page, "failed", "error");
+    const retry = answer(page, "Failed answer").getByRole("button", { name: "Retry" });
+    await retry.click();
+    await expect(retry).toHaveAttribute("aria-disabled", "true");
+    await retry.click({ force: true });
+    expect(await outcomeCalls(page)).toEqual(["retry:retry-press:mouse"]);
+    await settle(page, false);
+    await expect(retry).not.toHaveAttribute("aria-disabled");
+
+    await status(page, "stopped", "aborted");
+    const resume = answer(page, "Stopped answer").getByRole("button", { name: "Continue" });
+    await resume.click();
+    await expect(resume).toHaveAttribute("aria-disabled", "true");
+    await settle(page, true);
+    await expect(resume).not.toHaveAttribute("aria-disabled");
+    expect(await outcomeCalls(page)).toEqual(["retry:retry-press:mouse", "continue:continue-press:mouse"]);
+  });
+
+  test("agents retry a failed answer and continue a stopped one", async ({ page }) => {
+    await openOutcomes(page);
+    await expectAgentActions(page, "Earlier answer", ["copy", "retry"]);
+    await status(page, "stopped", "aborted");
+    await expectAgentActions(page, "Stopped answer", ["copy", "continue"]);
+    await act(page, [{ ref: "Stopped answer", action: "continue" }]);
+    expect(await outcomeCalls(page)).toEqual(["continue:imperative:agent"]);
+    await expectAgentActions(page, "Stopped answer", ["copy"]);
+  });
+
+  for (const scheme of ["light", "dark"] as const)
+    test(`has no axe violations with its outcomes and author, ${scheme}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      for (const name of ["outcomes", "author"]) {
+        await open(page, name);
+        await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
+        if (name === "outcomes") {
+          await status(page, "stopped", "aborted");
+          await status(page, "failed", "error");
+        }
+        await page.waitForFunction(() =>
+          document.getAnimations().every((animation) => animation.playState !== "running"),
+        );
+        const { violations } = await new AxeBuilder({ page }).include("#root").analyze();
+        expect(violations, name).toEqual([]);
+      }
+    });
+});
