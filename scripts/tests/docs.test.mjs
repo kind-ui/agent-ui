@@ -33,7 +33,15 @@ test("the sidebar lists every component page", () => {
 });
 
 const indexed = {
-  "composer control": ["picker", "add-menu", "settings-menu", "approval-mode", "model-control", "context-bar", "dictation"],
+  "composer control": [
+    "picker",
+    "add-menu",
+    "settings-menu",
+    "approval-mode",
+    "model-control",
+    "context-bar",
+    "dictation",
+  ],
   "thread and shell": [
     "thread-list",
     "thread-search",
@@ -52,7 +60,10 @@ for (const [group, names] of Object.entries(indexed)) {
     const index = readFileSync(new URL("index.mdx", content), "utf8");
     for (const name of names) {
       assert.ok(meta.pages.includes(name), `${name} is missing from components/meta.json`);
-      assert.ok(index.includes(`](./components/${name}.mdx)`), `index.mdx doesn't link components/${name}.mdx`);
+      assert.ok(
+        index.includes(`](./components/${name}.mdx)`),
+        `index.mdx doesn't link components/${name}.mdx`,
+      );
     }
   });
 }
@@ -60,7 +71,10 @@ for (const [group, names] of Object.entries(indexed)) {
 test("the Sidebar page leads with the full chat shell", () => {
   const source = page("sidebar");
   const first = source.indexOf("<include cwd");
-  assert.equal(source.slice(first, source.indexOf("</include>", first)), '<include cwd lang="tsx">./examples/sidebar/shell.tsx');
+  assert.equal(
+    source.slice(first, source.indexOf("</include>", first)),
+    '<include cwd lang="tsx">./examples/sidebar/shell.tsx',
+  );
 });
 
 const showcases = {

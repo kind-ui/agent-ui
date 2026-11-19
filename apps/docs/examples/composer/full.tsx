@@ -71,7 +71,9 @@ const demoSource: DictationSource = {
   },
 };
 
-type FullComposerProps = Pick<ComponentProps<typeof Composer>, "onSubmit" | "disabled"> & { placeholder?: string };
+type FullComposerProps = Pick<ComponentProps<typeof Composer>, "onSubmit" | "disabled"> & {
+  placeholder?: string;
+};
 
 const send = () => new Promise<void>((resolve) => setTimeout(resolve, 1000));
 
