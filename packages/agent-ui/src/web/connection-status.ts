@@ -25,7 +25,7 @@ const fill = (el: Element | null, text: string) => {
 /**
  * `<kind-connection-status state="…">` adds its mark, its words and Retry, unless it has them, and fills in the
  * words and Retry's label unless they hold text of their own. The `can-retry` attribute
- * shows Retry, which fires `retry`: call `event.detail.waitUntil(promise)` to keep it pending until the promise
+ * shows Retry, which fires `connectionretry`: call `event.detail.waitUntil(promise)` to keep it pending until the promise
  * settles. `labels` is a property.
  */
 export function defineConnectionStatus(): void {
@@ -34,6 +34,8 @@ export function defineConnectionStatus(): void {
     root: {
       tag: "kind-connection-status",
       kinds: { canRetry: "boolean" },
+      // Conversation fires its own `retry`, which a capture listener on it would hear from this element too.
+      events: { onRetry: "connectionretry" },
       // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
       options: (el) => ((el as KindConnectionStatusElement).canRetry ? {} : { onRetry: undefined }),
       render: (el, instance) => {
@@ -67,7 +69,7 @@ export function defineConnectionStatus(): void {
 }
 
 export type KindConnectionStatusEvents = {
-  retry: CustomEvent<ConnectionStatusRetryDetails & Pick<UiActionDetail, "waitUntil">>;
+  connectionretry: CustomEvent<ConnectionStatusRetryDetails & Pick<UiActionDetail, "waitUntil">>;
 };
 
 export interface KindConnectionStatusElement

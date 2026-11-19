@@ -44,7 +44,7 @@ const page =
     status.state = initial;
     if (motion) status.motion = motion;
     status.canRetry = true;
-    status.addEventListener("retry", (event) => event.detail.waitUntil(retried()));
+    status.addEventListener("connectionretry", (event) => event.detail.waitUntil(retried()));
     root.querySelector("kind-conversation")?.append(status);
     const set: ConnectionHost["set"] = (state, options) => {
       status.retryAt = options?.retryAt;
