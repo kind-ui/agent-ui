@@ -721,6 +721,7 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       attrs: (state) => ({
         type: "button",
         "aria-disabled": state.disabled ? "true" : undefined,
+        "data-kind-button": "",
       }),
       bind: (el, part) => part.api.discardRecovery.bind(el, part),
     }),

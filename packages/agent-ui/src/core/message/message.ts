@@ -230,6 +230,14 @@ export type MessageApi = {
   readClock: () => () => void;
   /** Moves focus out of the outcome when Retry or Continue leaves while focused. */
   outcomeRecovery: ReturnType<typeof createFocusRecovery>;
+  /** Saves the edit, as Enter does. */
+  saveEdit: (event?: Event) => void;
+  /** Ends the edit without saving, as Escape does. */
+  cancelEdit: () => void;
+  /** Saves the edit when focus leaves the editor and its buttons, as it leaves an editor without them. */
+  editFocusOut: (event: FocusEvent) => void;
+  /** Moves focus to Edit when Cancel or Save leaves while focused. */
+  editRecovery: ReturnType<typeof createFocusRecovery>;
   /** The avatar and time parts' states, memoized. */
   avatarState: (state: MessageState) => MessageAvatarState;
   timeState: (state: MessageState) => MessageTimeState;
@@ -280,6 +288,9 @@ export type MessagePrimitive = ReturnType<
       | "header"
       | "content"
       | "editor"
+      | "edit-actions"
+      | "edit-cancel"
+      | "edit-save"
       | "toolbar"
       | "copy"
       | "regenerate-trigger"
@@ -581,6 +592,18 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
         state.author ? avatarState(state.author.name, state.author.avatarUrl || undefined) : NO_AVATAR,
       timeState: (state) => timeState(state.createdAt ?? "", state.locale, state.timeZone, state.now),
       inlineEdit,
+      saveEdit: (event) => void inlineEdit.end("imperative", event),
+      cancelEdit: () => inlineEdit.cancel(),
+      editFocusOut: (event) => {
+        const next = event.relatedTarget;
+        const within = (name: "editor" | "edit-actions") =>
+          next instanceof Node && Boolean(context.element(name)?.contains(next));
+        if (!within("editor") && !within("edit-actions")) inlineEdit.end("focus-out", event);
+      },
+      editRecovery: createFocusRecovery({
+        fallback: () =>
+          context.element("edit")?.querySelector<HTMLElement>("button:not([disabled])") ?? undefined,
+      }),
       enterToolbar: (el) => {
         if (streamed) void enter(el, "fade", { motion: store.get().motion });
       },
@@ -637,10 +660,43 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       present: (state) => state.editing !== null,
       attrs: () => ({ "aria-label": "Edit message" }),
       on: {
-        keydown: (event, { api }) => api.inlineEdit.inputKeydown(event as KeyboardEvent),
-        focusout: (event, { api }) => api.inlineEdit.end("focus-out", event),
+        keydown: (event, { api }) => {
+          const key = event as KeyboardEvent;
+          // Tab moves on to Cancel and Save, which save when focus leaves them.
+          if (key.key === "Tab" && !key.shiftKey) return;
+          api.inlineEdit.inputKeydown(key);
+        },
+        focusout: (event, { api }) => api.editFocusOut(event as FocusEvent),
       },
       bind: (el, { api }) => api.inlineEdit.bindInput(el as HTMLTextAreaElement),
+    }),
+    // Cancel and Save, after the editor: a press keeps focus in the editor, so pressing Cancel doesn't save first.
+    "edit-actions": slot({
+      present: (state) => state.editing !== null,
+      attrs: (state) => ({ "data-role": state.role }),
+      on: {
+        mousedown: (event) => event.preventDefault(),
+        focusout: (event, { api }) => api.editFocusOut(event as FocusEvent),
+        keydown: (event, { api }) => {
+          if ((event as KeyboardEvent).key !== "Escape") return;
+          event.preventDefault();
+          api.cancelEdit();
+        },
+      },
+    }),
+    "edit-cancel": slot({
+      role: "button",
+      focus: "native",
+      press: ({ api }) => api.cancelEdit(),
+      attrs: () => ({ type: "button", "data-kind-button": "" }),
+      bind: (el, part) => part.api.editRecovery.bind(el, part),
+    }),
+    "edit-save": slot({
+      role: "button",
+      focus: "native",
+      press: ({ api }, event) => api.saveEdit(event),
+      attrs: () => ({ type: "button", "data-kind-button": "primary" }),
+      bind: (el, part) => part.api.editRecovery.bind(el, part),
     }),
     outcome: slot({
       present: (state) => state.outcome !== null,
@@ -667,6 +723,7 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
         type: "button",
         "aria-disabled": state.outcomePending ? "true" : undefined,
         "data-pending": state.outcomePending ? "" : undefined,
+        "data-kind-button": "secondary",
       }),
       bind: (el, part) => part.api.outcomeRecovery.bind(el, part),
     }),
@@ -679,6 +736,7 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
         type: "button",
         "aria-disabled": state.outcomePending ? "true" : undefined,
         "data-pending": state.outcomePending ? "" : undefined,
+        "data-kind-button": "secondary",
       }),
       bind: (el, part) => part.api.outcomeRecovery.bind(el, part),
     }),

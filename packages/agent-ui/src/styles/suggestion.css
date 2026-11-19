@@ -1,11 +1,19 @@
-/* Suggestion (spec §7): a row of prompt chips that scrolls sideways when they don't fit, with Previous and Next after it. */
+/* Suggestion (spec §7): a row of prompt chips that scrolls sideways when they don't fit, with Previous and Next after
+   it, or wraps onto more lines with `layout="wrap"`. */
 @layer components {
   [data-slot="kind-suggestion"] {
     display: block;
     min-width: 0;
-    font-size: var(--kind-text-sm);
+    font-size: var(--kind-text-md);
     line-height: 1.25rem;
     color: var(--kind-color-fg);
+  }
+
+  [data-slot="kind-suggestion"][data-layout="wrap"] {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
   }
 
   /* The edge with more chips past it fades. Carousel marks the slides in view once it has measured them, so a page
@@ -66,27 +74,29 @@
     display: none;
   }
 
+  /* Filled and borderless, one shape whether or not a chip has a description, which follows its label on one line. */
   [data-slot="kind-suggestion-item"] {
     display: inline-flex;
-    flex-direction: column;
-    align-items: flex-start;
+    align-items: baseline;
+    gap: 0.375rem;
     max-width: 18rem;
-    padding: 5px 12px;
-    border: 1px solid var(--kind-color-border);
+    min-height: var(--kind-trigger-height);
+    box-sizing: border-box;
+    padding: 0.375rem 0.75rem;
+    border: 0;
     border-radius: 999px;
-    background-color: var(--kind-color-surface);
+    background-color: var(--kind-color-bubble);
     color: var(--kind-color-fg);
+    font: inherit;
     text-align: start;
     white-space: nowrap;
     cursor: pointer;
     transition:
       background-color var(--kind-duration-fast) var(--kind-ease-out),
-      border-color var(--kind-duration-fast) var(--kind-ease-out),
       scale var(--kind-duration-fast) var(--kind-ease-out);
 
     &:where(:hover:not([aria-disabled="true"])) {
-      border-color: color-mix(in oklab, var(--kind-color-border) 60%, var(--kind-color-muted));
-      background-color: var(--kind-color-hover);
+      background-color: var(--kind-color-selected);
     }
     &:where(:active:not([aria-disabled="true"])) {
       scale: 0.97;
@@ -98,20 +108,17 @@
     &:where([aria-disabled="true"]) {
       cursor: default;
     }
-    /* A chip with a description is a small card, two lines tall. */
-    &:where(:has([data-suggestion-description]:not(:empty))) {
-      padding-block: 6px;
-      border-radius: calc(var(--kind-radius) * 2 / 3);
-    }
 
     & > :where([data-suggestion-label], [data-suggestion-description]) {
-      max-width: 100%;
+      min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    & > :where([data-suggestion-label]) {
+      flex-shrink: 0;
+      max-width: 100%;
+    }
     & > :where([data-suggestion-description]) {
-      font-size: var(--kind-text-xs);
-      line-height: 1rem;
       color: var(--kind-color-muted);
     }
     & > :where([data-suggestion-description]:empty) {

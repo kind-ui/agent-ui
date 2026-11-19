@@ -27,11 +27,12 @@ export default function ConversationEmptyExample() {
       <ConversationViewport>
         <ConversationContent>
           <ConversationEmpty>
-            <ConversationEmptyTitle>What can I help with?</ConversationEmptyTitle>
+            <ConversationEmptyTitle>Ask about kind-ui/agent-ui</ConversationEmptyTitle>
             <ConversationEmptyDescription>
-              {prompt ? `Sent: ${prompt}` : "Ask about this repository, or start from a suggestion."}
+              {prompt ? `Sent: ${prompt}` : "Start from a suggestion, or ask your own question."}
             </ConversationEmptyDescription>
             <Suggestion
+              layout="wrap"
               suggestions={suggestions}
               onPick={(id) => setPrompt(suggestions.find((suggestion) => suggestion.id === id)?.label)}
             />

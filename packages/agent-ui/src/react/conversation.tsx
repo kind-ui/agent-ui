@@ -16,6 +16,7 @@ const conversation = createParts(conversationPrimitive, {
   skeleton: "div",
   loading: "div",
   error: "div",
+  "error-icon": "span",
   "error-text": "div",
   retry: "button",
   marks: "div",
@@ -56,10 +57,13 @@ export function ConversationLoading({
 
 export type ConversationErrorProps = ComponentProps<typeof conversation.Error>;
 
-/** Shown while `status` is `"error"`: its words and Retry, unless you pass children. */
+/** Shown while `status` is `"error"`: its mark, its words and Retry, unless you pass children. */
 export function ConversationError({ children = ERROR_PARTS, ...props }: ConversationErrorProps) {
   return <conversation.Error {...props}>{children}</conversation.Error>;
 }
+
+/** The error's status mark. Hidden from assistive technology: the words say it. */
+export const ConversationErrorIcon = conversation.ErrorIcon;
 
 export type ConversationErrorTextProps = ComponentProps<typeof conversation.ErrorText>;
 
@@ -107,6 +111,7 @@ const SKELETON_ROWS = (
 
 const ERROR_PARTS = (
   <>
+    <ConversationErrorIcon />
     <ConversationErrorText />
     <ConversationRetry />
   </>

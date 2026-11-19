@@ -28,10 +28,14 @@ export type StreamingTextState = {
   text: string;
   chunks: readonly StreamingTextChunk[];
   caret: boolean;
+  /** Whether no text arrived for a moment, which is when the caret starts to pulse. */
+  stalled: boolean;
   motion: MotionMode;
 };
 
 export type StreamingTextApi = {
+  /** Times the caret's stall while it's shown. Called by the caret slot. */
+  bindCaret: () => () => void;
   /** Fades a chunk in when it was appended at full motion, never one that mounted with the text or replaced it. */
   enterChunk: (el: HTMLElement, id: number) => void;
 };
@@ -59,6 +63,8 @@ export type StreamingTextPrimitive = ReturnType<
   >
 >;
 
+const STALL_MS = 600;
+
 const presentation = (options: StreamingTextOptions) => ({
   caret: options.caret ?? false,
   motion: options.motion ?? "auto",
@@ -69,7 +75,7 @@ export const streamingTextPrimitive: StreamingTextPrimitive = definePrimitive({
   options: { text: "string", caret: "boolean", motion: "string" },
   state: (options: StreamingTextOptions): StreamingTextState => {
     const text = options.text ?? "";
-    return { ...presentation(options), text, chunks: text ? [{ id: 0, text }] : [] };
+    return { ...presentation(options), text, chunks: text ? [{ id: 0, text }] : [], stalled: false };
   },
   // `text` reaches state through the diff in `api`, which needs the text before it.
   sync: presentation,
@@ -92,10 +98,20 @@ export const streamingTextPrimitive: StreamingTextPrimitive = definePrimitive({
       return [{ id: first.id, text }, ...chunks.slice(count)];
     };
 
+    // The caret holds still while text arrives and pulses once it stops for a moment, timed only while it's shown.
+    let stall: ReturnType<typeof setTimeout> | undefined;
+    let caret = false;
+    const wait = () => {
+      clearTimeout(stall);
+      if (store.get().stalled) store.set({ stalled: false });
+      if (caret) stall = setTimeout(() => store.set({ stalled: true }), STALL_MS);
+    };
+
     context.onOptions((options) => {
       const text = options.text ?? "";
       const { text: previous, chunks, motion } = store.get();
       if (text === previous) return;
+      wait();
       const id = nextId++;
       const diff = streamingTextDiff(previous, text);
       if (diff.kind === "append") {
@@ -109,6 +125,14 @@ export const streamingTextPrimitive: StreamingTextPrimitive = definePrimitive({
     });
 
     return {
+      bindCaret: () => {
+        caret = true;
+        wait();
+        return () => {
+          caret = false;
+          clearTimeout(stall);
+        };
+      },
       enterChunk: (el, id) => {
         if (!fading.has(id) || entering.has(id)) return;
         entering.add(id);
@@ -130,7 +154,12 @@ export const streamingTextPrimitive: StreamingTextPrimitive = definePrimitive({
     }),
     caret: slot({
       present: (state) => state.caret,
-      attrs: (state) => ({ "aria-hidden": "true", "data-motion": state.motion }),
+      attrs: (state) => ({
+        "aria-hidden": "true",
+        "data-motion": state.motion,
+        "data-stalled": state.stalled ? "" : undefined,
+      }),
+      bind: (_el, { api }) => api.bindCaret(),
     }),
   }),
   agent: { actions: [] },

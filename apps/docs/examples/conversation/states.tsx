@@ -37,7 +37,7 @@ export default function ConversationStatesExample() {
             type="button"
             aria-pressed={status === value}
             onClick={() => setStatus(value)}
-            className="rounded-md border border-[var(--kind-color-border)] px-2.5 py-1 text-sm capitalize aria-pressed:bg-[var(--kind-color-hover)]"
+            className="rounded-md border border-[var(--kind-color-border)] px-2.5 py-1 text-sm capitalize aria-pressed:bg-[var(--kind-color-selected)]"
           >
             {value}
           </button>
@@ -66,7 +66,7 @@ export default function ConversationStatesExample() {
                   <p
                     className={
                       message.role === "user"
-                        ? "ms-auto w-fit max-w-[80%] rounded-2xl bg-[var(--kind-color-hover)] px-3.5 py-2"
+                        ? "ms-auto w-fit max-w-[80%] rounded-2xl bg-[var(--kind-color-bubble)] px-3.5 py-2"
                         : undefined
                     }
                   >

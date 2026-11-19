@@ -4,7 +4,7 @@
     display: block;
     min-width: 0;
     font-size: var(--kind-markdown-font-size, var(--kind-text-lg));
-    line-height: var(--kind-markdown-line-height, 1.7);
+    line-height: var(--kind-markdown-line-height, 1.6);
     color: var(--kind-markdown-color, var(--kind-color-fg));
     overflow-wrap: break-word;
 
@@ -31,10 +31,11 @@
       font-size: 1.25em;
     }
     & :where(h3) {
-      font-size: 1.0625em;
+      font-size: 1.125em;
     }
     & :where(h4, h5, h6) {
       font-size: 1em;
+      color: var(--kind-color-muted);
     }
     & :where(ul, ol) {
       padding-inline-start: 1.5em;
@@ -87,14 +88,14 @@
     & :where(:not(pre) > code) {
       padding: 0.125em 0.375em;
       border-radius: calc(var(--kind-radius) / 2);
-      background-color: var(--kind-color-hover);
+      /* A tint of the text rather than the hover fill, so it reads on the surface and inside a tinted block. */
+      background-color: color-mix(in oklab, var(--kind-color-fg) 7%, transparent);
       font-family: var(--kind-font-mono);
       font-size: 0.875em;
     }
     & :where(blockquote) {
       padding-inline-start: 1em;
       border-inline-start: 2px solid var(--kind-color-border);
-      color: var(--kind-color-muted);
     }
     & :where(hr) {
       border: 0;

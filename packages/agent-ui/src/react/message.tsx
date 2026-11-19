@@ -25,6 +25,9 @@ const message = createParts(messagePrimitive, {
   avatar: "div",
   content: "div",
   editor: "textarea",
+  "edit-actions": "div",
+  "edit-cancel": "button",
+  "edit-save": "button",
   toolbar: "div",
   copy: "span",
   regenerate: "span",
@@ -136,8 +139,41 @@ export function MessageOutcome({ children = OUTCOME, ...props }: ComponentProps<
 }
 
 export const MessageContent = message.Content;
-/** Shown in place of the content while a user message is edited. */
-export const MessageEditor = message.Editor;
+/** Shown in place of the content while a user message is edited, with Cancel and Save after it. */
+export function MessageEditor(props: ComponentProps<typeof message.Editor>) {
+  return (
+    <>
+      <message.Editor {...props} />
+      <MessageEditActions />
+    </>
+  );
+}
+
+/** Cancel and Save, shown while the message is edited. Enter and Escape do the same. */
+export function MessageEditActions({
+  children = EDIT_ACTIONS,
+  ...props
+}: ComponentProps<typeof message.EditActions>) {
+  return <message.EditActions {...props}>{children}</message.EditActions>;
+}
+
+export function MessageEditCancel({
+  children = "Cancel",
+  ...props
+}: ComponentProps<typeof message.EditCancel>) {
+  return <message.EditCancel {...props}>{children}</message.EditCancel>;
+}
+
+export function MessageEditSave({ children = "Save", ...props }: ComponentProps<typeof message.EditSave>) {
+  return <message.EditSave {...props}>{children}</message.EditSave>;
+}
+
+const EDIT_ACTIONS = (
+  <>
+    <MessageEditCancel />
+    <MessageEditSave />
+  </>
+);
 /** Shown once the message settles. Holds the branch switcher and a `KindToolbar` of actions. */
 export const MessageToolbar = message.Toolbar;
 /** Wrap a `KindToolbarButton` in each action: `<MessageCopy><KindToolbarButton aria-label="Copy" /></MessageCopy>`. */

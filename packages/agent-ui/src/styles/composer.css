@@ -174,9 +174,19 @@
       border-radius: 999px;
     }
 
+    /* Cancel, the status and Stop share the last line of the actions row, as Send does when the controls wrap. The
+       status runs from after Cancel to before Stop, over the hidden controls, so it has room for its words. */
+    & :is([data-dictation-part="cancel"], [data-dictation-part="status"], [data-dictation-part="stop"]) {
+      align-self: end;
+    }
+
     & [data-dictation-part="status"] {
-      grid-area: restored;
-      padding-inline-end: calc(var(--kind-dictation-height, 2rem) + 0.5rem);
+      grid-column: attach / restored;
+      grid-row: attach;
+      min-height: var(--kind-dictation-height, 2rem);
+      padding-inline: calc(var(--kind-dictation-height, 2rem) + 0.5rem);
+      /* It lies over Cancel's cell; words take no presses. */
+      pointer-events: none;
     }
 
     & [data-dictation-part="stop"] {
@@ -515,32 +525,6 @@
     & > span {
       overflow: hidden;
       text-overflow: ellipsis;
-    }
-  }
-
-  [data-slot="kind-composer-discard"] {
-    padding: 0.125rem 0.375rem;
-    border: 0;
-    background-color: transparent;
-    transition: background-color var(--kind-duration-fast);
-    border-radius: calc(var(--kind-radius) / 2);
-    color: var(--kind-color-fg);
-    font: inherit;
-    font-weight: 500;
-    cursor: pointer;
-
-    &:hover:not([aria-disabled="true"]) {
-      background-color: var(--kind-color-hover);
-    }
-
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
-    }
-
-    &[aria-disabled="true"] {
-      color: var(--kind-color-muted);
-      cursor: default;
     }
   }
 

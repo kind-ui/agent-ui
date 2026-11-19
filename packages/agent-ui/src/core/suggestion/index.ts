@@ -1,6 +1,7 @@
 export {
   type SuggestionApi,
   type SuggestionItemState,
+  type SuggestionLayout,
   type SuggestionOptions,
   type SuggestionPickReason,
   type SuggestionPrimitive,

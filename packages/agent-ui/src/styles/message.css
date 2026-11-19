@@ -25,6 +25,7 @@
 
   [data-slot="kind-message-content"],
   [data-slot="kind-message-editor"],
+  [data-slot="kind-message-edit-actions"],
   [data-slot="kind-message-toolbar"] {
     grid-column: -2;
   }
@@ -42,18 +43,22 @@
     max-width: min(80%, 36rem);
     padding: 0.5rem 0.875rem;
     border-radius: calc(var(--kind-radius) * 1.5);
-    background-color: var(--kind-color-hover);
+    background-color: var(--kind-color-bubble);
   }
 
+  /* Edits in the bubble's place: its alignment, fill and padding, growing with the text up to the bubble's width.
+     The 1px border takes the ring's color while it has focus, so the field reads as being edited, not as a second
+     frame. */
   [data-slot="kind-message-editor"] {
     box-sizing: border-box;
-    width: min(100%, 36rem);
+    width: min(80%, 36rem);
+    min-width: min(100%, 12rem);
+    max-width: min(80%, 36rem);
     min-height: 2.5rem;
-    field-sizing: content;
-    padding: 0.5rem 0.875rem;
+    padding: calc(0.5rem - 1px) calc(0.875rem - 1px);
     border: 1px solid var(--kind-color-border);
     border-radius: calc(var(--kind-radius) * 1.5);
-    background-color: var(--kind-color-surface);
+    background-color: var(--kind-color-bubble);
     color: inherit;
     font: inherit;
     resize: none;
@@ -61,6 +66,23 @@
     &:focus {
       outline: none;
     }
+
+    @supports (field-sizing: content) {
+      width: auto;
+      field-sizing: content;
+    }
+  }
+
+  [data-slot="kind-message-edit-actions"] {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.25rem;
+    margin-top: 0.375rem;
+  }
+
+  /* The toolbar steps aside while the message is edited, so Cancel and Save are the only actions. */
+  [data-slot="kind-message"][data-editing] [data-slot="kind-message-toolbar"] {
+    display: none;
   }
 
   [data-slot="kind-message-toolbar"] {
@@ -75,6 +97,23 @@
 
   [data-slot="kind-message-toolbar"][data-role="user"] {
     margin-inline: 0 -0.375rem;
+  }
+
+  /* Earlier messages show their actions on hover and focus; the last one, and every one on a touch screen, always
+     does. A branch switcher says something, so it stays. */
+  @media (hover: hover) {
+    :is(
+        [data-slot="kind-conversation-row"]:not([data-last]) [data-slot="kind-message"],
+        [data-slot="kind-message"]:has(~ [data-slot="kind-message"])
+      ):where(:not(:hover, :focus-within, :has([aria-expanded="true"])))
+      [data-slot="kind-message-toolbar"]
+      > :not([data-slot="kind-message-branch"]) {
+      opacity: 0;
+    }
+
+    [data-slot="kind-message-toolbar"] > * {
+      transition: opacity var(--kind-duration-fast) var(--kind-ease-out);
+    }
   }
 
   :is(
@@ -268,32 +307,6 @@
 
   :where([data-slot="kind-message-outcome"][data-outcome="failed"]) [data-slot="kind-message-outcome-text"] {
     color: var(--kind-color-fg);
-  }
-
-  :is([data-slot="kind-message-retry"], [data-slot="kind-message-continue"]) {
-    display: inline-flex;
-    align-items: center;
-    height: 1.75rem;
-    padding: 0 0.625rem;
-    border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) * 2 / 3);
-    background-color: var(--kind-color-surface);
-    color: var(--kind-color-fg);
-    font: inherit;
-    cursor: pointer;
-    transition: background-color var(--kind-duration-fast);
-
-    &:hover:not([aria-disabled="true"]) {
-      background-color: var(--kind-color-hover);
-    }
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
-    }
-    &[aria-disabled="true"] {
-      opacity: 0.6;
-      cursor: default;
-    }
   }
 
   /* Web keeps parts that aren't present in the page, with `hidden`. */

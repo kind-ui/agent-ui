@@ -28,6 +28,7 @@ import {
 type RegenerateOption = MessageRegenerateContentState["options"][number];
 
 const HEADER = `<kind-message-author></kind-message-author><kind-message-time><time></time></kind-message-time><kind-message-duration></kind-message-duration>`;
+const EDIT_ACTIONS = `<kind-message-edit-cancel><button>Cancel</button></kind-message-edit-cancel><kind-message-edit-save><button>Save</button></kind-message-edit-save>`;
 const OUTCOME = `<kind-message-outcome-icon></kind-message-outcome-icon><kind-message-outcome-text></kind-message-outcome-text><kind-message-retry><button>Retry</button></kind-message-retry><kind-message-continue><button>Continue</button></kind-message-continue>`;
 
 // Header, outcome and text parts this element filled in. A part someone wrote into keeps what they wrote, as
@@ -76,6 +77,11 @@ const drawDetails = (el: Element, api: MessageApi, state: MessageState) => {
   for (const part of own("kind-message-header")) if (claim(part) && !part.firstChild) part.innerHTML = HEADER;
   for (const part of own("kind-message-outcome"))
     if (claim(part) && !part.firstChild) part.innerHTML = OUTCOME;
+  // An editor written without Cancel and Save gets them after it.
+  if (!own("kind-message-edit-actions").length)
+    own("kind-message-editor")[0]?.after(el.ownerDocument.createElement("kind-message-edit-actions"));
+  for (const part of own("kind-message-edit-actions"))
+    if (claim(part) && !part.firstChild) part.innerHTML = EDIT_ACTIONS;
   for (const part of own("kind-message-avatar")) drawAvatar(part, api.avatarState(state));
   for (const part of own("kind-message-author")) fill(part, state.author?.name ?? "");
   const { label } = api.timeState(state);
@@ -144,7 +150,8 @@ const drawLevel = (parent: Element, options: RegenerateOption[], first?: Regener
  * `event.detail.waitUntil(promise)` to keep Retry or Continue pending). Write each action as a wrapper around a toolbar button,
  * `<kind-message-copy><ui-toolbar-button><button aria-label="Copy">`, inside a
  * `<kind-internal-toolbar><ui-toolbar aria-label="Message actions">`, and the editor as
- * `<kind-message-editor><textarea hidden></textarea></kind-message-editor>`.
+ * `<kind-message-editor><textarea hidden></textarea></kind-message-editor>`, which gets Cancel and Save after it in a
+ * `kind-message-edit-actions` unless you write one.
  *
  * With `regenerateOptions` (a property), write Regenerate as a menu whose trigger is the toolbar button:
  * `<kind-message-regenerate><kind-internal-menu><ui-menu>` holding
@@ -210,6 +217,9 @@ export function defineMessage(): void {
     avatar: "kind-message-avatar",
     content: "kind-message-content",
     editor: { tag: "kind-message-editor", target: wrappedChild("textarea"), display: "contents" },
+    "edit-actions": "kind-message-edit-actions",
+    "edit-cancel": { tag: "kind-message-edit-cancel", target: wrappedButton, display: "contents" },
+    "edit-save": { tag: "kind-message-edit-save", target: wrappedButton, display: "contents" },
     toolbar: "kind-message-toolbar",
     copy: { tag: "kind-message-copy", display: "contents" },
     regenerate: { tag: "kind-message-regenerate", display: "contents" },
@@ -267,6 +277,9 @@ declare global {
     "kind-message-avatar": HTMLElement;
     "kind-message-content": HTMLElement;
     "kind-message-editor": HTMLElement;
+    "kind-message-edit-actions": HTMLElement;
+    "kind-message-edit-cancel": HTMLElement;
+    "kind-message-edit-save": HTMLElement;
     "kind-message-toolbar": HTMLElement;
     "kind-message-copy": HTMLElement;
     "kind-message-regenerate": HTMLElement;

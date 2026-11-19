@@ -14,6 +14,8 @@ import { enter, type MotionMode } from "../motion/index.js";
 /** `"item-press"`: a person pressed a suggestion. `"imperative"`: an `api` call, like an agent's `pick`. */
 export type SuggestionPickReason = "item-press" | "imperative";
 
+export type SuggestionLayout = "scroll" | "wrap";
+
 export type SuggestionOptions = {
   /**
    * The suggestions, in the order they show.
@@ -27,6 +29,12 @@ export type SuggestionOptions = {
    * @default "Suggestions"
    */
   label?: string;
+  /**
+   * `"scroll"`: one row that scrolls sideways, with Previous and Next, for a fixed height like the space above a
+   * composer. `"wrap"`: the chips wrap onto more lines, for a few starter prompts in an empty conversation.
+   * @default "scroll"
+   */
+  layout?: SuggestionLayout;
   /**
    * How suggestions added after the first frame come in: they fade up at full motion and fade under reduced motion.
    * `"auto"` follows `prefers-reduced-motion`.
@@ -44,6 +52,8 @@ export type SuggestionState = {
   label: string;
   /** Whether `onPick` is set. */
   canPick: boolean;
+  /** The `layout`, else `"scroll"`. */
+  layout: SuggestionLayout;
   /** The `motion` option. */
   motion: MotionMode;
 };
@@ -72,6 +82,8 @@ type ItemProps = { value: string };
 export type SuggestionRootState = {
   /** The `label`, which names the Carousel. */
   label: string;
+  /** Whether the row scrolls in a Carousel or wraps. */
+  layout: SuggestionLayout;
   /** The `suggestions` to draw, one `SuggestionItem` each. */
   suggestions: SuggestionItem[];
 };
@@ -102,11 +114,19 @@ const byId = memo((suggestions: SuggestionItem[]) =>
 const suggestionOf = (state: SuggestionState, id: string) =>
   Object.hasOwn(state.suggestionsById, id) ? state.suggestionsById[id] : undefined;
 
-const presentation = ({ suggestions = NO_SUGGESTIONS, label, onPick, motion }: SuggestionOptions) => ({
+const presentation = ({
+  suggestions = NO_SUGGESTIONS,
+  label,
+  onPick,
+  layout,
+  motion,
+}: SuggestionOptions) => ({
   suggestions,
   suggestionsById: byId(suggestions),
   label: label ?? "Suggestions",
   canPick: onPick !== undefined,
+  // A web `layout` attribute can hold any string.
+  layout: layout === "wrap" ? ("wrap" as const) : ("scroll" as const),
   motion: motion ?? "auto",
 });
 
@@ -127,6 +147,7 @@ export const suggestionPrimitive: SuggestionPrimitive = definePrimitive<
     suggestions: "value",
     onPick: "callback",
     label: "string",
+    layout: "string",
     motion: "string",
   },
   state: presentation,
@@ -190,8 +211,12 @@ export const suggestionPrimitive: SuggestionPrimitive = definePrimitive<
   slots: (slot) => ({
     root: slot<BaseSlotProps, SuggestionRootState>({
       role: "group",
-      state: (state) => ({ label: state.label, suggestions: state.suggestions }),
-      attrs: (state) => ({ "aria-label": state.label, "data-motion": state.motion }),
+      state: (state) => ({ label: state.label, layout: state.layout, suggestions: state.suggestions }),
+      attrs: (state) => ({
+        "aria-label": state.label,
+        "data-layout": state.layout,
+        "data-motion": state.motion,
+      }),
       bind: (_el, { api }) => api.bindRoot(),
     }),
     item: slot<ItemProps & BaseSlotProps, SuggestionItemState>({

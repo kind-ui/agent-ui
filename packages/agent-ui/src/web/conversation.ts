@@ -9,7 +9,7 @@ import { createParts, type UiActionDetail, wrappedButton } from "@ui-sdk/web";
 import type { AttributeProperties, UiElement, UiPartElement } from "@ui-sdk/web/events";
 
 const SKELETON_ROWS = "<span></span><span></span><span></span>";
-const ERROR_PARTS = `<kind-conversation-error-text></kind-conversation-error-text><kind-conversation-retry><button>Retry</button></kind-conversation-retry>`;
+const ERROR_PARTS = `<kind-conversation-error-icon></kind-conversation-error-icon><kind-conversation-error-text></kind-conversation-error-text><kind-conversation-retry><button>Retry</button></kind-conversation-retry>`;
 
 const STATE_PARTS = /^kind-conversation-(skeleton|loading|error|error-text)$/;
 
@@ -119,6 +119,7 @@ export function defineConversation(): void {
     skeleton: "kind-conversation-skeleton",
     loading: "kind-conversation-loading",
     error: "kind-conversation-error",
+    "error-icon": "kind-conversation-error-icon",
     "error-text": "kind-conversation-error-text",
     retry: { tag: "kind-conversation-retry", target: wrappedButton, display: "contents" },
     marks: "kind-conversation-marks",
@@ -158,6 +159,7 @@ declare global {
     "kind-conversation-skeleton": HTMLElement;
     "kind-conversation-loading": HTMLElement;
     "kind-conversation-error": HTMLElement;
+    "kind-conversation-error-icon": HTMLElement;
     "kind-conversation-error-text": HTMLElement;
     "kind-conversation-retry": HTMLElement;
     "kind-conversation-marks": HTMLElement;

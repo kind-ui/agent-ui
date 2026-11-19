@@ -35,6 +35,7 @@ Conversation
 │       ├── ConversationSkeleton
 │       ├── ConversationLoading
 │       ├── ConversationError
+│       │   ├── ConversationErrorIcon
 │       │   ├── ConversationErrorText
 │       │   └── ConversationRetry
 │       └── ConversationEmpty
@@ -63,7 +64,7 @@ The conversation tells screen readers the new-message count politely as it grows
 
 ### Loading and Errors
 
-Pass `status` to say whether the messages are there yet. While it's `"loading"`, `ConversationSkeleton` shows three placeholder rows, hidden from screen readers, and `ConversationLoading` tells them "Loading conversation" instead. Put both in the content and render your rows only once the messages arrive.
+Pass `status` to say whether the messages are there yet. While it's `"loading"`, `ConversationSkeleton` shows three placeholder rows shaped like what loads (a question's bubble, an answer's lines of text, then another bubble), hidden from screen readers, and `ConversationLoading` tells them "Loading conversation" instead. Put both in the content and render your rows only once the messages arrive.
 
 <Example caption="Press Loading, Error or Ready to switch the conversation's status. In the error, press Retry: it stays pending, then the conversation loads again.">
   <ConversationStatesExample />
@@ -71,7 +72,7 @@ Pass `status` to say whether the messages are there yet. While it's `"loading"`,
   <include cwd lang="tsx">./examples/conversation/states.tsx</include>
 </Example>
 
-While `status` is `"error"`, `ConversationError` shows the `error` text, "Couldn't load this conversation" by default, and **Retry** when you pass `onRetry`. Return a promise from `onRetry` to keep **Retry** pending until it settles, so a second press doesn't load again. An error the conversation mounts with is a status, and one that appears later is an alert, so screen readers hear it right away. Pass children to `ConversationError` to arrange `ConversationErrorText` and `ConversationRetry` yourself.
+While `status` is `"error"`, `ConversationError` shows an error mark and the `error` text, "Couldn't load this conversation" by default, and **Retry** when you pass `onRetry`. Return a promise from `onRetry` to keep **Retry** pending until it settles, so a second press doesn't load again. An error the conversation mounts with is a status, and one that appears later is an alert, so screen readers hear it right away. Pass children to `ConversationError` to arrange `ConversationErrorIcon`, `ConversationErrorText` and `ConversationRetry` yourself.
 
 Set `messageCount` before `status` turns `"ready"`, so the loaded messages appear at once instead of playing the new-message entrance.
 

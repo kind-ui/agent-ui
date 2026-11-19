@@ -14,9 +14,13 @@
       position: absolute;
       inset-block: 0;
       inset-inline-start: 0.15em;
-      width: 0.125em;
+      width: 2px;
       border-radius: 1px;
-      background-color: currentColor;
+      background-color: color-mix(in oklab, currentColor 60%, transparent);
+    }
+
+    /* Still while text arrives; it pulses only once the text stops for a moment. */
+    &[data-stalled]::after {
       animation: kind-pulse 1s var(--kind-ease) infinite;
     }
 

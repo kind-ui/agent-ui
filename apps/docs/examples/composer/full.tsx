@@ -8,7 +8,6 @@ import { Composer, ComposerInput, ComposerSubmit } from "@/components/ui/compose
 import { ContextBar } from "@/components/ui/context-bar";
 import { Dictation } from "@/components/ui/dictation";
 import { ModelControl } from "@/components/ui/model-control";
-import { SettingsMenu } from "@/components/ui/settings-menu";
 import { AnthropicLogo, OpenAILogo } from "../model-selector/logos";
 
 const addItems = [
@@ -113,9 +112,11 @@ export default function FullComposerExample({
           levels={levels}
           effort={effort}
           onEffortChange={setEffort}
+          settings={settings}
+          values={values}
+          onValuesChange={setValues}
         />
         <ApprovalMode modes={modes} value={mode} onValueChange={setMode} />
-        <SettingsMenu settings={settings} values={values} onValuesChange={setValues} />
       </div>
       <Dictation source={demoSource} />
       <ComposerSubmit />

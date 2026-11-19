@@ -1,5 +1,6 @@
 import {
   type SuggestionApi,
+  type SuggestionLayout,
   type SuggestionOptions,
   type SuggestionState,
   suggestionPrimitive,
@@ -21,18 +22,20 @@ const chevron = (path: string) =>
 // suggestion by its id with the Suggestion's own `pick`, wherever it has scrolled.
 const DEFAULT_PARTS = `<kind-internal-carousel><ui-carousel slides-per-page="auto" drag-free><ui-carousel-viewport><ui-carousel-content></ui-carousel-content></ui-carousel-viewport><div data-suggestion-controls><ui-carousel-previous><button aria-label="Previous suggestions" data-agent-hidden>${chevron("m15 18-6-6 6-6")}</button></ui-carousel-previous><ui-carousel-next><button aria-label="Next suggestions" data-agent-hidden>${chevron("m9 18 6-6-6-6")}</button></ui-carousel-next></div></ui-carousel></kind-internal-carousel>`;
 
-// Rows this element filled in, and so draws the suggestions of. A row someone wrote keeps its suggestions, as
-// React's children do. Kept across instances, because UI SDK rebuilds one when the element returns to the page.
-const owned = new WeakSet<Element>();
+// Elements this element filled in, by the layout it filled them for, and so draws the suggestions of. One someone
+// wrote keeps its suggestions, as React's children do. Kept across instances, because UI SDK rebuilds one when the
+// element returns to the page.
+const filled = new WeakMap<Element, SuggestionLayout>();
 type Movable = Element & { moveBefore?: (node: Node, child: Node | null) => void };
 
-const createSuggestion = (doc: Document, id: string) => {
-  const slide = doc.createElement("ui-carousel-item");
+const createSuggestion = (doc: Document, id: string, slide: boolean) => {
   const item = doc.createElement("kind-suggestion-item");
   item.setAttribute("value", id);
   item.innerHTML = `<button><span data-suggestion-label></span> <span data-suggestion-description></span></button>`;
-  slide.append(item);
-  return slide;
+  if (!slide) return item;
+  const carouselItem = doc.createElement("ui-carousel-item");
+  carouselItem.append(item);
+  return carouselItem;
 };
 
 const setText = (el: Element | null, text: string) => {
@@ -40,17 +43,23 @@ const setText = (el: Element | null, text: string) => {
 };
 
 /**
- * Draws a slide for each suggestion, reusing the slide of a suggestion with the same id and moving only what is out
- * of place, so a focused suggestion keeps focus. `moveBefore` doesn't take focus away, where the browser has it.
+ * Draws a slide (or, when the row wraps, a chip) for each suggestion, reusing the one of a suggestion with the same
+ * id and moving only what is out of place, so a focused suggestion keeps focus. `moveBefore` doesn't take focus away,
+ * where the browser has it.
  */
-const drawSuggestions = (row: Movable, suggestions: SuggestionState["suggestions"]) => {
-  const slides = new Map<string, Element>();
-  for (const slide of row.querySelectorAll(":scope > ui-carousel-item"))
-    slides.set(slide.querySelector("kind-suggestion-item")?.getAttribute("value") ?? "", slide);
+const drawSuggestions = (row: Movable, suggestions: SuggestionState["suggestions"], slides: boolean) => {
+  const existing = new Map<string, Element>();
+  for (const slide of row.querySelectorAll(
+    `:scope > ${slides ? "ui-carousel-item" : "kind-suggestion-item"}`,
+  ))
+    existing.set(
+      (slides ? slide.querySelector("kind-suggestion-item") : slide)?.getAttribute("value") ?? "",
+      slide,
+    );
   let previous: Element | null = null;
   for (const { id, label, description } of suggestions) {
-    const slide = slides.get(id) ?? createSuggestion(row.ownerDocument, id);
-    slides.delete(id);
+    const slide = existing.get(id) ?? createSuggestion(row.ownerDocument, id, slides);
+    existing.delete(id);
     setText(slide.querySelector("[data-suggestion-label]"), label);
     setText(slide.querySelector("[data-suggestion-description]"), description ?? "");
     const before: Element | null = previous ? previous.nextElementSibling : row.firstElementChild;
@@ -60,13 +69,14 @@ const drawSuggestions = (row: Movable, suggestions: SuggestionState["suggestions
     }
     previous = slide;
   }
-  for (const slide of slides.values()) slide.remove();
+  for (const slide of existing.values()) slide.remove();
 };
 
 /**
  * `<kind-suggestion can-pick>` fills in its row when it has no children. Set `suggestions` as a property; the
  * `can-pick` attribute lets a person choose one, which fires `pick` with its id as `detail.value`. A row you write
- * yourself is the internal Carousel's markup, `kind-suggestion-item`s included, and keeps what you write in it.
+ * yourself is the internal Carousel's markup, `kind-suggestion-item`s included, and keeps what you write in it. With
+ * `layout="wrap"` there's no Carousel: the `kind-suggestion-item`s are its children.
  */
 export function defineSuggestion(): void {
   if (customElements.get("kind-suggestion")) return;
@@ -79,17 +89,23 @@ export function defineSuggestion(): void {
       options: (el) => ((el as KindSuggestionElement).canPick ? {} : { onPick: undefined }),
       api: ["getSuggestions"],
       render: (el, instance) => {
-        if (!el.firstElementChild) {
-          el.innerHTML = DEFAULT_PARTS;
-          const row = el.querySelector("ui-carousel-content");
-          if (row) owned.add(row);
-        }
         const draw = () => {
-          const { label, suggestions } = instance.get() as SuggestionState;
+          const { label, layout, suggestions } = instance.get() as SuggestionState;
+          if (!el.firstElementChild && !filled.has(el)) filled.set(el, layout);
+          const own = filled.get(el);
+          if (own !== undefined && (own !== layout || !el.firstElementChild)) {
+            filled.set(el, layout);
+            if (layout === "wrap") el.replaceChildren();
+            else el.innerHTML = DEFAULT_PARTS;
+          }
+          if (layout === "wrap") {
+            if (filled.has(el)) drawSuggestions(el, suggestions, false);
+            return;
+          }
           const carousel = el.querySelector("ui-carousel");
           if (carousel && carousel.ariaLabel !== label) carousel.ariaLabel = label;
           const row = el.querySelector("ui-carousel-content");
-          if (row && owned.has(row)) drawSuggestions(row, suggestions);
+          if (row && filled.has(el)) drawSuggestions(row, suggestions, true);
         };
         draw();
         return instance.subscribe(draw);

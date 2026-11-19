@@ -186,6 +186,7 @@ export type ConversationPrimitive = ReturnType<
       skeleton: ConversationSlot<BaseSlotProps>;
       loading: ConversationSlot<BaseSlotProps>;
       error: ConversationSlot<BaseSlotProps>;
+      "error-icon": ConversationSlot<BaseSlotProps>;
       "error-text": ConversationSlot<BaseSlotProps, { error: string }>;
       retry: ConversationSlot<BaseSlotProps, { retrying: boolean }>;
       marks: ConversationSlot<BaseSlotProps, { marks: readonly number[] }>;
@@ -517,6 +518,8 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
           : undefined;
         return {
           "data-virtualize": state.virtualize ? "" : undefined,
+          // The last message shows its actions without a hover.
+          "data-last": props.index === state.messageCount - 1 ? "" : undefined,
           style: css({ "--kind-conversation-row-start": start === undefined ? undefined : `${start}px` }),
         };
       },
@@ -591,6 +594,14 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
       roles: ["alert", "status"],
       present: (state) => state.status === "error",
     }),
+    "error-icon": slot({
+      attrs: (state) => ({
+        "aria-hidden": "true",
+        "data-status-mark": "",
+        "data-status": "error",
+        "data-motion": state.motion,
+      }),
+    }),
     "error-text": slot<BaseSlotProps, { error: string }>({
       state: (state) => ({ error: state.error ?? "" }),
     }),
@@ -604,6 +615,7 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
         type: "button",
         "aria-disabled": state.pending ? "true" : undefined,
         "data-pending": state.pending ? "" : undefined,
+        "data-kind-button": "secondary",
       }),
       bind: (el, part) => part.api.recovery.bind(el, part),
     }),
