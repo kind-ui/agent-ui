@@ -107,6 +107,9 @@ Last reviewed: `1b12785` (Design Wave 0)
 - **Share Dialog says "Only you can open this chat." while a `link` still exists** (Wave 6 Task 8): choosing "Only you" hides the link but doesn't revoke it, since D19 leaves revoking to the host (`onVisibilityChange` then `onRevoke`). Whether the primitive should revoke or word it differently is a spec question.
 - **Conversation rows are kept by `index` for `rowElement`** (Wave 6 Task 11): a host that prepends rows without UI SDK binding them again under their new index would hand Conversation Search the wrong row. `virtual.measure` keys rows the same way; unchecked.
 
+- **A Test Results count's name changes as a run streams** (Design Wave 1 Batch D): each count is a toggle button named by its text ("2 passed"), which the ARIA pattern asks to keep fixed. Needs a screen reader check, or a fixed name with the number as a description.
+- **File Tree reads `tones` and `letters` with the host's `change` unchecked** (`file-tree.ts`): a value like `"constructor"` writes a function's text into `data-kind-badge`. Predates Batch D for `letters`.
+
 ## Resolved
 
 - **Style guards missed `outline-color`, `font` shorthands, offsets and Tailwind ring classes** (Design Wave 0 review): `scripts/tests/styles.test.mjs` now checks all four.

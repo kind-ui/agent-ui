@@ -12,7 +12,13 @@ import {
 } from "@kind-ui/agent-ui/core";
 import type { TreeItemData } from "@ui-sdk/core";
 import { createParts, wrappedButton } from "@ui-sdk/web";
-import type { AttributeProperties, UiChangeEvent, UiElement, UiTreeElement } from "@ui-sdk/web/events";
+import type {
+  AttributeProperties,
+  UiChangeEvent,
+  UiElement,
+  UiPartElement,
+  UiTreeElement,
+} from "@ui-sdk/web/events";
 import { defineInternalTree } from "./internal/tree.js";
 import { defineStackTrace } from "./stack-trace.js";
 
@@ -239,16 +245,23 @@ export function defineTestResults(): void {
         };
         draw();
         const unsubscribe = instance.subscribe(draw);
-        // A part a page adds later is filled in when it arrives. The rows and stack traces drawn inside aren't parts.
+        // A part a page adds later is filled in when it arrives, and a count when its `value` changes. The rows and
+        // stack traces drawn inside aren't parts.
         const arrivals = new MutationObserver((records) => {
-          const arrived = records.some(
-            (record) =>
-              !(record.target instanceof Element && record.target.closest("ui-tree")) &&
-              [...record.addedNodes].some((node) => node instanceof Element),
+          const arrived = records.some((record) =>
+            record.type === "attributes"
+              ? record.target instanceof Element && record.target.localName === "kind-test-results-count"
+              : !(record.target instanceof Element && record.target.closest("ui-tree")) &&
+                [...record.addedNodes].some((node) => node instanceof Element),
           );
           if (arrived) draw();
         });
-        arrivals.observe(el, { childList: true, subtree: true });
+        arrivals.observe(el, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ["value"],
+        });
         return () => {
           unsubscribe();
           arrivals.disconnect();
@@ -313,7 +326,7 @@ declare global {
     "kind-test-results-meta": HTMLElement;
     "kind-test-results-content": HTMLElement;
     "kind-test-results-filter": HTMLElement;
-    "kind-test-results-count": HTMLElement;
+    "kind-test-results-count": UiPartElement<typeof testResultsPrimitive, "count", "value">;
     "kind-test-results-tree": HTMLElement;
     "kind-test-results-item": HTMLElement;
     "kind-test-results-item-status": HTMLElement;

@@ -31,12 +31,12 @@
     color: var(--kind-color-muted);
   }
 
-  [data-slot="kind-terminal-exit"]:where(:not([hidden]))
+  :where([data-slot="kind-terminal-exit"]:not([hidden]))
     + [data-slot="kind-terminal-meta"]:where(:not(:empty)) {
     margin-inline-start: -0.25rem;
 
     &::before {
-      content: "· ";
+      content: "· " / "";
     }
   }
 
@@ -108,7 +108,7 @@
     }
   }
 
-  [data-terminal-screen]:where(:hover, :focus-within) [data-slot="kind-terminal-copy"],
+  :where([data-terminal-screen]:is(:hover, :focus-within)) [data-slot="kind-terminal-copy"],
   [data-slot="kind-terminal-copy"]:where([data-copied]) {
     opacity: 1;
   }

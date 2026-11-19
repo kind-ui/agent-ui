@@ -79,8 +79,7 @@
   }
 
   /* Lines cut at an edge fade out there, so a reader sees there's more. */
-  [data-slot="kind-code-block"]
-    [data-slot="scroll-area"][data-overflow-x]
+  :where([data-slot="kind-code-block"] [data-slot="scroll-area"][data-overflow-x])
     > [data-slot="scroll-area-viewport"] {
     --scroll-area-overflow-x-start: inherit;
     --scroll-area-overflow-x-end: inherit;
@@ -106,8 +105,8 @@
 
   [data-slot="kind-code-block-code"] {
     --kind-code-block-gap: 1rem;
-    /* At least two digits wide, so numbers don't push the code sideways as the first 99 lines stream in. */
-    --kind-code-block-gutter: calc(max(2, var(--kind-code-block-digits, 1)) * 1ch);
+    /* At least three digits wide, so numbers don't push the code sideways as the first 999 lines stream in. */
+    --kind-code-block-gutter: calc(max(3, var(--kind-code-block-digits, 1)) * 1ch);
     --kind-code-block-indent: 0px;
     --kind-code-block-hang: 0px;
 
@@ -168,7 +167,7 @@
     }
   }
 
-  [data-slot="kind-code-block-header"]:not([hidden]) ~ * [data-slot="kind-code-block-code"] {
+  :where([data-slot="kind-code-block-header"]:not([hidden]) ~ *) [data-slot="kind-code-block-code"] {
     padding-top: 0.25rem;
   }
 }

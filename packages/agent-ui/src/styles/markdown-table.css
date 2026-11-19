@@ -54,7 +54,7 @@
     }
   }
 
-  :is([data-slot="kind-markdown-table"]:hover, [data-slot="kind-markdown-table"]:focus-within)
+  :where([data-slot="kind-markdown-table"]:is(:hover, :focus-within))
     > [data-slot="kind-markdown-table-header"] {
     opacity: 1;
   }
@@ -90,8 +90,7 @@
   }
 
   /* Columns cut at an edge fade out there, so a reader sees there's more. */
-  [data-slot="kind-markdown-table"]
-    [data-slot="scroll-area"][data-overflow-x]
+  :where([data-slot="kind-markdown-table"] [data-slot="scroll-area"][data-overflow-x])
     > [data-slot="scroll-area-viewport"] {
     --scroll-area-overflow-x-start: inherit;
     --scroll-area-overflow-x-end: inherit;

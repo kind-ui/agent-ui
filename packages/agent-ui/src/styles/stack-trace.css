@@ -243,7 +243,7 @@
     }
   }
 
-  [data-stack-trace-panel]:where(:hover, :focus-within) [data-slot="kind-stack-trace-copy"],
+  :where([data-stack-trace-panel]:is(:hover, :focus-within)) [data-slot="kind-stack-trace-copy"],
   [data-slot="kind-stack-trace-copy"]:where([data-copied]) {
     opacity: 1;
   }

@@ -7,7 +7,7 @@ import TestResultsExample from "../../../examples/test-results/basic";
 
 Use test results when the agent runs a test suite, so readers see how many tests passed, failed and were skipped, and why a test failed. It's a step: a header with the run's duration and its counts, which filter the tests, over a tree of suites and tests, in which a failed test opens to its message and a [Stack Trace](./stack-trace.mdx).
 
-<Example caption="Choose Failed to show only the failing tests. Focus a row and use the arrow keys to move between rows, Right Arrow and Left Arrow to open and close one, then press Tab to reach the stack trace inside a failure.">
+<Example caption="Press "1 failed" to show only the failing tests, and press it again to show every test. Focus a row and use the arrow keys to move between rows, Right Arrow and Left Arrow to open and close one, then press Tab to reach the stack trace inside a failure.">
   <TestResultsExample />
 
   <include cwd lang="tsx">./examples/test-results/basic.tsx</include>

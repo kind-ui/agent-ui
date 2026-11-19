@@ -170,7 +170,7 @@ export type TestResultsApi = Omit<StepApi, "expand" | "collapse"> & {
   setExpanded: (values: string[]) => boolean;
   /**
    * Shows only the tests with `status`, opening the step, or every test when they already show, as a press on a count
-   * does. Called by the count slot.
+   * does. Called by the count slot. The step opens with reason `"trigger-press"`, as a press on the header does.
    */
   pressCount: (status: TestCase["status"], event?: Event) => void;
   /** Reports what a person opened or closed. Called as presses, keys and find in page bubble to the tree part. */
@@ -338,6 +338,14 @@ const own = selects<TestResultsState, TestResultsApi, ItemPartProps>({
   counts: [],
   duration: [],
   filter: [],
+  expanded: [],
+});
+
+/** The counts render again only when a count or the filter changes. */
+const countParts = selects<TestResultsState, TestResultsApi, CountProps>({
+  rows: [],
+  suites: [],
+  duration: [],
   expanded: [],
 });
 
@@ -529,6 +537,7 @@ export const testResultsPrimitive: TestResultsPrimitive = definePrimitive<
         role: "button",
         focus: "native",
         props: { value: "string" },
+        selects: countParts,
         state: (state, { props }) => {
           const count = state.counts[props.value] ?? 0;
           return { count, text: `${count} ${WORDS[props.value]}` };

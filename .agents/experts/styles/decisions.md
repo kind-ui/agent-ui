@@ -70,6 +70,10 @@ Last reviewed: `1b12785` (Design Wave 0)
 - **Chain of Thought: the line to a new step appears at once** while the step fades up (`--kind-duration-base`), pointing 2px into the space it's about to take. No layout moves; drawing it from the new item can't reach a previous item's open content.
 - **Where Conversation's marks sit beside a classic (non-overlay) scrollbar is unmeasured** (Wave 6 Task 11): headless macOS draws a 0px scrollbar.
 
+- **Under `(hover: none)` Copy always covers the end of the table's last header and Terminal's first lines** (Design Wave 1 Batch D): nothing in the fixtures overlaps, but a long last header or first output line would sit under it.
+- **Inline-size containment on Test Results' root, Document's header and Sources' content** (Design Wave 1 Batch D): in a shrink-to-fit parent these parts no longer give the card its width, as with the composer.
+- **A Stack Trace location ends in an ellipsis** (Design Wave 1 Batch D): deep in a narrow Test Results row the `:line:col` can be cut, and the `title` with the full path doesn't reach touch or keyboard.
+
 ## Resolved
 
 - **Design Wave 0 review:** Generated Image's preview no longer scales, so it and the image match through the crossfade; `controls.css` states sit inside `:where()`, so a component rule wins and primary and danger keep their fill while open or pressed; every focus ring's offset is a token; the tree's selected row uses `--kind-color-selected`; dark `--kind-color-selected` is no longer the border color.
@@ -129,6 +133,9 @@ Last reviewed: `1b12785` (Design Wave 0)
 - **Day Separator overflowed a narrow container** (Wave 6 Task 6): the label now ellipsizes (`min-width: 0`), and `[hidden]` sets `display: none` over the root's `display: flex`.
 - **Message (Wave 6 Task 9):** `::first-letter` on the time capitalized lower-case months (Hungarian "nov."); the avatar and failed-outcome rules weighed two and three attributes (now `:where()`).
 - **Conversation Search's motion rules outranked a consumer class, light-mode marks were 2.6:1, and the highlight contrast comment was wrong** (Wave 6 Task 11): fixed (`:where()`, marks mixed toward `--kind-color-fg`, the measured ratios).
+
+- **Test Results' embedded Stack Trace keeps its chevron** (Design Wave 1 Batch D): only its status mark goes, since the row above carries it; hiding the chevron and hover left a working toggle with no look.
+- **Code Block's gutter stays at least three digits** (Design Wave 1 Batch D): two moved every line 7.8px sideways when a stream reached line 100.
 
 ## Revisit
 

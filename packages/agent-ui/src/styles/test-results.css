@@ -17,15 +17,17 @@
     display: none;
   }
 
-  /* The counts share the trigger's row, and drop under it when the row is too narrow for both. */
+  /* The counts share the trigger's row, and sit under it in a narrow run. The width decides, never the counts' text,
+     so a count gaining a digit while a run streams doesn't move the tests below. */
   [data-slot="kind-test-results"] {
+    container: kind-test-results / inline-size;
     flex-flow: row wrap;
     align-items: center;
     column-gap: 2px;
   }
 
   [data-slot="kind-test-results-trigger"] {
-    flex: 1 1 auto;
+    flex: 1 1 0;
     width: auto;
     min-width: 0;
   }
@@ -39,6 +41,12 @@
     display: flex;
     flex-shrink: 0;
     gap: 2px;
+  }
+
+  @container kind-test-results (width < 30rem) {
+    [data-slot="kind-test-results-filter"] {
+      flex-basis: 100%;
+    }
   }
 
   /* A dot per count in its status's color, quiet at zero; the words stay muted, so the color is said once. The dot
@@ -139,27 +147,20 @@
     margin-block: 3px;
   }
 
-  /* A failed test's Stack Trace, its message flush with the test's name: the row above already carries the mark and
-     opens it, so the trace's own mark and chevron go. `--tree-level` is the test's; the trigger's 6px padding is taken
-     off. */
+  /* A failed test's Stack Trace, its message flush with the test's name: the row above already carries the mark, so
+     the trace's own mark goes. `--tree-level` is the test's; the trigger's 6px padding is taken off. */
   [data-slot="kind-test-results-failure"] {
     padding-block: 0 8px;
     padding-inline: calc((var(--tree-level) - 1) * 1rem + 3rem - 6px) 0.25rem;
+  }
 
-    & [data-slot="kind-stack-trace-icon"] {
-      display: none;
-    }
-    & [data-slot="kind-stack-trace-trigger"] {
-      padding-block: 0 4px;
-      color: var(--kind-color-fg);
+  :where([data-slot="kind-test-results-failure"]) [data-slot="kind-stack-trace-icon"] {
+    display: none;
+  }
 
-      &::after {
-        display: none;
-      }
-      &:hover {
-        background-color: transparent;
-      }
-    }
+  :where([data-slot="kind-test-results-failure"]) [data-slot="kind-stack-trace-trigger"] {
+    padding-block: 0 4px;
+    color: var(--kind-color-fg);
   }
 
   [data-slot="kind-test-results-empty"] {

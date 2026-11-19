@@ -102,7 +102,7 @@
     /* Shared icon buttons (`data-kind-icon-button`). At an end, the one with no page that way hides in place, so
        nothing moves; UI SDK keeps it focusable, so it shows while it holds focus. */
     & :where([data-slot="carousel-previous"], [data-slot="carousel-next"]) {
-      &[data-disabled]:not(:focus) {
+      &:where([data-disabled]:not(:focus)) {
         visibility: hidden;
       }
       &:dir(rtl) svg {
