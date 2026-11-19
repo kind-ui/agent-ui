@@ -195,6 +195,19 @@ test("with confirmDelete off, Delete calls onDelete at once", async ({ page }) =
   await item(page, "Delete").click();
   await expect.poll(async () => (await host(page)).deletes.length).toBe(1);
   await expect(page.getByRole("alertdialog")).toHaveCount(0);
+  await expectAgentActions(page, "Chats", ["select", "newThread", "rename", "pin", "share"]);
+});
+
+test("an end reached while loading asks for more once loading stops", async ({ page }) => {
+  await load(page, "thousand");
+  await page.evaluate(() => (window as unknown as Fixture).kindThreadList.setStatus("loading"));
+  await link(page, "Thread 1").focus();
+  await page.keyboard.press("Control+End");
+  await expect(more(page, "Thread 1000")).toBeFocused();
+  const loads = async () => (await host(page)).calls.filter((call) => call.name === "loadMore");
+  expect(await loads()).toEqual([]);
+  await page.evaluate(() => (window as unknown as Fixture).kindThreadList.setStatus("idle"));
+  await expect.poll(loads).toEqual([{ name: "loadMore", reason: "end-reached" }]);
 });
 
 test("the keys reach rows not yet rendered, and nearing the end asks for more once", async ({ page }) => {

@@ -43,7 +43,7 @@ ThreadList
     └── ThreadListDialogDelete
 ```
 
-`ThreadList` renders these parts when you pass no children: a `nav` named by its `label`. `ThreadListNew` is the **New chat** button. `ThreadListViewport` scrolls the rows, and `ThreadListGrid` renders a `ThreadListHeading` for each group and a `ThreadListRow` for each chat in view. A row holds the chat's `ThreadListLink`, with its title, status and unread marks, and its More button. Pass a row children to replace what its link shows. `ThreadListEnd` shows after the rows while older chats load. `ThreadListMenu` is UI SDK's Menu, one for every row, and `ThreadListDialog` is the Alert Dialog that asks before a delete.
+`ThreadList` renders these parts when you pass no children: a `nav` named by its `label`. `ThreadListNew` is the **New chat** button. `ThreadListViewport` scrolls the rows, and `ThreadListGrid` renders a `ThreadListHeading` for each group and a `ThreadListRow` for each chat in view. A row holds the chat's `ThreadListLink`, with its title, status and unread marks, and its More button. Pass a row a function of its link's `{ value, title }`, defined once outside a render, to replace what its link shows. `ThreadListEnd` shows after the rows while older chats load. `ThreadListMenu` is UI SDK's Menu, one for every row, and `ThreadListDialog` is the Alert Dialog that asks before a delete.
 
 ## Usage
 

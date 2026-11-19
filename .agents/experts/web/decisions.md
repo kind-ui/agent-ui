@@ -69,6 +69,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 - **An unknown `motion` attribute matches no `data-motion` rule,** so reduced motion stops applying. Every animated component shares it; validate `motion` once for all of them.
 - **An empty `<kind-chain-of-thought>` inserts its parts on upgrade** (same class as `kind-reasoning`), which can shift layout before the element is defined.
 - **No moved or shadow-root fixture case for `kind-model-control`;** checked by hand in review (Wave 5 Task 9), as Model Selector's gap.
+- **Inside a shadow root, a web popup's string `finalFocus` is looked up in `ownerDocument`** (UI SDK `popup.js`), so Thread List's menu and dialog return focus through UI SDK's trigger fallback, not to the row after a deleted one (report upstream).
 
 ## Resolved
 

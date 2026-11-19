@@ -8,18 +8,10 @@ const { host, select, newThread, rename, pin, share, remove, loadMore } = thread
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 
-function Threads({
-  initial,
-  confirmDelete,
-  status,
-}: {
-  initial: Thread[];
-  confirmDelete?: boolean;
-  status?: "idle" | "loading" | "error";
-}) {
+function Threads({ initial, confirmDelete }: { initial: Thread[]; confirmDelete?: boolean }) {
   const [threads, setThreads] = useState(initial);
   const [value, setValue] = useState<string | null>(initial[1]?.id ?? null);
-  const [loadStatus, setLoadStatus] = useState(status);
+  const [loadStatus, setLoadStatus] = useState<"idle" | "loading" | "error">();
   useEffect(() => {
     Object.assign(window, {
       kindHost: host,
@@ -52,7 +44,6 @@ function Threads({
 export const cases = {
   all: () => <Threads initial={fixed} />,
   "no-confirm": () => <Threads initial={fixed} confirmDelete={false} />,
-  error: () => <Threads initial={fixed} status="error" />,
   ten: () => <Threads initial={manyThreads(10)} />,
   thousand: () => <Threads initial={manyThreads(1000)} />,
 };

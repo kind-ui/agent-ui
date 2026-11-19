@@ -8,15 +8,7 @@ const { host, select, newThread, rename, pin, share, remove, loadMore } = thread
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 
 const threadList =
-  ({
-    initial,
-    confirmDelete,
-    status,
-  }: {
-    initial: Thread[];
-    confirmDelete?: boolean;
-    status?: "idle" | "loading" | "error";
-  }) =>
+  ({ initial, confirmDelete }: { initial: Thread[]; confirmDelete?: boolean }) =>
   (root: HTMLElement) => {
     defineThreadList();
     const container = document.createElement("div");
@@ -29,7 +21,6 @@ const threadList =
     list.timeZone = "UTC";
     if (confirmDelete !== undefined) list.confirmDelete = confirmDelete;
     list.hasMore = initial.length > 100;
-    if (status) list.status = status;
     Object.assign(list, {
       canSelect: true,
       canNew: true,
@@ -83,7 +74,6 @@ const threadList =
 export const cases = {
   all: threadList({ initial: fixed }),
   "no-confirm": threadList({ initial: fixed, confirmDelete: false }),
-  error: threadList({ initial: fixed, status: "error" }),
   ten: threadList({ initial: manyThreads(10) }),
   thousand: threadList({ initial: manyThreads(1000) }),
 };

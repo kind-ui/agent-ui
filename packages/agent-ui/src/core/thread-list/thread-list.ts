@@ -34,6 +34,7 @@ import {
   menuBase,
 } from "../menu-base.js";
 import { createPendingAction } from "../pending.js";
+import { holdTransitions } from "../step/base.js";
 import { type ThreadGroupOptions, threadGroups } from "../thread-groups.js";
 import { todayKey } from "../time.js";
 
@@ -48,7 +49,8 @@ export type ThreadListAction = "rename" | "pin" | "share" | "delete";
 
 export type ThreadListOptions = Pick<MenuBaseOptions, "presentation" | "motion"> & {
   /**
-   * The threads, in the host's order inside each group.
+   * The threads, in the host's order inside each group. Ids are unique and don't start with `heading:`, which group
+   * headings' row keys use.
    * @default []
    */
   threads?: Thread[];
@@ -165,6 +167,9 @@ export type ThreadListState = MenuBaseState & {
 /** What the grid hands render functions: the rows to render, each a `ThreadListRow` of `rows` by its `index`. */
 export type ThreadListGridState = { visible: readonly VirtualItem[]; rows: readonly ThreadListRow[] };
 
+/** What the link hands render functions: its thread's id and title. */
+export type ThreadListLinkState = { value: string; title: string };
+
 /** What the menu content slot hands render functions: the open thread and what its menu offers. */
 export type ThreadListMenuContentState = {
   /** Pass it to `MenuContent`: where focus goes when the menu closes. */
@@ -207,7 +212,7 @@ export type ThreadListApi = {
   readonly share: ((id: string) => boolean) | undefined;
   /**
    * Opens the delete dialog for a thread, whose Delete calls `onDelete`, or calls it at once with `confirmDelete` off.
-   * Offered while `onDelete` is set.
+   * Offered while `onDelete` is set and no delete is pending.
    */
   readonly delete: ((id: string) => boolean) | undefined;
   /** The threads by id and title, for agents. */
@@ -261,7 +266,7 @@ type ThreadListSlots = {
   "heading-cell": Slot<RowProps, { label: string }>;
   row: Slot<RowProps>;
   "link-cell": Slot<RowProps>;
-  link: Slot<RowProps, { title: string }>;
+  link: Slot<RowProps, ThreadListLinkState>;
   status: Slot<RowProps>;
   unread: Slot<RowProps>;
   editor: Slot<RowProps>;
@@ -533,11 +538,17 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         ].filter((index): index is number => typeof index === "number");
       },
       onEnd: () => {
-        const { hasMore, loadStatus, canLoadMore } = store.get();
-        if (hasMore && canLoadMore && loadStatus !== "loading")
-          context.options().onLoadMore?.({ reason: "end-reached" });
+        atEnd = true;
+        loadAtEnd();
       },
     });
+    // `onEnd` runs once per row count, so an end reached while loading can't start loads once it can.
+    let atEnd = false;
+    const loadAtEnd = (options = context.options()) => {
+      if (!atEnd || !options.hasMore || !options.onLoadMore || options.status === "loading") return;
+      atEnd = false;
+      options.onLoadMore({ reason: "end-reached" });
+    };
     const showVisible = () => {
       const visible = virtual.items();
       store.set({ visible, starts: startsOf(visible), size: virtual.size() });
@@ -581,6 +592,8 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       const { rows: before, entries } = store.get();
       const { now, locale, timeZone, labels } = groupOptions(options);
       const rows = rowsOf(options.threads ?? NO_THREADS, now, locale, timeZone, labels);
+      if (rows.length !== before.length) atEnd = false;
+      loadAtEnd(options);
       if (rows === before) return;
       lastIndex = new Map(before.map((row, index) => [row.key, index]));
       store.set({ rows, entries: entriesOf(rows, entries) });
@@ -635,6 +648,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         });
     };
     const requestDelete = (id: string, source: ChangeSource) => {
+      if (store.get().deletePending) return;
       if (!store.get().confirmDelete) return runDelete(id, source);
       store.set({ deleting: id, deleteFailed: false });
       void dialog.open();
@@ -671,7 +685,10 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       if (open) {
         const payload = menu.controller.getPayload();
         const id = typeof payload === "string" ? payload : null;
-        opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        // Inside a shadow root, the document's active element is the host.
+        const focused = (context.element("root")?.getRootNode() as Document | ShadowRoot | undefined)
+          ?.activeElement;
+        opener = focused instanceof HTMLElement ? focused : null;
         store.set({ menuFor: id, menuOpenFor: id });
         return;
       }
@@ -762,7 +779,8 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         return store.get().canShare ? (id: string) => share(id) : undefined;
       },
       get delete() {
-        if (!store.get().canDelete) return undefined;
+        const { canDelete, deletePending } = store.get();
+        if (!canDelete || deletePending) return undefined;
         return (id: string) => {
           if (!known(id)) return false;
           requestDelete(id, actionSource(undefined, "imperative"));
@@ -931,7 +949,10 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         const entry = state.entries[props.value];
         return { label: entry?.type === "heading" ? entry.label : "" };
       },
-      attrs: (state) => ({ "aria-colspan": hasMenu(state) ? "2" : undefined }),
+      attrs: (state, { props }) => ({
+        "aria-colspan": hasMenu(state) ? "2" : undefined,
+        "data-group": props.value.slice("heading:".length),
+      }),
     }),
     row: slot<RowProps>({
       role: "row",
@@ -944,6 +965,8 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         "data-renaming": state.renaming === props.value ? "" : undefined,
         "data-unread": threadOf(state, props.value)?.unread ? "" : undefined,
       }),
+      // Rows mount as the list scrolls, and a web row's parts get their attributes after it's styled.
+      bind: (el) => holdTransitions(el),
     }),
     "link-cell": slot<RowProps>({
       role: "gridcell",
@@ -951,11 +974,11 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       props: { value: "string" },
       selects: ownRow(0),
     }),
-    link: slot<RowProps, { title: string }>({
+    link: slot<RowProps, ThreadListLinkState>({
       props: { value: "string" },
       selects: ownRow(0),
       present: (state, { props }) => state.renaming !== props.value,
-      state: (state, { props }) => ({ title: threadOf(state, props.value)?.title ?? "" }),
+      state: (state, { props }) => ({ value: props.value, title: threadOf(state, props.value)?.title ?? "" }),
       attrs: (state, { props, api }) => ({
         href: threadOf(state, props.value)?.href,
         "aria-current": state.value === props.value ? "page" : undefined,

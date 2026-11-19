@@ -58,7 +58,8 @@ const finalFocusSelector = (root: Element, popup: "menu" | "dialog", pick: () =>
     marks.set(root, own);
   }
   const name = `${own.id}-${popup}`;
-  const target = pick();
+  const picked = pick();
+  const target = picked && root.contains(picked) ? picked : null;
   if (own[popup] !== target) {
     own[popup]?.removeAttribute(FINAL_FOCUS);
     target?.setAttribute(FINAL_FOCUS, name);
@@ -258,7 +259,9 @@ export function defineThreadList(): void {
             // `open` calls `setOpen`, which would open it again without one, at the page's corner.
             if (!open) write(menu, "open", false);
           }
-          const grid = el.querySelector("kind-thread-list-grid > div");
+          const host = el.querySelector("kind-thread-list-grid");
+          if (host && !host.firstElementChild) host.replaceChildren(element(host.ownerDocument, "div"));
+          const grid = host?.firstElementChild ?? null;
           if (ownedOrEmpty(grid)) drawRows(grid, state);
           const content = el.querySelector<FocusElement>("kind-thread-list-menu-content > ui-menu-content");
           if (content) {

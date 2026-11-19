@@ -1,6 +1,11 @@
 "use client";
 
-import { type ThreadListGridState, threadListPrimitive } from "@kind-ui/agent-ui/core";
+import {
+  type ThreadListGridState,
+  type ThreadListLinkState,
+  type ThreadListMenuContentState,
+  threadListPrimitive,
+} from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/react/primitive";
 import { type ComponentProps, memo, type ReactNode } from "react";
 import {
@@ -73,58 +78,57 @@ const DEFAULT_ROWS = ({ visible, rows }: ThreadListGridState) =>
     ),
   );
 
-export type ThreadListHeadingProps = { value: string };
+export type ThreadListHeadingProps = ComponentProps<typeof parts.Heading>;
 
 /** A group's heading, by its row key. Memoized, so rows that didn't change aren't rendered again. */
-export const ThreadListHeading = memo(function ThreadListHeading({ value }: ThreadListHeadingProps) {
+export const ThreadListHeading = memo(function ThreadListHeading(props: ThreadListHeadingProps) {
   return (
-    <parts.Heading value={value}>
-      <parts.HeadingCell value={value}>{({ label }) => label}</parts.HeadingCell>
+    <parts.Heading {...props}>
+      <parts.HeadingCell value={props.value}>{({ label }) => label}</parts.HeadingCell>
     </parts.Heading>
   );
 });
 
-export type ThreadListRowProps = { value: string; children?: ReactNode };
+export type ThreadListRowProps = Omit<ComponentProps<typeof parts.Row>, "children"> & {
+  /**
+   * What the link shows, a function of its `{ value, title }`. Define it once outside a render, so the row stays
+   * memoized as the list scrolls.
+   */
+  children?: (state: ThreadListLinkState) => ReactNode;
+};
 
 /**
  * A thread's row, by its id: its link, which also opens the row's menu on a right-click or Shift+F10, and its More
- * button, unless you pass children for the link. Memoized, so rows that didn't change aren't rendered
- * again.
+ * button. Memoized, so rows that didn't change aren't rendered again.
  */
-export const ThreadListRow = memo(function ThreadListRow({ value, children }: ThreadListRowProps) {
+export const ThreadListRow = memo(function ThreadListRow({ children, ...props }: ThreadListRowProps) {
   return (
-    <parts.Row value={value}>
-      <parts.LinkCell value={value}>
-        <ThreadListLink value={value}>{children}</ThreadListLink>
-        <parts.Editor value={value} type="text" />
+    <parts.Row {...props}>
+      <parts.LinkCell value={props.value}>
+        <ThreadListLink value={props.value}>{children}</ThreadListLink>
+        <parts.Editor value={props.value} type="text" />
       </parts.LinkCell>
-      <parts.MoreCell value={value}>
-        <parts.More value={value}>{ELLIPSIS}</parts.More>
+      <parts.MoreCell value={props.value}>
+        <parts.More value={props.value}>{ELLIPSIS}</parts.More>
       </parts.MoreCell>
     </parts.Row>
   );
 });
 
-export type ThreadListLinkProps = Omit<ComponentProps<typeof parts.Link>, "children"> & {
-  children?: ReactNode;
-};
+export type ThreadListLinkProps = ComponentProps<typeof parts.Link>;
 
 /** A thread's link: its title, then its status and unread marks, unless you pass children. */
-export function ThreadListLink({ children, value, ...props }: ThreadListLinkProps) {
-  return (
-    <parts.Link value={value} {...props}>
-      {({ title }) =>
-        children ?? (
-          <>
-            <span data-thread-list-title="">{title}</span>
-            <parts.Status value={value} />
-            <parts.Unread value={value} />
-          </>
-        )
-      }
-    </parts.Link>
-  );
+export function ThreadListLink({ children = DEFAULT_LINK, ...props }: ThreadListLinkProps) {
+  return <parts.Link {...props}>{children}</parts.Link>;
 }
+
+const DEFAULT_LINK = ({ value, title }: ThreadListLinkState) => (
+  <>
+    <span data-thread-list-title="">{title}</span>
+    <parts.Status value={value} />
+    <parts.Unread value={value} />
+  </>
+);
 
 export type ThreadListMenuProps = { children?: ReactNode };
 
@@ -133,28 +137,43 @@ export function ThreadListMenu({ children = MENU_CONTENT }: ThreadListMenuProps)
   return <parts.Menu>{(menu) => <KindMenu {...menu}>{children}</KindMenu>}</parts.Menu>;
 }
 
-/** The row menu's items: Rename, Pin or Unpin, Share and Delete, each while its callback is set. */
-export function ThreadListMenuContent() {
+export type ThreadListMenuContentProps = Omit<ComponentProps<typeof KindMenuContent>, "children"> & {
+  /** The menu's items, a function of its thread and actions: a menu item for each action by default. */
+  children?: (state: ThreadListMenuContentState) => ReactNode;
+};
+
+/** UI SDK's `MenuContent` with Rename, Pin or Unpin, Share and Delete, each while its callback is set. */
+export function ThreadListMenuContent({ children = DEFAULT_ITEMS, ...props }: ThreadListMenuContentProps) {
   return (
     <parts.MenuContent>
-      {({ finalFocus, actions }) => (
+      {(state) => (
         // Hidden from agents, which use the Thread List's own actions. Kept mounted, so Menu never shows up beside it.
-        <KindMenuContent align="end" sideOffset={4} finalFocus={finalFocus} keepMounted data-agent-hidden="">
-          {actions.map((action) => (
-            <KindMenuItem
-              key={action.value}
-              value={action.value}
-              data-destructive={action.value === "delete" ? "" : undefined}
-            >
-              <span data-thread-list-icon={action.value} aria-hidden="true" />
-              {action.label}
-            </KindMenuItem>
-          ))}
+        <KindMenuContent
+          align="end"
+          sideOffset={4}
+          finalFocus={state.finalFocus}
+          keepMounted
+          data-agent-hidden=""
+          {...props}
+        >
+          {children(state)}
         </KindMenuContent>
       )}
     </parts.MenuContent>
   );
 }
+
+const DEFAULT_ITEMS = ({ actions }: ThreadListMenuContentState) =>
+  actions.map((action) => (
+    <KindMenuItem
+      key={action.value}
+      value={action.value}
+      data-destructive={action.value === "delete" ? "" : undefined}
+    >
+      <span data-thread-list-icon={action.value} aria-hidden="true" />
+      {action.label}
+    </KindMenuItem>
+  ));
 
 export type ThreadListDialogProps = { children?: ReactNode };
 

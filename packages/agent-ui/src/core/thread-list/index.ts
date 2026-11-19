@@ -4,6 +4,7 @@ export {
   type ThreadListDialogState,
   type ThreadListEntry,
   type ThreadListGridState,
+  type ThreadListLinkState,
   type ThreadListLoadReason,
   type ThreadListMenuContentState,
   type ThreadListOptions,
