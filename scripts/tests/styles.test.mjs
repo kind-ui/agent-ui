@@ -75,13 +75,14 @@ function scheme(name) {
   return { light: colors[0], dark: colors[1] };
 }
 
-test("marks and focus rings reach 3:1, and secondary text 4.5:1, on every fill", () => {
+test("marks and focus rings reach 3:1, and muted and accent text 4.5:1, on every fill", () => {
   for (const mode of ["light", "dark"]) {
     const color = (name) => scheme(name)[mode];
     for (const fill of ["surface", "hover", "selected", "current"]) {
       for (const mark of ["ring", "warning", "danger", "success", "accent"])
         assert.ok(contrast(color(mark), color(fill)) >= 3, `${mode} ${mark} on ${fill}`);
-      assert.ok(contrast(color("muted"), color(fill)) >= 4.5, `${mode} muted on ${fill}`);
+      for (const text of ["muted", "accent"])
+        assert.ok(contrast(color(text), color(fill)) >= 4.5, `${mode} ${text} text on ${fill}`);
     }
   }
 });

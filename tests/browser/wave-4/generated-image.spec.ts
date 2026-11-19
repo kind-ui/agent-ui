@@ -35,10 +35,15 @@ const host = <Key extends keyof Fixture["kindHost"]>(page: Page, key: Key, ...ar
     [key, args] as const,
   );
 const announced = (page: Page) => page.evaluate(() => (window as unknown as Fixture).kindAnnounced);
-const settled = (page: Page) =>
-  page.waitForFunction(() =>
+// Two frames first, so a transition a change starts on the next frame (the dialog's entrance) is running by then.
+const settled = async (page: Page) => {
+  await page.evaluate(
+    () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+  );
+  await page.waitForFunction(() =>
     document.getAnimations().every((animation) => animation.playState !== "running"),
   );
+};
 
 const open = async (page: Page, name = "all") => {
   // Records each text UI SDK's live regions are given.

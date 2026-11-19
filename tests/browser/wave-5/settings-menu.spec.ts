@@ -11,6 +11,11 @@ type Fixture = {
 const trigger = (page: Page) => page.getByRole("button", { name: "Settings" });
 const menu = (page: Page) => page.getByRole("menu").first();
 const toggle = (page: Page, name: string | RegExp) => page.getByRole("menuitemcheckbox", { name });
+// A pointer open moves focus into the menu after the click resolves, so wait for it before pressing inside.
+const openByPointer = async (page: Page) => {
+  await trigger(page).click();
+  await expect(page.locator('[role="menu"]:focus-within, [role="menu"]:focus')).toHaveCount(1);
+};
 const choice = (page: Page) => page.getByRole("menuitem", { name: /^Response style/ });
 const option = (page: Page, name: string) => page.getByRole("menuitemradio", { name });
 const content = (page: Page) => page.locator('[data-slot="menu-content"]');
@@ -128,7 +133,7 @@ for (const scheme of ["light", "dark"] as const)
     await page.emulateMedia({ colorScheme: scheme });
     await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     await load(page);
-    await trigger(page).click();
+    await openByPointer(page);
     await choice(page).press("ArrowRight");
     await expect(option(page, "Concise")).toBeFocused();
     await settled(page);
@@ -141,7 +146,7 @@ test("a value change or an equal settings copy redraws no row, and focus stays",
 }, testInfo) => {
   test.skip(layerOf(testInfo) !== "web", "React keys its rows; web redraws them");
   await load(page);
-  await trigger(page).click();
+  await openByPointer(page);
   await choice(page).press("ArrowRight");
   await page.keyboard.press("ArrowDown");
   await expect(option(page, "Balanced")).toBeFocused();

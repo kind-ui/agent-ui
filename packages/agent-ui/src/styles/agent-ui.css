@@ -107,8 +107,8 @@
   --kind-color-border: light-dark(oklch(0.92 0.004 286), oklch(0.32 0.006 286));
   --kind-color-ring: light-dark(oklch(0.55 0.014 286), oklch(0.72 0.012 286));
   --kind-color-shadow: light-dark(oklch(0.21 0.006 286), oklch(0 0 0));
-  --kind-color-accent: light-dark(oklch(0.55 0.2 262), oklch(0.7 0.15 262));
-  --kind-color-accent-hover: light-dark(oklch(0.5 0.2 262), oklch(0.76 0.13 262));
+  --kind-color-accent: light-dark(oklch(0.52 0.2 262), oklch(0.72 0.15 262));
+  --kind-color-accent-hover: light-dark(oklch(0.47 0.2 262), oklch(0.78 0.13 262));
   --kind-color-on-accent: light-dark(oklch(1 0 0), oklch(0.18 0.006 286));
   --kind-color-on-status: light-dark(oklch(1 0 0), oklch(0.18 0.006 286));
   --kind-color-on-warning: light-dark(oklch(0.21 0.006 286), oklch(0.18 0.006 286));
