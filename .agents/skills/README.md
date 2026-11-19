@@ -11,7 +11,10 @@ Skills for working on `@kind-ui/agent-ui`. Each one is a folder with a `SKILL.md
 | [`fumadocs`](fumadocs/SKILL.md) | You change `apps/docs`. | Where pages, examples and generated API tables live, which Fumadocs CLIs to use, static export limits and upgrades. |
 | [`documentation-writer`](documentation-writer/SKILL.md) | You plan a new kind of page. | Installed from github/awesome-copilot (`skills-lock.json`). Picks the Diátaxis type (tutorial, how-to, reference, explanation) and outlines the page. |
 | [`expert-review`](expert-review/SKILL.md) | Before every push. | Picks the layer experts the diff reaches (`node scripts/expert-scope.mjs`), runs them in parallel and hands back one table of findings. |
+| [`apple-design`](apple-design/SKILL.md) | You add or review motion, a gesture, a sheet or a transition. | Vendored unchanged. Response, direct manipulation, interruptibility, springs, materials, typography and restraint. |
+| [`impeccable`](impeccable/SKILL.md) | You have a component's screenshots, before `expert-review`. | Vendored: the core skill with `audit`, `critique`, `polish` and `distill` only; its detector runs through `npx impeccable@4.10.0 detect`. |
+| [`web-interface-guidelines`](web-interface-guidelines/SKILL.md) | The checklist pass on a component's render and style files. | Vendored unchanged with a skill header. MUST/SHOULD/NEVER rules for keyboard, focus, forms, layout stability, animation and theming. |
 
-The chain: write with `write-code`, finish with `unslop`, then run `expert-review` before you push.
+The chain: write with `write-code`, check the screenshots with `impeccable` and `web-interface-guidelines` (motion with `apple-design`), finish with `unslop`, then run `expert-review` before you push. `docs/design-principles.md` says what the design skills hold us to; `AGENTS.md` "Component task routine" says when each runs.
 
 The skills live in `.agents/skills/`, where Codex, Cursor, Gemini CLI and GitHub Copilot find them; `.claude/skills` links to the same folder for Claude Code. In a harness that doesn't load skills, ask your agent to read the skill's `SKILL.md` and follow it.
