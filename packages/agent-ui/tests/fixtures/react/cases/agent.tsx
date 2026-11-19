@@ -745,7 +745,7 @@ function Shell({ confirm }: { confirm: boolean }) {
   const [controller] = useState(createConversationController);
   const [marks, setMarks] = useState<readonly number[]>([]);
   const [history, setHistory] = useState<"error" | "loading">("error");
-  const answer = (action: string, set: string | undefined) => (details: { source: string }) =>
+  const settle = (action: string, set: string | undefined) => (details: { source: string }) =>
     host
       .decide(action)(details)
       .then(() => setLink(set));
@@ -803,8 +803,8 @@ function Shell({ confirm }: { confirm: boolean }) {
           agentConfirm={confirm}
           onOpenChange={(_open, details) => host.change("share", details)}
           onVisibilityChange={(_value, details) => host.change("share-visibility", details)}
-          onCreateLink={answer("share-create", shareLink)}
-          onRevoke={answer("share-revoke", undefined)}
+          onCreateLink={settle("share-create", shareLink)}
+          onRevoke={settle("share-revoke", undefined)}
           onCopy={host.decide("share-copy")}
         />
       </section>

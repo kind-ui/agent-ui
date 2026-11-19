@@ -81,7 +81,7 @@ Last reviewed: `729a1fd` (Wave 6 Task 1 groundwork)
 
 ## Resolved
 
-- **`nearestTabStop` searched only `ownerDocument.body`** (found in Wave 6 Task 7, fixed in Task 12): it now walks open shadow roots too, so a Notice or Connection Status hands focus to a stop inside one, before or after it.
+- **`nearestTabStop` searched only `ownerDocument.body`** (found in Wave 6 Task 7, fixed in Task 12): it now walks the flat tree (open shadow roots and slots), so a Notice or Connection Status hands focus where Tab would go, inside a shadow root or out of a slot.
 - **An empty written `<kind-dictation-status>` showed nothing (Wave 5 Task 11):** `draw` fills in its mark and `[data-dictation-text]`.
 - **Context Bar (Wave 5 Task 10):** a list written with only whitespace inside is filled in; new chip objects with the same content keep their rows; the content's `initial-focus`, `side-offset` and `align` are set on every draw, so content added later opens as React's does (`written` case).
 - **A `kind-message` written with menu markup and no `regenerateOptions` both regenerated and opened a menu of "Try again" (Wave 5 Task 7):** the root now always controls its `ui-menu`, which refuses to open without options, and empties a content it owns; `message.spec.ts` has a `no-options` case.

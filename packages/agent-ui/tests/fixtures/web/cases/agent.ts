@@ -740,7 +740,6 @@ function wireShell(wave: Element) {
     canDelete: true,
   });
   list.addEventListener("threadselect", (event) => recordChange("thread-select", event));
-  // `onNew` takes only its details, which the event carries as its value.
   list.addEventListener("threadnew", (event) => host.decide("thread-new")(event.detail.value));
   list.addEventListener("threadrename", decide("thread-rename"));
   list.addEventListener("pinchange", decide("thread-pin"));
@@ -849,7 +848,6 @@ export const cases = {
   "wave-3": waveThree,
   "wave-4": waveFour,
   "wave-5": waveFive,
-  // The bridge lists 100 components at most, which the Wave 5 page nearly fills, so Wave 6 sits beside Wave 1 alone.
   "wave-6": (root: HTMLElement) => {
     foundation(root);
     defineThreadList();

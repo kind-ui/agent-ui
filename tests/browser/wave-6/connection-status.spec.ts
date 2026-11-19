@@ -94,7 +94,21 @@ test("the pill keeps its width as the countdown loses a digit", async ({ page })
   const before = await width();
   await page.clock.runFor(1000);
   await expect(pill(page)).toHaveText(/Retrying in 9 s/);
-  // Within a layout unit: the hidden zeros shape as a run of their own. A lost digit is about 7px.
+  // Within a layout unit: the figure spaces shape as a run of their own. A lost digit is about 7px.
+  expect(await width()).toBeCloseTo(before, 1);
+});
+
+test("words a host wrote get no room for lost digits", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web hosts write the words");
+  await page.clock.install({ time: new Date("2026-11-18T12:00:00Z") });
+  await open(page, "written");
+  await page.clock.pauseAt(new Date("2026-11-18T12:00:10Z"));
+  await set(page, "reconnecting", { retryAt: "2026-11-18T12:00:20Z" });
+  const width = () => pill(page).evaluate((el) => el.getBoundingClientRect().width);
+  await expect(pill(page)).toHaveAttribute("data-state", "reconnecting");
+  const before = await width();
+  await page.clock.runFor(1000);
+  // A spare digit would add about 7px.
   expect(await width()).toBeCloseTo(before, 1);
 });
 
@@ -128,17 +142,51 @@ test("focus moves on from Retry when the connection comes back, and a pending re
   await expect(retryButton(page)).not.toHaveAttribute("aria-disabled");
 });
 
-test("focus moves from Retry into a shadow root after the pill", async ({ page }) => {
+// Recovery follows the flat tree, as Tab does: a shadow root in its host's place, slotted elements in their slot's.
+for (const { name, shadow, light, expected } of [
+  {
+    name: "into a shadow root after the pill",
+    shadow: "<button>Shadow</button>",
+    light: "",
+    expected: "Shadow",
+  },
+  {
+    name: "to a host's slotted child before its shadow button",
+    shadow: "<slot></slot><button>Shadow</button>",
+    light: "<button>Light</button>",
+    expected: "Light",
+  },
+])
+  test(`focus moves from Retry ${name}`, async ({ page }) => {
+    await open(page, "offline");
+    await pill(page).evaluate(
+      (el, [shadowHtml, lightHtml]) => {
+        const host = document.createElement("div");
+        host.attachShadow({ mode: "open" }).innerHTML = shadowHtml as string;
+        host.innerHTML = lightHtml as string;
+        el.after(host);
+      },
+      [shadow, light],
+    );
+    await retryButton(page).focus();
+    await set(page, "online");
+    await expect(page.getByRole("button", { name: expected, exact: true })).toBeFocused();
+  });
+
+test("focus moves from a Retry slotted into a host to the host's shadow button after it", async ({
+  page,
+}) => {
   await open(page, "offline");
   await pill(page).evaluate((el) => {
     const host = document.createElement("div");
-    host.id = "after-pill";
-    host.attachShadow({ mode: "open" }).innerHTML = "<button>After</button>";
-    el.after(host);
+    host.attachShadow({ mode: "open" }).innerHTML = "<slot></slot><button>Footer</button>";
+    el.replaceWith(host);
+    host.append(el);
+    host.after(Object.assign(document.createElement("button"), { textContent: "Later" }));
   });
   await retryButton(page).focus();
   await set(page, "online");
-  await expect(page.locator("#after-pill").getByRole("button", { name: "After" })).toBeFocused();
+  await expect(page.getByRole("button", { name: "Footer", exact: true })).toBeFocused();
 });
 
 test("Retry calls the host once and waits for it", async ({ page }) => {

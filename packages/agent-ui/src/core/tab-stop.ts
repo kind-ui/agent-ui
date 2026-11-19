@@ -1,25 +1,40 @@
 /**
- * The first element after `el` that Tab reaches, else the last one before it, looking inside open shadow roots. UI SDK
- * finds these with a function it doesn't export, and `createFocusRecovery` asks its `fallback` for the element.
+ * The first element after `el` that Tab reaches, else the last one before it. It walks the flat tree, as Tab does: an
+ * open shadow root in its host's place, and slotted elements where their slot is. UI SDK finds these with a function
+ * it doesn't export, and `createFocusRecovery` asks its `fallback` for the element.
  */
 export const nearestTabStop = (el: HTMLElement): HTMLElement | undefined => {
   let previous: HTMLElement | undefined;
   let passed = false;
-  // A shadow root's elements count where its host is, which is where Tab reaches them.
-  const next = (root: ParentNode): HTMLElement | undefined => {
-    for (const candidate of root.querySelectorAll<HTMLElement>("*")) {
-      if (candidate === el) passed = true;
-      if (el.contains(candidate) || candidate.closest("[inert]")) continue;
-      if (isTabStop(candidate)) {
-        if (passed) return candidate;
-        previous = candidate;
-      }
-      const inside = candidate.shadowRoot && next(candidate.shadowRoot);
-      if (inside) return inside;
+  const visit = (candidate: Element): HTMLElement | undefined => {
+    if (candidate === el) {
+      passed = true;
+      return undefined;
+    }
+    // A leaving part is often inert by now, with `el` inside it.
+    if (candidate.hasAttribute("inert")) {
+      if (candidate.contains(el)) passed = true;
+      return undefined;
+    }
+    if (candidate instanceof HTMLSlotElement) {
+      const assigned = candidate.assignedElements({ flatten: true });
+      return walk(assigned.length > 0 ? assigned : candidate.children);
+    }
+    if (candidate instanceof HTMLElement && isTabStop(candidate)) {
+      if (passed) return candidate;
+      previous = candidate;
+    }
+    // A host's light children are reached through its slots.
+    return walk(candidate.shadowRoot?.children ?? candidate.children);
+  };
+  const walk = (children: Iterable<Element>): HTMLElement | undefined => {
+    for (const child of children) {
+      const found = visit(child);
+      if (found) return found;
     }
     return undefined;
   };
-  return next(el.ownerDocument.body) ?? previous;
+  return walk(el.ownerDocument.body.children) ?? previous;
 };
 
 const isTabStop = (candidate: HTMLElement) =>

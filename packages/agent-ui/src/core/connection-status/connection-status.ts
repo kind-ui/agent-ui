@@ -6,7 +6,6 @@ import {
   createFocusRecovery,
   definePrimitive,
   type FocusRecovery,
-  live,
   prepareAnnouncements,
   type SlotDefinition,
 } from "@ui-sdk/core";
@@ -83,7 +82,7 @@ export type ConnectionStatusState = {
   started: boolean;
   /** Whole seconds until `retryAt` while `reconnecting`, else 0. Live: only the text hears it. */
   seconds: number;
-  /** How many digits `seconds` has lost since its countdown started, which the text keeps room for. Live. */
+  /** How many digits `seconds` has lost since its countdown started, which the default words keep room for. Live. */
   spareDigits: number;
   /** The `retryAt` option. */
   retryAt: string | undefined;
@@ -151,13 +150,20 @@ const isLost = (phase: ConnectionPhase) => phase === "reconnecting" || phase ===
 
 const isDown = (phase: ConnectionPhase) => phase !== "online" && phase !== "resuming";
 
-/** The pill's words: the countdown while reconnecting with time left, else the state's. */
+/**
+ * The pill's words: the countdown while reconnecting with time left, else the state's. The default countdown ends in a
+ * figure space, a digit wide, per digit it has lost, so "10 s" turning into "9 s" doesn't resize the pill.
+ */
 export const connectionStatusText = (
-  state: Pick<ConnectionStatusState, "shown" | "seconds" | "labels">,
-): string =>
-  state.shown === "reconnecting" && state.seconds > 0
-    ? state.labels.countdown(state.seconds)
-    : state.labels[state.shown];
+  state: Pick<ConnectionStatusState, "shown" | "seconds" | "labels"> &
+    Partial<Pick<ConnectionStatusState, "spareDigits">>,
+): string => {
+  if (state.shown !== "reconnecting" || state.seconds <= 0) return state.labels[state.shown];
+  const text = state.labels.countdown(state.seconds);
+  return state.labels.countdown === DEFAULT_LABELS.countdown
+    ? text + "\u2007".repeat(state.spareDigits ?? 0)
+    : text;
+};
 
 const presentation = (options: ConnectionStatusOptions) => ({
   retryAt: options.retryAt,
@@ -318,10 +324,6 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
       // Reads the live `seconds`, so a tick renders this part alone.
       state: (state) => ({ text: connectionStatusText(state) }),
       attrs: () => ({ "data-connection-status-part": "text" }),
-      // "Retrying in 10 s" turning into "9 s" keeps the pill's width, so it doesn't jump on its centre.
-      live: live((state) => ({
-        "data-spare-digits": state.spareDigits ? "0".repeat(state.spareDigits) : undefined,
-      })),
     }),
     retry: slot<BaseSlotProps, { pending: boolean; label: string }>({
       role: "button",
