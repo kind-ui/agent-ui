@@ -260,6 +260,12 @@ const components = {
 
   // wave-6-task-3: Thread Search
 
+  "thread-search": {
+    title: "Thread Search",
+    description: "A Search chats dialog over the threads, grouped by date, with New chat and a shortcut.",
+    uses: ["picker", "internal-command"],
+  },
+
   // wave-6-task-4: Sidebar
 
   sidebar: {

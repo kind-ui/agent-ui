@@ -1,0 +1,345 @@
+import {
+  type ChangeDetails,
+  definePrimitive,
+  dispatch,
+  type PopupPartState,
+  popupBackdrop,
+  type SlotDefinition,
+} from "@ui-sdk/core";
+import type { BaseSlotProps } from "@ui-sdk/core/renderer";
+import { ariaKeyshortcuts, formatShortcut, registerShortcut } from "@ui-sdk/core/shortcuts";
+import type { PickerItem, Thread } from "../../types/index.js";
+import {
+  type PickerBaseApi,
+  type PickerBaseOptions,
+  type PickerBaseSlots,
+  type PickerBaseState,
+  type PickerSearchOptions,
+  type PickerValueChangeReason,
+  pickerBase,
+} from "../picker/base.js";
+import { threadGroups } from "../thread-groups.js";
+import { type DateGroupKey, dateGroup, todayKey } from "../time.js";
+
+/** `"item-press"`: a person chose a row. `"imperative"`: an `api` call, like an agent's `select` or `newThread`. */
+export type ThreadSearchSelectReason = PickerValueChangeReason;
+
+export type ThreadSearchOptions = Omit<
+  PickerBaseOptions,
+  | "actions"
+  | "onAction"
+  | "value"
+  | "defaultValue"
+  | "onValueChange"
+  | "backLabel"
+  | "label"
+  | "placeholder"
+  | "emptyText"
+> &
+  PickerSearchOptions & {
+    /**
+     * The threads to search. While the search is empty the newest 20 show; while it filters, every one does, grouped
+     * as Thread List groups them: pinned first, then each `group`, then by date from `updatedAt`.
+     * @default []
+     */
+    threads?: Thread[];
+    /** Called when a person or `select` chooses a thread, by its `id`. Cancel it to keep the dialog open. */
+    onSelect?: (id: string, details: ChangeDetails<ThreadSearchSelectReason>) => void;
+    /** Adds a "New chat" row after the threads, called with the search text when a person or `newThread` runs it. */
+    onNew?: (query: string, details: ChangeDetails<ThreadSearchSelectReason>) => void;
+    /**
+     * Names the "New chat" row.
+     * @default "New chat"
+     */
+    newLabel?: string;
+    /**
+     * Names the trigger, the dialog and the search field.
+     * @default "Search chats"
+     */
+    label?: string;
+    /**
+     * Shown in the empty search field.
+     * @default "Search chats"
+     */
+    placeholder?: string;
+    /**
+     * Shown while no thread matches the search.
+     * @default "No chats found"
+     */
+    emptyText?: string;
+    /** Keys that open the dialog from anywhere on the page, like `"mod+k"`, shown in the trigger. None by default. */
+    shortcut?: string;
+    /** Today, for the date groups: an ISO date or an instant. Defaults to today in `timeZone`. */
+    now?: string;
+    /** A BCP 47 tag for the date groups' words. Defaults to English. */
+    locale?: string;
+    /** The IANA time zone that decides a thread's day. Defaults to UTC. */
+    timeZone?: string;
+    /** Replaces the fixed groups' words ("Pinned", "Previous 7 days", …), by key. */
+    groupLabels?: Partial<Record<DateGroupKey | "pinned", string>>;
+  };
+
+export type ThreadSearchState = PickerBaseState & {
+  /** The `shortcut` option. */
+  shortcut: string | undefined;
+  /** The `shortcut` as this platform shows it, like `⌘K`. Empty until the root binds, so a server renders none. */
+  shortcutText: string;
+  /** The `shortcut` for `aria-keyshortcuts`. Unset until the root binds. */
+  keyshortcuts: string | undefined;
+};
+
+/** What a row's `icon` holds: the thread's status and its words, for a status mark. */
+export type ThreadSearchIcon = { status: NonNullable<Thread["status"]>; label: string };
+
+export type ThreadSearchApi = PickerBaseApi & {
+  /** Runs "New chat" with the search text, calling `onNew`. Offered only while `onNew` is set. */
+  readonly newThread: (() => boolean) | undefined;
+};
+
+type ThreadSearchSlots = PickerBaseSlots<ThreadSearchState, ThreadSearchApi> & {
+  backdrop: SlotDefinition<ThreadSearchState, ThreadSearchApi, BaseSlotProps, PopupPartState>;
+  shortcut: SlotDefinition<ThreadSearchState, ThreadSearchApi, BaseSlotProps, { text: string }>;
+  status: SlotDefinition<ThreadSearchState, ThreadSearchApi, BaseSlotProps & { value?: string }>;
+};
+
+// Named explicitly because the inferred type references UI SDK types that no public entry exports (TS2742).
+export type ThreadSearchPrimitive = ReturnType<
+  typeof definePrimitive<ThreadSearchOptions, ThreadSearchState, ThreadSearchApi, ThreadSearchSlots>
+>;
+
+const RECENT = 20;
+const NEW = "new";
+const noThreads: Thread[] = [];
+
+const STATUS: Record<ThreadSearchIcon["status"], string> = {
+  running: "Running",
+  "awaiting-input": "Needs input",
+  error: "Failed",
+};
+
+type Grouping = {
+  now: string;
+  locale: string | undefined;
+  timeZone: string | undefined;
+  groupLabels: ThreadSearchOptions["groupLabels"] | undefined;
+};
+
+const groupingOf = ({ now, locale, timeZone, groupLabels }: ThreadSearchOptions): Grouping => ({
+  now: now ?? todayKey(timeZone),
+  locale,
+  timeZone,
+  groupLabels,
+});
+
+const itemOf = (
+  thread: Thread,
+  group: string | undefined,
+  meta: string | undefined,
+): PickerItem<unknown> => ({
+  value: thread.id,
+  label: thread.title,
+  ...(thread.snippet ? { description: thread.snippet } : {}),
+  ...(meta ? { meta } : {}),
+  ...(group === undefined ? {} : { group }),
+  ...(thread.status ? { icon: { status: thread.status, label: STATUS[thread.status] } } : {}),
+});
+
+const dateOf = (thread: Thread, grouping: Grouping) =>
+  dateGroup(thread.updatedAt, { ...grouping, labels: grouping.groupLabels }).label;
+
+/** Grouped as Thread List groups them; a row under a date group needs no date of its own. */
+const groupedItems = (threads: readonly Thread[], grouping: Grouping) =>
+  threadGroups(threads, { ...grouping, labels: grouping.groupLabels }).flatMap((group) =>
+    group.threads.map((thread) =>
+      itemOf(
+        thread,
+        group.label,
+        group.key === "pinned" || group.key.startsWith("group:") ? dateOf(thread, grouping) : undefined,
+      ),
+    ),
+  );
+
+/** In the host's order and ungrouped, so pinning and dates show in each row's `meta`. */
+const hostItems = (threads: readonly Thread[], grouping: Grouping) =>
+  threads.map((thread) =>
+    itemOf(
+      thread,
+      undefined,
+      thread.pinned ? (grouping.groupLabels?.pinned ?? "Pinned") : dateOf(thread, grouping),
+    ),
+  );
+
+const time = (thread: Thread) => {
+  const at = thread.updatedAt ? Date.parse(thread.updatedAt) : Number.NaN;
+  return Number.isNaN(at) ? Number.NEGATIVE_INFINITY : at;
+};
+
+const newest = (threads: readonly Thread[]) =>
+  [...threads].sort((a, b) => time(b) - time(a)).slice(0, RECENT);
+
+// Rows are kept while the host keeps its `threads` array and what they're grouped by, per array, so instances side by
+// side don't evict each other's.
+type Rows = { key: string; items: PickerItem<unknown>[]; recent: PickerItem<unknown>[] | undefined };
+const cache = new WeakMap<Thread[], Rows>();
+
+const rows = (options: ThreadSearchOptions): Rows => {
+  const threads = options.threads ?? noThreads;
+  const grouping = groupingOf(options);
+  const filter = options.filter !== false;
+  const key = JSON.stringify([grouping, filter]);
+  const found = cache.get(threads);
+  if (found?.key === key) return found;
+  const made: Rows = filter
+    ? {
+        key,
+        items: groupedItems(threads, grouping),
+        recent: threads.length > RECENT ? groupedItems(newest(threads), grouping) : undefined,
+      }
+    : { key, items: hostItems(threads, grouping), recent: undefined };
+  cache.set(threads, made);
+  return made;
+};
+
+const base = pickerBase<ThreadSearchOptions>({
+  kind: "thread-search",
+  label: "Search chats",
+  placeholder: "Search chats",
+  emptyText: "No chats found",
+  popup: "dialog",
+  select: true,
+  search: true,
+  toItems: (options) => rows(options).items,
+  emptyItems: (options) => rows(options).recent,
+  actions: {
+    of: (options) =>
+      typeof options.onNew === "function" ? [{ id: NEW, label: options.newLabel ?? "New chat" }] : [],
+    run: (context, _id, details) => dispatch(context, "onNew", context.store.get().query, details),
+  },
+});
+
+const shortcutOf = (options: ThreadSearchOptions) => ({ shortcut: options.shortcut || undefined });
+
+/**
+ * The "Search chats" dialog: a button that opens a search over the threads, grouped as Thread List groups them, with
+ * "New chat" after them. Built on Picker's rows in a dialog: choosing a thread calls `onSelect` and closes it. With
+ * `filter: false` the host searches, and `status` says when its results are loading or failed.
+ */
+export const threadSearchPrimitive: ThreadSearchPrimitive = definePrimitive<
+  ThreadSearchOptions,
+  ThreadSearchState,
+  ThreadSearchApi,
+  ThreadSearchSlots
+>({
+  name: "kind-thread-search",
+  options: {
+    open: base.options.open,
+    defaultOpen: base.options.defaultOpen,
+    onOpenChange: base.options.onOpenChange,
+    presentation: base.options.presentation,
+    disabled: base.options.disabled,
+    motion: base.options.motion,
+    label: "string",
+    placeholder: "string",
+    emptyText: "string",
+    threads: "value",
+    query: "string",
+    defaultQuery: "string",
+    onQueryChange: "callback",
+    filter: "boolean",
+    status: "string",
+    loadingText: "string",
+    errorText: "string",
+    onSelect: "callback",
+    onNew: "callback",
+    newLabel: "string",
+    shortcut: "string",
+    now: "string",
+    locale: "string",
+    timeZone: "string",
+    groupLabels: "value",
+  },
+  state: (options) => ({
+    ...base.state(options),
+    ...shortcutOf(options),
+    shortcutText: "",
+    keyshortcuts: undefined,
+  }),
+  sync: (options) => ({ ...base.sync(options), ...shortcutOf(options) }),
+  controlled: ["open", "query"],
+  api: (context) => {
+    const api = base.api(context);
+    return Object.defineProperty(api, "newThread", {
+      get: () => {
+        const run = api.run;
+        return run ? () => run(NEW) : undefined;
+      },
+      enumerable: true,
+    }) as ThreadSearchApi;
+  },
+  slots: (slot) => {
+    const picker = base.slots(slot);
+    return {
+      ...picker,
+      root: slot({
+        ...picker.root,
+        bind: (_el, { store, api }) => {
+          // The keys read differently per platform, so they're written once in the browser: the server and the first
+          // client render show none.
+          const show = () => {
+            const { shortcut, shortcutText, keyshortcuts } = store.get();
+            const text = shortcut ? formatShortcut(shortcut) : "";
+            const keys = shortcut ? ariaKeyshortcuts(shortcut) : undefined;
+            if (shortcutText !== text || keyshortcuts !== keys)
+              store.set({ shortcutText: text, keyshortcuts: keys });
+          };
+          show();
+          const unsubscribe = store.subscribe(show);
+          // A page shortcut, which a modal pauses; the keys are read on each press.
+          const unregister = registerShortcut(
+            () => store.get().shortcut,
+            (event) => {
+              const { open, disabled } = store.get();
+              if (!open && !disabled) api.setOpen(true, { reason: "shortcut", event });
+            },
+          );
+          return () => {
+            unsubscribe();
+            unregister();
+          };
+        },
+      }),
+      trigger: slot({
+        ...picker.trigger,
+        attrs: (state, part) => ({
+          ...picker.trigger.attrs?.(state, part),
+          "aria-keyshortcuts": state.keyshortcuts,
+        }),
+      }),
+      backdrop: popupBackdrop(slot),
+      shortcut: slot<BaseSlotProps, { text: string }>({
+        present: (state) => state.shortcut !== undefined,
+        state: (state) => ({ text: state.shortcutText }),
+        attrs: () => ({ "aria-hidden": "true", translate: "no", "data-thread-search-part": "shortcut" }),
+      }),
+      // A row's status mark, by its row key: named in words, since a status needs them.
+      status: slot<BaseSlotProps & { value?: string }>({
+        props: { value: "string" },
+        role: "img",
+        attrs: (state, { api, props }) => {
+          const icon = api.itemState(state, props.value ?? "")?.row.icon as ThreadSearchIcon | undefined;
+          return {
+            "aria-label": icon?.label,
+            "data-status-mark": "",
+            "data-status": icon?.status,
+            "data-thread-search-part": "status",
+          };
+        },
+      }),
+    };
+  },
+  agent: {
+    actions: ["open", "close", "search", "select", "newThread"],
+    // Not `closed`: the bridge would check `search`'s free text against the threads. `select` refuses an unknown id.
+    items: (api) => api.getChoices().filter((choice) => choice.value !== NEW),
+  },
+});

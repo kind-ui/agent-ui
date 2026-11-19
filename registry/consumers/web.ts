@@ -58,6 +58,8 @@ import { defineThreadList } from "./components/ui/web/thread-list.js";
 
 // wave-6-task-3: Thread Search
 
+import { defineThreadSearch } from "./components/ui/web/thread-search.js";
+
 // wave-6-task-4: Sidebar
 
 import { defineSidebar } from "./components/ui/web/sidebar.js";
@@ -147,6 +149,8 @@ for (const define of [
   defineThreadList,
 
   // wave-6-task-3: Thread Search
+
+  defineThreadSearch,
 
   // wave-6-task-4: Sidebar
 
@@ -265,6 +269,8 @@ const items = {
   "thread-list": `<kind-thread-list can-new></kind-thread-list>`,
 
   // wave-6-task-3: Thread Search
+
+  "thread-search": `<kind-thread-search can-select></kind-thread-search>`,
 
   // wave-6-task-4: Sidebar
 

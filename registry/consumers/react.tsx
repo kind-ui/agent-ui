@@ -65,6 +65,8 @@ import { ThreadList } from "./components/ui/thread-list.js";
 
 // wave-6-task-3: Thread Search
 
+import { ThreadSearch } from "./components/ui/thread-search.js";
+
 // wave-6-task-4: Sidebar
 
 import {
@@ -356,6 +358,14 @@ const items = {
   ),
 
   // wave-6-task-3: Thread Search
+
+  "thread-search": (
+    <ThreadSearch
+      threads={[{ id: "t1", title: "Plan the launch", updatedAt: "2026-11-18T09:00:00Z" }]}
+      now="2026-11-18"
+      onSelect={() => {}}
+    />
+  ),
 
   // wave-6-task-4: Sidebar
 

@@ -21,6 +21,7 @@ import {
   KindCommandList,
   KindCommandPage,
   KindCommandSeparator,
+  KindCommandStatus,
 } from "./internal/command.js";
 
 const parts = createParts(pickerPrimitive, {
@@ -78,9 +79,17 @@ export type PickerParts = Pick<typeof parts, "Trigger" | "Content" | "Viewport" 
 /**
  * The trigger, popover, list and rows of a picker, rendered through `parts`, for Model Selector and the other
  * components that spread `pickerBase` to share Picker's markup, each part named `<name><Part>` in React's tools.
- * `Default` is the trigger and the popover.
+ * `Default` is the trigger and the popover. `icon` draws a row's icon (an image URL or an element by default; `null`
+ * draws none), and `trailing` what follows its text, before its `meta`.
  */
-export function pickerParts(parts: PickerParts, name: string) {
+export function pickerParts(
+  parts: PickerParts,
+  name: string,
+  {
+    icon = (row: PickerRow) => iconOf(row.icon),
+    trailing,
+  }: { icon?: (row: PickerRow) => ReactNode; trailing?: (row: PickerRow) => ReactNode } = {},
+) {
   function Trigger({
     children = ({ text, icon }) => (
       <>
@@ -118,6 +127,9 @@ export function pickerParts(parts: PickerParts, name: string) {
         {(state) => (
           <KindCommand {...state.props}>
             <KindCommandInput aria-label={state.label} placeholder={state.placeholder} data-agent-hidden="" />
+            {state.statusText !== undefined ? (
+              <KindCommandStatus>{state.statusText}</KindCommandStatus>
+            ) : null}
             <KindCommandEmpty>{state.emptyText}</KindCommandEmpty>
             <KindCommandList>{children(state)}</KindCommandList>
           </KindCommand>
@@ -168,7 +180,7 @@ export function pickerParts(parts: PickerParts, name: string) {
   function Item({
     children = ({ row, description }) => (
       <>
-        {row.icon !== undefined ? <KindCommandItemIcon>{iconOf(row.icon)}</KindCommandItemIcon> : null}
+        <ItemIcon row={row} />
         <span data-picker-item-text="">
           <KindCommandItemText>{row.label}</KindCommandItemText>
           {description.length ? (
@@ -179,6 +191,7 @@ export function pickerParts(parts: PickerParts, name: string) {
             </span>
           ) : null}
         </span>
+        {trailing?.(row)}
         {row.meta ? <span data-picker-meta="">{row.meta}</span> : null}
         <span data-picker-mark="" />
       </>
@@ -186,6 +199,11 @@ export function pickerParts(parts: PickerParts, name: string) {
     ...props
   }: PickerItemProps) {
     return <parts.Item {...props}>{children}</parts.Item>;
+  }
+
+  function ItemIcon({ row }: { row: PickerRow }) {
+    const drawn = row.icon === undefined ? null : icon(row);
+    return drawn == null ? null : <KindCommandItemIcon>{drawn}</KindCommandItemIcon>;
   }
 
   // Shared, so an update doesn't render the default parts' wrappers again.

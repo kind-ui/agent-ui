@@ -238,6 +238,17 @@ const cases = {
 
   // wave-6-task-3: Thread Search
 
+  threadSearch: {
+    options: {
+      threads: [{ id: "t1", title: "Plan the launch", updatedAt: "2026-11-18T09:00:00Z", status: "running" }],
+      now: "2026-11-18",
+      shortcut: "mod+k",
+      onSelect: noop,
+      onNew: noop,
+    },
+    keys: { item: ["i:t1", "a:new"], status: ["i:t1"] },
+  },
+
   // wave-6-task-4: Sidebar
 
   sidebar: { options: { label: "Chats" } },

@@ -37,6 +37,8 @@
 
 <!-- wave-6-task-3: Thread Search -->
 
+  - `packages/agent-ui/src/styles/thread-search.css`: `search` (the trigger's icon), unchanged; derives from Feather.
+
 <!-- wave-6-task-4: Sidebar -->
 
 - `packages/agent-ui/src/styles/sidebar.css` (Sidebar's trigger): `panel-left` and `panel-right`, unchanged; both derive from Feather.

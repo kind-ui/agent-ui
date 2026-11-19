@@ -70,8 +70,17 @@ const drawTrigger = (button: Element, text: string, icon: unknown) => {
   if (label && label.textContent !== text) label.textContent = text;
 };
 
+type IconNodes = (document: Document, row: PickerRow) => Node[];
+
+const rowIcon: IconNodes = (document, row) => iconNodes(document, row.icon);
+
 /** A row's content inside its `kind-picker-item`, built from its data so no label is parsed as markup. */
-const drawItem = (part: Element, state: PickerItemState) => {
+const drawItem = (
+  part: Element,
+  state: PickerItemState,
+  icon: IconNodes,
+  trailing: IconNodes | undefined,
+) => {
   if (drawn.get(part) === state) return;
   const previous = drawn.get(part) as PickerItemState | undefined;
   drawn.set(part, state);
@@ -80,13 +89,16 @@ const drawItem = (part: Element, state: PickerItemState) => {
   if (previous?.row !== row) {
     const text = element(document, "span", { "data-picker-item-text": "" });
     text.append(element(document, "ui-command-item-text", {}, row.label));
+    const icons = row.icon === undefined ? [] : icon(document, row);
+    const iconEl = icons.length ? element(document, "ui-command-item-icon") : undefined;
+    iconEl?.append(...icons);
     part.replaceChildren(
-      ...(row.icon === undefined ? [] : [element(document, "ui-command-item-icon")]),
+      ...(iconEl ? [iconEl] : []),
       text,
+      ...(trailing?.(document, row) ?? []),
       ...(row.meta ? [element(document, "span", { "data-picker-meta": "" }, row.meta)] : []),
       element(document, "span", { "data-picker-mark": "" }),
     );
-    part.querySelector("ui-command-item-icon")?.append(...iconNodes(document, row.icon));
   }
   const text = part.querySelector("[data-picker-item-text]");
   let description = text?.querySelector("[data-picker-description]");
@@ -186,8 +198,30 @@ const drawList = (list: Element, pages: PickerPage[], itemTag: string) => {
   for (const page of pageEls.values()) page.remove();
 };
 
-/** The element a picker's root is: its `can-run` attribute, read into the options. */
-type PickerRootElement = HTMLElement & { canRun?: boolean };
+/** How a component that spreads `pickerBase` differs from Picker on Web Components. */
+export type PickerElementsConfig<P extends Primitive> = {
+  /** The parts an empty root fills itself with: Picker's trigger and popover by default. */
+  template?: string;
+  /** Each `can-<action>` attribute's property, and the callback it offers: `canRun` offers `onAction` by default. */
+  can?: Record<string, string>;
+  /** The root's live properties: `open` and `value` by default. */
+  state?: RootOptions<P>["state"];
+  /** The api methods copied onto the element: `isOpen`, `setOpen` and `getValue` by default. */
+  api?: RootOptions<P>["api"];
+  /** Draws the trigger's content into the button it filled in: Picker's icon, text and chevron by default. */
+  drawTrigger?: (button: Element, state: PickerBaseState, api: PickerBaseApi) => void;
+  /** A row's icon: an image URL or a copied element by default. None draws no icon. */
+  icon?: IconNodes;
+  /** What follows a row's text, before its `meta`. */
+  trailing?: IconNodes;
+  /** More parts, as `createParts` takes them. */
+  parts?: Record<string, string | PartOptions<P>>;
+};
+
+const pickerTrigger = (button: Element, state: PickerBaseState, api: PickerBaseApi) => {
+  const { text, icon } = api.triggerState(state);
+  drawTrigger(button, text, icon);
+};
 
 /**
  * The `createParts` map of a picker whose root is `tag` and whose parts are `<tag>-trigger`, `<tag>-content` and so
@@ -196,19 +230,28 @@ type PickerRootElement = HTMLElement & { canRun?: boolean };
  */
 export function pickerElements<P extends Primitive>(
   tag: string,
-  events: { onValueChange: string; onAction: string },
+  events: Record<string, string>,
+  config: PickerElementsConfig<P> = {},
 ): { root: RootOptions<P> } & Record<
   "trigger" | "content" | "viewport" | "command" | "item",
   string | PartOptions<P>
 > {
+  const can = config.can ?? { canRun: "onAction" };
+  const icon = config.icon ?? rowIcon;
+  const drawTriggerOf = config.drawTrigger ?? pickerTrigger;
   return {
+    ...config.parts,
     root: {
       tag,
-      kinds: { canRun: "boolean" },
+      kinds: Object.fromEntries(Object.keys(can).map((key) => [key, "boolean"])),
       // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
       options: (el) =>
-        ((el as PickerRootElement).canRun ? {} : { onAction: undefined }) as Partial<OptionsOf<P>>,
-      state: {
+        Object.fromEntries(
+          Object.entries(can)
+            .filter(([key]) => !(el as unknown as Record<string, unknown>)[key])
+            .map(([, callback]) => [callback, undefined]),
+        ) as Partial<OptionsOf<P>>,
+      state: config.state ?? {
         open: {
           get: (api) => (api as PickerBaseApi).isOpen(),
           set: (api, open) => (api as PickerBaseApi).setOpen(!!open),
@@ -221,7 +264,7 @@ export function pickerElements<P extends Primitive>(
       // The inner Command fires `valuechange` and `action` of its own, and its items a `select`.
       events,
       // `setValue` is offered only while enabled, so it isn't copied onto `api`.
-      api: ["isOpen", "setOpen", "getValue"] as RootOptions<P>["api"],
+      api: config.api ?? (["isOpen", "setOpen", "getValue"] as RootOptions<P>["api"]),
       // A sheet sits in a full-screen viewport, which the content moves into while it presents as one.
       portal: {
         slots: ["content"],
@@ -245,7 +288,7 @@ export function pickerElements<P extends Primitive>(
       render: (el, instance) => {
         instances.set(el, instance);
         if (!el.firstElementChild) {
-          el.innerHTML = defaultParts(tag);
+          el.innerHTML = config.template ?? defaultParts(tag);
           for (const part of el.querySelectorAll(`${tag}-trigger > button, ${tag}-command`)) owned.add(part);
           const content = el.querySelector(`${tag}-content`);
           // Focus moves to the search field as the list opens.
@@ -257,10 +300,7 @@ export function pickerElements<P extends Primitive>(
         const draw = () => {
           const state = instance.get() as PickerBaseState;
           const button = el.querySelector(`${tag}-trigger > button`);
-          if (button && owned.has(button)) {
-            const { text, icon } = api.triggerState(state);
-            drawTrigger(button, text, icon);
-          }
+          if (button && owned.has(button)) drawTriggerOf(button, state, api);
           const command = el.querySelector(`${tag}-command`);
           const commandState: PickerCommandState = api.commandState(state);
           if (command && owned.has(command) && drawn.get(command) !== commandState) {
@@ -270,6 +310,16 @@ export function pickerElements<P extends Primitive>(
             const input = command.querySelector<HTMLInputElement>("ui-command-input > input");
             write(input, "ariaLabel", commandState.label);
             write(input, "placeholder", commandState.placeholder);
+            let status = command.querySelector("ui-command-status");
+            if (commandState.statusText === undefined) status?.remove();
+            else {
+              if (!status) {
+                status = el.ownerDocument.createElement("ui-command-status");
+                command.querySelector("ui-command-input")?.after(status);
+              }
+              if (status.textContent !== commandState.statusText)
+                status.textContent = commandState.statusText;
+            }
             const empty = command.querySelector("ui-command-empty");
             if (empty && empty.textContent !== commandState.emptyText)
               empty.textContent = commandState.emptyText;
@@ -281,7 +331,7 @@ export function pickerElements<P extends Primitive>(
             if (!owned.has(part) && part.firstChild) continue;
             owned.add(part);
             const item = api.itemState(state, part.getAttribute("value") ?? "");
-            if (item) drawItem(part, item);
+            if (item) drawItem(part, item, icon, config.trailing);
           }
         };
         draw();

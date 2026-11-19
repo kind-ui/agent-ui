@@ -348,7 +348,9 @@ export {
   type PickerPrimitive,
   type PickerRow,
   type PickerRowKind,
+  type PickerSearchOptions,
   type PickerSection,
+  type PickerSelectOptions,
   type PickerState,
   type PickerTriggerState,
   type PickerValueChangeReason,
@@ -638,6 +640,16 @@ export {
 } from "./thread-list/index.js";
 
 // wave-6-task-3: Thread Search
+
+export {
+  type ThreadSearchApi,
+  type ThreadSearchIcon,
+  type ThreadSearchOptions,
+  type ThreadSearchPrimitive,
+  type ThreadSearchSelectReason,
+  type ThreadSearchState,
+  threadSearchPrimitive,
+} from "./thread-search/index.js";
 
 // wave-6-task-4: Sidebar
 

@@ -19,8 +19,8 @@
     "selectionPrimitive": 12500,
     "actionPrimitive": 8000,
     "menuBase": 4000,
-    "pickerPrimitive": 49500,
-    "modelSelectorPrimitive": 49500,
+    "pickerPrimitive": 50500,
+    "modelSelectorPrimitive": 51000,
     "addMenuPrimitive": 7500,
     "settingsMenuPrimitive": 8000,
     "approvalModePrimitive": 7500,
@@ -34,6 +34,7 @@
     "daySeparatorPrimitive": 5500,
     "connectionStatusPrimitive": 7000,
     "shareDialogPrimitive": 39000,
-    "conversationSearchPrimitive": 61500
+    "conversationSearchPrimitive": 61500,
+    "threadSearchPrimitive": 54000
   }
 }

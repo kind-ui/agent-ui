@@ -26,6 +26,8 @@ const pages = [
 
   // wave-6-task-3: Thread Search
 
+  "thread-search&case=all",
+
   // wave-6-task-4: Sidebar
 
   "sidebar&case=all",
