@@ -1,6 +1,18 @@
 # @kind-ui/agent-ui
 
-Agent-operable AI components built on [UI SDK](https://ui-sdk.dev/docs).
+AI interface components that people and agents can both use, for React and Web Components, built on [UI SDK](https://ui-sdk.dev/docs).
+
+[![npm version](https://img.shields.io/npm/v/@kind-ui/agent-ui?color=0368FF&label=npm)](https://www.npmjs.com/package/@kind-ui/agent-ui)
+[![CI](https://github.com/kind-ui/agent-ui/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/kind-ui/agent-ui/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/@kind-ui/agent-ui)](https://github.com/kind-ui/agent-ui/blob/main/LICENSE)
+
+[Docs](https://kindui.dev/docs/agent-ui/) · [Components](https://kindui.dev/docs/agent-ui/components/step/) · [GitHub](https://github.com/kind-ui/agent-ui) · [Changelog](https://github.com/kind-ui/agent-ui/blob/main/packages/agent-ui/CHANGELOG.md)
+
+<img alt="A finished agent run: a reasoning step, two tool calls with one approved, a completed plan, a subagent's result and a queue of follow-up prompts." src="https://raw.githubusercontent.com/kind-ui/agent-ui/main/docs/assets/readme-hero-light.png" width="576">
+
+```bash
+npm install @kind-ui/agent-ui @ui-sdk/core
+```
 
 | Entry | Contents |
 | --- | --- |
@@ -9,9 +21,9 @@ Agent-operable AI components built on [UI SDK](https://ui-sdk.dev/docs).
 | `@kind-ui/agent-ui/adapters/ai-sdk` | AI SDK `UIMessage` mapping (`ai` is an optional peer) |
 | `@kind-ui/agent-ui/styles.css` | Tailwind v4 source registration and theme tokens |
 
-Styled React and Web Components are distributed through the registry, not this package.
+Styled React and Web Components are distributed through the [registry](#registry), not this package.
 
-Components: Step and Step List, Status, Reasoning, Tool, Chain of Thought, Task, Plan, Subagent, Queue, Confirmation, Question, Checkpoint, Model Selector, Reasoning Effort, Suggestion, Context Meter, Feedback, Notice, Guardrail Notice, Conversation, Message, Markdown, Code Block, Markdown Table, Composer, Attachments, Uploader, Loader, Thinking Indicator, Typing Indicator, Streaming Text, Sources, Inline Citation, Document, Generated Image, File Tree, Terminal, Stack Trace, Test Results, Transcript, Selection and Action.
+[Components](https://kindui.dev/docs/agent-ui/): Step and Step List, Status, Reasoning, Tool, Chain of Thought, Task, Plan, Subagent, Queue, Confirmation, Question, Checkpoint, Model Selector, Reasoning Effort, Suggestion, Context Meter, Feedback, Notice, Guardrail Notice, Conversation, Message, Markdown, Code Block, Markdown Table, Composer, Attachments, Uploader, Loader, Thinking Indicator, Typing Indicator, Streaming Text, Sources, Inline Citation, Document, Generated Image, File Tree, Terminal, Stack Trace, Test Results, Transcript, Selection and Action.
 
 ## Registry
 
@@ -81,3 +93,7 @@ Tested against `ai@7.0.173`. The spec §4.3 tool states were observed in `ai@7.0
 - **`output-error` input:** `input` is preserved. When it is absent, the deprecated `rawInput` is used.
 - **Approval generation:** the SDK has none, so mapped approvals are `generation: 0`. Hosts that replace requests own the generation.
 - **Not mapped:** opaque approval fields (`descriptor`, `signature`, `requestReason`, `inputSchemaInput`), tool `title` and `toolMetadata`, text `citations`, and `providerMetadata`. The neutral `Approval` has no field for opaque metadata. None of these fields grant authority.
+
+## License
+
+[MIT](https://github.com/kind-ui/agent-ui/blob/main/LICENSE). Third-party notices ship in `THIRD_PARTY_NOTICES.md`.
