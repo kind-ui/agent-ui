@@ -30,6 +30,7 @@ const consumers: Record<string, string> = {
   "item-list.ts": "kind-task-item-icon",
   "test-results/test-results.ts": "kind-test-results-item-status",
   "dictation-button/dictation-button.ts": "kind-dictation-status-icon",
+  "thread-list/thread-list.ts": "kind-thread-list-status",
 };
 
 type Fixture = {
@@ -64,6 +65,7 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
   },
   { url: "/?c=stack-trace&case=all", slots: ["kind-stack-trace-icon"] },
   { url: "/?c=terminal&case=all", slots: ["kind-terminal-icon"] },
+  { url: "/?c=thread-list&case=all", slots: ["kind-thread-list-status"] },
   {
     url: "/?c=checkpoint&case=all",
     slots: ["kind-checkpoint-restored"],

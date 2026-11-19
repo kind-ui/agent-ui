@@ -29,8 +29,8 @@ const BUDGETS = {
   // Rows are 36px in a 600px column, so as many are in view at 10 threads as at 1,000, whatever the fonts. Pinning
   // moves every row in view down one; appending to 10 threads fills the column with new rows.
   threadSelect: { writes: 5, renders: 11, notified: 16, layoutReads: 2 },
-  threadPin: { writes: 115, renders: 38, notified: 182, layoutReads: 2 },
-  threadAppend: { writes: 185, renders: 77, notified: 78, layoutReads: 2 },
+  threadPin: { writes: 117, renders: 38, notified: 182, layoutReads: 2 },
+  threadAppend: { writes: 200, renders: 77, notified: 78, layoutReads: 2 },
 
   // wave-6-task-11: Conversation Search
 };
