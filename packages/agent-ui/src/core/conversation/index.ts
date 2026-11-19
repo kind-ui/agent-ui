@@ -3,7 +3,9 @@ export {
   type ConversationController,
   type ConversationOptions,
   type ConversationPrimitive,
+  type ConversationRetryDetails,
   type ConversationState,
+  type ConversationStatus,
   conversationPrimitive,
   createConversationController,
 } from "./conversation.js";

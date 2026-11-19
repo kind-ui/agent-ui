@@ -1,4 +1,5 @@
 import {
+  type ActionDetails,
   announce,
   createController,
   createFocusRecovery,
@@ -13,7 +14,9 @@ import {
   type Virtualizer,
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
+import { actionSource } from "../action-source.js";
 import { enter, exit, type MotionMode, resolveMotion } from "../motion/index.js";
+import { createPendingAction } from "../pending.js";
 import { nextFollowState } from "./follow.js";
 
 export type ConversationController = {
@@ -30,6 +33,11 @@ export type ConversationController = {
 /** A handle for the `controller` option, to scroll and read a conversation from outside it. */
 export const createConversationController = (): ConversationController =>
   createController<ConversationController>();
+
+/** What the conversation shows in its rows' place: its messages, a skeleton while loading, or an error. */
+export type ConversationStatus = "ready" | "loading" | "error";
+
+export type ConversationRetryDetails = ActionDetails & { reason: "retry-press" | "imperative" };
 
 export type ConversationOptions = {
   /**
@@ -57,6 +65,22 @@ export type ConversationOptions = {
   /** A handle from `createConversationController()`, to scroll and read the conversation from outside it. */
   controller?: ConversationController;
   /**
+   * `"loading"` shows the skeleton and `"error"` the error, in the rows' place; the empty part shows only while `"ready"`.
+   * Set `messageCount` before `status` turns `"ready"`, so the loaded messages don't play the new-message entrance.
+   * @default "ready"
+   */
+  status?: ConversationStatus;
+  /**
+   * The error's words, while `status` is `"error"`.
+   * @default "Couldn't load this conversation"
+   */
+  error?: string;
+  /**
+   * Called when Retry is pressed. Shows Retry while `status` is `"error"`. Return a promise to keep Retry pending
+   * until it settles.
+   */
+  onRetry?: (details: ConversationRetryDetails) => unknown;
+  /**
    * `"auto"` follows `prefers-reduced-motion`.
    * @default "auto"
    */
@@ -70,6 +94,16 @@ export type ConversationState = {
   virtualize: boolean;
   /** The `motion` option. */
   motion: MotionMode;
+  /** The `status` option. */
+  status: ConversationStatus;
+  /** The `error` option, or its default. */
+  error: string;
+  /** Whether `onRetry` is set. */
+  canRetry: boolean;
+  /** Whether a promise `onRetry` returned is still pending. */
+  retrying: boolean;
+  /** Whether the error appeared after the conversation mounted, so it's an alert rather than a status. */
+  errorAlert: boolean;
   /** Whether new content scrolls into view. Set by `createStickToBottom`; listed in `controlled` for the agent snapshot only. */
   following: boolean;
   /** Messages added while not following. In the agent snapshot too. */
@@ -91,6 +125,8 @@ export type ConversationApi = ConversationController & {
   recovery: FocusRecovery;
   /** Plays the mount-only entrance on a row that wasn't rendered before. */
   enterRow: (el: HTMLElement, index: number) => void;
+  /** Calls `onRetry`. Offered while `status` is `"error"`, `onRetry` is set and no retry is pending. */
+  readonly retry: ((event?: Event) => void) | undefined;
 };
 
 type RowProps = { value: string; index: number };
@@ -115,6 +151,13 @@ export type ConversationPrimitive = ReturnType<
       row: ConversationSlot<RowProps & BaseSlotProps>;
       jump: ConversationSlot<BaseSlotProps>;
       empty: ConversationSlot<BaseSlotProps>;
+      "empty-title": ConversationSlot<BaseSlotProps>;
+      "empty-description": ConversationSlot<BaseSlotProps>;
+      skeleton: ConversationSlot<BaseSlotProps>;
+      loading: ConversationSlot<BaseSlotProps>;
+      error: ConversationSlot<BaseSlotProps>;
+      "error-text": ConversationSlot<BaseSlotProps, { error: string }>;
+      retry: ConversationSlot<BaseSlotProps, { retrying: boolean }>;
     }
   >
 >;
@@ -124,7 +167,12 @@ const newMessages = (count: number) => `${count} new message${count === 1 ? "" :
 const presentation = (options: ConversationOptions) => ({
   messageCount: options.messageCount ?? 0,
   motion: options.motion ?? "auto",
+  status: options.status ?? "ready",
+  error: options.error ?? "Couldn't load this conversation",
+  canRetry: options.onRetry !== undefined,
 });
+
+const isEmpty = (state: ConversationState) => state.status === "ready" && state.messageCount === 0;
 
 const prefersReduced = () =>
   typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -139,6 +187,9 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
     onRowsChange: "callback",
     controller: "value",
     motion: "string",
+    status: "string",
+    error: "string",
+    onRetry: "action",
   },
   state: (options: ConversationOptions): ConversationState => ({
     ...presentation(options),
@@ -146,6 +197,8 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
     following: true,
     newCount: 0,
     jumpExiting: false,
+    retrying: false,
+    errorAlert: false,
     rows: [],
     size: 0,
   }),
@@ -157,6 +210,7 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
     // Rows up to this index have entered already, so a row that remounts (virtualized, or re-rendered) stays still.
     let newestEntered = follow.count - 1;
     let prepending = false;
+    let status = store.get().status;
 
     const apply = (next: typeof follow) => {
       const wasFollowing = follow.following;
@@ -187,21 +241,40 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
       context.options().onRowsChange?.(rows);
     });
 
+    const pendingRetry = createPendingAction(context, { state: "retrying" });
+
     context.onOptions((options) => {
       const count = options.messageCount ?? 0;
-      if (count === follow.count) return;
-      if (prepending) {
-        prepending = false;
-        newestEntered += count - follow.count;
-        follow = nextFollowState(follow, { type: "prepend", count });
-      } else {
-        newestEntered = Math.min(newestEntered, count - 1);
-        apply(nextFollowState(follow, { type: "count", count }));
+      const next = options.status ?? "ready";
+      const loaded = next === "ready" && status !== "ready";
+      if (next !== status) {
+        status = next;
+        pendingRetry.release();
+        if (next === "error") store.set({ errorAlert: true });
       }
-      if (store.get().virtualize) virtual.refresh();
+      if (count !== follow.count) {
+        if (prepending) {
+          prepending = false;
+          newestEntered += count - follow.count;
+          follow = nextFollowState(follow, { type: "prepend", count });
+        } else {
+          newestEntered = Math.min(newestEntered, count - 1);
+          apply(nextFollowState(follow, { type: "count", count }));
+        }
+        if (store.get().virtualize) virtual.refresh();
+      }
+      // Messages that arrive while loading, or with the load, are history: they don't play the entrance.
+      if (next !== "ready" || loaded) newestEntered = Math.max(newestEntered, count - 1);
     });
 
     const recovery = createFocusRecovery({ fallback: () => context.element("viewport") });
+
+    const retry = (event?: Event) => {
+      const { onRetry } = context.options();
+      if (!onRetry) return;
+      const reason = event ? "retry-press" : "imperative";
+      pendingRetry.run(() => onRetry({ reason, source: actionSource(event, reason) }));
+    };
 
     return {
       scrollToEnd: () => {
@@ -218,9 +291,16 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
       virtual,
       recovery,
       enterRow: (el, index) => {
-        if (index <= newestEntered) return;
-        newestEntered = index;
-        void enter(el, "fade-up", { motion: store.get().motion });
+        // A React row binds before its root takes the options that added it, so a load is known a microtask later.
+        queueMicrotask(() => {
+          if (index <= newestEntered) return;
+          newestEntered = index;
+          void enter(el, "fade-up", { motion: store.get().motion });
+        });
+      },
+      get retry() {
+        const { canRetry, retrying, status } = store.get();
+        return canRetry && status === "error" && !retrying ? retry : undefined;
       },
     };
   },
@@ -231,6 +311,7 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
         "aria-live": "polite",
         "data-following": state.following ? "" : undefined,
         "data-virtualize": state.virtualize ? "" : undefined,
+        "data-status": state.status === "ready" ? undefined : state.status,
       }),
     }),
     viewport: slot({
@@ -251,6 +332,8 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
       state: (state) => ({ rows: state.rows }),
       attrs: (state) => ({
         "data-virtualize": state.virtualize ? "" : undefined,
+        "data-status": state.status === "ready" ? undefined : state.status,
+        "data-empty": isEmpty(state) ? "" : undefined,
         style: css({ "--kind-conversation-size": state.virtualize ? `${state.size}px` : undefined }),
       }),
     }),
@@ -317,9 +400,39 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
         };
       },
     }),
-    empty: slot({
-      present: (state) => state.messageCount === 0,
+    empty: slot({ present: isEmpty }),
+    "empty-title": slot({}),
+    "empty-description": slot({}),
+    skeleton: slot({
+      present: (state) => state.status === "loading",
+      attrs: (state) => ({ "aria-hidden": "true", "data-motion": state.motion }),
+    }),
+    loading: slot({
+      role: "status",
+      present: (state) => state.status === "loading",
+    }),
+    error: slot({
+      // An error the page loaded with is a status; one that appears later is an alert.
+      role: (state) => (state.errorAlert ? "alert" : "status"),
+      roles: ["alert", "status"],
+      present: (state) => state.status === "error",
+    }),
+    "error-text": slot<BaseSlotProps, { error: string }>({
+      state: (state) => ({ error: state.error }),
+    }),
+    retry: slot<BaseSlotProps, { retrying: boolean }>({
+      role: "button",
+      focus: "native",
+      press: ({ api }, event) => api.retry?.(event),
+      present: (state) => state.status === "error" && state.canRetry,
+      state: (state) => ({ retrying: state.retrying }),
+      attrs: (state) => ({
+        type: "button",
+        "aria-disabled": state.retrying ? "true" : undefined,
+        "data-pending": state.retrying ? "" : undefined,
+      }),
+      bind: (el, part) => part.api.recovery.bind(el, part),
     }),
   }),
-  agent: { actions: ["scrollToEnd"] },
+  agent: { actions: ["scrollToEnd", "retry"] },
 });

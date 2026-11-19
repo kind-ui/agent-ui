@@ -1,14 +1,20 @@
-import { createConversationController } from "@kind-ui/agent-ui/core";
+import { type ConversationStatus, createConversationController } from "@kind-ui/agent-ui/core";
 import { memo, useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 import {
   Conversation,
   ConversationContent,
   ConversationEmpty,
+  ConversationEmptyDescription,
+  ConversationEmptyTitle,
+  ConversationError,
   ConversationJump,
+  ConversationLoading,
   ConversationRow,
+  ConversationSkeleton,
   ConversationViewport,
 } from "../../../../src/react/conversation.js";
+import { type ConversationStates, retryRecorder } from "../../shared/conversation.js";
 
 type Message = { id: string; role: "user" | "assistant"; text: string };
 
@@ -109,6 +115,51 @@ function Remount() {
   return shown ? <Chat count={31} /> : null;
 }
 
+function States({ initial }: { initial: ConversationStatus }) {
+  const [view, setView] = useState<{ status: ConversationStatus; count: number; error?: string }>({
+    status: initial,
+    count: 0,
+  });
+  const [retry] = useState(retryRecorder);
+  useEffect(() => {
+    const states: ConversationStates = {
+      set: (status, count = 0, error) => setView({ status, count, ...(error !== undefined && { error }) }),
+      resolveRetry: retry.resolveRetry,
+      rejectRetry: retry.rejectRetry,
+      retries: retry.retries,
+    };
+    Object.assign(window, { kindConversationStates: states });
+  }, [retry]);
+  return (
+    <Conversation
+      aria-label="Conversation"
+      messageCount={view.count}
+      status={view.status}
+      {...(view.error !== undefined && { error: view.error })}
+      onRetry={retry.onRetry}
+      className="m-4 h-[28rem] w-[32rem] max-w-[calc(100%-2rem)] rounded-xl border border-[var(--kind-color-border)]"
+    >
+      <ConversationViewport>
+        <ConversationContent>
+          {messages(0, view.count).map((m, i) => (
+            <Row key={m.id} message={m} index={i} />
+          ))}
+          <ConversationSkeleton />
+          <ConversationLoading />
+          <ConversationError />
+          <ConversationEmpty>
+            <ConversationEmptyTitle>What can I help with?</ConversationEmptyTitle>
+            <ConversationEmptyDescription>
+              Ask about your code, your docs or your last deploy.
+            </ConversationEmptyDescription>
+          </ConversationEmpty>
+        </ConversationContent>
+      </ConversationViewport>
+      <ConversationJump />
+    </Conversation>
+  );
+}
+
 export const cases = {
   chat: () => <Chat count={31} />,
   empty: () => <Chat count={0} />,
@@ -116,4 +167,7 @@ export const cases = {
   "chat-500": () => <Chat count={500} />,
   virtual: () => <Chat count={1000} virtualize />,
   remount: () => <Remount />,
+  loading: () => <States initial="loading" />,
+  error: () => <States initial="error" />,
+  welcome: () => <States initial="ready" />,
 };

@@ -191,3 +191,113 @@ test("is a live UI SDK primitive agents can scroll to the end", async ({ page })
   await atEnd(page);
   await expect(page.locator('[data-slot="kind-conversation"]')).toHaveAttribute("data-following", "");
 });
+
+type States = {
+  kindConversationStates: {
+    set(status: string, count?: number, error?: string): void;
+    resolveRetry(): void;
+    rejectRetry(): void;
+    retries: { reason: string; source: string }[];
+  };
+};
+
+const states = <K extends keyof States["kindConversationStates"]>(
+  page: Page,
+  method: K,
+  ...args: unknown[]
+) =>
+  page.evaluate(
+    ([m, a]) => {
+      const target = (window as unknown as States).kindConversationStates;
+      const value = target[m as K];
+      return typeof value === "function"
+        ? (value as (...x: unknown[]) => unknown)(...(a as unknown[]))
+        : value;
+    },
+    [method, args] as const,
+  );
+const openState = async (page: Page, name: "loading" | "error" | "welcome") => {
+  await page.goto(`/?c=conversation&case=${name}`);
+  await expect(page.locator('[data-slot="kind-conversation"]')).toHaveAttribute("data-following", "");
+  await expect.poll(() => page.evaluate(() => "kindConversationStates" in window)).toBe(true);
+};
+const skeleton = (page: Page) => page.locator('[data-slot="kind-conversation-skeleton"]');
+const retryButton = (page: Page) => page.getByRole("button", { name: "Retry" });
+const box = (locator: Locator) => locator.evaluate((el) => JSON.stringify(el.getBoundingClientRect()));
+
+test("loading swaps the skeleton for the rows without moving the viewport or replaying entrances", async ({
+  page,
+}) => {
+  await openState(page, "loading");
+  await expect(skeleton(page)).toBeVisible();
+  await expect(skeleton(page)).toHaveAttribute("aria-hidden", "true");
+  await expect(page.getByRole("status")).toHaveText("Loading conversation");
+  await expect(page.getByText("What can I help with?")).toBeHidden();
+  const before = await box(viewport(page));
+  await states(page, "set", "ready", 31);
+  await expect(page.locator('[data-message="m30"]')).toBeVisible();
+  await expect(skeleton(page)).toBeHidden();
+  await expect(page.getByRole("status")).toHaveCount(0);
+  expect(await box(viewport(page))).toBe(before);
+  await atEnd(page);
+  const rows = page.locator('[data-slot="kind-conversation-row"]');
+  expect(await rows.evaluateAll((els) => els.filter((el) => el.getAnimations().length > 0).length)).toBe(0);
+});
+
+test("an error shows its words and Retry, which locks while pending", async ({ page }) => {
+  await openState(page, "error");
+  const error = page.locator('[data-slot="kind-conversation-error"]');
+  // The page loaded with this error, so it's a status, not an alert.
+  await expect(error).toHaveRole("status");
+  await expect(error).toContainText("Couldn't load this conversation");
+  await expectAgentActions(page, "Conversation", ["scrollToEnd", "retry"]);
+  await retryButton(page).click();
+  await expect(retryButton(page)).toHaveAttribute("aria-disabled", "true");
+  await expectAgentActions(page, "Conversation", ["scrollToEnd"]);
+  // Playwright waits for an `aria-disabled` button to enable, so press it anyway.
+  await retryButton(page).click({ force: true });
+  expect(await states(page, "retries")).toEqual([{ reason: "retry-press", source: "mouse" }]);
+  await states(page, "rejectRetry");
+  await expect(retryButton(page)).not.toHaveAttribute("aria-disabled");
+  await retryButton(page).focus();
+  await states(page, "set", "loading");
+  // Retry left while focused, so focus moves to the viewport.
+  await expect(viewport(page)).toBeFocused();
+  await states(page, "set", "error", 0, "The connection dropped.");
+  await expect(page.getByRole("alert")).toContainText("The connection dropped.");
+});
+
+test("the empty part's title and description center at 390 px", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 700 });
+  await openState(page, "welcome");
+  const title = page.getByText("What can I help with?");
+  const description = page.getByText("Ask about your code");
+  await expect(title).toBeVisible();
+  await expect(description).toBeVisible();
+  const center = (locator: Locator) =>
+    locator.evaluate((el) => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const rect = range.getBoundingClientRect();
+      return rect.left + rect.width / 2;
+    });
+  const middle = await viewport(page).evaluate((el) => {
+    const rect = el.getBoundingClientRect();
+    return rect.left + rect.width / 2;
+  });
+  expect(Math.abs((await center(title)) - middle)).toBeLessThanOrEqual(1);
+  expect(Math.abs((await center(description)) - middle)).toBeLessThanOrEqual(1);
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+});
+
+for (const scheme of ["light", "dark"] as const)
+  for (const name of ["loading", "error", "welcome"] as const)
+    test(`has no axe violations ${name}, ${scheme}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await openState(page, name);
+      // The fixture page has no background of its own, which axe reads as white.
+      await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
+      const { violations } = await new AxeBuilder({ page }).include("#root").analyze();
+      expect(violations).toEqual([]);
+    });

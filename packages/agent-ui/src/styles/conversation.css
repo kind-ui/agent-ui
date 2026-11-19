@@ -98,6 +98,14 @@
       min-height: 0;
       height: var(--kind-conversation-size);
     }
+
+    /* A virtualized list with no rows to place lays its state out as an unvirtualized one does. */
+    &[data-virtualize]:is([data-status], [data-empty]) {
+      display: flex;
+      box-sizing: border-box;
+      min-height: 100%;
+      height: auto;
+    }
   }
 
   /* Rows space themselves, so a virtualized row's measured height includes its share of the gap. */
@@ -112,12 +120,119 @@
     }
   }
 
-  [data-slot="kind-conversation-empty"] {
-    display: block;
+  [data-slot="kind-conversation-empty"],
+  [data-slot="kind-conversation-error"] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    box-sizing: border-box;
+    max-width: 100%;
     margin: auto;
     padding: 3rem 1rem;
     text-align: center;
     color: var(--kind-color-muted);
+  }
+
+  /* Whatever follows the words, like a Suggestion, gets room and the row's width. */
+  [data-slot="kind-conversation-empty"]
+    > :not([data-slot="kind-conversation-empty-title"], [data-slot="kind-conversation-empty-description"]) {
+    align-self: stretch;
+    margin-top: 1rem;
+  }
+
+  [data-slot="kind-conversation-empty-title"] {
+    display: block;
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.75rem;
+    color: var(--kind-color-fg);
+  }
+
+  [data-slot="kind-conversation-empty-description"] {
+    display: block;
+    max-width: 28rem;
+  }
+
+  [data-slot="kind-conversation-error-text"] {
+    display: block;
+    color: var(--kind-color-fg);
+  }
+
+  [data-slot="kind-conversation-retry"] {
+    display: inline-flex;
+    align-items: center;
+    height: 2rem;
+    margin-top: 0.5rem;
+    padding-inline: 0.875rem;
+    border: 1px solid var(--kind-color-border);
+    border-radius: 9999px;
+    background-color: var(--kind-color-surface);
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--kind-color-fg);
+    transition: background-color var(--kind-duration-fast);
+
+    &:hover:not([aria-disabled]) {
+      background-color: var(--kind-color-hover);
+    }
+    &[aria-disabled] {
+      color: var(--kind-color-muted);
+      cursor: default;
+    }
+    &:focus-visible {
+      outline: 1.5px solid var(--kind-color-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  /* Rows of a set height, so the skeleton never depends on the fonts. A host's own rows take the same places. */
+  [data-slot="kind-conversation-skeleton"] {
+    --kind-conversation-skeleton-row: 2.75rem;
+
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-block: 0.75rem;
+
+    & > * {
+      display: block;
+      height: var(--kind-conversation-skeleton-row);
+      border-radius: 1rem;
+      background-color: var(--kind-color-hover);
+      animation: kind-pulse 1.6s ease-in-out infinite;
+    }
+    & > :nth-child(3n + 1) {
+      align-self: flex-end;
+      width: 45%;
+    }
+    & > :nth-child(3n + 2) {
+      width: 85%;
+      height: calc(var(--kind-conversation-skeleton-row) * 2);
+    }
+    & > :nth-child(3n) {
+      width: 60%;
+    }
+
+    &:is([data-motion="reduced"], [data-motion="none"]) > * {
+      animation: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      & > * {
+        animation: none;
+      }
+    }
+  }
+
+  /* Read by assistive technology only; the skeleton speaks for itself. */
+  [data-slot="kind-conversation-loading"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   [data-slot="kind-conversation-jump"] {
@@ -171,7 +286,14 @@
   }
 
   /* Web keeps parts that aren't present in the page, with `hidden`. */
-  :is([data-slot="kind-conversation-jump"], [data-slot="kind-conversation-empty"])[hidden] {
+  :is(
+    [data-slot="kind-conversation-jump"],
+    [data-slot="kind-conversation-empty"],
+    [data-slot="kind-conversation-skeleton"],
+    [data-slot="kind-conversation-loading"],
+    [data-slot="kind-conversation-error"],
+    [data-slot="kind-conversation-retry"]
+  )[hidden] {
     display: none;
   }
 }

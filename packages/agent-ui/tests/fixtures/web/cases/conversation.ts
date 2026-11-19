@@ -1,6 +1,7 @@
-import type { ConversationController } from "@kind-ui/agent-ui/core";
+import type { ConversationController, ConversationStatus } from "@kind-ui/agent-ui/core";
 import type { VirtualItem } from "@ui-sdk/core";
-import { defineConversation } from "../../../../src/web/conversation.js";
+import { defineConversation, type KindConversationElement } from "../../../../src/web/conversation.js";
+import { type ConversationStates, retryRecorder } from "../../shared/conversation.js";
 
 const lines = [
   "How do I keep a chat scrolled to the newest reply?",
@@ -95,6 +96,46 @@ function chat(root: HTMLElement, count: number, virtualize = false) {
   });
 }
 
+function states(root: HTMLElement, initial: ConversationStatus) {
+  defineConversation();
+  root.innerHTML = `
+    <kind-conversation aria-label="Conversation" message-count="0" status="${initial}" can-retry
+      class="m-4 h-[28rem] w-[32rem] max-w-[calc(100%-2rem)] rounded-xl border border-[var(--kind-color-border)]">
+      <kind-conversation-viewport>
+        <kind-conversation-content>
+          <kind-conversation-skeleton hidden></kind-conversation-skeleton>
+          <kind-conversation-loading hidden></kind-conversation-loading>
+          <kind-conversation-error hidden></kind-conversation-error>
+          <kind-conversation-empty hidden>
+            <kind-conversation-empty-title>What can I help with?</kind-conversation-empty-title>
+            <kind-conversation-empty-description>Ask about your code, your docs or your last deploy.</kind-conversation-empty-description>
+          </kind-conversation-empty>
+        </kind-conversation-content>
+      </kind-conversation-viewport>
+      <kind-conversation-jump><button hidden></button></kind-conversation-jump>
+    </kind-conversation>`;
+  const conversation = root.querySelector("kind-conversation") as KindConversationElement;
+  const content = root.querySelector("kind-conversation-content") as HTMLElement;
+  const retry = retryRecorder();
+  conversation.addEventListener("retry", (event) =>
+    event.detail.waitUntil(retry.onRetry(event.detail) as Promise<unknown>),
+  );
+  const kindConversationStates: ConversationStates = {
+    set: (status, count = 0, error) => {
+      for (const el of content.querySelectorAll("kind-conversation-row")) el.remove();
+      content.prepend(...Array.from({ length: count }, (_, i) => row(i, i)));
+      conversation.setAttribute("message-count", String(count));
+      if (error === undefined) conversation.removeAttribute("error");
+      else conversation.setAttribute("error", error);
+      conversation.setAttribute("status", status);
+    },
+    resolveRetry: retry.resolveRetry,
+    rejectRetry: retry.rejectRetry,
+    retries: retry.retries,
+  };
+  Object.assign(window, { kindConversationStates });
+}
+
 export const cases = {
   chat: (root: HTMLElement) => chat(root, 31),
   empty: (root: HTMLElement) => chat(root, 0),
@@ -107,4 +148,7 @@ export const cases = {
       kindRemount: () => (root.firstElementChild ? root.replaceChildren() : chat(root, 31)),
     });
   },
+  loading: (root: HTMLElement) => states(root, "loading"),
+  error: (root: HTMLElement) => states(root, "error"),
+  welcome: (root: HTMLElement) => states(root, "ready"),
 };
