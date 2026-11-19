@@ -13,7 +13,7 @@
 
 1. Become the go-to styled AI component kit built on UI SDK, so other developers adopt it.
 2. Put Kind UI's AI components on one agent-first foundation, UI SDK, instead of Base UI.
-3. Ship 50 AI components in five waves, with every agent step built on a shared Step base.
+3. Ship 56 AI components in six waves, with every agent step built on a shared Step base.
 4. Keep behavior framework-agnostic. Launch with React and Web Components.
 5. Make every interactive component agent-operable through named actions that work with UI SDK `createAgent` and WebMCP.
 6. Meet Kind UI's product criteria: accessibility, reduced motion, explicit async states, typed contracts, and consumer-owned state.
@@ -21,7 +21,7 @@
 ### Non-goals
 
 - Porting code from kind-ui/charts `packages/ai` or `packages/primitives`. `packages/ai/src` in that repository is used only as a catalog of which components exist.
-- Exporting general-purpose components (button, popover, menu, and so on). They exist only to serve AI components and stay internal. Picker (Wave 5) is the one public base of this kind, as `stepPrimitive` is: every composer picker spreads it.
+- Exporting general-purpose components (button, popover, menu, and so on). They exist only to serve AI components and stay internal. Picker (Wave 5) is the one public base of this kind, as `stepPrimitive` is: every composer picker spreads it. Sidebar and Launcher (Wave 6) are public too: they are the frames of a chat app (a thread list or an assistant beside the host's page, a chat that opens from a corner), composed from UI SDK Resizable, Drawer, Popover and Dialog, not general controls.
 - Changing `@kind-ui/charts`, or depending on kind-ui/charts code, scripts, or configuration. This repository mirrors its tooling conventions by copying the conventions, not by importing anything.
 - Vue, Svelte, and Solid render layers at launch. The architecture permits them; they are not scheduled.
 - A TanStack AI adapter at launch. It is scheduled after Wave 4.
@@ -78,6 +78,7 @@ Components are built on UI SDK, not around it.
 | Test Results failure rows keep the Tree's keys | UI SDK's Tree handles keys and presses on anything inside a row, so a failed test's Stack Trace couldn't take Enter or a press without toggling the row. The failure part cancels the keys and clicks the Tree handles once the trace has had them, which the Tree then skips, and presses a focused button on Enter. Roving focus, expansion and typeahead stay the Tree's. |
 | Composed UI SDK component events on Web Components | `@ui-sdk/web` reports a component's changes and actions only as events on its own element, which don't bubble (File Input's `valuechange` and `reject`, Menu's and Command's `action`, Slider's `valuecommit`, …). `core/composed-events.ts` (`hearComposed`) hears the named events of the `ui-*` elements inside a slot's element as they capture, from that slot's `bind`, and hands them to the callbacks React passes as props. The composer, the uploader and every Wave 5 component that composes a UI SDK component use it. |
 | Dictation audio and speech | Microphone capture, its levels and speech recognition are platform APIs (`getUserMedia`, Web Audio `AnalyserNode`, `SpeechRecognition`) no UI SDK behavior covers. `core/dictation.ts` listens to them inside a `DictationSource`, started only from a person's or a confirmed agent's press. |
+| Conversation search highlights | Conversation Search paints its matches with the CSS Custom Highlight API (`CSS.highlights`, `Highlight` and `Range`s over the text of the rows in view), which changes no DOM and no focus, and which no UI SDK behavior covers. Finding the matches uses `matchRanges`. Moving to one goes through the Conversation controller: `createVirtualizer`'s `scrollToIndex` when virtualized, else the row's `scrollIntoView`, since an unvirtualized conversation has no UI SDK behavior that scrolls to a row. |
 | Conversation new-message counter | Counts messages added while not following. Following itself uses `createStickToBottom`. |
 | Streaming Text append diff and Composer draft settlement | Pure data rules. |
 | Clipboard writes for copy actions | `navigator.clipboard.writeText`, used only if the pinned UI SDK has no clipboard utility. |
@@ -93,15 +94,17 @@ AI components need general controls. These are UI SDK components or `@ui-sdk/cor
 | --- | --- | --- |
 | Button | Button | almost all |
 | Collapsible | Collapsible, `bindPanel`, `bindFindable` | Step and every Step-based component, Sources, Queue |
-| Popover, Tooltip | Popover (`createPopup`; Context Meter and Inline Citation add hover and focus opening; Wave 5 popups take `presentation`), Tooltip | Feedback, Checkpoint, Context Meter, Inline Citation, Picker, Context Bar |
-| Menu | Menu (checkbox and radio items, submenus, `presentation`) | Message, Add Menu, Settings Menu, Approval Mode, Model Control |
-| Command | Command | Picker, Model Selector |
+| Popover, Tooltip | Popover (`createPopup`; Context Meter and Inline Citation add hover and focus opening; Wave 5 popups take `presentation`), Tooltip | Feedback, Checkpoint, Context Meter, Inline Citation, Picker, Context Bar, Launcher |
+| Menu | Menu (checkbox and radio items, submenus, `presentation`) | Message, Add Menu, Settings Menu, Approval Mode, Model Control, Thread List (row actions) |
+| Command | Command | Picker, Model Selector, Thread Search |
 | Slider, Switch | Slider; Switch's look for Settings Menu's checkbox items | Settings Menu, Model Control |
-| Alert Dialog, Dialog | Alert Dialog, Dialog (`createPopup` with `dialogPreset` for Generated Image) | Checkpoint, Generated Image |
+| Alert Dialog, Dialog | Alert Dialog, Dialog (`createPopup` with `dialogPreset` for Generated Image) | Checkpoint, Generated Image, Thread List (delete), Thread Search, Share Dialog, Launcher (`modal`) |
+| Resizable, Drawer | Resizable (a collapsible panel with pixel sizes and a saved layout), Drawer (a side sheet) | Sidebar |
+| Input | Input, Input Group, Clear | Transcript, Conversation Search, Share Dialog |
 | Scroll Area | Scroll Area, `createStickToBottom` | Conversation, Terminal, Code Block, Markdown Table, Document |
 | Token Input, Trigger Menu | Token Input, Trigger Menu | Composer |
 | File Input | File Input | Composer, Uploader |
-| Segmented Control | Segmented Control | Reasoning Effort, Test Results |
+| Segmented Control | Segmented Control | Reasoning Effort, Test Results, Share Dialog |
 | Toolbar, Toggle | Toolbar, Toggle, and for Selection `position` and `bindLayer` | Message, Code Block, Feedback, Selection, Document |
 | Carousel | Carousel | Suggestion, Inline Citation |
 | Tree | Tree, `treeFromPaths` | File Tree, Test Results |
@@ -208,7 +211,7 @@ Every new check script joins `npm run check`.
 | Specifier | Contents | Runtime deps |
 | --- | --- | --- |
 | `@kind-ui/agent-ui` | Neutral types and type guards | none |
-| `@kind-ui/agent-ui/core` | Every public primitive definition (`stepPrimitive`, `composerPrimitive`, …), their option and state types, the markdown engine, the motion helper, the ANSI and stack trace helpers, the dictation source (`createSpeechDictation`) | `@ui-sdk/core`, `motion`, the markdown libraries (§6), `ansi-sequence-parser`, `stacktrace-parser` |
+| `@kind-ui/agent-ui/core` | Every public primitive definition (`stepPrimitive`, `composerPrimitive`, …), their option and state types, the markdown engine, the motion helper, the ANSI and stack trace helpers, the dictation source (`createSpeechDictation`), the date and time labels (`core/time.ts`) | `@ui-sdk/core`, `motion`, the markdown libraries (§6), `ansi-sequence-parser`, `stacktrace-parser` |
 | `@kind-ui/agent-ui/adapters/ai-sdk` | `fromUIMessages`, `fromUIMessagePart`, `toApprovalResponse`, `fromChatStatus` | none (`ai` types only) |
 | `@kind-ui/agent-ui/styles.css` | Tailwind v4 source registration and theme tokens | none |
 
@@ -285,7 +288,21 @@ interface Message {
   status: MessageStatus;
   parts: Part[];
   createdAt?: string; // ISO 8601
+  author?: { id: string; name: string; avatarUrl?: string }; // who wrote it, when it isn't obvious from role
+  error?: { message: string }; // why a message with status "error" failed
   metadata?: Record<string, unknown>;
+}
+
+interface Thread {
+  id: string;
+  title: string;
+  updatedAt?: string; // ISO 8601; picks the thread's date group
+  pinned?: boolean;
+  group?: string; // a host group (a project, a folder) in place of the date group
+  href?: string; // the thread's own URL, so a row is a real link
+  status?: "running" | "awaiting-input" | "error"; // work still going on in the background
+  unread?: boolean;
+  snippet?: string; // Thread Search: the text that matched
 }
 
 type Part =
@@ -431,14 +448,14 @@ Code highlighting is pluggable through `highlight?: (code, lang) => Promise<Toke
 - Each primitive declares `agent: { actions: [...] }` and `controlled` snapshot keys in its `definePrimitive` definition. This spec writes actions as `component.action` (for example `composer.submit`); a snapshot shows them as `component: "composer"`, `actions: ["submit"]`.
 - An action is listed only while available. `composer.stop` appears only while a submission is in flight and the host supplies `onStop`. Host-callback actions (for example `message.regenerate`) appear only when the host supplies the callback. On Web Components, where a listener can't be seen, a `can-<action>` boolean attribute (for example `can-regenerate`) stands for the callback, and the callback is a DOM event.
 - Actions run the same code paths as pointer and keyboard input. Change callbacks receive `details.source === "agent"` so hosts can distinguish and cancel agent changes.
-- These consequential actions render `data-agent-confirm`, so `createAgent` permissions and WebMCP `registerTools` `allow` require a person: `composer.submit`, `confirmation.approve`, `confirmation.deny`, `checkpoint.restore`, `plan.accept`, `subagent.cancel`, `question.submit`, `approvalMode.setValue`, `dictation.start`. Confirmation's marking cannot be turned off; the others accept the primitive option `agentConfirm: false`.
+- These consequential actions render `data-agent-confirm`, so `createAgent` permissions and WebMCP `registerTools` `allow` require a person: `composer.submit`, `confirmation.approve`, `confirmation.deny`, `checkpoint.restore`, `plan.accept`, `subagent.cancel`, `question.submit`, `approvalMode.setValue`, `dictation.start`, every `shareDialog` action, and the Delete button of Thread List's delete dialog (`threadList.delete` opens the dialog; only its Delete calls `onDelete`, as Checkpoint's Restore does). Confirmation's marking cannot be turned off; the others accept the primitive option `agentConfirm: false`.
 - No other action renders `data-agent-confirm`, including Queue `reorder` and `remove`, Uploader `cancel` and `retry`, Attachments `remove`, and Wave 3's `suggestion.pick`, `feedback.rate`, `feedback.submitComment`, `notice.dismiss` and `setValue`. UI SDK's bridge reads the mark per component, not per action, so marking one action would gate every action of that component. A host that wants a person for any of them requires it through `createAgent`'s or `registerTools`' `allow`, and those components' docs show how.
 - Every component root with a role requires an accessible name; agents address components by that label or by `ref`. Markdown and Streaming Text are content with no role, which ARIA does not let a name sit on, and offer no actions.
 - Kind UI ships no agent bridge. Hosts create one with `createAgent` from `@ui-sdk/react/agent` or `@ui-sdk/web/agent`. Docs show both, plus `registerTools` for WebMCP.
 
 ## 7. Components by wave
 
-Each wave is a minor release of `@kind-ui/agent-ui` (0.1 to 0.5) with its registry items and docs reference pages, and a docs showcase page where a scripted run shows something the pages can't (Waves 1–4). "Replaces" names the kind-ui/charts `packages/ai/src` file used as a catalog reference, kind-ui/charts#253 (unmerged), or "(new)" for new additions.
+Each wave is a minor release of `@kind-ui/agent-ui` (0.1 to 0.6) with its registry items and docs reference pages, and a docs showcase page where a scripted run shows something the pages can't (Waves 1–4). "Replaces" names the kind-ui/charts `packages/ai/src` file used as a catalog reference, kind-ui/charts#253 (unmerged), or "(new)" for new additions.
 
 ### Wave 1 (0.1): foundation
 
@@ -568,7 +585,35 @@ Behavior requirements:
 - **Message regenerate-with:** with `regenerateOptions`, Regenerate becomes a menu whose first item is "Try again"; `onRegenerate` receives the option's id, `undefined` for "Try again".
 - **Composer:** `draftKey` with `draftStorage` restores an uncontrolled draft (§4.1) and shows "Draft restored" with Discard. Below `--kind-composer-compact-width` its controls row wraps under the editor and labelled triggers show only their icon, keeping their names.
 
-Component count: 13 + 8 + 10 + 10 + 7 = 48 rows, with Selection and Action counted as one family.
+### Wave 6 (0.6): thread and shell
+
+| Component | Composes | Agent actions | Replaces |
+| --- | --- | --- | --- |
+| **Thread List** | `createGridFocus`, `createTypeahead`, `createVirtualizer`, Menu (`menuBase`, one menu for every row), `createInlineEdit`, Alert Dialog | `select(id)`, `newThread`, `rename(id, title)`, `pin(id, pinned?)`, `share(id)`, `delete(id)` | (new) |
+| **Thread Search** | Dialog (`createPopup` with `dialogPreset`), Command (Picker's rows) | `open`, `close`, `search(text)`, `select(id)` | (new) |
+| **Sidebar** | Resizable, Drawer, `@ui-sdk/core/shortcuts` | `open`, `close` | (new) |
+| **Launcher** | Popover or Dialog (`createPopup`), `@ui-sdk/core/shortcuts` | `open`, `close` | (new) |
+| **Conversation Search** | Input, `matchRanges`, Conversation's controller, the CSS Custom Highlight API (§2) | `search(text)`, `next`, `previous`, `close` | (new) |
+| **Day Separator** | `@ui-sdk/core/date` | none | (new) |
+| **Connection Status** | `announce`, the status mark | `retry` | (new) |
+| **Share Dialog** | Dialog (`createPopup` with `dialogPreset`), Segmented Control, Input, `createPendingAction` | `open`, `close`, `setVisibility(value)`, `createLink`, `copyLink`, `revoke` | (new) |
+
+Wave 6 also gives **Message** its author, time and outcome (`retry`, `continue`) and **Conversation** its loading, error and empty states (`retry`) and search marks.
+
+Behavior requirements:
+
+- **Thread List:** a `nav` named by its `label` holding a grid with one Tab stop: each thread is a row of its link (the current one `aria-current="page"`) and its More button; Up and Down move between threads, Left and Right between the link and More, Home, End and typeahead as a grid's. Pinned threads come first, then the rest grouped by `updatedAt` (Today, Yesterday, Previous 7 days, Previous 30 days, then months and years, in the host's `locale` and `timeZone`), or by the host's `group`. Each row has one menu (Rename, Pin or Unpin, Share, Delete: each present only with its callback), opened by the row's More button, Shift+F10, the context-menu key or a right-click. Rename edits in place (Enter commits, Escape cancels). Delete asks in an Alert Dialog first, for a person and an agent alike. A running, waiting or failed thread shows the status mark and its words; an unread one says so. Long histories are always virtualized and ask the host for more (`onLoadMore`) near the end.
+- **Thread Search:** a dialog holding a search field and the threads as Command rows, pinned first and then grouped as Thread List groups them, with the matched text marked in titles and snippets. It filters locally by default; with `filter: false` the host searches and passes `status` while results load. Enter on a row calls `onSelect` and closes. An optional `shortcut` (like `mod+k`) opens it.
+- **Sidebar:** a side panel (`side: "start"` for a thread list, `"end"` for an assistant beside the host's page) beside the host's content, resized by its handle (the window splitter pattern) between `minSize` and `maxSize`, collapsed and restored by its trigger, Enter on the handle or an optional `shortcut`, with its layout saved to host-chosen storage. Below `overlayBelow` it is a Drawer from the same side over the page instead; the panel's content remounts at that switch, as UI SDK's responsive recipe says, so hosts keep state above it.
+- **Launcher:** a floating button (named by its `label`, with an optional unread count in words) that opens a chat panel: a non-modal popover above it, a dialog with `modal`, and a full-screen sheet on small touch screens (`presentation: "auto"`). The panel stays in the page while closed, so a draft and the scroll position survive.
+- **Conversation Search:** a `search` region with a field, "N of M", Previous, Next and Close, over the host's message texts (Markdown is read as the text it renders). Enter and Shift+Enter move between matches; moving to a match scrolls its message into view through the Conversation's controller, virtualized or not, and paints every match in view with the current one stronger. The Conversation shows a mark beside its scrollbar for each message with a match. Escape clears and closes, returning focus to where it was. The count is announced after typing pauses, never per key. It never takes the browser's find shortcut unless the host passes one.
+- **Day Separator:** a heading between messages of different days that reads "Today", "Yesterday", a weekday within the week, or the date, in the host's `locale` and `timeZone`, with a `<time datetime>`. Server markup shows the date; the relative word replaces it once it binds.
+- **Connection Status:** a pill over the top of the conversation, taking no room and not a live region (it announces through `announce` only), for `connecting`, `reconnecting` (with a countdown from `retryAt` that is never announced per second), `offline` and a stream being resumed; Retry appears only with `onRetry`. It announces the connection lost and back, and leaves once `online`.
+- **Share Dialog:** a dialog choosing who can open the conversation ("Only you" or "Anyone with the link"), creating the link through the host (`onCreateLink`, pending until it settles), and showing it in a read-only field with Copy, plus Revoke. It never builds a URL. Every action needs a person while `agentConfirm` is on (default). A shared, read-only conversation is a Conversation whose Messages get no action callbacks.
+- **Message:** with `author` it shows the speaker's name and avatar (`continued` hides them for consecutive messages from the same author); with `createdAt` its time in a `<time datetime>`; with `durationSeconds` how long the answer took. A message with status `aborted` ends with "Stopped" and, with `onContinue`, Continue; status `error` ends with the error's words and, with `onRetry`, Retry. Each outcome is announced once, only by a message that was streaming.
+- **Conversation:** `status: "loading"` shows a fixed-height skeleton in the rows' place; `"error"` shows the failure's words and, with `onRetry`, Retry; the empty part gains a title and a description for a welcome, with suggestions below as the host chooses.
+
+Component count: 13 + 8 + 10 + 10 + 7 + 8 = 56 rows, with Selection and Action counted as one family.
 
 ## 8. Accessibility requirements
 
@@ -584,7 +629,7 @@ These apply to every component:
 
 ### 9.1 npm package
 
-`@kind-ui/agent-ui` ships the exports in §3. The package starts private at `0.0.0` and becomes public at 0.1 only with explicit publication authorization. Each wave is one minor release (0.1 to 0.5). Before 1.0, breaking API changes increment the minor version and compatible fixes increment the patch version.
+`@kind-ui/agent-ui` ships the exports in §3. The package starts private at `0.0.0` and becomes public at 0.1 only with explicit publication authorization. Each wave is one minor release (0.1 to 0.6). Before 1.0, breaking API changes increment the minor version and compatible fixes increment the patch version.
 
 ### 9.2 Registry
 
