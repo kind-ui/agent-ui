@@ -29,32 +29,36 @@ agent-ui ships parts of someone else's product. A person meets them mid-task, be
 
 ## System
 
-Each component is quiet on its own; these rules keep a page of them reading as one product. The tokens live in `agent-ui.css` and the shared controls in `controls.css`; `scripts/tests/styles.test.mjs` holds the ones a check can.
+Each component is quiet on its own; these rules keep a page of them reading as one product: pill controls, soft elevation, concentric corners and quiet motion. The tokens live in `agent-ui.css` and the shared controls in `controls.css`; `scripts/tests/styles.test.mjs` holds the ones a check can.
 
-- **One way to show waiting.** A task that is running shows the status mark's spinner. A reply on its way shows the dots, at one size. A pending button keeps its label and holds a 14px running mark. Never two loops for one wait, and never shimmering, pulsing or glowing text.
-- **No box inside a box.** One container per object: the outer component, a standalone artifact (a document, an image) or a decision waiting on a person gets the border. Controls inside it are ghost, with no border at rest and a fill on hover and while open. Chips inside it are filled, not outlined.
+- **One way to show waiting.** A task that is running shows the status mark's spinner. A reply on its way shows the dots, at one size. A pending button keeps its width and its accessible name: its label stays in the layout, drawn clear, under a 14px running mark centered on it. Never two loops for one wait, and never shimmering, pulsing or glowing text.
+- **No box inside a box.** One container per object: the outer component, a standalone artifact (a document, an image, a code block) or a decision waiting on a person. Controls inside it are ghost, with no border at rest and a fill on hover and while open. Chips inside it are filled, not outlined.
 - **Say a fact once.** One mark per row, plus words. Don't color the text when a colored mark sits beside it, and don't add a tinted border, a tinted fill and an icon to say the same thing.
 - **Chrome on hover or focus, not on every item.** Per-item actions (copy, edit, more) show on `:hover` and `:focus-within`, and always on the last item and under `(hover: none)`. A nested block (a table in a document) defers to its parent's actions.
-- **One focus ring:** `outline: var(--kind-focus-ring)` with `outline-offset: var(--kind-focus-offset)`, or `var(--kind-focus-offset-inset)` inside a container that clips. It's 2px of `--kind-color-ring`, at least 3:1 on every fill.
-- **A type scale, not sizes.** `--kind-text-md` (14px) for controls and body text in a component, `-sm` (13px) for secondary text and code, `-xs` (12px) for meta and badges, `-lg` (15px) for reading text and dialog titles, `-xl` (18px) for an empty state's title. Nothing smaller than 12px; mono only for literal code.
-- **States have their own colors.** `--kind-color-hover` is for pointer hover only. `--kind-color-selected` is the chosen item (a pressed toggle, the highlighted row, an open trigger); `--kind-color-current` is where the person is (the current thread or segment). A status tint is `color-mix(in oklab, <status> var(--kind-tint-fill), transparent)`.
-- **One radius scale:** `--kind-radius-sm` for rows and items, `-md` for controls, `-lg` for popups and code, `--kind-radius` for cards and dialogs.
+- **Focus rings appear only for keyboard navigation; text fields never show one.** The ring is `outline: var(--kind-focus-ring)` under `:focus-visible` only, 2px of neutral ink that follows the shape. Rows, list items, chips in a strip and anything in a scroller draw it inside (`--kind-focus-offset-inset`), where no ancestor clips it; a free-standing control draws it 2px outside. A text field, the composer included, shows its caret and changes nothing else.
+- **Everything pressed is a pill.** Buttons, icon buttons, triggers, chips and badges use `--kind-radius-full`. Rows are soft rectangles. Corners nest concentrically, inner = outer − padding: rows `--kind-radius-md` (10px) in popups `--kind-popup-radius` (16px, 6px padding), cards `--kind-radius-lg` (14px), the user bubble `--kind-bubble-radius` (22px), dialogs `--kind-dialog-radius` (24px), the composer `--kind-composer-radius` (28px). Every corner but the pill follows `--kind-radius`.
+- **Soft elevation, not borders.** Floating surfaces (popups, dialogs, the composer) sit on `--kind-color-raised` with their `--kind-shadow-*`, whose first layer is the 1px `--kind-color-hairline`; they draw no border. Dark surfaces lift by lightness and are neutral gray.
+- **States are translucent ink.** `--kind-color-hover` is for the pointer only, `--kind-color-pressed` for `:active`, `--kind-color-selected` for the chosen item (a pressed toggle, the highlighted row, an open trigger) and `--kind-color-current` for where the person is, with `--kind-font-weight-current` and never a hue. The accent is for links, status and a host's own colored primary; the one primary action is the ink `--kind-color-primary` pill.
+- **A type scale, not sizes.** The system face (`--kind-font-sans`, for hosts that want it), weights 400, 500 and 600, and a slightly tighter track from 13 to 16px: each `--kind-text-*` has a `-leading` and a `-tracking`. Controls are `md` (14/20), secondary text `sm` (13), meta and badges `xs` (12), prose and the composer `body` (16/24), dialog titles `xl` (18), an empty state's prompt `2xl` (24). Nothing smaller than 12px; mono only for literal code.
+- **Sizes climb 28, 32, 36.** `--kind-control-height-sm`, `--kind-control-height` (the default) and `--kind-control-height-lg`; the composer's controls are `--kind-composer-control-height` (36). Under a coarse pointer every control's hit area is 44px.
+- **Motion is short and physical, and stops.** Hover colors take `--kind-duration-fast` on `--kind-ease-in-out`. A press scales to `--kind-press-scale` in `--kind-duration-instant` and releases on `--kind-ease-spring`; a control that opens something doesn't scale. Popups enter from `--kind-enter-scale` on `--kind-ease-enter` and leave faster on `--kind-ease-exit`. Reduced motion keeps opacity only. Nothing loops but a spinner.
 
 ### Shared controls
 
-A part opts in with an attribute its core slot writes, so both render layers draw it the same. Use these before styling a control of your own; a component stylesheet only adds what's particular to it.
+A part opts in with an attribute its core slot writes, so both render layers draw it the same. **Shared controls own their look:** a component picks a variant or a size and may only place the control (margin, alignment, order, width); it never restyles one. When a look is missing, add a variant here.
 
 | Attribute | Use it for |
 | --- | --- |
-| `data-kind-button` | A text button: ghost by default, `="secondary"` bordered, `="primary"` or `="danger"` filled. One primary per decision. 28px tall. |
-| `data-kind-icon-button` | A 28px square ghost button with one icon and an accessible name: copy, close, more, previous and next. |
-| `data-kind-trigger` | What opens a menu, picker or popover: ghost, 32px, filled while open. |
+| `data-kind-button` | A text pill: ghost by default, `="secondary"` raised with a hairline, `="soft"` on the bubble fill, `="primary"` the ink pill (one per surface), `="danger"` and `="danger-ghost"`. |
+| `data-kind-icon-button` | A circle with one icon and an accessible name: copy, close, more, previous and next. |
+| `data-kind-trigger` | What opens a menu, picker or popover: a ghost pill with a muted label that turns to ink on hover and while open. |
+| `data-kind-size` | `="sm"` (28) or `="lg"` (36) on any of the three above; 32 by default. |
 | `data-kind-badge` | A count or a short state beside a title, as a tinted pill, `="success" \| "warning" \| "danger" \| "accent"`. Beside a status mark, use words, not a badge. |
 | `data-kind-popup` | A menu, list or card that floats over the page. |
-| `data-kind-dialog`, `data-kind-dialog-title`, `data-kind-scrim` | A modal and what dims the page behind it; a sheet's backdrop takes the same scrim. |
+| `data-kind-dialog`, `data-kind-dialog-title`, `data-kind-scrim` | A modal and what dims and blurs the page behind it; a sheet's backdrop takes the same scrim. |
 | `data-kind-code` | A block of code, terminal output or a stack trace. |
 
-Under a coarse pointer, buttons, icon buttons and triggers grow their hit area to 44px through `::before`, so don't draw on `::before` of a shared control.
+Under a coarse pointer, buttons, icon buttons and triggers grow their hit area to 44px through `::before`, so don't draw on `::before` of a shared control. The user's message is a `--kind-color-bubble` fill with `--kind-bubble-radius` and `--kind-bubble-padding`; the assistant's reply is prose on the canvas, with no bubble.
 
 ## Agent-first
 

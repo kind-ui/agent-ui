@@ -215,9 +215,8 @@
       font-size: var(--kind-text-sm);
       text-overflow: ellipsis;
 
-      &:focus-visible {
-        outline: var(--kind-focus-ring);
-        outline-offset: var(--kind-focus-offset-inset);
+      &:focus {
+        outline: none;
       }
     }
   }

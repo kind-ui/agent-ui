@@ -35,12 +35,12 @@ export const KindCommandList = withKindClass(
 export const KindCommandGroup = withKindClass(CommandGroup, "py-0.5", "KindCommandGroup");
 export const KindCommandGroupLabel = withKindClass(
   CommandGroupLabel,
-  "px-2 pt-1.5 pb-1 text-[length:var(--kind-text-xs)]/4 font-medium text-[var(--kind-color-muted)]",
+  "px-2.5 pt-1.5 pb-1 text-[length:var(--kind-text-xs)]/4 font-medium text-[var(--kind-color-muted)]",
   "KindCommandGroupLabel",
 );
 export const KindCommandItem = withKindClass(
   CommandItem,
-  "flex cursor-default select-none items-center gap-2 rounded-[var(--kind-radius-sm)] px-2 py-[var(--kind-command-item-padding-block,0.375rem)] outline-hidden data-highlighted:bg-[var(--kind-color-selected)] data-disabled:cursor-not-allowed data-disabled:opacity-50 data-pending:cursor-wait",
+  "flex cursor-default select-none items-center gap-2 rounded-[var(--kind-radius-md)] px-2.5 py-[var(--kind-command-item-padding-block,0.375rem)] outline-hidden data-highlighted:bg-[var(--kind-color-selected)] data-disabled:cursor-not-allowed data-disabled:opacity-50 data-pending:cursor-wait",
   "KindCommandItem",
 );
 export const KindCommandItemIcon = withKindClass(
@@ -60,7 +60,7 @@ export const KindCommandShortcut = withKindClass(
 );
 export const KindCommandSeparator = withKindClass(
   CommandSeparator,
-  "-mx-1 my-1 h-px bg-[var(--kind-color-border)]",
+  "mx-2.5 my-1 h-px bg-[var(--kind-color-border)]",
   "KindCommandSeparator",
 );
 export const KindCommandEmpty = withKindClass(

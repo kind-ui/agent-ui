@@ -93,7 +93,7 @@
     }
     &:focus-visible {
       outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
+      outline-offset: var(--kind-focus-offset-inset);
     }
     &:where([aria-disabled="true"]) {
       cursor: default;

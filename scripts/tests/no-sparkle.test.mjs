@@ -5,7 +5,7 @@ import { test } from "node:test";
 
 // The project draws no sparkle icon anywhere: not an icon name, an emoji or a symbol.
 const repoRoot = new URL("../../", import.meta.url);
-const sparkle = /sparkl|[\u2726\u2727\u2728\u2747\u2748\u{1F31F}\u{1F4AB}]/iu;
+const sparkle = /sparkl|auto_awesome|[\u2726\u2727\u2728\u2747\u2748\u{1F31F}\u{1F4AB}]/iu;
 // Prose that states the rule, and this test.
 const skipped =
   /^(AGENTS\.md|docs\/superpowers\/|docs\/design-principles\.md$|\.agents\/|scripts\/tests\/no-sparkle\.test\.mjs$)/;

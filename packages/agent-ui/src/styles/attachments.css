@@ -34,7 +34,7 @@
 
     &:focus-visible {
       outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
+      outline-offset: var(--kind-focus-offset-inset);
     }
 
     &[data-error] {

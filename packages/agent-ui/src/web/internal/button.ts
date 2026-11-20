@@ -7,10 +7,8 @@ const classes = [
   "[&_[data-slot=button]]:items-center",
   "[&_[data-slot=button]]:justify-center",
   "[&_[data-slot=button]]:gap-1.5",
-  "[&_[data-slot=button]]:rounded-[var(--kind-radius-md)]",
-  "[&_[data-slot=button]]:border",
-  "[&_[data-slot=button]]:border-transparent",
-  "[&_[data-slot=button]]:px-3",
+  "[&_[data-slot=button]]:rounded-[var(--kind-radius-full)]",
+  "[&_[data-slot=button]]:px-3.5",
   "[&_[data-slot=button]]:text-[length:var(--kind-text-md)]/5",
   "[&_[data-slot=button]]:font-medium",
   "[&_[data-slot=button]]:text-[var(--kind-color-fg)]",
@@ -20,6 +18,11 @@ const classes = [
   "[&_[data-slot=button]]:data-disabled:cursor-not-allowed",
   "[&_[data-slot=button]]:data-disabled:opacity-50",
   "[&_[data-slot=button]]:data-pending:cursor-wait",
+  "[&_[data-slot=button]]:active:bg-[var(--kind-color-pressed)]",
+  "[&_[data-slot=button]]:active:scale-[var(--kind-press-scale)]",
+  "[&_[data-slot=button]]:motion-reduce:active:scale-100",
+  "[&_[data-slot=button]]:transition-[background-color,color,scale]",
+  "[&_[data-slot=button]]:duration-[var(--kind-duration-fast)]",
 ];
 
 export function defineInternalButton(): void {

@@ -52,10 +52,8 @@
         background-color: currentColor;
         mask: var(--kind-transcript-search-icon) center / contain no-repeat;
       }
-      &:has(input:focus-visible) {
-        box-shadow: 0 0 0 1.5px var(--kind-color-ring);
-        /* Shows in forced colors, where the shadow doesn't. */
-        outline: var(--kind-focus-ring-width) solid transparent;
+      & input:focus {
+        outline: none;
       }
     }
 

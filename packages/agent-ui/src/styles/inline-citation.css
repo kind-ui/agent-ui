@@ -82,7 +82,7 @@
 
       &:focus-visible {
         outline: var(--kind-focus-ring);
-        outline-offset: var(--kind-focus-offset);
+        outline-offset: var(--kind-focus-offset-inset);
       }
     }
     /* One source to a page, and the viewport as tall as the tallest, so paging never moves the controls. */

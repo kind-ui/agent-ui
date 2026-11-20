@@ -23,13 +23,6 @@
       border-color var(--kind-duration-fast),
       box-shadow var(--kind-duration-fast);
 
-    &:focus-within {
-      border-color: color-mix(in oklab, var(--kind-color-ring) 70%, var(--kind-color-border));
-      box-shadow:
-        0 0 0 3px color-mix(in oklab, var(--kind-color-ring) 18%, transparent),
-        0 8px 24px -12px color-mix(in oklab, var(--kind-color-shadow) 18%, transparent);
-    }
-
     &:has([data-slot="file-input-dropzone"][data-dragging]) {
       border-color: var(--kind-composer-accent);
       box-shadow: 0 0 0 3px color-mix(in oklab, var(--kind-composer-accent) 22%, transparent);

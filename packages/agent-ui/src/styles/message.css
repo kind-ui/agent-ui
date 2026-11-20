@@ -58,9 +58,8 @@
     font: inherit;
     resize: none;
 
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
+    &:focus {
+      outline: none;
     }
   }
 
