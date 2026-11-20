@@ -8,7 +8,7 @@ import {
   type SlotDefinition,
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
-import { fileSize } from "../file-size.js";
+import { fileExtension, fileKind, fileSize } from "../file-info.js";
 import { bindLeavingRow, createRowSlide, dropRow, type LeavingRow, leavingRows } from "../leaving.js";
 import { enter, type MotionMode } from "../motion/index.js";
 
@@ -26,9 +26,13 @@ export type AttachmentItem = {
 
 export const ATTACHMENT_ERRORS = { type: "File type not accepted", size: "File is too large" } as const;
 
-/** What a chip says under the name: its error, else its size. */
+/** What a chip says under the name: its error, else its type and size, like "PDF · 482 kB". */
 export const attachmentDetail = (item: AttachmentItem): string =>
-  item.error ? ATTACHMENT_ERRORS[item.error] : item.size === undefined ? "" : fileSize(item.size);
+  item.error
+    ? ATTACHMENT_ERRORS[item.error]
+    : [fileExtension(item.name).toUpperCase(), item.size === undefined ? "" : fileSize(item.size)]
+        .filter(Boolean)
+        .join(" · ");
 
 export type AttachmentsOptions = {
   /**
@@ -270,6 +274,7 @@ export const attachmentsPrimitive: AttachmentsPrimitive = definePrimitive({
           "data-leaving": row?.leaving ? "" : undefined,
           "data-error": item?.error,
           "data-image": item && isImage(item) ? "" : undefined,
+          "data-file-kind": item && fileKind(item.name, item.mediaType),
           "aria-keyshortcuts": state.canRemove ? "Delete" : undefined,
         };
       },

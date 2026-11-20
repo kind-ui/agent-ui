@@ -51,6 +51,8 @@
 - Licensed under the ISC License; the icons that derive from Feather (all but `wrap-text`, `pencil`, `paperclip`, `square-slash`, `file`, `image-off`, `folder-open`, `mic` and `grip-vertical`) are also under the MIT License.
 - Wave 6 icon paths, one line per component naming its stylesheet, its icons, any change and which icons derive from Feather (each task adds its line below its own marker, as `AGENTS.md` "Wave 6 shared-file markers" says):
 
+- `packages/agent-ui/src/styles/file-kind.css` (Attachments' and Uploader's file glyphs): `file`, `file-text`, `file-image`, `file-code`, `file-archive`, `file-spreadsheet`, `file-music` and `file-play`, unchanged; `file-text` derives from Feather.
+
 <!-- wave-6-task-2: Thread List -->
 
   - `packages/agent-ui/src/styles/thread-list.css` (Thread List: New chat, More and the row menu's items): `plus`, `ellipsis`, `pencil`, `pin`, `share` and `trash-2`, unchanged; `plus`, `ellipsis` (`more-horizontal`), `share` and `trash-2` derive from Feather.

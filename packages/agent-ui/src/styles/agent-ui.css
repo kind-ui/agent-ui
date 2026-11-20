@@ -44,6 +44,7 @@
 @import "./markdown-table.css";
 @import "./message.css";
 @import "./composer.css";
+@import "./file-kind.css";
 @import "./attachments.css";
 @import "./uploader.css";
 @import "./loader.css";

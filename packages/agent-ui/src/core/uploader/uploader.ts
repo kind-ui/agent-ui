@@ -9,8 +9,8 @@ import {
 } from "@ui-sdk/core";
 import type { FileInputOptions, FileInputValueChangeReason, FileRejection } from "@ui-sdk/core/file-input";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
+import { fileKind, fileSize } from "../file-info.js";
 import { type FileIntake, forwardFileInputEvents } from "../file-input-events.js";
-import { fileSize } from "../file-size.js";
 import { bindLeavingRow, createRowSlide, dropRow, type LeavingRow, leavingRows } from "../leaving.js";
 import { memo } from "../memo.js";
 import { enter, type MotionMode } from "../motion/index.js";
@@ -23,6 +23,8 @@ export type UploadItem = {
   name: string;
   /** In bytes. */
   size: number;
+  /** Picks the row's glyph with the name's extension, like `"image/png"`. */
+  mediaType?: string;
   /** From 0 to 100. */
   progress: number;
   status: UploadStatus;
@@ -377,6 +379,7 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
           "aria-hidden": row?.leaving ? "true" : undefined,
           "data-status": row?.item.status,
           "data-leaving": row?.leaving ? "" : undefined,
+          "data-file-kind": row && fileKind(row.item.name, row.item.mediaType),
         };
       },
       state: (state, { props }) => {
