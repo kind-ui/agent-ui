@@ -225,13 +225,6 @@
     line-height: var(--kind-text-sm-leading);
   }
 
-  /* The shared popup's exit scale outranks its own reduced-motion reset, so it's reset here too. */
-  @media (prefers-reduced-motion: reduce) {
-    [data-slot="kind-inline-citation-content"]:where([data-starting-style], [data-ending-style]) {
-      scale: none;
-    }
-  }
-
   /* The `motion` option, which the shared popup can't read: "reduced" only fades, in 120 ms; `none` doesn't animate. */
   :where([data-slot="kind-inline-citation"][data-motion="reduced"])
     [data-slot="kind-inline-citation-content"] {

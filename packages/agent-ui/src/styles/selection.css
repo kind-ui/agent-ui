@@ -38,13 +38,6 @@
     scale: none;
   }
 
-  /* The shared popup's exit scale outranks its own reduced-motion reset, so it's reset here too. */
-  @media (prefers-reduced-motion: reduce) {
-    [data-slot="kind-selection-toolbar"]:where([data-starting-style], [data-ending-style]) {
-      scale: none;
-    }
-  }
-
   [data-slot="kind-selection-toolbar"]:where([data-motion="none"]) {
     transition: none;
   }
