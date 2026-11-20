@@ -34,7 +34,8 @@
   }
 
   /* The tool is the container, so its payloads are bare code under their heading. */
-  :where([data-slot="kind-tool-input"], [data-slot="kind-tool-output"]) > [data-slot="kind-code-block"] {
+  /* Two attributes, since code-block.css loads after this file. */
+  [data-slot="kind-tool-content"] [data-slot="kind-code-block"] {
     border: 0;
     border-radius: 0;
     background-color: transparent;
