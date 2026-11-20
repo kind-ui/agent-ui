@@ -9,7 +9,7 @@ import { withKindClass } from "./kind-class.js";
 
 export const KindSegmentedControl = withKindClass(
   SegmentedControl,
-  "relative isolate inline-flex items-center gap-0.5 rounded-[var(--kind-radius-full)] bg-[var(--kind-color-hover)] p-0.5 data-disabled:opacity-50",
+  "relative isolate inline-flex items-center gap-0.5 rounded-[var(--kind-radius-full)] bg-[var(--kind-color-hover)] p-0.5 data-disabled:opacity-[var(--kind-disabled-opacity)]",
   "KindSegmentedControl",
 );
 export const KindSegmentedControlIndicator = withKindClass(

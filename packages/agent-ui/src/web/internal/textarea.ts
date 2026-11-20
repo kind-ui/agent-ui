@@ -19,7 +19,7 @@ const classes = [
   "[&_[data-slot=textarea]]:placeholder:text-[var(--kind-color-muted)]",
   "[&_[data-slot=textarea]]:outline-hidden",
   "[&_[data-slot=textarea]]:data-disabled:cursor-not-allowed",
-  "[&_[data-slot=textarea]]:data-disabled:opacity-50",
+  "[&_[data-slot=textarea]]:data-disabled:opacity-[var(--kind-disabled-opacity)]",
   "[&_[data-slot=textarea]]:data-readonly:text-[var(--kind-color-muted)]",
 ];
 

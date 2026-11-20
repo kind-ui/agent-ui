@@ -198,6 +198,8 @@
   --kind-icon-size: 1rem;
   --kind-icon-size-lg: 1.125rem;
   --kind-hit-area: 2.75rem;
+  /* A disabled control fades rather than greys out, so its label stays legible. */
+  --kind-disabled-opacity: 0.64;
   --kind-chat-max-width: 48rem;
 
   /* Elevation: a hairline and a soft, wide drop under it; in dark a faint top highlight lifts the edge. */

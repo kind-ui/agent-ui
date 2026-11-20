@@ -11,7 +11,7 @@ import { withKindClass } from "./kind-class.js";
 export const KindTokenInput = TokenInput;
 export const KindTokenInputEditor = withKindClass(
   TokenInputEditor,
-  "min-h-16 whitespace-pre-wrap w-full rounded-[var(--kind-radius-md)] border border-[var(--kind-color-border)] bg-[var(--kind-color-surface)] px-3 py-2 text-[length:var(--kind-text-md)]/5 text-[var(--kind-color-fg)] outline-hidden data-disabled:opacity-50 [&_[data-slot=token-input-host]]:whitespace-nowrap data-empty:before:pointer-events-none data-empty:before:text-[var(--kind-color-muted)] data-empty:before:content-[attr(aria-placeholder)]",
+  "min-h-16 whitespace-pre-wrap w-full rounded-[var(--kind-radius-md)] border border-[var(--kind-color-border)] bg-[var(--kind-color-surface)] px-3 py-2 text-[length:var(--kind-text-md)]/5 text-[var(--kind-color-fg)] outline-hidden data-disabled:opacity-[var(--kind-disabled-opacity)] [&_[data-slot=token-input-host]]:whitespace-nowrap data-empty:before:pointer-events-none data-empty:before:text-[var(--kind-color-muted)] data-empty:before:content-[attr(aria-placeholder)]",
   "KindTokenInputEditor",
 );
 export const KindTokenInputToken = withKindClass(

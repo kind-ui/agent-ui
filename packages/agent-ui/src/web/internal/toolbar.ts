@@ -20,7 +20,7 @@ const classes = [
   "[&_:is([data-slot=toolbar-button],ui-toolbar-button_[data-slot=menu-trigger])]:hover:text-[var(--kind-color-fg)]",
   "[&_:is([data-slot=toolbar-button],ui-toolbar-button_[data-slot=menu-trigger])]:focus-visible:[outline:var(--kind-focus-ring)]",
   "[&_:is([data-slot=toolbar-button],ui-toolbar-button_[data-slot=menu-trigger])]:focus-visible:[outline-offset:var(--kind-focus-offset)]",
-  "[&_:is([data-slot=toolbar-button],ui-toolbar-button_[data-slot=menu-trigger])]:data-disabled:opacity-50",
+  "[&_:is([data-slot=toolbar-button],ui-toolbar-button_[data-slot=menu-trigger])]:data-disabled:opacity-[var(--kind-disabled-opacity)]",
   "[&_[data-slot=toolbar-group]]:flex",
   "[&_[data-slot=toolbar-group]]:items-center",
   "[&_[data-slot=toolbar-group]]:gap-1",

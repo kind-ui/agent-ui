@@ -12,7 +12,7 @@ import { withKindClass } from "./kind-class.js";
 
 export const KindSlider = withKindClass(
   Slider,
-  "flex w-full flex-col gap-1.5 data-disabled:opacity-50",
+  "flex w-full flex-col gap-1.5 data-disabled:opacity-[var(--kind-disabled-opacity)]",
   "KindSlider",
 );
 export const KindSliderControl = withKindClass(

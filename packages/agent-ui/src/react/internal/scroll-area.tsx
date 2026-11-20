@@ -29,6 +29,6 @@ export const KindScrollAreaThumb = withKindClass(
 );
 export const KindScrollAreaScrollToEnd = withKindClass(
   ScrollAreaScrollToEnd,
-  "inline-flex h-[var(--kind-control-height)] items-center justify-center gap-1.5 rounded-[var(--kind-radius-full)] bg-[var(--kind-color-raised)] px-3.5 text-[length:var(--kind-text-md)]/5 font-medium text-[var(--kind-color-fg)] hover:bg-[var(--kind-color-hover)] focus-visible:[outline:var(--kind-focus-ring)] focus-visible:[outline-offset:var(--kind-focus-offset)] data-disabled:cursor-not-allowed data-disabled:opacity-50 data-pending:cursor-wait opacity-0 data-visible:opacity-100 shadow-[0_0_0_1px_var(--kind-color-hairline)]",
+  "inline-flex h-[var(--kind-control-height)] items-center justify-center gap-1.5 rounded-[var(--kind-radius-full)] bg-[var(--kind-color-raised)] px-3.5 text-[length:var(--kind-text-md)]/5 font-medium text-[var(--kind-color-fg)] hover:bg-[var(--kind-color-hover)] focus-visible:[outline:var(--kind-focus-ring)] focus-visible:[outline-offset:var(--kind-focus-offset)] data-disabled:cursor-not-allowed data-disabled:opacity-[var(--kind-disabled-opacity)] data-pending:cursor-wait opacity-0 data-visible:opacity-100 shadow-[0_0_0_1px_var(--kind-color-hairline)]",
   "KindScrollAreaScrollToEnd",
 );

@@ -18,7 +18,7 @@ export const KindTreeItem = withKindClass(
 );
 export const KindTreeItemLabel = withKindClass(
   TreeItemLabel,
-  "flex min-h-7 cursor-default items-center gap-1.5 rounded-[var(--kind-radius-md)] ps-[calc((var(--tree-level)-1)*1rem+0.25rem)] pe-2 select-none hover:bg-[var(--kind-color-hover)] data-selected:bg-[var(--kind-color-selected)] data-disabled:opacity-50",
+  "flex min-h-7 cursor-default items-center gap-1.5 rounded-[var(--kind-radius-md)] ps-[calc((var(--tree-level)-1)*1rem+0.25rem)] pe-2 select-none hover:bg-[var(--kind-color-hover)] data-selected:bg-[var(--kind-color-selected)] data-disabled:opacity-[var(--kind-disabled-opacity)]",
   "KindTreeItemLabel",
 );
 export const KindTreeItemIndicator = withKindClass(

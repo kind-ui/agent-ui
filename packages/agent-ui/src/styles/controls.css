@@ -5,6 +5,8 @@
   /* Pills: a 28 / 32 / 36 ladder through `data-kind-size="sm" | "lg"`, a press that scales, a release on a spring. */
   :where([data-kind-button], [data-kind-icon-button], [data-kind-trigger]) {
     --kind-control-block-size: var(--kind-control-height);
+    /* An icon reads quieter than its label on ghost controls, and turns to ink with it on hover. */
+    --kind-control-icon-color: currentColor;
 
     position: relative;
     display: inline-flex;
@@ -62,7 +64,7 @@
 
     &:where(:disabled, [data-disabled], [aria-disabled="true"]) {
       cursor: not-allowed;
-      opacity: 0.5;
+      opacity: var(--kind-disabled-opacity);
     }
 
     /* Pending keeps its width: the label stays in the layout, and in the accessible name, but is drawn clear, and
@@ -87,10 +89,14 @@
       margin: auto;
     }
 
+    /* An icon sits a little closer to the edge than a label would, so the pill looks balanced. */
     & > :where(svg) {
       flex-shrink: 0;
       width: var(--kind-icon-size);
       height: var(--kind-icon-size);
+      margin-inline: -0.125rem;
+      color: var(--kind-control-icon-color);
+      pointer-events: none;
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -114,10 +120,26 @@
     padding: 0 1rem;
   }
 
+  :where(
+    [data-kind-button]:not([data-kind-button="primary"], [data-kind-button="danger"]),
+    [data-kind-trigger]
+  ) {
+    --kind-control-icon-color: var(--kind-color-muted);
+
+    &:where(
+        :hover:not(:disabled, [data-disabled], [aria-disabled="true"]),
+        [aria-expanded="true"],
+        [data-popup-open]
+      ) {
+      --kind-control-icon-color: currentColor;
+    }
+  }
+
   :where([data-kind-button="secondary"]) {
     background-color: var(--kind-color-raised);
     box-shadow:
       0 0 0 1px var(--kind-color-hairline),
+      inset 0 1px 0 light-dark(transparent, oklch(1 0 0 / 0.06)),
       var(--kind-shadow-control);
 
     &:where(:hover:not(:disabled, [data-disabled], [aria-disabled="true"])) {
@@ -142,9 +164,9 @@
       ) {
       background-color: var(--kind-color-primary-hover);
     }
-    &:where(:active) {
+    &:where(:active, [data-pressed]) {
       background-color: var(--kind-color-primary-hover);
-      box-shadow: none;
+      box-shadow: inset 0 1px 0 oklch(0 0 0 / 0.08);
     }
   }
 
@@ -162,6 +184,11 @@
   :where([data-kind-button="danger"]) {
     background-color: var(--kind-color-danger);
     color: var(--kind-color-on-status);
+    box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.12);
+
+    &:where(:active, [data-pressed]) {
+      box-shadow: inset 0 1px 0 oklch(0 0 0 / 0.08);
+    }
 
     &:where(
         :hover:not(:disabled, [data-disabled], [aria-disabled="true"]),

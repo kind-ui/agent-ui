@@ -14,7 +14,7 @@ const classes = [
   "[&_[data-slot=token-input-editor]]:text-[length:var(--kind-text-md)]/5",
   "[&_[data-slot=token-input-editor]]:text-[var(--kind-color-fg)]",
   "[&_[data-slot=token-input-editor]]:outline-hidden",
-  "[&_[data-slot=token-input-editor]]:data-disabled:opacity-50",
+  "[&_[data-slot=token-input-editor]]:data-disabled:opacity-[var(--kind-disabled-opacity)]",
   "[&_[data-slot=token-input-editor]]:[&_[data-slot=token-input-host]]:whitespace-nowrap",
   "[&_[data-slot=token-input-editor]]:data-empty:before:pointer-events-none",
   "[&_[data-slot=token-input-editor]]:data-empty:before:text-[var(--kind-color-muted)]",
