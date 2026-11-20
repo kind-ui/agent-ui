@@ -41,6 +41,19 @@ export default {
     "token-input",
     "trigger-menu",
 
+    // framework-svelte-2: chat core
+
+    // framework-svelte-3: composer controls
+
+    // framework-svelte-4: indicators, notices and files
+
+    // framework-svelte-5: step family
+
+    // framework-svelte-6: developer output
+
+    // framework-svelte-7: Wave 6 shell
+
+    // framework-svelte-8: conformance
   ],
   // Spec files the layer's projects run, relative to `tests/browser/`.
   specs: [

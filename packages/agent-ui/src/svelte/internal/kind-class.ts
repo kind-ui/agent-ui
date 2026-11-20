@@ -6,9 +6,12 @@ import type { ClassValue } from "svelte/elements";
 // own base classes: the element gets the outer part's base classes once, as React's `withKindClass` does.
 const merged = new WeakSet<object>();
 
+// A caller may wrap the handed-over value (`class={[props.class, "extra"]}`), so a mark at any depth counts.
+const isMerged = (value: unknown): boolean =>
+  Array.isArray(value) && (merged.has(value) || value.some(isMerged));
+
 function kindClass(base: string, value: unknown): ClassValue {
-  if (typeof value === "object" && value !== null && merged.has(value)) return value as ClassValue;
-  const result = value ? [base, value as ClassValue] : [base];
+  const result = isMerged(value) ? [value as ClassValue] : value ? [base, value as ClassValue] : [base];
   merged.add(result);
   return result;
 }
