@@ -547,6 +547,7 @@ export const conversationPrimitive: ConversationPrimitive = definePrimitive({
           state.newCount > 0 ? `Jump to latest, ${newMessages(state.newCount)}` : "Jump to latest",
         // `announce` reads the count once; the log would read the button's text again.
         "aria-live": "off",
+        "data-kind-button": "secondary",
       }),
       bind: (el, part) => {
         const { store } = part;

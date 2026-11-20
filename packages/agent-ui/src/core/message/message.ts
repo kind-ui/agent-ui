@@ -822,6 +822,8 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       attrs: (state) => ({
         type: "button",
         "aria-label": "Previous response",
+        "data-kind-icon-button": "",
+        "data-kind-size": "sm",
         "aria-disabled": state.branchIndex <= 0 ? "true" : undefined,
       }),
     }),
@@ -845,6 +847,8 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       attrs: (state) => ({
         type: "button",
         "aria-label": "Next response",
+        "data-kind-icon-button": "",
+        "data-kind-size": "sm",
         "aria-disabled": state.branchIndex >= state.branchCount - 1 ? "true" : undefined,
       }),
     }),

@@ -230,7 +230,13 @@ export const suggestionPrimitive: SuggestionPrimitive = definePrimitive<
         label: suggestionOf(state, key)?.label ?? "",
         description: suggestionOf(state, key)?.description,
       }),
-      attrs: (state) => ({ type: "button", "aria-disabled": state.canPick ? undefined : "true" }),
+      attrs: (state) => ({
+        type: "button",
+        "aria-disabled": state.canPick ? undefined : "true",
+        "data-kind-button": "soft",
+        // Starter prompts in an empty conversation are a size up from a row above the composer.
+        "data-kind-size": state.layout === "wrap" ? "lg" : undefined,
+      }),
       bind: (el, part) => {
         part.api.bindItem(el, part.key);
         return part.api.recovery.bind(el, part);

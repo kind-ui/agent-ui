@@ -105,21 +105,10 @@ test("the caret is hidden from assistive technology", async ({ page }) => {
   );
 });
 
-test("the caret holds still while text arrives and pulses once it stops", async ({ page }) => {
+test("the caret holds still", async ({ page }) => {
   await open(page);
   const caret = page.locator('[data-slot="kind-streaming-text-caret"]');
-  await expect(caret).toHaveAttribute("data-stalled", "");
-  const held = await page.evaluate(async () => {
-    (window as unknown as Fixture).kindStream.set("Streaming text fades in, still");
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    const caret = document.querySelector('[data-slot="kind-streaming-text-caret"]');
-    return {
-      stalled: caret?.hasAttribute("data-stalled"),
-      animations: caret?.getAnimations({ subtree: true }).length,
-    };
-  });
-  expect(held).toEqual({ stalled: false, animations: 0 });
-  await expect(caret).toHaveAttribute("data-stalled", "");
+  expect(await caret.evaluate((el) => el.getAnimations({ subtree: true }).length)).toBe(0);
 });
 
 test("indicators are listed for agents with no actions", async ({ page }) => {

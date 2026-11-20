@@ -30,7 +30,8 @@
     flex-direction: column;
     min-height: 0;
     font-size: var(--kind-text-md);
-    line-height: 1.5rem;
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
     color: var(--kind-color-fg);
   }
 
@@ -144,9 +145,10 @@
 
   [data-slot="kind-conversation-empty-title"] {
     display: block;
-    font-size: var(--kind-text-xl);
-    font-weight: 600;
-    line-height: 1.75rem;
+    font-size: var(--kind-text-2xl);
+    font-weight: var(--kind-font-weight-medium);
+    line-height: var(--kind-text-2xl-leading);
+    letter-spacing: var(--kind-text-2xl-tracking);
     color: var(--kind-color-fg);
   }
 
@@ -183,16 +185,16 @@
     gap: 1.5rem;
     padding-block: 0.75rem;
 
+    /* Still: nothing loops but a spinner, and the hidden status already says it's loading. */
     & > * {
       display: block;
       position: relative;
-      animation: kind-pulse 1.6s ease-in-out infinite;
     }
     & > :nth-child(odd) {
       align-self: flex-end;
       width: 45%;
       height: 2.5rem;
-      border-radius: calc(var(--kind-radius) * 1.5);
+      border-radius: var(--kind-bubble-radius);
       background-color: var(--kind-conversation-skeleton-fill);
     }
     & > :nth-child(2n + 3) {
@@ -209,31 +211,17 @@
         position: absolute;
         inset-inline-start: 0;
         height: 0.625rem;
-        border-radius: 999px;
+        border-radius: var(--kind-radius-full);
         background-color: var(--kind-conversation-skeleton-fill);
       }
       &::before {
-        top: calc((var(--kind-conversation-skeleton-line) - 0.625rem) / 2);
+        top: calc(var(--kind-conversation-skeleton-line) * 0.5 - 0.3125rem);
         width: 90%;
         box-shadow: 0 var(--kind-conversation-skeleton-line) 0 var(--kind-conversation-skeleton-fill);
       }
       &::after {
-        top: calc(
-          var(--kind-conversation-skeleton-line) *
-          2 +
-          (var(--kind-conversation-skeleton-line) - 0.625rem) /
-          2
-        );
+        top: calc(var(--kind-conversation-skeleton-line) * 2.5 - 0.3125rem);
         width: 60%;
-      }
-    }
-
-    &:is([data-motion="reduced"], [data-motion="none"]) > * {
-      animation: none;
-    }
-    @media (prefers-reduced-motion: reduce) {
-      & > * {
-        animation: none;
       }
     }
   }
@@ -248,6 +236,7 @@
     white-space: nowrap;
   }
 
+  /* A secondary pill that floats over the log's end, its arrow before the count. */
   [data-slot="kind-conversation-jump"] {
     /* Lucide "arrow-down", see THIRD_PARTY_NOTICES.md. */
     --kind-conversation-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M19 12l-7 7-7-7'/%3E%3C/svg%3E");
@@ -256,43 +245,22 @@
     bottom: 1rem;
     left: 50%;
     translate: -50% 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    height: 2rem;
-    padding-inline: 0.75rem 0.875rem;
-    border: 1px solid var(--kind-color-border);
-    border-radius: 9999px;
-    background-color: var(--kind-color-surface);
-    box-shadow:
-      0 1px 2px color-mix(in oklab, var(--kind-color-shadow) 6%, transparent),
-      0 4px 16px -4px color-mix(in oklab, var(--kind-color-shadow) 12%, transparent);
-    font-size: var(--kind-text-sm);
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-    color: var(--kind-color-fg);
-    transition: background-color var(--kind-duration-fast);
+    z-index: 1;
 
-    &::before {
+    /* `::before` is the shared control's hit area, so the arrow is `::after`, ordered first. */
+    &::after {
       content: "";
+      order: -1;
       width: 14px;
       height: 14px;
       background-color: var(--kind-color-muted);
       mask: var(--kind-conversation-arrow) center / contain no-repeat;
     }
-    &:hover {
-      background-color: var(--kind-color-hover);
-    }
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
-    }
   }
 
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
-    [data-slot="kind-conversation-jump"]::before {
+    [data-slot="kind-conversation-jump"]::after {
       forced-color-adjust: none;
       background-color: ButtonText;
     }
