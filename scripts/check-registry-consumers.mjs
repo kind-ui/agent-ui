@@ -281,14 +281,19 @@ async function check() {
     .digest("hex");
   if (sha256 !== manifest.sha256)
     throw new Error(`${manifest.tarball} changed since \`npm run check:package\``);
+  // `KIND_LAYERS` picks the consumers; a layer whose manifest lists nothing yet has none.
+  const layers = selectedLayers().filter((name) => visibleItems(name).length);
+  if (!layers.length) {
+    console.log("no selected layer has registry items; nothing to check");
+    return;
+  }
   const server = await serve(join(root, manifest.tarball));
   const browser = await chromium.launch();
   const dirs = [];
   const evidence = { shadcn: SHADCN, tarball: manifest.tarball, sha256: manifest.sha256, consumers: {} };
   try {
     const errors = [];
-    // `KIND_LAYERS` picks the consumers; a layer whose manifest lists nothing yet has none.
-    for (const layer of selectedLayers().filter((name) => visibleItems(name).length)) {
+    for (const layer of layers) {
       // Outside the workspace, so nothing resolves from the repository's own node_modules.
       const dir = mkdtempSync(join(tmpdir(), `agent-ui-registry-${layer}-`));
       dirs.push(dir);
@@ -323,12 +328,15 @@ async function check() {
         rendered: Object.keys(rendered).filter((name) => rendered[name]),
       };
     }
-    writeFileSync(evidenceFile, `${JSON.stringify(evidence, null, 2)}\n`);
+    // Only a run over every layer writes the evidence, so a filtered run never replaces it with less.
+    const complete = !process.env.KIND_LAYERS?.trim();
+    if (complete) writeFileSync(evidenceFile, `${JSON.stringify(evidence, null, 2)}\n`);
     if (errors.length) throw new Error(errors.join("\n  "));
     const counts = Object.entries(evidence.consumers).map(
       ([layer, { rendered }]) => `${rendered.length} ${layer}`,
     );
-    console.log(`rendered ${counts.join(" and ")} items; evidence in ${evidenceFile.slice(root.length + 1)}`);
+    const where = complete ? `; evidence in ${evidenceFile.slice(root.length + 1)}` : "";
+    console.log(`rendered ${counts.join(" and ")} items${where}`);
   } finally {
     await browser.close();
     server.close();

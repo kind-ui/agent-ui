@@ -30,3 +30,11 @@ test("each new layer's hand-written behavior fails", () => {
   assert.match(errors, /src\/solid\/widget\.tsx: tabIndex belongs in the primitive/);
   assert.doesNotMatch(errors, /src\/(vue|svelte|solid)\/[\w/]*: render file must use createParts/);
 });
+
+test("listener shorthands, other layers and other file types fail", () => {
+  const errors = checkUiSdkUsage(fx("bad"), {}).join("\n");
+  assert.match(errors, /svelte\/widget\/Field\.svelte: \{onfocusout\} belongs in the primitive/);
+  assert.match(errors, /solid\/widget\.tsx: onFocusIn belongs in the primitive/);
+  assert.match(errors, /vue\/widget\.ts: imports \.\.\/react\/widget\.js/);
+  assert.match(errors, /solid\/helper\.ts: Solid render files are \.tsx \(plan D4\)/);
+});

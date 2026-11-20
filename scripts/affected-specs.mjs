@@ -16,8 +16,11 @@ const src = "packages/agent-ui/src/";
 const coreIndex = `${src}core/index.ts`;
 const layers = "react|web|vue|svelte|solid";
 const sourceFile = /\.(tsx?|vue|svelte)$/;
-// Parity runs every manifest-driven layer against React (framework layers plan D10).
-const paritySpec = "tests/browser/parity.spec.ts";
+// A layer file reaches the root-level specs (`parity.spec.ts`, `hydration.spec.ts`) its manifest lists; a React one
+// reaches those any manifest lists, since parity compares each layer with React.
+const layerFile = /^packages\/agent-ui\/(?:src|tests\/fixtures)\/(react|vue|svelte|solid)\/(?:cases\/)?/;
+const rootSpecs = (names) =>
+  names.filter((spec) => !spec.includes("/")).map((spec) => `tests/browser/${spec}`);
 
 const unrelated = [
   /^(docs|apps\/docs|registry|tests\/types|\.agents|\.claude|\.changeset|\.vscode)\//,
@@ -95,14 +98,13 @@ function loadGraph() {
 }
 
 /** The specs `changed` can reach, sorted, or "all" when a file's reach is unknown. */
-export function affectedSpecs(changed, { dependents, specs } = loadGraph()) {
+export function affectedSpecs(changed, { dependents, specs } = loadGraph(), layerManifests = manifests) {
   const affected = new Set();
   for (const file of changed) {
     const layer = file.match(/^registry\/layers\/(\w+)\.mjs$/)?.[1];
     if (layer) {
-      if (!manifests[layer]) return "all";
-      for (const each of [...manifests[layer].specs.map((spec) => `tests/browser/${spec}`), paritySpec])
-        affected.add(each);
+      if (!layerManifests[layer]) return "all";
+      for (const spec of layerManifests[layer].specs) affected.add(`tests/browser/${spec}`);
       continue;
     }
     if (!dependents.has(file)) {
@@ -116,15 +118,21 @@ export function affectedSpecs(changed, { dependents, specs } = loadGraph()) {
         .map((each) => each.match(new RegExp(`/fixtures/(?:${layers})/cases/([^/.]+)\\.`))?.[1])
         .filter(Boolean),
     );
-    const hits = [...specs].filter(
-      ([spec, used]) => reached.has(spec) || [...used].some((name) => cases.has(name)),
-    );
+    const hits = [...specs]
+      .filter(([spec, used]) => reached.has(spec) || [...used].some((name) => cases.has(name)))
+      .map(([spec]) => spec);
+    for (const each of reached) {
+      const match = each.match(layerFile);
+      if (!match || (each.includes("/tests/fixtures/") && !each.includes("/cases/"))) continue;
+      const listed = match[1] === "react" ? Object.values(layerManifests) : [layerManifests[match[1]]];
+      hits.push(...listed.flatMap((manifest) => rootSpecs(manifest?.specs ?? [])));
+    }
     if (!hits.length) {
       if ([...reached].some((each) => new RegExp(`/tests/fixtures/|/src/(${layers}|styles)/`).test(each)))
         return "all";
       continue;
     }
-    for (const [spec] of hits) affected.add(spec);
+    for (const spec of hits) affected.add(spec);
   }
   return [...affected].sort();
 }

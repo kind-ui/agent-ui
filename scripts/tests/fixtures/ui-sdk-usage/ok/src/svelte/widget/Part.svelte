@@ -3,4 +3,4 @@
 let { children } = $props();
 </script>
 
-{@render children?.()}
+<span aria-hidden="true"></span>{@render children?.()}

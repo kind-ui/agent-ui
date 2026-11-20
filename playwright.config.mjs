@@ -16,8 +16,12 @@ const allServers = [
 
 const layers = selectedLayers();
 const specsOf = (layer) => manifests[layer]?.specs ?? [];
-const servers = allServers.filter(
-  ({ layer }) => layers.includes(layer) && (!manifests[layer] || specsOf(layer).length > 0),
+// `parity.spec.ts` compares each layer with React's page, so a layer that runs it starts React's server too.
+const parity = layers.some((layer) => manifests[layer] && specsOf(layer).includes("parity.spec.ts"));
+const servers = allServers.filter(({ layer, mode }) =>
+  layers.includes(layer)
+    ? !manifests[layer] || specsOf(layer).length > 0
+    : layer === "react" && mode === "development" && parity,
 );
 
 async function probe(port, identity) {

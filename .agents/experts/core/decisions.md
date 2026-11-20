@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `bfb9bb7` (Design Wave 1 Batch D)
+Last reviewed: `e3ab23a` (framework layers Task 1)
 
 ## Settled
 

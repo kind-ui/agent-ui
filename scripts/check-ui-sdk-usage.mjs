@@ -10,7 +10,7 @@ const specPath = join(repoRoot, "docs/superpowers/specs/2026-11-14-agent-ui-desi
 // `scrollTo(` and `scrollTop` must not match UI SDK APIs such as `createStickToBottom().scrollToBottom()`.
 const matches = (source, pattern) =>
   pattern instanceof RegExp
-    ? pattern.test(source)
+    ? pattern.exec(source)?.[0]
     : pattern === "scrollTo"
       ? /\bscrollTo\s*\(/.test(source)
       : pattern === "scrollTop"
@@ -31,7 +31,6 @@ const RENDER_FORBIDDEN = [
   "role:",
   'setAttribute("aria-',
 ];
-const spelled = (label, pattern) => Object.assign(pattern, { label });
 const SHARED_FORBIDDEN = [
   "addEventListener",
   "tabIndex",
@@ -51,33 +50,34 @@ const RENDER_LAYERS = [
   {
     layer: "vue",
     files: /\.ts$/,
+    shape: "Vue render files are .ts",
     forbidden: [
       ...SHARED_FORBIDDEN,
-      spelled("onKeydown", /\bon(Key|Focus)\w*\s*:/),
-      spelled("@keydown", /[@:]key(down|up)\b/),
-      spelled("aria-*:", /["']aria-[\w-]+["']\s*:/),
+      /\bon(Key|Focus|Blur)\w*(?=\s*:)/,
+      /(@|v-on:)(key(down|up)|focus(in|out)?|blur)\b/,
     ],
   },
   {
     layer: "svelte",
     files: /\.(ts|svelte)$/,
+    shape: "Svelte render files are .ts or .svelte",
     // A component is its folder: `index.ts` and its `.svelte` parts count together.
     unit: (file) => file.slice(0, file.lastIndexOf("/")),
     forbidden: [
       ...SHARED_FORBIDDEN,
-      spelled("onkeydown=", /\bonkey(down|up)\s*=/),
-      spelled("{@attach} focus", /\{@attach[^}]*focus/),
-      spelled("aria-*=", /\baria-[\w-]+\s*=/),
+      /\{\s*on(key(down|up)|focus(in|out)?|blur)\s*\}/,
+      /\bon(key(down|up)|focus(in|out)?|blur)=/,
+      /\{@attach[^}]*focus/,
     ],
   },
   {
     layer: "solid",
     files: /\.tsx$/,
+    shape: "Solid render files are .tsx",
     forbidden: [
       ...SHARED_FORBIDDEN,
-      spelled("onKeyDown", /\bonKey(Down|Up)\b/),
-      spelled("on:keydown", /\bon:key(down|up)\b/),
-      spelled("aria-*=", /\baria-[\w-]+\s*=/),
+      /\bon(Key(Down|Up)|Focus(In|Out)?|Blur)\b/,
+      /\bon:(key(down|up)|focus(in|out)?|blur)\b/,
     ],
   },
 ];
@@ -90,6 +90,7 @@ const OWN_PACKAGES = {
 };
 // Kind class helpers pass UI SDK parts through; React's is a `.ts` file, which its layer doesn't scan.
 const RENDER_EXEMPT = new Set(["src/vue/internal/kind-class.ts", "src/svelte/internal/kind-class.ts"]);
+const KIND_CLASS = "/internal/kind-class.ts";
 const CORE_FORBIDDEN = [
   "addEventListener",
   ".focus(",
@@ -211,17 +212,32 @@ export function checkUiSdkUsage(root, exceptions) {
 
   // Rules 2 and 3: render files use createParts or wrap a UI SDK component, with no hand-written behavior, and
   // import core only through `@kind-ui/agent-ui/core` and no other layer.
-  for (const { layer, files, partsFrom = `@ui-sdk/${layer}/primitive`, unit, forbidden } of RENDER_LAYERS) {
+  for (const {
+    layer,
+    files,
+    shape,
+    partsFrom = `@ui-sdk/${layer}/primitive`,
+    unit,
+    forbidden,
+  } of RENDER_LAYERS) {
     const units = new Map();
-    for (const path of walk(join(root, "src", layer)).filter((f) => files.test(f))) {
+    for (const path of walk(join(root, "src", layer))) {
       const file = rel(path);
+      if (!files.test(file)) {
+        const dotfile = /(^|\/)\.[^/]*$/.test(file);
+        if (shape && !dotfile && !file.endsWith(KIND_CLASS)) errors.push(`${file}: ${shape} (plan D4)`);
+        continue;
+      }
       if (RENDER_EXEMPT.has(file)) continue;
       const source = stripComments(readFileSync(path, "utf8"));
       const key = unit ? unit(file) : file;
       units.set(key, `${units.get(key) ?? ""}\n${source}`);
       for (const pattern of forbidden) {
-        if (matches(source, pattern))
-          errors.push(`${file}: ${pattern.label ?? pattern} belongs in the primitive (UI SDK)`);
+        const found = matches(source, pattern);
+        if (found)
+          errors.push(
+            `${file}: ${pattern instanceof RegExp ? found : pattern} belongs in the primitive (UI SDK)`,
+          );
       }
       const specifiers = [...source.matchAll(/(?:from|import)\s*\(?\s*["']([^"']+)["']/g)].map((m) => m[1]);
       for (const specifier of specifiers) {
@@ -231,7 +247,8 @@ export function checkUiSdkUsage(root, exceptions) {
         const crossLayer =
           (/^@ui-sdk\/(?!core$)/.test(pkg) && pkg !== `@ui-sdk/${layer}`) ||
           (LAYER_PACKAGES.includes(pkg) && !OWN_PACKAGES[layer]?.includes(pkg));
-        if (crossLayer || /^(\.\.\/)+core(\/|$)/.test(specifier)) {
+        const otherLayer = /^(?:\.\.\/)+(react|web|vue|svelte|solid)\//.exec(specifier)?.[1];
+        if (crossLayer || /^(\.\.\/)+core(\/|$)/.test(specifier) || (otherLayer && otherLayer !== layer)) {
           errors.push(
             `${file}: imports ${specifier}; a render file imports core through @kind-ui/agent-ui/core and no other layer`,
           );

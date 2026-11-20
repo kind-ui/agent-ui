@@ -22,13 +22,13 @@ import {
 } from "../../shared/composer.js";
 
 const unsettled = new Promise<void>(() => {});
-let recorded: ReturnType<typeof recorder> | undefined;
-let drafts: ReturnType<typeof draftOptions> | undefined;
+type FullProps = {
+  params: URLSearchParams;
+  submitOn?: "enter" | "mod-enter";
+  drafts: ReturnType<typeof draftOptions>;
+} & ReturnType<typeof recorder>;
 
-function Full({ params, submitOn }: { params: URLSearchParams; submitOn?: "enter" | "mod-enter" }) {
-  recorded ??= recorder();
-  drafts ??= draftOptions(params);
-  const { onSubmit, onStop } = recorded;
+function Full({ params, submitOn, drafts, onSubmit, onStop }: FullProps) {
   const [mounted, setMounted] = useState(true);
   const [draft, setDraft] = useState<ComposerDraft>({ text: "", tokens: [], attachments: [] });
   const [draftKey, setDraftKey] = useState(params.get("draftKey") ?? "chat-1");
@@ -107,7 +107,9 @@ export const cases = {
       <ComposerSubmit>Send</ComposerSubmit>
     </Composer>
   ),
-  full: (params: URLSearchParams) => <Full params={params} />,
-  "mod-enter": (params: URLSearchParams) => <Full params={params} submitOn="mod-enter" />,
+  full: (params: URLSearchParams) => <Full params={params} drafts={draftOptions(params)} {...recorder()} />,
+  "mod-enter": (params: URLSearchParams) => (
+    <Full params={params} submitOn="mod-enter" drafts={draftOptions(params)} {...recorder()} />
+  ),
   attachments: (params: URLSearchParams) => <AttachmentsCase params={params} />,
 };

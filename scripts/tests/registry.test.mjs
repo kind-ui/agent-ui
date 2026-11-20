@@ -173,3 +173,17 @@ test("a manifest's components and internals become that layer's items", () => {
     "@ui/svelte/internal/kind-class.ts",
   ]);
 });
+
+test("a manifest naming an unknown component or internal throws, and a missing Svelte folder lists nothing", () => {
+  const none = () => [];
+  assert.throws(
+    () => layerItems({ vue: { components: ["nope"], internals: [] } }, none),
+    /registry\/layers\/vue\.mjs: unknown component nope/,
+  );
+  assert.throws(
+    () => layerItems({ solid: { components: [], internals: ["nope"] } }, none),
+    /registry\/layers\/solid\.mjs: unknown internal nope/,
+  );
+  const [step] = layerItems({ svelte: { components: ["step"], internals: [] } }, none);
+  assert.match(errorsWith({ items: [...catalog.items, step] }), /"step-svelte": ships no files/);
+});

@@ -83,8 +83,11 @@ function changed(base) {
 
 const plan = [];
 for (const expert of experts) {
-  // A framework layer's expert arrives with its track's first task; until then only an explicit base reaches it.
-  if (!existsSync(path.join(root, ".agents/experts", expert)) && !flags.base) continue;
+  // A framework layer's expert arrives with its track's first task.
+  if (!existsSync(path.join(root, ".agents/experts", expert, "expert.md"))) {
+    plan.push({ expert, base: null, own: [], shared: [], note: "no expert.md yet; skipped" });
+    continue;
+  }
   const base = flags.base ?? lastReviewed(expert);
   if (!base) {
     plan.push({ expert, base: null, own: [], shared: [], note: "no Last reviewed commit; pass --base" });

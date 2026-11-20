@@ -102,6 +102,7 @@ export function validateCatalog(input, pkg) {
     const files = new Set(closure.flatMap((each) => each.files.map((file) => resolve(root, file))));
     const packages = new Set(closure.flatMap((each) => each.dependencies.map((d) => splitVersion(d)[0])));
     for (const name of frameworkPackages[item.layer] ?? []) packages.add(name);
+    if (!item.files.length) errors.push(`${where}: ships no files`);
     for (const file of item.files) {
       const path = resolve(root, file);
       if (!existsSync(path)) {

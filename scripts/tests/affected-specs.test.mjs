@@ -54,5 +54,17 @@ test("a framework fixture case reaches the specs that load it", () => {
   assert.deepEqual(affectedSpecs([svelteCase], graph), [spec("step")]);
 });
 
-test("a layer manifest reaches its specs and parity", () =>
-  assert.deepEqual(affectedSpecs(["registry/layers/vue.mjs"]), ["tests/browser/parity.spec.ts"]));
+test("a layer manifest reaches the specs it lists", () => {
+  const listed = { vue: { specs: ["parity.spec.ts", "wave-1/step.spec.ts"] } };
+  assert.deepEqual(affectedSpecs(["registry/layers/vue.mjs"], undefined, listed), [
+    "tests/browser/parity.spec.ts",
+    spec("step"),
+  ]);
+});
+
+test("a layer fixture case reaches the root specs its manifest lists", () => {
+  const vueCase = "packages/agent-ui/tests/fixtures/vue/cases/step.ts";
+  const graph = { dependents: new Map([[vueCase, new Set()]]), specs: new Map() };
+  const listed = { vue: { specs: ["parity.spec.ts"] }, svelte: { specs: ["hydration.spec.ts"] } };
+  assert.deepEqual(affectedSpecs([vueCase], graph, listed), ["tests/browser/parity.spec.ts"]);
+});

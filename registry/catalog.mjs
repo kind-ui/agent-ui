@@ -1,6 +1,6 @@
 // Every registry item (spec §9.2). `scripts/build-registry.mjs` builds them with the shadcn CLI.
 // `registryDependencies` use the `@kind-ui` namespace: a bare name means an item of shadcn's own registry.
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { manifests } from "./layers/index.mjs";
 
 const pkg = JSON.parse(readFileSync(new URL("../packages/agent-ui/package.json", import.meta.url), "utf8"));
@@ -409,11 +409,13 @@ export function layerItems(layerManifests, list) {
   for (const [layer, { components: names, internals: wrappers }] of Object.entries(layerManifests)) {
     const { title: framework, file, folder } = frameworks[layer];
     const dir = `packages/agent-ui/src/${layer}/`;
+    const unknown = (kind, name) => new Error(`registry/layers/${layer}.mjs: unknown ${kind} ${name}`);
     const files = (name) =>
       (folder ? list(`${dir}${name}`).map((each) => `${name}/${each}`) : file(name)).map(
         (each) => dir + each,
       );
     for (const name of names) {
+      if (!Object.hasOwn(components, name)) throw unknown("component", name);
       const { title, description, uses } = components[name];
       result.push({
         name: `${name}-${layer}`,
@@ -429,6 +431,7 @@ export function layerItems(layerManifests, list) {
       });
     }
     for (const name of wrappers) {
+      if (!internals.includes(name)) throw unknown("internal", name);
       result.push({
         name: `internal-${name}-${layer}`,
         type: "registry:ui",
@@ -443,7 +446,15 @@ export function layerItems(layerManifests, list) {
   return result;
 }
 
-const listFiles = (dir) => readdirSync(new URL(`../${dir}`, import.meta.url)).sort();
+// A missing folder lists nothing, so `validateCatalog` reports the item as it does a missing Vue or Solid file.
+const listFiles = (dir) => {
+  const url = new URL(`../${dir}`, import.meta.url);
+  if (!existsSync(url)) return [];
+  return readdirSync(url, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && !entry.name.startsWith("."))
+    .map((entry) => entry.name)
+    .sort();
+};
 items.push(...layerItems(manifests, listFiles));
 
 export default { packageVersion, uiSdkVersion, items };
