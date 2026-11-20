@@ -103,6 +103,10 @@ test("the keyboard opens the dialog, chooses who can open the chat, and Escape r
 test("Create link stays pending until the host makes the link, then shows it", async ({ page }) => {
   await load(page);
   await openForLink(page);
+  // Measured once the dialog has finished scaling in.
+  await page.waitForFunction(() =>
+    document.getAnimations().every((animation) => animation.playState !== "running"),
+  );
   const before = await button(page, "Create link").boundingBox();
   await button(page, "Create link").click();
   // A pending button keeps full opacity and its place, and says what it's doing beside a running mark.

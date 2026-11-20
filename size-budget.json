@@ -1,6 +1,6 @@
 {
   ".": 265,
-  "./core": 242500,
+  "./core": 243500,
   "./adapters/ai-sdk": 1345,
   "imports": {
     "stepBase": 5500,
