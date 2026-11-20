@@ -227,6 +227,7 @@ export const noticeBase = <
           "aria-label": "Dismiss",
           "data-notice-part": "dismiss",
           "data-kind-icon-button": "",
+          "data-kind-size": "sm",
         }),
       }),
     }),

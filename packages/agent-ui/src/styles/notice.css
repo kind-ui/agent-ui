@@ -14,12 +14,13 @@
     box-sizing: border-box;
     padding-block: 10px;
     padding-inline: 12px 8px;
-    border: 1px solid var(--kind-color-border);
     border-radius: var(--kind-radius-lg);
-    background-color: var(--kind-color-surface);
+    background-color: var(--kind-color-raised);
+    box-shadow: 0 0 0 1px var(--kind-color-hairline);
     color: var(--kind-color-fg);
     font-size: var(--kind-text-md);
-    line-height: 1.25rem;
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
 
     &[data-variant="success"] {
       --kind-notice-tone: var(--kind-color-success);
@@ -33,11 +34,11 @@
 
     /* Info and success are said by their mark. Warning and error also take a tint, in place of the border. */
     &:is([data-variant="warning"], [data-variant="error"]) {
-      border-color: transparent;
+      box-shadow: none;
       background-color: color-mix(
         in oklab,
         var(--kind-notice-tone) var(--kind-tint-fill),
-        var(--kind-color-surface)
+        var(--kind-color-raised)
       );
     }
   }
@@ -56,7 +57,7 @@
   }
 
   [data-notice-part="title"] {
-    font-weight: 600;
+    font-weight: var(--kind-font-weight-semibold);
   }
 
   [data-notice-part="description"] {
@@ -78,12 +79,12 @@
     }
   }
 
-  /* The shared icon button (controls.css), centered on the first line. Its glyph is on `::after`, since a coarse
-     pointer's hit area takes `::before`. */
+  /* The small shared icon button (controls.css), centered on the first line. Its glyph is on `::after`, since a
+     coarse pointer's hit area takes `::before`. */
   [data-notice-part="dismiss"] {
     grid-row: 1;
     grid-column: 3;
-    margin-block: calc((1.25rem - var(--kind-control-height)) / 2);
+    margin-block: calc((var(--kind-text-md-leading) - var(--kind-control-height-sm)) / 2);
 
     &::after {
       content: "";
@@ -92,12 +93,6 @@
       background-color: currentColor;
       mask: var(--kind-notice-dismiss) center / contain no-repeat;
     }
-  }
-
-  /* The shared hover fill is lighter than a light tint, so on one a hover darkens whatever is under it. */
-  [data-notice-part="root"]:is([data-variant="warning"], [data-variant="error"])
-    > :is([data-notice-part="dismiss"], [data-notice-part="detail-trigger"]):hover {
-    background-color: color-mix(in oklab, var(--kind-color-fg) 6%, transparent);
   }
 
   /* Forced colors replace a background, which is all a mask draws. */

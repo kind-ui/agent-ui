@@ -7,7 +7,8 @@
     min-height: 1.25rem;
     color: var(--kind-color-muted);
     font-size: var(--kind-text-md);
-    line-height: 1.25rem;
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
   }
 
   [data-slot="kind-loader-dots"] {
@@ -19,7 +20,7 @@
   [data-slot="kind-loader-dot"] {
     width: var(--kind-dot-size);
     height: var(--kind-dot-size);
-    border-radius: var(--kind-radius-full, 9999px);
+    border-radius: var(--kind-radius-full);
     background-color: currentColor;
     opacity: 0.3;
   }
