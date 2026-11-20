@@ -8,6 +8,8 @@ export default {
   components: [
     // framework-svelte-1: groundwork, internal wrappers and Step
 
+    "step",
+
     // framework-svelte-2: chat core
 
     // framework-svelte-3: composer controls
@@ -25,10 +27,29 @@ export default {
   // Internal wrapper names, without the `internal-` prefix.
   internals: [
     // framework-svelte-1: groundwork, internal wrappers and Step
+
+    "avatar",
+    "button",
+    "collapsible",
+    "command",
+    "file-input",
+    "menu",
+    "progress",
+    "scroll-area",
+    "switch",
+    "toggle",
+    "token-input",
+    "trigger-menu",
+
   ],
   // Spec files the layer's projects run, relative to `tests/browser/`.
   specs: [
     // framework-svelte-1: groundwork, internal wrappers and Step
+
+    "wave-1/step.spec.ts",
+    "wave-1/internal.spec.ts",
+    "parity.spec.ts",
+    "hydration.spec.ts",
 
     // framework-svelte-2: chat core
 
