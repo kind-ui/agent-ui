@@ -12,16 +12,17 @@
     color: var(--kind-color-muted);
   }
 
-  /* In a narrow composer the trigger shows only its shield, and a risky mode's mark beside it; its name still says
-     the mode. */
+  /* In a narrow composer the trigger shows only its shield, centered in a round trigger, or beside a risky mode's
+     mark; its name still says the mode. */
   @container kind-composer (width < 28rem) {
-    :where([data-kind="approval-mode"]) [data-kind-trigger] {
+    :where([data-kind="approval-mode"] [data-menu-part="trigger"]:not([data-danger])) [data-kind-trigger] {
       width: var(--kind-trigger-height);
-      padding-inline: 0;
     }
-    :where([data-kind="approval-mode"] [data-menu-part="trigger"][data-danger]) [data-kind-trigger] {
-      width: auto;
-      padding-inline: 0.5rem;
+    :where([data-kind="approval-mode"] [data-menu-part="trigger"]:not([data-danger]))
+      [data-menu-trigger-icon] {
+      position: absolute;
+      inset: 0;
+      margin: auto;
     }
     [data-approval-mode-value] {
       display: none;

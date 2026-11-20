@@ -20,11 +20,10 @@
 
   [data-context-bar-part="root"] {
     --kind-context-chip-max-width: 12rem;
-    --kind-context-chip-height: 1.75rem;
+    --kind-context-chip-height: var(--kind-control-height-sm);
     --kind-context-bar-gap: 0.375rem;
-    /* Chips sit inside the composer's box, so they're filled, not outlined. */
-    --kind-context-chip-fill: var(--kind-color-selected);
-    --kind-context-chip-fill-hover: color-mix(in oklab, var(--kind-color-fg) 8%, var(--kind-color-selected));
+    /* Chips sit inside the composer's box, so they're filled, not outlined, as the "+N" soft button is. */
+    --kind-context-chip-fill: var(--kind-color-bubble);
     /* Registered as a `<length>`, so core reads it in pixels. */
     --kind-context-bar-more-width: 2.5rem;
     display: flex;
@@ -63,10 +62,11 @@
     box-sizing: border-box;
     max-inline-size: var(--kind-context-chip-max-width, 12rem);
     block-size: var(--kind-context-chip-height, 1.75rem);
-    padding-inline: 0.5rem;
-    border-radius: var(--kind-radius-md);
+    padding-inline: 0.625rem;
+    border-radius: var(--kind-radius-full);
     background-color: var(--kind-context-chip-fill);
     color: var(--kind-color-fg);
+    font-weight: var(--kind-font-weight-medium);
     white-space: nowrap;
 
     &:focus-visible {
@@ -84,7 +84,7 @@
 
   /* The remove control's place at the end, so the label's end padding comes from it. */
   :where([data-context-bar-part="chip"]):has([data-context-bar-part="remove"]) {
-    padding-inline-end: 0.125rem;
+    padding-inline-end: 0.3125rem;
   }
 
   :where([data-context-bar-part="chip"], [data-context-bar-part="item"]):where([data-leaving]) {
@@ -115,22 +115,22 @@
     white-space: nowrap;
   }
 
-  /* Pointer only: 16px drawn, 24px to press. */
+  /* Pointer only: 18px drawn, 26px to press. */
   [data-context-bar-part="remove"] {
     position: relative;
     display: inline-grid;
     flex: none;
     place-items: center;
-    inline-size: 1rem;
-    block-size: 1rem;
+    inline-size: 1.125rem;
+    block-size: 1.125rem;
     margin-inline-start: auto;
-    border-radius: 999px;
+    border-radius: var(--kind-radius-full);
     color: var(--kind-color-muted);
     cursor: pointer;
     transition:
-      color var(--kind-duration-fast) var(--kind-ease-out),
-      background-color var(--kind-duration-fast) var(--kind-ease-out),
-      opacity var(--kind-duration-fast) var(--kind-ease-out);
+      color var(--kind-duration-fast) var(--kind-ease-in-out),
+      background-color var(--kind-duration-fast) var(--kind-ease-in-out),
+      opacity var(--kind-duration-fast) var(--kind-ease-in-out);
 
     &::before {
       content: "";
@@ -145,20 +145,21 @@
       inset: -0.25rem;
     }
     &:hover {
-      background-color: color-mix(in oklab, var(--kind-color-fg) 10%, transparent);
+      background-color: var(--kind-color-hover);
       color: var(--kind-color-fg);
     }
   }
 
-  /* In an overflow row, the remove control shows with the row's hover or focus, and always on touch screens. */
-  :where([data-context-bar-part="item"]) [data-context-bar-part="remove"] {
+  /* The remove control shows with its chip's or row's hover or focus, and always on touch screens. */
+  :where([data-context-bar-part="chip"], [data-context-bar-part="item"]) [data-context-bar-part="remove"] {
     opacity: 0;
   }
-  :where([data-context-bar-part="item"]:is(:hover, :focus-within)) [data-context-bar-part="remove"] {
+  :where(:is([data-context-bar-part="chip"], [data-context-bar-part="item"]):is(:hover, :focus-within))
+    [data-context-bar-part="remove"] {
     opacity: 1;
   }
   @media (hover: none) {
-    :where([data-context-bar-part="item"]) [data-context-bar-part="remove"] {
+    :where([data-context-bar-part="chip"], [data-context-bar-part="item"]) [data-context-bar-part="remove"] {
       opacity: 1;
     }
   }
@@ -180,22 +181,12 @@
     }
   }
 
-  /* The shared trigger, drawn as a chip, at one width whatever the count, which core reserves before it fits the
-     chips. */
+  /* A small soft button, at one width whatever the count, which core reserves before it fits the chips. Its
+     ring sits inside, since the row clips. */
   [data-context-bar-part="overflow"] {
+    --kind-focus-offset: var(--kind-focus-offset-inset);
     inline-size: var(--kind-context-bar-more-width);
-    block-size: var(--kind-context-chip-height, 1.75rem);
-    padding: 0;
-    background-color: var(--kind-context-chip-fill);
-    font-size: inherit;
-    font-variant-numeric: tabular-nums;
-
-    &:where(:hover, [aria-expanded="true"]) {
-      background-color: var(--kind-context-chip-fill-hover);
-    }
-    &:focus-visible {
-      outline-offset: var(--kind-focus-offset-inset);
-    }
+    min-inline-size: 0;
   }
 
   [data-context-bar-part="content"] {
@@ -231,7 +222,7 @@
     box-sizing: border-box;
     max-block-size: var(--kind-context-bar-list-max-height, 16rem);
     margin: 0;
-    padding: 4px;
+    padding: var(--kind-popup-padding);
     overflow-y: auto;
     overscroll-behavior: contain;
     list-style: none;
@@ -244,12 +235,12 @@
     gap: 0.5rem;
     box-sizing: border-box;
     inline-size: 100%;
-    block-size: 2rem;
-    padding-inline: 0.5rem 0.25rem;
-    border-radius: var(--kind-radius-sm);
+    block-size: var(--kind-row-height);
+    padding-inline: 0.625rem 0.3125rem;
+    border-radius: var(--kind-radius-md);
     color: var(--kind-color-fg);
     white-space: nowrap;
-    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+    transition: background-color var(--kind-duration-fast) var(--kind-ease-in-out);
 
     &:hover,
     &:focus-visible {
@@ -269,36 +260,11 @@
     }
   }
 
-  /* Motion: the popover rises and fades in from the button. Reduced motion only fades, in 120 ms; `none` doesn't
-     animate. A sheet is UI SDK's, which slides whatever the motion settings. */
-  [data-context-bar-part="content"]:where(:not([data-presentation="sheet"])) {
-    transition:
-      opacity var(--kind-duration-fast) var(--kind-ease-out),
-      translate var(--kind-duration-base) var(--kind-ease),
-      scale var(--kind-duration-base) var(--kind-ease);
-
-    &:where([data-starting-style], [data-ending-style]) {
-      opacity: 0;
-      translate: 0 -4px;
-      scale: 0.98;
-    }
-    &:where([data-starting-style], [data-ending-style]):where([data-side="top"]) {
-      translate: 0 4px;
-    }
-    &:where([data-starting-style], [data-ending-style]):where([data-side="right"]) {
-      translate: -4px 0;
-    }
-    &:where([data-starting-style], [data-ending-style]):where([data-side="left"]) {
-      translate: 4px 0;
-    }
-    &:where([data-ending-style]) {
-      transition-duration: var(--kind-duration-fast);
-    }
-  }
-
+  /* Motion is the shared popup's: it scales in from the button. Reduced motion only fades, in 120 ms; `none`
+     doesn't animate. A sheet is UI SDK's, which slides whatever the motion settings. */
   @media (prefers-reduced-motion: reduce) {
     [data-context-bar-part="content"]:where([data-motion="auto"]) {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
       &:where([data-starting-style], [data-ending-style]) {
         translate: none;
@@ -308,7 +274,7 @@
   }
 
   [data-context-bar-part="content"]:where([data-motion="reduced"]) {
-    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
     &:where([data-starting-style], [data-ending-style]) {
       translate: none;

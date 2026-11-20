@@ -24,20 +24,6 @@
     --kind-context-color: var(--kind-color-danger);
   }
 
-  /* The shared trigger, in the meter's quieter type until hovered or open. */
-  [data-slot="kind-context-meter-trigger"] {
-    padding-inline: 6px;
-    color: inherit;
-    font-size: inherit;
-    font-weight: 400;
-    line-height: inherit;
-
-    &:hover,
-    &[aria-expanded="true"] {
-      color: var(--kind-color-fg);
-    }
-  }
-
   [data-slot="kind-context-meter-value"] {
     display: contents;
   }
@@ -46,7 +32,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    transition: --meter-value var(--kind-duration-panel) var(--kind-ease);
+    transition: --meter-value var(--kind-duration-panel) var(--kind-ease-enter);
   }
 
   /* The ring is the track's `::before`, the level's glyph its `::after`, so the glyph sits inside the ring without
@@ -133,9 +119,7 @@
   [data-slot="kind-context-meter-rows"] {
     display: grid;
     gap: 4px;
-    margin: 10px 0 0;
-    padding-top: 10px;
-    border-top: 1px solid var(--kind-color-border);
+    margin: 0.75rem 0 0;
 
     & > div {
       display: flex;
@@ -151,30 +135,14 @@
     }
   }
 
-  /* Motion: the ring sweeps to a new value and the details rise in. Reduced motion only fades, in 120 ms; `none`
-     doesn't animate. */
-  :where([data-slot="kind-context-meter"]) [data-slot="kind-context-meter-content"] {
-    transition:
-      opacity var(--kind-duration-base) var(--kind-ease),
-      translate var(--kind-duration-base) var(--kind-ease),
-      scale var(--kind-duration-base) var(--kind-ease);
-
-    &:is([data-starting-style], [data-ending-style]) {
-      opacity: 0;
-      translate: 0 4px;
-      scale: 0.98;
-    }
-    &[data-ending-style] {
-      transition-duration: var(--kind-duration-fast);
-    }
-  }
-
+  /* Motion: the ring sweeps to a new value and the details scale in, as every shared popup does. Reduced motion
+     only fades, in 120 ms; `none` doesn't animate. */
   @media (prefers-reduced-motion: reduce) {
     :where([data-slot="kind-context-meter"][data-motion="auto"]) [data-slot="meter"] {
       transition: none;
     }
     :where([data-slot="kind-context-meter"][data-motion="auto"]) [data-slot="kind-context-meter-content"] {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
       &:is([data-starting-style], [data-ending-style]) {
         translate: none;
@@ -188,7 +156,7 @@
     transition: none;
   }
   :where([data-slot="kind-context-meter"][data-motion="reduced"]) [data-slot="kind-context-meter-content"] {
-    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
     &:is([data-starting-style], [data-ending-style]) {
       translate: none;

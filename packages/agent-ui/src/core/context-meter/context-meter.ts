@@ -291,6 +291,7 @@ export const contextMeterPrimitive: ContextMeterPrimitive = definePrimitive<
           type: "button",
           "aria-label": part.api.valueText(state),
           "data-kind-trigger": "",
+          "data-kind-size": "sm",
         }),
       }),
       value: slot<BaseSlotProps, ContextMeterValueState>({

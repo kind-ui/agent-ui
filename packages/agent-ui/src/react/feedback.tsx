@@ -56,7 +56,7 @@ export function FeedbackUp({
   ...props
 }: FeedbackThumbProps) {
   return (
-    <Toggle value="up" aria-label="Good response" data-kind-icon-button="" {...props}>
+    <Toggle value="up" aria-label="Good response" data-kind-icon-button="" data-kind-size="sm" {...props}>
       {children}
     </Toggle>
   );
@@ -68,7 +68,7 @@ export function FeedbackDown({
   ...props
 }: FeedbackThumbProps) {
   return (
-    <Toggle value="down" aria-label="Bad response" data-kind-icon-button="" {...props}>
+    <Toggle value="down" aria-label="Bad response" data-kind-icon-button="" data-kind-size="sm" {...props}>
       {children}
     </Toggle>
   );

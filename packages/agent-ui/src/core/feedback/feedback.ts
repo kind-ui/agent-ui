@@ -392,7 +392,12 @@ export const feedbackPrimitive: FeedbackPrimitive = definePrimitive<
       comment: slot({
         ...trigger,
         present: showsComment,
-        attrs: (state, part) => ({ ...trigger.attrs?.(state, part), type: "button", "data-kind-button": "" }),
+        attrs: (state, part) => ({
+          ...trigger.attrs?.(state, part),
+          type: "button",
+          "data-kind-button": "",
+          "data-kind-size": "sm",
+        }),
         bind: (el, part) => {
           const unbindTrigger = trigger.bind?.(el, part);
           const unbindRecovery = part.api.recovery.bind(el, part);

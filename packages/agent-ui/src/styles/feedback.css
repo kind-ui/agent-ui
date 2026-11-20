@@ -22,11 +22,6 @@
     gap: 2px;
   }
 
-  /* Shared icon buttons, quiet until pressed: then the thumb fills in, in the foreground color. */
-  :where([data-slot="kind-feedback"]) [data-slot="toggle"][data-pressed] {
-    color: var(--kind-color-fg);
-  }
-
   :where([data-slot="kind-feedback"]) [data-feedback-icon] {
     display: block;
     width: 16px;
@@ -48,26 +43,14 @@
     mask-image: var(--kind-feedback-thumb-pressed);
   }
 
-  /* "Add a comment" (a shared button, in the row's muted type until hovered or open) and the thanks share one place
-     at the thumbs' height, so swapping them moves nothing above or below; the row grows by the thanks' wider text. */
-  [data-slot="kind-feedback-comment"] {
-    padding-inline: 8px;
-    color: inherit;
-    font-size: inherit;
-    line-height: inherit;
-
-    &:hover,
-    &[aria-expanded="true"] {
-      color: var(--kind-color-fg);
-    }
-  }
-
+  /* "Add a comment", a small shared button, and the thanks share one place at the thumbs' height, so swapping
+     them moves nothing above or below; the row grows by the thanks' wider text. */
   [data-slot="kind-feedback-thanks"] {
     display: inline-flex;
     align-items: center;
-    height: var(--kind-control-height);
-    padding-inline: 8px;
-    border-radius: var(--kind-radius-md);
+    height: var(--kind-control-height-sm);
+    padding-inline: 0.75rem;
+    border-radius: var(--kind-radius-full);
 
     &:focus-visible {
       outline: var(--kind-focus-ring);
@@ -81,11 +64,7 @@
     gap: 8px;
     width: 18rem;
     max-width: calc(100vw - 16px);
-    padding: 12px;
-    font-size: var(--kind-text-sm);
-    line-height: 1.25rem;
-    outline: none;
-    transform-origin: var(--transform-origin);
+    padding: 0.75rem;
   }
 
   /* Names the box for assistive technology; on screen it would repeat the button that opened it. */
@@ -100,9 +79,7 @@
     white-space: nowrap;
   }
 
-  /* The ring takes the field's border's place, rather than drawing a line around it. */
   [data-slot="kind-feedback-comment-text"] {
-    --kind-focus-offset: var(--kind-focus-offset-inset);
     display: block;
   }
 
@@ -111,7 +88,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    min-height: 1.75rem;
+    min-height: var(--kind-control-height);
   }
 
   [data-slot="kind-feedback-comment-status"] {
@@ -131,31 +108,15 @@
     font-size: var(--kind-text-xs);
   }
 
-  /* The shared primary button: empty text dims it, a pending send keeps it solid beside its status. */
   [data-slot="kind-feedback-comment-send"] {
     margin-inline-start: auto;
   }
 
-  /* Motion: the box rises in. Reduced motion only fades, in 120 ms; `none` doesn't animate. */
-  :where([data-slot="kind-feedback"]) [data-slot="kind-feedback-content"] {
-    transition:
-      opacity var(--kind-duration-base) var(--kind-ease),
-      translate var(--kind-duration-base) var(--kind-ease),
-      scale var(--kind-duration-base) var(--kind-ease);
-
-    &:is([data-starting-style], [data-ending-style]) {
-      opacity: 0;
-      translate: 0 4px;
-      scale: 0.98;
-    }
-    &[data-ending-style] {
-      transition-duration: var(--kind-duration-fast);
-    }
-  }
-
+  /* Motion is the shared popup's: the box scales in. Reduced motion only fades, in 120 ms; `none` doesn't
+     animate. */
   @media (prefers-reduced-motion: reduce) {
     :where([data-slot="kind-feedback"][data-motion="auto"]) [data-slot="kind-feedback-content"] {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
       &:is([data-starting-style], [data-ending-style]) {
         translate: none;
@@ -166,7 +127,7 @@
   }
 
   :where([data-slot="kind-feedback"][data-motion="reduced"]) [data-slot="kind-feedback-content"] {
-    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
     &:is([data-starting-style], [data-ending-style]) {
       translate: none;

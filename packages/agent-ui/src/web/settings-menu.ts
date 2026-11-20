@@ -259,6 +259,7 @@ export function defineSettingsMenu(): void {
           const button = trigger?.querySelector("button");
           if (button && button.ariaLabel !== props["aria-label"]) button.ariaLabel = props["aria-label"];
           button?.toggleAttribute("data-kind-trigger", props["data-kind-trigger"] === "");
+          button?.toggleAttribute("data-kind-icon-button", props["data-kind-icon-button"] === "");
           const content = el.querySelector("kind-settings-menu-content > ui-menu-content");
           const rows = api.contentState(state);
           // A content written empty fills itself in, as React's bare `SettingsMenuContent` does.

@@ -3,15 +3,26 @@
    switch and menu are `menu.css`'s. Every effort label shares one grid cell and only the chosen one shows, so the
    trigger keeps its width when the effort changes. */
 @layer components {
-  :where([data-kind="model-control"]) [data-kind-trigger] {
-    padding-inline: 0.5rem 0.375rem;
-  }
-
   :where([data-kind="model-control"] [data-menu-part="trigger"]) [data-menu-chevron] {
     margin-inline-start: 0.125rem;
     /* Down in either direction, so `menu.css`'s right-to-left mirror is off. */
     rotate: 90deg;
     scale: none;
+    transition: rotate var(--kind-duration-base) var(--kind-ease-enter);
+  }
+
+  /* The chevron turns up while the menu is open. */
+  :where([data-kind="model-control"] [data-menu-part="trigger"][data-open]) [data-menu-chevron] {
+    rotate: -90deg;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-kind="model-control"][data-motion="auto"] [data-menu-part="trigger"]) [data-menu-chevron] {
+      transition: none;
+    }
+  }
+  :where([data-kind="model-control"][data-motion="reduced"] [data-menu-part="trigger"]) [data-menu-chevron] {
+    transition: none;
   }
 
   [data-model-control-separator],
@@ -38,9 +49,14 @@
   @container kind-composer (width < 28rem) {
     :where([data-kind="model-control"]) [data-kind-trigger]:where(:has([data-slot="menu-item-icon"])) {
       width: var(--kind-trigger-height);
-      padding-inline: 0;
-
-      & > :not([data-slot="menu-item-icon"]) {
+    }
+    :where([data-kind="model-control"] [data-menu-part="trigger"]:has([data-slot="menu-item-icon"])) {
+      & [data-slot="menu-item-icon"] {
+        position: absolute;
+        inset: 0;
+        margin: auto;
+      }
+      & [data-model-control-model] {
         display: none;
       }
     }

@@ -298,7 +298,7 @@ const changes = new WeakMap<object, (id: string, value: boolean | string, cause:
  */
 export const settingsBase = <Options extends SettingsBaseOptions>(config: SettingsBaseConfig<Options>) => {
   const base = menuBase<Options>({
-    sharedTrigger: true,
+    sharedTrigger: "icon-button",
     kind: config.kind,
     label: config.label,
     toData: config.toData,
