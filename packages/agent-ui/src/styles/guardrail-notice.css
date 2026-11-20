@@ -17,7 +17,7 @@
     gap: 4px;
     margin-inline-start: -4px;
     padding: 0 4px;
-    border-radius: calc(var(--kind-radius) / 3);
+    border-radius: var(--kind-radius-sm);
     color: var(--kind-color-fg);
     font-weight: 500;
     transition: background-color var(--kind-duration-fast);

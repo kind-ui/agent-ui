@@ -30,7 +30,7 @@
   [data-slot="kind-typing-indicator-dot"] {
     width: var(--kind-dot-size);
     height: var(--kind-dot-size);
-    border-radius: 999px;
+    border-radius: var(--kind-radius-full, 9999px);
     background-color: currentColor;
     opacity: 0.3;
   }

@@ -126,7 +126,7 @@
     padding-block: 0.625rem;
     padding-inline: 0.875rem 0.625rem;
     border: 1px solid var(--kind-color-border);
-    border-radius: var(--kind-radius);
+    border-radius: var(--kind-radius-lg);
     background-color: var(--kind-color-surface);
 
     &[data-status="queued"],
@@ -189,7 +189,7 @@
       display: block;
       height: 0.25rem;
       overflow: hidden;
-      border-radius: 999px;
+      border-radius: var(--kind-radius-full, 9999px);
       background-color: var(--kind-color-border);
     }
 
