@@ -14,7 +14,7 @@
 1. Become the go-to styled AI component kit built on UI SDK, so other developers adopt it.
 2. Put Kind UI's AI components on one agent-first foundation, UI SDK, instead of Base UI.
 3. Ship 56 AI components in six waves, with every agent step built on a shared Step base.
-4. Keep behavior framework-agnostic. Launch with React and Web Components.
+4. Keep behavior framework-agnostic. Launch with React and Web Components, then add Vue, Svelte and Solid layers over the same primitives (0.7).
 5. Make every interactive component agent-operable through named actions that work with UI SDK `createAgent` and WebMCP.
 6. Meet Kind UI's product criteria: accessibility, reduced motion, explicit async states, typed contracts, and consumer-owned state.
 
@@ -23,7 +23,7 @@
 - Porting code from kind-ui/charts `packages/ai` or `packages/primitives`. `packages/ai/src` in that repository is used only as a catalog of which components exist.
 - Exporting general-purpose components (button, popover, menu, and so on). They exist only to serve AI components and stay internal. Picker (Wave 5) is the one public base of this kind, as `stepPrimitive` is: every composer picker spreads it. Sidebar (Wave 6) is public too: it is the frame of a chat app (a thread list or an assistant beside the host's page), composed from UI SDK Resizable and Drawer, not a general control.
 - Changing `@kind-ui/charts`, or depending on kind-ui/charts code, scripts, or configuration. This repository mirrors its tooling conventions by copying the conventions, not by importing anything.
-- Vue, Svelte, and Solid render layers at launch. The architecture permits them; they are not scheduled.
+- Vue, Svelte, and Solid render layers at launch. They are scheduled for 0.7, after Wave 6 (§7 "Framework layers").
 - A TanStack AI adapter at launch. It is scheduled after Wave 4.
 - An LLM backend, agent runtime, agent bridge, model provider, transport, store, or universal chat schema.
 - Math (KaTeX), Mermaid, and raw HTML rendering in Markdown.
@@ -39,10 +39,12 @@ flowchart TD
   C["core: definePrimitive behaviors, markdown engine, motion helper (no framework)"]
   R["react render layer: createParts from @ui-sdk/react/primitive + Tailwind classes"]
   W["web render layer: createParts from @ui-sdk/web + Tailwind classes"]
+  F["vue, svelte and solid render layers: createParts from @ui-sdk/vue, @ui-sdk/svelte, @ui-sdk/solid + Tailwind classes (0.7)"]
   A --> T
   C --> T
   R --> C
   W --> C
+  F --> C
 ```
 
 | Layer | Depends on | Must not import |
@@ -52,6 +54,9 @@ flowchart TD
 | `adapters/ai-sdk` | `types`, `ai` types | `core`, React, `@ui-sdk/*` |
 | `react` | `@kind-ui/agent-ui/core`, `@ui-sdk/react` | `ai`, `web` |
 | `web` | `@kind-ui/agent-ui/core`, `@ui-sdk/web` | React, `ai` |
+| `vue` (0.7) | `@kind-ui/agent-ui/core`, `@ui-sdk/vue`, `vue` | React, `ai`, other layers |
+| `svelte` (0.7) | `@kind-ui/agent-ui/core`, `@ui-sdk/svelte`, `svelte` | React, `ai`, other layers |
+| `solid` (0.7) | `@kind-ui/agent-ui/core`, `@ui-sdk/solid`, `solid-js`, `@solidjs/web` | React, `ai`, other layers |
 
 Rules:
 
@@ -60,6 +65,7 @@ Rules:
 - Render-layer files import `core` through the public specifier `@kind-ui/agent-ui/core`, never a relative path, so the registry can copy them byte-for-byte.
 - Styling uses Tailwind v4 utilities keyed on UI SDK `data-*` state attributes (for example `data-[status=running]:`, `data-open:`). Data-dependent values (progress width, token ratios) use CSS variables set by the primitive. No runtime CSS-in-JS.
 - Web Components render into light DOM so Tailwind utilities and consumer styles apply. Custom element tags use the `kind-` prefix (for example `<kind-composer>`).
+- Vue, Svelte and Solid layers (0.7) render the same primitives with the same part names, options, state, classes and default children as the React layer, in each framework's idiom: Vue `v-model:<key>`, scoped slots and a `#render` slot; Svelte `bind:<key>`, snippets and a `render` snippet; Solid props, function children and a `render` prop. File shapes: Vue `src/vue/<name>.ts` (render functions), Svelte `src/svelte/<name>/` (`index.ts` and `.svelte` parts, runes only), Solid `src/solid/<name>.tsx` (Solid 2). The floors are UI SDK's: Vue 3.5, Svelte 5.33, Solid 2.
 
 ### Building on UI SDK
 
@@ -218,14 +224,14 @@ Every new check script joins `npm run check`.
 Dependency policy:
 
 - `@ui-sdk/core` is a dependency pinned to an exact version (no range). The latest at spec time is `0.1.0-beta.1`; Wave 1 pins the exact version it is built and tested against.
-- `@ui-sdk/react` and `@ui-sdk/web` are not dependencies of the npm package. Registry items declare them at the same exact version as `@ui-sdk/core`.
+- `@ui-sdk/react`, `@ui-sdk/web`, `@ui-sdk/vue`, `@ui-sdk/svelte` and `@ui-sdk/solid` are not dependencies of the npm package. Registry items declare them at the same exact version as `@ui-sdk/core`.
 - `motion` is a dependency pinned exactly. Only its framework-agnostic API (`animate`, spring options) is used.
 - The markdown libraries are dependencies pinned exactly (reason: §6): `mdast-util-from-markdown`, `mdast-util-gfm`, `micromark-extension-gfm`, `mdast-util-definitions`, `micromark-util-sanitize-uri`, `marked` (block lexer only), and `remend`.
 - `ansi-sequence-parser` (Terminal's SGR styles, §7) and `stacktrace-parser` (Stack Trace's `stack` text, §7) are dependencies pinned exactly, each behind one core module (`core/ansi.ts`, `core/stack.ts`).
 - `ai` is an optional peer dependency used only for adapter types. A consumer without `ai` must install, typecheck, and run every entry, including the adapter's other exports.
-- No React peer dependency on the npm package.
+- No React, Vue, Svelte or Solid peer dependency on the npm package.
 
-Styled React and Web Components are distributed only through the registry (§9.2). Upgrading any `@ui-sdk/*` package is a separate PR with its own changeset and a full `npm run check`.
+Styled React, Web Components, Vue, Svelte and Solid layers are distributed only through the registry (§9.2); the package gains no `./react`, `./vue`, `./svelte` or `./solid` entry (framework layers plan D2). Upgrading any `@ui-sdk/*` package is a separate PR with its own changeset and a full `npm run check`.
 
 ## 4. Core types and adapters
 
@@ -615,6 +621,10 @@ Behavior requirements:
 
 Component count: 13 + 8 + 10 + 10 + 7 + 8 = 56 rows, with Selection and Action counted as one family.
 
+### Framework layers (0.7)
+
+Every component above, and the 24 internal wrappers they compose, gains Vue, Svelte and Solid render files (plan: `docs/superpowers/plans/2026-11-20-agent-ui-framework-layers.md`). No behavior, option or action changes: the layers call `createParts` on the same primitives, and a bug a layer finds is fixed in core. Parity is tested: each layer exports the same parts as React, and each fixture case renders the same roles, `aria-*` and `data-*` attributes, classes and text as React's at rest and after its interaction. Every browser spec runs on each layer once its components are ported; each layer server-renders and hydrates every case without a mismatch; agent snapshots list the same components, names and actions in every layer. Hosts create the agent bridge with `createAgent` from `@ui-sdk/<framework>/agent`.
+
 ## 8. Accessibility requirements
 
 These apply to every component:
@@ -629,18 +639,18 @@ These apply to every component:
 
 ### 9.1 npm package
 
-`@kind-ui/agent-ui` ships the exports in §3. The package starts private at `0.0.0` and becomes public at 0.1 only with explicit publication authorization. Each wave is one minor release (0.1 to 0.6). Before 1.0, breaking API changes increment the minor version and compatible fixes increment the patch version.
+`@kind-ui/agent-ui` ships the exports in §3. The package starts private at `0.0.0` and becomes public at 0.1 only with explicit publication authorization. Each wave is one minor release (0.1 to 0.6), and the framework layers are 0.7. Before 1.0, breaking API changes increment the minor version and compatible fixes increment the patch version.
 
 ### 9.2 Registry
 
 Styled React and Web Components ship as copy-in shadcn registry items from this repository's own registry. Nothing extends or imports the kind-ui/charts registry.
 
 - `registry/catalog.mjs` lists every item. `scripts/build-registry.mjs` reads it, stages item files, and runs a pinned `shadcn` CLI `build` executed ephemerally (not added to the dependency tree), writing the flat served catalog (`registry.json`) and per-item payloads (`<name>.json`) to `artifacts/registry/r/`.
-- Item names are `<component>` for React and `<component>-web` for Web Components (for example `composer` and `composer-web`), with no product prefix. Consumers address them through the registry namespace (for example `@kind-ui/composer`).
+- Item names are `<component>` for React, `<component>-web` for Web Components, and `<component>-vue`, `<component>-svelte` and `<component>-solid` for the 0.7 layers (for example `composer`, `composer-web` and `composer-vue`), with no product prefix. A layer lists the components it ships in `registry/layers/<layer>.mjs`. Consumers address them through the registry namespace (for example `@kind-ui/composer`).
 - Internal general components ship as hidden `internal-<name>` items (for example `internal-button`), referenced through `registryDependencies` and excluded from docs listings.
 - Item names must be unique across the shared `@kind-ui` namespace, which also holds charts' items (§9.6). The build fails on duplicate names within this catalog; the release and the kindui.dev deployment fail on collisions with charts' items.
-- Item files are copied byte-for-byte from `packages/agent-ui/src/react/` or `packages/agent-ui/src/web/`. The build fails if a staged file differs from its source.
-- Items pin `@kind-ui/agent-ui`, `@ui-sdk/core`, and `@ui-sdk/react` or `@ui-sdk/web` to exact versions. The build fails when the catalog's `@kind-ui/agent-ui` version differs from `packages/agent-ui/package.json`, or when an item's `@ui-sdk/*` version differs from the package's `@ui-sdk/core` pin.
+- Item files are copied byte-for-byte from `packages/agent-ui/src/<layer>/` (`react`, `web`, `vue`, `svelte`, `solid`), with targets `@ui/<path>` for React and `@ui/<layer>/<path>` for the others. The build fails if a staged file differs from its source.
+- Items pin `@kind-ui/agent-ui`, `@ui-sdk/core`, and their layer's `@ui-sdk/<framework>` to exact versions; the framework itself (React, Vue, Svelte, Solid) is the consumer's. The build fails when the catalog's `@kind-ui/agent-ui` version differs from `packages/agent-ui/package.json`, or when an item's `@ui-sdk/*` version differs from the package's `@ui-sdk/core` pin.
 - The item `css` field registers `@kind-ui/agent-ui/styles.css` (theme tokens and Tailwind v4 source registration) for the standard `src/`, `app/`, and `src/app/` stylesheet locations. Consumers with other layouts import it from their own stylesheet. Existing consumer theme variables remain authoritative.
 - Catalog file entries omit `content`; item payloads include source content. The catalog conforms to the official shadcn registry schema.
 - The build output is served from kindui.dev as described in §9.6. Submitting the namespace to the shadcn directory is not part of any build or check.
@@ -671,7 +681,7 @@ All jobs run on every change; this repository has one product, so there is no pa
 
 ### 9.5 Docs site
 
-`apps/docs` gains one reference page per component covering exports, options, state ownership, callbacks, errors, keyboard behavior, agent actions, tested versions, and runnable React and Web Components examples, plus one showcase page per wave. Pages ship in the same wave as their components. The site's build is `npm run build:docs`, with base path `/agent-ui/`; it is served as described in §9.6.
+`apps/docs` gains one reference page per component covering exports, options, state ownership, callbacks, errors, keyboard behavior, agent actions, tested versions, and runnable React examples with Vue, Svelte and Solid code tabs beside them (0.7; the preview stays React and the parity tests cover the rest), plus one showcase page per wave. Pages ship in the same wave as their components. The site's build is `npm run build:docs`, with base path `/agent-ui/`; it is served as described in §9.6.
 
 ### 9.6 Hosting
 
@@ -694,7 +704,7 @@ Consumers install with the existing namespace, for example `npx shadcn@latest ad
 | Layer | What | Where |
 | --- | --- | --- |
 | Core unit | Keyboard, focus, state transitions, Step auto open/close, composer draft snapshots, approval generations, markdown block finality, repair, URL sanitizing, ANSI parsing, adapter mapping | `packages/agent-ui/tests/core/`, with `@ui-sdk/core/testing` and `node --test` (`npm run test:unit`) |
-| Browser | Each component in the React and Web Components fixtures: rendering, keyboard-only paths, axe scan (`@axe-core/playwright`), streaming, scroll following | `tests/browser/wave-<n>/`, run by `playwright.config.mjs` projects per wave and render layer (fixed port, Chromium, Vite fixture web server) |
+| Browser | Each component in the React, Web Components, Vue, Svelte and Solid fixtures (a layer runs the specs its manifest lists), plus React-to-layer parity and per-layer hydration (0.7): rendering, keyboard-only paths, axe scan (`@axe-core/playwright`), streaming, scroll following | `tests/browser/wave-<n>/`, run by `playwright.config.mjs` projects per wave and render layer (fixed port, Chromium, Vite fixture web server) |
 | UI SDK usage | Static check: every public component in `src/core/<component>/` is a `definePrimitive` result, every render file under `src/react/` and `src/web/` (including `internal/`) uses `createParts` or wraps a UI SDK component, and no file outside the exception list in §2 "Building on UI SDK" contains hand-written focus, key, scroll, or ARIA code. Runtime proof: the per-component `createAgent` snapshot test (next row), since the bridge registers only UI SDK primitives. | `scripts/check-ui-sdk-usage.mjs` (part of `npm run lint`) |
 | Agent actions | For each component, the `createAgent` snapshot lists the expected actions and keys; `act` runs each action and the resulting state matches; `data-agent-confirm` steps are refused without approval | Browser specs, both render layers |
 | Reduced motion | Each animated component under `reducedMotion: "reduce"` runs no transform or height animation and reaches its final state | Browser specs |
@@ -702,7 +712,7 @@ Consumers install with the existing namespace, for example `npx shadcn@latest ad
 | Packed package | `npm pack` tarball exports resolve; `core` has no React or `ai` runtime import; CSS is included; `publint` and `@arethetypeswrong/cli` pass; a clean consumer installs the tarball without `ai` and imports every entry | `scripts/check-package.mjs` (`npm run check:package`) |
 | Size | Each public JS entry, bundled with its dependencies, minified and gzipped, stays within its limit | `size-budget.json`, `scripts/check-size.mjs` (`npm run check:size`) |
 | Count budgets | DOM writes, renders, parts notified, layout reads and markdown parses per streamed delta stay within fixed counts at 10 and 500 rows; mounting and unmounting Conversation leaves no DOM nodes or listeners | `tests/browser/wave-1/budgets.spec.ts` |
-| Registry consumers | Each wave's items install from the local registry build and local tarball into clean Vite React and Vite Web Components consumers under `artifacts/`, then build and render; installed `@ui-sdk/*` and `@kind-ui/agent-ui` versions match the pins | `scripts/check-registry-consumers.mjs` (`npm run check:registry-consumers`) |
+| Registry consumers | Each wave's items install from the local registry build and local tarball into clean Vite React, Web Components, Vue, Svelte and Solid consumers, then build and render; installed `@ui-sdk/*` and `@kind-ui/agent-ui` versions match the pins | `scripts/check-registry-consumers.mjs` (`npm run check:registry-consumers`) |
 
 Tests use fixtures and explicitly resolved deferred promises; no live services and no timing sleeps. Accessibility automation is supplemented by manual keyboard and screen-reader review of each wave's fixtures before release.
 
@@ -723,6 +733,7 @@ Tests use fixtures and explicitly resolved deferred promises; no live services a
 | Streaming Markdown engine | Correctness, performance, and security | Reuse mdast/micromark parsing; tail-only parsing; finality and sanitizer tests; the 10,000-token acceptance test in both render layers |
 | Motion helper | Exit and layout bugs across frameworks | Small helper over UI SDK `animateIn` / `animateOut` and `motion` `animate`; interruption and reversal tests; a reduced path for every animation |
 | Virtualization with streaming rows | Scroll jumps or lost reader position | `virtualize` is opt-in; browser tests stream into the last row while scrolled up and assert a stable position |
+| Three more render layers (0.7) | Parity drifts; a framework package lags `@ui-sdk/react` | Mechanical parity tests (exports and rendered trees against React); every spec runs per layer; Solid 2 and UI SDK's framework packages are young, so gaps are reported upstream and recorded in AGENTS.md "UI SDK API notes" |
 | Scope of 41 components | Waves slip | Waves ship independently; a wave's checks pass before the next wave starts |
 | New repository tooling | Wave 1 also carries workspace, CI, and release setup | The Wave 1 foundation PR lands tooling with the Step and Composer primitives only; later Wave 1 components follow in their own PRs |
 

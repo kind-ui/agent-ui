@@ -14,6 +14,11 @@ Skills for working on `@kind-ui/agent-ui`. Each one is a folder with a `SKILL.md
 | [`apple-design`](apple-design/SKILL.md) | You add or review motion, a gesture, a sheet or a transition. | Vendored unchanged. Response, direct manipulation, interruptibility, springs, materials, typography and restraint. |
 | [`impeccable`](impeccable/SKILL.md) | You have a component's screenshots, before `expert-review`. | Vendored: the core skill with `audit`, `critique`, `polish` and `distill` only; its detector runs through `npx impeccable@4.10.0 detect`. |
 | [`web-interface-guidelines`](web-interface-guidelines/SKILL.md) | The checklist pass on a component's render and style files. | Vendored unchanged with a skill header. MUST/SHOULD/NEVER rules for keyboard, focus, forms, layout stability, animation and theming. |
+| [`vue-best-practices`](vue-best-practices/SKILL.md) | You write or review a file under `src/vue/`, a Vue fixture or a Vue docs example. | Installed from vuejs-ai/skills (`skills-lock.json`). Vue 3 Composition API, reactivity, slots, render functions, SSR and `vue-tsc`. |
+| [`svelte-core-bestpractices`](svelte-core-bestpractices/SKILL.md) | You write or review a file under `src/svelte/`, a Svelte fixture or a Svelte docs example. | Installed from sveltejs/ai-tools (`skills-lock.json`). Svelte 5 runes, snippets, attachments, events and reactivity. |
+| [`solid-best-practices`](solid-best-practices/SKILL.md) | You write or review a file under `src/solid/`, a Solid fixture or a Solid docs example. | Written here from Solid's 2.0 migration guide, since UI SDK needs Solid 2 and the available Solid skills teach Solid 1. |
+
+A framework skill sits beside `ui-sdk`, never instead of it: read `ui-sdk` and `node_modules/@ui-sdk/<framework>/docs/llms.txt` first, then the framework's skill for the language rules.
 
 The chain: write with `write-code`, check the screenshots with `impeccable` and `web-interface-guidelines` (motion with `apple-design`), finish with `unslop`, then run `expert-review` before you push. `docs/design-principles.md` says what the design skills hold us to; `AGENTS.md` "Component task routine" says when each runs.
 

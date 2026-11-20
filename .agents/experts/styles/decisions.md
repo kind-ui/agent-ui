@@ -6,6 +6,7 @@ Last reviewed: `bfb9bb7` (Design Wave 1 Batch D)
 
 ## Settled
 
+- **Stylesheets serve five render layers (framework layers plan, 2026-11-20):** Vue, Svelte and Solid parts write the same `data-*` attributes and Tailwind classes as React's, so a component stylesheet keys on attributes core writes, never on a framework's markup. The parity spec compares class lists against React.
 - **Focus rings are keyboard-only, and text fields show none (Design Wave 0, user preference):** every ring is `:focus-visible`, never `:focus` or `:focus-within`, and a text field (input, textarea, the composer's editor, a rename field, a search field) shows its caret and changes nothing else on focus, not even its border. Don't propose a field ring or halo; `styles.test.mjs` fails one.
 - **Pill controls, soft elevation, translucent states (Design Wave 0):** pressables use `--kind-radius-full`, which `--kind-radius: 0` doesn't square; floating surfaces draw a hairline in their shadow rather than a border; hover, pressed, selected and current are translucent ink with no hue, `current` set apart by weight; the primary action is the ink `--kind-color-primary`. Rings on rows, items, strip chips and scrollers sit inside (`--kind-focus-offset-inset`).
 - **The system font is a token, not a default (Design Wave 0):** `--kind-font-sans` exists for hosts that want it, but components inherit the host's font; forcing ours would fight the product we sit in.
