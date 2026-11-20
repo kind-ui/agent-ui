@@ -79,7 +79,7 @@ const send = () => new Promise<void>((resolve) => setTimeout(resolve, 1000));
 export default function FullComposerExample({
   onSubmit = send,
   disabled,
-  placeholder = "Ask anything",
+  placeholder = "Ask anything…",
 }: FullComposerProps) {
   const [chips, setChips] = useState(context);
   const [model, setModel] = useState<string | null>("claude-sonnet-5.5");

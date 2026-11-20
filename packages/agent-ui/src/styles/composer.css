@@ -102,6 +102,9 @@
      neither the controls nor Send move. "Draft restored" makes room for the mic, and hides while Dictation shows
      more than it. */
   :where([data-slot="file-input-dropzone"]) > [data-dictation-part="root"][data-phase] {
+    /* Its buttons take the composer's control size, beside Send. */
+    --kind-dictation-height: var(--kind-composer-control-height);
+
     z-index: 1;
     grid-area: restored;
     justify-self: end;
