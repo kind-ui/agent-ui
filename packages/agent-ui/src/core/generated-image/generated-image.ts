@@ -385,7 +385,7 @@ export const generatedImagePrimitive: GeneratedImagePrimitive = definePrimitive<
         attrs: (state) => ({
           type: "button",
           "aria-label": "Download",
-          "data-kind-button": "",
+          "data-kind-button": "secondary",
           "data-pending": state.pending ? "" : undefined,
         }),
       }),

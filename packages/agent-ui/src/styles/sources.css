@@ -6,14 +6,15 @@
     flex-direction: column;
     align-items: flex-start;
     font-size: var(--kind-text-md);
-    line-height: 1.25rem;
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
     color: var(--kind-color-fg);
   }
 
   /* As wide as its text, so the summary stays compact; the count doesn't change the row's height. */
   [data-sources-part="trigger"] {
     width: auto;
-    font-weight: 500;
+    font-weight: var(--kind-font-weight-medium);
     font-variant-numeric: tabular-nums;
   }
 
@@ -37,11 +38,21 @@
     gap: 2px;
   }
 
+  /* A row that lights under the pointer and darkens as it's pressed, when its link goes somewhere. */
   [data-sources-part="item"] {
     display: flex;
     flex-direction: column;
     gap: 2px;
     padding: 6px;
+    border-radius: var(--kind-radius-md);
+    transition: background-color var(--kind-duration-fast) var(--kind-ease-in-out);
+
+    &:where(:has([data-sources-part="link"][href]:hover)) {
+      background-color: var(--kind-color-hover);
+    }
+    &:where(:has([data-sources-part="link"][href]:active)) {
+      background-color: var(--kind-color-pressed);
+    }
   }
 
   /* One row: icon, title, host. The title wraps to two lines and the host shrinks first, since the title names the
@@ -51,7 +62,7 @@
     min-width: 0;
     align-items: flex-start;
     gap: 8px;
-    border-radius: calc(var(--kind-radius) / 3);
+    border-radius: var(--kind-radius-sm);
     color: inherit;
     text-decoration: none;
 
@@ -68,7 +79,7 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
-    font-weight: 500;
+    font-weight: var(--kind-font-weight-medium);
     overflow-wrap: anywhere;
 
     &:where([data-sources-part="link"][href]:hover *) {
@@ -117,8 +128,9 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: var(--kind-text-xs);
-    line-height: 1.25rem;
+    line-height: var(--kind-text-md-leading);
     color: var(--kind-color-muted);
+    font-variant-numeric: tabular-nums;
   }
 
   /* Narrow, the host takes its own line under the title, as in Inline Citation's card. */
@@ -131,7 +143,7 @@
     [data-sources-part="host"] {
       grid-column: 2;
       min-width: 0;
-      line-height: 1rem;
+      line-height: var(--kind-text-xs-leading);
     }
   }
 
@@ -145,8 +157,14 @@
     -webkit-line-clamp: 2;
     line-clamp: 2;
     font-size: var(--kind-text-sm);
-    line-height: 1.125rem;
+    line-height: var(--kind-text-sm-leading);
     color: var(--kind-color-muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-sources-part="item"] {
+      transition: none;
+    }
   }
 
   @media (forced-colors: active) {

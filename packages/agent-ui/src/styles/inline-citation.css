@@ -13,25 +13,25 @@
     margin-inline: 0.125em;
     padding: 0 0.5em;
     border: 0;
-    border-radius: 999px;
-    background-color: color-mix(in oklab, var(--kind-color-muted) 14%, var(--kind-color-surface));
+    border-radius: var(--kind-radius-full);
+    background-color: var(--kind-color-selected);
     color: var(--kind-color-muted);
     font: inherit;
     font-size: 0.75em;
     font-style: normal;
-    font-weight: 500;
+    font-weight: var(--kind-font-weight-medium);
     font-variant-numeric: tabular-nums;
     line-height: 1.375;
     white-space: nowrap;
     vertical-align: baseline;
     cursor: pointer;
     transition:
-      background-color var(--kind-duration-fast) var(--kind-ease-out),
-      color var(--kind-duration-fast) var(--kind-ease-out);
+      background-color var(--kind-duration-fast) var(--kind-ease-in-out),
+      color var(--kind-duration-fast) var(--kind-ease-in-out);
 
     &:hover,
     &[data-open] {
-      background-color: color-mix(in oklab, var(--kind-color-muted) 26%, var(--kind-color-surface));
+      background-color: color-mix(in oklab, var(--kind-color-fg) 14%, transparent);
       color: var(--kind-color-fg);
     }
     &:focus-visible {
@@ -40,26 +40,24 @@
     }
   }
 
-  /* The shared popup (`data-kind-popup`), which resets what it would otherwise inherit from the paragraph it sits in. */
+  /* The shared popup (`data-kind-popup`) draws the card and its motion: it scales in from the marker (UI SDK's
+     `--transform-origin`) with `--kind-enter-scale` and fades out quicker; reduced motion only fades. */
   [data-slot="kind-inline-citation-content"] {
     z-index: 50;
     display: block;
     width: 18rem;
     max-width: calc(100vw - 16px);
-    padding: 12px;
+  }
+
+  /* Inside the popup's padding, and resetting what the card would otherwise inherit from the paragraph it sits in. */
+  [data-slot="kind-inline-citation-carousel"] {
+    display: block;
+    padding: 6px;
     font-style: normal;
-    font-weight: 400;
-    line-height: 1.25rem;
-    letter-spacing: normal;
+    font-weight: var(--kind-font-weight-regular);
     text-align: start;
     text-indent: 0;
     white-space: normal;
-    outline: none;
-    transform-origin: var(--transform-origin);
-  }
-
-  [data-slot="kind-inline-citation-carousel"] {
-    display: block;
   }
 
   :where([data-slot="kind-inline-citation-carousel"]) {
@@ -72,7 +70,7 @@
     & [data-slot="carousel-viewport"] {
       display: block;
       margin: -4px;
-      border-radius: calc(var(--kind-radius) / 2);
+      border-radius: var(--kind-radius-sm);
 
       &:focus-visible {
         outline: var(--kind-focus-ring);
@@ -84,11 +82,21 @@
       display: flex;
       gap: 16px;
     }
+    /* A row that lights under the pointer and darkens as it's pressed, when its link goes somewhere. */
     & [data-slot="carousel-item"] {
       display: block;
       flex: 0 0 100%;
       min-width: 0;
       padding: 4px;
+      border-radius: var(--kind-radius-sm);
+      transition: background-color var(--kind-duration-fast) var(--kind-ease-in-out);
+
+      &:has([data-slot="kind-inline-citation-link"][href]:hover) {
+        background-color: var(--kind-color-hover);
+      }
+      &:has([data-slot="kind-inline-citation-link"][href]:active) {
+        background-color: var(--kind-color-pressed);
+      }
     }
   }
 
@@ -96,12 +104,15 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-top: 8px;
-    border-top: 1px solid var(--kind-color-border);
+    margin-inline: -6px;
+    margin-block-end: -6px;
 
-    /* Shared icon buttons (`data-kind-icon-button`). At an end, the one with no page that way hides in place, so
-       nothing moves; UI SDK keeps it focusable, so it shows while it holds focus. */
+    /* Small shared icon buttons (`data-kind-icon-button`), whose circles line up with the card's padding. At an end,
+       the one with no page that way hides in place, so nothing moves; UI SDK keeps it focusable, so it shows while it
+       holds focus. */
     & :where([data-slot="carousel-previous"], [data-slot="carousel-next"]) {
+      --kind-control-block-size: var(--kind-control-height-sm);
+
       &:where([data-disabled]:not(:focus)) {
         visibility: hidden;
       }
@@ -114,6 +125,7 @@
   [data-slot="kind-inline-citation-index"] {
     color: var(--kind-color-muted);
     font-size: var(--kind-text-xs);
+    line-height: var(--kind-text-xs-leading);
     font-variant-numeric: tabular-nums;
   }
 
@@ -132,7 +144,7 @@
     grid-template-columns: 16px minmax(0, 1fr);
     align-items: start;
     column-gap: 8px;
-    border-radius: calc(var(--kind-radius) / 3);
+    border-radius: var(--kind-radius-sm);
     color: inherit;
     text-decoration: none;
 
@@ -149,7 +161,7 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
-    font-weight: 500;
+    font-weight: var(--kind-font-weight-medium);
     overflow-wrap: anywhere;
 
     &:where([data-slot="kind-inline-citation-link"][href]:hover *) {
@@ -195,7 +207,7 @@
     overflow: hidden;
     color: var(--kind-color-muted);
     font-size: var(--kind-text-xs);
-    line-height: 1rem;
+    line-height: var(--kind-text-xs-leading);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -210,41 +222,20 @@
     line-clamp: 3;
     color: var(--kind-color-muted);
     font-size: var(--kind-text-sm);
-    line-height: 1.125rem;
+    line-height: var(--kind-text-sm-leading);
   }
 
-  /* Motion: the card grows out of its marker (UI SDK's `--transform-origin`) and leaves faster than it came. Reduced
-     motion only fades, in 120 ms; `none` doesn't animate. */
-  :where([data-slot="kind-inline-citation"]) [data-slot="kind-inline-citation-content"] {
-    transition:
-      opacity var(--kind-duration-base) var(--kind-ease),
-      scale var(--kind-duration-base) var(--kind-ease);
-
-    &:is([data-starting-style], [data-ending-style]) {
-      opacity: 0;
-      scale: 0.96;
-    }
-    &[data-ending-style] {
-      transition-duration: var(--kind-duration-fast);
-      transition-timing-function: var(--kind-ease-out);
-    }
-  }
-
+  /* The shared popup's exit scale outranks its own reduced-motion reset, so it's reset here too. */
   @media (prefers-reduced-motion: reduce) {
-    :where([data-slot="kind-inline-citation"][data-motion="auto"])
-      [data-slot="kind-inline-citation-content"] {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
-
-      &:is([data-starting-style], [data-ending-style]) {
-        scale: none;
-        transition-duration: var(--kind-duration-reduced);
-      }
+    [data-slot="kind-inline-citation-content"]:where([data-starting-style], [data-ending-style]) {
+      scale: none;
     }
   }
 
+  /* The `motion` option, which the shared popup can't read: "reduced" only fades, in 120 ms; `none` doesn't animate. */
   :where([data-slot="kind-inline-citation"][data-motion="reduced"])
     [data-slot="kind-inline-citation-content"] {
-    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
     &:is([data-starting-style], [data-ending-style]) {
       scale: none;
@@ -257,7 +248,8 @@
       [data-slot="kind-inline-citation-trigger"],
       [data-slot="kind-inline-citation-content"],
       [data-slot="carousel-previous"],
-      [data-slot="carousel-next"]
+      [data-slot="carousel-next"],
+      [data-slot="carousel-item"]
     ) {
     transition: none;
   }

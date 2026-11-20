@@ -8,8 +8,6 @@
     flex-direction: column;
     min-width: 0;
     overflow: hidden;
-    border: 1px solid var(--kind-color-border);
-    color: var(--kind-color-fg);
 
     /* The viewport's mask clips its own ring, so the block draws it. */
     &:has([data-slot="scroll-area-viewport"]:focus-visible) {
@@ -23,11 +21,11 @@
     display: flex;
     align-items: center;
     gap: 2px;
-    height: 2rem;
+    height: var(--kind-control-height);
     padding-inline: 1rem 0.25rem;
     color: var(--kind-color-muted);
     font-size: var(--kind-text-xs);
-    line-height: 1rem;
+    line-height: var(--kind-text-xs-leading);
   }
 
   [data-slot="kind-code-block-language"] {
@@ -42,16 +40,18 @@
   :is([data-slot="kind-code-block-wrap"], [data-slot="kind-code-block-copy"]) {
     &::after {
       content: "";
-      width: 0.875rem;
-      height: 0.875rem;
+      width: var(--kind-icon-size-sm);
+      height: var(--kind-icon-size-sm);
       background-color: currentColor;
       mask: var(--kind-icon-copy) center / contain no-repeat;
     }
-    &[data-copied] {
-      color: var(--kind-color-success);
-    }
     &[data-copied]::after {
       mask-image: var(--kind-icon-check);
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      &[data-copied]::after {
+        animation: kind-code-block-copied var(--kind-duration-spring) var(--kind-ease-spring);
+      }
     }
   }
 
@@ -135,7 +135,7 @@
       font-style: italic;
     }
     & [data-font-style="bold"] {
-      font-weight: 600;
+      font-weight: var(--kind-font-weight-semibold);
     }
 
     /* Wrapped lines hang 2ch in from their first, so a continuation doesn't read as a line of its own. */
@@ -169,5 +169,11 @@
 
   :where([data-slot="kind-code-block-header"]:not([hidden]) ~ *) [data-slot="kind-code-block-code"] {
     padding-top: 0.25rem;
+  }
+}
+
+@keyframes kind-code-block-copied {
+  from {
+    scale: 0.6;
   }
 }

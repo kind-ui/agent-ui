@@ -547,6 +547,7 @@ export const testResultsPrimitive: TestResultsPrimitive = definePrimitive<
           type: "button",
           "aria-pressed": state.filter === props.value ? "true" : "false",
           "data-kind-button": "",
+          "data-kind-size": "sm",
           "data-test-results-count": props.value,
           "data-zero": state.counts[props.value] === 0 ? "" : undefined,
         }),

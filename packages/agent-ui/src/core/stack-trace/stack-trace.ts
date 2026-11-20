@@ -400,6 +400,7 @@ export const stackTracePrimitive: StackTracePrimitive = definePrimitive<
           type: "button",
           "aria-label": "Copy stack trace",
           "data-kind-icon-button": "",
+          "data-kind-size": "sm",
           "data-copied": state.copied ? "" : undefined,
         }),
       }),

@@ -37,10 +37,13 @@
     min-width: 0;
   }
 
+  /* The counts inherit their figures from here (a shared control's `font: inherit`), so a digit changing keeps the
+     row's width. */
   [data-slot="kind-test-results-filter"] {
     display: flex;
     flex-shrink: 0;
     gap: 2px;
+    font-variant-numeric: tabular-nums;
   }
 
   @container kind-test-results (width < 30rem) {
@@ -49,24 +52,15 @@
     }
   }
 
-  /* A dot per count in its status's color, quiet at zero; the words stay muted, so the color is said once. The dot
-     is `::after`, since a shared control's `::before` is its hit area under a coarse pointer. */
+  /* Small ghost pills (core sets `data-kind-size="sm"`), each with a dot in its status's color, quiet at zero. The
+     dot is `::after`, since a shared control's `::before` is its hit area under a coarse pointer. */
   [data-test-results-count] {
-    padding-inline: 0.5rem;
-    font-size: var(--kind-text-xs);
-    font-weight: 400;
-    font-variant-numeric: tabular-nums;
-    color: var(--kind-color-muted);
-
-    &:where(:hover, [aria-pressed="true"]) {
-      color: var(--kind-color-fg);
-    }
     &::after {
       content: "";
       order: -1;
       width: 6px;
       height: 6px;
-      border-radius: 9999px;
+      border-radius: var(--kind-radius-full);
       background-color: var(--kind-test-results-count, var(--kind-color-muted));
     }
     &[data-test-results-count="pass"] {
@@ -92,7 +86,7 @@
     pointer-events: none;
 
     & svg {
-      transition: rotate var(--kind-duration-base) var(--kind-ease);
+      transition: rotate var(--kind-duration-base) var(--kind-ease-in-out);
     }
   }
 
@@ -133,7 +127,7 @@
     line-clamp: 2;
 
     &:where([data-kind="suite"] > *) {
-      font-weight: 500;
+      font-weight: var(--kind-font-weight-medium);
     }
     &:where([data-kind="test"][data-status="skip"] > *) {
       color: var(--kind-color-muted);
@@ -172,8 +166,8 @@
   /* Rows come in once, as they mount: a test that finishes rises in, and the rest stay still. */
   :where([data-test-results-part="tree"]:not([data-motion="none"])) [data-slot="tree-label"] {
     transition:
-      opacity var(--kind-duration-base) var(--kind-ease-out),
-      translate var(--kind-duration-base) var(--kind-ease);
+      opacity var(--kind-duration-base) var(--kind-ease-in-out),
+      translate var(--kind-duration-base) var(--kind-ease-enter);
 
     @starting-style {
       opacity: 0;
@@ -196,7 +190,7 @@
   :where([data-test-results-part="tree"]) [data-slot="tree-group"] {
     height: var(--tree-group-height);
     overflow: hidden;
-    transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-base) var(--kind-ease-in-out);
   }
   :where([data-test-results-part="tree"]:not([data-motion="none"]))
     [data-slot="tree-group"]:is([data-starting-style], [data-ending-style]) {
@@ -207,8 +201,8 @@
     [data-test-results-part="tree"][data-motion="auto"] {
       & [data-slot="tree-group"] {
         transition:
-          height var(--kind-duration-panel) var(--kind-ease),
-          opacity var(--kind-duration-base) var(--kind-ease-out);
+          height var(--kind-duration-panel) var(--kind-ease-enter),
+          opacity var(--kind-duration-base) var(--kind-ease-in-out);
 
         &:is([data-starting-style], [data-ending-style]) {
           height: 0;

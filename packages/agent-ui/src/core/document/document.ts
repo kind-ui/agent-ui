@@ -370,7 +370,8 @@ export const documentPrimitive: DocumentPrimitive = definePrimitive<
       state: (state) => ({ label: state.open ? "Show less" : "Show more" }),
       attrs: (state, part) => ({
         type: "button",
-        "data-kind-button": "",
+        "data-kind-button": "secondary",
+        "data-kind-size": "sm",
         "aria-expanded": String(state.open),
         "aria-controls": `${part.id}-body`,
         ...openAttrs(state.open),

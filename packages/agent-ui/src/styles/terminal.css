@@ -52,10 +52,10 @@
     color: var(--kind-color-fg);
   }
 
+  /* A filled code surface, no edge (docs/design-principles.md "System"). */
   [data-terminal-screen] {
     position: relative;
     overflow: hidden;
-    border: 1px solid var(--kind-color-border);
   }
 
   /* Copy sits in the screen's corner, so the command (when shown) and the output start at the top. */
@@ -68,7 +68,7 @@
     padding-inline: 0.75rem 2.5rem;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
-    font-weight: 500;
+    font-weight: var(--kind-font-weight-medium);
 
     &::before {
       content: "$ ";
@@ -77,29 +77,19 @@
     }
   }
 
-  /* Shown while the screen is hovered or holds focus, and always without hover. Its fill at rest keeps the output
-     it covers from showing through. */
+  /* Shown while the screen is hovered or holds focus, and always without hover. Core makes it a raised `secondary`
+     pill, whose fill keeps the output it covers from showing through. */
   [data-slot="kind-terminal-copy"] {
     position: absolute;
     z-index: 1;
-    top: 0.25rem;
-    inset-inline-end: 0.25rem;
+    top: 0.375rem;
+    inset-inline-end: 0.375rem;
     opacity: 0;
-    transition:
-      opacity var(--kind-duration-fast),
-      color var(--kind-duration-fast),
-      background-color var(--kind-duration-fast);
 
-    &:where(:not(:hover)) {
-      background-color: var(--kind-code-surface);
-    }
-    &:where([data-copied]) {
-      color: var(--kind-color-success);
-    }
     &::after {
       content: "";
-      width: 0.875rem;
-      height: 0.875rem;
+      width: var(--kind-icon-size-sm);
+      height: var(--kind-icon-size-sm);
       background-color: currentColor;
       mask: var(--kind-icon-copy) center / contain no-repeat;
     }
@@ -213,30 +203,30 @@
     translate: -50% 0;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    height: 1.75rem;
+    gap: 0.375rem;
+    height: var(--kind-control-height-sm);
     padding-inline: 0.625rem 0.75rem;
-    border: 1px solid var(--kind-color-border);
-    border-radius: 9999px;
-    background-color: var(--kind-color-surface);
-    box-shadow:
-      0 1px 2px color-mix(in oklab, var(--kind-color-shadow) 6%, transparent),
-      0 4px 16px -4px color-mix(in oklab, var(--kind-color-shadow) 12%, transparent);
+    border: 0;
+    border-radius: var(--kind-radius-full);
+    background-color: var(--kind-color-raised);
+    box-shadow: var(--kind-shadow-popover);
     font-family: inherit;
     font-size: var(--kind-text-xs);
-    font-weight: 500;
+    font-weight: var(--kind-font-weight-medium);
+    line-height: var(--kind-text-xs-leading);
     white-space: nowrap;
     color: var(--kind-color-fg);
+    cursor: pointer;
     transition:
-      opacity var(--kind-duration-base) var(--kind-ease-out),
-      translate var(--kind-duration-base) var(--kind-ease),
-      background-color var(--kind-duration-fast);
+      opacity var(--kind-duration-base) var(--kind-ease-in-out),
+      translate var(--kind-duration-base) var(--kind-ease-enter),
+      background-color var(--kind-duration-fast) var(--kind-ease-in-out);
 
     &:where([data-starting-style], [data-ending-style]) {
       opacity: 0;
     }
     &:where([data-motion="reduced"]) {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
     }
     &:where([data-motion="none"]) {
       transition: none;
@@ -244,13 +234,13 @@
 
     &::before {
       content: "";
-      width: 12px;
-      height: 12px;
+      width: 0.75rem;
+      height: 0.75rem;
       background-color: var(--kind-color-muted);
       mask: var(--kind-terminal-arrow) center / contain no-repeat;
     }
     &:hover {
-      background-color: var(--kind-color-hover);
+      background-image: linear-gradient(var(--kind-color-hover) 0 0);
     }
     &:focus-visible {
       outline: var(--kind-focus-ring);
@@ -286,7 +276,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     [data-slot="kind-terminal-jump"]:where([data-motion="auto"]) {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
     }
   }
 }

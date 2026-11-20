@@ -219,6 +219,7 @@ export const codeBlockPrimitive: CodeBlockPrimitive = definePrimitive({
       attrs: (state) => ({
         type: "button",
         "data-kind-icon-button": "",
+        "data-kind-size": "sm",
         "aria-label": "Wrap lines",
         "aria-pressed": String(state.wrap),
       }),
@@ -230,6 +231,7 @@ export const codeBlockPrimitive: CodeBlockPrimitive = definePrimitive({
       attrs: (state) => ({
         type: "button",
         "data-kind-icon-button": "",
+        "data-kind-size": "sm",
         "aria-label": "Copy code",
         "data-copied": state.copied ? "" : undefined,
       }),

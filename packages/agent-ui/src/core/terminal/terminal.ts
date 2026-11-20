@@ -321,6 +321,8 @@ export const terminalPrimitive: TerminalPrimitive = definePrimitive<
           type: "button",
           "aria-label": "Copy output",
           "data-kind-icon-button": "",
+          "data-kind-button": "secondary",
+          "data-kind-size": "sm",
           "data-copied": state.copied ? "" : undefined,
         }),
       }),

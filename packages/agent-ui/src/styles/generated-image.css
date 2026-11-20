@@ -10,19 +10,19 @@
     display: block;
     color: var(--kind-color-fg);
     font-size: var(--kind-text-md);
-    line-height: 1.25rem;
+    line-height: var(--kind-text-md-leading);
   }
 
   /* `aspect-ratio` and the width come from the image's `width` and `height`, so every phase takes the same box. The
-     outline is an inner border over whatever the frame shows, so a light image keeps its edge against the page. */
+     outline is an inner hairline over whatever the frame shows, so a light image keeps its edge against the page. */
   [data-slot="kind-generated-image-frame"] {
     position: relative;
     display: block;
     isolation: isolate;
     max-inline-size: min(100%, var(--kind-generated-image-width));
     overflow: hidden;
-    border-radius: var(--kind-radius);
-    outline: 1px solid color-mix(in oklab, var(--kind-color-fg) 10%, transparent);
+    border-radius: var(--kind-radius-lg);
+    outline: 1px solid var(--kind-color-hairline);
     outline-offset: -1px;
     background-color: var(--kind-color-hover);
   }
@@ -42,7 +42,7 @@
     z-index: 1;
     filter: blur(calc(24px - 20px * var(--kind-generated-image-resolve, 0)))
       saturate(calc(0.6 + 0.4 * var(--kind-generated-image-resolve, 0)));
-    transition: filter var(--kind-duration-panel) var(--kind-ease);
+    transition: filter var(--kind-duration-panel) var(--kind-ease-in-out);
   }
   /* Gone once the image has faded in over it, so a transparent image doesn't show it. */
   :where([data-slot="kind-generated-image-frame"][data-phase="loaded"])
@@ -54,7 +54,7 @@
   [data-slot="kind-generated-image-image"] {
     z-index: 2;
     opacity: 0;
-    transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-base) var(--kind-ease-in-out);
 
     &[data-loaded] {
       opacity: 1;
@@ -70,13 +70,16 @@
     z-index: 4;
     display: block;
     max-inline-size: calc(100% - 20px);
-    padding: 2px 8px;
-    border-radius: 999px;
-    background-color: var(--kind-color-surface);
-    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--kind-color-fg) 8%, transparent);
+    padding: 0 8px;
+    border-radius: var(--kind-radius-full);
+    background-color: var(--kind-color-raised);
+    box-shadow:
+      0 0 0 1px var(--kind-color-hairline),
+      var(--kind-shadow-control);
     color: var(--kind-color-fg);
     font-size: var(--kind-text-xs);
-    line-height: 1.25rem;
+    font-weight: var(--kind-font-weight-medium);
+    line-height: var(--kind-badge-height);
   }
 
   :where([data-slot="kind-generated-image-progress"]) {
@@ -118,6 +121,7 @@
     padding: 16px;
     color: var(--kind-color-muted);
     font-size: var(--kind-text-sm);
+    line-height: var(--kind-text-sm-leading);
     text-align: center;
     text-wrap: balance;
 
@@ -149,25 +153,27 @@
       outline: var(--kind-focus-ring);
       outline-offset: var(--kind-focus-offset-inset);
     }
-    /* A pill and the glyph on it, in the corner. */
+    /* A circle and the glyph on it, in the corner, drawn as Download is. */
     &::before,
     &::after {
       content: "";
       position: absolute;
       inset-inline-end: 8px;
       inset-block-end: 8px;
-      width: 1.75rem;
-      height: 1.75rem;
+      width: var(--kind-control-height-sm);
+      height: var(--kind-control-height-sm);
       opacity: 0;
-      transition: opacity var(--kind-duration-fast) var(--kind-ease-out);
+      transition: opacity var(--kind-duration-fast) var(--kind-ease-in-out);
     }
     &::before {
-      border-radius: var(--kind-radius-md);
-      background-color: color-mix(in oklab, var(--kind-color-surface) 88%, transparent);
-      box-shadow: inset 0 0 0 1px var(--kind-color-border);
+      border-radius: var(--kind-radius-full);
+      background-color: var(--kind-color-raised);
+      box-shadow:
+        0 0 0 1px var(--kind-color-hairline),
+        var(--kind-shadow-control);
     }
     &::after {
-      background-color: var(--kind-color-fg);
+      background-color: var(--kind-control-icon-color, var(--kind-color-muted));
       mask: var(--kind-generated-image-zoom-icon) center / 0.875rem no-repeat;
     }
     &:is(:hover, :focus-visible)::before,
@@ -176,38 +182,33 @@
     }
   }
 
-  /* Download and Close are shared ghost buttons (`data-kind-button`). Download's glyph is on `::after`, since a shared
-     control's `::before` is its touch target. */
+  /* Download is a shared secondary button and Close a ghost one (`data-kind-button`). Download's glyph is on `::after`,
+     since a shared control's `::before` is its touch target. */
   [data-slot="kind-generated-image-download"]::after {
     content: "";
     order: -1;
     flex: none;
     width: 0.875rem;
     height: 0.875rem;
-    background-color: currentColor;
+    background-color: var(--kind-control-icon-color, currentColor);
     mask: var(--kind-generated-image-download-icon) center / contain no-repeat;
   }
+  /* Pending draws the label clear; the glyph hides with it, under the running mark. */
+  [data-slot="kind-generated-image-download"][data-pending]::after {
+    visibility: hidden;
+  }
 
-  /* In the frame, Download is an icon in the corner, shown on hover and focus, and always where nothing hovers. */
+  /* In the frame, Download is a small circle in the corner, its icon centered in the button's padding. It shows on
+     hover and focus, and always where nothing hovers; it stays focusable while it doesn't show. */
   :where([data-slot="kind-generated-image-frame"]) [data-slot="kind-generated-image-download"] {
+    --kind-control-block-size: var(--kind-control-height-sm);
+
     position: absolute;
     inset-inline-end: 8px;
     inset-block-start: 8px;
     z-index: 6;
-    width: 1.75rem;
-    height: 1.75rem;
-    padding: 0;
-    border-color: var(--kind-color-border);
-    border-radius: var(--kind-radius-md);
-    background-color: color-mix(in oklab, var(--kind-color-surface) 88%, transparent);
+    width: var(--kind-control-block-size);
     opacity: 0;
-    transition:
-      opacity var(--kind-duration-fast) var(--kind-ease-out),
-      background-color var(--kind-duration-fast) var(--kind-ease-out);
-
-    &:hover {
-      background-color: var(--kind-color-surface);
-    }
   }
   :where([data-slot="kind-generated-image-frame"]:is(:hover, :focus-within))
     [data-slot="kind-generated-image-download"] {
@@ -225,33 +226,45 @@
     z-index: 50;
   }
 
+  /* The shared dialog (`data-kind-dialog`) draws its box, padding and motion. */
   [data-slot="kind-generated-image-content"] {
+    --kind-generated-image-dialog-padding: 1.5rem;
+
     position: fixed;
     inset: 0;
     z-index: 50;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    box-sizing: border-box;
+    gap: 12px;
     width: fit-content;
     height: fit-content;
     max-width: calc(100vw - 2rem);
     max-height: calc(100dvh - 2rem);
     margin: auto;
-    padding: 10px;
-    outline: none;
+
+    @media (max-width: 639px) {
+      --kind-generated-image-dialog-padding: 1.25rem;
+    }
   }
 
-  /* As large as the screen leaves room for, beside the padding and the actions row, keeping its shape. */
+  /* As large as the screen leaves room for, beside the dialog's padding, the gap and the actions row, keeping its
+     shape. */
   [data-slot="kind-generated-image-full-image"] {
     display: block;
     align-self: center;
     object-fit: contain;
     width: auto;
     height: auto;
-    max-width: calc(100vw - 2rem - 22px);
-    max-height: calc(100dvh - 2rem - 64px);
-    border-radius: calc(var(--kind-radius) * 2 / 3);
+    max-width: calc(100vw - 2rem - 2 * var(--kind-generated-image-dialog-padding));
+    max-height: calc(
+      100dvh -
+      2rem -
+      2 *
+      var(--kind-generated-image-dialog-padding) -
+      12px -
+      var(--kind-control-height)
+    );
+    border-radius: var(--kind-radius-md);
     background-color: var(--kind-color-hover);
   }
 
@@ -262,7 +275,6 @@
     align-items: center;
     gap: 8px;
     min-width: 0;
-    padding-inline-start: 4px;
   }
 
   [data-slot="kind-generated-image-title"] {
@@ -271,40 +283,25 @@
     margin: 0;
     overflow: hidden;
     font-size: var(--kind-text-md);
-    font-weight: 600;
-    line-height: 1.25rem;
+    font-weight: var(--kind-font-weight-semibold);
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  /* Motion: the preview sharpens with progress, the image fades in over it, and the dialog rises in over a fading
-     backdrop. Reduced motion steps the preview's blur and only fades the image and dialog, in 120 ms; `none`
-     doesn't animate. */
-  :where([data-slot="kind-generated-image"]) {
-    & [data-slot="kind-generated-image-content"] {
-      transition:
-        opacity var(--kind-duration-base) var(--kind-ease),
-        translate var(--kind-duration-base) var(--kind-ease),
-        scale var(--kind-duration-base) var(--kind-ease);
+  /* Motion: the preview sharpens with progress, the image fades in over it, and the dialog scales in from
+     `--kind-dialog-enter-scale` (the shared dialog's motion) over a fading backdrop. Reduced motion steps the
+     preview's blur and only fades the image and dialog, in 120 ms; `none` doesn't animate. */
+  :where([data-slot="kind-generated-image"]) [data-slot="kind-generated-image-backdrop"] {
+    transition: opacity var(--kind-duration-base) var(--kind-ease-enter);
 
-      &:is([data-starting-style], [data-ending-style]) {
-        opacity: 0;
-        translate: 0 8px;
-        scale: 0.98;
-      }
-      &[data-ending-style] {
-        transition-duration: var(--kind-duration-fast);
-      }
+    &:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
     }
-    & [data-slot="kind-generated-image-backdrop"] {
-      transition: opacity var(--kind-duration-base) var(--kind-ease-out);
-
-      &:is([data-starting-style], [data-ending-style]) {
-        opacity: 0;
-      }
-      &[data-ending-style] {
-        transition-duration: var(--kind-duration-fast);
-      }
+    &[data-ending-style] {
+      transition-duration: var(--kind-duration-exit);
+      transition-timing-function: var(--kind-ease-exit);
     }
   }
 
@@ -312,7 +309,7 @@
     :where([data-slot="kind-generated-image"][data-motion="auto"]) {
       & [data-slot="kind-generated-image-trigger"]::before,
       & [data-slot="kind-generated-image-trigger"]::after,
-      & :is([data-slot="kind-generated-image-preview"], [data-slot="kind-generated-image-download"]) {
+      & [data-slot="kind-generated-image-preview"] {
         transition: none;
       }
       &
@@ -326,10 +323,9 @@
           [data-slot="kind-generated-image-content"],
           [data-slot="kind-generated-image-backdrop"]
         ) {
-        transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+        transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
         &:is([data-starting-style], [data-ending-style]) {
-          translate: none;
           scale: none;
           transition-duration: var(--kind-duration-reduced);
         }
@@ -340,7 +336,7 @@
   :where([data-slot="kind-generated-image"][data-motion="reduced"]) {
     & [data-slot="kind-generated-image-trigger"]::before,
     & [data-slot="kind-generated-image-trigger"]::after,
-    & :is([data-slot="kind-generated-image-preview"], [data-slot="kind-generated-image-download"]) {
+    & [data-slot="kind-generated-image-preview"] {
       transition: none;
     }
     &
@@ -354,10 +350,9 @@
         [data-slot="kind-generated-image-content"],
         [data-slot="kind-generated-image-backdrop"]
       ) {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
       &:is([data-starting-style], [data-ending-style]) {
-        translate: none;
         scale: none;
         transition-duration: var(--kind-duration-reduced);
       }

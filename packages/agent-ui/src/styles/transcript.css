@@ -8,9 +8,8 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border: 1px solid var(--kind-color-border);
-    border-radius: var(--kind-radius);
-    background-color: var(--kind-color-surface);
+    border-radius: var(--kind-radius-lg);
+    box-shadow: 0 0 0 1px var(--kind-color-hairline);
     color: var(--kind-color-fg);
   }
 
@@ -36,9 +35,9 @@
       display: flex;
       align-items: center;
       gap: 0.25rem;
-      height: 2rem;
+      height: var(--kind-control-height);
       padding-inline: 0.75rem 0.25rem;
-      border-radius: calc(var(--kind-radius) * 2 / 3);
+      border-radius: var(--kind-radius-md);
       color: var(--kind-color-muted);
 
       &::before {
@@ -64,6 +63,7 @@
       color: var(--kind-color-fg);
       font: inherit;
       font-size: var(--kind-text-md);
+      letter-spacing: var(--kind-text-md-tracking);
       outline: none;
 
       &::placeholder {
@@ -82,9 +82,12 @@
       height: 1.5rem;
       padding: 0;
       border: 0;
-      border-radius: var(--kind-radius-sm);
+      border-radius: var(--kind-radius-full);
       background-color: transparent;
       color: var(--kind-color-muted);
+      transition:
+        background-color var(--kind-duration-fast) var(--kind-ease-in-out),
+        color var(--kind-duration-fast) var(--kind-ease-in-out);
 
       &::before {
         content: "";
@@ -110,6 +113,7 @@
   [data-slot="kind-transcript-count"] {
     flex-shrink: 0;
     font-size: var(--kind-text-xs);
+    line-height: var(--kind-text-xs-leading);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
@@ -126,7 +130,7 @@
     &:focus-visible {
       outline: var(--kind-focus-ring);
       outline-offset: var(--kind-focus-offset-inset);
-      border-radius: 0 0 var(--kind-radius) var(--kind-radius);
+      border-radius: 0 0 var(--kind-radius-lg) var(--kind-radius-lg);
     }
   }
 
@@ -145,7 +149,7 @@
     position: relative;
     margin-inline: 0.25rem;
     padding: 0.5rem 0.75rem;
-    border-radius: calc(var(--kind-radius) * 2 / 3);
+    border-radius: var(--kind-radius-md);
 
     &:where([data-measured] > *) {
       position: absolute;
@@ -155,23 +159,15 @@
     &:where([data-can-seek]) {
       cursor: pointer;
     }
-    &:where([data-can-seek]:hover) {
+    /* The playing segment. */
+    &:where([aria-current]) {
+      background-color: var(--kind-color-current);
+    }
+    &:where([data-can-seek]:hover:not([aria-current])) {
       background-color: var(--kind-color-hover);
     }
-
-    /* The playing segment's bar, on the side its text starts. */
-    &::before {
-      content: "";
-      position: absolute;
-      inset-block: 0;
-      inset-inline-start: 0;
-      width: 2px;
-      border-start-start-radius: inherit;
-      border-end-start-radius: inherit;
-      background-color: transparent;
-    }
-    &:where([aria-current])::before {
-      background-color: var(--kind-color-accent);
+    &:where([data-can-seek]:active) {
+      background-color: var(--kind-color-pressed);
     }
   }
 
@@ -183,14 +179,14 @@
     gap: 0.5rem;
     height: 1.25rem;
     margin-block-end: 0.125rem;
-    line-height: 1.25rem;
+    line-height: var(--kind-text-md-leading);
   }
 
   [data-slot="kind-transcript-speaker"] {
     min-width: 0;
     overflow: hidden;
     font-size: var(--kind-text-sm);
-    font-weight: 600;
+    font-weight: var(--kind-font-weight-semibold);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -205,10 +201,10 @@
     padding: 0 0.25rem;
     margin-inline: -0.25rem;
     border: 0;
-    border-radius: calc(var(--kind-radius) / 3);
+    border-radius: var(--kind-radius-sm);
     background: none;
     font: inherit;
-    line-height: 1.25rem;
+    line-height: var(--kind-text-md-leading);
     cursor: pointer;
 
     &:hover [data-slot="kind-transcript-time"] {
@@ -225,7 +221,8 @@
   [data-slot="kind-transcript-text"] {
     margin: 0;
     font-size: var(--kind-text-md);
-    line-height: 1.25rem;
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
     overflow-wrap: anywhere;
   }
 
@@ -254,13 +251,12 @@
      motion, fades in over 120 ms under reduced motion, and shows at once with "none" (spec §6). */
   :where([data-slot="kind-transcript"]:not([data-motion="none"])) {
     & [data-slot="kind-transcript-segment"],
-    & [data-slot="kind-transcript-segment"]::before,
     & [data-slot="kind-transcript-word"] {
       transition:
-        opacity var(--kind-duration-reduced) var(--kind-ease-out),
-        background-color var(--kind-duration-fast) var(--kind-ease-out),
-        box-shadow var(--kind-duration-fast) var(--kind-ease-out),
-        color var(--kind-duration-fast) var(--kind-ease-out);
+        opacity var(--kind-duration-reduced) var(--kind-ease-in-out),
+        background-color var(--kind-duration-fast) var(--kind-ease-in-out),
+        box-shadow var(--kind-duration-fast) var(--kind-ease-in-out),
+        color var(--kind-duration-fast) var(--kind-ease-in-out);
     }
     & [data-slot="kind-transcript-segment"]:where([data-entering]) {
       @starting-style {
@@ -272,10 +268,10 @@
   @media (prefers-reduced-motion: no-preference) {
     :where([data-slot="kind-transcript"][data-motion="auto"]) [data-slot="kind-transcript-segment"] {
       transition:
-        opacity var(--kind-duration-base) var(--kind-ease-out),
-        translate var(--kind-duration-base) var(--kind-ease),
-        background-color var(--kind-duration-fast) var(--kind-ease-out),
-        color var(--kind-duration-fast) var(--kind-ease-out);
+        opacity var(--kind-duration-base) var(--kind-ease-enter),
+        translate var(--kind-duration-base) var(--kind-ease-enter),
+        background-color var(--kind-duration-fast) var(--kind-ease-in-out),
+        color var(--kind-duration-fast) var(--kind-ease-in-out);
 
       &:where([data-entering]) {
         @starting-style {

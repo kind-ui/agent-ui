@@ -4,7 +4,7 @@
 @layer components {
   [data-slot="kind-stack-trace"] {
     --kind-stack-trace-font-size: var(--kind-code-font-size);
-    --kind-stack-trace-row-height: 1.75rem;
+    --kind-stack-trace-row-height: var(--kind-control-height-sm);
   }
 
   /* An error's message can be long: it wraps rather than hiding its end. */
@@ -15,7 +15,7 @@
   }
 
   [data-stack-trace-name] {
-    font-weight: 600;
+    font-weight: var(--kind-font-weight-semibold);
     color: color-mix(in oklab, var(--kind-color-danger) 70%, var(--kind-color-fg));
   }
 
@@ -38,27 +38,22 @@
     color: var(--kind-color-fg);
   }
 
-  /* Tall enough for Copy when the panel holds nothing else. Only the message and frames are code, so the library
-     rows keep the page's font. */
+  /* A filled code surface, no edge (docs/design-principles.md "System"), tall enough for Copy when it holds nothing
+     else. Its rows set their own type: only the message and frames are code, so the library rows read as words. */
   [data-stack-trace-panel] {
     position: relative;
     min-height: 2.5rem;
-    border: 1px solid var(--kind-color-border);
-    padding-block: 0.375rem;
-    font-family: inherit;
-    font-size: var(--kind-stack-trace-font-size);
   }
 
   :is([data-slot="kind-stack-trace-message"], [data-slot="kind-stack-trace-frame"]) {
-    font-family: var(--kind-font-mono);
+    font-size: var(--kind-stack-trace-font-size);
   }
 
   /* Rows leave room for Copy at the panel's corner, so nothing runs under it. */
   [data-slot="kind-stack-trace-message"] {
-    padding-block: 0.25rem 0.5rem;
+    padding-block: 0.625rem 0.375rem;
     padding-inline: 0.75rem 2.75rem;
-    margin-block-end: 0.25rem;
-    border-block-end: 1px solid var(--kind-color-border);
+    box-shadow: 0 1px 0 var(--kind-color-hairline);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     color: var(--kind-color-fg);
@@ -68,6 +63,10 @@
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+
+  [data-slot="kind-stack-trace-list"] {
+    padding-block: 0.375rem;
   }
 
   [data-slot="kind-stack-trace-frame"] {
@@ -94,15 +93,19 @@
     width: 100%;
     padding-inline-end: 2.25rem;
     border: 0;
-    border-radius: calc(var(--kind-radius) / 2);
+    border-radius: var(--kind-radius-md);
     background-color: transparent;
     font: inherit;
     text-align: start;
     color: inherit;
-    transition: background-color var(--kind-duration-fast);
+    cursor: pointer;
+    transition: background-color var(--kind-duration-fast) var(--kind-ease-in-out);
 
     &:hover {
-      background-color: color-mix(in oklab, var(--kind-color-fg) 6%, transparent);
+      background-color: var(--kind-color-hover);
+    }
+    &:active {
+      background-color: var(--kind-color-pressed);
     }
     &:focus-visible {
       outline: var(--kind-focus-ring);
@@ -110,10 +113,66 @@
     }
   }
 
+  /* A frame that opens says so where the pointer or focus is: a small chevron after its location slides in. */
+  [data-slot="kind-stack-trace-frame-open"] {
+    &::after {
+      content: "";
+      align-self: center;
+      flex-shrink: 0;
+      width: 5px;
+      height: 5px;
+      margin-inline-start: -0.375rem;
+      border-right: 1.5px solid currentColor;
+      border-bottom: 1.5px solid currentColor;
+      color: var(--kind-color-muted);
+      opacity: 0;
+      rotate: -45deg;
+      transition: opacity var(--kind-duration-fast) var(--kind-ease-in-out);
+    }
+    &:dir(rtl)::after {
+      rotate: 135deg;
+    }
+    &:where(:hover, :focus-visible)::after {
+      opacity: 1;
+    }
+  }
+
+  @media (hover: none) {
+    [data-slot="kind-stack-trace-frame-open"]::after {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    [data-slot="kind-stack-trace-frame-open"]:where(
+        [data-slot="kind-stack-trace-content"][data-motion="auto"] *
+      )::after {
+      translate: -3px 0;
+      transition:
+        opacity var(--kind-duration-fast) var(--kind-ease-in-out),
+        translate var(--kind-duration-base) var(--kind-ease-enter);
+    }
+    [data-slot="kind-stack-trace-frame-open"]:where(
+        [data-slot="kind-stack-trace-content"][data-motion="auto"] *
+      ):where(:hover, :focus-visible)::after {
+      translate: none;
+    }
+    [data-slot="kind-stack-trace-frame-open"]:where(
+        [data-slot="kind-stack-trace-content"][data-motion="auto"] *
+      ):dir(rtl)::after {
+      translate: 3px 0;
+    }
+  }
+
+  [data-slot="kind-stack-trace-content"][data-motion="none"]
+    [data-slot="kind-stack-trace-frame-open"]::after {
+    transition: none;
+  }
+
   [data-slot="kind-stack-trace-frame-function"] {
     min-width: 0;
     overflow-wrap: break-word;
-    font-weight: 500;
+    font-weight: var(--kind-font-weight-medium);
     color: var(--kind-color-fg);
   }
 
@@ -132,7 +191,7 @@
   }
 
   :where([data-slot="kind-stack-trace-frame"][data-library]) [data-slot="kind-stack-trace-frame-function"] {
-    font-weight: 400;
+    font-weight: var(--kind-font-weight-regular);
     color: var(--kind-color-muted);
   }
 
@@ -145,14 +204,17 @@
     padding-block: 0.25rem;
     padding-inline: 0.75rem 2.25rem;
     border: 0;
-    border-radius: calc(var(--kind-radius) / 2);
+    border-radius: var(--kind-radius-md);
     background-color: transparent;
-    font: inherit;
+    font-family: var(--kind-font-sans);
+    font-size: var(--kind-stack-trace-font-size);
+    line-height: var(--kind-text-sm-leading);
     text-align: start;
     color: var(--kind-color-muted);
+    cursor: pointer;
     transition:
-      color var(--kind-duration-fast),
-      background-color var(--kind-duration-fast);
+      color var(--kind-duration-fast) var(--kind-ease-in-out),
+      background-color var(--kind-duration-fast) var(--kind-ease-in-out);
 
     &::before {
       content: "";
@@ -163,7 +225,7 @@
       border-right: 1.5px solid currentColor;
       border-bottom: 1.5px solid currentColor;
       transform: rotate(-45deg);
-      transition: transform var(--kind-duration-base) var(--kind-ease);
+      transition: transform var(--kind-duration-base) var(--kind-ease-in-out);
     }
     &[data-open]::before {
       transform: translateY(-1px) rotate(45deg);
@@ -176,7 +238,10 @@
     }
     &:hover {
       color: var(--kind-color-fg);
-      background-color: color-mix(in oklab, var(--kind-color-fg) 6%, transparent);
+      background-color: var(--kind-color-hover);
+    }
+    &:active {
+      background-color: var(--kind-color-pressed);
     }
     &:focus-visible {
       color: var(--kind-color-fg);
@@ -194,7 +259,7 @@
     overflow: hidden;
     margin-inline-start: 1.125rem;
     border-inline-start: 1.5px solid var(--kind-color-border);
-    transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-base) var(--kind-ease-in-out);
 
     &:is([data-starting-style], [data-ending-style]) {
       opacity: 0;
@@ -223,18 +288,11 @@
     top: 0.375rem;
     inset-inline-end: 0.375rem;
     opacity: 0;
-    transition:
-      opacity var(--kind-duration-fast),
-      color var(--kind-duration-fast),
-      background-color var(--kind-duration-fast);
 
-    &:where([data-copied]) {
-      color: var(--kind-color-success);
-    }
     &::after {
       content: "";
-      width: 0.875rem;
-      height: 0.875rem;
+      width: var(--kind-icon-size-sm);
+      height: var(--kind-icon-size-sm);
       background-color: currentColor;
       mask: var(--kind-icon-copy) center / contain no-repeat;
     }
@@ -271,8 +329,8 @@
   @media (prefers-reduced-motion: no-preference) {
     [data-slot="kind-stack-trace-library-frames"][data-motion="auto"] {
       transition:
-        height var(--kind-duration-panel) var(--kind-ease),
-        opacity var(--kind-duration-base) var(--kind-ease-out);
+        height var(--kind-duration-panel) var(--kind-ease-enter),
+        opacity var(--kind-duration-base) var(--kind-ease-in-out);
 
       &:is([data-starting-style], [data-ending-style]) {
         height: 0;
