@@ -76,8 +76,7 @@
   }
 
   /* With a Dictation, the middle keeps room for its mic, so the controls wrap before they run under it. */
-  :where([data-slot="kind-composer"])
-    [data-slot="file-input-dropzone"]:has(> [data-dictation-part="root"]) {
+  :where([data-slot="kind-composer"]) [data-slot="file-input-dropzone"]:has(> [data-dictation-part="root"]) {
     grid-template-columns: auto minmax(var(--kind-composer-control-height), 1fr) auto;
   }
 
