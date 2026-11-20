@@ -9,7 +9,7 @@
     color: var(--kind-color-fg);
   }
 
-  [data-slot="kind-suggestion"][data-layout="wrap"] {
+  [data-slot="kind-suggestion"]:where([data-layout="wrap"]) {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;

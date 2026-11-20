@@ -28,6 +28,7 @@ Last reviewed: `1b12785` (Design Wave 0)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Switching a filled `kind-suggestion`'s `layout` rebuilds its chips and drops focus** (Design Wave 1 A): the two layouts usually sit in separate elements; move the items with `moveBefore` if a host switches one in place. In a shadow root, Escape on Save or Enter on Cancel leaves focus on `<body>`, as UI SDK's `keepFocus` reads the document's active element (report upstream beside focus recovery).
 - **Only Settings Menu pins the pointer-open highlight fix** (Design Wave 0): Add Menu, Approval Mode, Model Control and Message's regenerate menu share `menuBase` and passed a probe, but have no test of their own.
 - **Dictation's web `draw` runs on every level (Wave 5 Task 11):** cheap and guarded; no `written` or `moved` fixture case yet.
 - **An empty `<kind-dictation>` takes no room until defined (Wave 5 Task 11):** a `:not(:defined)` rule from its size variables would hold it.

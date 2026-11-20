@@ -151,7 +151,8 @@ const drawLevel = (parent: Element, options: RegenerateOption[], first?: Regener
  * `<kind-message-copy><ui-toolbar-button><button aria-label="Copy">`, inside a
  * `<kind-internal-toolbar><ui-toolbar aria-label="Message actions">`, and the editor as
  * `<kind-message-editor><textarea hidden></textarea></kind-message-editor>`, which gets Cancel and Save after it in a
- * `kind-message-edit-actions` unless you write one.
+ * `kind-message-edit-actions` unless you write one: write yours `hidden`, holding
+ * `<kind-message-edit-cancel><button>Cancel</button></kind-message-edit-cancel>` and its Save twin.
  *
  * With `regenerateOptions` (a property), write Regenerate as a menu whose trigger is the toolbar button:
  * `<kind-message-regenerate><kind-internal-menu><ui-menu>` holding

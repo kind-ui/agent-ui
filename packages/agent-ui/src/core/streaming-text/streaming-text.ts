@@ -28,7 +28,7 @@ export type StreamingTextState = {
   text: string;
   chunks: readonly StreamingTextChunk[];
   caret: boolean;
-  /** Whether no text arrived for a moment, which is when the caret starts to pulse. */
+  /** Whether no text arrived for 600 ms, which is when the caret starts to pulse. */
   stalled: boolean;
   motion: MotionMode;
 };

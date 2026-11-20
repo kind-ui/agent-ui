@@ -4,7 +4,7 @@
 
 Chat core on the shared design system.
 
-- Editing a user message keeps the bubble's place, alignment and fill, and shows **Cancel** and **Save** in place of the toolbar. Tab moves from the text to them without saving. React `MessageEditor` renders the new `MessageEditActions` (`MessageEditCancel`, `MessageEditSave`) after the text area; on Web Components an editor gets a `kind-message-edit-actions` after it unless you write one.
+- Editing a user message keeps the bubble's place, alignment and fill, and shows **Cancel** and **Save** in place of the toolbar. Tab moves from the text to them without saving. React `MessageEditor` renders the new `MessageEditActions` (`MessageEditCancel`, `MessageEditSave`) after the text area unless you pass children; on Web Components an editor gets a `kind-message-edit-actions` after it unless you write one.
 - A message that isn't the last shows its toolbar on hover or while focus is inside it; the last message, every message on a touch screen, and any branch switcher always show.
 - The user bubble fills with `--kind-color-bubble`, so it reads in dark.
 - Message's Retry and Continue, Conversation's Retry and the Composer's Discard are the shared button (`data-kind-button`). Conversation's error shows a status mark in a new `error-icon` part (`ConversationErrorIcon`), then its words and Retry on one line, as a failed message does.

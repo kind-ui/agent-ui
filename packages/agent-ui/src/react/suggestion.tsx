@@ -89,6 +89,8 @@ export function SuggestionItem(props: SuggestionItemProps) {
   );
 }
 
+export type SuggestionChipProps = ComponentProps<typeof parts.Item>;
+
 /** A suggestion's button, whose `value` is its `id`. Reads its label and description unless you pass children. */
 export function SuggestionChip({
   children = ({ label, description }) => (
@@ -103,7 +105,7 @@ export function SuggestionChip({
     </>
   ),
   ...props
-}: SuggestionItemProps) {
+}: SuggestionChipProps) {
   return <parts.Item {...props}>{children}</parts.Item>;
 }
 

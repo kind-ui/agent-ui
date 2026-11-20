@@ -14,6 +14,7 @@ import { enter, type MotionMode } from "../motion/index.js";
 /** `"item-press"`: a person pressed a suggestion. `"imperative"`: an `api` call, like an agent's `pick`. */
 export type SuggestionPickReason = "item-press" | "imperative";
 
+/** How the suggestions sit: `"scroll"` in one row that scrolls sideways, `"wrap"` onto more lines. */
 export type SuggestionLayout = "scroll" | "wrap";
 
 export type SuggestionOptions = {

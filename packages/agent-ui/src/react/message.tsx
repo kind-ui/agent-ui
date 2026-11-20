@@ -139,12 +139,17 @@ export function MessageOutcome({ children = OUTCOME, ...props }: ComponentProps<
 }
 
 export const MessageContent = message.Content;
-/** Shown in place of the content while a user message is edited, with Cancel and Save after it. */
-export function MessageEditor(props: ComponentProps<typeof message.Editor>) {
+export type MessageEditorProps = Omit<ComponentProps<typeof message.Editor>, "children"> & {
+  /** What follows the text area: `<MessageEditActions />` by default. Pass your own, or `null` for none. */
+  children?: ReactNode;
+};
+
+/** Shown in place of the content while a user message is edited, with Cancel and Save after it unless you pass children. */
+export function MessageEditor({ children = DEFAULT_EDIT_ACTIONS, ...props }: MessageEditorProps) {
   return (
     <>
       <message.Editor {...props} />
-      <MessageEditActions />
+      {children}
     </>
   );
 }
@@ -157,6 +162,7 @@ export function MessageEditActions({
   return <message.EditActions {...props}>{children}</message.EditActions>;
 }
 
+/** Ends the edit without saving, as Escape does. "Cancel", unless you pass children. */
 export function MessageEditCancel({
   children = "Cancel",
   ...props
@@ -164,6 +170,7 @@ export function MessageEditCancel({
   return <message.EditCancel {...props}>{children}</message.EditCancel>;
 }
 
+/** Saves the edit, as Enter does. "Save", unless you pass children. */
 export function MessageEditSave({ children = "Save", ...props }: ComponentProps<typeof message.EditSave>) {
   return <message.EditSave {...props}>{children}</message.EditSave>;
 }
@@ -174,6 +181,7 @@ const EDIT_ACTIONS = (
     <MessageEditSave />
   </>
 );
+const DEFAULT_EDIT_ACTIONS = <MessageEditActions />;
 /** Shown once the message settles. Holds the branch switcher and a `KindToolbar` of actions. */
 export const MessageToolbar = message.Toolbar;
 /** Wrap a `KindToolbarButton` in each action: `<MessageCopy><KindToolbarButton aria-label="Copy" /></MessageCopy>`. */

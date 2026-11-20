@@ -49,12 +49,14 @@ test("edits a user message in place: Escape restores it, Enter saves it", async 
   await editor.fill("Something else");
   await page.keyboard.press("Escape");
   await expect(editor).toBeHidden();
+  await expect(page.getByRole("button", { name: "Edit" })).toBeFocused();
   await expect(user(page)).toContainText("How should the client handle a flaky upstream?");
   expect(await calls(page)).toEqual([]);
   await page.getByRole("button", { name: "Edit" }).click();
   await editor.fill("How do I retry safely?");
   await page.keyboard.press("Enter");
   await expect(editor).toBeHidden();
+  await expect(page.getByRole("button", { name: "Edit" })).toBeFocused();
   await expect(user(page)).toContainText("How do I retry safely?");
   expect(await calls(page)).toEqual(["edit:How do I retry safely?"]);
 });

@@ -231,6 +231,8 @@ export type MessageApi = {
   readClock: () => () => void;
   /** Moves focus out of the outcome when Retry or Continue leaves while focused. */
   outcomeRecovery: ReturnType<typeof createFocusRecovery>;
+  /** Handles a key in the editor: Enter saves, Escape cancels, and either puts focus back on Edit. */
+  editKeydown: (event: KeyboardEvent) => void;
   /** Saves the edit, as Enter does. */
   saveEdit: (event?: Event) => void;
   /** Ends the edit without saving, as Escape does. */
@@ -615,6 +617,9 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       timeState: (state) => timeState(state.createdAt ?? "", state.locale, state.timeZone, state.now),
       inlineEdit,
       // React renders the toolbar back after the recovery has looked for Edit, so Edit takes focus once it's there.
+      editKeydown: (event) => {
+        if (inlineEdit.inputKeydown(event) && store.get().editing === null) keepFocus(editButton);
+      },
       saveEdit: (event) => {
         if (inlineEdit.end("imperative", event)) keepFocus(editButton);
       },
@@ -689,7 +694,7 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
           const key = event as KeyboardEvent;
           // Tab moves on to Cancel and Save, which save when focus leaves them.
           if (key.key === "Tab" && !key.shiftKey) return;
-          api.inlineEdit.inputKeydown(key);
+          api.editKeydown(key);
         },
         focusout: (event, { api }) => api.editFocusOut(event as FocusEvent),
       },
