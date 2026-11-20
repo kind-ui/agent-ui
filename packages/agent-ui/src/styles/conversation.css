@@ -130,7 +130,7 @@
     box-sizing: border-box;
     max-width: 100%;
     margin: auto;
-    padding: 3rem 1rem;
+    padding: 1.5rem 1rem;
     text-align: center;
     color: var(--kind-color-muted);
   }
@@ -149,6 +149,7 @@
     font-weight: var(--kind-font-weight-medium);
     line-height: var(--kind-text-2xl-leading);
     letter-spacing: var(--kind-text-2xl-tracking);
+    text-wrap: balance;
     color: var(--kind-color-fg);
   }
 

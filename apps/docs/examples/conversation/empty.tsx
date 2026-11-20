@@ -22,7 +22,7 @@ export default function ConversationEmptyExample() {
     <Conversation
       aria-label="Conversation"
       messageCount={0}
-      className="h-80 w-full max-w-xl rounded-xl border border-[var(--kind-color-border)]"
+      className="h-96 w-full max-w-xl rounded-xl border border-[var(--kind-color-border)]"
     >
       <ConversationViewport>
         <ConversationContent>

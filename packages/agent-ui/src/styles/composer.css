@@ -75,6 +75,12 @@
     }
   }
 
+  /* With a Dictation, the middle keeps room for its mic, so the controls wrap before they run under it. */
+  :where([data-slot="kind-composer"])
+    [data-slot="file-input-dropzone"]:has(> [data-dictation-part="root"]) {
+    grid-template-columns: auto minmax(var(--kind-composer-control-height), 1fr) auto;
+  }
+
   /* While "Draft restored" shows, the controls wrap before they squeeze it under Send; its text gives way first. */
   :where([data-slot="kind-composer"])
     [data-slot="file-input-dropzone"]:has(> [data-slot="kind-composer-restored"]:not([hidden])) {
