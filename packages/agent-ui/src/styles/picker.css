@@ -52,37 +52,6 @@
     }
   }
 
-  /* Thread Search's trigger isn't the shared one: it reads as a field. */
-  :where([data-kind="thread-search"]) [data-picker-part="trigger"] {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    height: var(--kind-trigger-height);
-    padding-inline: 8px 6px;
-    border: 1px solid var(--kind-color-border);
-    border-radius: var(--kind-radius-md);
-    background-color: var(--kind-color-surface);
-    color: var(--kind-color-fg);
-    font: inherit;
-    cursor: default;
-    transition: background-color var(--kind-duration-fast) var(--kind-ease-in-out);
-
-    &:hover {
-      background-color: var(--kind-color-hover);
-    }
-    &:focus-visible {
-      outline: var(--kind-focus-ring);
-      outline-offset: var(--kind-focus-offset);
-    }
-    &:disabled,
-    &[aria-disabled="true"] {
-      opacity: var(--kind-disabled-opacity);
-    }
-    & [data-picker-text] {
-      flex: 1;
-    }
-  }
-
   :where([data-picker-part="root"]) :is([data-picker-icon], [data-slot="command-item-icon"]) {
     display: inline-flex;
     flex-shrink: 0;

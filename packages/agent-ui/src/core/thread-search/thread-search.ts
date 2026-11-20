@@ -252,6 +252,7 @@ const base = pickerBase<ThreadSearchOptions>({
   placeholder: "Search chats…",
   emptyText: "No chats found",
   popup: "dialog",
+  sharedTrigger: true,
   select: true,
   search: true,
   rank,
@@ -373,7 +374,6 @@ export const threadSearchPrimitive: ThreadSearchPrimitive = definePrimitive<
         attrs: (state, part) => ({
           ...picker.trigger.attrs?.(state, part),
           "aria-keyshortcuts": state.keyshortcuts,
-          "data-kind-trigger": "",
         }),
       }),
       backdrop: slot({
