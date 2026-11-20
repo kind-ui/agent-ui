@@ -87,22 +87,6 @@ const checks: Check[] = [
     viewport: narrow,
   },
   {
-    name: "launcher",
-    page: "launcher&case=all",
-    pattern: "dialog",
-    target: (page) => page.getByRole("dialog", { name: "Assistant" }),
-    open: press(button(/^Open Assistant/)),
-    // The panel is non-modal and closes when Tab leaves it: see "Launcher's non-modal panel and checkPattern".
-    known: [/focus should return here when Escape closes/],
-  },
-  {
-    name: "launcher modal",
-    page: "launcher&case=modal",
-    pattern: "dialog",
-    target: (page) => page.getByRole("dialog", { name: "Assistant" }),
-    open: press(button(/^Open Assistant/)),
-  },
-  {
     name: "share-dialog",
     page: "share-dialog&case=all",
     pattern: "dialog",

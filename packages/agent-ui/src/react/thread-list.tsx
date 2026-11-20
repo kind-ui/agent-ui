@@ -4,6 +4,7 @@ import {
   type ThreadListGridState,
   type ThreadListLinkState,
   type ThreadListMenuContentState,
+  type ThreadListTimeState,
   threadListPrimitive,
 } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/react/primitive";
@@ -29,6 +30,7 @@ const parts = createParts(threadListPrimitive, {
   link: "a",
   status: "span",
   unread: "span",
+  time: "span",
   editor: "input",
   "more-cell": "div",
   more: "button",
@@ -98,8 +100,8 @@ export type ThreadListRowProps = Omit<ComponentProps<typeof parts.Row>, "childre
 };
 
 /**
- * A thread's row, by its id: its link, which also opens the row's menu on a right-click or Shift+F10, and its More
- * button. Memoized, so rows that didn't change aren't rendered again.
+ * A thread's row, by its id: its link, which also opens the row's menu on a right-click or Shift+F10, how long ago it
+ * changed, and its More button, which takes the time's place on hover and focus. Memoized, so rows that didn't change aren't rendered again.
  */
 export const ThreadListRow = memo(function ThreadListRow({ children, ...props }: ThreadListRowProps) {
   return (
@@ -107,15 +109,18 @@ export const ThreadListRow = memo(function ThreadListRow({ children, ...props }:
       <parts.LinkCell value={props.value}>
         <ThreadListLink value={props.value}>{children}</ThreadListLink>
         <parts.Editor value={props.value} type="text" />
+        <parts.Time value={props.value}>{TIME}</parts.Time>
       </parts.LinkCell>
       <parts.MoreCell value={props.value}>
-        <parts.More value={props.value} data-kind-icon-button="">
+        <parts.More value={props.value} data-kind-icon-button="" data-kind-size="sm">
           {ELLIPSIS}
         </parts.More>
       </parts.MoreCell>
     </parts.Row>
   );
 });
+
+const TIME = ({ label }: ThreadListTimeState) => label;
 
 export type ThreadListLinkProps = ComponentProps<typeof parts.Link>;
 

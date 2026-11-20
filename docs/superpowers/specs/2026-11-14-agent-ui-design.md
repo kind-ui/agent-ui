@@ -21,7 +21,7 @@
 ### Non-goals
 
 - Porting code from kind-ui/charts `packages/ai` or `packages/primitives`. `packages/ai/src` in that repository is used only as a catalog of which components exist.
-- Exporting general-purpose components (button, popover, menu, and so on). They exist only to serve AI components and stay internal. Picker (Wave 5) is the one public base of this kind, as `stepPrimitive` is: every composer picker spreads it. Sidebar and Launcher (Wave 6) are public too: they are the frames of a chat app (a thread list or an assistant beside the host's page, a chat that opens from a corner), composed from UI SDK Resizable, Drawer, Popover and Dialog, not general controls.
+- Exporting general-purpose components (button, popover, menu, and so on). They exist only to serve AI components and stay internal. Picker (Wave 5) is the one public base of this kind, as `stepPrimitive` is: every composer picker spreads it. Sidebar (Wave 6) is public too: it is the frame of a chat app (a thread list or an assistant beside the host's page), composed from UI SDK Resizable and Drawer, not a general control.
 - Changing `@kind-ui/charts`, or depending on kind-ui/charts code, scripts, or configuration. This repository mirrors its tooling conventions by copying the conventions, not by importing anything.
 - Vue, Svelte, and Solid render layers at launch. The architecture permits them; they are not scheduled.
 - A TanStack AI adapter at launch. It is scheduled after Wave 4.
@@ -94,11 +94,11 @@ AI components need general controls. These are UI SDK components or `@ui-sdk/cor
 | --- | --- | --- |
 | Button | Button | almost all |
 | Collapsible | Collapsible, `bindPanel`, `bindFindable` | Step and every Step-based component, Sources, Queue |
-| Popover, Tooltip | Popover (`createPopup`; Context Meter and Inline Citation add hover and focus opening; Wave 5 popups take `presentation`), Tooltip | Feedback, Checkpoint, Context Meter, Inline Citation, Picker, Context Bar, Launcher |
+| Popover, Tooltip | Popover (`createPopup`; Context Meter and Inline Citation add hover and focus opening; Wave 5 popups take `presentation`), Tooltip | Feedback, Checkpoint, Context Meter, Inline Citation, Picker, Context Bar |
 | Menu | Menu (checkbox and radio items, submenus, `presentation`) | Message, Add Menu, Settings Menu, Approval Mode, Model Control, Thread List (row actions) |
 | Command | Command | Picker, Model Selector, Thread Search |
 | Slider, Switch | Slider; Switch's look for Settings Menu's checkbox items | Settings Menu, Model Control |
-| Alert Dialog, Dialog | Alert Dialog, Dialog (`createPopup` with `dialogPreset` for Generated Image) | Checkpoint, Generated Image, Thread List (delete), Thread Search, Share Dialog, Launcher (`modal`) |
+| Alert Dialog, Dialog | Alert Dialog, Dialog (`createPopup` with `dialogPreset` for Generated Image) | Checkpoint, Generated Image, Thread List (delete), Thread Search, Share Dialog |
 | Resizable, Drawer | Resizable (a collapsible panel with pixel sizes and a saved layout), Drawer (a side sheet) | Sidebar |
 | Input | Input, Input Group, Clear | Transcript, Conversation Search, Share Dialog |
 | Scroll Area | Scroll Area, `createStickToBottom` | Conversation, Terminal, Code Block, Markdown Table, Document |
@@ -592,11 +592,12 @@ Behavior requirements:
 | **Thread List** | `createGridFocus`, `createTypeahead`, `createVirtualizer`, Menu (`menuBase`, one menu for every row), `createInlineEdit`, Alert Dialog | `select(id)`, `newThread`, `rename(id, title)`, `pin(id, pinned?)`, `share(id)`, `delete(id)` | (new) |
 | **Thread Search** | Dialog (`createPopup` with `dialogPreset`), Command (Picker's rows) | `open`, `close`, `search(text)`, `select(id)` | (new) |
 | **Sidebar** | Resizable, Drawer, `@ui-sdk/core/shortcuts` | `open`, `close` | (new) |
-| **Launcher** | Popover or Dialog (`createPopup`), `@ui-sdk/core/shortcuts` | `open`, `close` | (new) |
 | **Conversation Search** | Input, `matchRanges`, Conversation's controller, the CSS Custom Highlight API (§2) | `search(text)`, `next`, `previous`, `close` | (new) |
 | **Day Separator** | `@ui-sdk/core/date` | none | (new) |
 | **Connection Status** | `announce`, the status mark | `retry` | (new) |
 | **Share Dialog** | Dialog (`createPopup` with `dialogPreset`), Segmented Control, Input, `createPendingAction` | `open`, `close`, `setVisibility(value)`, `createLink`, `copyLink`, `revoke` | (new) |
+
+Launcher, planned for this wave, was dropped by the user.
 
 Wave 6 also gives **Message** its author, time and outcome (`retry`, `continue`) and **Conversation** its loading, error and empty states (`retry`) and search marks.
 
@@ -605,7 +606,6 @@ Behavior requirements:
 - **Thread List:** a `nav` named by its `label` holding a grid with one Tab stop: each thread is a row of its link (the current one `aria-current="page"`) and its More button; Up and Down move between threads, Left and Right between the link and More, Home, End and typeahead as a grid's. Pinned threads come first, then the rest grouped by `updatedAt` (Today, Yesterday, Previous 7 days, Previous 30 days, then months and years, in the host's `locale` and `timeZone`), or by the host's `group`. Each row has one menu (Rename, Pin or Unpin, Share, Delete: each present only with its callback), opened by the row's More button, Shift+F10, the context-menu key or a right-click. Rename edits in place (Enter commits, Escape cancels). Delete asks in an Alert Dialog first, for a person and an agent alike. A running, waiting or failed thread shows the status mark and its words; an unread one says so. Long histories are always virtualized and ask the host for more (`onLoadMore`) near the end.
 - **Thread Search:** a dialog holding a search field and the threads as Command rows, pinned first and then grouped as Thread List groups them, with the matched text marked in titles and snippets. It filters locally by default; with `filter: false` the host searches and passes `status` while results load. Enter on a row calls `onSelect` and closes. An optional `shortcut` (like `mod+k`) opens it.
 - **Sidebar:** a side panel (`side: "start"` for a thread list, `"end"` for an assistant beside the host's page) beside the host's content, resized by its handle (the window splitter pattern) between `minSize` and `maxSize`, collapsed and restored by its trigger, Enter on the handle or an optional `shortcut`, with its layout saved to host-chosen storage. Below `overlayBelow` it is a Drawer from the same side over the page instead; the panel's content remounts at that switch, as UI SDK's responsive recipe says, so hosts keep state above it.
-- **Launcher:** a floating button (named by its `label`, with an optional unread count in words) that opens a chat panel: a non-modal popover above it, a dialog with `modal`, and a full-screen sheet on small touch screens (`presentation: "auto"`). The panel stays in the page while closed, so a draft and the scroll position survive.
 - **Conversation Search:** a `search` region with a field, "N of M", Previous, Next and Close, over the host's message texts (Markdown is read as the text it renders). Enter and Shift+Enter move between matches; moving to a match scrolls its message into view through the Conversation's controller, virtualized or not, and paints every match in view with the current one stronger. The Conversation shows a mark beside its scrollbar for each message with a match. Escape clears and closes, returning focus to where it was. The count is announced after typing pauses, never per key. It never takes the browser's find shortcut unless the host passes one.
 - **Day Separator:** a heading between messages of different days that reads "Today", "Yesterday", a weekday within the week, or the date, in the host's `locale` and `timeZone`, with a `<time datetime>`. Server markup shows the date; the relative word replaces it once it binds.
 - **Connection Status:** a pill over the top of the conversation, taking no room and not a live region (it announces through `announce` only), for `connecting`, `reconnecting` (with a countdown from `retryAt` that is never announced per second), `offline` and a stream being resumed; Retry appears only with `onRetry`. It announces the connection lost and back, and leaves once `online`.

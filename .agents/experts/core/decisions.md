@@ -50,7 +50,6 @@ Last reviewed: `bfb9bb7` (Design Wave 1 Batch D)
 - **"New chat" filters like any row** (Thread Search, Wave 6 Task 3): Command exposes no way to keep a composed item through a search (its listbox `pinned` isn't a `CommandItem` prop), so New chat shows only while the search matches it, as Picker's footer actions do.
 - **Thread Search's `agent.items` isn't `closed`** (Wave 6 Task 3): the bridge would check `search`'s free text against the threads; `select` refuses an unknown id itself, as Transcript's `seek` does.
 - **Thread Search's Escape closes its dialog** (`@ui-sdk/core/testing`, Wave 6 Task 12): as with "A picker's Escape closes its popover", Command's search is a `combobox` whose list is always shown, here inside a modal dialog, so Escape closes the dialog and focus returns to the trigger, where `checkPattern("combobox")` expects only the list to close and focus to stay. `wave-6/aria-patterns.spec.ts` accepts those two problems; the dialog check passes.
-- **Launcher's non-modal panel and checkPattern** (`@ui-sdk/core/testing`, Wave 6 Task 12): without `modal` the panel is a popover (`popoverPreset`) that closes when focus leaves it, so `checkPattern("dialog")`'s Escape after Tabbing out finds nothing to close and focus is wherever Tab took it, as with Feedback in "Non-modal popovers and checkPattern's dialog check". `wave-6/aria-patterns.spec.ts` accepts that one problem; the `modal` panel passes the check whole.
 
 ## Known and open (don't report again, check whether fixed)
 

@@ -43,7 +43,6 @@ import { GeneratedImage } from "../../../../src/react/generated-image.js";
 import { GuardrailNotice } from "../../../../src/react/guardrail-notice.js";
 import { InlineCitation } from "../../../../src/react/inline-citation.js";
 import { KindToolbar, KindToolbarButton } from "../../../../src/react/internal/toolbar.js";
-import { Launcher } from "../../../../src/react/launcher.js";
 import { Loader } from "../../../../src/react/loader.js";
 import { Markdown } from "../../../../src/react/markdown.js";
 import {
@@ -790,11 +789,6 @@ function Shell({ confirm }: { confirm: boolean }) {
             <SidebarTrigger />
           </SidebarInset>
         </Sidebar>
-      </section>
-      <section id="launcher" data-case="launcher" className="relative h-20 [transform:translateZ(0)]">
-        <Launcher label="Assistant" onOpenChange={(_open, details) => host.change("launcher", details)}>
-          <p className="p-4">How can I help?</p>
-        </Launcher>
       </section>
       <section id="share" data-case="share-dialog">
         <ShareDialog

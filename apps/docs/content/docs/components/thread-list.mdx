@@ -43,7 +43,7 @@ ThreadList
     └── ThreadListDialogDelete
 ```
 
-`ThreadList` renders these parts when you pass no children: a `nav` named by its `label`. `ThreadListNew` is the **New chat** button. `ThreadListViewport` scrolls the rows, and `ThreadListGrid` renders a `ThreadListHeading` for each group and a `ThreadListRow` for each chat in view. A row holds the chat's `ThreadListLink`, with its title, status and unread marks, and its More button. Pass a row a function of its link's `{ value, title }`, defined once outside a render, to replace what its link shows. `ThreadListEnd` shows after the rows while older chats load. `ThreadListMenu` is UI SDK's Menu, one for every row, and `ThreadListDialog` is the Alert Dialog that asks before a delete.
+`ThreadList` renders these parts when you pass no children: a `nav` named by its `label`. `ThreadListNew` is the **New chat** button. `ThreadListViewport` scrolls the rows, and `ThreadListGrid` renders a `ThreadListHeading` for each group and a `ThreadListRow` for each chat in view. A row holds the chat's `ThreadListLink`, with its title, status and unread marks, how long ago it changed, and its More button. Pass a row a function of its link's `{ value, title }`, defined once outside a render, to replace what its link shows. `ThreadListEnd` shows after the rows while older chats load. `ThreadListMenu` is UI SDK's Menu, one for every row, and `ThreadListDialog` is the Alert Dialog that asks before a delete.
 
 ## Usage
 
@@ -51,13 +51,15 @@ ThreadList
 
 Pass `threads`, each with an `id` and a `title`, and optionally an `href`, an `updatedAt` (an ISO date-time), `pinned`, a `group`, a `status` and `unread`. With an `href`, a chat's row is a real link, so it opens in a new tab like any other. A `status` of `running`, `awaiting-input` or `error` shows the status mark, named "Running", "Needs input" or "Failed", and `unread` shows a dot named "Unread". A long title is cut short with an ellipsis, and the link's name is the whole title.
 
+Each row ends in how long ago its `updatedAt` was, in a few characters: "now", "5m", "2h", "3d", then the date, like "Nov 2". The time is for the eye only, since the row's group already says when, so a screen reader reads the title alone. On hover, on focus and while its menu is open, the row's More button takes the time's place, and on touch screens More always shows instead.
+
 Pass the current chat's `id` as `value`, and its link gets `aria-current="page"`. You own `value`, as your router owns the route.
 
 ### Groups
 
 Pinned chats come first, under **Pinned**. Then chats with a `group` gather under it, in the order each group first appears, like a project or a folder. The rest gather by `updatedAt`: **Today**, **Yesterday**, **Previous 7 days**, **Previous 30 days**, then each month this year, then each year. Inside a group, chats keep the order you pass.
 
-Groups depend on today's date, so pass `now` (an ISO date or date-time) when the server renders the list, or its markup and the browser's may group the chats apart. Set `timeZone` to decide which day a chat falls on (UTC by default), `locale` for the month and year names, and `groupLabels` to replace the fixed words, like `{ today: "Aujourd'hui" }`.
+Groups and times depend on the clock, so pass `now` (an ISO date or date-time) when the server renders the list, or its markup and the browser's may group the chats apart. Without `now`, server markup shows each row's date, and the browser counts from its own clock once the list mounts, again each minute. Set `timeZone` to decide which day a chat falls on (UTC by default), `locale` for the month and year names, and `groupLabels` to replace the fixed words, like `{ today: "Aujourd'hui" }`.
 
 ### Opening a Chat
 

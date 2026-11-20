@@ -9,7 +9,8 @@
     --kind-thread-list-icon-pin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 17v5'/%3E%3Cpath d='M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z'/%3E%3C/svg%3E");
     --kind-thread-list-icon-share: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2v13'/%3E%3Cpath d='m16 6-4-4-4 4'/%3E%3Cpath d='M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8'/%3E%3C/svg%3E");
     --kind-thread-list-icon-delete: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 11v6'/%3E%3Cpath d='M14 11v6'/%3E%3Cpath d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6'/%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E");
-    /* Fixed, so the virtualizer's rows and every budget hold whatever the fonts. */
+    /* `--kind-list-row-height` in pixels, which the virtualizer reads as a number, so its rows and every budget hold
+       whatever the fonts. */
     --kind-thread-row-height: 36px;
 
     display: flex;
@@ -18,15 +19,16 @@
     min-height: 0;
     height: 100%;
     font-size: var(--kind-text-md);
-    line-height: 1.25rem;
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
     color: var(--kind-color-fg);
   }
 
   [data-thread-list-icon] {
     display: inline-flex;
     flex-shrink: 0;
-    width: 16px;
-    height: 16px;
+    width: var(--kind-icon-size);
+    height: var(--kind-icon-size);
 
     &::before {
       content: "";
@@ -54,12 +56,8 @@
     }
   }
 
-  /* As tall as a row and aligned with the titles below it. */
   [data-slot="kind-thread-list-new"] {
-    justify-content: flex-start;
-    gap: 8px;
-    height: var(--kind-thread-row-height);
-    padding-inline: 8px;
+    align-self: flex-start;
   }
 
   [data-slot="kind-thread-list-viewport"] {
@@ -88,11 +86,12 @@
   [data-slot="kind-thread-list-heading-cell"] {
     display: block;
     align-self: end;
-    padding: 0 8px 6px;
+    padding: 0 10px 6px;
     overflow: hidden;
     font-size: var(--kind-text-xs);
-    line-height: 1rem;
-    font-weight: 500;
+    font-weight: var(--kind-font-weight-medium);
+    line-height: var(--kind-text-xs-leading);
+    letter-spacing: var(--kind-text-xs-tracking);
     color: var(--kind-color-muted);
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -105,7 +104,7 @@
 
   [data-slot="kind-thread-list-row"] {
     border-radius: var(--kind-radius-md);
-    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+    transition: background-color var(--kind-duration-fast) var(--kind-ease-in-out);
 
     &:hover {
       background-color: var(--kind-color-hover);
@@ -122,6 +121,7 @@
   [data-slot="kind-thread-list-link-cell"] {
     display: flex;
     flex: 1;
+    align-items: center;
     min-width: 0;
     height: 100%;
   }
@@ -130,10 +130,10 @@
     display: flex;
     flex: 1;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     min-width: 0;
     height: 100%;
-    padding-inline: 8px;
+    padding-inline: 10px;
     border-radius: inherit;
     color: inherit;
     text-decoration: none;
@@ -145,20 +145,45 @@
     }
   }
 
+  /* A notch under ink, so the current row, the hovered one and an unread one read first. */
   [data-thread-list-title] {
     flex: 1;
     min-width: 0;
     overflow: hidden;
+    color: color-mix(in oklab, var(--kind-color-fg) 85%, transparent);
     text-overflow: ellipsis;
     white-space: nowrap;
+    transition: color var(--kind-duration-fast) var(--kind-ease-in-out);
+  }
+
+  [data-thread-list-title]:where(
+    [data-slot="kind-thread-list-row"]:is(:hover, [data-current], [data-unread]) *
+  ) {
+    color: var(--kind-color-fg);
   }
 
   [data-thread-list-title]:where([data-current] *) {
-    font-weight: 500;
+    font-weight: var(--kind-font-weight-current);
   }
 
   [data-thread-list-title]:where([data-unread] *) {
-    font-weight: 600;
+    font-weight: var(--kind-font-weight-semibold);
+  }
+
+  /* How long ago, at the row's end, as wide as More at least, which takes its place. */
+  [data-slot="kind-thread-list-time"] {
+    flex-shrink: 0;
+    box-sizing: content-box;
+    min-width: var(--kind-control-height-sm);
+    padding-inline: 4px 10px;
+    font-size: var(--kind-text-xs);
+    line-height: var(--kind-text-xs-leading);
+    letter-spacing: var(--kind-text-xs-tracking);
+    font-variant-numeric: tabular-nums;
+    color: var(--kind-color-muted);
+    text-align: end;
+    white-space: nowrap;
+    transition: opacity var(--kind-duration-fast) var(--kind-ease-in-out);
   }
 
   /* Muted, so the accent in this column is only ever the unread dot. */
@@ -178,55 +203,56 @@
     flex-shrink: 0;
     width: 8px;
     height: 8px;
-    border-radius: 9999px;
+    border-radius: var(--kind-radius-full);
     background-color: var(--kind-color-accent);
   }
 
+  /* A text field shows its caret and its hairline, never a ring. */
   [data-slot="kind-thread-list-editor"] {
     flex: 1;
     min-width: 0;
-    height: calc(var(--kind-thread-row-height) - 6px);
-    margin-inline: 3px;
-    padding-inline: 5px;
-    border: 1px solid var(--kind-color-ring);
+    height: calc(var(--kind-thread-row-height) - 8px);
+    margin-inline: 4px;
+    padding-inline: 6px;
+    border: 0;
     border-radius: var(--kind-radius-sm);
-    background-color: var(--kind-color-surface);
+    background-color: var(--kind-color-raised);
+    box-shadow: 0 0 0 1px var(--kind-color-hairline);
     color: inherit;
     font: inherit;
     outline: none;
   }
 
+  /* Over the time, so showing More moves nothing: on hover, focus and the row whose menu is open. The cell fades
+     rather than the button, whose look is the shared icon button's. */
   [data-slot="kind-thread-list-more-cell"] {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
     display: flex;
-    flex-shrink: 0;
     align-items: center;
     padding-inline-end: 4px;
+    opacity: 0;
+    transition: opacity var(--kind-duration-fast) var(--kind-ease-in-out);
   }
 
-  /* Always laid out, so showing it moves nothing: on hover, focus, the current row and the row whose menu is open. */
-  [data-slot="kind-thread-list-more"] {
-    opacity: 0;
-    transition:
-      opacity var(--kind-duration-fast) var(--kind-ease-out),
-      background-color var(--kind-duration-fast),
-      color var(--kind-duration-fast);
-
-    /* Stronger than the row's own hover fill beneath it. */
-    &:hover:not([aria-expanded="true"]) {
-      background-color: color-mix(in oklab, var(--kind-color-hover), var(--kind-color-fg) 8%);
+  :where([data-slot="kind-thread-list-row"]:is(:hover, :focus-within, [data-menu-open])) {
+    & [data-slot="kind-thread-list-more-cell"] {
+      opacity: 1;
+    }
+    &:has(> [data-slot="kind-thread-list-more-cell"]:not([hidden])) [data-slot="kind-thread-list-time"] {
+      opacity: 0;
     }
   }
 
-  [data-slot="kind-thread-list-more"]:where(
-    [data-slot="kind-thread-list-row"]:is(:hover, :focus-within, [data-current], [data-menu-open]) *
-  ) {
-    opacity: 1;
-  }
-
-  /* Touch screens have no hover to show it. */
+  /* Touch screens have no hover to show it, so More stands in for the time. */
   @media (hover: none) {
-    [data-slot="kind-thread-list-more"] {
+    [data-slot="kind-thread-list-more-cell"] {
       opacity: 1;
+    }
+    :where([data-slot="kind-thread-list-row"]:has(> [data-slot="kind-thread-list-more-cell"]:not([hidden])))
+      [data-slot="kind-thread-list-time"] {
+      visibility: hidden;
     }
   }
 
@@ -236,8 +262,10 @@
     align-items: center;
     gap: 8px;
     min-height: var(--kind-thread-row-height);
-    padding-inline: 8px;
+    padding-inline: 10px 4px;
     font-size: var(--kind-text-xs);
+    line-height: var(--kind-text-xs-leading);
+    letter-spacing: var(--kind-text-xs-tracking);
     color: var(--kind-color-muted);
 
     &[data-status="error"] {
@@ -261,65 +289,63 @@
     justify-content: flex-end;
     gap: 8px;
     min-height: var(--kind-control-height);
-    margin-top: 12px;
+    margin-top: 16px;
   }
 
   [data-slot="kind-thread-list-dialog-error"] {
     flex: 1;
     min-width: 0;
     font-size: var(--kind-text-xs);
-    line-height: 1rem;
+    line-height: var(--kind-text-xs-leading);
+    letter-spacing: var(--kind-text-xs-tracking);
     color: var(--kind-color-danger);
   }
 
-  /* Motion: the dialog rises and fades in, and its backdrop fades. Reduced motion only fades, in 120 ms; `none`
-     doesn't animate. The menu's motion is `menu.css`'s. */
+  /* Motion: the dialog scales in from just below its size and fades, and leaves quicker; its backdrop fades. Reduced
+     motion only fades; `none` doesn't animate. The menu's motion is `menu.css`'s. */
   :where([data-slot="kind-thread-list"]) {
     & [data-slot="alert-dialog-content"] {
       transition:
-        opacity var(--kind-duration-base) var(--kind-ease),
-        translate var(--kind-duration-base) var(--kind-ease),
-        scale var(--kind-duration-base) var(--kind-ease);
+        opacity var(--kind-duration-base) var(--kind-ease-enter),
+        scale var(--kind-duration-base) var(--kind-ease-enter);
 
       &:is([data-starting-style], [data-ending-style]) {
         opacity: 0;
-        translate: 0 8px;
-        scale: 0.98;
-      }
-      &[data-ending-style] {
-        transition-duration: var(--kind-duration-fast);
+        scale: var(--kind-dialog-enter-scale);
       }
     }
     & [data-slot="alert-dialog-backdrop"] {
-      transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+      transition: opacity var(--kind-duration-base) var(--kind-ease-enter);
 
       &:is([data-starting-style], [data-ending-style]) {
         opacity: 0;
       }
-      &[data-ending-style] {
-        transition-duration: var(--kind-duration-fast);
-      }
+    }
+    & :is([data-slot="alert-dialog-content"], [data-slot="alert-dialog-backdrop"])[data-ending-style] {
+      transition-duration: var(--kind-duration-exit);
+      transition-timing-function: var(--kind-ease-exit);
     }
   }
 
-  /* More fades in at most over the reduced duration. */
+  /* More and the time fade at most over the reduced duration. */
   @media (prefers-reduced-motion: reduce) {
-    :where([data-slot="kind-thread-list"][data-motion="auto"]) [data-slot="kind-thread-list-more"] {
+    :where([data-slot="kind-thread-list"][data-motion="auto"])
+      :is([data-slot="kind-thread-list-more-cell"], [data-slot="kind-thread-list-time"]) {
       transition-duration: var(--kind-duration-reduced);
     }
   }
 
-  :where([data-slot="kind-thread-list"][data-motion="reduced"]) [data-slot="kind-thread-list-more"] {
+  :where([data-slot="kind-thread-list"][data-motion="reduced"])
+    :is([data-slot="kind-thread-list-more-cell"], [data-slot="kind-thread-list-time"]) {
     transition-duration: var(--kind-duration-reduced);
   }
 
   @media (prefers-reduced-motion: reduce) {
     :where([data-slot="kind-thread-list"][data-motion="auto"])
       :is([data-slot="alert-dialog-content"], [data-slot="alert-dialog-backdrop"]) {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
       &:is([data-starting-style], [data-ending-style]) {
-        translate: none;
         scale: none;
         transition-duration: var(--kind-duration-reduced);
       }
@@ -328,10 +354,9 @@
 
   :where([data-slot="kind-thread-list"][data-motion="reduced"])
     :is([data-slot="alert-dialog-content"], [data-slot="alert-dialog-backdrop"]) {
-    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
     &:is([data-starting-style], [data-ending-style]) {
-      translate: none;
       scale: none;
       transition-duration: var(--kind-duration-reduced);
     }
@@ -342,11 +367,9 @@
       [data-slot="alert-dialog-content"],
       [data-slot="alert-dialog-backdrop"],
       [data-slot="kind-thread-list-row"],
-      [data-slot="kind-thread-list-more"],
-      [data-slot="kind-thread-list-new"],
-      [data-slot="kind-thread-list-retry"],
-      [data-slot="kind-thread-list-dialog-cancel"],
-      [data-slot="kind-thread-list-dialog-delete"]
+      [data-slot="kind-thread-list-more-cell"],
+      [data-slot="kind-thread-list-time"],
+      [data-thread-list-title]
     ) {
     transition: none;
   }

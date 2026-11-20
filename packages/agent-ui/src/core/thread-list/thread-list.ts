@@ -36,7 +36,8 @@ import {
 import { createPendingAction } from "../pending.js";
 import { holdTransitions } from "../step/base.js";
 import { type ThreadGroupOptions, threadGroups } from "../thread-groups.js";
-import { todayKey } from "../time.js";
+import { compactTimeLabel, type RelativeTimeOptions, todayKey } from "../time.js";
+import { everyMinute } from "../today.js";
 
 /** `"item-press"`: a person pressed the link or a menu item. `"imperative"`: an `api` call, like an agent's. */
 export type ThreadListReason = "item-press" | "imperative";
@@ -97,8 +98,9 @@ export type ThreadListOptions = Pick<MenuBaseOptions, "presentation" | "motion">
    */
   status?: "idle" | "loading" | "error";
   /**
-   * Today, as an ISO date or instant, which picks the date groups. Pass it when the server renders the list, so its
-   * markup and the browser's group the same threads.
+   * Today, as an ISO date or instant, which picks the date groups and how long ago each row reads ("2h", "3d"). Pass
+   * it when the server renders the list, so its markup and the browser's agree; without it, server markup shows each
+   * row's date and the browser reads its clock.
    * @default todayKey(timeZone)
    */
   now?: string;
@@ -135,6 +137,11 @@ export type ThreadListState = MenuBaseState & {
   focused: string | null;
   /** The `value` option. */
   value: string | null;
+  /**
+   * How each row's time reads: from the `now` option, else the browser's clock once bound, else no `now`, as on a
+   * server; in `locale` and `timeZone`.
+   */
+  time: RelativeTimeOptions;
   /** The thread the menu was last opened for. */
   menuFor: string | null;
   /** The thread whose menu is open. */
@@ -166,6 +173,9 @@ export type ThreadListState = MenuBaseState & {
 
 /** What the grid hands render functions: the rows to render, each a `ThreadListRow` of `rows` by its `index`. */
 export type ThreadListGridState = { visible: readonly VirtualItem[]; rows: readonly ThreadListRow[] };
+
+/** What a row's time hands render functions: how long ago the thread changed, like "2h". */
+export type ThreadListTimeState = { label: string };
 
 /** What the link hands render functions: its thread's id and title. */
 export type ThreadListLinkState = { value: string; title: string };
@@ -223,6 +233,10 @@ export type ThreadListApi = {
   grid: GridFocus;
   /** Renames in place. */
   inlineEdit: InlineEdit;
+  /** Called by the root slot: reads the browser's clock, unless `now` is set, and again each minute. */
+  bindClock: () => () => void;
+  /** A row's time slot state, memoized per thread. */
+  timeState: (state: ThreadListState, id: string) => ThreadListTimeState;
   /** Called by the viewport slot: connects the virtualizer. */
   bindViewport: (el: HTMLElement) => () => void;
   /** Called by the link and More: joins the grid at the row its thread sits in now. */
@@ -269,6 +283,7 @@ type ThreadListSlots = {
   link: Slot<RowProps, ThreadListLinkState>;
   status: Slot<RowProps>;
   unread: Slot<RowProps>;
+  time: Slot<RowProps, ThreadListTimeState>;
   editor: Slot<RowProps>;
   "more-cell": Slot<RowProps>;
   more: Slot<RowProps>;
@@ -401,6 +416,7 @@ const byValue = ({ props }: { props: Cell }) => [props.value];
 // A row's parts hear only about their own entry, place and marks, so a change reaches only the rows it changed.
 const ownRow = (column?: number) =>
   selects<ThreadListState, ThreadListApi, RowProps>({
+    time: [],
     rows: [],
     entries: byValue,
     visible: [],
@@ -420,7 +436,37 @@ const ownRow = (column?: number) =>
     deleteFailed: [],
   });
 
+const threadIn = (entry: ThreadListEntry | undefined) =>
+  entry?.type === "thread" ? entry.thread : undefined;
+
+// A row's time hears only about its own thread and the clock, not about the row moving.
+const ownTime = selects<ThreadListState, ThreadListApi, RowProps>({
+  rows: [],
+  entries: {
+    values: byValue,
+    moved: (before, after, notify) => {
+      for (const id in after) if (threadIn(before[id]) !== threadIn(after[id])) notify(id);
+      for (const id in before) if (!(id in after)) notify(id);
+    },
+  },
+  visible: [],
+  starts: [],
+  size: [],
+  active: [],
+  focused: [],
+  value: [],
+  menuFor: [],
+  menuOpenFor: [],
+  renaming: [],
+  open: [],
+  renamePending: [],
+  deleting: [],
+  deletePending: [],
+  deleteFailed: [],
+});
+
 const outsideRows = selects<ThreadListState, ThreadListApi, BaseSlotProps>({
+  time: [],
   rows: [],
   entries: [],
   visible: [],
@@ -481,6 +527,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       ...base.state(options),
       ...presentation(options),
       value: options.value ?? null,
+      time: { now: options.now, locale: options.locale, timeZone: options.timeZone },
       rows,
       entries: entriesOf(rows, {}),
       visible,
@@ -507,6 +554,17 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
     const deletePending = createPendingAction(context, { state: "deletePending" });
     const typeahead = createTypeahead();
     let rowHeight = ROW_HEIGHT;
+    let clock: string | undefined;
+    // Each row's time by thread id, with what it was read from.
+    const times = new Map<
+      string,
+      { state: ThreadListTimeState; from: string | undefined; time: RelativeTimeOptions }
+    >();
+    const readTime = ({ now = clock, locale, timeZone }: ThreadListOptions) => {
+      const { time } = store.get();
+      if (time.now !== now || time.locale !== locale || time.timeZone !== timeZone)
+        store.set({ time: { now, locale, timeZone } });
+    };
     let viewport: HTMLElement | undefined;
     // Where each row sat before the last change, so focus recovery finds the row that took a removed one's place.
     let lastIndex = new Map<string, number>();
@@ -589,6 +647,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
     context.onOptions((options) => {
       const value = options.value ?? null;
       if (value !== store.get().value) store.set({ value });
+      readTime(options);
       const { rows: before, entries } = store.get();
       const { now, locale, timeZone, labels } = groupOptions(options);
       const rows = rowsOf(options.threads ?? NO_THREADS, now, locale, timeZone, labels);
@@ -796,6 +855,30 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       menu,
       grid,
       inlineEdit,
+      bindClock: () => {
+        const tick = () => {
+          clock = new Date().toISOString();
+          readTime(context.options());
+        };
+        tick();
+        const stop = everyMinute(tick);
+        return () => {
+          stop();
+          clock = undefined;
+        };
+      },
+      timeState: (state, id) => {
+        const from = threadOf(state, id)?.updatedAt;
+        const found = times.get(id);
+        if (found && found.from === from && found.time === state.time) return found.state;
+        const next = {
+          state: { label: from === undefined ? "" : compactTimeLabel(from, state.time) },
+          from,
+          time: state.time,
+        };
+        times.set(id, next);
+        return next.state;
+      },
       bindViewport: (el) => {
         viewport = el;
         rowHeight =
@@ -902,6 +985,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       role: "navigation",
       selects: outsideRows,
       attrs: (state) => ({ "aria-label": state.label, "data-motion": state.motion }),
+      bind: (_el, { api }) => api.bindClock(),
     }),
     new: slot({
       role: "button",
@@ -909,7 +993,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       selects: outsideRows,
       present: (state) => state.canNew,
       press: ({ api }, event) => api.newThread?.(event),
-      attrs: () => ({ type: "button", "data-kind-button": "" }),
+      attrs: () => ({ type: "button", "data-kind-button": "", "data-kind-size": "lg" }),
     }),
     viewport: slot({
       selects: outsideRows,
@@ -919,6 +1003,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       role: "grid",
       keys: { none: "The links and More buttons in its cells handle them." },
       selects: selects<ThreadListState, ThreadListApi, BaseSlotProps>({
+        time: [],
         entries: [],
         starts: [],
         active: [],
@@ -1020,6 +1105,13 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       selects: ownRow(0),
       present: (state, { props }) => threadOf(state, props.value)?.unread === true,
       attrs: () => ({ "aria-label": "Unread" }),
+    }),
+    // Hidden from assistive technology: the row's date group says when, and the link's name stays its title.
+    time: slot<RowProps, ThreadListTimeState>({
+      props: { value: "string" },
+      selects: ownTime,
+      state: (state, { api, props }) => api.timeState(state, props.value),
+      attrs: () => ({ "aria-hidden": "true" }),
     }),
     editor: slot<RowProps>({
       props: { value: "string" },
@@ -1142,7 +1234,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       selects: outsideRows,
       present: (state) => state.loadStatus === "error" && state.canLoadMore,
       press: ({ api }) => api.retry(),
-      attrs: () => ({ type: "button", "data-kind-button": "" }),
+      attrs: () => ({ type: "button", "data-kind-button": "", "data-kind-size": "sm" }),
     }),
   }),
   agent: {

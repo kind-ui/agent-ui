@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  compactTimeLabel,
   dateGroup,
   dayKey,
   dayLabel,
@@ -23,6 +24,18 @@ test("dayLabel reads relative days in the given zone", () => {
   assert.equal(dayLabel("2026-11-18T01:00:00Z", { locale: "en" }), "November 18, 2026", "no now: the date");
   assert.equal(dayLabel("2026-11-17", { now: "2026-11-18", locale: "de" }), "gestern");
   assert.equal(dayLabel("not a date", utc), "");
+});
+
+test("compactTimeLabel counts minutes, hours and days, then reads the date", () => {
+  assert.equal(compactTimeLabel("2026-11-18T07:29:40Z", utc), "now");
+  assert.equal(compactTimeLabel("2026-11-18T07:10:00Z", utc), "20m");
+  assert.equal(compactTimeLabel("2026-11-17T09:30:00Z", utc), "22h");
+  assert.equal(compactTimeLabel("2026-11-15T12:00:00Z", utc), "3d");
+  assert.equal(compactTimeLabel("2026-11-02T12:00:00Z", utc), "Nov 2");
+  assert.equal(compactTimeLabel("2025-11-02T12:00:00Z", utc), "Nov 2, 2025");
+  assert.equal(compactTimeLabel("2026-11-18T05:00:00Z", { now: "2026-11-18" }), "5:00 AM", "a day for now");
+  assert.equal(compactTimeLabel("2026-11-18T05:00:00Z", { locale: "en" }), "Nov 18", "no now: the date");
+  assert.equal(compactTimeLabel("not a date", utc), "");
 });
 
 test("dayKey takes an ISO date as its own day and an instant in the zone", () => {

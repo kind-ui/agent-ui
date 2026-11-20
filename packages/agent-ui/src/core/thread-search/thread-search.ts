@@ -111,6 +111,7 @@ export type ThreadSearchApi = PickerBaseApi & {
 type ThreadSearchSlots = PickerBaseSlots<ThreadSearchState, ThreadSearchApi> & {
   backdrop: SlotDefinition<ThreadSearchState, ThreadSearchApi, BaseSlotProps, PopupPartState>;
   shortcut: SlotDefinition<ThreadSearchState, ThreadSearchApi, BaseSlotProps, { text: string }>;
+  hints: SlotDefinition<ThreadSearchState, ThreadSearchApi, BaseSlotProps>;
   status: SlotDefinition<ThreadSearchState, ThreadSearchApi, BaseSlotProps & { value?: string }>;
 };
 
@@ -372,6 +373,7 @@ export const threadSearchPrimitive: ThreadSearchPrimitive = definePrimitive<
         attrs: (state, part) => ({
           ...picker.trigger.attrs?.(state, part),
           "aria-keyshortcuts": state.keyshortcuts,
+          "data-kind-trigger": "",
         }),
       }),
       backdrop: slot({
@@ -382,6 +384,10 @@ export const threadSearchPrimitive: ThreadSearchPrimitive = definePrimitive<
         present: (state) => state.shortcut !== undefined,
         state: (state) => ({ text: state.shortcutText }),
         attrs: () => ({ "aria-hidden": "true", translate: "no", "data-thread-search-part": "shortcut" }),
+      }),
+      // The keys a pointer user may not know, shown to the eye only: UI SDK Command handles them.
+      hints: slot({
+        attrs: () => ({ "aria-hidden": "true", "data-thread-search-part": "hints" }),
       }),
       // A row's status mark, by its row key: named in words, since a status needs them.
       status: slot<BaseSlotProps & { value?: string }>({

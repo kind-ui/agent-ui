@@ -23,6 +23,7 @@ const parts = createParts(threadSearchPrimitive, {
   command: "div",
   item: "span",
   shortcut: "kbd",
+  hints: "div",
   status: "span",
 });
 
@@ -76,11 +77,35 @@ export function ThreadSearchBackdrop(props: ThreadSearchBackdropProps) {
   return <parts.Backdrop {...props} />;
 }
 
+export type ThreadSearchHintsProps = ComponentProps<typeof parts.Hints>;
+
+/** "↑↓ Navigate", "↵ Open" and "Esc Close" under the list, unless you pass children. Hidden on touch screens. */
+export function ThreadSearchHints({ children = HINTS, ...props }: ThreadSearchHintsProps) {
+  return <parts.Hints {...props}>{children}</parts.Hints>;
+}
+
+const HINTS = (
+  <>
+    <span>
+      <kbd>↑↓</kbd> Navigate
+    </span>
+    <span>
+      <kbd>↵</kbd> Open
+    </span>
+    <span>
+      <kbd>Esc</kbd> Close
+    </span>
+  </>
+);
+
 const DEFAULT = (
   <>
     <ThreadSearchTrigger />
     <ThreadSearchBackdrop />
-    <picker.Content />
+    <picker.Content>
+      <picker.List />
+      <ThreadSearchHints />
+    </picker.Content>
   </>
 );
 
@@ -92,7 +117,7 @@ export function ThreadSearch({ children = DEFAULT, ...props }: ThreadSearchProps
   return <parts.Root {...props}>{children}</parts.Root>;
 }
 
-/** The dialog: the search field and the list, unless you pass children. Focus moves to the search field. */
+/** The dialog: the search field, the list and the key hints, unless you pass children. Focus moves to the search field. */
 export const ThreadSearchContent = picker.Content;
 /** UI SDK Command: the search field, its status line, the empty text, and the rows unless you pass children. */
 export const ThreadSearchList = picker.List;

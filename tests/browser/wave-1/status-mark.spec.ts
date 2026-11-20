@@ -44,7 +44,7 @@ const consumers: Record<string, string> = {
 
   // wave-6-task-4: Sidebar
 
-  // wave-6-task-5: Launcher
+  // wave-6-task-5: Launcher, dropped by the user
 
   // wave-6-task-6: Day Separator
 
@@ -160,7 +160,7 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
 
   // wave-6-task-4: Sidebar
 
-  // wave-6-task-5: Launcher
+  // wave-6-task-5: Launcher, dropped by the user
 
   // wave-6-task-6: Day Separator
 

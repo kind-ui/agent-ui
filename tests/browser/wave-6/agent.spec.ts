@@ -18,7 +18,6 @@ import { layerOf } from "../layer.js";
 const threads = { component: "kind-thread-list", label: "Chats", id: "thread-list" };
 const search = { component: "kind-thread-search", label: "Search chats", id: "thread-search" };
 const sidebar = { component: "kind-sidebar", label: "History", id: "sidebar" };
-const launcher = { component: "kind-launcher", label: "Assistant", id: "launcher" };
 const share = { component: "kind-share-dialog", label: "Share", id: "share" };
 const failed = { component: "kind-message", label: "Failed answer", id: "failed" };
 const earlier = { component: "kind-conversation", label: "Earlier chat", id: "earlier" };
@@ -27,7 +26,7 @@ const find = { component: "kind-conversation-search", label: "Search in conversa
 
 type Target = typeof threads;
 
-const wave6 = [threads, search, sidebar, launcher, share, failed, earlier, connection, find];
+const wave6 = [threads, search, sidebar, share, failed, earlier, connection, find];
 
 const open = async (page: Page) => {
   await page.goto("/?c=agent&case=wave-6");
@@ -154,17 +153,6 @@ const conformance: Conformance[] = [
     },
     pointer: press("sidebar", "Show History"),
   },
-  { target: launcher, action: "open", pointer: press("launcher", /^Open Assistant/) },
-  {
-    target: launcher,
-    action: "close",
-    before: async (page) => {
-      await press("launcher", /^Open Assistant/)(page);
-      await opened(launcher)(page).toBe(true);
-      await settled(page);
-    },
-    pointer: (page) => page.keyboard.press("Escape"),
-  },
   { target: share, action: "open", pointer: press("share", "Share") },
   { target: share, action: "close", before: openShare, pointer: (page) => page.keyboard.press("Escape") },
   {
@@ -239,7 +227,6 @@ test("one snapshot lists each Wave 6 component once by name with its actions, an
     'kind-connection-status "Offline": retry',
     'kind-conversation "Earlier chat": retry scrollToEnd',
     'kind-conversation-search "Search in conversation": close press search',
-    'kind-launcher "Assistant": open press',
     'kind-message "Failed answer": copy retry',
     'kind-share-dialog "Share": open press',
     'kind-sidebar "History": close press',
@@ -306,12 +293,11 @@ test("change callbacks hear source agent, and a cancelled change leaves the stat
   await act(page, threads.component, threads.label, "select", ["t3"]);
   await act(page, search.component, search.label, "open");
   await act(page, sidebar.component, sidebar.label, "close");
-  await act(page, launcher.component, launcher.label, "open");
   await act(page, share.component, share.label, "open");
   await act(page, find.component, find.label, "search", ["rollout"]);
   await act(page, find.component, find.label, "close");
   expect((await host(page)).changes).toEqual(
-    ["thread-select", "thread-search", "sidebar", "launcher", "share", "find-query", "find"].map(
+    ["thread-select", "thread-search", "sidebar", "share", "find-query", "find"].map(
       (name) => `${name}:agent`,
     ),
   );
@@ -320,7 +306,6 @@ test("change callbacks hear source agent, and a cancelled change leaves the stat
   for (const [target, open] of [
     [search, false],
     [sidebar, true],
-    [launcher, false],
     [share, false],
   ] as const)
     expect((await entry(page, target.component, target.label))?.open, target.label).toBe(open);

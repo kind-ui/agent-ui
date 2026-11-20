@@ -23,7 +23,7 @@ AI interface components that people and agents can both use, for React and Web C
 
 ## Features
 
-- **57 components** for AI chat and agent interfaces: conversations and streaming markdown, the steps an agent takes, the places a person answers it, the output it hands back, and the shell around a chat: its list of past chats, a sidebar and search.
+- **56 components** for AI chat and agent interfaces: conversations and streaming markdown, the steps an agent takes, the places a person answers it, the output it hands back, and the shell around a chat: its list of past chats, a sidebar and search.
 - **React and Web Components.** Every component ships as a React item and a `-web` twin with the same props, states and styles.
 - **Built on UI SDK.** Focus, keyboard navigation, popups, dismissal and screen reader announcements come from [UI SDK](https://ui-sdk.dev/docs), not hand-written code.
 - **Agent-operable.** An agent connected with UI SDK's `createAgent` reads the same components a person sees and runs their actions, with a person confirming the ones that matter.
@@ -204,7 +204,6 @@ const rendered = fromUIMessages(messages, { status, error });
 | [Thread List](https://kindui.dev/docs/agent-ui/components/thread-list/) | Past chats grouped by date, to open, rename, pin, share or delete. |
 | [Thread Search](https://kindui.dev/docs/agent-ui/components/thread-search/) | A search dialog over past chats, grouped like the list, with New chat. |
 | [Sidebar](https://kindui.dev/docs/agent-ui/components/sidebar/) | A panel beside the page that people resize and collapse, and a drawer on narrow screens. |
-| [Launcher](https://kindui.dev/docs/agent-ui/components/launcher/) | A floating button in the page's corner that opens a chat, as a popover or a dialog. |
 | [Day Separator](https://kindui.dev/docs/agent-ui/components/day-separator/) | A heading where a new day starts in a conversation, reading Today or Yesterday. |
 | [Connection Status](https://kindui.dev/docs/agent-ui/components/connection-status/) | A pill over the conversation while the connection drops, comes back or resumes a stream. |
 | [Share Dialog](https://kindui.dev/docs/agent-ui/components/share-dialog/) | Choose who can open a chat, then create, copy or stop sharing its link. |

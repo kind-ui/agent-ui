@@ -624,7 +624,6 @@ export const sidebarPrimitive: SidebarPrimitive = definePrimitive<
         "aria-controls": `${part.id}-panel`,
         "aria-keyshortcuts": state.bound && state.shortcut ? ariaKeyshortcuts(state.shortcut) : undefined,
         "data-sidebar-part": "trigger",
-        "data-kind-button": "",
         "data-side": state.side,
         "data-open": state.open ? "" : undefined,
       }),

@@ -28,7 +28,7 @@
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
-    background: var(--kind-color-surface);
+    background: var(--kind-color-canvas);
   }
 
   [data-slot="resizable-panel"]:has(> [data-sidebar-part="panel"]) {
@@ -52,27 +52,67 @@
     flex: 1;
   }
 
-  /* The shared button, unfilled while the panel is open, since that's its resting state. Without children it's the
-     icon button's square. */
-  [data-sidebar-part="trigger"][aria-expanded="true"]:not(:hover) {
-    background-color: transparent;
-  }
-
-  [data-sidebar-part="trigger"]:empty {
-    width: var(--kind-control-height);
+  /* A ghost icon pill like the shared icon button, but without its open fill: open is the panel's resting state. */
+  [data-sidebar-part="trigger"] {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: var(--kind-control-height);
+    height: var(--kind-control-height);
     padding: 0;
+    border: 0;
+    border-radius: var(--kind-radius-full);
+    background-color: transparent;
     color: var(--kind-color-muted);
+    font: inherit;
+    cursor: pointer;
+    transition:
+      background-color var(--kind-duration-fast) var(--kind-ease-in-out),
+      color var(--kind-duration-fast) var(--kind-ease-in-out),
+      scale var(--kind-duration-spring) var(--kind-ease-spring);
 
     &:hover {
+      background-color: var(--kind-color-hover);
       color: var(--kind-color-fg);
+    }
+
+    &:active {
+      background-color: var(--kind-color-pressed);
+      scale: var(--kind-press-scale);
+      transition-duration: var(--kind-duration-fast), var(--kind-duration-fast), var(--kind-duration-instant);
+    }
+
+    &:focus-visible {
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      &:active {
+        scale: none;
+      }
+    }
+
+    @media (pointer: coarse) {
+      &::before {
+        content: "";
+        position: absolute;
+        inset: 50% auto auto 50%;
+        width: max(100%, var(--kind-hit-area));
+        height: max(100%, var(--kind-hit-area));
+        translate: -50% -50%;
+      }
     }
   }
 
-  /* An empty trigger draws the panel icon, on `::after` since `::before` is the shared control's hit area. */
+  /* An empty trigger draws the panel icon, on `::after` since `::before` is the hit area. */
   [data-sidebar-part="trigger"]:empty::after {
     content: "";
-    width: 1rem;
-    height: 1rem;
+    width: var(--kind-icon-size);
+    height: var(--kind-icon-size);
     background-color: currentColor;
     mask: var(--kind-sidebar-icon-left) center / contain no-repeat;
   }
@@ -164,10 +204,10 @@
       width: 4px;
       height: 1.5rem;
       translate: -50% -50%;
-      border-radius: 9999px;
-      background-color: var(--kind-color-border);
-      box-shadow: 0 0 0 1px var(--kind-color-surface);
-      transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+      border-radius: var(--kind-radius-full);
+      background-color: color-mix(in oklab, var(--kind-color-muted) 45%, var(--kind-color-canvas));
+      box-shadow: 0 0 0 2px var(--kind-color-canvas);
+      transition: background-color var(--kind-duration-fast) var(--kind-ease-in-out);
     }
 
     &:is([data-hovering], [data-dragging])::after {
@@ -220,16 +260,16 @@
       }
 
       &:has([data-sidebar-part="panel"][data-rail]) {
-        --kind-sidebar-frame-transition: flex-basis var(--kind-duration-panel) var(--kind-ease);
+        --kind-sidebar-frame-transition: flex-basis var(--kind-duration-panel) var(--kind-ease-enter);
       }
 
       & [data-sidebar-part="panel"]:not([data-overlay], [data-rail]) {
-        transition: translate var(--kind-duration-panel) var(--kind-ease);
+        transition: translate var(--kind-duration-panel) var(--kind-ease-enter);
       }
 
       /* Closing accelerates away, so the panel leaves its frame just as the frame closes. */
       & [data-sidebar-part="panel"]:not([data-open], [data-overlay], [data-rail]) {
-        transition-timing-function: ease-in;
+        transition-timing-function: var(--kind-ease-exit);
       }
     }
   }

@@ -228,10 +228,9 @@ const cases = {
       heading: ["heading:pinned"],
       "heading-cell": ["heading:pinned"],
       ...Object.fromEntries(
-        ["row", "link-cell", "link", "status", "unread", "editor", "more-cell", "more"].map((slot) => [
-          slot,
-          ["a"],
-        ]),
+        ["row", "link-cell", "link", "status", "unread", "time", "editor", "more-cell", "more"].map(
+          (slot) => [slot, ["a"]],
+        ),
       ),
     },
   },
@@ -253,9 +252,7 @@ const cases = {
 
   sidebar: { options: { label: "Chats" } },
 
-  // wave-6-task-5: Launcher
-
-  launcher: { options: { label: "Assistant", unread: 2, shortcut: "mod+i" } },
+  // wave-6-task-5: Launcher, dropped by the user
 
   // wave-6-task-6: Day Separator
 

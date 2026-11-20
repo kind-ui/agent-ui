@@ -64,9 +64,7 @@ import { defineThreadSearch } from "./components/ui/web/thread-search.js";
 
 import { defineSidebar } from "./components/ui/web/sidebar.js";
 
-// wave-6-task-5: Launcher
-
-import { defineLauncher } from "./components/ui/web/launcher.js";
+// wave-6-task-5: Launcher, dropped by the user
 
 // wave-6-task-6: Day Separator
 
@@ -156,9 +154,7 @@ for (const define of [
 
   defineSidebar,
 
-  // wave-6-task-5: Launcher
-
-  defineLauncher,
+  // wave-6-task-5: Launcher, dropped by the user
 
   // wave-6-task-6: Day Separator
 
@@ -276,9 +272,7 @@ const items = {
 
   sidebar: `<kind-sidebar label="Chats" class="h-64"><kind-sidebar-panel>Chats</kind-sidebar-panel><kind-sidebar-inset><kind-sidebar-trigger><button></button></kind-sidebar-trigger></kind-sidebar-inset></kind-sidebar>`,
 
-  // wave-6-task-5: Launcher
-
-  launcher: `<kind-launcher><kind-launcher-content><p>How can I help?</p></kind-launcher-content></kind-launcher>`,
+  // wave-6-task-5: Launcher, dropped by the user
 
   // wave-6-task-6: Day Separator
 

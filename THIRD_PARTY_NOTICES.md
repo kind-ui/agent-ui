@@ -63,9 +63,7 @@
 
 - `packages/agent-ui/src/styles/sidebar.css` (Sidebar's trigger): `panel-left` and `panel-right`, unchanged; both derive from Feather.
 
-<!-- wave-6-task-5: Launcher -->
-
-- `packages/agent-ui/src/styles/launcher.css` (the launcher's button and Close): `message-circle` and `x`, unchanged; both derive from Feather.
+<!-- wave-6-task-5: Launcher, dropped by the user -->
 
 <!-- wave-6-task-6: Day Separator -->
 

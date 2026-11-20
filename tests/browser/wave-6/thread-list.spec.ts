@@ -63,6 +63,19 @@ test("groups read Pinned, the host's group, then dates, each under a row header"
   await expect(link(page, "Draft the launch post Unread")).toBeVisible();
 });
 
+test("each row ends in how long ago it changed, hidden from assistive technology, which More covers on hover", async ({
+  page,
+}) => {
+  await load(page);
+  const times = page.locator('[data-slot="kind-thread-list-time"]');
+  await expect(times).toHaveText(["Nov 10", "5h", "1h", "4h", "20h", "4d"]);
+  await expect(times.first()).toHaveAttribute("aria-hidden", "true");
+  const row = page.locator('[data-slot="kind-thread-list-row"]').filter({ has: link(page, "Atlas roadmap") });
+  await row.hover();
+  await expect(row.locator('[data-slot="kind-thread-list-time"]')).toHaveCSS("opacity", "0");
+  await expect(row.locator('[data-slot="kind-thread-list-more-cell"]')).toHaveCSS("opacity", "1");
+});
+
 test("one Tab stop: arrows skip headings, Right reaches More, the context menu key opens the same menu", async ({
   page,
 }) => {

@@ -57,15 +57,16 @@ const formatter = (tag: string, timeZone: string | undefined, options: Intl.Date
   return found;
 };
 
-const relative = new Map<string, Intl.RelativeTimeFormat>();
-const relativeDay = (tag: string, days: number) => {
-  let found = relative.get(tag);
+const relativeFormats = new Map<string, Intl.RelativeTimeFormat>();
+const relative = (tag: string) => {
+  let found = relativeFormats.get(tag);
   if (!found) {
     found = new Intl.RelativeTimeFormat(tag, { numeric: "auto" });
-    relative.set(tag, found);
+    relativeFormats.set(tag, found);
   }
-  return found.format(-days, "day");
+  return found;
 };
+const relativeDay = (tag: string, days: number) => relative(tag).format(-days, "day");
 
 /** An ISO date-time; one without an offset reads as UTC, since `Date` would read it in the machine's own zone. */
 const instant = (iso: string): Date | undefined => {
@@ -147,11 +148,16 @@ export function timeLabel(iso: string, options: RelativeTimeOptions = {}): strin
 
 const unitFormats = new Map<string, Intl.NumberFormat>();
 const unitLists = new Map<string, Intl.ListFormat>();
-const unit = (tag: string, name: "hour" | "minute" | "second", value: number) => {
-  const key = `${tag}|${name}`;
+const unit = (
+  tag: string,
+  name: "day" | "hour" | "minute" | "second",
+  value: number,
+  display: "short" | "narrow" = "short",
+) => {
+  const key = `${tag}|${name}|${display}`;
   let found = unitFormats.get(key);
   if (!found) {
-    found = new Intl.NumberFormat(tag, { style: "unit", unit: name, unitDisplay: "short" });
+    found = new Intl.NumberFormat(tag, { style: "unit", unit: name, unitDisplay: display });
     unitFormats.set(key, found);
   }
   return found.format(value);
@@ -175,6 +181,36 @@ export function durationLabel(seconds: number | undefined, localeTag?: string): 
     unitLists.set(tag, list);
   }
   return list.format(parts);
+}
+
+/**
+ * How long ago, in a list row's few characters: "now", "5m", "2h", "3d", then the date ("Nov 2", with the year when
+ * it isn't `now`'s). With a day for `now` rather than an instant, today reads as the time of day. Without `now`, the
+ * date, as server markup shows it. Empty for a string that isn't a date.
+ */
+export function compactTimeLabel(iso: string, options: RelativeTimeOptions = {}): string {
+  const found = daysAgo(iso, options.now, options.timeZone);
+  if (!found) return "";
+  const tag = locale(options.locale);
+  const date = instant(iso);
+  const now = options.now === undefined ? undefined : instant(options.now);
+  if (date && now) {
+    const minutes = Math.floor((now.getTime() - date.getTime()) / 60_000);
+    if (minutes < 1) return relative(tag).format(0, "second");
+    if (minutes < 60) return unit(tag, "minute", minutes, "narrow");
+    if (minutes < 24 * 60) return unit(tag, "hour", Math.floor(minutes / 60), "narrow");
+  }
+  const { day, today, ago } = found;
+  if (ago !== undefined && ago <= 0) {
+    if (!date) return relativeDay(tag, 0);
+    return formatter(tag, options.timeZone, { hour: "numeric", minute: "2-digit" })
+      .format(date)
+      .replace(THIN_SPACES, " ");
+  }
+  if (ago !== undefined && ago < 7) return unit(tag, "day", ago, "narrow");
+  const format: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+  if (today !== undefined && today.slice(0, 4) !== day.slice(0, 4)) format.year = "numeric";
+  return formatDate(day, tag, format);
 }
 
 /**

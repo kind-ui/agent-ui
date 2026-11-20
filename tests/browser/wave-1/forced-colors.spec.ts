@@ -32,9 +32,7 @@ const pages = [
 
   "sidebar&case=all",
 
-  // wave-6-task-5: Launcher
-
-  "launcher&case=read",
+  // wave-6-task-5: Launcher, dropped by the user
 
   // wave-6-task-6: Day Separator
 

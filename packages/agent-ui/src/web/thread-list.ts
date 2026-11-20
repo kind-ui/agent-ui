@@ -6,6 +6,7 @@ import {
   type ThreadListOptions,
   type ThreadListReason,
   type ThreadListState,
+  type ThreadListTimeState,
   threadListPrimitive,
 } from "@kind-ui/agent-ui/core";
 import type { ActionDetails, ChangeDetails } from "@ui-sdk/core";
@@ -74,6 +75,17 @@ const newHeading = (document: Document, key: string) => {
   return heading;
 };
 
+// Each row's time element and the state it was last drawn from.
+const rowTimes = new WeakMap<Element, Element>();
+const drawnTimes = new WeakMap<Element, ThreadListTimeState>();
+
+const drawTime = (row: Element, time: ThreadListTimeState) => {
+  const target = rowTimes.get(row);
+  if (!target || drawnTimes.get(target) === time) return;
+  drawnTimes.set(target, time);
+  if (target.textContent !== time.label) target.textContent = time.label;
+};
+
 const newRow = (document: Document, id: string) => {
   const anchor = element(document, "a");
   anchor.append(
@@ -86,9 +98,10 @@ const newRow = (document: Document, id: string) => {
   const cell = element(document, "kind-thread-list-link-cell", { value: id });
   const editor = element(document, "kind-thread-list-editor", { value: id });
   editor.append(element(document, "input", { type: "text" }));
-  cell.append(link, editor);
+  const time = element(document, "kind-thread-list-time", { value: id });
+  cell.append(link, editor, time);
   // The shared icon button is written as the row is made, not by its part, so a new row costs no more writes.
-  const button = element(document, "button", { "data-kind-icon-button": "" });
+  const button = element(document, "button", { "data-kind-icon-button": "", "data-kind-size": "sm" });
   button.append(element(document, "span", { "data-thread-list-icon": "more", "aria-hidden": "true" }));
   const more = element(document, "kind-thread-list-more", { value: id });
   more.append(button);
@@ -96,6 +109,7 @@ const newRow = (document: Document, id: string) => {
   moreCell.append(more);
   const row = element(document, "kind-thread-list-row", { value: id });
   row.append(cell, moreCell);
+  rowTimes.set(row, time);
   return row;
 };
 
@@ -118,7 +132,7 @@ const drawEntry = (row: Element, entry: ThreadListEntry) => {
 const gridRows = new WeakMap<Element, Map<string, Element>>();
 
 /** Draws a heading or a row for each row in view, reusing each key's element and removing those that left. */
-const drawRows = (grid: Element, state: ThreadListState) => {
+const drawRows = (grid: Element, state: ThreadListState, api: ThreadListApi) => {
   const document = grid.ownerDocument;
   const rows = gridRows.get(grid) ?? new Map<string, Element>();
   gridRows.set(grid, rows);
@@ -139,6 +153,7 @@ const drawRows = (grid: Element, state: ThreadListState) => {
       rows.set(item.key, row);
     }
     drawEntry(row, entry);
+    if (entry.type === "thread") drawTime(row, api.timeState(state, item.key));
     place(grid, row, previous ? previous.nextElementSibling : grid.firstElementChild);
     previous = row;
   }
@@ -263,7 +278,7 @@ export function defineThreadList(): void {
           const host = el.querySelector("kind-thread-list-grid");
           if (host && !host.firstElementChild) host.replaceChildren(element(host.ownerDocument, "div"));
           const grid = host?.firstElementChild ?? null;
-          if (ownedOrEmpty(grid)) drawRows(grid, state);
+          if (ownedOrEmpty(grid)) drawRows(grid, state, api);
           const content = el.querySelector<FocusElement>("kind-thread-list-menu-content > ui-menu-content");
           if (content) {
             const { finalFocus, actions } = api.menuContentState(state);
@@ -299,6 +314,7 @@ export function defineThreadList(): void {
     link: { tag: "kind-thread-list-link", target: wrappedChild("a"), display: "contents" },
     status: "kind-thread-list-status",
     unread: "kind-thread-list-unread",
+    time: "kind-thread-list-time",
     editor: { tag: "kind-thread-list-editor", target: wrappedChild("input"), display: "contents" },
     "more-cell": "kind-thread-list-more-cell",
     more: { tag: "kind-thread-list-more", target: wrappedButton, display: "contents" },
@@ -360,6 +376,7 @@ declare global {
     "kind-thread-list-link": HTMLElement;
     "kind-thread-list-status": HTMLElement;
     "kind-thread-list-unread": HTMLElement;
+    "kind-thread-list-time": HTMLElement;
     "kind-thread-list-editor": HTMLElement;
     "kind-thread-list-more-cell": HTMLElement;
     "kind-thread-list-more": HTMLElement;

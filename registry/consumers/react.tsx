@@ -77,9 +77,7 @@ import {
   SidebarTrigger,
 } from "./components/ui/sidebar.js";
 
-// wave-6-task-5: Launcher
-
-import { Launcher } from "./components/ui/launcher.js";
+// wave-6-task-5: Launcher, dropped by the user
 
 // wave-6-task-6: Day Separator
 
@@ -379,13 +377,7 @@ const items = {
     </Sidebar>
   ),
 
-  // wave-6-task-5: Launcher
-
-  launcher: (
-    <Launcher>
-      <p>How can I help?</p>
-    </Launcher>
-  ),
+  // wave-6-task-5: Launcher, dropped by the user
 
   // wave-6-task-6: Day Separator
 

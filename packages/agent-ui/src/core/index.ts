@@ -564,6 +564,7 @@ export {
 export { thinkingIndicatorPrimitive } from "./thinking-indicator/index.js";
 export { type ThreadGroup, type ThreadGroupOptions, threadGroups } from "./thread-groups.js";
 export {
+  compactTimeLabel,
   type DateGroup,
   type DateGroupKey,
   type DateGroupOptions,
@@ -636,6 +637,7 @@ export {
   type ThreadListReason,
   type ThreadListRow,
   type ThreadListState,
+  type ThreadListTimeState,
   threadListPrimitive,
   threadListRows,
 } from "./thread-list/index.js";
@@ -669,19 +671,7 @@ export {
   sidebarPrimitive,
 } from "./sidebar/index.js";
 
-// wave-6-task-5: Launcher
-
-export {
-  LAUNCHER_INITIAL_FOCUS,
-  type LauncherApi,
-  type LauncherOpenChangeReason,
-  type LauncherOptions,
-  type LauncherPresentation,
-  type LauncherPrimitive,
-  type LauncherState,
-  launcherPrimitive,
-  launcherTriggerName,
-} from "./launcher/index.js";
+// wave-6-task-5: Launcher, dropped by the user
 
 // wave-6-task-6: Day Separator
 

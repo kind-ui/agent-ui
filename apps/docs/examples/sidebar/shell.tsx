@@ -198,17 +198,12 @@ export default function ChatShellExample() {
   };
 
   return (
-    <Sidebar
-      label="Chats"
-      defaultSize="200px"
-      minSize="180px"
-      className="h-[640px] w-full overflow-hidden rounded-xl border border-[var(--kind-color-border)]"
-    >
+    <Sidebar label="Chats" defaultSize="200px" minSize="180px" className="h-[640px] w-full overflow-hidden">
       <SidebarPanel>
-        <div className="flex h-12 shrink-0 items-center border-b border-[var(--kind-color-border)] px-2">
+        <div className="flex h-12 shrink-0 items-center px-2">
           <ThreadSearch threads={threads} now={now} timeZone={timeZone} onSelect={open} onNew={create} />
         </div>
-        <div className="flex min-h-0 flex-1 flex-col p-2">
+        <div className="flex min-h-0 flex-1 flex-col px-2 pb-2">
           <div className="min-h-0 flex-1">
             <ThreadList
               threads={threads}
@@ -234,12 +229,21 @@ export default function ChatShellExample() {
         </div>
       </SidebarPanel>
       <SidebarHandle />
-      <SidebarInset>
+      <SidebarInset className="bg-[var(--kind-color-raised)]">
         <header className="flex h-12 shrink-0 items-center gap-2 border-b border-[var(--kind-color-border)] px-3">
           <SidebarTrigger />
           <h2 className="m-0 min-w-0 flex-1 truncate text-sm font-medium">{thread?.title ?? "New chat"}</h2>
-          <button type="button" data-kind-button="" onClick={() => setSearching(true)}>
-            Find
+          <button
+            type="button"
+            data-kind-icon-button=""
+            aria-label="Find in chat"
+            title="Find in chat"
+            onClick={() => setSearching(true)}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
           </button>
         </header>
         <div className="relative min-h-0 flex-1">
@@ -276,10 +280,10 @@ export default function ChatShellExample() {
             <ConnectionStatus state={online ? "online" : "offline"} />
           </Conversation>
         </div>
-        <div className="p-3">
+        <div className="mx-auto w-full max-w-[var(--kind-chat-max-width)] p-3">
           <FullComposer
             disabled={!online}
-            placeholder={online ? "Ask anything" : "Offline"}
+            placeholder={online ? "Ask anything…" : "Offline"}
             onSubmit={(draft) => send(draft.text)}
           />
         </div>

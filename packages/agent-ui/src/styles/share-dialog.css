@@ -1,7 +1,8 @@
 /* Share Dialog (spec §7): a quiet Share button whose dialog chooses who can open the chat and shows its link. Keyed
-   on `data-share-dialog-part`, so both render layers draw the same. The dialog sits near the top of the screen rather
-   than centered, so the link row appearing grows it downward and nothing above it moves; each row keeps one height
-   whatever it holds, so Create link, the link and Copy link, Copied, the error and Stop sharing swap in place. */
+   on `data-share-dialog-part`, so both render layers draw the same; the shared dialog, scrim and buttons draw
+   themselves. The dialog sits near the top of the screen rather than centered, so the link row appearing grows it
+   downward and nothing above it moves; each row keeps one height whatever it holds, so Create link, the link and
+   Copy link, Copied, the error and Stop sharing swap in place. */
 @layer components {
   [data-share-dialog-part="root"] {
     display: inline-flex;
@@ -10,14 +11,13 @@
   [data-share-dialog-part="trigger"] {
     /* Lucide "share", see THIRD_PARTY_NOTICES.md. */
     --kind-share-dialog-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2v13'/%3E%3Cpath d='m16 6-4-4-4 4'/%3E%3Cpath d='M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8'/%3E%3C/svg%3E");
-    padding-inline-start: 0.5rem;
 
     /* The shared button keeps `::before` for its touch hit area, so the glyph is drawn on `::after`, placed first. */
     &::after {
       content: "";
       order: -1;
-      width: 14px;
-      height: 14px;
+      width: var(--kind-icon-size-sm);
+      height: var(--kind-icon-size-sm);
       background-color: currentColor;
       mask: var(--kind-share-dialog-icon) center / contain no-repeat;
     }
@@ -32,10 +32,7 @@
   [data-share-dialog-part="content"] {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 16px;
-    line-height: 1.25rem;
-    outline: none;
+    gap: 1rem;
 
     /* A sheet is placed by UI SDK, in its viewport. */
     &:where(:not([data-presentation="sheet"])) {
@@ -43,23 +40,29 @@
       inset: max(1rem, var(--kind-dialog-top)) 0 auto;
       z-index: 50;
       width: min(28rem, 100vw - 2rem);
-      height: fit-content;
       max-height: calc(100dvh - max(1rem, var(--kind-dialog-top)) - 1rem);
       margin: 0 auto;
       overflow-y: auto;
     }
+    /* UI SDK slides a sheet in, so it isn't the shared dialog and draws its own surface. */
     &:where([data-presentation="sheet"]) {
+      box-sizing: border-box;
       width: 100%;
-      max-width: none;
-      padding-block-end: calc(16px + env(safe-area-inset-bottom, 0px));
+      padding: 1.25rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
       border-radius: var(--kind-dialog-radius) var(--kind-dialog-radius) 0 0;
+      background-color: var(--kind-color-raised);
+      color: var(--kind-color-fg);
+      box-shadow: var(--kind-shadow-dialog);
+      font-size: var(--kind-text-md);
+      line-height: var(--kind-text-md-leading);
+      letter-spacing: var(--kind-text-md-tracking);
     }
   }
 
   [data-share-dialog-header] {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 0.25rem;
     min-width: 0;
   }
 
@@ -69,7 +72,8 @@
     overflow: hidden;
     color: var(--kind-color-muted);
     font-size: var(--kind-text-sm);
-    line-height: 1.25rem;
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -93,8 +97,8 @@
 
   [data-share-dialog-link-row] {
     display: flex;
-    gap: 8px;
-    height: var(--kind-control-height);
+    gap: 0.5rem;
+    height: var(--kind-control-height-lg);
   }
 
   :where([data-share-dialog-part="content"][data-visibility="private"]) [data-share-dialog-link-row] {
@@ -111,6 +115,7 @@
     min-width: 0;
   }
 
+  /* A read-only field: a hairline pill beside the buttons, which shows its caret and no ring. */
   :where([data-share-dialog-part="link"]) {
     & :where(ui-input) {
       display: contents;
@@ -121,24 +126,24 @@
       min-width: 0;
       height: 100%;
       margin: 0;
-      padding-inline: 10px;
-      border: 1px solid var(--kind-color-border);
-      border-radius: var(--kind-radius-md);
-      background-color: var(--kind-color-surface);
+      padding-inline: 0.875rem;
+      border: 0;
+      border-radius: var(--kind-radius-full);
+      background-color: transparent;
       color: var(--kind-color-fg);
+      box-shadow: 0 0 0 1px var(--kind-color-hairline);
       font: inherit;
-      font-size: var(--kind-text-sm);
+      font-size: var(--kind-text-md);
+      line-height: var(--kind-text-md-leading);
+      letter-spacing: var(--kind-text-md-tracking);
       text-overflow: ellipsis;
-
-      &:focus {
-        outline: none;
-      }
+      outline: none;
     }
   }
 
   /* Wide enough for "Copy link", so "Copied" doesn't move the link. */
   [data-share-dialog-part="copy"] {
-    min-width: 6.5rem;
+    min-width: 7rem;
   }
 
   /* The error at the start, then Stop sharing, with Done always last, so nothing arriving moves Done. */
@@ -146,8 +151,8 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 8px;
-    min-height: var(--kind-control-height);
+    gap: 0.5rem;
+    min-height: var(--kind-control-height-lg);
   }
 
   [data-share-dialog-part="error"] {
@@ -156,11 +161,8 @@
     margin: 0;
     color: var(--kind-color-danger);
     font-size: var(--kind-text-sm);
-    line-height: 1rem;
-  }
-
-  [data-share-dialog-part="revoke"] {
-    color: var(--kind-color-danger);
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
   }
 
   /* Forced colors replace a background, which is all a mask draws. */
@@ -171,58 +173,49 @@
     }
   }
 
-  /* Motion: the dialog rises and fades in over a fading backdrop. Reduced motion only fades, in 120 ms; `none`
-     doesn't animate. A sheet is UI SDK's, which slides whatever the motion settings. */
-  [data-share-dialog-part="content"]:where(:not([data-presentation="sheet"])) {
-    transition:
-      opacity var(--kind-duration-base) var(--kind-ease),
-      translate var(--kind-duration-base) var(--kind-ease),
-      scale var(--kind-duration-base) var(--kind-ease);
-
-    &:where([data-starting-style], [data-ending-style]) {
-      opacity: 0;
-      translate: 0 8px;
-      scale: 0.98;
-    }
-    &:where([data-ending-style]) {
-      transition-duration: var(--kind-duration-fast);
-    }
-  }
-
+  /* Motion: the shared dialog scales in over the fading backdrop. The `motion` option reaches them here: reduced
+     only fades, in 120 ms, and `none` doesn't animate. A sheet is UI SDK's, which slides whatever the motion
+     settings. */
   [data-share-dialog-part="backdrop"] {
-    transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-base) var(--kind-ease-enter);
 
     &:where([data-starting-style], [data-ending-style]) {
       opacity: 0;
     }
     &:where([data-ending-style]) {
-      transition-duration: var(--kind-duration-fast);
+      transition-duration: var(--kind-duration-exit);
+      transition-timing-function: var(--kind-ease-exit);
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    :is([data-share-dialog-part="content"], [data-share-dialog-part="backdrop"]):where([data-motion="auto"]) {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+    :is(
+        [data-share-dialog-part="content"]:not([data-presentation="sheet"]),
+        [data-share-dialog-part="backdrop"]
+      ):where([data-motion="auto"]) {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
       &:where([data-starting-style], [data-ending-style]) {
-        translate: none;
         scale: none;
       }
     }
   }
 
-  :is([data-share-dialog-part="content"], [data-share-dialog-part="backdrop"]):where(
-    [data-motion="reduced"]
-  ) {
-    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+  :is(
+    [data-share-dialog-part="content"]:not([data-presentation="sheet"]),
+    [data-share-dialog-part="backdrop"]
+  ):where([data-motion="reduced"]) {
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
     &:where([data-starting-style], [data-ending-style]) {
-      translate: none;
       scale: none;
     }
   }
 
-  :is([data-share-dialog-part="content"], [data-share-dialog-part="backdrop"]):where([data-motion="none"]),
+  :is(
+    [data-share-dialog-part="content"]:not([data-presentation="sheet"]),
+    [data-share-dialog-part="backdrop"]
+  ):where([data-motion="none"]),
   :where([data-share-dialog-part="root"][data-motion="none"]) [data-share-dialog-part="trigger"],
   :where([data-share-dialog-part="content"][data-motion="none"])
     :is(

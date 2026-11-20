@@ -18,7 +18,7 @@ type P = typeof threadSearchPrimitive;
 
 const TAG = "kind-thread-search";
 
-const template = `<${TAG}-trigger><button></button></${TAG}-trigger><${TAG}-backdrop hidden></${TAG}-backdrop><${TAG}-content hidden><${TAG}-command><kind-internal-command><ui-command><ui-command-input><input data-agent-hidden></ui-command-input><ui-command-empty></ui-command-empty><ui-command-list></ui-command-list></ui-command></kind-internal-command></${TAG}-command></${TAG}-content>`;
+const template = `<${TAG}-trigger><button></button></${TAG}-trigger><${TAG}-backdrop hidden></${TAG}-backdrop><${TAG}-content hidden><${TAG}-command><kind-internal-command><ui-command><ui-command-input><input data-agent-hidden></ui-command-input><ui-command-empty></ui-command-empty><ui-command-list></ui-command-list></ui-command></kind-internal-command></${TAG}-command><${TAG}-hints><span><kbd>↑↓</kbd> Navigate</span><span><kbd>↵</kbd> Open</span><span><kbd>Esc</kbd> Close</span></${TAG}-hints></${TAG}-content>`;
 
 /** The trigger's label and the `shortcut`'s keys, made once and then only their text written. */
 const drawTrigger = (button: Element, state: ThreadSearchState) => {
@@ -69,6 +69,7 @@ export function defineThreadSearch(): void {
       parts: {
         backdrop: `${TAG}-backdrop`,
         shortcut: `${TAG}-shortcut`,
+        hints: `${TAG}-hints`,
         status: `${TAG}-status`,
       },
     },
@@ -107,6 +108,7 @@ declare global {
     "kind-thread-search-command": HTMLElement;
     "kind-thread-search-item": HTMLElement;
     "kind-thread-search-shortcut": HTMLElement;
+    "kind-thread-search-hints": HTMLElement;
     "kind-thread-search-status": HTMLElement;
   }
 }

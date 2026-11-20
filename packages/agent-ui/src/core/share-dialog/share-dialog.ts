@@ -448,7 +448,8 @@ export const shareDialogPrimitive: ShareDialogPrimitive = definePrimitive<
         state: (state) => ({ pending: state.pending, motion: state.motion }),
         attrs: (state) => ({
           type: "button",
-          "data-kind-button": name === "create" ? "primary" : "",
+          "data-kind-button": name === "create" ? "primary" : "danger-ghost",
+          "data-kind-size": "lg",
           "aria-disabled": state.pending || state.sent ? "true" : undefined,
           "data-pending": state.pending ? "" : undefined,
           "data-share-dialog-part": name,
@@ -493,7 +494,8 @@ export const shareDialogPrimitive: ShareDialogPrimitive = definePrimitive<
         ...content,
         attrs: (state, part) => ({
           ...content.attrs?.(state, part),
-          "data-kind-dialog": "",
+          // A sheet is UI SDK's, which slides it in, so it draws its own surface.
+          "data-kind-dialog": state.presentation === "sheet" ? undefined : "",
           "data-share-dialog-part": "content",
           "data-visibility": state.visibility,
           "data-motion": state.motion,
@@ -538,6 +540,7 @@ export const shareDialogPrimitive: ShareDialogPrimitive = definePrimitive<
           type: "button",
           "data-copied": state.copied ? "" : undefined,
           "data-kind-button": "secondary",
+          "data-kind-size": "lg",
           "data-share-dialog-part": "copy",
         }),
       }),
@@ -552,7 +555,9 @@ export const shareDialogPrimitive: ShareDialogPrimitive = definePrimitive<
         attrs: (state, part) => ({
           ...close.attrs?.(state, part),
           type: "button",
-          "data-kind-button": "secondary",
+          // Create link is the one primary action while it shows; Done is otherwise.
+          "data-kind-button": shows.create(state) ? "secondary" : "primary",
+          "data-kind-size": "lg",
           "data-share-dialog-part": "close",
         }),
       }),

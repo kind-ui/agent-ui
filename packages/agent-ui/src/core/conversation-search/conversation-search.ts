@@ -1,4 +1,5 @@
 import {
+  animateIn,
   announce,
   type ChangeDetails,
   createChange,
@@ -569,12 +570,25 @@ export const conversationSearchPrimitive: ConversationSearchPrimitive = definePr
       },
       closePress: (event) => void setOpen(false, "close-press", event),
       recovery,
-      bindRoot: () => {
+      bindRoot: (el) => {
         mounted = true;
         // A bar that mounts open with a search counts and marks it, without scrolling the conversation.
         if (!store.get().counted) refresh(true, false);
         ensureShortcut();
+        // Opening plays the shared popup's entrance from UI SDK's `data-starting-style`.
+        let shown = store.get().open;
+        let stop = () => {};
+        const unsubscribe = store.subscribe(() => {
+          const { open } = store.get();
+          if (open && !shown) {
+            stop();
+            stop = animateIn(el);
+          }
+          shown = open;
+        });
         return () => {
+          unsubscribe();
+          stop();
           mounted = false;
           unregisterShortcut?.();
           unregisterShortcut = undefined;

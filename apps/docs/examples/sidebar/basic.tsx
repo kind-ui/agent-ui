@@ -10,10 +10,7 @@ const chats = [
 
 export default function SidebarExample() {
   return (
-    <Sidebar
-      label="Chats"
-      className="h-[420px] w-full overflow-hidden rounded-xl border border-[var(--kind-color-border)]"
-    >
+    <Sidebar label="Chats" className="h-[420px] w-full overflow-hidden">
       <SidebarPanel>
         <div className="flex h-12 shrink-0 items-center border-b border-[var(--kind-color-border)] px-4">
           <h2 className="m-0 text-sm font-medium">Chats</h2>
@@ -24,7 +21,7 @@ export default function SidebarExample() {
               <li key={chat}>
                 <a
                   href="#chat"
-                  className="block truncate rounded-md px-2.5 py-1.5 text-sm hover:bg-[var(--kind-color-hover)]"
+                  className="flex h-9 items-center truncate rounded-[var(--kind-radius-md)] px-2.5 text-sm hover:bg-[var(--kind-color-hover)]"
                 >
                   {chat}
                 </a>

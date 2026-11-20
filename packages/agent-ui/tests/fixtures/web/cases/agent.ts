@@ -23,7 +23,6 @@ import { defineGuardrailNotice } from "../../../../src/web/guardrail-notice.js";
 import { defineInlineCitation } from "../../../../src/web/inline-citation.js";
 import { defineInternalMenu } from "../../../../src/web/internal/menu.js";
 import { defineInternalToolbar } from "../../../../src/web/internal/toolbar.js";
-import { defineLauncher } from "../../../../src/web/launcher.js";
 import { defineLoader } from "../../../../src/web/loader.js";
 import { defineMarkdown } from "../../../../src/web/markdown.js";
 import { defineMessage } from "../../../../src/web/message.js";
@@ -675,11 +674,6 @@ const shell = `
         <kind-sidebar-inset><kind-sidebar-trigger><button></button></kind-sidebar-trigger></kind-sidebar-inset>
       </kind-sidebar>
     </section>
-    <section id="launcher" data-case="launcher" class="relative h-20 [transform:translateZ(0)]">
-      <kind-launcher label="Assistant">
-        <kind-launcher-content><p class="p-4">How can I help?</p></kind-launcher-content>
-      </kind-launcher>
-    </section>
     <section id="share" data-case="share-dialog"></section>
     <section id="day" data-case="day-separator">
       <kind-day-separator date="2026-11-18T09:30:00Z" time-zone="UTC"></kind-day-separator>
@@ -759,9 +753,6 @@ function wireShell(wave: Element) {
   wave
     .querySelector("kind-sidebar")
     ?.addEventListener("openchange", (event) => recordChange("sidebar", event));
-  wave
-    .querySelector("kind-launcher")
-    ?.addEventListener("openchange", (event) => recordChange("launcher", event));
   const share = place("share", "kind-share-dialog", {
     defaultVisibility: "link",
     canCreateLink: true,
@@ -853,7 +844,6 @@ export const cases = {
     defineThreadList();
     defineThreadSearch();
     defineSidebar();
-    defineLauncher();
     defineShareDialog();
     defineDaySeparator();
     defineConnectionStatus();

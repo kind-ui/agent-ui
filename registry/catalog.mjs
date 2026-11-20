@@ -275,14 +275,7 @@ const components = {
     uses: ["internal-resizable", "internal-drawer"],
   },
 
-  // wave-6-task-5: Launcher
-
-  launcher: {
-    title: "Launcher",
-    description:
-      "A floating button in the page's corner that opens a chat, which stays mounted while it's closed.",
-    uses: [],
-  },
+  // wave-6-task-5: Launcher, dropped by the user
 
   // wave-6-task-6: Day Separator
 

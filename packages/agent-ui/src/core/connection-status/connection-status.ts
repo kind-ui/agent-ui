@@ -337,6 +337,7 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
         type: "button",
         "data-connection-status-part": "retry",
         "data-kind-button": "",
+        "data-kind-size": "sm",
         "data-pending": state.pending ? "" : undefined,
       }),
       bind: (el, part) => {

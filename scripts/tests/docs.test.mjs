@@ -46,7 +46,6 @@ const indexed = {
     "thread-list",
     "thread-search",
     "sidebar",
-    "launcher",
     "day-separator",
     "connection-status",
     "share-dialog",

@@ -25,12 +25,7 @@ export default function SidebarAssistantExample() {
   const [lines, setLines] = useState(first);
 
   return (
-    <Sidebar
-      side="end"
-      label="Assistant"
-      defaultSize="320px"
-      className="h-[420px] w-full overflow-hidden rounded-xl border border-[var(--kind-color-border)]"
-    >
+    <Sidebar side="end" label="Assistant" defaultSize="320px" className="h-[420px] w-full overflow-hidden">
       <SidebarInset>
         <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-[var(--kind-color-border)] px-3">
           <h2 className="m-0 truncate text-sm font-medium">billing-export.ts</h2>
@@ -59,7 +54,7 @@ export default function SidebarAssistantExample() {
                   <p
                     className={
                       line.role === "user"
-                        ? "ms-auto w-fit max-w-[85%] rounded-2xl bg-[var(--kind-color-hover)] px-3 py-1.5 text-sm"
+                        ? "ms-auto w-fit max-w-[85%] rounded-[var(--kind-bubble-radius)] bg-[var(--kind-color-bubble)] px-3.5 py-2 text-sm"
                         : "text-sm"
                     }
                   >
