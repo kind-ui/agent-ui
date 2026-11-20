@@ -200,8 +200,8 @@ for (const colorScheme of ["light", "dark"] as const) {
   test(`axe reports no violations with the dialog open in ${colorScheme} mode`, async ({ page }) => {
     await page.emulateMedia({ colorScheme });
     await load(page);
-    await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     await open(page);
+    await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     await search(page).fill("pri");
     await expect(dialog(page).locator("mark").first()).toBeVisible();
     await settled(page);

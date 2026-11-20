@@ -159,8 +159,8 @@ test("a change the host cancels keeps the old value and the menu open", async ({
 for (const scheme of ["light", "dark"] as const)
   test(`axe passes with the menu open, ${scheme}`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: scheme });
-    await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     await load(page);
+    await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     await trigger(page).click();
     await expect(menu(page)).toBeVisible();
     await settled(page);

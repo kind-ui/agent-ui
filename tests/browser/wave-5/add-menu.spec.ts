@@ -88,8 +88,8 @@ test("agent actions: open, close and run", async ({ page }) => {
 for (const scheme of ["light", "dark"] as const)
   test(`axe passes with the menu open, ${scheme}`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: scheme });
-    await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     await load(page);
+    await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     await trigger(page).click();
     await settled(page);
     const results = await new AxeBuilder({ page }).include("#root").analyze();

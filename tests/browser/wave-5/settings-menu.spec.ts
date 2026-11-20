@@ -131,8 +131,8 @@ test("agent actions: open, close, toggle and setValue; open, the bridge adds its
 for (const scheme of ["light", "dark"] as const)
   test(`axe passes with the menu and a submenu open, ${scheme}`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: scheme });
-    await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     await load(page);
+    await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     await openByPointer(page);
     await choice(page).press("ArrowRight");
     await expect(option(page, "Concise")).toBeFocused();
