@@ -21,7 +21,7 @@
     flex-shrink: 0;
     width: var(--kind-icon-size);
     height: var(--kind-icon-size);
-    background-color: currentColor;
+    background-color: var(--kind-control-icon-color, currentColor);
     mask: var(--kind-menu-trigger-icon) center / contain no-repeat;
   }
 

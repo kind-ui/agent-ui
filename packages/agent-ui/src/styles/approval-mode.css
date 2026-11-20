@@ -8,10 +8,6 @@
     --kind-status-mark-size: 14px;
   }
 
-  :where([data-kind="approval-mode"]) [data-menu-trigger-icon] {
-    color: var(--kind-color-muted);
-  }
-
   /* In a narrow composer the trigger shows only its shield, centered in a round trigger, or beside a risky mode's
      mark; its name still says the mode. */
   @container kind-composer (width < 28rem) {
