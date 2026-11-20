@@ -6,13 +6,14 @@
     flex-direction: column;
     gap: 8px;
     font-size: var(--kind-text-md);
-    line-height: 1.25rem;
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
     color: var(--kind-color-fg);
   }
 
   [data-slot="kind-confirmation-title"] {
     display: block;
-    font-weight: 500;
+    font-weight: var(--kind-font-weight-medium);
     overflow-wrap: anywhere;
   }
 
@@ -56,7 +57,7 @@
 
     & [data-confirmation-label] {
       flex-shrink: 0;
-      font-weight: 500;
+      font-weight: var(--kind-font-weight-medium);
     }
     & [data-confirmation-reason] {
       min-width: 0;
@@ -68,21 +69,6 @@
     & [data-confirmation-reason]:empty {
       display: none;
     }
-  }
-
-  /* Reduced motion: a short fade. `none`: no transition at all. */
-  @media (prefers-reduced-motion: reduce) {
-    :where([data-slot="kind-confirmation"][data-motion="auto"]) [data-kind-button] {
-      transition-duration: var(--kind-duration-reduced);
-    }
-  }
-
-  :where([data-slot="kind-confirmation"][data-motion="reduced"]) [data-kind-button] {
-    transition-duration: var(--kind-duration-reduced);
-  }
-
-  :where([data-slot="kind-confirmation"][data-motion="none"]) [data-kind-button] {
-    transition: none;
   }
 
   :is(

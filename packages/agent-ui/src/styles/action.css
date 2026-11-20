@@ -13,7 +13,8 @@
     color: var(--kind-color-muted);
     font-style: italic;
     font-size: var(--kind-text-sm);
-    line-height: 1.25rem;
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }

@@ -14,7 +14,7 @@
       width: var(--kind-status-mark-size, 16px);
       height: var(--kind-status-mark-size, 16px);
       overflow: hidden;
-      border-radius: 9999px;
+      border-radius: var(--kind-radius-full);
     }
 
     & :where(img) {
@@ -78,7 +78,7 @@
 
   /* The result fades in once, when it appears; reduced motion keeps the 120 ms fade, "none" keeps nothing. */
   [data-step-part="result"] {
-    transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-base) var(--kind-ease-in-out);
 
     @starting-style {
       opacity: 0;

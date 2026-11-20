@@ -7,7 +7,8 @@
     gap: 16px;
     margin: 0;
     font-size: var(--kind-text-md);
-    line-height: 1.25rem;
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
     color: var(--kind-color-fg);
   }
 
@@ -23,12 +24,12 @@
     display: block;
     margin-bottom: 8px;
     padding: 0;
-    font-weight: 500;
+    font-weight: var(--kind-font-weight-medium);
 
     & [data-question-required] {
       margin-inline-start: 4px;
       font-size: var(--kind-text-xs);
-      font-weight: 400;
+      font-weight: var(--kind-font-weight-regular);
       color: var(--kind-color-muted);
     }
   }
@@ -44,7 +45,7 @@
     align-items: flex-start;
     gap: 10px;
     padding: 6px 8px;
-    border-radius: var(--kind-radius-sm);
+    border-radius: var(--kind-radius-md);
     cursor: pointer;
     transition: background-color var(--kind-duration-fast);
 
@@ -84,7 +85,7 @@
     :is([data-slot="radio-indicator"], [data-slot="checkbox-indicator"]) {
     transition:
       opacity var(--kind-duration-fast),
-      scale var(--kind-duration-fast) var(--kind-ease);
+      scale var(--kind-duration-fast) var(--kind-ease-enter);
 
     &:is([data-starting-style], [data-ending-style]) {
       opacity: 0;
@@ -132,7 +133,7 @@
       align-items: center;
       gap: 8px;
       min-height: var(--kind-control-height);
-      font-weight: 500;
+      font-weight: var(--kind-font-weight-medium);
     }
 
     & dl {
@@ -162,14 +163,7 @@
   /* Reduced motion: a short fade, and the indicators don't scale. `none`: no transition at all. */
   @media (prefers-reduced-motion: reduce) {
     [data-slot="kind-question"][data-motion="auto"] {
-      &
-        :is(
-          [data-question-option],
-          [data-slot="radio"],
-          [data-slot="checkbox"],
-          [data-slot="kind-question-submit"],
-          [data-slot="kind-question-skip"]
-        ) {
+      & :is([data-question-option], [data-slot="radio"], [data-slot="checkbox"]) {
         transition-duration: var(--kind-duration-reduced);
       }
       & :is([data-slot="radio-indicator"], [data-slot="checkbox-indicator"]) {
@@ -180,14 +174,7 @@
   }
 
   [data-slot="kind-question"][data-motion="reduced"] {
-    &
-      :is(
-        [data-question-option],
-        [data-slot="radio"],
-        [data-slot="checkbox"],
-        [data-slot="kind-question-submit"],
-        [data-slot="kind-question-skip"]
-      ) {
+    & :is([data-question-option], [data-slot="radio"], [data-slot="checkbox"]) {
       transition-duration: var(--kind-duration-reduced);
     }
     & :is([data-slot="radio-indicator"], [data-slot="checkbox-indicator"]) {
@@ -202,9 +189,7 @@
       [data-slot="radio"],
       [data-slot="checkbox"],
       [data-slot="radio-indicator"],
-      [data-slot="checkbox-indicator"],
-      [data-slot="kind-question-submit"],
-      [data-slot="kind-question-skip"]
+      [data-slot="checkbox-indicator"]
     ) {
     transition: none;
   }

@@ -18,7 +18,8 @@
     display: flex;
     flex-direction: column;
     font-size: var(--kind-text-md);
-    line-height: 1.25rem;
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
     color: var(--kind-color-fg);
   }
 
@@ -27,21 +28,23 @@
     width: 100%;
     align-items: center;
     gap: 8px;
-    border-radius: var(--kind-radius-sm);
+    border-radius: var(--kind-radius-md);
     padding: 4px 6px;
     text-align: left;
     color: var(--kind-color-muted);
     transition:
-      color var(--kind-duration-fast),
-      background-color var(--kind-duration-fast);
+      color var(--kind-duration-fast) var(--kind-ease-in-out),
+      background-color var(--kind-duration-fast) var(--kind-ease-in-out);
 
     &:hover {
       color: var(--kind-color-fg);
       background-color: var(--kind-color-hover);
     }
+    &:active {
+      background-color: var(--kind-color-pressed);
+    }
     &:focus-visible {
       color: var(--kind-color-fg);
-      background-color: var(--kind-color-hover);
       outline: var(--kind-focus-ring);
       outline-offset: var(--kind-focus-offset-inset);
     }
@@ -54,7 +57,7 @@
       border-right: 1.5px solid currentColor;
       border-bottom: 1.5px solid currentColor;
       transform: translateX(-1px) rotate(-45deg);
-      transition: transform var(--kind-duration-base) var(--kind-ease);
+      transition: transform var(--kind-duration-base) var(--kind-ease-enter);
     }
     &[data-open]::after {
       transform: translateY(-2px) rotate(45deg);
@@ -73,7 +76,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-weight: 500;
+    font-weight: var(--kind-font-weight-medium);
 
     /* What's running or waiting on the person reads at full contrast; done and not started stay quiet. */
     &:is([data-status="running"], [data-status="awaiting-input"], [data-status="error"]) {
@@ -104,7 +107,7 @@
     height: var(--kind-step-content-height);
     overflow: hidden;
     color: var(--kind-color-muted);
-    transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-base) var(--kind-ease-in-out);
 
     &:is([data-starting-style], [data-ending-style]) {
       opacity: 0;
@@ -122,8 +125,8 @@
   @media (prefers-reduced-motion: no-preference) {
     [data-step-part="content"][data-motion="auto"] {
       transition:
-        height var(--kind-duration-panel) var(--kind-ease),
-        opacity var(--kind-duration-base) var(--kind-ease-out);
+        height var(--kind-duration-panel) var(--kind-ease-enter),
+        opacity var(--kind-duration-base) var(--kind-ease-in-out);
 
       &:is([data-starting-style], [data-ending-style]) {
         height: 0;

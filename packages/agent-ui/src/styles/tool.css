@@ -50,7 +50,7 @@
     gap: 0.375rem;
     height: var(--kind-control-height);
     font-size: var(--kind-text-xs);
-    font-weight: 500;
+    font-weight: var(--kind-font-weight-medium);
   }
 
   /* Always in the markup, shown by state, so its arrival moves nothing beside it. */
@@ -117,7 +117,8 @@
     margin-block: 4px;
     color: var(--kind-color-danger);
     font-size: var(--kind-text-md);
-    line-height: 1.25rem;
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
     overflow-wrap: anywhere;
   }
 }

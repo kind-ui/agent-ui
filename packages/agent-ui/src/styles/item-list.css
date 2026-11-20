@@ -14,10 +14,11 @@
   /* One row for every list in the family: Task and Plan items and Queue rows. Chain of Thought steps are Step
      triggers, which have the same padding. */
   :is([data-step-part="item"], [data-slot="kind-queue-item"]) {
-    border-radius: var(--kind-radius-sm);
+    border-radius: var(--kind-radius-md);
     padding: 4px 6px;
     font-size: var(--kind-text-md);
-    line-height: 1.25rem;
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
     color: var(--kind-color-fg);
     transition: background-color var(--kind-duration-fast);
 
@@ -42,7 +43,7 @@
     & > [data-step-part="title"] {
       overflow: visible;
       white-space: normal;
-      font-weight: 400;
+      font-weight: var(--kind-font-weight-regular);
       transition: color var(--kind-duration-fast);
     }
 
@@ -91,7 +92,8 @@
     & > code {
       font-family: var(--kind-font-mono);
       font-size: var(--kind-text-xs);
-      line-height: 1.125rem;
+      line-height: var(--kind-text-xs-leading);
+      letter-spacing: var(--kind-text-xs-tracking);
       overflow-wrap: anywhere;
     }
     & > code:not(:last-child)::after {
@@ -102,7 +104,8 @@
 
   [data-step-part="description"] {
     font-size: var(--kind-text-sm);
-    line-height: 1.125rem;
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
     color: var(--kind-color-muted);
   }
 

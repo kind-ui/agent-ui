@@ -383,8 +383,20 @@
     line-height: var(--kind-code-line-height);
   }
 
-  /* A button's default markup holds its running mark, which shows only while the button is pending, in the button's
-     own text color, so it reads on a filled button too. */
+  /* A button's default markup holds its running mark, which shows only while the button is pending, over its label,
+     in the color the label would have, since a pending label is drawn clear. */
+  :where([data-kind-button]) {
+    --kind-pending-mark-color: var(--kind-color-fg);
+  }
+  :where([data-kind-button="primary"]) {
+    --kind-pending-mark-color: var(--kind-color-primary-fg);
+  }
+  :where([data-kind-button="danger"]) {
+    --kind-pending-mark-color: var(--kind-color-on-status);
+  }
+  :where([data-kind-button="danger-ghost"]) {
+    --kind-pending-mark-color: var(--kind-color-danger);
+  }
   :where([data-kind-button]:not([data-pending])) > [data-kind-pending-mark] {
     display: none;
   }
@@ -394,10 +406,10 @@
     animation: none;
   }
   [data-kind-button] > [data-kind-pending-mark][data-status-mark] {
-    border-color: color-mix(in oklab, currentColor 30%, transparent);
+    border-color: color-mix(in oklab, var(--kind-pending-mark-color) 30%, transparent);
 
     &::before {
-      border-top-color: currentColor;
+      border-top-color: var(--kind-pending-mark-color);
     }
   }
 }
