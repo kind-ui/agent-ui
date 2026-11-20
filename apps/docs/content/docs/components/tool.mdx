@@ -29,7 +29,8 @@ npx shadcn@latest add @kind-ui/tool-web
 Tool
 ├── ToolTrigger
 │   ├── ToolIcon
-│   └── ToolTitle
+│   ├── ToolTitle
+│   └── ToolMeta
 ├── ToolContent
 │   ├── ToolInput
 │   │   └── ToolInputCopy
@@ -39,7 +40,7 @@ Tool
 └── ToolApproval
 ```
 
-`Tool` renders these parts when you pass no children; any children you pass replace them. The trigger is a native button that shows or hides the content. `ToolTitle` shows the tool's name, `ToolInput` and `ToolOutput` the values as a [Code Block](./code-block.mdx) or [Markdown](./markdown.mdx), and `ToolError` the error. `ToolApproval` renders a [Confirmation](./confirmation.mdx) while the call has an approval, after the content, so it shows while the tool is closed. Each takes its own children instead.
+`Tool` renders these parts when you pass no children; any children you pass replace them. The trigger is a native button that shows or hides the content. `ToolTitle` shows the tool's name and `ToolMeta` how long the call took, like "2 s", once you pass `durationSeconds`; `ToolInput` and `ToolOutput` the values as a [Code Block](./code-block.mdx) or [Markdown](./markdown.mdx), and `ToolError` the error. `ToolApproval` renders a [Confirmation](./confirmation.mdx) while the call has an approval, after the content, so it shows while the tool is closed. Each takes its own children instead.
 
 ## Usage
 

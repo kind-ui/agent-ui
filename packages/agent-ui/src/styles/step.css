@@ -56,8 +56,15 @@
       margin-inline: 2px 4px;
       border-right: 1.5px solid currentColor;
       border-bottom: 1.5px solid currentColor;
+      opacity: 0.6;
       transform: translateX(-1px) rotate(-45deg);
-      transition: transform var(--kind-duration-base) var(--kind-ease-enter);
+      transition:
+        transform var(--kind-duration-base) var(--kind-ease-enter),
+        opacity var(--kind-duration-fast) var(--kind-ease-in-out);
+    }
+    /* The chevron says the row opens; it steps forward on hover and while open. */
+    &:is(:hover, :focus-visible, [data-open])::after {
+      opacity: 1;
     }
     &[data-open]::after {
       transform: translateY(-2px) rotate(45deg);

@@ -34,6 +34,9 @@ const parts = [
   },
 ] as const;
 
+// How long each finished call took, which the host knows from its own timing.
+const durations: Record<string, number> = { call_1: 1.2, call_4: 30 };
+
 export default function ToolExample() {
   const [approved, setApproved] = useState<boolean>();
   return (
@@ -51,6 +54,7 @@ export default function ToolExample() {
             key={step.id}
             call={step.call}
             error={step.error}
+            durationSeconds={durations[part.toolCallId]}
             onApprove={() => setApproved(true)}
             onDeny={() => setApproved(false)}
           />
