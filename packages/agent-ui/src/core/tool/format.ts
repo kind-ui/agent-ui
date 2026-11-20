@@ -13,9 +13,27 @@ export const toolStatus = (call: ToolCall): StepStatus => {
   return "running";
 };
 
-/** `value` as indented JSON, or as `String(value)` when it has none, like `undefined` or a cycle. */
+const isScalar = (value: unknown) =>
+  value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean";
+
+const isSmall = (value: unknown): value is Record<string, unknown> => {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+  const values = Object.values(value);
+  return values.length > 0 && values.length <= 3 && values.every(isScalar);
+};
+
+/**
+ * `value` as JSON: an object of up to three scalar values on one line (`{ "filter": "client" }`), anything else
+ * indented, or `String(value)` when it has none, like `undefined` or a cycle.
+ */
 export const toolCode = (value: unknown): string => {
   try {
+    if (isSmall(value)) {
+      const pairs = Object.entries(value).map(
+        ([key, item]) => `${JSON.stringify(key)}: ${JSON.stringify(item)}`,
+      );
+      return `{ ${pairs.join(", ")} }`;
+    }
     return JSON.stringify(value, null, 2) ?? String(value);
   } catch {
     return String(value);

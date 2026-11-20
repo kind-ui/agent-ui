@@ -5,8 +5,8 @@ import { expectAgentActions } from "../agent-snapshot.js";
 type Fixture = { kindStream: { set(text: string): void } };
 
 const indicators = [
-  ["kind-loader", "Loading"],
-  ["kind-thinking-indicator", "Thinking"],
+  ["kind-loader", "Loading…"],
+  ["kind-thinking-indicator", "Thinking…"],
   ["kind-typing-indicator", "Typing"],
 ] as const;
 
@@ -43,6 +43,9 @@ test("each indicator is a named status whose dots are hidden from assistive tech
   for (const [slot, label] of indicators) {
     await expect(page.getByRole("status", { name: label })).toBeVisible();
     await expect(page.locator(`[data-slot="${slot}-dots"]`)).toHaveAttribute("aria-hidden", "true");
+  }
+  for (const slot of ["kind-loader", "kind-thinking-indicator"]) {
+    await expect(page.locator(`[data-slot="${slot}-dots"] + [data-slot="${slot}-label"]`)).toHaveCount(1);
   }
 });
 
@@ -105,9 +108,15 @@ test("the caret is hidden from assistive technology", async ({ page }) => {
   );
 });
 
+test("the caret holds still", async ({ page }) => {
+  await open(page);
+  const caret = page.locator('[data-slot="kind-streaming-text-caret"]');
+  expect(await caret.evaluate((el) => el.getAnimations({ subtree: true }).length)).toBe(0);
+});
+
 test("indicators are listed for agents with no actions", async ({ page }) => {
   await open(page);
-  await expectAgentActions(page, "Thinking", []);
+  await expectAgentActions(page, "Thinking…", []);
 });
 
 test("axe reports no violations", async ({ page }) => {

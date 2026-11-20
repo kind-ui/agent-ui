@@ -5,7 +5,7 @@ description: Offer prompts a person can send in one press.
 
 import SuggestionExample from "../../../examples/suggestion/basic";
 
-Use suggestions under an answer or an empty composer, to offer the next things a person might ask. Each one is a short chip, and the row scrolls sideways when they don't all fit.
+Use suggestions under an answer or an empty composer, to offer the next things a person might ask. Each one is a short chip, and the row scrolls sideways when they don't all fit, or wraps onto more lines.
 
 <Example caption="Press a suggestion to send it. Press Next to bring the later ones into view, or swipe the row.">
   <SuggestionExample />
@@ -34,7 +34,7 @@ Suggestion
     └── SuggestionNext
 ```
 
-`Suggestion` is a group named by its `label` that holds UI SDK's Carousel. `SuggestionViewport` is the row that scrolls, each `SuggestionItem` is a button showing a suggestion's `label` and `description`, and `SuggestionPrevious` and `SuggestionNext` scroll the row. `SuggestionControls` holds them and hides them while every suggestion fits.
+`Suggestion` is a group named by its `label` that holds UI SDK's Carousel. `SuggestionViewport` is the row that scrolls, each `SuggestionItem` is a Carousel slide holding a `SuggestionChip`, the button showing a suggestion's `label` and `description`, and `SuggestionPrevious` and `SuggestionNext` scroll the row. `SuggestionControls` holds them and hides them while every suggestion fits.
 
 ## Usage
 
@@ -53,7 +53,7 @@ Pass `suggestions`, each with an `id`, a `label` and an optional `description`, 
 
 ### Overflow
 
-The suggestions sit in one row. When they don't all fit, **Previous** and **Next** appear after it and the edge with more past it fades; while they fit, the buttons take no room. Only suggestions at least half in view can be reached with Tab, so press **Next**, swipe or scroll to reach the rest.
+The suggestions sit in one row. Set `layout="wrap"` to let them wrap onto more lines instead, with no Carousel, as for a few starter prompts in an empty [Conversation](./conversation.mdx); keep it to about four. Otherwise, when they don't all fit, **Previous** and **Next** appear after it and the edge with more past it fades; while they fit, the buttons take no room. Only suggestions at least half in view can be reached with Tab, so press **Next**, swipe or scroll to reach the rest.
 
 ### Keyboard
 

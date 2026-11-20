@@ -20,11 +20,17 @@ test("a consumer's own token values win", async ({ page }) => {
   await expect(step(page)).toHaveCSS("color", "rgb(1, 2, 3)");
 });
 
-test("internal wrappers read the theme tokens", async ({ page }) => {
+test("internal wrappers read the theme tokens, and --kind-radius squares all but the pills", async ({
+  page,
+}) => {
   await page.emulateMedia({ colorScheme: "dark" });
-  await page.goto("/?c=internal&case=button");
-  const button = page.locator('[data-slot="button"]').first();
-  await expect(button).toHaveCSS("background-color", "oklch(0.24 0.006 286)");
+  await page.goto("/?c=internal&case=token-input");
+  const field = page.locator('[data-slot="token-input-editor"]').first();
+  await expect(field).toHaveCSS("color", "oklch(0.96 0.003 286)");
+  await expect(field).toHaveCSS("border-top-left-radius", "10px");
   await page.addStyleTag({ content: ":root { --kind-radius: 0px; }" });
-  await expect(button).toHaveCSS("border-radius", "0px");
+  await expect(field).toHaveCSS("border-top-left-radius", "0px");
+  await page.goto("/?c=internal&case=button");
+  await page.addStyleTag({ content: ":root { --kind-radius: 0px; }" });
+  await expect(page.locator('[data-slot="button"]').first()).toHaveCSS("border-top-left-radius", "9999px");
 });

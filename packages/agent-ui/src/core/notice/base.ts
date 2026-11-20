@@ -8,6 +8,7 @@ import {
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { bindLeavingRow } from "../leaving.js";
 import { enter, type MotionMode } from "../motion/index.js";
+import { nearestTabStop } from "../tab-stop.js";
 
 export type NoticeVariant = "info" | "success" | "warning" | "error";
 
@@ -74,26 +75,6 @@ const VARIANTS: Record<NoticeVariant, { mark: string; name: string }> = {
   success: { mark: "complete", name: "Success" },
   warning: { mark: "warning", name: "Warning" },
   error: { mark: "error", name: "Error" },
-};
-
-/**
- * The first element after `el` that Tab reaches, else the last one before it. UI SDK finds these with a function it
- * doesn't export, and `createFocusRecovery` asks its `fallback` for the element.
- */
-const nearestTabStop = (el: HTMLElement): HTMLElement | undefined => {
-  const stops = [...el.ownerDocument.body.querySelectorAll<HTMLElement>("*")].filter(
-    (candidate) =>
-      candidate.tabIndex >= 0 &&
-      // Chrome reports 0 for a link without `href`, which takes no focus.
-      !candidate.matches(":is(a, area):not([href])") &&
-      !el.contains(candidate) &&
-      !candidate.matches(":disabled") &&
-      !candidate.closest("[inert]") &&
-      candidate.checkVisibility({ visibilityProperty: true }),
-  );
-  const isAfter = (candidate: HTMLElement) =>
-    Boolean(el.compareDocumentPosition(candidate) & Node.DOCUMENT_POSITION_FOLLOWING);
-  return stops.find(isAfter) ?? stops.filter((candidate) => !isAfter(candidate)).at(-1);
 };
 
 // Roots on the page before this module ran (server markup an app hydrates later) or already shown once, as when a
@@ -241,7 +222,13 @@ export const noticeBase = <
         focus: "native",
         present: (state) => state.canDismiss,
         press: ({ api }) => api.dismiss?.(),
-        attrs: () => ({ type: "button", "aria-label": "Dismiss", "data-notice-part": "dismiss" }),
+        attrs: () => ({
+          type: "button",
+          "aria-label": "Dismiss",
+          "data-notice-part": "dismiss",
+          "data-kind-icon-button": "",
+          "data-kind-size": "sm",
+        }),
       }),
     }),
     agent: { actions: ["dismiss"] },

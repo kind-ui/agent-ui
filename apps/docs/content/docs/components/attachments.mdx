@@ -36,7 +36,7 @@ Attachments
 
 ### Items
 
-Pass `items`, each with an `id`, a `name` and optionally its `size` in bytes and `mediaType`. An image shows a preview from its `url`, or from its `file` once the chip is on the page. Set `error` to `"type"` or `"size"` to show "File type not accepted" or "File is too large" in place of the size. A chip added later fades in; the ones there at first don't.
+Pass `items`, each with an `id`, a `name` and optionally its `size` in bytes and `mediaType`. An image shows a preview from its `url`, or from its `file` once the chip is on the page. Each chip shows a glyph for its kind (image, document, code, spreadsheet, archive, audio or video), from `mediaType` or the name's extension, and its extension and size, like "PDF · 482 kB". Set `error` to `"type"` or `"size"` to show "File type not accepted" or "File is too large" in their place. A chip added later fades in; the ones there at first don't.
 
 ### Removing
 

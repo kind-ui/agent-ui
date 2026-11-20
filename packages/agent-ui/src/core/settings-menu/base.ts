@@ -73,9 +73,14 @@ export type SettingsMenuAction = {
   icon: unknown;
 };
 
-/** A row that opens a submenu of options, one of them chosen. */
+/** A row of options, one of them chosen: a submenu, or a section of the menu itself while `inline`. */
 export type SettingsMenuChoiceRow = {
   type: "choice";
+  /**
+   * Whether the options sit in the menu itself, under their group labels (the row's `label` for options without a
+   * group), rather than in a submenu.
+   */
+  inline: boolean;
   /** The setting's `id`, which names its radio groups. */
   id: string;
   /** The submenu trigger's text before the value, and the text typeahead matches. */
@@ -84,7 +89,7 @@ export type SettingsMenuChoiceRow = {
   icon: unknown;
   /** Every option, in order: the trigger stacks their labels so it keeps its width. */
   options: SettingsOption<unknown>[];
-  /** The options by `group`, in first-seen order: a labelled radio group for each. */
+  /** The options by `group`, in first-seen order: a labelled group for each. */
   groups: SettingsMenuOptionGroup[];
   /** Items after the options, behind a separator. */
   actions: SettingsMenuAction[];
@@ -190,20 +195,38 @@ export const settingsGroups = (options: SettingsOption<unknown>[]): SettingsMenu
     return [...groups.values()];
   });
 
+const labelled = new WeakMap<SettingsOption<unknown>[], Map<string, SettingsMenuOptionGroup[]>>();
+
+/** `settingsGroups`, with `label` on the options that have no group, kept while the host keeps its array. */
+const labelledGroups = (options: SettingsOption<unknown>[], label: string) => {
+  const byLabel = cached(labelled, options, () => new Map<string, SettingsMenuOptionGroup[]>());
+  let groups = byLabel.get(label);
+  if (!groups) {
+    groups = settingsGroups(options).map((group) =>
+      group.label === undefined ? { ...group, label } : group,
+    );
+    byLabel.set(label, groups);
+  }
+  return groups;
+};
+
 /** A choice row, for a component that adds one of its own. A `value` that isn't an enabled option shows none. */
 export const settingsChoiceRow = (
   setting: Pick<SettingsMenuChoiceRow, "id" | "label" | "options"> & {
     icon?: unknown;
     actions?: SettingsMenuAction[];
+    /** Whether the options sit in the menu itself. @default false */
+    inline?: boolean;
   },
   value: unknown,
 ): SettingsMenuChoiceRow => ({
   type: "choice",
+  inline: setting.inline ?? false,
   id: setting.id,
   label: setting.label,
   icon: setting.icon,
   options: setting.options,
-  groups: settingsGroups(setting.options),
+  groups: setting.inline ? labelledGroups(setting.options, setting.label) : settingsGroups(setting.options),
   actions: setting.actions ?? NO_ACTIONS,
   value: setting.options.some((option) => option.value === value && !option.disabled)
     ? (value as string)
@@ -275,6 +298,7 @@ const changes = new WeakMap<object, (id: string, value: boolean | string, cause:
  */
 export const settingsBase = <Options extends SettingsBaseOptions>(config: SettingsBaseConfig<Options>) => {
   const base = menuBase<Options>({
+    sharedTrigger: "icon-button",
     kind: config.kind,
     label: config.label,
     toData: config.toData,

@@ -1,3 +1,4 @@
+@import "./controls.css";
 @import "./status-mark.css";
 @import "./step.css";
 @import "./status.css";
@@ -22,8 +23,8 @@
 @import "./transcript.css";
 @import "./question.css";
 @import "./checkpoint.css";
-@import "./model-selector.css";
 @import "./picker.css";
+@import "./model-selector.css";
 @import "./menu.css";
 @import "./add-menu.css";
 @import "./settings-menu.css";
@@ -43,6 +44,7 @@
 @import "./markdown-table.css";
 @import "./message.css";
 @import "./composer.css";
+@import "./file-kind.css";
 @import "./attachments.css";
 @import "./uploader.css";
 @import "./loader.css";
@@ -50,25 +52,179 @@
 @import "./typing-indicator.css";
 @import "./streaming-text.css";
 
+/* Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its stylesheet import right below its own line. */
+
+/* wave-6-task-2: Thread List */
+
+@import "./thread-list.css";
+
+/* wave-6-task-3: Thread Search */
+
+@import "./thread-search.css";
+
+/* wave-6-task-4: Sidebar */
+
+@import "./sidebar.css";
+
+/* wave-6-task-5: Launcher, dropped by the user */
+
+/* wave-6-task-6: Day Separator */
+
+@import "./day-separator.css";
+
+/* wave-6-task-7: Connection Status */
+
+@import "./connection-status.css";
+
+/* wave-6-task-8: Share Dialog */
+
+@import "./share-dialog.css";
+
+/* wave-6-task-9: Message author, time and outcomes */
+
+/* wave-6-task-10: Conversation states */
+
+/* wave-6-task-11: Conversation Search */
+
+@import "./conversation-search.css";
+
 /* Theme tokens (spec §3). `default` lets a consumer's own `@theme` or `:root` values win. Colors follow
    `color-scheme` through `light-dark()`: set `color-scheme: light dark` to follow the system, or `dark` on a
    dark theme's root. */
 @theme default {
   --kind-color-fg: light-dark(oklch(0.21 0.006 286), oklch(0.96 0.003 286));
-  --kind-color-muted: light-dark(oklch(0.52 0.014 286), oklch(0.72 0.012 286));
-  --kind-color-surface: light-dark(oklch(1 0 0), oklch(0.24 0.006 286));
-  --kind-color-hover: light-dark(oklch(0.967 0.001 286), oklch(0.27 0.006 286));
-  --kind-color-border: light-dark(oklch(0.92 0.004 286), oklch(0.32 0.006 286));
+  --kind-color-muted: light-dark(oklch(0.52 0.014 286), oklch(0.74 0.012 286));
+  /* The page behind a conversation, and the raised surface of what sits on it: popups, dialogs, the composer.
+     Dark surfaces lift through lightness, so they stay neutral gray rather than tinted. */
+  --kind-color-canvas: light-dark(oklch(0.991 0 0), oklch(0.18 0 0));
+  --kind-color-surface: light-dark(oklch(1 0 0), oklch(0.235 0 0));
+  --kind-color-raised: var(--kind-color-surface);
+  /* State fills are translucent ink, so they read on the canvas, a surface or a bubble alike. Hover is for the
+     pointer only; a state that has to read takes its own token. */
+  --kind-color-hover: light-dark(oklch(0 0 0 / 0.05), oklch(1 0 0 / 0.08));
+  --kind-color-pressed: light-dark(oklch(0 0 0 / 0.09), oklch(1 0 0 / 0.13));
+  /* The chosen item in a set: a pressed toggle, the highlighted row of an open list, an open trigger. */
+  --kind-color-selected: light-dark(oklch(0 0 0 / 0.07), oklch(1 0 0 / 0.11));
+  /* Where the person is: the current thread, page or segment, drawn with `--kind-font-weight-current` too. */
+  --kind-color-current: light-dark(oklch(0 0 0 / 0.06), oklch(1 0 0 / 0.1));
+  --kind-color-bubble: light-dark(oklch(0.955 0 0), oklch(0.29 0 0));
+  --kind-color-scrim: light-dark(oklch(0 0 0 / 0.32), oklch(0 0 0 / 0.6));
+  /* A 1px edge drawn as `box-shadow: 0 0 0 1px`, so it takes no layout; floating surfaces use it instead of a border. */
+  --kind-color-hairline: light-dark(oklch(0 0 0 / 0.08), oklch(1 0 0 / 0.09));
+  --kind-color-border: light-dark(oklch(0 0 0 / 0.1), oklch(1 0 0 / 0.12));
   --kind-color-ring: light-dark(oklch(0.55 0.014 286), oklch(0.72 0.012 286));
+  --kind-color-focus: light-dark(oklch(0.45 0 0 / 0.7), oklch(0.85 0 0 / 0.7));
   --kind-color-shadow: light-dark(oklch(0.21 0.006 286), oklch(0 0 0));
-  --kind-color-accent: light-dark(oklch(0.55 0.2 262), oklch(0.7 0.15 262));
+  /* The one primary action: an ink pill that inverts in dark. The accent is for links, status and a host's own
+     colored primary. */
+  --kind-color-primary: light-dark(oklch(0.18 0 0), oklch(0.97 0 0));
+  --kind-color-primary-hover: color-mix(in oklab, var(--kind-color-primary) 85%, var(--kind-color-canvas));
+  --kind-color-primary-fg: light-dark(oklch(1 0 0), oklch(0.18 0 0));
+  --kind-color-accent: light-dark(oklch(0.52 0.2 262), oklch(0.75 0.14 262));
+  --kind-color-accent-hover: light-dark(oklch(0.47 0.2 262), oklch(0.78 0.13 262));
   --kind-color-on-accent: light-dark(oklch(1 0 0), oklch(0.18 0.006 286));
   --kind-color-on-status: light-dark(oklch(1 0 0), oklch(0.18 0.006 286));
   --kind-color-on-warning: light-dark(oklch(0.21 0.006 286), oklch(0.18 0.006 286));
   --kind-color-success: light-dark(oklch(0.6 0.15 155), oklch(0.74 0.15 155));
-  --kind-color-warning: light-dark(oklch(0.72 0.16 65), oklch(0.8 0.14 70));
+  --kind-color-warning: light-dark(oklch(0.62 0.16 60), oklch(0.8 0.14 70));
   --kind-color-danger: light-dark(oklch(0.55 0.21 27), oklch(0.7 0.18 25));
+  /* A status color's tint, as `color-mix(in oklab, <status> var(--kind-tint-fill), transparent)`. */
+  --kind-tint-fill: 12%;
+  --kind-tint-border: 30%;
+
+  /* Type: the system face, three weights, and a slightly tighter track from 13 to 16px. Controls are `md`,
+     secondary text `sm`, meta and badges `xs`, prose and the composer `body`, dialog titles `lg`, an empty
+     state's prompt `2xl`. Each size has a `-leading` and a `-tracking`. */
+  --kind-font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --kind-font-weight-regular: 400;
+  --kind-font-weight-medium: 500;
+  --kind-font-weight-semibold: 600;
+  --kind-font-weight-current: var(--kind-font-weight-medium);
+  --kind-text-xs: 0.75rem;
+  --kind-text-xs-leading: 1rem;
+  --kind-text-xs-tracking: 0;
+  --kind-text-sm: 0.8125rem;
+  --kind-text-sm-leading: 1.125rem;
+  --kind-text-sm-tracking: -0.006em;
+  --kind-text-md: 0.875rem;
+  --kind-text-md-leading: 1.25rem;
+  --kind-text-md-tracking: -0.011em;
+  --kind-text-lg: 0.9375rem;
+  --kind-text-lg-leading: 1.375rem;
+  --kind-text-lg-tracking: -0.016em;
+  --kind-text-body: 1rem;
+  --kind-text-body-leading: 1.5rem;
+  --kind-text-body-tracking: -0.011em;
+  --kind-text-xl: 1.125rem;
+  --kind-text-xl-leading: 1.5rem;
+  --kind-text-xl-tracking: -0.014em;
+  --kind-text-2xl: 1.5rem;
+  --kind-text-2xl-leading: 1.875rem;
+  --kind-text-2xl-tracking: 0;
+
+  /* Corners: everything pressed is a pill; containers nest concentrically (inner = outer - padding), so a 16px
+     popup with 6px padding holds 10px rows. All but the pill follow `--kind-radius`, so 0 squares them. */
   --kind-radius: 0.75rem;
+  --kind-radius-full: 9999px;
+  --kind-radius-sm: calc(var(--kind-radius) / 2);
+  --kind-radius-md: calc(var(--kind-radius) * 5 / 6);
+  --kind-radius-lg: calc(var(--kind-radius) * 7 / 6);
+  --kind-popup-radius: calc(var(--kind-radius) * 4 / 3);
+  --kind-popup-padding: 6px;
+  --kind-dialog-radius: calc(var(--kind-radius) * 2);
+  --kind-composer-radius: calc(var(--kind-radius) * 7 / 3);
+  --kind-bubble-radius: calc(var(--kind-radius) * 11 / 6);
+  --kind-bubble-padding: 0.625rem 1rem;
+
+  /* Focus shows for the keyboard only (`:focus-visible`): 2px of neutral ink that follows the shape, at least 3:1
+     on every fill. Rows, list items and anything in a scroller draw it inside (`-inset`), where no ancestor clips
+     it. Text fields draw none; the caret is the cue. */
+  --kind-focus-ring-width: 2px;
+  --kind-focus-ring: var(--kind-focus-ring-width) solid var(--kind-color-focus);
+  --kind-focus-offset: 2px;
+  --kind-focus-offset-inset: calc(-1 * var(--kind-focus-ring-width));
+
+  /* Sizes: a 28 / 32 / 36 control ladder (`-sm`, default, `-lg`); the composer's controls are 36. */
+  --kind-control-height-sm: 1.75rem;
+  --kind-control-height: 2rem;
+  --kind-control-height-lg: 2.25rem;
+  --kind-trigger-height: var(--kind-control-height);
+  --kind-composer-control-height: var(--kind-control-height-lg);
+  --kind-badge-height: 1.25rem;
+  --kind-row-height: 2rem;
+  --kind-list-row-height: 2.25rem;
+  --kind-icon-size-sm: 0.875rem;
+  --kind-icon-size: 1rem;
+  --kind-icon-size-lg: 1.125rem;
+  --kind-hit-area: 2.75rem;
+  /* The dots of a reply on its way (Loader, Thinking and Typing Indicator). */
+  --kind-dot-size: 0.3125rem;
+  /* A disabled control fades rather than greys out, so its label stays legible. */
+  --kind-disabled-opacity: 0.64;
+  --kind-chat-max-width: 48rem;
+
+  /* Elevation: a hairline and a soft, wide drop under it; in dark a faint top highlight lifts the edge. */
+  --kind-shadow-control: 0 1px 2px light-dark(oklch(0 0 0 / 0.05), transparent);
+  --kind-shadow-popover:
+    0 0 0 1px var(--kind-color-hairline), inset 0 1px 0 light-dark(transparent, oklch(1 0 0 / 0.04)),
+    0 2px 6px -2px light-dark(oklch(0 0 0 / 0.06), transparent),
+    0 16px 40px -14px light-dark(oklch(0 0 0 / 0.16), oklch(0 0 0 / 0.8));
+  --kind-shadow-dialog:
+    0 0 0 1px var(--kind-color-hairline), inset 0 1px 0 light-dark(transparent, oklch(1 0 0 / 0.04)),
+    0 24px 68px -22px light-dark(oklch(0 0 0 / 0.35), oklch(0 0 0 / 0.9));
+  --kind-shadow-composer:
+    0 0 0 1px var(--kind-color-hairline), inset 0 1px 0 light-dark(transparent, oklch(1 0 0 / 0.03)),
+    0 1px 2px light-dark(oklch(0 0 0 / 0.04), transparent),
+    0 6px 20px -6px light-dark(oklch(0 0 0 / 0.08), transparent);
+  --kind-scrim-blur: 4px;
+  --kind-material-blur: 12px;
+  --kind-material-opacity: 80%;
+  --kind-dialog-top: 12vh;
+  --kind-code-surface: light-dark(oklch(0.975 0.002 286), oklch(0.21 0.006 286));
+  --kind-code-radius: var(--kind-radius-lg);
+  --kind-code-font-size: var(--kind-text-sm);
+  --kind-code-line-height: 1.25rem;
+
   --kind-font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
   /* Lucide "copy" and "check", see THIRD_PARTY_NOTICES.md. */
   --kind-icon-copy: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='14' height='14' x='8' y='8' rx='2' ry='2'/%3E%3Cpath d='M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2'/%3E%3C/svg%3E");
@@ -80,15 +236,40 @@
   --kind-duration-base: 200ms;
   --kind-duration-panel: 280ms;
   --kind-duration-reduced: 120ms;
-
-  @keyframes kind-shimmer {
-    from {
-      background-position: 100% 0;
-    }
-    to {
-      background-position: -100% 0;
-    }
-  }
+  --kind-duration-instant: 100ms;
+  --kind-duration-exit: 150ms;
+  --kind-duration-spring: 450ms;
+  /* Enter: a fast start and a long, soft settle. Exit: leaves at once. In-out: hover and color. */
+  --kind-ease-enter: cubic-bezier(0.32, 0.72, 0, 1);
+  --kind-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --kind-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  /* A damped spring (response 0.4 s, damping 0.85) for a release or an expand, over --kind-duration-spring. */
+  --kind-ease-spring: linear(
+    0,
+    0.051,
+    0.167,
+    0.308,
+    0.45,
+    0.579,
+    0.689,
+    0.778,
+    0.847,
+    0.9,
+    0.938,
+    0.964,
+    0.982,
+    0.994,
+    1.001,
+    1.004,
+    1.006,
+    1.006,
+    1.006,
+    1.005,
+    1
+  );
+  --kind-press-scale: 0.97;
+  --kind-enter-scale: 0.96;
+  --kind-dialog-enter-scale: 0.98;
 
   @keyframes kind-spin {
     to {

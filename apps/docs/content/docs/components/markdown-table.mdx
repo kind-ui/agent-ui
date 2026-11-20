@@ -27,11 +27,11 @@ npx shadcn@latest add @kind-ui/markdown-table-web
 
 ### Columns
 
-Set `--kind-markdown-table-columns` to the number of columns. Each column then keeps at least `--kind-markdown-table-column-width` (8rem by default), and a wider table scrolls sideways. Columns hold their width as rows stream in, so the table doesn't reflow. Set `data-align` to `right` or `center` on a cell to align it.
+Set `--kind-markdown-table-columns` to the number of columns. Each column then keeps at least `--kind-markdown-table-column-width` (8rem by default), and a wider table scrolls sideways, fading at the edge where more columns are. Columns hold their width as rows stream in, so the table doesn't reflow. Set `data-align` to `right` or `center` on a cell to align it.
 
 ### Copying
 
-The copy button copies the table as tab-separated text, a row per line, and turns into a check for two seconds. Tab reaches it, and Enter or Space presses it. It tells screen readers "Copied", or "Copy failed" when the browser refuses the clipboard write.
+The copy button shows over the header row's end while the pointer is on the table or focus is inside it, and always on touch screens. It copies the table as tab-separated text, a row per line, and turns into a check for two seconds. Tab reaches it, and Enter or Space presses it. It tells screen readers "Copied", or "Copy failed" when the browser refuses the clipboard write.
 
 ## API Reference
 

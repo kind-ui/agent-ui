@@ -48,7 +48,7 @@ export const MODEL_CONTROL_EFFORT = "effort";
 
 export type ModelControlOptions = SettingsBaseOptions & {
   /**
-   * The models, listed in the Model submenu under their `group`s with their icons. A model's `efforts` names the effort
+   * The models, listed in the menu under their `group`s with their icons. A model's `efforts` names the effort
    * levels it supports; the others show dimmed and are skipped.
    * @default []
    */
@@ -63,7 +63,8 @@ export type ModelControlOptions = SettingsBaseOptions & {
   /** Called when a person or `setModel` chooses a model. */
   onModelChange?: (model: string, details: ChangeDetails<ModelControlChangeReason>) => void;
   /**
-   * The effort levels, from least to most effort, listed in the Effort submenu. Without any, there's no Effort row.
+   * The effort levels, from least to most effort, listed in the menu after the models. Without any, there's no
+   * Effort section; the levels the chosen model doesn't support show dimmed.
    * @default []
    */
   levels?: EffortLevel[];
@@ -84,7 +85,7 @@ export type ModelControlOptions = SettingsBaseOptions & {
    */
   onEffortChange?: (effort: string, details: ChangeDetails<ModelControlEffortChangeReason>) => void;
   /**
-   * Items after the models in the Model submenu, like "More models", shown while `onAction` is set.
+   * Items after the models, like "More models", shown while `onAction` is set.
    * @default []
    */
   actions?: PickerAction<unknown>[];
@@ -244,7 +245,7 @@ const radios = (name: string, options: SettingsOption<unknown>[]) => ({
   items: options.map(({ value, label, disabled }) => ({ value, label, ...(disabled && { disabled }) })),
 });
 
-/** The rows as UI SDK Menu data, as `getItems` reads them: the Model and Effort submenus among the host's settings. */
+/** The rows as UI SDK Menu data, as `getItems` reads them: Model and Effort in the menu itself, then the host's rows. */
 const toData = (rows: SettingsMenuRow[], settings: SettingsEntry<unknown>[]): MenuData => {
   const host = settingsData(settings);
   return rows.map((row) => {
@@ -252,7 +253,7 @@ const toData = (rows: SettingsMenuRow[], settings: SettingsEntry<unknown>[]): Me
     if (index !== -1) return host[index] as MenuData[number];
     const choice = row as SettingsMenuChoiceRow;
     return {
-      type: "submenu" as const,
+      type: "group" as const,
       label: choice.label,
       items: [
         radios(choice.id, choice.options),
@@ -277,7 +278,7 @@ type RowsInput = Pick<
   "entries" | "values" | "models" | "model" | "levels" | "effort" | "actions" | "modelLabel" | "effortLabel"
 >;
 
-/** The rows: the host's toggles, then Model and Effort, then the host's choices. */
+/** The rows: Model and Effort, in the menu itself, then the host's choices and toggles. */
 const modelControlRows = (input: RowsInput): SettingsMenuRow[] => {
   const host = settingsMenuRows(hostSettings(input.entries), input.values);
   const chosen = chosenModel(input);
@@ -289,19 +290,29 @@ const modelControlRows = (input: RowsInput): SettingsMenuRow[] => {
   }));
   const added: SettingsMenuRow[] = [
     settingsChoiceRow(
-      { id: MODEL_CONTROL_MODEL, label: input.modelLabel, options: toModelOptions(input.models), actions },
+      {
+        id: MODEL_CONTROL_MODEL,
+        label: input.modelLabel,
+        options: toModelOptions(input.models),
+        actions,
+        inline: true,
+      },
       input.model,
     ),
   ];
-  if (efforts.some((option) => !option.disabled))
+  // A model without effort keeps the section, its levels dimmed, so choosing it doesn't resize the open menu.
+  if (efforts.length)
     added.push(
       settingsChoiceRow(
-        { id: MODEL_CONTROL_EFFORT, label: input.effortLabel, options: efforts },
+        { id: MODEL_CONTROL_EFFORT, label: input.effortLabel, options: efforts, inline: true },
         modelEffort(input.levels, chosen, input.effort),
       ),
     );
-  const toggles = host.filter((row) => row.type === "toggle").length;
-  return [...host.slice(0, toggles), ...added, ...host.slice(toggles)];
+  return [
+    ...added,
+    ...host.filter((row) => row.type === "choice"),
+    ...host.filter((row) => row.type === "toggle"),
+  ];
 };
 
 const base = settingsBase<ModelControlOptions>({
@@ -388,9 +399,9 @@ const base = settingsBase<ModelControlOptions>({
 });
 
 /**
- * One button for the model and its effort, reading "GPT-5 · High", that opens a menu of settings: a Model submenu of
- * the models, grouped with their icons, an Effort submenu of the levels the model supports, and the host's own
- * toggles and choices.
+ * One button for the model and its effort, reading "GPT-5 · High", that opens one menu: the models, grouped with
+ * their icons, then the effort levels the model supports, each one press away, then the host's own choices and
+ * toggles.
  */
 export const modelControlPrimitive: ModelControlPrimitive = definePrimitive<
   ModelControlOptions,
@@ -462,6 +473,7 @@ export const modelControlPrimitive: ModelControlPrimitive = definePrimitive<
       ): ModelControlTriggerState => ({
         "aria-label": label,
         disabled,
+        "data-kind-trigger": "",
         model: { label: modelText, icon },
         effort: options && value !== null ? { options, value } : undefined,
       }),

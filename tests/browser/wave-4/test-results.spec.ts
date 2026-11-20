@@ -18,6 +18,7 @@ const row = (page: Page, id: string, name: string | RegExp) =>
 // A row's own label: the treeitem holds its group, so its middle may be a row inside it.
 const label = (page: Page, id: string, name: string | RegExp) =>
   row(page, id, name).locator(':scope > [data-slot="tree-label"]');
+const count = (page: Page, id: string, name: RegExp) => results(page, id).getByRole("button", { name });
 const host = (page: Page) => page.evaluate(() => (window as unknown as Fixture).kindHost);
 const set = (page: Page, id: string, next: Record<string, unknown>) =>
   page.evaluate(([i, n]) => (window as unknown as Fixture).kindTestResults.set(i, n), [id, next] as const);
@@ -52,7 +53,9 @@ test("shows the counts and duration, and opens failures to their message and sta
   await expect(run).toHaveAttribute("role", "group");
   await expect(run).toHaveAccessibleName("Tests");
   await expect(run).toHaveAttribute("data-status", "error");
-  await expect(part(page, "results", "meta")).toHaveText("3 passed 1 failed 1 skipped 70 ms");
+  await expect(part(page, "results", "meta")).toHaveText("70 ms");
+  await expect(part(page, "results", "count")).toHaveText(["3 passed", "1 failed", "1 skipped"]);
+  await expect(run.getByRole("button", { pressed: true })).toHaveCount(0);
   await expect(run.getByRole("tree", { name: "Tests" })).toBeVisible();
 
   await expect(row(page, "results", /^auth/)).toHaveAttribute("aria-expanded", "true");
@@ -68,15 +71,21 @@ test("shows the counts and duration, and opens failures to their message and sta
   );
 });
 
-test("the filter's arrow keys switch the tree, and an empty filter says so", async ({ page }) => {
+test("a count filters the tree, pressing it again shows every test, and an empty filter says so", async ({
+  page,
+}) => {
   await open(page);
   const tree = results(page, "results").getByRole("tree");
-  await results(page, "results").getByRole("radio", { name: "All" }).focus();
-  await page.keyboard.press("ArrowRight");
-  await expect(results(page, "results").getByRole("radio", { name: "Failed" })).toBeChecked();
+  const failed = count(page, "results", /failed$/);
+  await failed.click();
+  await expect(failed).toHaveAttribute("aria-pressed", "true");
   await expect(tree.getByRole("treeitem").filter({ visible: true })).toHaveText([/^auth/, /^rejects/]);
-  expect((await host(page)).filters).toEqual([["fail", expect.stringMatching(/^input-change:/)]]);
-  await page.keyboard.press("ArrowRight");
+  expect((await host(page)).filters).toEqual([["fail", expect.stringMatching(/^item-press:/)]]);
+  await failed.press("Enter");
+  await expect(failed).toHaveAttribute("aria-pressed", "false");
+  await expect(tree.getByRole("treeitem", { name: /^cart/ })).toBeVisible();
+  expect((await host(page)).filters.at(-1)).toEqual(["all", expect.stringMatching(/^item-press:/)]);
+  await count(page, "results", /passed$/).click();
   await expect(tree.getByRole("treeitem", { name: /^cart/ })).toBeVisible();
   await expect(tree.getByRole("treeitem", { name: /^signs in/ })).toBeHidden();
 
@@ -123,20 +132,24 @@ test("a live run grows without moving its header, and collapses to its counts wh
   await settled(page);
   expect(await label(page, "live", /^math/).boundingBox()).toEqual(first);
   expect(await trigger.boundingBox()).toEqual(before);
-  await expect(part(page, "live", "meta")).toHaveText("2 passed 0 failed 0 skipped 3 ms");
+  await expect(part(page, "live", "meta")).toHaveText("3 ms");
 
   await set(page, "live", { status: "complete" });
   await expect(live).not.toHaveAttribute("data-open", "");
   await expect(part(page, "live", "content")).toBeHidden();
-  await expect(trigger).toHaveAccessibleName("Live run 2 passed 0 failed 0 skipped 3 ms");
+  await expect(trigger).toHaveAccessibleName("Live run 3 ms");
+  await expect(part(page, "live", "count")).toHaveText(["2 passed", "0 failed", "0 skipped"]);
+  // A count pressed while closed opens the run to the tests it shows.
+  await count(page, "live", /passed$/).click();
+  await expect(live).toHaveAttribute("data-open", "");
 });
 
 test("an owner that refuses keeps the filter and open rows it holds", async ({ page }) => {
   await open(page, "refused");
   const run = results(page, "results");
-  await run.getByRole("radio", { name: "Failed" }).click();
+  await count(page, "results", /failed$/).click();
   await expect.poll(async () => (await host(page)).filters.length).toBe(1);
-  await expect(run.getByRole("radio", { name: "All" })).toBeChecked();
+  await expect(run.getByRole("button", { pressed: true })).toHaveCount(0);
   await expect(row(page, "results", /^cart/)).toBeVisible();
   await label(page, "results", /^auth/).click();
   await expect.poll(async () => (await host(page)).expanded).toEqual([[["auth/bad"], "item-press"]]);
@@ -179,7 +192,7 @@ test("agents filter, open a suite and close the run", async ({ page }) => {
   expect(JSON.parse(await act(page, "Tests", "expand", ["cart"]))).toMatchObject({ ok: true });
   await expect(row(page, "results", /^cart/)).toHaveAttribute("aria-expanded", "true");
   await act(page, "Tests", "setFilter", ["skip"]);
-  await expect(results(page, "results").getByRole("radio", { name: "Skipped" })).toBeChecked();
+  await expect(count(page, "results", /skipped$/)).toHaveAttribute("aria-pressed", "true");
   expect((await host(page)).filters.at(-1)).toEqual(["skip", "imperative:agent"]);
   expect(JSON.parse(await act(page, "Tests", "expand", ["nope"])).error.message).toContain('No item "nope"');
   await act(page, "Tests", "collapse");
@@ -209,7 +222,7 @@ test("kind-test-results keeps its filter and open rows when put back", async ({ 
   test.skip(layerOf(testInfo) !== "web", "web elements only");
   await open(page);
   const run = results(page, "results");
-  await run.getByRole("radio", { name: "Failed" }).click();
+  await count(page, "results", /failed$/).click();
   await label(page, "results", /^rejects/).click();
   await run.evaluate(async (el) => {
     const parent = el.parentElement as HTMLElement;
@@ -217,7 +230,7 @@ test("kind-test-results keeps its filter and open rows when put back", async ({ 
     await new Promise((resolve) => setTimeout(resolve));
     parent.append(el);
   });
-  await expect(run.getByRole("radio", { name: "Failed" })).toBeChecked();
+  await expect(count(page, "results", /failed$/)).toHaveAttribute("aria-pressed", "true");
   await expect(row(page, "results", /^rejects/)).toHaveAttribute("aria-expanded", "false");
   await label(page, "results", /^auth/).click();
   await expect(row(page, "results", /^auth/)).toHaveAttribute("aria-expanded", "false");
@@ -234,6 +247,6 @@ test("kind-test-results fills in a filter and tree written later, with whitespac
     panel.innerHTML =
       "<kind-test-results-filter>\n</kind-test-results-filter><kind-test-results-tree></kind-test-results-tree>";
   });
-  await expect(run.getByRole("radio")).toHaveCount(4);
+  await expect(part(page, "late", "count")).toHaveText(["3 passed", "1 failed", "1 skipped"]);
   await expect(row(page, "late", /^auth/)).toHaveAttribute("aria-expanded", "true");
 });

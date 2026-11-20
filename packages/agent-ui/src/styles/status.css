@@ -1,59 +1,22 @@
-/* Status (spec §7), shared by both render layers. The mark comes from status-mark.css. */
+/* Status (spec §7), shared by both render layers. The mark comes from status-mark.css. The mark and the words say
+   the status, so the badge adds no tinted fill or border. */
 @layer components {
   [data-slot="kind-status"] {
-    --kind-status-tone: var(--kind-color-muted);
-
     display: inline-flex;
     box-sizing: border-box;
     height: 1.5rem;
     align-items: center;
     gap: 0.375rem;
-    /* Centers the 16px mark in the pill: the start padding matches the space above and below it. */
-    padding-inline: calc((1.5rem - 2px - 16px) / 2) 0.625rem;
-    border: 1px solid color-mix(in oklab, var(--kind-status-tone) 30%, var(--kind-color-border));
-    border-radius: 9999px;
-    background-color: color-mix(in oklab, var(--kind-status-tone) 8%, var(--kind-color-surface));
     color: var(--kind-color-fg);
-    font-size: 0.75rem;
-    font-weight: 500;
-    line-height: 1rem;
+    font-size: var(--kind-text-xs);
+    font-weight: var(--kind-font-weight-medium);
+    line-height: var(--kind-text-xs-leading);
+    letter-spacing: var(--kind-text-xs-tracking);
     white-space: nowrap;
     vertical-align: middle;
-    transition:
-      border-color var(--kind-duration-base) var(--kind-ease),
-      background-color var(--kind-duration-base) var(--kind-ease);
-
-    &[data-status="running"] {
-      --kind-status-tone: var(--kind-color-accent);
-    }
-    &[data-status="awaiting-input"] {
-      --kind-status-tone: var(--kind-color-warning);
-    }
-    &[data-status="complete"] {
-      --kind-status-tone: var(--kind-color-success);
-    }
-    &[data-status="error"] {
-      --kind-status-tone: var(--kind-color-danger);
-    }
   }
 
   [data-slot="kind-status-label"] {
     font-variant-numeric: tabular-nums;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    [data-slot="kind-status"][data-motion="auto"] {
-      transition-duration: var(--kind-duration-reduced);
-      transition-timing-function: linear;
-    }
-  }
-
-  [data-slot="kind-status"][data-motion="reduced"] {
-    transition-duration: var(--kind-duration-reduced);
-    transition-timing-function: linear;
-  }
-
-  [data-slot="kind-status"][data-motion="none"] {
-    transition: none;
   }
 }

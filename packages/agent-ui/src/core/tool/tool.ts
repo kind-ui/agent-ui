@@ -2,6 +2,7 @@ import { definePrimitive, type SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { type Approval, hasOutput, type StepStatus, type ToolCall } from "../../types/index.js";
 import { approvalLabel, isActionable } from "../approval.js";
+import { stepDuration } from "../chain-of-thought/open-steps.js";
 import { createCopy } from "../clipboard.js";
 import type { Highlight } from "../code-block/index.js";
 import type { ConfirmationCallback, ConfirmationOptions } from "../confirmation/index.js";
@@ -98,6 +99,7 @@ type ToolSlots = {
   trigger: ToolSlot;
   icon: ToolSlot;
   title: ToolSlot<{ title: string }>;
+  meta: ToolSlot<{ duration: string }>;
   approval: ToolSlot<ToolApprovalState>;
   content: ToolSlot;
   input: ToolSlot<{ label: string; code: string; streaming: boolean; highlight: Highlight | undefined }>;
@@ -151,6 +153,7 @@ const presentation = ({ call, label, error, highlight, onApprove, onDeny, approv
 
 const copyAttrs = (name: string, copied: boolean) => ({
   type: "button",
+  "data-kind-icon-button": "",
   "aria-label": `Copy ${name}`,
   "data-copied": copied ? "" : undefined,
 });
@@ -222,12 +225,18 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
     };
   },
   slots: (slot) => {
-    const { root, trigger, icon, title, content } = base.slots(slot);
+    const { root, trigger, icon, title, meta, content } = base.slots(slot);
     return {
       root,
       trigger,
       icon,
       title: slot<BaseSlotProps, { title: string }>({ ...title, state: (state) => ({ title: state.title }) }),
+      // How long the call took, once the host passes `durationSeconds`.
+      meta: slot<BaseSlotProps, { duration: string }>({
+        ...meta,
+        present: (state) => stepDuration(state.durationSeconds) !== "",
+        state: (state) => ({ duration: stepDuration(state.durationSeconds) }),
+      }),
       // Outside the content, so a request shows while the tool is closed, and its outcome stays once decided.
       approval: slot<BaseSlotProps, ToolApprovalState>({
         present: (state) => isActionable(state.approval) || approvalLabel(state.approval) !== undefined,

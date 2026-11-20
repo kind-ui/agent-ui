@@ -7,7 +7,7 @@ import DocumentExample from "../../../examples/document/basic";
 
 Use a document when the agent hands over a file, like a README, a script or notes, rather than a reply. It shows the title with what the document is and its size, Copy and Download in a toolbar, and the content in a preview that expands to show it all.
 
-<Example caption="Press Show more to see the whole README, and Show less to collapse it. Press Copy to copy its source, or Markdown or Text to download it.">
+<Example caption="Press Show more to see the whole README, and Show less to collapse it. Press Copy to copy its source, or Markdown or Plain text to download it.">
   <DocumentExample />
 
   <include cwd lang="tsx">./examples/document/basic.tsx</include>
@@ -54,7 +54,7 @@ Pass the source as `content` and say how it shows with `format`. `"markdown"`, t
 
 **Copy** writes `content` to the clipboard, shows a check for two seconds and announces "Copied". Cancel `onCopy`'s details to copy something else yourself.
 
-**Download** shows while `onDownload` is set. The component never builds or fetches a file: it calls `onDownload` with the chosen format's `id`, and your handler saves it, as the example's `save` does. With more than one of `downloads`, each format has its own button named after its `label`; with one or none, there's a single **Download**. Return a promise to keep Download pending until it settles; if it rejects, the component announces "Download failed".
+**Download** shows while `onDownload` is set. The component never builds or fetches a file: it calls `onDownload` with the chosen format's `id`, and your handler saves it, as the example's `save` does. With more than one of `downloads`, each format has its own button showing its `label` and named "Download" and that label, like "Download Markdown"; with one or none, there's a single **Download**. In a card under 28rem wide, the buttons show only their glyph, so the title keeps its room. Return a promise to keep Download pending until it settles; if it rejects, the component announces "Download failed".
 
 The toolbar is one Tab stop. Use the arrow keys to move between its buttons, and Enter or Space to press one.
 

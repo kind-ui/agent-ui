@@ -13,59 +13,51 @@
     margin-inline: 0.125em;
     padding: 0 0.5em;
     border: 0;
-    border-radius: 999px;
-    background-color: color-mix(in oklab, var(--kind-color-muted) 14%, var(--kind-color-surface));
+    border-radius: var(--kind-radius-full);
+    background-color: var(--kind-color-selected);
     color: var(--kind-color-muted);
     font: inherit;
     font-size: 0.75em;
     font-style: normal;
-    font-weight: 500;
+    font-weight: var(--kind-font-weight-medium);
     font-variant-numeric: tabular-nums;
     line-height: 1.375;
     white-space: nowrap;
     vertical-align: baseline;
     cursor: pointer;
     transition:
-      background-color var(--kind-duration-fast) var(--kind-ease-out),
-      color var(--kind-duration-fast) var(--kind-ease-out);
+      background-color var(--kind-duration-fast) var(--kind-ease-in-out),
+      color var(--kind-duration-fast) var(--kind-ease-in-out);
 
     &:hover,
     &[data-open] {
-      background-color: color-mix(in oklab, var(--kind-color-muted) 26%, var(--kind-color-surface));
+      background-color: color-mix(in oklab, var(--kind-color-fg) 14%, transparent);
       color: var(--kind-color-fg);
     }
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 1px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
   }
 
-  /* The card resets what it would otherwise inherit from the paragraph it sits in. */
+  /* The shared popup (`data-kind-popup`) draws the card and its motion: it scales in from the marker (UI SDK's
+     `--transform-origin`) with `--kind-enter-scale` and fades out quicker; reduced motion only fades. */
   [data-slot="kind-inline-citation-content"] {
     z-index: 50;
     display: block;
     width: 18rem;
     max-width: calc(100vw - 16px);
-    padding: 12px;
-    border: 1px solid var(--kind-color-border);
-    border-radius: var(--kind-radius);
-    background-color: var(--kind-color-surface);
-    box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 20%, transparent);
-    color: var(--kind-color-fg);
-    font-size: 0.8125rem;
+  }
+
+  /* Inside the popup's padding, and resetting what the card would otherwise inherit from the paragraph it sits in. */
+  [data-slot="kind-inline-citation-carousel"] {
+    display: block;
+    padding: 6px;
     font-style: normal;
-    font-weight: 400;
-    line-height: 1.25rem;
-    letter-spacing: normal;
+    font-weight: var(--kind-font-weight-regular);
     text-align: start;
     text-indent: 0;
     white-space: normal;
-    outline: none;
-    transform-origin: var(--transform-origin);
-  }
-
-  [data-slot="kind-inline-citation-carousel"] {
-    display: block;
   }
 
   :where([data-slot="kind-inline-citation-carousel"]) {
@@ -78,11 +70,11 @@
     & [data-slot="carousel-viewport"] {
       display: block;
       margin: -4px;
-      border-radius: calc(var(--kind-radius) / 2);
+      border-radius: var(--kind-radius-sm);
 
       &:focus-visible {
-        outline: 2px solid var(--kind-color-ring);
-        outline-offset: 2px;
+        outline: var(--kind-focus-ring);
+        outline-offset: var(--kind-focus-offset-inset);
       }
     }
     /* One source to a page, and the viewport as tall as the tallest, so paging never moves the controls. */
@@ -90,11 +82,21 @@
       display: flex;
       gap: 16px;
     }
+    /* A row that lights under the pointer and darkens as it's pressed, when its link goes somewhere. */
     & [data-slot="carousel-item"] {
       display: block;
       flex: 0 0 100%;
       min-width: 0;
       padding: 4px;
+      border-radius: var(--kind-radius-sm);
+      transition: background-color var(--kind-duration-fast) var(--kind-ease-in-out);
+
+      &:has([data-slot="kind-inline-citation-link"][href]:hover) {
+        background-color: var(--kind-color-hover);
+      }
+      &:has([data-slot="kind-inline-citation-link"][href]:active) {
+        background-color: var(--kind-color-pressed);
+      }
     }
   }
 
@@ -102,40 +104,17 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-top: 8px;
-    border-top: 1px solid var(--kind-color-border);
+    margin-inline: -6px;
+    margin-block-end: -6px;
 
+    /* Small shared icon buttons (`data-kind-icon-button`), whose circles line up with the card's padding. At an end,
+       the one with no page that way hides in place, so nothing moves; UI SDK keeps it focusable, so it shows while it
+       holds focus. */
     & :where([data-slot="carousel-previous"], [data-slot="carousel-next"]) {
-      display: inline-flex;
-      width: 24px;
-      height: 24px;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      border: 0;
-      border-radius: calc(var(--kind-radius) / 2);
-      background-color: transparent;
-      color: var(--kind-color-muted);
-      cursor: pointer;
-      transition:
-        background-color var(--kind-duration-fast) var(--kind-ease-out),
-        color var(--kind-duration-fast) var(--kind-ease-out);
+      --kind-control-block-size: var(--kind-control-height-sm);
 
-      &:hover:not([data-disabled]) {
-        background-color: var(--kind-color-hover);
-        color: var(--kind-color-fg);
-      }
-      &:focus-visible {
-        outline: 2px solid var(--kind-color-ring);
-        outline-offset: 1px;
-      }
-      &[data-disabled] {
-        cursor: default;
-        opacity: 0.4;
-      }
-      & svg {
-        width: 16px;
-        height: 16px;
+      &:where([data-disabled]:not(:focus)) {
+        visibility: hidden;
       }
       &:dir(rtl) svg {
         scale: -1 1;
@@ -145,49 +124,45 @@
 
   [data-slot="kind-inline-citation-index"] {
     color: var(--kind-color-muted);
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
+    line-height: var(--kind-text-xs-leading);
     font-variant-numeric: tabular-nums;
   }
 
   [data-slot="kind-inline-citation-item"] {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
     min-width: 0;
   }
 
+  /* The entry in Sources' order: icon, title, host, then the snippet. The card is narrow, so the host takes its own
+     line under the title, which wraps to two. */
   [data-slot="kind-inline-citation-link"] {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    display: grid;
     min-width: 0;
-    border-radius: calc(var(--kind-radius) / 3);
+    grid-template-columns: 16px minmax(0, 1fr);
+    align-items: start;
+    column-gap: 8px;
+    border-radius: var(--kind-radius-sm);
     color: inherit;
     text-decoration: none;
 
     &[href]:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
-  }
-
-  [data-slot="kind-inline-citation-host"] {
-    display: block;
-    overflow: hidden;
-    color: var(--kind-color-muted);
-    font-size: 0.75rem;
-    line-height: 1rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   [data-slot="kind-inline-citation-source-title"] {
     display: -webkit-box;
+    min-width: 0;
     overflow: hidden;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
-    font-weight: 600;
+    font-weight: var(--kind-font-weight-medium);
+    overflow-wrap: anywhere;
 
     &:where([data-slot="kind-inline-citation-link"][href]:hover *) {
       text-decoration: underline;
@@ -196,53 +171,66 @@
     }
   }
 
+  /* A UI SDK Avatar of the favicon; without one, or until it loads, a link glyph. */
+  [data-slot="kind-inline-citation-icon"] {
+    display: inline-flex;
+    flex-shrink: 0;
+    margin-block: 2px;
+    /* Lucide "link", see THIRD_PARTY_NOTICES.md. */
+    --kind-inline-citation-link-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/%3E%3Cpath d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/%3E%3C/svg%3E");
+
+    & :where([data-slot="avatar"]) {
+      position: relative;
+      display: inline-flex;
+      width: 16px;
+      height: 16px;
+      overflow: hidden;
+      border-radius: calc(var(--kind-radius) / 3);
+    }
+
+    & :where([data-slot="avatar-fallback"]) {
+      width: 100%;
+      height: 100%;
+      background-color: var(--kind-color-muted);
+      mask: var(--kind-inline-citation-link-icon) center / 100% 100% no-repeat;
+    }
+
+    & :where(img) {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  [data-slot="kind-inline-citation-host"] {
+    grid-column: 2;
+    overflow: hidden;
+    color: var(--kind-color-muted);
+    font-size: var(--kind-text-xs);
+    line-height: var(--kind-text-xs-leading);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Under the title, past the 16px icon and the 8px gap. */
   [data-slot="kind-inline-citation-snippet"] {
     display: -webkit-box;
+    padding-inline-start: 24px;
     overflow: hidden;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
     line-clamp: 3;
     color: var(--kind-color-muted);
-    font-size: 0.75rem;
-    line-height: 1.125rem;
+    font-size: var(--kind-text-sm);
+    line-height: var(--kind-text-sm-leading);
   }
 
-  /* Motion: the card rises in. Reduced motion only fades, in 120 ms; `none` doesn't animate. */
-  :where([data-slot="kind-inline-citation"]) [data-slot="kind-inline-citation-content"] {
-    transition:
-      opacity var(--kind-duration-base) var(--kind-ease),
-      translate var(--kind-duration-base) var(--kind-ease),
-      scale var(--kind-duration-base) var(--kind-ease);
-
-    &:is([data-starting-style], [data-ending-style]) {
-      opacity: 0;
-      translate: 0 4px;
-      scale: 0.98;
-    }
-    &[data-ending-style] {
-      transition-duration: var(--kind-duration-fast);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    :where([data-slot="kind-inline-citation"][data-motion="auto"])
-      [data-slot="kind-inline-citation-content"] {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
-
-      &:is([data-starting-style], [data-ending-style]) {
-        translate: none;
-        scale: none;
-        transition-duration: var(--kind-duration-reduced);
-      }
-    }
-  }
-
+  /* The `motion` option, which the shared popup can't read: "reduced" only fades, in 120 ms; `none` doesn't animate. */
   :where([data-slot="kind-inline-citation"][data-motion="reduced"])
     [data-slot="kind-inline-citation-content"] {
-    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
     &:is([data-starting-style], [data-ending-style]) {
-      translate: none;
       scale: none;
       transition-duration: var(--kind-duration-reduced);
     }
@@ -253,7 +241,8 @@
       [data-slot="kind-inline-citation-trigger"],
       [data-slot="kind-inline-citation-content"],
       [data-slot="carousel-previous"],
-      [data-slot="carousel-next"]
+      [data-slot="carousel-next"],
+      [data-slot="carousel-item"]
     ) {
     transition: none;
   }
@@ -268,6 +257,11 @@
     }
     [data-slot="kind-inline-citation-source-title"]:where([data-slot="kind-inline-citation-link"][href] *) {
       color: LinkText;
+    }
+    /* Forced colors replace a background, which is all a mask draws. */
+    [data-slot="kind-inline-citation-icon"] [data-slot="avatar-fallback"] {
+      forced-color-adjust: none;
+      background-color: CanvasText;
     }
   }
 }

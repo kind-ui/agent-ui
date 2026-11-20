@@ -7,7 +7,7 @@ import ApprovalModeExample from "../../../examples/approval-mode/basic";
 
 Use an approval mode beside a [composer](./composer.mdx) when people decide how often the agent stops to ask, like approving every tool call or letting it edit files on its own. It's a button that shows the current mode and opens a menu of modes, each with a description, and it marks a risky one.
 
-<Example caption="Press Approvals, then choose Full access. The menu closes, and the button shows Full access in the danger color with a warning mark.">
+<Example caption="Press Approvals, then choose Full access. The menu closes, and the button shows Full access with a warning mark.">
   <ApprovalModeExample />
 
   <include cwd lang="tsx">./examples/approval-mode/basic.tsx</include>
@@ -32,13 +32,13 @@ ApprovalMode
     └── ApprovalModeRows
 ```
 
-`ApprovalMode` is a group named by its `label` and the current mode, around UI SDK's Menu. `ApprovalModeTrigger` is UI SDK's `MenuTrigger`, a button that shows a shield icon, the mode's label and, for a risky mode, a warning mark, unless you pass children. `ApprovalModeContent` is UI SDK's `MenuContent`: a header with the `label` and an optional **Learn more** item, then one radio group. `ApprovalModeRows` draws the modes inside it as radio items. `ApprovalMode` renders the trigger and content when you pass no children.
+`ApprovalMode` is a group named by its `label` and the current mode, around UI SDK's Menu. `ApprovalModeTrigger` is UI SDK's `MenuTrigger`, a button that shows a shield icon, the mode's label and, for a risky mode, a warning mark, unless you pass children. `ApprovalModeContent` is UI SDK's `MenuContent`: one radio group headed by the `label`, then an optional **Learn more** item. `ApprovalModeRows` draws the modes inside it as radio items. `ApprovalMode` renders the trigger and content when you pass no children.
 
 ## Usage
 
 ### Modes
 
-Pass `modes`, in order. Each has a `value`, which must be unique, a `label` and an optional `description`, a second line under the label. A mode with `danger: true` lets the agent do more without asking: its row is drawn in the danger color with a warning mark and the word "Risky", and when it's chosen the button turns the danger color and shows the mark too.
+Pass `modes`, in order. Each has a `value`, which must be unique, a `label` and an optional `description`, a second line under the label. A mode with `danger: true` lets the agent do more without asking: its row says "Risky" in the danger color, and when it's chosen the button shows a warning mark.
 
 The button is named by the `label` and the mode, like "Approvals, Ask every time", with ", risky" after a risky mode. The `label` is "Approvals" by default and also heads the menu.
 
@@ -63,7 +63,7 @@ The Approval Mode doesn't act on the mode. Your app reads it and decides which t
 
 ### Learn More
 
-Pass `learnMoreHref` to add a **Learn more** link to the menu's header, or `onLearnMore` to handle it yourself. `onLearnMore` gets the `learnMoreHref`, if there is one, and the reason `item-press`. Without either, the header shows only the `label`.
+Pass `learnMoreHref` to add a **Learn more** link after the modes, or `onLearnMore` to handle it yourself. `onLearnMore` gets the `learnMoreHref`, if there is one, and the reason `item-press`.
 
 ### Opening
 
@@ -71,7 +71,7 @@ Pass `open` and `onOpenChange` to control whether the menu is open, or `defaultO
 
 ### Keyboard
 
-The button is one Tab stop. Enter, Space or Down Arrow opens the menu, and the arrow keys move between **Learn more** and the modes. Typing a letter moves to the next mode whose label starts with it. Enter or Space chooses a mode and closes the menu. Escape closes it without a change, with focus back on the button.
+The button is one Tab stop. Enter, Space or Down Arrow opens the menu with focus on the first mode, and the arrow keys move between the modes and **Learn more**. Typing a letter moves to the next mode whose label starts with it. Enter or Space chooses a mode and closes the menu. Escape closes it without a change, with focus back on the button.
 
 ### Presentation and Motion
 

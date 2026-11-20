@@ -181,11 +181,14 @@ export function checkUiSdkUsage(root, exceptions) {
     const file = rel(path);
     if (Object.hasOwn(exceptions, file)) continue;
     // A tabindex whose value comes from a UI SDK focus helper (`roving.tabIndex(state, part)`) is UI SDK's, so is
-    // focus a roving group moves (`roving.focus(key)`), and so is a static `tabindex: "0"` in a slot that declares UI
-    // SDK's `focus: "tab-stop"`.
+    // focus a roving group, a grid or a UI SDK `create…Controller()` moves (`roving.focus(key)`, `grid.focus(cell)`,
+    // `controller.focus()`), and so is a static `tabindex: "0"` in a slot that declares UI SDK's `focus: "tab-stop"`.
     const source = stripComments(readFileSync(path, "utf8"))
       .replace(/\btabindex["']?\s*:\s*[\w.]+\.tabIndex\(/g, "")
-      .replace(/\broving\.focus\(/g, "")
+      .replace(/\b(?:roving|grid)\.focus\(/g, "")
+      .replace(/\bcontroller\.focus\(/g, (match, _offset, whole) =>
+        /\bconst controller = create\w+Controller\(/.test(whole) ? "" : match,
+      )
       .replace(/\btabindex["']?\s*:\s*["']0["']/g, (match, offset, whole) => {
         const slot = whole.slice(whole.lastIndexOf("slot(", offset), offset);
         return /\bfocus\s*:\s*["']tab-stop["']/.test(slot) ? "" : match;

@@ -55,6 +55,18 @@ test("objects are indented JSON, and a cycle falls back to its string", () => {
   assert.deepEqual(toolValue(cycle), { kind: "code", code: "[object Object]" });
 });
 
+test("an object of up to three scalars is one line", () => {
+  assert.deepEqual(toolValue({ filter: "client", n: 2, ok: null }), {
+    kind: "code",
+    code: '{ "filter": "client", "n": 2, "ok": null }',
+  });
+  assert.deepEqual(toolValue({ a: 1, b: 2, c: 3, d: 4 }), {
+    kind: "code",
+    code: '{\n  "a": 1,\n  "b": 2,\n  "c": 3,\n  "d": 4\n}',
+  });
+  assert.deepEqual(toolValue({}), { kind: "code", code: "{}" });
+});
+
 test("approval labels", () => {
   assert.equal(approvalLabel(undefined), undefined);
   assert.equal(approvalLabel(approval("requested")), "Waiting for approval");

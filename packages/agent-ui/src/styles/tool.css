@@ -2,14 +2,26 @@
 @layer components {
   [data-slot="kind-tool-title"] {
     font-family: var(--kind-font-mono);
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
   }
 
-  /* Aligned with the title: the trigger's 6px padding, the 16px mark and the 8px gap. */
   [data-slot="kind-tool-approval"] {
     display: block;
     padding-block: 2px 4px;
-    padding-inline: 30px 6px;
+    padding-inline: var(--kind-step-indent) 6px;
+  }
+
+  /* The trigger's mark already says the tool waits, so the outcome reads only words until it's decided. */
+  :where(
+      [data-slot="kind-tool-approval"]
+        [data-slot="kind-confirmation-outcome"]:is(
+          [data-state="requested"],
+          [data-state="submitting"],
+          [data-state="submit-failed"]
+        )
+    )
+    [data-slot="kind-confirmation-outcome-icon"] {
+    display: none;
   }
 
   [data-slot="kind-tool-content"] {
@@ -21,92 +33,93 @@
     display: block;
   }
 
+  /* The tool is the container, so its payloads are bare code under their heading. */
+  /* Two attributes, since code-block.css loads after this file. */
+  [data-slot="kind-tool-content"] [data-slot="kind-code-block"] {
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+
+    & :where([data-slot="kind-code-block-code"]) {
+      padding: 0 0 0.25rem;
+    }
+  }
+
   [data-tool-heading] {
     display: flex;
     align-items: center;
     gap: 0.375rem;
-    height: 1.75rem;
-    font-size: 0.75rem;
-    font-weight: 500;
+    height: var(--kind-control-height);
+    font-size: var(--kind-text-xs);
+    font-weight: var(--kind-font-weight-medium);
   }
 
   /* Always in the markup, shown by state, so its arrival moves nothing beside it. */
   [data-tool-badge] {
     display: none;
-    padding-inline: 0.375rem;
-    border: 1px solid var(--kind-color-border);
-    border-radius: 9999px;
-    font-weight: 400;
-    line-height: 1rem;
   }
   [data-slot="kind-tool-input"][data-state="streaming"] > [data-tool-heading] > [data-tool-badge],
   [data-slot="kind-tool-output"][data-state="preliminary"] > [data-tool-heading] > [data-tool-badge] {
-    display: inline-block;
+    display: inline-flex;
   }
 
+  /* Shown on hover or focus of its section, always on touch; hidden by opacity, so it keeps its place. */
   :is([data-slot="kind-tool-input-copy"], [data-slot="kind-tool-output-copy"]) {
-    display: inline-grid;
-    place-items: center;
-    width: 1.75rem;
-    height: 1.75rem;
     margin-inline-start: auto;
-    padding: 0;
-    border: 0;
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: transparent;
-    color: var(--kind-color-muted);
+    opacity: 0;
     transition:
+      opacity var(--kind-duration-fast),
       color var(--kind-duration-fast),
       background-color var(--kind-duration-fast);
 
-    &::before {
+    &::after {
       content: "";
       width: 0.875rem;
       height: 0.875rem;
       background-color: currentColor;
       mask: var(--kind-icon-copy) center / contain no-repeat;
     }
-    &:hover {
-      color: var(--kind-color-fg);
-      background-color: var(--kind-color-hover);
-    }
-    &:focus-visible {
-      color: var(--kind-color-fg);
-      outline: 1.5px solid var(--kind-color-ring);
-      outline-offset: -1.5px;
-    }
     &[data-copied] {
       color: var(--kind-color-success);
     }
-    &[data-copied]::before {
+    &[data-copied]::after {
       mask-image: var(--kind-icon-check);
+    }
+    /* The content clips, and this button sits at its inline end. */
+    &:focus-visible {
+      outline-offset: var(--kind-focus-offset-inset);
+    }
+  }
+  :is([data-slot="kind-tool-input"], [data-slot="kind-tool-output"]):is(:hover, :focus-within)
+    :is([data-slot="kind-tool-input-copy"], [data-slot="kind-tool-output-copy"]),
+  :is([data-slot="kind-tool-input-copy"], [data-slot="kind-tool-output-copy"])[data-copied] {
+    opacity: 1;
+  }
+  @media (hover: none) {
+    :is([data-slot="kind-tool-input-copy"], [data-slot="kind-tool-output-copy"]) {
+      opacity: 1;
     }
   }
 
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
-    :is([data-slot="kind-tool-input-copy"], [data-slot="kind-tool-output-copy"])::before {
+    :is([data-slot="kind-tool-input-copy"], [data-slot="kind-tool-output-copy"])::after {
       forced-color-adjust: none;
       background-color: ButtonText;
     }
   }
 
   [data-slot="kind-tool-output"][data-kind="markdown"] {
-    --kind-markdown-font-size: 0.875rem;
+    --kind-markdown-font-size: var(--kind-text-md);
     --kind-markdown-color: var(--kind-color-fg);
   }
 
   [data-slot="kind-tool-error"] {
     margin-block: 4px;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid color-mix(in oklab, var(--kind-color-danger) 40%, var(--kind-color-border));
-    border-inline-start-width: 3px;
-    border-inline-start-color: var(--kind-color-danger);
-    border-radius: calc(var(--kind-radius) * 2 / 3);
-    background-color: color-mix(in oklab, var(--kind-color-danger) 8%, var(--kind-color-surface));
-    color: var(--kind-color-fg);
-    font-size: 0.8125rem;
-    line-height: 1.25rem;
+    color: var(--kind-color-danger);
+    font-size: var(--kind-text-md);
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
     overflow-wrap: anywhere;
   }
 }

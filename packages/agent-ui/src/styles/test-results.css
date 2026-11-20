@@ -1,6 +1,6 @@
-/* Test Results (spec §7): the Step base's header with the run's counts and duration, over a filter and a tree of
-   suites and tests in which a failed test opens to its Stack Trace. The trigger comes from step.css, through
-   `data-step-part`; rows are UI SDK Tree rows, styled by the internal Tree. */
+/* Test Results (spec §7): the Step base's header with the run's duration and, beside it, its counts as toggle buttons
+   that filter the tests, over a tree of suites and tests in which a failed test opens to its Stack Trace. The trigger
+   comes from step.css, through `data-step-part`; rows are UI SDK Tree rows, styled by the internal Tree. */
 @layer components {
   /* Custom elements on Web Components are inline until styled. */
   :is(
@@ -17,25 +17,50 @@
     display: none;
   }
 
-  /* The counts sit at the header's end, so a count that grows a digit takes room from the title, not the rows. */
-  [data-slot="kind-test-results-meta"] {
-    display: inline-flex;
+  /* The counts share the trigger's row, and sit under it in a narrow run. The width decides, never the counts' text,
+     so a count gaining a digit while a run streams doesn't move the tests below. */
+  [data-slot="kind-test-results"] {
+    container: kind-test-results / inline-size;
+    flex-flow: row wrap;
     align-items: center;
-    gap: 10px;
+    column-gap: 2px;
   }
 
-  [data-test-results-count] {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    white-space: nowrap;
+  [data-slot="kind-test-results-trigger"] {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+  }
 
-    /* A mark per count, in its status's color, quiet at zero. */
-    &::before {
+  [data-slot="kind-test-results-content"] {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  /* The counts inherit their figures from here (a shared control's `font: inherit`), so a digit changing keeps the
+     row's width. */
+  [data-slot="kind-test-results-filter"] {
+    display: flex;
+    flex-shrink: 0;
+    gap: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @container kind-test-results (width < 30rem) {
+    [data-slot="kind-test-results-filter"] {
+      flex-basis: 100%;
+    }
+  }
+
+  /* Small ghost pills (core sets `data-kind-size="sm"`), each with a dot in its status's color, quiet at zero. The
+     dot is `::after`, since a shared control's `::before` is its hit area under a coarse pointer. */
+  [data-test-results-count] {
+    &::after {
       content: "";
+      order: -1;
       width: 6px;
       height: 6px;
-      border-radius: 9999px;
+      border-radius: var(--kind-radius-full);
       background-color: var(--kind-test-results-count, var(--kind-color-muted));
     }
     &[data-test-results-count="pass"] {
@@ -44,20 +69,9 @@
     &[data-test-results-count="fail"] {
       --kind-test-results-count: var(--kind-color-danger);
     }
-    &[data-zero]::before {
+    &[data-zero]::after {
       background-color: color-mix(in oklab, var(--kind-color-muted) 45%, transparent);
     }
-    &:where([data-test-results-count="fail"]:not([data-zero])) {
-      color: color-mix(in oklab, var(--kind-color-danger) 70%, var(--kind-color-fg));
-    }
-  }
-
-  /* Room for a few digits, so the counts don't slide as the duration grows. */
-  [data-test-results-duration] {
-    display: inline-block;
-    min-width: 6ch;
-    text-align: end;
-    white-space: nowrap;
   }
 
   [data-test-results-panel] {
@@ -67,86 +81,53 @@
     color: var(--kind-color-fg);
   }
 
-  /* The filter: a mark slides to the chosen one at full motion; reduced motion fills it in place in 120 ms. */
-  [data-slot="kind-test-results-filter"] ui-segmented-control {
-    display: inline-flex;
-  }
-
-  :where([data-slot="kind-test-results-filter"]) {
-    & [data-slot="segmented-control-indicator"] {
-      transition-property: translate, width;
-      transition-duration: var(--kind-duration-base);
-      transition-timing-function: var(--kind-ease);
-    }
-    & [data-slot="segmented-control-item"] {
-      transition:
-        color var(--kind-duration-fast) var(--kind-ease-out),
-        background-color var(--kind-duration-reduced) var(--kind-ease-out),
-        box-shadow var(--kind-duration-reduced) var(--kind-ease-out);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    :where([data-slot="kind-test-results-filter"][data-motion="auto"]) {
-      & [data-slot="segmented-control-indicator"] {
-        display: none;
-      }
-      & [data-slot="segmented-control-item"][data-checked] {
-        background-color: var(--kind-color-surface);
-        box-shadow: inset 0 0 0 1px var(--kind-color-border);
-      }
-    }
-  }
-
-  :where([data-slot="kind-test-results-filter"]:is([data-motion="reduced"], [data-motion="none"])) {
-    & [data-slot="segmented-control-indicator"] {
-      display: none;
-    }
-    & [data-slot="segmented-control-item"][data-checked] {
-      background-color: var(--kind-color-surface);
-      box-shadow: inset 0 0 0 1px var(--kind-color-border);
-    }
-  }
-
-  :where([data-slot="kind-test-results-filter"][data-motion="none"]) [data-slot="segmented-control-item"] {
-    transition: none;
-  }
-
   /* A press on the arrow lands on its row, which the tree part hears: UI SDK's indicator cancels its own click. */
   :where([data-test-results-part="tree"]) [data-slot="tree-indicator"] {
     pointer-events: none;
 
     & svg {
-      transition: rotate var(--kind-duration-base) var(--kind-ease);
+      transition: rotate var(--kind-duration-base) var(--kind-ease-in-out);
     }
+  }
+
+  /* Names wrap to two lines; the arrow, the mark and the duration stay on the first. The internal Tree centers a
+     label's children, so each lines itself up. */
+  :where([data-test-results-part="tree"]) [data-slot="tree-indicator"] {
+    align-self: flex-start;
+    margin-block-start: 6px;
   }
 
   [data-test-results-part="item"] {
     display: flex;
     flex: 1;
+    align-self: stretch;
     min-width: 0;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
+    padding-block: 4px;
 
     /* The duration, after the name and the mark's words in the row's name. */
     &::after {
       content: attr(data-duration);
       flex-shrink: 0;
-      font-size: 0.75rem;
+      font-size: var(--kind-text-xs);
       font-variant-numeric: tabular-nums;
       color: var(--kind-color-muted);
     }
   }
 
   [data-test-results-name] {
+    display: -webkit-box;
     flex: 1;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: break-word;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
 
     &:where([data-kind="suite"] > *) {
-      font-weight: 500;
+      font-weight: var(--kind-font-weight-medium);
     }
     &:where([data-kind="test"][data-status="skip"] > *) {
       color: var(--kind-color-muted);
@@ -157,12 +138,23 @@
   [data-test-results-part="status"] {
     --kind-status-mark-size: 14px;
     order: -1;
+    margin-block: 3px;
   }
 
-  /* A failed test's Stack Trace, lined up with its name. `--tree-level` is the test's. */
+  /* A failed test's Stack Trace, its message flush with the test's name: the row above already carries the mark, so
+     the trace's own mark goes. `--tree-level` is the test's; the trigger's 6px padding is taken off. */
   [data-slot="kind-test-results-failure"] {
-    padding-block: 2px 8px;
-    padding-inline: calc((var(--tree-level) - 1) * 1rem + 1.625rem) 0.25rem;
+    padding-block: 0 8px;
+    padding-inline: calc((var(--tree-level) - 1) * 1rem + 3rem - 6px) 0.25rem;
+  }
+
+  :where([data-slot="kind-test-results-failure"]) [data-slot="kind-stack-trace-icon"] {
+    display: none;
+  }
+
+  :where([data-slot="kind-test-results-failure"]) [data-slot="kind-stack-trace-trigger"] {
+    padding-block: 0 4px;
+    color: var(--kind-color-fg);
   }
 
   [data-slot="kind-test-results-empty"] {
@@ -174,8 +166,8 @@
   /* Rows come in once, as they mount: a test that finishes rises in, and the rest stay still. */
   :where([data-test-results-part="tree"]:not([data-motion="none"])) [data-slot="tree-label"] {
     transition:
-      opacity var(--kind-duration-base) var(--kind-ease-out),
-      translate var(--kind-duration-base) var(--kind-ease);
+      opacity var(--kind-duration-base) var(--kind-ease-in-out),
+      translate var(--kind-duration-base) var(--kind-ease-enter);
 
     @starting-style {
       opacity: 0;
@@ -198,7 +190,7 @@
   :where([data-test-results-part="tree"]) [data-slot="tree-group"] {
     height: var(--tree-group-height);
     overflow: hidden;
-    transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-base) var(--kind-ease-in-out);
   }
   :where([data-test-results-part="tree"]:not([data-motion="none"]))
     [data-slot="tree-group"]:is([data-starting-style], [data-ending-style]) {
@@ -209,8 +201,8 @@
     [data-test-results-part="tree"][data-motion="auto"] {
       & [data-slot="tree-group"] {
         transition:
-          height var(--kind-duration-panel) var(--kind-ease),
-          opacity var(--kind-duration-base) var(--kind-ease-out);
+          height var(--kind-duration-panel) var(--kind-ease-enter),
+          opacity var(--kind-duration-base) var(--kind-ease-in-out);
 
         &:is([data-starting-style], [data-ending-style]) {
           height: 0;
@@ -248,7 +240,7 @@
 
   /* Forced colors replace a background, which is all a count's mark draws. */
   @media (forced-colors: active) {
-    [data-test-results-count]::before {
+    [data-test-results-count]::after {
       forced-color-adjust: none;
       background-color: CanvasText;
     }

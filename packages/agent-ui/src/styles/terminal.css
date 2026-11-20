@@ -1,14 +1,14 @@
-/* Terminal (spec §7): the Step base's header with the command, its exit code and duration, over a screen with the
-   prompt and the output in its ANSI colors. The trigger and the panel's motion come from step.css, through
-   `data-step-part`. */
+/* Terminal (spec §7): the Step base's header with the command, its exit code and duration, over a code surface
+   (`data-kind-code`, controls.css) with the output in its ANSI colors. The trigger and the panel's motion come from
+   step.css, through `data-step-part`. */
 @layer components {
   [data-slot="kind-terminal"] {
     --kind-terminal-max-height: 20rem;
-    --kind-terminal-font-size: 0.8125rem;
-    --kind-terminal-line-height: 1.25rem;
+    --kind-terminal-font-size: var(--kind-code-font-size);
+    --kind-terminal-line-height: var(--kind-code-line-height);
   }
 
-  [data-slot="kind-terminal-title"] {
+  [data-slot="kind-terminal-title"]:where([data-command]) {
     font-family: var(--kind-font-mono);
     font-size: var(--kind-terminal-font-size);
   }
@@ -23,20 +23,20 @@
     display: block;
   }
 
+  /* Plain words beside the duration: the status mark already carries the outcome's color. */
   [data-slot="kind-terminal-exit"] {
     flex-shrink: 0;
-    padding-inline: 0.375rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 500;
+    font-size: var(--kind-text-xs);
     font-variant-numeric: tabular-nums;
-    line-height: 1.125rem;
-    color: color-mix(in oklab, var(--kind-color-success) 55%, var(--kind-color-fg));
-    background-color: color-mix(in oklab, var(--kind-color-success) 12%, transparent);
+    color: var(--kind-color-muted);
+  }
 
-    &:where([data-exit="failure"]) {
-      color: color-mix(in oklab, var(--kind-color-danger) 60%, var(--kind-color-fg));
-      background-color: color-mix(in oklab, var(--kind-color-danger) 12%, transparent);
+  :where([data-slot="kind-terminal-exit"]:not([hidden]))
+    + [data-slot="kind-terminal-meta"]:where(:not(:empty)) {
+    margin-inline-start: -0.25rem;
+
+    &::before {
+      content: "· " / "";
     }
   }
 
@@ -52,32 +52,23 @@
     color: var(--kind-color-fg);
   }
 
+  /* A filled code surface, no edge (docs/design-principles.md "System"). */
   [data-terminal-screen] {
     position: relative;
     overflow: hidden;
-    border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) * 2 / 3);
-    background-color: var(--kind-color-hover);
-    font-family: var(--kind-font-mono);
-    font-size: var(--kind-terminal-font-size);
-    line-height: var(--kind-terminal-line-height);
   }
 
+  /* Copy sits in the screen's corner, so the command (when shown) and the output start at the top. */
   [data-terminal-header] {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    padding-block: 0.5rem 0;
-    padding-inline: 0.75rem 0.375rem;
+    display: contents;
   }
 
   [data-slot="kind-terminal-command"] {
-    flex: 1;
-    min-width: 0;
-    padding-block: 0.25rem;
+    padding-block: 0.5rem 0;
+    padding-inline: 0.75rem 2.5rem;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
-    font-weight: 500;
+    font-weight: var(--kind-font-weight-medium);
 
     &::before {
       content: "$ ";
@@ -86,48 +77,41 @@
     }
   }
 
+  /* Shown while the screen is hovered or holds focus, and always without hover. Core makes it a raised `secondary`
+     pill, whose fill keeps the output it covers from showing through. */
   [data-slot="kind-terminal-copy"] {
-    display: inline-grid;
-    flex-shrink: 0;
-    place-items: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    padding: 0;
-    border: 0;
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: transparent;
-    color: var(--kind-color-muted);
-    transition:
-      color var(--kind-duration-fast),
-      background-color var(--kind-duration-fast);
+    position: absolute;
+    z-index: 1;
+    top: 0.375rem;
+    inset-inline-end: 0.375rem;
+    opacity: 0;
 
-    &::before {
+    &::after {
       content: "";
-      width: 0.875rem;
-      height: 0.875rem;
+      width: var(--kind-icon-size-sm);
+      height: var(--kind-icon-size-sm);
       background-color: currentColor;
       mask: var(--kind-icon-copy) center / contain no-repeat;
     }
-    &:hover {
-      color: var(--kind-color-fg);
-      background-color: color-mix(in oklab, var(--kind-color-fg) 6%, transparent);
-    }
-    &:focus-visible {
-      color: var(--kind-color-fg);
-      outline: 1.5px solid var(--kind-color-ring);
-      outline-offset: -1.5px;
-    }
-    &[data-copied] {
-      color: var(--kind-color-success);
-    }
-    &[data-copied]::before {
+    &[data-copied]::after {
       mask-image: var(--kind-icon-check);
+    }
+  }
+
+  :where([data-terminal-screen]:is(:hover, :focus-within)) [data-slot="kind-terminal-copy"],
+  [data-slot="kind-terminal-copy"]:where([data-copied]) {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    [data-slot="kind-terminal-copy"] {
+      opacity: 1;
     }
   }
 
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
-    [data-slot="kind-terminal-copy"]::before {
+    [data-slot="kind-terminal-copy"]::after {
       forced-color-adjust: none;
       background-color: ButtonText;
     }
@@ -139,7 +123,7 @@
     max-height: var(--kind-terminal-max-height);
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding-block-end: 0.5rem;
+    padding-block: 0.5rem;
     line-height: var(--kind-terminal-line-height);
     scrollbar-width: thin;
     scrollbar-color: var(--kind-color-border) transparent;
@@ -151,8 +135,8 @@
 
   /* The viewport scrolls under the screen's rounded corners, so the screen draws its ring. */
   [data-terminal-screen]:where(:has([data-slot="kind-terminal-viewport"]:focus-visible)) {
-    outline: 1.5px solid color-mix(in oklab, var(--kind-color-ring) 50%, transparent);
-    outline-offset: -1.5px;
+    outline: var(--kind-focus-ring);
+    outline-offset: var(--kind-focus-offset-inset);
   }
 
   [data-slot="kind-terminal-output"] {
@@ -192,8 +176,7 @@
   /* A cursor after the last line while the command runs. It overhangs into the line's padding, so it never wraps a
      full line. */
   [data-slot="kind-terminal-line"]:where(
-    [data-slot="kind-terminal"][data-status="running"] *,
-    [data-last]
+    [data-slot="kind-terminal"][data-status="running"] [data-last]
   )::after {
     content: "";
     display: inline-block;
@@ -220,30 +203,30 @@
     translate: -50% 0;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    height: 1.75rem;
+    gap: 0.375rem;
+    height: var(--kind-control-height-sm);
     padding-inline: 0.625rem 0.75rem;
-    border: 1px solid var(--kind-color-border);
-    border-radius: 9999px;
-    background-color: var(--kind-color-surface);
-    box-shadow:
-      0 1px 2px color-mix(in oklab, var(--kind-color-shadow) 6%, transparent),
-      0 4px 16px -4px color-mix(in oklab, var(--kind-color-shadow) 12%, transparent);
+    border: 0;
+    border-radius: var(--kind-radius-full);
+    background-color: var(--kind-color-raised);
+    box-shadow: var(--kind-shadow-popover);
     font-family: inherit;
-    font-size: 0.75rem;
-    font-weight: 500;
+    font-size: var(--kind-text-xs);
+    font-weight: var(--kind-font-weight-medium);
+    line-height: var(--kind-text-xs-leading);
     white-space: nowrap;
     color: var(--kind-color-fg);
+    cursor: pointer;
     transition:
-      opacity var(--kind-duration-base) var(--kind-ease-out),
-      translate var(--kind-duration-base) var(--kind-ease),
-      background-color var(--kind-duration-fast);
+      opacity var(--kind-duration-base) var(--kind-ease-in-out),
+      translate var(--kind-duration-base) var(--kind-ease-enter),
+      background-color var(--kind-duration-fast) var(--kind-ease-in-out);
 
     &:where([data-starting-style], [data-ending-style]) {
       opacity: 0;
     }
     &:where([data-motion="reduced"]) {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
     }
     &:where([data-motion="none"]) {
       transition: none;
@@ -251,17 +234,17 @@
 
     &::before {
       content: "";
-      width: 12px;
-      height: 12px;
+      width: 0.75rem;
+      height: 0.75rem;
       background-color: var(--kind-color-muted);
       mask: var(--kind-terminal-arrow) center / contain no-repeat;
     }
     &:hover {
-      background-color: var(--kind-color-hover);
+      background-image: linear-gradient(var(--kind-color-hover) 0 0);
     }
     &:focus-visible {
-      outline: 1.5px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
   }
 
@@ -273,7 +256,11 @@
   }
 
   /* Web keeps parts that aren't present in the page, with `hidden`. */
-  :is([data-slot="kind-terminal-jump"], [data-slot="kind-terminal-exit"])[hidden] {
+  :is(
+    [data-slot="kind-terminal-jump"],
+    [data-slot="kind-terminal-exit"],
+    [data-slot="kind-terminal-command"]
+  )[hidden] {
     display: none;
   }
 
@@ -289,7 +276,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     [data-slot="kind-terminal-jump"]:where([data-motion="auto"]) {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
     }
   }
 }

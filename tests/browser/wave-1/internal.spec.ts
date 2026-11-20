@@ -38,7 +38,7 @@ for (const name of Object.keys(rootSlots)) {
 test("button: Enter and Space press it", async ({ page }) => {
   await open(page, "button");
   const button = page.getByRole("button", { name: "Save" });
-  await expect(button).toHaveCSS("border-top-left-radius", "6px");
+  await expect(button).toHaveCSS("border-top-left-radius", "9999px");
   await button.focus();
   await page.keyboard.press("Enter");
   await page.keyboard.press("Space");
@@ -71,8 +71,8 @@ test("toolbar: a Kind part rendered as a toolbar button gets one class list", as
   ]) {
     const trigger = page.getByRole("button", { name });
     const classes = (await trigger.getAttribute("class"))?.split(" ") ?? [];
-    expect(classes).toContain("h-7");
-    expect(classes).not.toContain("h-8");
+    expect(classes).toContain("h-[var(--kind-control-height-sm)]");
+    expect(classes).not.toContain("h-[var(--kind-trigger-height)]");
     await trigger.click();
     await expect(page.getByRole("menuitem", { name: item })).toBeVisible();
     await page.keyboard.press("Escape");
@@ -85,7 +85,7 @@ test("toggle: Space flips aria-pressed", async ({ page }) => {
   await toggle.focus();
   await page.keyboard.press("Space");
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
-  await expect(toggle).toHaveCSS("color", "oklch(1 0 0)");
+  await expect(toggle).toHaveCSS("background-color", "oklch(0 0 0 / 0.07)");
 });
 
 test("menu: ArrowDown moves focus, Escape closes and returns focus", async ({ page }) => {

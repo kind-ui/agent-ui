@@ -17,9 +17,9 @@
     gap: 4px;
     margin-inline-start: -4px;
     padding: 0 4px;
-    border-radius: calc(var(--kind-radius) / 3);
+    border-radius: var(--kind-radius-sm);
     color: var(--kind-color-fg);
-    font-weight: 500;
+    font-weight: var(--kind-font-weight-medium);
     transition: background-color var(--kind-duration-fast);
 
     &::after {
@@ -30,17 +30,17 @@
       border-right: 1.5px solid currentColor;
       border-bottom: 1.5px solid currentColor;
       transform: translateY(-1px) rotate(45deg);
-      transition: transform var(--kind-duration-base) var(--kind-ease);
+      transition: transform var(--kind-duration-base) var(--kind-ease-in-out);
     }
     &[data-open]::after {
       transform: translateY(1px) rotate(-135deg);
     }
     &:hover {
-      background-color: color-mix(in oklab, var(--kind-notice-tone) 12%, transparent);
+      background-color: var(--kind-color-hover);
     }
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 1px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
   }
 
@@ -65,7 +65,7 @@
   @media (prefers-reduced-motion: no-preference) {
     [data-notice-part="detail"][data-motion="auto"] {
       transition:
-        height var(--kind-duration-panel) var(--kind-ease),
+        height var(--kind-duration-panel) var(--kind-ease-in-out),
         opacity var(--kind-duration-base) var(--kind-ease-out);
 
       &:is([data-starting-style], [data-ending-style]) {

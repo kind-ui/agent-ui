@@ -1,9 +1,9 @@
-/* Plan (spec §7): a UI SDK Progress under the title, and an Accept button at the end. */
+/* Plan (spec §7): an Accept button at the end, which "Accepted" replaces at its height, and the UI SDK Progress a host
+   can compose under the title. */
 @layer components {
-  /* Aligned with the title: the trigger's 6px padding, the 16px mark and the 8px gap. */
   [data-step-part="progress"] {
     padding-block: 0 4px;
-    padding-inline: 30px 6px;
+    padding-inline: var(--kind-step-indent) 6px;
 
     & [data-slot="progress"] {
       display: flex;
@@ -17,8 +17,9 @@
       min-inline-size: 13ch;
       text-align: end;
       flex-shrink: 0;
-      font-size: 0.75rem;
-      line-height: 1rem;
+      font-size: var(--kind-text-xs);
+      line-height: var(--kind-text-xs-leading);
+      letter-spacing: var(--kind-text-xs-tracking);
       font-variant-numeric: tabular-nums;
       color: var(--kind-color-muted);
     }
@@ -27,7 +28,7 @@
       flex: 1;
       height: 4px;
       overflow: hidden;
-      border-radius: 999px;
+      border-radius: var(--kind-radius-full);
       background-color: var(--kind-color-border);
     }
 
@@ -38,7 +39,7 @@
       border-radius: inherit;
       background-color: var(--kind-color-accent);
       transition:
-        width var(--kind-duration-panel) var(--kind-ease),
+        width var(--kind-duration-panel) var(--kind-ease-enter),
         background-color var(--kind-duration-base);
     }
   }
@@ -60,34 +61,30 @@
     background-color: var(--kind-color-success);
   }
 
-  [data-step-part="accept"] {
+  /* Both aligned with the title, at the shared control's height. */
+  :is([data-step-part="accept"], [data-step-part="outcome"]) {
     align-self: flex-start;
     margin-block: 4px 2px;
-    margin-inline-start: 30px;
-    border-radius: calc(var(--kind-radius) / 2);
-    padding: 4px 10px;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    line-height: 1.25rem;
-    background-color: var(--kind-color-accent);
-    color: var(--kind-color-on-accent);
-    transition:
-      background-color var(--kind-duration-fast),
-      opacity var(--kind-duration-fast);
+    margin-inline-start: var(--kind-step-indent);
 
-    &:hover:not([aria-disabled="true"]) {
-      background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-fg));
-    }
-    &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
-    }
-    &[aria-disabled="true"] {
-      opacity: 0.6;
-      cursor: default;
-    }
     &[hidden] {
       display: none;
+    }
+  }
+
+  [data-step-part="outcome"] {
+    --kind-status-mark-size: 14px;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: var(--kind-control-height);
+    border-radius: var(--kind-radius-sm);
+    font-weight: var(--kind-font-weight-medium);
+
+    &:focus-visible {
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
   }
 }

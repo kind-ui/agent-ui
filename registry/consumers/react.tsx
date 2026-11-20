@@ -56,6 +56,49 @@ import { Tool } from "./components/ui/tool.js";
 import { Transcript } from "./components/ui/transcript.js";
 import { TypingIndicator } from "./components/ui/typing-indicator.js";
 import { Uploader } from "./components/ui/uploader.js";
+
+// Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its imports right below its own line.
+
+// wave-6-task-2: Thread List
+
+import { ThreadList } from "./components/ui/thread-list.js";
+
+// wave-6-task-3: Thread Search
+
+import { ThreadSearch } from "./components/ui/thread-search.js";
+
+// wave-6-task-4: Sidebar
+
+import {
+  Sidebar,
+  SidebarHandle,
+  SidebarInset,
+  SidebarPanel,
+  SidebarTrigger,
+} from "./components/ui/sidebar.js";
+
+// wave-6-task-5: Launcher, dropped by the user
+
+// wave-6-task-6: Day Separator
+
+import { DaySeparator } from "./components/ui/day-separator.js";
+
+// wave-6-task-7: Connection Status
+
+import { ConnectionStatus } from "./components/ui/connection-status.js";
+
+// wave-6-task-8: Share Dialog
+
+import { ShareDialog } from "./components/ui/share-dialog.js";
+
+// wave-6-task-9: Message author, time and outcomes
+
+// wave-6-task-10: Conversation states
+
+// wave-6-task-11: Conversation Search
+
+import { ConversationSearch } from "./components/ui/conversation-search.js";
+
 import "./index.css";
 
 const items = {
@@ -303,6 +346,58 @@ const items = {
   "thinking-indicator": <ThinkingIndicator />,
   "typing-indicator": <TypingIndicator />,
   "streaming-text": <StreamingText text="Streaming text" caret />,
+
+  // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its item right below its own line.
+
+  // wave-6-task-2: Thread List
+
+  "thread-list": (
+    <ThreadList threads={[{ id: "a", title: "First chat", href: "#a" }]} now="2026-11-18" onNew={() => {}} />
+  ),
+
+  // wave-6-task-3: Thread Search
+
+  "thread-search": (
+    <ThreadSearch
+      threads={[{ id: "t1", title: "Plan the launch", updatedAt: "2026-11-18T09:00:00Z" }]}
+      now="2026-11-18"
+      onSelect={() => {}}
+    />
+  ),
+
+  // wave-6-task-4: Sidebar
+
+  sidebar: (
+    <Sidebar label="Chats" className="h-64">
+      <SidebarPanel>Chats</SidebarPanel>
+      <SidebarHandle />
+      <SidebarInset>
+        <SidebarTrigger />
+      </SidebarInset>
+    </Sidebar>
+  ),
+
+  // wave-6-task-5: Launcher, dropped by the user
+
+  // wave-6-task-6: Day Separator
+
+  "day-separator": <DaySeparator date="2026-11-18" />,
+
+  // wave-6-task-7: Connection Status
+
+  "connection-status": <ConnectionStatus state="offline" onRetry={() => {}} />,
+
+  // wave-6-task-8: Share Dialog
+
+  "share-dialog": <ShareDialog link="https://example.com/s/abc" defaultVisibility="link" />,
+
+  // wave-6-task-9: Message author, time and outcomes
+
+  // wave-6-task-10: Conversation states
+
+  // wave-6-task-11: Conversation Search
+
+  "conversation-search": <ConversationSearch defaultOpen messages={[{ id: "1", text: "Hello." }]} />,
 };
 
 createRoot(document.getElementById("root") as HTMLElement).render(

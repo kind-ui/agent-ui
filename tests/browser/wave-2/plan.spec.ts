@@ -32,18 +32,16 @@ const open = async (page: Page, name = "all") => {
   await expect(item(page, "Audit the current schema")).toBeVisible();
 };
 
-test("shows the planned items and how many are done on a progress bar", async ({ page }) => {
+test("shows the planned items and how many are done", async ({ page }) => {
   await open(page);
   await expect(plan(page)).toHaveAttribute("data-kind", "plan");
-  const progress = page.getByRole("progressbar", { name: "2 of 5 steps" });
-  await expect(progress).toHaveAttribute("aria-valuenow", "40");
+  const meta = plan(page).locator('[data-slot="kind-plan-meta"]');
+  await expect(meta).toHaveText("2 of 5");
+  await expect(page.getByRole("progressbar")).toHaveCount(0);
   await expect(item(page, "Add the new columns")).toContainText("Nullable first");
   await expect(item(page, "Drop the old columns").getByRole("img")).toHaveAccessibleName("Skipped");
   await setStatus(page, "backfill", "complete");
-  await expect(page.getByRole("progressbar", { name: "3 of 5 steps" })).toHaveAttribute(
-    "aria-valuenow",
-    "60",
-  );
+  await expect(meta).toHaveText("3 of 5");
 });
 
 test("items are one Tab stop with arrow keys", async ({ page }) => {
@@ -66,6 +64,35 @@ test("a double press on Accept calls the host once, and a rejection enables it a
   await expect(accept(page)).not.toHaveAttribute("aria-disabled");
   await accept(page).click();
   expect(await accepts(page)).toBe(2);
+});
+
+test("a resolved accept leaves Accepted in its place, which takes focus", async ({ page }) => {
+  await open(page);
+  await accept(page).focus();
+  await accept(page).press("Enter");
+  await expect(accept(page)).toHaveAttribute("data-pending", "");
+  await page.evaluate(() => (window as unknown as Fixture).kindAccepts[0]?.resolve());
+  await expect(accept(page)).toBeHidden();
+  const outcome = page.locator('#plan [data-slot="kind-plan-outcome"]');
+  await expect(outcome).toHaveText("Accepted");
+  await expect(outcome).toBeFocused();
+  await expectAgentActions(page, "Migration plan", ["collapse", "expand", "press"]);
+});
+
+test("an accepted kind-plan put back in the page stays accepted", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await open(page);
+  await accept(page).click();
+  await page.evaluate(() => (window as unknown as Fixture).kindAccepts[0]?.resolve());
+  await expect(page.locator('#plan [data-slot="kind-plan-outcome"]')).toBeVisible();
+  await page.evaluate(() => {
+    const el = document.getElementById("plan");
+    const parent = el?.parentElement;
+    el?.remove();
+    if (el) parent?.prepend(el);
+  });
+  await expect(page.locator('#plan [data-slot="kind-plan-outcome"]')).toBeVisible();
+  await expect(accept(page)).toBeHidden();
 });
 
 test("when Accept leaves with focus, focus moves to the trigger", async ({ page }) => {
@@ -115,18 +142,16 @@ for (const colorScheme of ["light", "dark"] as const) {
   });
 }
 
-test("the progress bar and Accept line up with the title in right-to-left text", async ({ page }) => {
+test("Accept lines up with the title in right-to-left text", async ({ page }) => {
   await open(page);
   await plan(page).evaluate((el) => el.setAttribute("dir", "rtl"));
   const edges = await plan(page).evaluate((el) => {
     const right = (selector: string) => el.querySelector(selector)?.getBoundingClientRect().right ?? 0;
     return {
       title: right('[data-slot="kind-plan-title"]'),
-      track: right('[data-slot="progress-track"]'),
       accept: right('[data-slot="kind-plan-accept"]'),
     };
   });
-  expect(edges.track).toBeCloseTo(edges.title, 0);
   expect(edges.accept).toBeCloseTo(edges.title, 0);
 });
 

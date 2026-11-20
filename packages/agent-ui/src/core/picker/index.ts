@@ -8,6 +8,8 @@ export {
   type PickerItemState,
   type PickerOpenChangeReason,
   type PickerPresentation,
+  type PickerSearchOptions,
+  type PickerSelectOptions,
   type PickerTriggerState,
   type PickerValueChangeReason,
   pickerBase,

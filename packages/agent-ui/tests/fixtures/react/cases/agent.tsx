@@ -1,5 +1,5 @@
 import type { Answers, QueueItem } from "@kind-ui/agent-ui";
-import type { AttachmentItem, UploadItem } from "@kind-ui/agent-ui/core";
+import { type AttachmentItem, createConversationController, type UploadItem } from "@kind-ui/agent-ui/core";
 import type { AgentAction } from "@ui-sdk/react/agent";
 import { type CSSProperties, useEffect, useState } from "react";
 import { Action } from "../../../../src/react/action.js";
@@ -19,15 +19,22 @@ import {
   ComposerTriggerMenu,
 } from "../../../../src/react/composer.js";
 import { Confirmation } from "../../../../src/react/confirmation.js";
+import { ConnectionStatus } from "../../../../src/react/connection-status.js";
 import { ContextBar } from "../../../../src/react/context-bar.js";
 import { ContextMeter } from "../../../../src/react/context-meter.js";
 import {
   Conversation,
   ConversationContent,
+  ConversationError,
   ConversationJump,
+  ConversationLoading,
+  ConversationMarks,
   ConversationRow,
+  ConversationSkeleton,
   ConversationViewport,
 } from "../../../../src/react/conversation.js";
+import { ConversationSearch } from "../../../../src/react/conversation-search.js";
+import { DaySeparator } from "../../../../src/react/day-separator.js";
 import { Dictation } from "../../../../src/react/dictation.js";
 import { Document } from "../../../../src/react/document.js";
 import { Feedback } from "../../../../src/react/feedback.js";
@@ -40,6 +47,8 @@ import { Loader } from "../../../../src/react/loader.js";
 import { Markdown } from "../../../../src/react/markdown.js";
 import {
   Message,
+  MessageAuthor,
+  MessageAvatar,
   MessageBranch,
   MessageBranchLabel,
   MessageBranchNext,
@@ -48,6 +57,8 @@ import {
   MessageCopy,
   MessageEdit,
   MessageEditor,
+  MessageHeader,
+  MessageOutcome,
   MessageRegenerate,
   MessageToolbar,
 } from "../../../../src/react/message.js";
@@ -62,6 +73,14 @@ import { Reasoning } from "../../../../src/react/reasoning.js";
 import { ReasoningEffort } from "../../../../src/react/reasoning-effort.js";
 import { Selection } from "../../../../src/react/selection.js";
 import { SettingsMenu } from "../../../../src/react/settings-menu.js";
+import { ShareDialog } from "../../../../src/react/share-dialog.js";
+import {
+  Sidebar,
+  SidebarHandle,
+  SidebarInset,
+  SidebarPanel,
+  SidebarTrigger,
+} from "../../../../src/react/sidebar.js";
 import { Sources } from "../../../../src/react/sources.js";
 import { StackTrace } from "../../../../src/react/stack-trace.js";
 import { Status } from "../../../../src/react/status.js";
@@ -81,6 +100,8 @@ import { Task } from "../../../../src/react/task.js";
 import { Terminal } from "../../../../src/react/terminal.js";
 import { TestResults } from "../../../../src/react/test-results.js";
 import { ThinkingIndicator } from "../../../../src/react/thinking-indicator.js";
+import { ThreadList } from "../../../../src/react/thread-list.js";
+import { ThreadSearch } from "../../../../src/react/thread-search.js";
 import { Tool } from "../../../../src/react/tool.js";
 import { Transcript } from "../../../../src/react/transcript.js";
 import { TypingIndicator } from "../../../../src/react/typing-indicator.js";
@@ -100,6 +121,7 @@ import {
   queueItems,
   replies,
   selectionActions,
+  shellMessages,
   steps,
   taskItems,
   thoughts,
@@ -114,7 +136,7 @@ import { downloads, readme } from "../../shared/document.js";
 import { entries } from "../../shared/file-tree.js";
 import { lighthouse, size } from "../../shared/generated-image.js";
 import { answer } from "../../shared/markdown.js";
-import { regenerateOptions } from "../../shared/message.js";
+import { author, outcomeError, outcomeText, regenerateOptions } from "../../shared/message.js";
 import {
   levels as controlLevels,
   models as controlModels,
@@ -125,11 +147,13 @@ import { guardrails, type NoticeData, notices } from "../../shared/notice.js";
 import { placeActions, places } from "../../shared/picker.js";
 import { deployQuestions } from "../../shared/question.js";
 import { initialValues, settings } from "../../shared/settings-menu.js";
+import { shareLink } from "../../shared/share-dialog.js";
 import { sources } from "../../shared/sources.js";
 import { typeErrorStack } from "../../shared/stack-trace.js";
 import { suggestions } from "../../shared/suggestion.js";
 import { installRun } from "../../shared/terminal.js";
 import { suites } from "../../shared/test-results.js";
+import { NOW, threads } from "../../shared/thread-list.js";
 import { standup } from "../../shared/transcript.js";
 import { uploads } from "../../shared/uploader.js";
 
@@ -714,11 +738,156 @@ function Composing({ confirm }: { confirm: boolean }) {
   );
 }
 
-function Confirmable({ wave }: { wave: 2 | 3 | 4 | 5 }) {
+// Wave 6: the shell. Each component's callbacks go through the page's host, as Wave 5's do.
+function Shell({ confirm }: { confirm: boolean }) {
+  const [link, setLink] = useState<string | undefined>();
+  const [controller] = useState(createConversationController);
+  const [marks, setMarks] = useState<readonly number[]>([]);
+  const [history, setHistory] = useState<"error" | "loading">("error");
+  const settle = (action: string, set: string | undefined) => (details: { source: string }) =>
+    host
+      .decide(action)(details)
+      .then(() => setLink(set));
+  return (
+    <div className="flex w-[40rem] flex-col gap-8 p-6">
+      <section id="thread-list" data-case="thread-list" className="flex h-[22rem] flex-col">
+        <ThreadList
+          threads={threads}
+          value="t2"
+          now={NOW}
+          timeZone="UTC"
+          onSelect={(_id, details) => host.change("thread-select", details)}
+          onNew={host.decide("thread-new")}
+          onRename={host.decide("thread-rename")}
+          onPinChange={host.decide("thread-pin")}
+          onShare={host.decide("thread-share")}
+          onDelete={host.decide("thread-delete")}
+        />
+      </section>
+      <section id="thread-search" data-case="thread-search">
+        <ThreadSearch
+          threads={threads}
+          now={NOW}
+          timeZone="UTC"
+          onOpenChange={(_open, details) => host.change("thread-search", details)}
+          onQueryChange={(_query, details) => host.change("thread-search-query", details)}
+          onSelect={(_id, details) => host.change("thread-search-select", details)}
+          onNew={host.decide("thread-search-new")}
+        />
+      </section>
+      <section id="sidebar" data-case="sidebar">
+        <Sidebar
+          label="History"
+          className="h-48"
+          onOpenChange={(_open, details) => host.change("sidebar", details)}
+        >
+          <SidebarPanel>
+            <p className="p-2">Earlier chats</p>
+          </SidebarPanel>
+          <SidebarHandle />
+          <SidebarInset>
+            <SidebarTrigger />
+          </SidebarInset>
+        </Sidebar>
+      </section>
+      <section id="share" data-case="share-dialog">
+        <ShareDialog
+          defaultVisibility="link"
+          link={link}
+          agentConfirm={confirm}
+          onOpenChange={(_open, details) => host.change("share", details)}
+          onVisibilityChange={(_value, details) => host.change("share-visibility", details)}
+          onCreateLink={settle("share-create", shareLink)}
+          onRevoke={settle("share-revoke", undefined)}
+          onCopy={host.decide("share-copy")}
+        />
+      </section>
+      <section id="day" data-case="day-separator">
+        <DaySeparator date="2026-11-18T09:30:00Z" timeZone="UTC" />
+      </section>
+      <section id="failed" data-case="message">
+        <Message
+          aria-label="Failed answer"
+          messageRole="assistant"
+          status="error"
+          error={outcomeError}
+          text={outcomeText}
+          author={author}
+          onRetry={host.decide("message-retry")}
+        >
+          <MessageAvatar />
+          <MessageHeader>
+            <MessageAuthor />
+          </MessageHeader>
+          <MessageContent>{outcomeText}</MessageContent>
+          <MessageOutcome />
+        </Message>
+      </section>
+      <section id="earlier" data-case="conversation">
+        <Conversation
+          aria-label="Earlier chat"
+          messageCount={0}
+          status={history}
+          onRetry={(details) =>
+            host
+              .decide("conversation-retry")(details)
+              .then(() => setHistory("loading"))
+          }
+          className="h-40"
+        >
+          <ConversationViewport>
+            <ConversationContent>
+              <ConversationSkeleton />
+              <ConversationLoading />
+              <ConversationError />
+            </ConversationContent>
+          </ConversationViewport>
+        </Conversation>
+      </section>
+      <section id="connection" data-case="connection-status" className="relative h-16">
+        <ConnectionStatus state="offline" onRetry={host.decide("connection-retry")} />
+      </section>
+      <section id="find" data-case="conversation-search" className="relative">
+        <ConversationSearch
+          messages={shellMessages}
+          conversation={controller}
+          defaultOpen
+          motion="none"
+          onMarksChange={setMarks}
+          onQueryChange={(_query, details) => host.change("find-query", details)}
+          onOpenChange={(_open, details) => host.change("find", details)}
+        />
+        <Conversation
+          aria-label="Found chat"
+          messageCount={shellMessages.length}
+          controller={controller}
+          marks={marks}
+          motion="none"
+          className="h-48"
+        >
+          <ConversationViewport>
+            <ConversationContent>
+              {shellMessages.map((message, index) => (
+                <ConversationRow key={message.id} value={message.id} index={index}>
+                  <p>{message.text}</p>
+                </ConversationRow>
+              ))}
+            </ConversationContent>
+          </ConversationViewport>
+          <ConversationMarks />
+        </Conversation>
+      </section>
+    </div>
+  );
+}
+
+function Confirmable({ wave }: { wave: 2 | 3 | 4 | 5 | 6 }) {
   const [confirm, setConfirm] = useState(true);
   useEffect(() => {
     host.confirm = setConfirm;
   }, []);
+  // The bridge lists 100 components at most, which the Wave 5 page nearly fills, so Wave 6 sits beside Wave 1 alone.
+  if (wave === 6) return <Shell confirm={confirm} />;
   return (
     <>
       <Activity confirm={confirm} />
@@ -729,7 +898,7 @@ function Confirmable({ wave }: { wave: 2 | 3 | 4 | 5 }) {
   );
 }
 
-function Page({ wave }: { wave: 2 | 3 | 4 | 5 }) {
+function Page({ wave }: { wave: 2 | 3 | 4 | 5 | 6 }) {
   return (
     <>
       <Foundation />
@@ -744,4 +913,5 @@ export const cases = {
   "wave-3": () => <Page wave={3} />,
   "wave-4": () => <Page wave={4} />,
   "wave-5": () => <Page wave={5} />,
+  "wave-6": () => <Page wave={6} />,
 };

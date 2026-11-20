@@ -23,7 +23,7 @@ AI interface components that people and agents can both use, for React and Web C
 
 ## Features
 
-- **42 components** for AI chat and agent interfaces: conversations and streaming markdown, the steps an agent takes, the places a person answers it, and the output it hands back.
+- **56 components** for AI chat and agent interfaces: conversations and streaming markdown, the steps an agent takes, the places a person answers it, the output it hands back, and the shell around a chat: its list of past chats, a sidebar and search.
 - **React and Web Components.** Every component ships as a React item and a `-web` twin with the same props, states and styles.
 - **Built on UI SDK.** Focus, keyboard navigation, popups, dismissal and screen reader announcements come from [UI SDK](https://ui-sdk.dev/docs), not hand-written code.
 - **Agent-operable.** An agent connected with UI SDK's `createAgent` reads the same components a person sees and runs their actions, with a person confirming the ones that matter.
@@ -116,7 +116,7 @@ Each action reaches your callbacks with `details.source` set to `"agent"`. Actio
 ```ts
 import { fromUIMessages, toApprovalResponse } from "@kind-ui/agent-ui/adapters/ai-sdk";
 
-const rendered = fromUIMessages(messages, status);
+const rendered = fromUIMessages(messages, { status, error });
 ```
 
 `ai` is an optional peer dependency, imported for types only. See the [AI SDK adapter](https://kindui.dev/docs/agent-ui/adapters/ai-sdk/) page.
@@ -127,8 +127,8 @@ const rendered = fromUIMessages(messages, status);
 
 | Component | Description |
 | --- | --- |
-| [Conversation](https://kindui.dev/docs/agent-ui/components/conversation/) | A message log that follows new content and offers a jump to the latest. |
-| [Message](https://kindui.dev/docs/agent-ui/components/message/) | A chat message with copy, regenerate, edit and branch controls, and a menu of ways to regenerate. |
+| [Conversation](https://kindui.dev/docs/agent-ui/components/conversation/) | A message log that follows new content and offers a jump to the latest, with loading, error and empty states. |
+| [Message](https://kindui.dev/docs/agent-ui/components/message/) | A chat message with copy, regenerate, edit and branch controls, a menu of ways to regenerate, its author and time, and Retry or Continue when it failed or stopped. |
 | [Markdown](https://kindui.dev/docs/agent-ui/components/markdown/) | Streaming markdown that parses only the blocks that changed. |
 | [Code Block](https://kindui.dev/docs/agent-ui/components/code-block/) | A code block with its language, a wrap toggle and a copy button. |
 | [Markdown Table](https://kindui.dev/docs/agent-ui/components/markdown-table/) | A table that scrolls sideways instead of squeezing its columns, with a copy button. |
@@ -196,6 +196,18 @@ const rendered = fromUIMessages(messages, status);
 | [Model Control](https://kindui.dev/docs/agent-ui/components/model-control/) | The model and its effort in one button, with Model and Effort submenus. |
 | [Context Bar](https://kindui.dev/docs/agent-ui/components/context-bar/) | Removable context chips, the ones that don't fit behind a +N button that lists them. |
 | [Dictation](https://kindui.dev/docs/agent-ui/components/dictation/) | A mic button that turns speech into text through a source the host chooses, with a live waveform. |
+
+### Thread & shell
+
+| Component | Description |
+| --- | --- |
+| [Thread List](https://kindui.dev/docs/agent-ui/components/thread-list/) | Past chats grouped by date, to open, rename, pin, share or delete. |
+| [Thread Search](https://kindui.dev/docs/agent-ui/components/thread-search/) | A search dialog over past chats, grouped like the list, with New chat. |
+| [Sidebar](https://kindui.dev/docs/agent-ui/components/sidebar/) | A panel beside the page that people resize and collapse, and a drawer on narrow screens. |
+| [Day Separator](https://kindui.dev/docs/agent-ui/components/day-separator/) | A heading where a new day starts in a conversation, reading Today or Yesterday. |
+| [Connection Status](https://kindui.dev/docs/agent-ui/components/connection-status/) | A pill over the conversation while the connection drops, comes back or resumes a stream. |
+| [Share Dialog](https://kindui.dev/docs/agent-ui/components/share-dialog/) | Choose who can open a chat, then create, copy or stop sharing its link. |
+| [Conversation Search](https://kindui.dev/docs/agent-ui/components/conversation-search/) | Find text in a conversation's messages, with marks beside the scrollbar. |
 
 ## Showcases
 

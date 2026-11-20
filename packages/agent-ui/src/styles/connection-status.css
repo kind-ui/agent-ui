@@ -1,0 +1,106 @@
+/* Connection Status (spec §7, D18), shared by both render layers through `data-connection-status-part`. It floats
+   over the top edge of its nearest positioned ancestor, like a Conversation's root, so it takes no room. The mark
+   comes from status-mark.css. */
+@layer components {
+  [data-connection-status-part="root"] {
+    position: absolute;
+    top: 0.75rem;
+    left: 50%;
+    z-index: 1;
+    translate: -50% 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    box-sizing: border-box;
+    height: var(--kind-control-height);
+    padding-inline: 0.75rem;
+    border-radius: var(--kind-radius-full);
+    background-color: var(--kind-color-raised);
+    box-shadow: var(--kind-shadow-popover);
+    font-size: var(--kind-text-sm);
+    font-weight: var(--kind-font-weight-medium);
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
+    white-space: nowrap;
+    color: var(--kind-color-fg);
+    transition:
+      opacity var(--kind-duration-base) var(--kind-ease-enter),
+      translate var(--kind-duration-base) var(--kind-ease-enter);
+
+    &[hidden] {
+      display: none;
+    }
+    &:where([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+    }
+    &:where([data-ending-style]) {
+      transition-duration: var(--kind-duration-exit);
+      transition-timing-function: var(--kind-ease-exit);
+    }
+    &:where([data-motion="reduced"]) {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
+    }
+    &:where([data-motion="none"]) {
+      transition: none;
+    }
+    /* Retry sits as far from the pill's end as from its top and bottom. */
+    &:has([data-connection-status-part="retry"]:not([hidden])) {
+      padding-inline-end: calc((var(--kind-control-height) - var(--kind-control-height-sm)) / 2);
+    }
+  }
+
+  [data-connection-status-part="mark"] {
+    --kind-status-mark-size: 14px;
+  }
+
+  [data-connection-status-part="text"] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* While a retry is pending it keeps its room, unseen. */
+  [data-connection-status-part="retry"] {
+    &[data-pending] {
+      visibility: hidden;
+    }
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  /* While the pill shows, the conversation's top edge fades under it, so its text doesn't run into the pill. */
+  [data-slot="kind-conversation"]:has(> [data-connection-status-part="root"]:not([hidden]))
+    > [data-slot="kind-conversation-viewport"] {
+    mask-image: linear-gradient(to bottom, transparent, black 3.5rem);
+  }
+
+  /* The second layer repeats conversation.css's scroll fade, which the mask above would replace. */
+  @supports (animation-timeline: scroll()) {
+    [data-slot="kind-conversation"]:has(> [data-connection-status-part="root"]:not([hidden]))
+      > [data-slot="kind-conversation-viewport"] {
+      mask-image:
+        linear-gradient(to bottom, transparent, black 3.5rem),
+        linear-gradient(
+          to bottom,
+          transparent,
+          black var(--kind-conversation-fade-start),
+          black calc(100% - var(--kind-conversation-fade-end)),
+          transparent
+        );
+      mask-composite: intersect;
+    }
+  }
+
+  /* Full motion only: it drops in and fades out (D18); reduced motion fades over 120 ms with no move, "none" keeps
+     nothing (spec §6). */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-connection-status-part="root"]:where([data-motion="auto"]):where([data-starting-style]) {
+      translate: -50% -0.375rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-connection-status-part="root"]:where([data-motion="auto"]) {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
+    }
+  }
+}

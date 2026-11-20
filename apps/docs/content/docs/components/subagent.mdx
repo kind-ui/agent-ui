@@ -5,7 +5,7 @@ description: Show a subagent's run, from the steps it takes to the answer it ret
 
 import SubagentExample from "../../../examples/subagent/basic";
 
-Use a subagent when an agent hands part of its work to another agent. It shows the subagent's avatar, name and status, the steps it takes nested under it, a Stop button while you offer one, and its result once it's done.
+Use a subagent when an agent hands part of its work to another agent. It reads like every step: its status mark, an avatar if you have one, its name and its status in words, then the steps it takes nested under it, a Stop button while you offer one, and its result once it's done.
 
 <Example caption="Press Code reviewer, or focus it and press Enter or Space, to hide the tools it called. The result stays in view.">
   <SubagentExample />
@@ -28,9 +28,9 @@ npx shadcn@latest add @kind-ui/subagent-web
 ```text
 Subagent
 ├── SubagentTrigger
+│   ├── SubagentIcon
 │   ├── SubagentAvatar
 │   ├── SubagentTitle
-│   ├── SubagentIcon
 │   └── SubagentMeta
 ├── SubagentContent
 │   └── SubagentChildren
@@ -38,7 +38,7 @@ Subagent
 └── SubagentResult
 ```
 
-`Subagent` renders these parts, and puts its children, the subagent's steps, in `SubagentChildren`. The trigger is a native button that shows or hides them. `SubagentAvatar` is a UI SDK Avatar of `avatarSrc`, showing the initials of `agentName` until the image loads or without one. `SubagentTitle` shows the `label`, else the `agentName`. `SubagentIcon` is the status mark, and `SubagentMeta` the status in words, like "Working" or "Done in 14 s". `SubagentCancel` renders only while the subagent can be stopped, and `SubagentResult` only once it's complete. To arrange the parts yourself, render them inside `SubagentRoot`.
+`Subagent` renders these parts, and puts its children, the subagent's steps, in `SubagentChildren`. The trigger is a native button that shows or hides them. `SubagentIcon` is the status mark. `SubagentAvatar` is a small round UI SDK Avatar of `avatarSrc`, and renders only when you pass one. `SubagentTitle` shows the `label`, else the `agentName`, and `SubagentMeta` the status in words, like "Working" or "Done in 14 s". `SubagentCancel` renders only while the subagent can be stopped, and `SubagentResult` only once it's complete. To arrange the parts yourself, render them inside `SubagentRoot`.
 
 ## Usage
 

@@ -5,7 +5,8 @@
     overflow-wrap: anywhere;
   }
 
-  /* An empty inline with a positioned bar after the text, so the caret never adds width or line height. */
+  /* An empty inline with a positioned bar after the text, so the caret never adds width or line height. It holds still:
+     nothing loops but a spinner. */
   [data-slot="kind-streaming-text-caret"] {
     position: relative;
 
@@ -14,24 +15,13 @@
       position: absolute;
       inset-block: 0;
       inset-inline-start: 0.15em;
-      width: 0.125em;
+      width: 2px;
       border-radius: 1px;
-      background-color: currentColor;
-      animation: kind-pulse 1s var(--kind-ease) infinite;
+      background-color: color-mix(in oklab, currentColor 60%, transparent);
     }
 
     &[hidden] {
       display: none;
     }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    [data-slot="kind-streaming-text-caret"][data-motion="auto"]::after {
-      animation: none;
-    }
-  }
-
-  [data-slot="kind-streaming-text-caret"]:is([data-motion="reduced"], [data-motion="none"])::after {
-    animation: none;
   }
 }

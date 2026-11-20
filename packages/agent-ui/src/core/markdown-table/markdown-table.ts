@@ -50,6 +50,8 @@ export const markdownTablePrimitive: MarkdownTablePrimitive = definePrimitive({
       press: ({ api }) => void api.copy(),
       attrs: (state) => ({
         type: "button",
+        "data-kind-icon-button": "",
+        "data-kind-size": "sm",
         "aria-label": "Copy table",
         "data-copied": state.copied ? "" : undefined,
       }),

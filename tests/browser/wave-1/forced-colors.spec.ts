@@ -17,6 +17,40 @@ const pages = [
   "terminal&case=all",
   "context-bar&case=all",
   "dictation&case=default",
+
+  // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its pages right below its own line.
+
+  // wave-6-task-2: Thread List
+
+  "thread-list&case=all",
+
+  // wave-6-task-3: Thread Search
+
+  "thread-search&case=all",
+
+  // wave-6-task-4: Sidebar
+
+  "sidebar&case=all",
+
+  // wave-6-task-5: Launcher, dropped by the user
+
+  // wave-6-task-6: Day Separator
+
+  // wave-6-task-7: Connection Status
+
+  "connection-status&case=offline",
+
+  // wave-6-task-8: Share Dialog
+
+  "share-dialog&case=all",
+
+  // wave-6-task-9: Message author, time and outcomes
+
+  // wave-6-task-10: Conversation states
+
+  // wave-6-task-11: Conversation Search
+
+  "conversation-search&case=basic",
 ];
 
 type Colors = { backdrop(el: Element): string };
@@ -58,10 +92,13 @@ const iconColor = (locator: Locator) =>
   locator.evaluate((el) => getComputedStyle(el, "::before").backgroundColor);
 const backdrop = (locator: Locator) => locator.evaluate((el) => (window as unknown as Colors).backdrop(el));
 
-test("in forced colors every mask-drawn icon keeps a system color", async ({ page }) => {
+test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ forcedColors: "active" });
   await page.addInitScript(defineBackdrop);
-  for (const query of pages) {
+});
+
+for (const query of pages) {
+  test(`in forced colors every mask-drawn icon on ${query} keeps a system color`, async ({ page }) => {
     await page.goto(`/?c=${query}`);
     await expect(page.locator("#root [data-slot]").first()).toBeAttached();
     if (query.startsWith("conversation")) {
@@ -80,8 +117,10 @@ test("in forced colors every mask-drawn icon keeps a system color", async ({ pag
       expect(color, `${query} ${icon}`).not.toMatch(/^rgba\(.*, 0\)$/);
       expect(color, `${query} ${icon}`).not.toBe(backdrop);
     }
-  }
+  });
+}
 
+test("in forced colors Send's icon changes when it enables", async ({ page }) => {
   await page.goto("/?c=composer&case=full");
   const send = page.getByRole("button", { name: "Send" });
   await expect(send).toHaveAttribute("aria-disabled", "true");
@@ -90,12 +129,15 @@ test("in forced colors every mask-drawn icon keeps a system color", async ({ pag
   await page.keyboard.type("hello");
   await expect(send).not.toHaveAttribute("aria-disabled", "true");
   expect(await iconColor(send)).not.toBe(disabled);
+});
 
+test("in forced colors a pressed Wrap lines keeps its icon visible", async ({ page }) => {
   await page.goto("/?c=markdown&case=answer");
   const wrap = page.getByRole("button", { name: "Wrap lines" });
   const off = await backdrop(wrap);
   await wrap.click();
   await expect(wrap).toHaveAttribute("aria-pressed", "true");
   expect(await backdrop(wrap)).not.toBe(off);
-  expect(await iconColor(wrap)).not.toBe(await backdrop(wrap));
+  const icon = await wrap.evaluate((el) => getComputedStyle(el, "::after").backgroundColor);
+  expect(icon).not.toBe(await backdrop(wrap));
 });

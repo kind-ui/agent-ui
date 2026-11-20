@@ -135,6 +135,10 @@ test("Submit then Skip within one task calls the host once", async ({ page }) =>
   await expect(submit(page)).toHaveAttribute("aria-disabled", "true");
   await expect(skip(page)).toHaveAttribute("aria-disabled", "true");
   await expect(part(page, "status")).toHaveText("Sending answers");
+  // One running mark for one wait: the pressed button's, not the status's.
+  await expect(submit(page).locator("[data-kind-pending-mark]")).toBeVisible();
+  await expect(skip(page).locator("[data-kind-pending-mark]")).toBeHidden();
+  await expect(part(page, "status").locator("[data-status-mark]")).toHaveCount(0);
   expect((await calls(page)).map((call) => call.action)).toEqual(["submit"]);
 });
 
@@ -265,6 +269,17 @@ test("a written item replaces the one the element added, and one written empty i
   await expect(page.locator('kind-question-item[value="env"]')).toHaveCount(1);
   await expect(form(page).getByRole("radio")).toHaveCount(2);
   await expect(form(page).getByRole("group", { name: "Where should it deploy? Required" })).toBeVisible();
+});
+
+test("a button written without a label span gets its label", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  await open(page);
+  await page.evaluate(() => {
+    for (const part of document.querySelectorAll("kind-question-submit, kind-question-skip"))
+      part.innerHTML = "<button></button>";
+  });
+  await expect(form(page).locator("kind-question-submit button")).toHaveText("Submit");
+  await expect(form(page).locator("kind-question-skip button")).toHaveText("Skip");
 });
 
 test("a written item's radio group keeps the name the page gave it", async ({ page }, testInfo) => {

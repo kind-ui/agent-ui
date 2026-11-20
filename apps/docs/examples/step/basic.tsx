@@ -7,7 +7,7 @@ export default function StepExample() {
         <StepTrigger>
           <StepIcon />
           <StepTitle>Read the logs</StepTitle>
-          <StepMeta>2s</StepMeta>
+          <StepMeta>2 s</StepMeta>
         </StepTrigger>
         <StepContent>
           <p>Three requests timed out after 30 seconds.</p>

@@ -5,13 +5,12 @@ import { stepDuration } from "../chain-of-thought/open-steps.js";
 import { createPendingAction } from "../pending.js";
 import { type StepApi, type StepOptions, type StepState, stepAnnouncement, stepBase } from "../step/base.js";
 
+export { avatarInitials } from "../avatar.js";
+
 export type SubagentOptions = StepOptions & {
-  /**
-   * The subagent's name: the title, unless `label` replaces it, and the avatar's initials. Without one, the title
-   * is "Subagent" and the avatar shows "?".
-   */
+  /** The subagent's name: the title, unless `label` replaces it. Without one, the title is "Subagent". */
   agentName?: string;
-  /** The avatar image. Without it, or until it loads, the avatar shows the name's initials. */
+  /** A small round image after the status mark. Without it, the header shows no avatar. */
   avatarSrc?: string;
   /** The subagent's final answer, as markdown, shown once the status is `complete`. */
   result?: string;
@@ -62,7 +61,7 @@ type Slot<Public extends object = Record<never, never>> = SlotDefinition<
 type SubagentSlots = {
   root: Slot;
   trigger: Slot;
-  avatar: Slot<{ name: string; initials: string; src: string | undefined }>;
+  avatar: Slot<{ name: string; src: string | undefined }>;
   icon: Slot;
   title: Slot<{ title: string }>;
   meta: Slot<{ label: string }>;
@@ -76,22 +75,6 @@ type SubagentSlots = {
 export type SubagentPrimitive = ReturnType<
   typeof definePrimitive<SubagentOptions, SubagentState, SubagentApi, SubagentSlots>
 >;
-
-const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
-
-/**
- * The first character of each of the first two words of `name` that start with a letter or digit, in upper case,
- * or "?" when there are none. A character whose upper case is longer, like "ß", stays as it is.
- */
-export const avatarInitials = (name: string): string =>
-  (name.match(/[\p{L}\p{N}]\S*/gu) ?? [])
-    .slice(0, 2)
-    .map((word) => {
-      const segment = graphemes.segment(word).containing(0)?.segment ?? word;
-      const upper = segment.toUpperCase();
-      return upper.length === segment.length ? upper : segment;
-    })
-    .join("") || "?";
 
 const STATUS_LABELS: Record<StepStatus, string> = {
   pending: "Waiting",
@@ -176,12 +159,9 @@ export const subagentPrimitive: SubagentPrimitive = definePrimitive<
           "data-agent-confirm": state.agentConfirm ? "Stops the subagent for you" : undefined,
         }),
       }),
-      avatar: slot<BaseSlotProps, { name: string; initials: string; src: string | undefined }>({
-        state: (state) => ({
-          name: state.agentName,
-          initials: avatarInitials(state.agentName),
-          src: state.avatarSrc,
-        }),
+      avatar: slot<BaseSlotProps, { name: string; src: string | undefined }>({
+        present: (state) => state.avatarSrc !== undefined,
+        state: (state) => ({ name: state.agentName, src: state.avatarSrc }),
         // The title beside it names the subagent.
         attrs: () => ({ "aria-hidden": "true", "data-step-part": "avatar" }),
       }),
@@ -198,6 +178,7 @@ export const subagentPrimitive: SubagentPrimitive = definePrimitive<
         state: (state) => ({ pending: state.pending }),
         attrs: (state) => ({
           type: "button",
+          "data-kind-button": "secondary",
           "aria-disabled": state.pending ? "true" : undefined,
           "data-step-part": "cancel",
           "data-pending": state.pending ? "" : undefined,

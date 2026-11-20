@@ -32,10 +32,8 @@ test("the sidebar lists every component page", () => {
   assert.deepEqual([...meta.pages].sort(), [...components].sort());
 });
 
-test("the docs index links every composer control page", () => {
-  const meta = JSON.parse(readFileSync(new URL("components/meta.json", content), "utf8"));
-  const index = readFileSync(new URL("index.mdx", content), "utf8");
-  for (const name of [
+const indexed = {
+  "composer control": [
     "picker",
     "add-menu",
     "settings-menu",
@@ -43,10 +41,39 @@ test("the docs index links every composer control page", () => {
     "model-control",
     "context-bar",
     "dictation",
-  ]) {
-    assert.ok(meta.pages.includes(name), `${name} is missing from components/meta.json`);
-    assert.ok(index.includes(`](./components/${name}.mdx)`), `index.mdx doesn't link components/${name}.mdx`);
-  }
+  ],
+  "thread and shell": [
+    "thread-list",
+    "thread-search",
+    "sidebar",
+    "day-separator",
+    "connection-status",
+    "share-dialog",
+    "conversation-search",
+  ],
+};
+
+for (const [group, names] of Object.entries(indexed)) {
+  test(`the docs index links every ${group} page`, () => {
+    const meta = JSON.parse(readFileSync(new URL("components/meta.json", content), "utf8"));
+    const index = readFileSync(new URL("index.mdx", content), "utf8");
+    for (const name of names) {
+      assert.ok(meta.pages.includes(name), `${name} is missing from components/meta.json`);
+      assert.ok(
+        index.includes(`](./components/${name}.mdx)`),
+        `index.mdx doesn't link components/${name}.mdx`,
+      );
+    }
+  });
+}
+
+test("the Sidebar page leads with the full chat shell", () => {
+  const source = page("sidebar");
+  const first = source.indexOf("<include cwd");
+  assert.equal(
+    source.slice(first, source.indexOf("</include>", first)),
+    '<include cwd lang="tsx">./examples/sidebar/shell.tsx',
+  );
 });
 
 const showcases = {

@@ -7,7 +7,7 @@ import ToolExample from "../../../examples/tool/basic";
 
 Use a tool for each tool call the model makes. Its header shows the tool's name and status, and its content holds the input, then the output or the error.
 
-<Example caption="Press search_docs, or focus it and press Enter or Space, to see what the search returned.">
+<Example caption="Press search_docs, or focus it and press Enter or Space, to see what the search returned. Approve or deny delete_branch to see its outcome.">
   <ToolExample />
 
   <include cwd lang="tsx">./examples/tool/basic.tsx</include>
@@ -29,7 +29,8 @@ npx shadcn@latest add @kind-ui/tool-web
 Tool
 ├── ToolTrigger
 │   ├── ToolIcon
-│   └── ToolTitle
+│   ├── ToolTitle
+│   └── ToolMeta
 ├── ToolContent
 │   ├── ToolInput
 │   │   └── ToolInputCopy
@@ -39,7 +40,7 @@ Tool
 └── ToolApproval
 ```
 
-`Tool` renders these parts when you pass no children; any children you pass replace them. The trigger is a native button that shows or hides the content. `ToolTitle` shows the tool's name, `ToolInput` and `ToolOutput` the values as a [Code Block](./code-block.mdx) or [Markdown](./markdown.mdx), and `ToolError` the error. `ToolApproval` renders a [Confirmation](./confirmation.mdx) while the call has an approval, after the content, so it shows while the tool is closed. Each takes its own children instead.
+`Tool` renders these parts when you pass no children; any children you pass replace them. The trigger is a native button that shows or hides the content. `ToolTitle` shows the tool's name and `ToolMeta` how long the call took, like "2 s", once you pass `durationSeconds`; `ToolInput` and `ToolOutput` the values as a [Code Block](./code-block.mdx) or [Markdown](./markdown.mdx), and `ToolError` the error. `ToolApproval` renders a [Confirmation](./confirmation.mdx) while the call has an approval, after the content, so it shows while the tool is closed. Each takes its own children instead.
 
 ## Usage
 
@@ -55,9 +56,9 @@ The status comes from the call. An error outcome is `error`, a denied or cancell
 
 ### Input and Output
 
-The input shows as JSON, labeled **Partial** while it streams. Output appears once the call has some: text renders as Markdown, and any other value as JSON, so `0`, `false`, `""` and `null` show as themselves. Output that may still change is labeled **Preliminary**. JSON longer than its block scrolls inside it, and nothing above a value moves while it streams.
+The input shows as JSON, an object of up to three plain values on one line, labeled **Partial** while it streams. Output appears once the call has some: text renders as Markdown, and any other value as JSON, so `0`, `false`, `""` and `null` show as themselves. Output that may still change is labeled **Preliminary**. JSON longer than its block scrolls inside it, and nothing above a value moves while it streams.
 
-Each has a copy button, shown once there's a value, that copies it as shown, checks for 2 seconds and announces "Copied". The buttons and code blocks are named after the tool, like "Copy search_docs input" and "search_docs input", so people and agents can tell two tools apart. Pass `highlight` to color both, as Code Block's does.
+Each has a copy button, shown once there's a value while the pointer is over its section or focus is in it (always on touch screens), that copies it as shown, checks for 2 seconds and announces "Copied". The buttons and code blocks are named after the tool, like "Copy search_docs input" and "search_docs input", so people and agents can tell two tools apart. Pass `highlight` to color both, as Code Block's does.
 
 ### Approvals and Errors
 

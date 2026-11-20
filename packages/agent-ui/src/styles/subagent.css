@@ -1,34 +1,20 @@
-/* Subagent (spec §7): a framed run with an avatar in its header, its own steps under it, then Stop or the result. */
+/* Subagent (spec §7): a Step whose header may show the host's avatar after the mark, with its own steps under it,
+   then Stop or the result. */
 @layer components {
-  [data-slot="kind-subagent"] {
-    border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) * 2 / 3);
-    padding: 4px;
-  }
-
-  /* Concentric with the frame: its radius less the 1px border and 4px padding. */
-  [data-slot="kind-subagent-trigger"] {
-    border-radius: max(0px, calc(var(--kind-radius) * 2 / 3 - 5px));
-  }
-
   [data-step-part="avatar"] {
     display: inline-flex;
     flex-shrink: 0;
 
+    &[hidden] {
+      display: none;
+    }
+
     & :where([data-slot="avatar"]) {
-      position: relative;
       display: inline-flex;
-      width: 20px;
-      height: 20px;
-      align-items: center;
-      justify-content: center;
+      width: var(--kind-status-mark-size, 16px);
+      height: var(--kind-status-mark-size, 16px);
       overflow: hidden;
-      border-radius: 9999px;
-      background-color: color-mix(in oklab, var(--kind-color-accent) 18%, var(--kind-color-surface));
-      color: var(--kind-color-fg);
-      font-size: 0.5625rem;
-      font-weight: 600;
-      line-height: 1;
+      border-radius: var(--kind-radius-full);
     }
 
     & :where(img) {
@@ -38,11 +24,15 @@
     }
   }
 
-  /* The guide line runs under the avatar, and the steps' marks line up with the title: the trigger's 6px padding,
-     the 20px avatar and the 8px gap. */
+  /* The steps' own triggers pad their marks by 6px, so the content sits 6px short of the title for those marks to
+     line up with it. */
   [data-slot="kind-subagent-content"] {
-    margin-inline-start: 15.25px;
-    padding-inline-start: 11.25px;
+    padding-inline-start: calc(
+      var(--kind-step-indent) -
+      var(--kind-step-guide) -
+      var(--kind-step-guide-width) -
+      6px
+    );
 
     /* Steps a web host writes straight into the content sit as close as React's children part. */
     & > * {
@@ -66,29 +56,8 @@
   [data-step-part="cancel"] {
     align-self: flex-start;
     margin-block: 4px 2px;
-    margin-inline-start: 34px;
-    border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) / 2);
-    padding: 1px 10px;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    line-height: 1.25rem;
-    color: var(--kind-color-fg);
-    transition:
-      background-color var(--kind-duration-fast),
-      opacity var(--kind-duration-fast);
+    margin-inline-start: var(--kind-step-indent);
 
-    &:hover:not([aria-disabled="true"]) {
-      background-color: var(--kind-color-hover);
-    }
-    &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
-    }
-    &[aria-disabled="true"] {
-      opacity: 0.6;
-      cursor: default;
-    }
     &[hidden] {
       display: none;
     }
@@ -97,9 +66,9 @@
   [data-step-part="result"] {
     display: block;
     padding-block: 2px 4px;
-    padding-inline: 34px 6px;
-    --kind-markdown-font-size: 0.875rem;
-    --kind-markdown-line-height: 1.6;
+    padding-inline: var(--kind-step-indent) 6px;
+    --kind-markdown-font-size: var(--kind-text-md);
+    --kind-markdown-line-height: 1.5;
 
     &[hidden],
     &:empty {
@@ -109,7 +78,7 @@
 
   /* The result fades in once, when it appears; reduced motion keeps the 120 ms fade, "none" keeps nothing. */
   [data-step-part="result"] {
-    transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-base) var(--kind-ease-in-out);
 
     @starting-style {
       opacity: 0;

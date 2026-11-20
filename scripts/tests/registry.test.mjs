@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { after, test } from "node:test";
@@ -76,7 +76,10 @@ test("component names have no product prefix", () => {
 test("every component ships in both layers", () => {
   const names = catalog.items.map((each) => each.name);
   const react = catalog.items.filter((each) => each.layer === "react" && !each.hidden);
-  assert.equal(react.length, 49);
+  const renderFiles = readdirSync(new URL("../../packages/agent-ui/src/react/", import.meta.url))
+    .filter((file) => file.endsWith(".tsx"))
+    .map((file) => file.slice(0, -".tsx".length));
+  assert.deepEqual(react.map((each) => each.name).sort(), renderFiles.sort());
   for (const { name } of react) assert.ok(names.includes(`${name}-web`), name);
 });
 

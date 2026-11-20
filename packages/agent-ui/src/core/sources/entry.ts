@@ -11,8 +11,6 @@ export type SourceEntry = {
   snippet: string;
   /** The `favicon`. An image source runs no script, so it isn't checked as a link is. */
   favicon: string | undefined;
-  /** The first letter of the host name, else of the title, which the icon shows until a `favicon` loads. */
-  initial: string;
 };
 
 const hostName = (url: string | undefined): string => {
@@ -25,16 +23,14 @@ const hostName = (url: string | undefined): string => {
   }
 };
 
-/** A source as the list shows it: its link only when safe, and the host name and initial read from it. */
+/** A source as the list shows it: its link only when safe, and the host name read from it. */
 export const sourceEntry = (source: Source): SourceEntry => {
   const url = (source.url && sanitizeUrl(source.url)) || undefined;
-  const host = hostName(url);
   return {
     title: source.title,
     url,
-    host,
+    host: hostName(url),
     snippet: source.snippet ?? "",
     favicon: source.favicon || undefined,
-    initial: [...(host || source.title.trim())][0]?.toUpperCase() ?? "?",
   };
 };

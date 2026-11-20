@@ -23,7 +23,7 @@ npm install @kind-ui/agent-ui @ui-sdk/core
 
 Styled React and Web Components are distributed through the [registry](#registry), not this package.
 
-[Components](https://kindui.dev/docs/agent-ui/): Step and Step List, Status, Reasoning, Tool, Chain of Thought, Task, Plan, Subagent, Queue, Confirmation, Question, Checkpoint, Model Selector, Reasoning Effort, Suggestion, Context Meter, Feedback, Notice, Guardrail Notice, Conversation, Message, Markdown, Code Block, Markdown Table, Composer, Attachments, Uploader, Loader, Thinking Indicator, Typing Indicator, Streaming Text, Sources, Inline Citation, Document, Generated Image, File Tree, Terminal, Stack Trace, Test Results, Transcript, Selection, Action, Picker, Add Menu, Settings Menu, Approval Mode, Model Control, Context Bar and Dictation.
+[Components](https://kindui.dev/docs/agent-ui/): Step and Step List, Status, Reasoning, Tool, Chain of Thought, Task, Plan, Subagent, Queue, Confirmation, Question, Checkpoint, Model Selector, Reasoning Effort, Suggestion, Context Meter, Feedback, Notice, Guardrail Notice, Conversation, Message, Markdown, Code Block, Markdown Table, Composer, Attachments, Uploader, Loader, Thinking Indicator, Typing Indicator, Streaming Text, Sources, Inline Citation, Document, Generated Image, File Tree, Terminal, Stack Trace, Test Results, Transcript, Selection, Action, Picker, Add Menu, Settings Menu, Approval Mode, Model Control, Context Bar, Dictation, Thread List, Thread Search, Sidebar, Day Separator, Connection Status, Share Dialog and Conversation Search.
 
 ## Registry
 
@@ -75,7 +75,7 @@ Tailwind writes the defaults on `:root, :host`, so inside a shadow root that loa
 
 | Export | Maps |
 | --- | --- |
-| `fromUIMessages(messages, status?)` | `UIMessage[]` to `Message[]`. `status` applies to the last message, and earlier messages are `"complete"`. |
+| `fromUIMessages(messages, { status, error }?)` | `UIMessage[]` to `Message[]`. `status` and `error` apply to the last message, and earlier messages are `"complete"`. Takes `status` alone too. |
 | `fromUIMessagePart(part, { messageId, index })` | One part. Returns `null` only for `step-start`. |
 | `fromChatStatus(status)` | `submitted`, `streaming`, `ready` → `complete`, `error` |
 | `toApprovalResponse(approval, decision)` | The argument for `addToolApprovalResponse`: `{ id: approval.approvalId, approved, reason? }` |

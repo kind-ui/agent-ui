@@ -80,7 +80,12 @@ export type MenuPartState = {
 };
 
 /** What the trigger slot hands UI SDK's `MenuTrigger`: pass every key to it. */
-export type MenuTriggerState = { "aria-label": string; disabled: boolean };
+export type MenuTriggerState = {
+  "aria-label": string;
+  disabled: boolean;
+  "data-kind-trigger"?: "";
+  "data-kind-icon-button"?: "";
+};
 
 /** What ran a plain item: the click or key press, and who, and `keepOpen`, which refuses the close that follows. */
 export type MenuRun = { event?: Event | undefined; source: ChangeSource; keepOpen: () => void };
@@ -142,6 +147,11 @@ export type MenuBaseConfig<Options extends MenuBaseOptions> = {
   toData: (options: Options) => MenuData;
   /** Whether the menu may open now, beside `disabled`. */
   canOpen?: (options: Options) => boolean;
+  /**
+   * The shared control the trigger is: `"trigger"` for one showing text, `"icon-button"` for one showing only an
+   * icon. Without it, the host's markup styles the button.
+   */
+  sharedTrigger?: "trigger" | "icon-button";
   /** A plain item ran. A returned promise keeps the item pending and the menu open until it settles. */
   onAction?: (value: string, details: MenuRun, context: Context<Options>) => unknown;
   /** A checkbox item, by its value, wants to toggle. */
@@ -268,6 +278,8 @@ export const menuBase = <Options extends MenuBaseOptions>(config: MenuBaseConfig
         (label: string, disabled: boolean): MenuTriggerState => ({
           "aria-label": label,
           disabled,
+          ...(config.sharedTrigger === "trigger" && { "data-kind-trigger": "" as const }),
+          ...(config.sharedTrigger === "icon-button" && { "data-kind-icon-button": "" as const }),
         }),
       );
 
@@ -279,12 +291,21 @@ export const menuBase = <Options extends MenuBaseOptions>(config: MenuBaseConfig
         source: detail.source,
         cancel: () => event.preventDefault(),
       });
+      // A UI SDK bug: writing `open` onto a `ui-menu` during its own `openchange` makes a pointer open highlight the
+      // first item and leave focus on the trigger. So `partState.menu` keeps the open it had until the event ends;
+      // remove this once UI SDK handles the write.
+      let applying: boolean | undefined;
       const composedEvents: Record<string, ComposedHandler> = {
         openchange: (detail, event) => {
           if ((event.target as Element).localName !== "ui-menu") return;
           const { value, ...rest } = detail as Detail;
           const details = { ...rest, cancel: () => event.preventDefault() };
-          onOpenChange(value as boolean, details as ChangeDetails<MenuOpenChangeReason>);
+          applying = !value;
+          try {
+            onOpenChange(value as boolean, details as ChangeDetails<MenuOpenChangeReason>);
+          } finally {
+            applying = undefined;
+          }
         },
         action: (detail, event) => {
           if ((event.target as Element).localName !== "ui-menu") return;
@@ -334,7 +355,7 @@ export const menuBase = <Options extends MenuBaseOptions>(config: MenuBaseConfig
         },
         getItems: () => (store.get().disabled ? [] : store.get().items),
         partState: {
-          menu: (state) => menu(state.presentation, state.open),
+          menu: (state) => menu(state.presentation, applying ?? state.open),
           trigger: (state) => trigger(state.label, state.disabled),
         },
         composedEvents,

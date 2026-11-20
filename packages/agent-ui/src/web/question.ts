@@ -14,7 +14,8 @@ import { defineInternalTextarea } from "./internal/textarea.js";
 
 type Question = NonNullable<QuestionOptions["questions"]>[number];
 
-const DEFAULT_PARTS = `<kind-question-actions><kind-question-submit><button></button></kind-question-submit><kind-question-skip><button></button></kind-question-skip><kind-question-status><kind-question-status-icon></kind-question-status-icon><span data-question-label></span></kind-question-status><kind-question-error>Answers not sent. Try again.</kind-question-error></kind-question-actions><kind-question-summary><span data-question-outcome><kind-question-summary-icon></kind-question-summary-icon><span data-question-label></span></span><dl></dl></kind-question-summary>`;
+const PENDING_MARK = `<span data-kind-pending-mark="" data-status-mark="" data-status="running" aria-hidden="true"></span>`;
+const DEFAULT_PARTS = `<kind-question-actions><kind-question-submit><button>${PENDING_MARK}<span data-kind-label></span></button></kind-question-submit><kind-question-skip><button>${PENDING_MARK}<span data-kind-label></span></button></kind-question-skip><kind-question-status><span data-question-label></span></kind-question-status><kind-question-error>Answers not sent. Try again.</kind-question-error></kind-question-actions><kind-question-summary><span data-question-outcome><kind-question-summary-icon></kind-question-summary-icon><span data-question-label></span></span><dl></dl></kind-question-summary>`;
 const CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>`;
 
 // Parts this element wrote text into, and questions it added. A part someone wrote text into keeps it, and a question
@@ -25,6 +26,9 @@ const owned = new WeakSet<Element>();
 const named = new WeakSet<Element>();
 // The question each item this element fills was drawn from, so a changed question is drawn again.
 const drawn = new WeakMap<Element, Question>();
+
+// The default buttons hold their running mark beside a label span; a button someone wrote takes the label itself.
+const label = (button: Element | null) => button?.querySelector("[data-kind-label]") ?? button;
 
 const fill = (part: Element | null | undefined, text: string) => {
   if (!part || !(owned.has(part) || !part.textContent)) return;
@@ -258,8 +262,8 @@ export function defineQuestion(): void {
             }
           }
           api.syncAnswers();
-          fill(form.querySelector("kind-question-submit button"), state.submitLabel);
-          fill(form.querySelector("kind-question-skip button"), state.skipLabel);
+          fill(label(form.querySelector("kind-question-submit button")), state.submitLabel);
+          fill(label(form.querySelector("kind-question-skip button")), state.skipLabel);
           fill(
             form.querySelector("kind-question-status [data-question-label]"),
             state.pressed === "skip" ? "Skipping" : "Sending answers",

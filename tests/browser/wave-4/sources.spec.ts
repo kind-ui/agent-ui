@@ -84,7 +84,8 @@ test("a source with an unsafe URL is text with no host or icon image; a safe fav
   await expect(unsafe.getByRole("link")).toHaveCount(0);
   await expect(page.locator('#sources [href^="javascript:"]')).toHaveCount(0);
   await expect(unsafe.locator('[data-sources-part="host"]')).toHaveCount(0);
-  await expect(unsafe.locator('[data-sources-part="icon"]')).toHaveText("P");
+  await expect(unsafe.locator('[data-sources-part="icon"]')).toHaveText("");
+  await expect(unsafe.locator('[data-sources-part="icon"] [data-slot="avatar-fallback"]')).toBeVisible();
   await expect(region(page).getByRole("link")).toHaveCount(2);
   const backoff = items(page).filter({ hasText: "Exponential backoff" });
   await expect(backoff.locator('[data-sources-part="icon"] img')).toHaveAttribute("src", /^data:image\/svg/);

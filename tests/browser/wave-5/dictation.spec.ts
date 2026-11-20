@@ -116,6 +116,7 @@ for (const motion of ["reduced", "none"] as const)
       "0.6",
     );
     expect(await scales(page)).toEqual(["1 0.35", "1 0.35", "1 0.35"]);
+    await expect(page.locator('[data-dictation-part="bar"]:visible')).toHaveCount(16);
   });
 
 test("prefers-reduced-motion holds the bars still too", async ({ page }) => {
@@ -242,7 +243,7 @@ test.describe("inside a Composer", () => {
     const padding = await page
       .locator('[data-slot="file-input-dropzone"]')
       .evaluate((el) => Number.parseFloat(getComputedStyle(el).paddingLeft));
-    expect(cancelBox.x).toBeCloseTo(idle.frame.x + 1 + padding, 0);
+    expect(cancelBox.x).toBeCloseTo(idle.frame.x + padding, 0);
     expect(cancelBox.y + cancelBox.height / 2).toBeCloseTo(idle.send.y + idle.send.height / 2, 0);
     expect(stopBox.x + stopBox.width).toBeLessThanOrEqual(idle.send.x);
     expect(stopBox.y + stopBox.height / 2).toBeCloseTo(idle.send.y + idle.send.height / 2, 0);

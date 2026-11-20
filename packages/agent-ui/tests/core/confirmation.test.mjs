@@ -135,3 +135,33 @@ test("an automatic approval without a decision has no outcome to show", () => {
   const confirmation = confirmationPrimitive({ approval: request("auto") });
   assert.equal(confirmation.get().outcome, undefined);
 });
+
+test("with reason, a person's Deny opens the box first, and Cancel closes it without deciding", () => {
+  const calls = [];
+  const confirmation = confirmationPrimitive({
+    approval: request("requested"),
+    reason: true,
+    onApprove: () => {},
+    onDeny: (decision) => calls.push(decision),
+  });
+  confirmation.api.press("deny");
+  assert.equal(confirmation.get().composing, true);
+  assert.equal(calls.length, 0);
+  confirmation.api.cancelReason();
+  assert.equal(confirmation.get().composing, false);
+  confirmation.api.press("deny");
+  confirmation.api.press("deny");
+  assert.deepEqual(calls, [{ approvalId: "a", generation: 1 }]);
+});
+
+test("an agent's deny decides at once without opening the box", () => {
+  const calls = [];
+  const confirmation = confirmationPrimitive({
+    approval: request("requested"),
+    reason: true,
+    onDeny: (decision) => calls.push(decision),
+  });
+  confirmation.api.deny("Too broad");
+  assert.equal(confirmation.get().composing, false);
+  assert.deepEqual(calls, [{ approvalId: "a", generation: 1, reason: "Too broad" }]);
+});

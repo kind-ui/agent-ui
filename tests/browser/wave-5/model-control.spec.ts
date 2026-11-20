@@ -10,7 +10,6 @@ type Fixture = {
 
 const NAME = "Model, Claude Opus 5.5, Medium effort";
 const trigger = (page: Page) => page.locator('#control [data-slot="menu-trigger"]').first();
-const row = (page: Page, name: RegExp) => page.getByRole("menuitem", { name });
 const option = (page: Page, name: RegExp) => page.getByRole("menuitemradio", { name });
 const changes = (page: Page) => page.evaluate(() => (window as unknown as Fixture).kindHost.changes);
 const act = (page: Page, ref: string, action: string, args: unknown[] = []) =>
@@ -39,7 +38,7 @@ const load = async (page: Page, name = "all") => {
   await expect(trigger(page)).toHaveAccessibleName(NAME);
 };
 
-test("the trigger reads the model and effort; the menu holds the toggle, Model, Effort and the host's choice", async ({
+test("the trigger reads the model and effort; one menu lists models, then levels, then the host's choice and toggle", async ({
   page,
 }) => {
   await load(page);
@@ -47,40 +46,37 @@ test("the trigger reads the model and effort; the menu holds the toggle, Model, 
   await expect(page.getByRole("group", { name: NAME })).toBeVisible();
   await trigger(page).click();
   await expect(page.getByRole("menuitemcheckbox", { name: "Fast mode" })).toBeVisible();
-  await expect(page.getByRole("menuitem")).toHaveText([
-    /Model.*Claude Opus 5\.5/,
-    /Effort.*Medium/,
-    /Context window.*1M/,
-  ]);
+  await expect(page.getByRole("menuitem")).toHaveText([/More models/, /Context window.*1M/]);
+  const items = page.getByRole("menu").first().getByRole("menuitemradio");
+  await expect(items.first()).toHaveAccessibleName(/Claude Opus 5\.5/);
+  await expect(items.last()).toHaveAccessibleName(/^Max/);
 });
 
-test("the Model submenu groups models with icons; choosing one falls back to an effort it supports", async ({
+test("models sit under their group labels with icons; choosing one falls back to an effort it supports", async ({
   page,
 }) => {
   await load(page);
   await trigger(page).click();
-  await row(page, /^Model/).click();
   await expect(page.getByText("OpenAI", { exact: true })).toBeVisible();
+  await expect(page.getByText("Effort", { exact: true })).toBeVisible();
   await expect(option(page, /Claude Opus 5\.5/)).toHaveAttribute("aria-checked", "true");
   await expect(option(page, /GPT-6\.1 Terra/).locator("img")).toHaveCount(1);
   await option(page, /GPT-6\.1 Terra/).click();
   await expect(trigger(page)).toHaveAccessibleName("Model, GPT-6.1 Terra, Medium effort");
-  // Radio items keep the menu open, as in Settings Menu, so the new effort shows beside the model.
+  // Radio items keep the menu open, so the new effort shows below the model.
   await expect(option(page, /GPT-6\.1 Terra/)).toHaveAttribute("aria-checked", "true");
-  await expect(row(page, /^Effort/)).toHaveAccessibleName(/Medium/);
+  await expect(option(page, /^Medium/)).toHaveAttribute("aria-checked", "true");
   expect((await changes(page)).map(({ component, value, reason }) => [component, value, reason])).toEqual([
     ["model", "terra", "item-press"],
   ]);
 });
 
-test("the Effort submenu dims levels the model doesn't support, which can't be chosen", async ({ page }) => {
+test("levels the model doesn't support are dimmed and can't be chosen", async ({ page }) => {
   await load(page);
   await act(page, NAME, "setModel", ["terra"]);
   await expect(trigger(page)).toHaveAccessibleName("Model, GPT-6.1 Terra, Medium effort");
   await trigger(page).focus();
   await page.keyboard.press("Enter");
-  await row(page, /^Effort/).press("ArrowRight");
-  await expect(option(page, /^Low/)).toBeFocused();
   await expect(option(page, /^High/)).toHaveAttribute("aria-disabled", "true");
   // Playwright waits for an aria-disabled item to be enabled; a person can still press it.
   await option(page, /^High/).click({ force: true });
@@ -95,19 +91,18 @@ test("the Effort submenu dims levels the model doesn't support, which can't be c
   });
 });
 
-test("a model without effort levels has no Effort row and no effort in its name", async ({ page }) => {
+test("a model without effort levels dims every level and has no effort in its name", async ({ page }) => {
   await load(page);
   await act(page, NAME, "setModel", ["haiku"]);
   await expect(trigger(page)).toHaveAccessibleName("Model, Claude Haiku 5.5");
   await trigger(page).click();
-  await expect(row(page, /^Model/)).toBeVisible();
-  await expect(row(page, /^Effort/)).toHaveCount(0);
+  for (const level of [/^Low/, /^Max/])
+    await expect(option(page, level)).toHaveAttribute("aria-disabled", "true");
 });
 
 test("More models runs the action and closes the menu", async ({ page }) => {
   await load(page);
   await trigger(page).click();
-  await row(page, /^Model/).click();
   await page.getByRole("menuitem", { name: "More models" }).click();
   await expect(page.getByRole("menu")).toHaveCount(0);
   expect((await changes(page)).at(-1)).toMatchObject({
@@ -138,24 +133,21 @@ test("agents choose a model and an effort, refusing one the model doesn't suppor
 test("a refused model or effort keeps the old one", async ({ page }) => {
   await load(page, "refusing");
   await trigger(page).click();
-  await row(page, /^Effort/).click();
   await option(page, /^High/).click();
   await expect(option(page, /^Medium/)).toHaveAttribute("aria-checked", "true");
   await expect(trigger(page)).toHaveAccessibleName(NAME);
-  await row(page, /^Model/).click();
   await option(page, /GPT-6\.1 Terra/).click();
   await expect(option(page, /Claude Opus 5\.5/)).toHaveAttribute("aria-checked", "true");
   await expect(trigger(page)).toHaveAccessibleName(NAME);
 });
 
 for (const colorScheme of ["light", "dark"] as const) {
-  test(`axe reports no violations with the Model submenu open in ${colorScheme} mode`, async ({ page }) => {
+  test(`axe reports no violations with the menu open in ${colorScheme} mode`, async ({ page }) => {
     await page.emulateMedia({ colorScheme });
     await load(page);
     // The fixture page has no background of its own, which axe reads as white.
     await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     await trigger(page).click();
-    await row(page, /^Model/).click();
     await expect(option(page, /Claude Opus 5\.5/)).toBeVisible();
     await settled(page);
     const { violations } = await new AxeBuilder({ page }).include("#root").analyze();

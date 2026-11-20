@@ -97,18 +97,30 @@ test("Next and Previous page through three sources, and the unsafe one is text",
   await marker(page, "many").click();
   const many = card(page, "Sources: 3");
   const index = many.locator('[data-slot="kind-inline-citation-index"]');
+  const icon = (title: string) =>
+    many
+      .locator('[data-slot="kind-inline-citation-item"]')
+      .filter({ hasText: title })
+      .locator('[data-slot="kind-inline-citation-icon"]');
   await expect(index).toHaveText("1 of 3");
+  await expect(many.getByRole("link", { name: /Rate limits/ })).toHaveText(
+    /^Rate limits.*docs\.github\.com$/,
+  );
   await expect(index).toHaveAttribute("aria-live", "off");
   const previous = many.getByRole("button", { name: "Previous source" });
   const next = many.getByRole("button", { name: "Next source" });
-  await expect(previous).toHaveAttribute("aria-disabled", "true");
+  // At an end the button with no page that way hides in place, unless it holds focus.
+  await expect(previous).toBeHidden();
   await settled(page);
   const height = await many.evaluate((el) => el.getBoundingClientRect().height);
   await next.click();
   await expect(index).toHaveText("2 of 3");
+  await expect(icon("Exponential backoff").locator("img")).toHaveAttribute("src", /^data:image\/svg/);
   await next.click();
   await expect(index).toHaveText("3 of 3");
   await expect(many.getByText("Pasted notes")).toBeVisible();
+  await expect(icon("Pasted notes")).toHaveText("");
+  await expect(icon("Pasted notes").locator('[data-slot="avatar-fallback"]')).toBeVisible();
   await expect(page.locator('#many [href^="javascript:"]')).toHaveCount(0);
   await expect(next).toHaveAttribute("aria-disabled", "true");
   await settled(page);

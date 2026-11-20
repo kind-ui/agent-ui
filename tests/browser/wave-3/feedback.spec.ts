@@ -65,6 +65,37 @@ test("a group named Feedback with two thumbs, neither pressed, and no comment bu
   expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
 });
 
+test("the comment box asks what went well after a thumbs up, what could be better after a thumbs down", async ({
+  page,
+}) => {
+  await open(page);
+  await openBox(page);
+  await expect(text(page)).toHaveAttribute("placeholder", "What went well…");
+  await page.keyboard.press("Escape");
+  await down(page).click();
+  await addComment(page).click();
+  await expect(text(page)).toHaveAttribute("placeholder", "What could be better…");
+});
+
+test("a comment box a web host wrote keeps its own placeholder and name", async ({ page }, testInfo) => {
+  test.skip(layerOf(testInfo) !== "web", "React hands them to a render function to override");
+  await open(page);
+  const written = await page.evaluate(async () => {
+    const source = document.querySelector("kind-feedback");
+    const feedback = document.createElement("kind-feedback") as HTMLElement & { rating: string | null };
+    feedback.innerHTML = source?.innerHTML ?? "";
+    const area = feedback.querySelector("kind-feedback-comment-text textarea") as HTMLTextAreaElement;
+    area.placeholder = "Tell us more";
+    area.ariaLabel = "Your note";
+    document.body.append(feedback);
+    feedback.rating = "up";
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+    return [area.placeholder, area.ariaLabel];
+  });
+  expect(written).toEqual(["Tell us more", "Your note"]);
+});
+
 test("the thumbs are one Tab stop with arrow keys between them", async ({ page }) => {
   await open(page);
   await page.locator("#above").click();

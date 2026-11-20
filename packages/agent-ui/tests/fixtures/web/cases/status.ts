@@ -6,7 +6,7 @@ export const cases = {
   all: (root: HTMLElement) => {
     defineStatus();
     root.innerHTML = `
-      <div class="flex flex-col items-start gap-3 p-6">
+      <div class="flex flex-col items-start gap-3 bg-[var(--kind-color-surface)] p-6">
         ${statuses.map((status) => `<kind-status status="${status}"></kind-status>`).join("")}
         <kind-status id="live" status="running"></kind-status>
         <kind-status id="composed" status="complete">

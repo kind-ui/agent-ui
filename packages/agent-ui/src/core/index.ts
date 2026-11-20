@@ -135,7 +135,9 @@ export {
   type ConversationController,
   type ConversationOptions,
   type ConversationPrimitive,
+  type ConversationRetryDetails,
   type ConversationState,
+  type ConversationStatus,
   conversationPrimitive,
   createConversationController,
   type FollowEvent,
@@ -273,14 +275,19 @@ export {
   branchLabel,
   MESSAGE_TRY_AGAIN,
   type MessageApi,
+  type MessageAvatarState,
   type MessageBranchChangeReason,
   type MessageOptions,
+  type MessageOutcome,
+  type MessageOutcomeDetails,
   type MessagePrimitive,
   type MessageRegenerateContentState,
   type MessageRegenerateDetails,
   type MessageRegenerateReason,
   type MessageRegenerateState,
   type MessageState,
+  type MessageTimeState,
+  messageOutcomeText,
   messagePrimitive,
 } from "./message/index.js";
 export {
@@ -341,7 +348,9 @@ export {
   type PickerPrimitive,
   type PickerRow,
   type PickerRowKind,
+  type PickerSearchOptions,
   type PickerSection,
+  type PickerSelectOptions,
   type PickerState,
   type PickerTriggerState,
   type PickerValueChangeReason,
@@ -510,6 +519,7 @@ export {
 export {
   type SuggestionApi,
   type SuggestionItemState,
+  type SuggestionLayout,
   type SuggestionOptions,
   type SuggestionPickReason,
   type SuggestionPrimitive,
@@ -536,11 +546,11 @@ export {
   emptyTestsText,
   type TestCounts,
   type TestResultsApi,
+  type TestResultsCountState,
   type TestResultsExpandedChangeReason,
   type TestResultsFailureState,
   type TestResultsFilter,
   type TestResultsFilterChangeReason,
-  type TestResultsFilterState,
   type TestResultsOptions,
   type TestResultsPrimitive,
   type TestResultsRow,
@@ -552,6 +562,23 @@ export {
   testValue,
 } from "./test-results/index.js";
 export { thinkingIndicatorPrimitive } from "./thinking-indicator/index.js";
+export { type ThreadGroup, type ThreadGroupOptions, threadGroups } from "./thread-groups.js";
+export {
+  compactTimeLabel,
+  type DateGroup,
+  type DateGroupKey,
+  type DateGroupOptions,
+  dateGroup,
+  dayKey,
+  dayLabel,
+  durationLabel,
+  isContinuation,
+  isSameDay,
+  type RelativeTimeOptions,
+  type TimeOptions,
+  timeLabel,
+  todayKey,
+} from "./time.js";
 export {
   type ToolApi,
   type ToolApprovalState,
@@ -591,3 +618,123 @@ export {
   uploadDetail,
   uploaderPrimitive,
 } from "./uploader/index.js";
+
+// Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its exports right below its own line.
+
+// wave-6-task-2: Thread List
+
+export {
+  type ThreadListAction,
+  type ThreadListApi,
+  type ThreadListDialogState,
+  type ThreadListEntry,
+  type ThreadListGridState,
+  type ThreadListLinkState,
+  type ThreadListLoadReason,
+  type ThreadListMenuContentState,
+  type ThreadListOptions,
+  type ThreadListPrimitive,
+  type ThreadListReason,
+  type ThreadListRow,
+  type ThreadListState,
+  type ThreadListTimeState,
+  threadListPrimitive,
+  threadListRows,
+} from "./thread-list/index.js";
+
+// wave-6-task-3: Thread Search
+
+export {
+  type ThreadSearchApi,
+  type ThreadSearchIcon,
+  type ThreadSearchOptions,
+  type ThreadSearchPrimitive,
+  type ThreadSearchSelectReason,
+  type ThreadSearchState,
+  threadSearchPrimitive,
+} from "./thread-search/index.js";
+
+// wave-6-task-4: Sidebar
+
+export {
+  type SidebarApi,
+  type SidebarHandleState,
+  type SidebarInsetState,
+  type SidebarOpenChangeReason,
+  type SidebarOptions,
+  type SidebarPanelState,
+  type SidebarPrimitive,
+  type SidebarRootState,
+  type SidebarSide,
+  type SidebarState,
+  type SidebarTriggerState,
+  sidebarPrimitive,
+} from "./sidebar/index.js";
+
+// wave-6-task-5: Launcher, dropped by the user
+
+// wave-6-task-6: Day Separator
+
+export {
+  type DaySeparatorLabelState,
+  type DaySeparatorOptions,
+  type DaySeparatorPrimitive,
+  type DaySeparatorState,
+  daySeparatorPrimitive,
+} from "./day-separator/index.js";
+
+// wave-6-task-7: Connection Status
+
+export {
+  type ConnectionPhase,
+  type ConnectionState,
+  type ConnectionStatusApi,
+  type ConnectionStatusLabels,
+  type ConnectionStatusOptions,
+  type ConnectionStatusPrimitive,
+  type ConnectionStatusRetryDetails,
+  type ConnectionStatusState,
+  connectionStatusPrimitive,
+  connectionStatusText,
+} from "./connection-status/index.js";
+
+// wave-6-task-8: Share Dialog
+
+export {
+  SHARE_DIALOG_DESCRIPTIONS,
+  SHARE_VISIBILITY_OPTIONS,
+  type ShareDialogActionDetails,
+  type ShareDialogActionState,
+  type ShareDialogApi,
+  type ShareDialogLinkState,
+  type ShareDialogOptions,
+  type ShareDialogPresentation,
+  type ShareDialogPrimitive,
+  type ShareDialogState,
+  type ShareDialogVisibilityState,
+  type ShareVisibility,
+  type ShareVisibilityChangeReason,
+  type ShareVisibilityOption,
+  shareDialogPrimitive,
+} from "./share-dialog/index.js";
+
+// wave-6-task-9: Message author, time and outcomes
+
+// wave-6-task-10: Conversation states
+
+// wave-6-task-11: Conversation Search
+
+export {
+  type ConversationSearchApi,
+  type ConversationSearchInputState,
+  type ConversationSearchMatch,
+  type ConversationSearchMessage,
+  type ConversationSearchOpenChangeReason,
+  type ConversationSearchOptions,
+  type ConversationSearchPrimitive,
+  type ConversationSearchQueryChangeReason,
+  type ConversationSearchState,
+  conversationSearchPrimitive,
+  findMatches,
+  searchText,
+} from "./conversation-search/index.js";

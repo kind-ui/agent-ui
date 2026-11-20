@@ -399,6 +399,8 @@ export const stackTracePrimitive: StackTracePrimitive = definePrimitive<
         attrs: (state) => ({
           type: "button",
           "aria-label": "Copy stack trace",
+          "data-kind-icon-button": "",
+          "data-kind-size": "sm",
           "data-copied": state.copied ? "" : undefined,
         }),
       }),

@@ -77,7 +77,7 @@ const cases = {
   contextMeter: {
     options: { used: 57600, total: 128000, usage: { input: 50000, output: 7600 }, locale: "en" },
   },
-  conversation: { options: { messageCount: 2 }, keys: { row: ["0", "1"] } },
+  conversation: { options: { messageCount: 2, marks: [1] }, keys: { row: ["0", "1"], mark: ["1"] } },
   dictationButton: { options: { source: async function* () {}, bars: 2 }, keys: { bar: ["0", "1"] } },
   document: {
     options: {
@@ -191,7 +191,7 @@ const cases = {
         },
       ],
     },
-    keys: { item: ["s", "s/t"], failure: ["s/t"] },
+    keys: { item: ["s", "s/t"], failure: ["s/t"], count: ["pass", "fail", "skip"] },
   },
   thinkingIndicator: { options: { label: "Thinking" } },
   tool: { options: { call, onApprove: noop, onDeny: noop } },
@@ -210,6 +210,70 @@ const cases = {
       onCancel: noop,
     },
     keys: { item: ["a"] },
+  },
+
+  // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its case right below its own line.
+
+  // wave-6-task-2: Thread List
+
+  threadList: {
+    options: {
+      threads: [{ id: "a", title: "A", href: "#a", pinned: true, status: "running", unread: true }],
+      now: "2026-11-18",
+      onSelect: noop,
+      onRename: noop,
+      onDelete: noop,
+    },
+    keys: {
+      heading: ["heading:pinned"],
+      "heading-cell": ["heading:pinned"],
+      ...Object.fromEntries(
+        ["row", "link-cell", "link", "status", "unread", "time", "editor", "more-cell", "more"].map(
+          (slot) => [slot, ["a"]],
+        ),
+      ),
+    },
+  },
+
+  // wave-6-task-3: Thread Search
+
+  threadSearch: {
+    options: {
+      threads: [{ id: "t1", title: "Plan the launch", updatedAt: "2026-11-18T09:00:00Z", status: "running" }],
+      now: "2026-11-18",
+      shortcut: "mod+k",
+      onSelect: noop,
+      onNew: noop,
+    },
+    keys: { item: ["i:t1", "a:new"], status: ["i:t1"] },
+  },
+
+  // wave-6-task-4: Sidebar
+
+  sidebar: { options: { label: "Chats" } },
+
+  // wave-6-task-5: Launcher, dropped by the user
+
+  // wave-6-task-6: Day Separator
+
+  daySeparator: { options: { date: "2026-11-18T09:30:00Z" } },
+
+  // wave-6-task-7: Connection Status
+
+  connectionStatus: { options: { state: "offline", onRetry: noop } },
+
+  // wave-6-task-8: Share Dialog
+
+  shareDialog: { options: { link: "https://example.com/s/abc", defaultVisibility: "link", onRevoke: noop } },
+
+  // wave-6-task-9: Message author, time and outcomes
+
+  // wave-6-task-10: Conversation states
+
+  // wave-6-task-11: Conversation Search
+
+  conversationSearch: {
+    options: { messages: [{ id: "m1", text: "Hello **there**" }], defaultQuery: "there", defaultOpen: true },
   },
 };
 

@@ -45,7 +45,7 @@ export type InlineCitationOptions = {
   /** Called when the card opens or closes, with what caused it. */
   onOpenChange?: (open: boolean, details: ChangeDetails<InlineCitationOpenChangeReason>) => void;
   /**
-   * How the card opens: at full motion it rises in; reduced motion only fades. `"auto"` follows
+   * How the card opens: at full motion it grows from the marker; reduced motion only fades. `"auto"` follows
    * `prefers-reduced-motion`.
    * @default "auto"
    */
@@ -119,6 +119,7 @@ type InlineCitationSlots = {
   carousel: Slot<BaseSlotProps, InlineCitationCarouselState>;
   item: Slot<ItemProps & BaseSlotProps>;
   link: Slot<ItemPartProps & BaseSlotProps>;
+  icon: Slot<ItemPartProps & BaseSlotProps, { favicon: string | undefined }>;
   host: Slot<ItemPartProps & BaseSlotProps, { host: string }>;
   // Not `title`, which would name the citation in an agent's snapshot while one source shows.
   "source-title": Slot<ItemPartProps & BaseSlotProps, { title: string }>;
@@ -138,7 +139,6 @@ const noEntry: SourceEntry = {
   host: "",
   snippet: "",
   favicon: undefined,
-  initial: "",
 };
 
 // Cached by object, so citations in one paragraph don't evict each other's entries.
@@ -281,6 +281,7 @@ export const inlineCitationPrimitive: InlineCitationPrimitive = definePrimitive<
         // Named by the summary, not by the trigger as UI SDK's popup content is.
         attrs: (state, part) => ({
           ...content.attrs?.(state, part),
+          "data-kind-popup": "",
           "aria-labelledby": undefined,
           "aria-label": state.summary,
         }),
@@ -304,6 +305,12 @@ export const inlineCitationPrimitive: InlineCitationPrimitive = definePrimitive<
           const { url } = entryAt(state, key);
           return { href: url, target: url && "_blank", rel: url && "noreferrer" };
         },
+      }),
+      icon: slot<ItemPartProps & BaseSlotProps, { favicon: string | undefined }>({
+        props: fromItem,
+        selects: own,
+        state: (state, { key }) => ({ favicon: entryAt(state, key).favicon }),
+        attrs: () => ({ "aria-hidden": "true" }),
       }),
       host: slot<ItemPartProps & BaseSlotProps, { host: string }>({
         props: fromItem,

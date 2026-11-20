@@ -6,7 +6,7 @@ import type { AttributeProperties, UiChangeEvent, UiElement } from "@ui-sdk/web/
 import { defineInternalAlertDialog } from "./internal/alert-dialog.js";
 import { defineInternalTooltip } from "./internal/tooltip.js";
 
-const DEFAULT_PARTS = `<kind-checkpoint-label></kind-checkpoint-label><kind-checkpoint-description></kind-checkpoint-description><kind-checkpoint-line></kind-checkpoint-line><kind-checkpoint-restore><kind-internal-alert-dialog><ui-alert-dialog><kind-internal-tooltip><ui-tooltip type="label"><ui-tooltip-trigger><ui-alert-dialog-trigger><button data-checkpoint-trigger></button></ui-alert-dialog-trigger></ui-tooltip-trigger><ui-tooltip-content hidden>Restore checkpoint</ui-tooltip-content></ui-tooltip></kind-internal-tooltip><ui-alert-dialog-backdrop hidden></ui-alert-dialog-backdrop><ui-alert-dialog-content hidden><ui-alert-dialog-title></ui-alert-dialog-title><ui-alert-dialog-description></ui-alert-dialog-description><div data-checkpoint-answers><kind-checkpoint-error>Couldn't restore. Try again.</kind-checkpoint-error><kind-checkpoint-cancel><button>Cancel</button></kind-checkpoint-cancel><kind-checkpoint-confirm><button>Restore</button></kind-checkpoint-confirm></div></ui-alert-dialog-content></ui-alert-dialog></kind-internal-alert-dialog></kind-checkpoint-restore><kind-checkpoint-restored><span aria-hidden="true" data-status-mark data-status="complete"></span>Restored</kind-checkpoint-restored>`;
+const DEFAULT_PARTS = `<kind-checkpoint-label></kind-checkpoint-label><kind-checkpoint-description></kind-checkpoint-description><kind-checkpoint-line></kind-checkpoint-line><kind-checkpoint-restore><kind-internal-alert-dialog><ui-alert-dialog><kind-internal-tooltip><ui-tooltip type="label"><ui-tooltip-trigger><ui-alert-dialog-trigger><button data-checkpoint-trigger data-kind-icon-button></button></ui-alert-dialog-trigger></ui-tooltip-trigger><ui-tooltip-content hidden>Restore checkpoint</ui-tooltip-content></ui-tooltip></kind-internal-tooltip><ui-alert-dialog-backdrop hidden></ui-alert-dialog-backdrop><ui-alert-dialog-content hidden><ui-alert-dialog-title></ui-alert-dialog-title><ui-alert-dialog-description></ui-alert-dialog-description><div data-checkpoint-answers><kind-checkpoint-error>Couldn't restore. Try again.</kind-checkpoint-error><kind-checkpoint-cancel><button>Cancel</button></kind-checkpoint-cancel><kind-checkpoint-confirm><button><span data-kind-pending-mark="" data-status-mark="" data-status="running" aria-hidden="true"></span>Restore</button></kind-checkpoint-confirm></div></ui-alert-dialog-content></ui-alert-dialog></kind-internal-alert-dialog></kind-checkpoint-restore><kind-checkpoint-restored><span aria-hidden="true" data-status-mark data-status="complete"></span>Restored</kind-checkpoint-restored>`;
 
 // Parts this element wrote text into. A part someone wrote text into keeps it, as React's children do. Kept across
 // instances, because UI SDK rebuilds one when the element returns to the page.
@@ -27,7 +27,7 @@ const write = <Target extends object, Key extends keyof Target>(
 };
 
 type DialogElement = Element & { controller?: unknown; dismissible?: boolean };
-type ContentElement = Element & { initialFocus?: string };
+type ContentElement = Element & { initialFocus?: string; ariaBusy: string | null };
 
 /**
  * `<kind-checkpoint label="Checkpoint" description="Before editing auth.ts">` fills in its parts when it has no
@@ -59,11 +59,13 @@ export function defineCheckpoint(): void {
           const state = instance.get() as CheckpointState;
           fill(el.querySelector("kind-checkpoint-label"), state.label);
           fill(el.querySelector("kind-checkpoint-description"), state.description ?? "");
-          const { controller, dismissible, initialFocus, title, description } = api.dialogState(state);
+          const { controller, dismissible, busy, initialFocus, title, description } = api.dialogState(state);
           const dialog = el.querySelector<DialogElement>("kind-checkpoint-restore ui-alert-dialog");
           write(dialog, "controller", controller);
           write(dialog, "dismissible", dismissible);
-          write(el.querySelector<ContentElement>("ui-alert-dialog-content"), "initialFocus", initialFocus);
+          const content = el.querySelector<ContentElement>("ui-alert-dialog-content");
+          write(content, "initialFocus", initialFocus);
+          write(content, "ariaBusy", busy ? "true" : null);
           fill(el.querySelector("ui-alert-dialog-title"), title);
           fill(el.querySelector("ui-alert-dialog-description"), description);
         };

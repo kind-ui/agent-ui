@@ -49,6 +49,43 @@ import { defineTool } from "./components/ui/web/tool.js";
 import { defineTranscript } from "./components/ui/web/transcript.js";
 import { defineTypingIndicator } from "./components/ui/web/typing-indicator.js";
 import { defineUploader } from "./components/ui/web/uploader.js";
+
+// Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its imports right below its own line.
+
+// wave-6-task-2: Thread List
+
+import { defineThreadList } from "./components/ui/web/thread-list.js";
+
+// wave-6-task-3: Thread Search
+
+import { defineThreadSearch } from "./components/ui/web/thread-search.js";
+
+// wave-6-task-4: Sidebar
+
+import { defineSidebar } from "./components/ui/web/sidebar.js";
+
+// wave-6-task-5: Launcher, dropped by the user
+
+// wave-6-task-6: Day Separator
+
+import { defineDaySeparator } from "./components/ui/web/day-separator.js";
+
+// wave-6-task-7: Connection Status
+
+import { defineConnectionStatus } from "./components/ui/web/connection-status.js";
+
+// wave-6-task-8: Share Dialog
+
+import { defineShareDialog } from "./components/ui/web/share-dialog.js";
+
+// wave-6-task-9: Message author, time and outcomes
+
+// wave-6-task-10: Conversation states
+
+// wave-6-task-11: Conversation Search
+
+import { defineConversationSearch } from "./components/ui/web/conversation-search.js";
+
 import "./index.css";
 
 for (const define of [
@@ -102,6 +139,42 @@ for (const define of [
   defineThinkingIndicator,
   defineTypingIndicator,
   defineStreamingText,
+
+  // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its define function right below its own line.
+
+  // wave-6-task-2: Thread List
+
+  defineThreadList,
+
+  // wave-6-task-3: Thread Search
+
+  defineThreadSearch,
+
+  // wave-6-task-4: Sidebar
+
+  defineSidebar,
+
+  // wave-6-task-5: Launcher, dropped by the user
+
+  // wave-6-task-6: Day Separator
+
+  defineDaySeparator,
+
+  // wave-6-task-7: Connection Status
+
+  defineConnectionStatus,
+
+  // wave-6-task-8: Share Dialog
+
+  defineShareDialog,
+
+  // wave-6-task-9: Message author, time and outcomes
+
+  // wave-6-task-10: Conversation states
+
+  // wave-6-task-11: Conversation Search
+
+  defineConversationSearch,
 ]) {
   define();
 }
@@ -184,6 +257,42 @@ const items = {
   "thinking-indicator": `<kind-thinking-indicator></kind-thinking-indicator>`,
   "typing-indicator": `<kind-typing-indicator></kind-typing-indicator>`,
   "streaming-text": `<kind-streaming-text text="Streaming text" caret></kind-streaming-text>`,
+
+  // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its item right below its own line.
+
+  // wave-6-task-2: Thread List
+
+  "thread-list": `<kind-thread-list can-new></kind-thread-list>`,
+
+  // wave-6-task-3: Thread Search
+
+  "thread-search": `<kind-thread-search can-select></kind-thread-search>`,
+
+  // wave-6-task-4: Sidebar
+
+  sidebar: `<kind-sidebar label="Chats" class="h-64"><kind-sidebar-panel>Chats</kind-sidebar-panel><kind-sidebar-inset><kind-sidebar-trigger><button></button></kind-sidebar-trigger></kind-sidebar-inset></kind-sidebar>`,
+
+  // wave-6-task-5: Launcher, dropped by the user
+
+  // wave-6-task-6: Day Separator
+
+  "day-separator": `<kind-day-separator date="2026-11-18"></kind-day-separator>`,
+
+  // wave-6-task-7: Connection Status
+
+  "connection-status": `<kind-connection-status state="offline" can-retry></kind-connection-status>`,
+
+  // wave-6-task-8: Share Dialog
+
+  "share-dialog": `<kind-share-dialog link="https://example.com/s/abc" default-visibility="link"></kind-share-dialog>`,
+
+  // wave-6-task-9: Message author, time and outcomes
+
+  // wave-6-task-10: Conversation states
+
+  // wave-6-task-11: Conversation Search
+
+  "conversation-search": `<kind-conversation-search default-open></kind-conversation-search>`,
 };
 
 const main = document.createElement("main");

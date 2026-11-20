@@ -1,0 +1,406 @@
+/* Thread List (spec §7): the threads as a navigation grid in groups, a row per thread at a fixed height, with New chat
+   above and one menu and delete dialog for every row. The row menu's look and motion are `menu.css`'s. */
+@layer components {
+  [data-slot="kind-thread-list"] {
+    /* Lucide "plus", "ellipsis", "pencil", "pin", "share" and "trash-2", see THIRD_PARTY_NOTICES.md. */
+    --kind-thread-list-icon-new: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='M12 5v14'/%3E%3C/svg%3E");
+    --kind-thread-list-icon-more: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='1'/%3E%3Ccircle cx='19' cy='12' r='1'/%3E%3Ccircle cx='5' cy='12' r='1'/%3E%3C/svg%3E");
+    --kind-thread-list-icon-rename: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z'/%3E%3Cpath d='m15 5 4 4'/%3E%3C/svg%3E");
+    --kind-thread-list-icon-pin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 17v5'/%3E%3Cpath d='M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z'/%3E%3C/svg%3E");
+    --kind-thread-list-icon-share: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2v13'/%3E%3Cpath d='m16 6-4-4-4 4'/%3E%3Cpath d='M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8'/%3E%3C/svg%3E");
+    --kind-thread-list-icon-delete: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 11v6'/%3E%3Cpath d='M14 11v6'/%3E%3Cpath d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6'/%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E");
+    /* `--kind-list-row-height` in pixels, which the virtualizer reads as a number, so its rows and every budget hold
+       whatever the fonts. */
+    --kind-thread-row-height: 36px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 0;
+    height: 100%;
+    font-size: var(--kind-text-md);
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
+    color: var(--kind-color-fg);
+  }
+
+  [data-thread-list-icon] {
+    display: inline-flex;
+    flex-shrink: 0;
+    width: var(--kind-icon-size);
+    height: var(--kind-icon-size);
+
+    &::before {
+      content: "";
+      flex: 1;
+      background-color: currentColor;
+      mask: var(--kind-thread-list-icon) center / contain no-repeat;
+    }
+    &:where([data-thread-list-icon="new"]) {
+      --kind-thread-list-icon: var(--kind-thread-list-icon-new);
+    }
+    &:where([data-thread-list-icon="more"]) {
+      --kind-thread-list-icon: var(--kind-thread-list-icon-more);
+    }
+    &:where([data-thread-list-icon="rename"]) {
+      --kind-thread-list-icon: var(--kind-thread-list-icon-rename);
+    }
+    &:where([data-thread-list-icon="pin"]) {
+      --kind-thread-list-icon: var(--kind-thread-list-icon-pin);
+    }
+    &:where([data-thread-list-icon="share"]) {
+      --kind-thread-list-icon: var(--kind-thread-list-icon-share);
+    }
+    &:where([data-thread-list-icon="delete"]) {
+      --kind-thread-list-icon: var(--kind-thread-list-icon-delete);
+    }
+  }
+
+  [data-slot="kind-thread-list-new"] {
+    align-self: flex-start;
+  }
+
+  [data-slot="kind-thread-list-viewport"] {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* Each row sits where the virtualizer placed it, over a box as tall as every row. */
+  [data-slot="kind-thread-list-grid"] {
+    position: relative;
+    height: var(--kind-thread-list-size);
+  }
+
+  :is([data-slot="kind-thread-list-heading"], [data-slot="kind-thread-list-row"]) {
+    position: absolute;
+    inset-inline: 0;
+    top: var(--kind-thread-row-start, 0);
+    display: flex;
+    align-items: center;
+    height: var(--kind-thread-row-height);
+  }
+
+  [data-slot="kind-thread-list-heading-cell"] {
+    display: block;
+    align-self: end;
+    padding: 0 10px 6px;
+    overflow: hidden;
+    font-size: var(--kind-text-xs);
+    font-weight: var(--kind-font-weight-medium);
+    line-height: var(--kind-text-xs-leading);
+    letter-spacing: var(--kind-text-xs-tracking);
+    color: var(--kind-color-muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    /* Date group names are lower case where `Intl` writes them so; the host's own names are left as written. */
+    &:not([data-group^="group:"])::first-letter {
+      text-transform: uppercase;
+    }
+  }
+
+  [data-slot="kind-thread-list-row"] {
+    border-radius: var(--kind-radius-md);
+    transition: background-color var(--kind-duration-fast) var(--kind-ease-in-out);
+
+    &:hover {
+      background-color: var(--kind-color-hover);
+    }
+    &[data-menu-open] {
+      background-color: var(--kind-color-selected);
+    }
+    /* Hover and an open menu leave the current row as it is. */
+    &[data-current] {
+      background-color: var(--kind-color-current);
+    }
+  }
+
+  [data-slot="kind-thread-list-link-cell"] {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    min-width: 0;
+    height: 100%;
+  }
+
+  [data-slot="kind-thread-list-link"] {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    height: 100%;
+    padding-inline: 10px;
+    border-radius: inherit;
+    color: inherit;
+    text-decoration: none;
+    outline: none;
+
+    &:focus-visible {
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
+    }
+  }
+
+  /* A notch under ink, so the current row, the hovered one and an unread one read first. */
+  [data-thread-list-title] {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: color-mix(in oklab, var(--kind-color-fg) 85%, transparent);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color var(--kind-duration-fast) var(--kind-ease-in-out);
+  }
+
+  [data-thread-list-title]:where(
+    [data-slot="kind-thread-list-row"]:is(:hover, [data-current], [data-unread]) *
+  ) {
+    color: var(--kind-color-fg);
+  }
+
+  [data-thread-list-title]:where([data-current] *) {
+    font-weight: var(--kind-font-weight-current);
+  }
+
+  [data-thread-list-title]:where([data-unread] *) {
+    font-weight: var(--kind-font-weight-semibold);
+  }
+
+  /* How long ago, at the row's end, as wide as More at least, which takes its place. */
+  [data-slot="kind-thread-list-time"] {
+    flex-shrink: 0;
+    box-sizing: content-box;
+    min-width: var(--kind-control-height-sm);
+    padding-inline: 4px 10px;
+    font-size: var(--kind-text-xs);
+    line-height: var(--kind-text-xs-leading);
+    letter-spacing: var(--kind-text-xs-tracking);
+    font-variant-numeric: tabular-nums;
+    color: var(--kind-color-muted);
+    text-align: end;
+    white-space: nowrap;
+    transition: opacity var(--kind-duration-fast) var(--kind-ease-in-out);
+  }
+
+  /* Muted, so the accent in this column is only ever the unread dot. */
+  [data-slot="kind-thread-list-status"] {
+    --kind-status-mark-size: 14px;
+    flex-shrink: 0;
+
+    &[data-status="running"] {
+      border-color: color-mix(in oklab, var(--kind-color-muted) 25%, var(--kind-color-surface));
+      &::before {
+        border-top-color: var(--kind-color-muted);
+      }
+    }
+  }
+
+  [data-slot="kind-thread-list-unread"] {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--kind-radius-full);
+    background-color: var(--kind-color-accent);
+  }
+
+  /* A text field shows its caret and its hairline, never a ring. */
+  [data-slot="kind-thread-list-editor"] {
+    flex: 1;
+    min-width: 0;
+    height: calc(var(--kind-thread-row-height) - 8px);
+    margin-inline: 4px;
+    padding-inline: 6px;
+    border: 0;
+    border-radius: var(--kind-radius-sm);
+    background-color: var(--kind-color-raised);
+    box-shadow: 0 0 0 1px var(--kind-color-hairline);
+    color: inherit;
+    font: inherit;
+    outline: none;
+  }
+
+  /* Over the time, so showing More moves nothing: on hover, focus and the row whose menu is open. The cell fades
+     rather than the button, whose look is the shared icon button's. */
+  [data-slot="kind-thread-list-more-cell"] {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    display: flex;
+    align-items: center;
+    padding-inline-end: 4px;
+    opacity: 0;
+    transition: opacity var(--kind-duration-fast) var(--kind-ease-in-out);
+  }
+
+  :where([data-slot="kind-thread-list-row"]:is(:hover, :focus-within, [data-menu-open])) {
+    & [data-slot="kind-thread-list-more-cell"] {
+      opacity: 1;
+    }
+    &:has(> [data-slot="kind-thread-list-more-cell"]:not([hidden])) [data-slot="kind-thread-list-time"] {
+      opacity: 0;
+    }
+  }
+
+  /* Touch screens have no hover to show it, so More stands in for the time. */
+  @media (hover: none) {
+    [data-slot="kind-thread-list-more-cell"] {
+      opacity: 1;
+    }
+    :where([data-slot="kind-thread-list-row"]:has(> [data-slot="kind-thread-list-more-cell"]:not([hidden])))
+      [data-slot="kind-thread-list-time"] {
+      visibility: hidden;
+    }
+  }
+
+  [data-slot="kind-thread-list-end"] {
+    --kind-status-mark-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: var(--kind-thread-row-height);
+    padding-inline: 10px 4px;
+    font-size: var(--kind-text-xs);
+    line-height: var(--kind-text-xs-leading);
+    letter-spacing: var(--kind-text-xs-tracking);
+    color: var(--kind-color-muted);
+
+    &[data-status="error"] {
+      color: var(--kind-color-danger);
+    }
+  }
+
+  [data-slot="kind-thread-list-retry"] {
+    margin-inline-start: auto;
+  }
+
+  [data-slot="kind-thread-list-dialog"],
+  [data-slot="kind-thread-list-dialog"] ui-alert-dialog {
+    display: contents;
+  }
+
+  /* The dialog's answers: the error, then Cancel and Delete, in one row of one height. */
+  :where([data-slot="kind-thread-list"]) [data-thread-list-answers] {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    min-height: var(--kind-control-height);
+    margin-top: 16px;
+  }
+
+  [data-slot="kind-thread-list-dialog-error"] {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--kind-text-xs);
+    line-height: var(--kind-text-xs-leading);
+    letter-spacing: var(--kind-text-xs-tracking);
+    color: var(--kind-color-danger);
+  }
+
+  /* Motion: the dialog scales in from just below its size and fades, and leaves quicker; its backdrop fades. Reduced
+     motion only fades; `none` doesn't animate. The menu's motion is `menu.css`'s. */
+  :where([data-slot="kind-thread-list"]) {
+    & [data-slot="alert-dialog-content"] {
+      transition:
+        opacity var(--kind-duration-base) var(--kind-ease-enter),
+        scale var(--kind-duration-base) var(--kind-ease-enter);
+
+      &:is([data-starting-style], [data-ending-style]) {
+        opacity: 0;
+        scale: var(--kind-dialog-enter-scale);
+      }
+    }
+    & [data-slot="alert-dialog-backdrop"] {
+      transition: opacity var(--kind-duration-base) var(--kind-ease-enter);
+
+      &:is([data-starting-style], [data-ending-style]) {
+        opacity: 0;
+      }
+    }
+    & :is([data-slot="alert-dialog-content"], [data-slot="alert-dialog-backdrop"])[data-ending-style] {
+      transition-duration: var(--kind-duration-exit);
+      transition-timing-function: var(--kind-ease-exit);
+    }
+  }
+
+  /* More and the time fade at most over the reduced duration. */
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-slot="kind-thread-list"][data-motion="auto"])
+      :is([data-slot="kind-thread-list-more-cell"], [data-slot="kind-thread-list-time"]) {
+      transition-duration: var(--kind-duration-reduced);
+    }
+  }
+
+  :where([data-slot="kind-thread-list"][data-motion="reduced"])
+    :is([data-slot="kind-thread-list-more-cell"], [data-slot="kind-thread-list-time"]) {
+    transition-duration: var(--kind-duration-reduced);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-slot="kind-thread-list"][data-motion="auto"])
+      :is([data-slot="alert-dialog-content"], [data-slot="alert-dialog-backdrop"]) {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
+
+      &:is([data-starting-style], [data-ending-style]) {
+        scale: none;
+        transition-duration: var(--kind-duration-reduced);
+      }
+    }
+  }
+
+  :where([data-slot="kind-thread-list"][data-motion="reduced"])
+    :is([data-slot="alert-dialog-content"], [data-slot="alert-dialog-backdrop"]) {
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      scale: none;
+      transition-duration: var(--kind-duration-reduced);
+    }
+  }
+
+  :where([data-slot="kind-thread-list"][data-motion="none"])
+    :is(
+      [data-slot="alert-dialog-content"],
+      [data-slot="alert-dialog-backdrop"],
+      [data-slot="kind-thread-list-row"],
+      [data-slot="kind-thread-list-more-cell"],
+      [data-slot="kind-thread-list-time"],
+      [data-thread-list-title]
+    ) {
+    transition: none;
+  }
+
+  /* Web Components keep parts that aren't present in the page, hidden. */
+  :is(
+    [data-slot="kind-thread-list-new"],
+    [data-slot="kind-thread-list-link"],
+    [data-slot="kind-thread-list-status"],
+    [data-slot="kind-thread-list-unread"],
+    [data-slot="kind-thread-list-editor"],
+    [data-slot="kind-thread-list-more-cell"],
+    [data-slot="kind-thread-list-end"],
+    [data-slot="kind-thread-list-retry"],
+    [data-slot="kind-thread-list-dialog-error"]
+  )[hidden] {
+    display: none;
+  }
+
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    [data-thread-list-icon]::before {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+    [data-slot="kind-thread-list-unread"] {
+      forced-color-adjust: none;
+      background-color: Highlight;
+    }
+    [data-slot="kind-thread-list-row"][data-current] {
+      outline: 1px solid Highlight;
+    }
+  }
+}

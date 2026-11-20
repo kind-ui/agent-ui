@@ -9,10 +9,6 @@ import {
   type TreeItemData,
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
-import {
-  createSegmentedControlController,
-  type SegmentedControlController,
-} from "@ui-sdk/core/segmented-control";
 import { createTreeController, type TreeController } from "@ui-sdk/core/tree";
 import type { StepStatus, TestCase, TestSuite } from "../../types/index.js";
 import { cached, memo } from "../memo.js";
@@ -30,8 +26,11 @@ import {
   testValue,
 } from "./summary.js";
 
-/** `"input-change"`: a person chose a filter. `"imperative"`: an `api` call, like an agent's `setFilter`. */
-export type TestResultsFilterChangeReason = "input-change" | "imperative";
+/**
+ * `"item-press"`: a person pressed a count, or pressed the shown one again for every test. `"imperative"`: an `api`
+ * call, like an agent's `setFilter`.
+ */
+export type TestResultsFilterChangeReason = "item-press" | "imperative";
 
 /**
  * `"item-press"`: a press, or Enter, on a row. `"list-navigation"`: an arrow key or `*`. `"find-in-page"`: the
@@ -59,7 +58,9 @@ export type TestResultsOptions = Omit<StepOptions, "status" | "label"> & {
   label?: string;
   /** What the run is doing. Defaults to `error` once a test failed, else `complete`, or `pending` with no tests. */
   status?: StepStatus;
-  /** Which tests show. Passing it controls it: change it in `onFilterChange`. */
+  /**
+   * Which tests show, chosen by pressing a count in the header. Passing it controls it: change it in `onFilterChange`.
+   */
   filter?: TestResultsFilter;
   /**
    * Which tests show at first, when `filter` isn't passed.
@@ -125,16 +126,12 @@ export type TestResultsFailureState = {
   motion: MotionMode;
 };
 
-/** What the filter part hands the Segmented Control: pass every key but `levels` to it. */
-export type TestResultsFilterState = {
-  /** The primitive's own, which it reads and writes the filter through. */
-  controller: SegmentedControlController;
-  /** The filter when the Segmented Control mounted. */
-  defaultValue: TestResultsFilter;
-  /** Names the radio group. */
-  "aria-label": string;
-  /** The filters to render, not a prop of the Segmented Control. */
-  levels: { value: TestResultsFilter; label: string }[];
+/** What a count part hands its render function. */
+export type TestResultsCountState = {
+  /** How many tests have its status. */
+  count: number;
+  /** Its words, like "3 passed". */
+  text: string;
 };
 
 /** What the tree part hands the Tree: pass every key to it. */
@@ -171,12 +168,11 @@ export type TestResultsApi = Omit<StepApi, "expand" | "collapse"> & {
   getExpanded: () => string[];
   /** Opens exactly these suites and failed tests. Returns `false` when one isn't either, or for a refused change. */
   setExpanded: (values: string[]) => boolean;
-  /** Reports the filter a person chose. Called as the Segmented Control's `change` bubbles to the filter part. */
-  readFilter: (event: Event) => void;
-  /** Writes the filter into the Segmented Control once it has attached the controller. */
-  syncFilter: () => void;
-  /** Hands the Segmented Control its props. Called by the filter slot. */
-  filterState: (state: TestResultsState) => TestResultsFilterState;
+  /**
+   * Shows only the tests with `status`, opening the step, or every test when they already show, as a press on a count
+   * does. Called by the count slot. The step opens with reason `"trigger-press"`, as a press on the header does.
+   */
+  pressCount: (status: TestCase["status"], event?: Event) => void;
   /** Reports what a person opened or closed. Called as presses, keys and find in page bubble to the tree part. */
   readTree: (event: Event) => void;
   /** Writes the open rows into the Tree once it has attached the controller. */
@@ -186,6 +182,7 @@ export type TestResultsApi = Omit<StepApi, "expand" | "collapse"> & {
 };
 
 type ItemProps = { value: string };
+type CountProps = { value: TestCase["status"] };
 type ItemPartProps = { value?: string };
 
 type Slot<
@@ -200,7 +197,8 @@ type TestResultsSlots = {
   title: Slot<BaseSlotProps, { title: string }>;
   meta: Slot<BaseSlotProps, { counts: TestCounts; duration: string }>;
   content: Slot;
-  filter: Slot<BaseSlotProps, TestResultsFilterState>;
+  filter: Slot;
+  count: Slot<CountProps & BaseSlotProps, TestResultsCountState>;
   tree: Slot<BaseSlotProps, TestResultsTreeState>;
   item: Slot<ItemProps & BaseSlotProps, TestResultsRow>;
   "item-status": Slot<ItemPartProps & BaseSlotProps>;
@@ -213,7 +211,7 @@ export type TestResultsPrimitive = ReturnType<
   typeof definePrimitive<TestResultsOptions, TestResultsState, TestResultsApi, TestResultsSlots>
 >;
 
-const FILTERS: TestResultsFilterState["levels"] = [
+const FILTERS: { value: TestResultsFilter; label: string }[] = [
   { value: "all", label: "All" },
   { value: "fail", label: "Failed" },
   { value: "pass", label: "Passed" },
@@ -343,6 +341,14 @@ const own = selects<TestResultsState, TestResultsApi, ItemPartProps>({
   expanded: [],
 });
 
+/** The counts render again only when a count or the filter changes. */
+const countParts = selects<TestResultsState, TestResultsApi, CountProps>({
+  rows: [],
+  suites: [],
+  duration: [],
+  expanded: [],
+});
+
 const sameValues = (a: readonly string[], b: readonly string[]) => {
   const wanted = new Set(b);
   return new Set(a).size === wanted.size && a.every((value) => wanted.has(value));
@@ -412,7 +418,6 @@ export const testResultsPrimitive: TestResultsPrimitive = definePrimitive<
     const step = base.api(context);
     // `createChange` reads change reasons from the options type, which `context` widens.
     const change = createChange(context as PrimitiveContext<TestResultsOptions, TestResultsState, string>);
-    const filterController = createSegmentedControlController();
     const treeController = createTreeController();
     const initial = store.get();
     let resync = 0;
@@ -439,29 +444,20 @@ export const testResultsPrimitive: TestResultsPrimitive = definePrimitive<
       if (!sameValues(next, expanded)) change("expanded", next, { reason: "auto", source: "programmatic" });
     });
 
-    const syncFilter = () => {
-      const { filter } = store.get();
-      // The controller reads `undefined` until the Segmented Control attaches it.
-      const shown = filterController.getValue();
-      if (shown !== undefined && shown !== filter) filterController.setValue(filter);
-    };
     const syncTree = () => {
       const { expanded } = store.get();
       // The controller reads `undefined` until the Tree attaches it.
       const shown = treeController.getExpanded();
       if (shown !== undefined && !sameValues(shown, expanded)) treeController.setExpanded(expanded);
     };
-    store.subscribe(() => {
-      syncFilter();
-      syncTree();
-    });
+    store.subscribe(syncTree);
     // A change the owner cancels is written back, and so is one a controlling owner didn't take by the next frame:
-    // the Segmented Control and the Tree hold their own values.
-    const settle = (accepted: boolean, sync: () => void, controlled: boolean) => {
-      if (!accepted) sync();
+    // the Tree holds its own open rows.
+    const settle = (accepted: boolean, controlled: boolean) => {
+      if (!accepted) syncTree();
       else if (controlled) {
         cancelAnimationFrame(resync);
-        resync = requestAnimationFrame(sync);
+        resync = requestAnimationFrame(syncTree);
       }
     };
 
@@ -469,12 +465,6 @@ export const testResultsPrimitive: TestResultsPrimitive = definePrimitive<
     const setExpanded = (expanded: string[]) =>
       sameValues(expanded, store.get().expanded) || change("expanded", expanded, { reason: "imperative" });
 
-    const filterState: TestResultsFilterState = {
-      controller: filterController,
-      defaultValue: initial.filter,
-      "aria-label": "Filter",
-      levels: FILTERS,
-    };
     const treeState = memo(
       (label: string, items: TreeItemData[]): TestResultsTreeState => ({
         controller: treeController,
@@ -506,14 +496,12 @@ export const testResultsPrimitive: TestResultsPrimitive = definePrimitive<
       },
       getExpanded: () => store.get().expanded,
       setExpanded: (values) => values.every(isBranch) && setExpanded(values),
-      readFilter: (event) => {
-        const next = filterController.getValue() as TestResultsFilter | undefined;
-        if (next === undefined || next === store.get().filter) return;
-        const accepted = change("filter", next, { reason: "input-change", event });
-        settle(accepted, syncFilter, context.options().filter !== undefined);
+      pressCount: (status, event) => {
+        const next = store.get().filter === status ? "all" : status;
+        if (!change("filter", next, { reason: "item-press", ...(event ? { event } : {}) }) || next === "all")
+          return;
+        if (!step.isOpen()) step.setOpen(true, { reason: "trigger-press", event });
       },
-      syncFilter,
-      filterState: () => filterState,
       readTree: (event) => {
         const expanded = treeController.getExpanded();
         if (expanded === undefined || sameValues(expanded, store.get().expanded)) return;
@@ -525,7 +513,7 @@ export const testResultsPrimitive: TestResultsPrimitive = definePrimitive<
               ? "item-press"
               : "list-navigation";
         const accepted = change("expanded", expanded, { reason, event });
-        settle(accepted, syncTree, context.options().expanded !== undefined);
+        settle(accepted, context.options().expanded !== undefined);
       },
       syncTree,
       treeState: (state) => treeState(state.title, itemsOf(state.suites, state.filter)),
@@ -543,12 +531,26 @@ export const testResultsPrimitive: TestResultsPrimitive = definePrimitive<
         state: ({ counts, duration }) => ({ counts, duration }),
       }),
       content,
-      filter: slot<BaseSlotProps, TestResultsFilterState>({
-        state: (state, { api }) => api.filterState(state),
-        attrs: (state) => ({ "data-test-results-part": "filter", "data-motion": state.motion }),
-        // UI SDK's Segmented Control fires a native `change` that bubbles, as native radios do.
-        on: { change: (event, { api }) => api.readFilter(event) },
-        bind: (_el, { api }) => api.syncFilter(),
+      // The counts, beside the trigger: pressing one shows only its tests, and pressing it again shows every test.
+      filter: slot({ attrs: () => ({ "data-test-results-part": "filter" }) }),
+      count: slot<CountProps & BaseSlotProps, TestResultsCountState>({
+        role: "button",
+        focus: "native",
+        props: { value: "string" },
+        selects: countParts,
+        state: (state, { props }) => {
+          const count = state.counts[props.value] ?? 0;
+          return { count, text: `${count} ${WORDS[props.value]}` };
+        },
+        press: ({ api, props }, event) => api.pressCount(props.value, event),
+        attrs: (state, { props }) => ({
+          type: "button",
+          "aria-pressed": state.filter === props.value ? "true" : "false",
+          "data-kind-button": "",
+          "data-kind-size": "sm",
+          "data-test-results-count": props.value,
+          "data-zero": state.counts[props.value] === 0 ? "" : undefined,
+        }),
       }),
       tree: slot<BaseSlotProps, TestResultsTreeState>({
         state: (state, { api }) => api.treeState(state),

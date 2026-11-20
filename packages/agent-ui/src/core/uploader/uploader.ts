@@ -7,13 +7,9 @@ import {
   type Part,
   type SlotDefinition,
 } from "@ui-sdk/core";
-import {
-  type FileInputOptions,
-  type FileInputValueChangeReason,
-  type FileRejection,
-  formatFileSize,
-} from "@ui-sdk/core/file-input";
+import type { FileInputOptions, FileInputValueChangeReason, FileRejection } from "@ui-sdk/core/file-input";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
+import { fileKind, fileSize } from "../file-info.js";
 import { type FileIntake, forwardFileInputEvents } from "../file-input-events.js";
 import { bindLeavingRow, createRowSlide, dropRow, type LeavingRow, leavingRows } from "../leaving.js";
 import { memo } from "../memo.js";
@@ -27,6 +23,8 @@ export type UploadItem = {
   name: string;
   /** In bytes. */
   size: number;
+  /** Picks the row's glyph with the name's extension, like `"image/png"`. */
+  mediaType?: string;
   /** From 0 to 100. */
   progress: number;
   status: UploadStatus;
@@ -137,14 +135,14 @@ const isActive = (item: UploadItem) => item.status === "queued" || item.status =
 
 /** What an upload row says under the name. */
 export function uploadDetail(item: UploadItem): string {
-  const size = formatFileSize(item.size);
+  const size = fileSize(item.size);
   switch (item.status) {
     case "queued":
       return `Waiting · ${size}`;
     case "uploading":
       return `${Math.round(item.progress)}% · ${size}`;
     case "done":
-      return size;
+      return `${size} · Uploaded`;
     case "error":
       return item.error ?? "Upload failed";
     case "cancelled":
@@ -381,6 +379,7 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
           "aria-hidden": row?.leaving ? "true" : undefined,
           "data-status": row?.item.status,
           "data-leaving": row?.leaving ? "" : undefined,
+          "data-file-kind": row && fileKind(row.item.name, row.item.mediaType),
         };
       },
       state: (state, { props }) => {
@@ -407,6 +406,7 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
           type: "button",
           "aria-label": action === "retry" ? `Retry ${name}` : `Cancel ${name}`,
           "data-action": action,
+          "data-kind-icon-button": "",
         };
       },
       bind: (el, part) => part.api.bindAction(el, part),

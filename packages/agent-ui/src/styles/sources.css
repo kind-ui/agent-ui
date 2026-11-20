@@ -5,20 +5,22 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: var(--kind-text-md);
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
     color: var(--kind-color-fg);
   }
 
   /* As wide as its text, so the summary stays compact; the count doesn't change the row's height. */
   [data-sources-part="trigger"] {
     width: auto;
-    font-weight: 500;
+    font-weight: var(--kind-font-weight-medium);
     font-variant-numeric: tabular-nums;
   }
 
   /* No guide line: the list sits under the trigger at full width. */
   [data-sources-part="content"] {
+    container: kind-sources / inline-size;
     align-self: stretch;
     margin-inline-start: 0;
     padding-inline-start: 0;
@@ -36,25 +38,49 @@
     gap: 2px;
   }
 
+  /* A row that lights under the pointer and darkens as it's pressed, when its link goes somewhere. */
   [data-sources-part="item"] {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    border-radius: calc(var(--kind-radius) / 2);
     padding: 6px;
-    transition: background-color var(--kind-duration-fast);
+    border-radius: var(--kind-radius-md);
+    transition: background-color var(--kind-duration-fast) var(--kind-ease-in-out);
 
     &:where(:has([data-sources-part="link"][href]:hover)) {
       background-color: var(--kind-color-hover);
     }
+    &:where(:has([data-sources-part="link"][href]:active)) {
+      background-color: var(--kind-color-pressed);
+    }
+  }
+
+  /* One row: icon, title, host. The title wraps to two lines and the host shrinks first, since the title names the
+     link. The icon and host line up with the title's first line. */
+  [data-sources-part="link"] {
+    display: flex;
+    min-width: 0;
+    align-items: flex-start;
+    gap: 8px;
+    border-radius: var(--kind-radius-sm);
+    color: inherit;
+    text-decoration: none;
+
+    &[href]:focus-visible {
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
+    }
   }
 
   [data-sources-part="title"] {
+    display: -webkit-box;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-weight: 500;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    font-weight: var(--kind-font-weight-medium);
+    overflow-wrap: anywhere;
 
     &:where([data-sources-part="link"][href]:hover *) {
       text-decoration: underline;
@@ -63,39 +89,28 @@
     }
   }
 
-  [data-sources-part="link"] {
-    display: flex;
-    min-width: 0;
-    align-items: center;
-    gap: 8px;
-    border-radius: calc(var(--kind-radius) / 3);
-    color: inherit;
-    text-decoration: none;
-
-    &[href]:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
-    }
-  }
-
+  /* A UI SDK Avatar of the favicon; without one, or until it loads, a link glyph. */
   [data-sources-part="icon"] {
     display: inline-flex;
     flex-shrink: 0;
+    margin-block: 2px;
+    /* Lucide "link", see THIRD_PARTY_NOTICES.md. */
+    --kind-sources-link-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/%3E%3Cpath d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/%3E%3C/svg%3E");
 
     & :where([data-slot="avatar"]) {
       position: relative;
       display: inline-flex;
       width: 16px;
       height: 16px;
-      align-items: center;
-      justify-content: center;
       overflow: hidden;
       border-radius: calc(var(--kind-radius) / 3);
-      background-color: color-mix(in oklab, var(--kind-color-muted) 16%, var(--kind-color-surface));
-      color: var(--kind-color-fg);
-      font-size: 0.625rem;
-      font-weight: 600;
-      line-height: 1;
+    }
+
+    & :where([data-slot="avatar-fallback"]) {
+      width: 100%;
+      height: 100%;
+      background-color: var(--kind-color-muted);
+      mask: var(--kind-sources-link-icon) center / 100% 100% no-repeat;
     }
 
     & :where(img) {
@@ -105,15 +120,31 @@
     }
   }
 
-  /* Shrinks before the title, which names the link, down to a readable floor. */
+  /* Shrinks before the title, down to a readable floor. */
   [data-sources-part="host"] {
     flex-shrink: 4;
     min-width: min(12ch, 30%);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
+    line-height: var(--kind-text-md-leading);
     color: var(--kind-color-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Narrow, the host takes its own line under the title, as in Inline Citation's card. */
+  @container kind-sources (width < 24rem) {
+    [data-sources-part="link"] {
+      display: grid;
+      grid-template-columns: 16px minmax(0, 1fr);
+      column-gap: 8px;
+    }
+    [data-sources-part="host"] {
+      grid-column: 2;
+      min-width: 0;
+      line-height: var(--kind-text-xs-leading);
+    }
   }
 
   /* Under the title, past the 16px icon and the 8px gap, two lines at most. */
@@ -125,14 +156,25 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
-    font-size: 0.8125rem;
-    line-height: 1.125rem;
+    font-size: var(--kind-text-sm);
+    line-height: var(--kind-text-sm-leading);
     color: var(--kind-color-muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-sources-part="item"] {
+      transition: none;
+    }
   }
 
   @media (forced-colors: active) {
     [data-sources-part="title"]:where([data-sources-part="link"][href] *) {
       color: LinkText;
+    }
+    /* Forced colors replace a background, which is all a mask draws. */
+    [data-sources-part="icon"] [data-slot="avatar-fallback"] {
+      forced-color-adjust: none;
+      background-color: CanvasText;
     }
   }
 }

@@ -12,7 +12,7 @@
     --kind-context-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M8 4.5v4.25'/%3E%3Cpath d='M8 11.5h.01'/%3E%3C/svg%3E");
 
     display: inline-flex;
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     line-height: 1rem;
     color: var(--kind-color-muted);
   }
@@ -24,31 +24,6 @@
     --kind-context-color: var(--kind-color-danger);
   }
 
-  [data-slot="kind-context-meter-trigger"] {
-    display: inline-flex;
-    align-items: center;
-    height: 1.75rem;
-    padding-inline: 6px;
-    border: 0;
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: transparent;
-    color: inherit;
-    font: inherit;
-    transition:
-      background-color var(--kind-duration-fast) var(--kind-ease-out),
-      color var(--kind-duration-fast) var(--kind-ease-out);
-
-    &:hover,
-    &[data-open] {
-      background-color: var(--kind-color-hover);
-      color: var(--kind-color-fg);
-    }
-    &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
-    }
-  }
-
   [data-slot="kind-context-meter-value"] {
     display: contents;
   }
@@ -57,7 +32,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    transition: --meter-value var(--kind-duration-panel) var(--kind-ease);
+    transition: --meter-value var(--kind-duration-panel) var(--kind-ease-enter);
   }
 
   /* The ring is the track's `::before`, the level's glyph its `::after`, so the glyph sits inside the ring without
@@ -76,7 +51,11 @@
       border-radius: 50%;
     }
     &::before {
-      background: conic-gradient(var(--kind-context-color) var(--meter-value), var(--kind-color-border) 0);
+      /* A track as visible as the arc's start, so a part-full ring reads as a gauge and not a spinner. */
+      background: conic-gradient(
+        var(--kind-context-color) var(--meter-value),
+        color-mix(in oklab, var(--kind-color-muted) 35%, transparent) 0
+      );
       mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
     }
   }
@@ -116,12 +95,7 @@
     width: 15rem;
     max-width: calc(100vw - 16px);
     padding: 12px;
-    border: 1px solid var(--kind-color-border);
-    border-radius: var(--kind-radius);
-    background-color: var(--kind-color-surface);
-    box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 20%, transparent);
-    color: var(--kind-color-fg);
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     line-height: 1rem;
     outline: none;
     transform-origin: var(--transform-origin);
@@ -130,7 +104,7 @@
   [data-slot="kind-context-meter-title"] {
     display: block;
     margin: 0;
-    font-size: 0.8125rem;
+    font-size: var(--kind-text-sm);
     font-weight: 600;
     line-height: 1.25rem;
   }
@@ -145,9 +119,7 @@
   [data-slot="kind-context-meter-rows"] {
     display: grid;
     gap: 4px;
-    margin: 10px 0 0;
-    padding-top: 10px;
-    border-top: 1px solid var(--kind-color-border);
+    margin: 0.75rem 0 0;
 
     & > div {
       display: flex;
@@ -163,30 +135,14 @@
     }
   }
 
-  /* Motion: the ring sweeps to a new value and the details rise in. Reduced motion only fades, in 120 ms; `none`
-     doesn't animate. */
-  :where([data-slot="kind-context-meter"]) [data-slot="kind-context-meter-content"] {
-    transition:
-      opacity var(--kind-duration-base) var(--kind-ease),
-      translate var(--kind-duration-base) var(--kind-ease),
-      scale var(--kind-duration-base) var(--kind-ease);
-
-    &:is([data-starting-style], [data-ending-style]) {
-      opacity: 0;
-      translate: 0 4px;
-      scale: 0.98;
-    }
-    &[data-ending-style] {
-      transition-duration: var(--kind-duration-fast);
-    }
-  }
-
+  /* Motion: the ring sweeps to a new value and the details scale in, as every shared popup does. Reduced motion
+     only fades, in 120 ms; `none` doesn't animate. */
   @media (prefers-reduced-motion: reduce) {
     :where([data-slot="kind-context-meter"][data-motion="auto"]) [data-slot="meter"] {
       transition: none;
     }
     :where([data-slot="kind-context-meter"][data-motion="auto"]) [data-slot="kind-context-meter-content"] {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
       &:is([data-starting-style], [data-ending-style]) {
         translate: none;
@@ -200,7 +156,7 @@
     transition: none;
   }
   :where([data-slot="kind-context-meter"][data-motion="reduced"]) [data-slot="kind-context-meter-content"] {
-    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
     &:is([data-starting-style], [data-ending-style]) {
       translate: none;

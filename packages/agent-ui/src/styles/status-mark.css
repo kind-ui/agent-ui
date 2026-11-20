@@ -17,7 +17,7 @@
     width: var(--kind-status-mark-size, 16px);
     height: var(--kind-status-mark-size, 16px);
     border-radius: 9999px;
-    border: var(--kind-status-mark-ring) dashed color-mix(in oklab, var(--kind-color-muted) 70%, transparent);
+    border: var(--kind-status-mark-ring) dashed color-mix(in oklab, var(--kind-color-muted) 80%, transparent);
     background-color: transparent;
     transition:
       border-color var(--kind-duration-base),
@@ -69,7 +69,8 @@
         background-color: var(--kind-color-warning);
         opacity: 1;
         transform: none;
-        animation: kind-pulse 1.6s ease-in-out infinite;
+        /* It waits on the person, so it calls three times, then holds still rather than nag. */
+        animation: kind-pulse 1.6s ease-in-out 3;
       }
     }
 

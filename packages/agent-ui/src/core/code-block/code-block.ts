@@ -203,6 +203,7 @@ export const codeBlockPrimitive: CodeBlockPrimitive = definePrimitive({
     root: slot({
       role: "group",
       attrs: (state) => ({
+        "data-kind-code": "",
         "data-wrap": state.wrap ? "" : undefined,
         "data-streaming": state.streaming ? "" : undefined,
       }),
@@ -217,6 +218,8 @@ export const codeBlockPrimitive: CodeBlockPrimitive = definePrimitive({
       press: ({ api }, event) => api.toggleWrap(event),
       attrs: (state) => ({
         type: "button",
+        "data-kind-icon-button": "",
+        "data-kind-size": "sm",
         "aria-label": "Wrap lines",
         "aria-pressed": String(state.wrap),
       }),
@@ -227,6 +230,8 @@ export const codeBlockPrimitive: CodeBlockPrimitive = definePrimitive({
       press: ({ api }) => void api.copy(),
       attrs: (state) => ({
         type: "button",
+        "data-kind-icon-button": "",
+        "data-kind-size": "sm",
         "aria-label": "Copy code",
         "data-copied": state.copied ? "" : undefined,
       }),

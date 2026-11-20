@@ -14,7 +14,7 @@ import { Question } from "@/components/ui/question";
 import { ReasoningEffort } from "@/components/ui/reasoning-effort";
 import { Suggestion } from "@/components/ui/suggestion";
 import { Tool } from "@/components/ui/tool";
-import { AnthropicLogo, GeminiLogo, MicrosoftLogo, OpenAILogo, XAILogo } from "../model-selector/logos";
+import { AnthropicLogo, GoogleMonogram, MicrosoftLogo, OpenAILogo, XAILogo } from "../model-selector/logos";
 
 const ASK = 5;
 const APPROVE = ASK + 1;
@@ -81,9 +81,9 @@ const models = [
     name: "Gemini 4 Argon",
     group: "Google",
     description: "Long context",
-    icon: <GeminiLogo />,
+    icon: <GoogleMonogram />,
   },
-  { id: "gemini-3.8-flash", name: "Gemini 3.8 Flash", group: "Google", icon: <GeminiLogo /> },
+  { id: "gemini-3.8-flash", name: "Gemini 3.8 Flash", group: "Google", icon: <GoogleMonogram /> },
   { id: "grok-4.7", name: "Grok 4.7", group: "xAI", icon: <XAILogo /> },
 ];
 

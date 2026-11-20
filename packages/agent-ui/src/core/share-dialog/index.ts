@@ -1,0 +1,17 @@
+export {
+  SHARE_DIALOG_DESCRIPTIONS,
+  SHARE_VISIBILITY_OPTIONS,
+  type ShareDialogActionDetails,
+  type ShareDialogActionState,
+  type ShareDialogApi,
+  type ShareDialogLinkState,
+  type ShareDialogOptions,
+  type ShareDialogPresentation,
+  type ShareDialogPrimitive,
+  type ShareDialogState,
+  type ShareDialogVisibilityState,
+  type ShareVisibility,
+  type ShareVisibilityChangeReason,
+  type ShareVisibilityOption,
+  shareDialogPrimitive,
+} from "./share-dialog.js";

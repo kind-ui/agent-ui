@@ -20,7 +20,7 @@ export default function PickerProjectExample() {
   return (
     <Picker
       label="Project"
-      placeholder="Search projects"
+      placeholder="Search projects…"
       items={projects}
       value={project}
       onValueChange={setProject}

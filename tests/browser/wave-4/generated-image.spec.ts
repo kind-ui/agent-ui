@@ -35,17 +35,15 @@ const host = <Key extends keyof Fixture["kindHost"]>(page: Page, key: Key, ...ar
     [key, args] as const,
   );
 const announced = (page: Page) => page.evaluate(() => (window as unknown as Fixture).kindAnnounced);
-// The shimmer loops while an image is on its way, so only animations that end are waited on.
-const settled = (page: Page) =>
-  page.waitForFunction(() =>
-    document
-      .getAnimations()
-      .every(
-        (animation) =>
-          animation.playState !== "running" ||
-          animation.effect?.getTiming().iterations === Number.POSITIVE_INFINITY,
-      ),
+// Two frames first, so a transition a change starts on the next frame (the dialog's entrance) is running by then.
+const settled = async (page: Page) => {
+  await page.evaluate(
+    () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
   );
+  await page.waitForFunction(() =>
+    document.getAnimations().every((animation) => animation.playState !== "running"),
+  );
+};
 
 const open = async (page: Page, name = "all") => {
   // Records each text UI SDK's live regions are given.
@@ -150,21 +148,26 @@ test("the trigger opens the image full size, and Escape returns focus to it", as
   await expect(trigger).toBeFocused();
 });
 
-test("the grain thins as progress rises and the field drifts at full motion only", async ({ page }) => {
-  const frame = () => part(page, "lifecycle", "frame");
-  const grain = () => frame().evaluate((el) => Number(getComputedStyle(el, "::after").opacity));
-  const drift = () => frame().evaluate((el) => getComputedStyle(el, "::before").animationName);
+test("the preview sharpens as progress rises and nothing loops while generating", async ({ page }) => {
+  const blur = () =>
+    part(page, "lifecycle", "preview").evaluate((el) =>
+      Number(/blur\(([\d.]+)px/.exec(getComputedStyle(el).filter)?.[1]),
+    );
+  const looping = () =>
+    page.evaluate(() =>
+      document
+        .getAnimations()
+        .some((animation) => animation.effect?.getTiming().iterations === Number.POSITIVE_INFINITY),
+    );
   await open(page);
   await expect(part(page, "lifecycle", "progress")).toHaveText("Creating image40%");
-  const early = await grain();
+  const early = await blur();
   await host(page, "progress", 90);
-  await expect.poll(grain).toBeLessThan(early);
-  expect(await drift()).toContain("kind-generated-image-drift");
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  expect(await drift()).toBe("none");
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-  await open(page, "reduced");
-  expect(await drift()).toBe("none");
+  await expect.poll(blur).toBeLessThan(early);
+  expect(await looping()).toBe(false);
+  expect(
+    await part(page, "lifecycle", "progress").evaluate((el) => getComputedStyle(el).backdropFilter),
+  ).toBe("none");
 });
 
 test("agents open, close and download once the image is loaded", async ({ page }) => {

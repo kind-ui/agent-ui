@@ -19,6 +19,11 @@ export type PlanOptions = ItemListOptions<PlanItem> & {
    */
   onAccept?: () => unknown;
   /**
+   * Whether the plan was accepted, which replaces Accept with "Accepted". Without it, a plan shows "Accepted" once a
+   * call to `onAccept` resolves.
+   */
+  accepted?: boolean;
+  /**
    * Whether an agent needs a person to approve its actions on the plan. UI SDK marks a whole component, so
    * `expand` and `collapse` ask too.
    * @default true
@@ -31,14 +36,20 @@ export type PlanState = ItemListState<PlanItem> & {
   canAccept: boolean;
   /** Whether a promise `onAccept` returned is still pending. */
   pending: boolean;
+  /** The `accepted` option, else whether a call to `onAccept` resolved. */
+  accepted: boolean;
   /** The `agentConfirm` option. */
   agentConfirm: boolean;
 };
 
 export type PlanApi = ItemListApi<PlanItem, PlanState> & {
-  /** Calls `onAccept`. Offered only while it's set and not pending. */
+  /** Calls `onAccept`. Offered only while it's set, not pending and the plan isn't accepted. */
   readonly accept: (() => void) | undefined;
-  /** Moves focus to the trigger when Accept leaves while focused. Called by the accept slot. */
+  /** Whether the plan reads as accepted. */
+  isAccepted: () => boolean;
+  /** Marks the plan accepted, or not, unless the host passes `accepted`. A web element put back keeps it this way. */
+  setAccepted: (accepted: boolean) => void;
+  /** Moves focus to "Accepted", else the trigger, when Accept leaves while focused. Called by the accept slot. */
   acceptRecovery: ReturnType<typeof createFocusRecovery>;
 };
 
@@ -63,6 +74,8 @@ type PlanSlots = {
   "item-title": ItemSlot<{ title: string }>;
   "item-description": ItemSlot<{ description: string }>;
   accept: Slot<BaseSlotProps, { pending: boolean }>;
+  outcome: Slot;
+  "outcome-icon": Slot;
 };
 
 // Named explicitly because the inferred type references UI SDK types that no public entry exports (TS2742).
@@ -79,25 +92,57 @@ const presentation = (options: PlanOptions) => ({
   agentConfirm: options.agentConfirm ?? true,
 });
 
+// A plan is the same plan while its item ids are, so an accept of an earlier one doesn't count for it.
+const planKey = (options: PlanOptions) => (options.items ?? []).map((item) => item.id).join("\n");
+
 export const planPrimitive: PlanPrimitive = definePrimitive<PlanOptions, PlanState, PlanApi, PlanSlots>({
   name: "kind-plan",
   ...list,
-  options: { ...list.options, onAccept: "action", agentConfirm: "boolean" },
-  state: (options) => ({ ...list.state(options), ...presentation(options), pending: false }),
+  options: { ...list.options, onAccept: "action", accepted: "boolean", agentConfirm: "boolean" },
+  state: (options) => ({
+    ...list.state(options),
+    ...presentation(options),
+    accepted: options.accepted ?? false,
+    pending: false,
+  }),
   sync: (options) => ({ ...list.sync(options), ...presentation(options) }),
   api: (context) => {
     const { store } = context;
-    const pendingAccept = createPendingAction(context, { state: "pending" });
+    let key = planKey(context.options());
+    // Whether a call to `onAccept` resolved for this plan, which counts while the host doesn't pass `accepted`.
+    let called = false;
+    const pendingAccept = createPendingAction(context, { state: "pending", key: () => key });
+    context.onOptions((options) => {
+      const next = planKey(options);
+      if (next !== key) {
+        key = next;
+        called = false;
+        pendingAccept.release();
+      }
+      const accepted = options.accepted ?? called;
+      if (accepted !== store.get().accepted) store.set({ accepted });
+    });
+    const setAccepted = (accepted: boolean) => {
+      called = accepted;
+      store.set({ accepted: context.options().accepted ?? called });
+    };
     const accept = () => {
       const { onAccept } = context.options();
-      if (onAccept) pendingAccept.run(onAccept);
+      if (!onAccept) return;
+      void pendingAccept.run(onAccept)?.then((outcome) => {
+        if (outcome === "done") setAccepted(true);
+      });
     };
     return {
       ...list.api(context),
-      acceptRecovery: createFocusRecovery({ fallback: () => context.element("trigger") }),
+      isAccepted: () => store.get().accepted,
+      setAccepted,
+      acceptRecovery: createFocusRecovery({
+        fallback: () => context.element("outcome") ?? context.element("trigger"),
+      }),
       get accept() {
-        const { canAccept, pending } = store.get();
-        return canAccept && !pending ? accept : undefined;
+        const { canAccept, pending, accepted } = store.get();
+        return canAccept && !pending && !accepted ? accept : undefined;
       },
     };
   },
@@ -131,16 +176,32 @@ export const planPrimitive: PlanPrimitive = definePrimitive<PlanOptions, PlanSta
       accept: slot<BaseSlotProps, { pending: boolean }>({
         role: "button",
         focus: "native",
-        present: (state) => state.canAccept,
+        present: (state) => state.canAccept && !state.accepted,
         press: ({ api }) => api.accept?.(),
         state: (state) => ({ pending: state.pending }),
         attrs: (state) => ({
           type: "button",
           "aria-disabled": state.pending ? "true" : undefined,
           "data-step-part": "accept",
+          "data-kind-button": "primary",
           "data-pending": state.pending ? "" : undefined,
         }),
         bind: (el, part) => part.api.acceptRecovery.bind(el, part),
+      }),
+      // Takes Accept's place at its height, so the decision stays on the page. A Tab stop, so focus has somewhere
+      // to go when Accept leaves.
+      outcome: slot({
+        focus: "tab-stop",
+        present: (state) => state.accepted,
+        attrs: () => ({ tabindex: "0", "data-step-part": "outcome" }),
+      }),
+      "outcome-icon": slot({
+        attrs: (state) => ({
+          "aria-hidden": "true",
+          "data-status-mark": "",
+          "data-status": "complete",
+          "data-motion": state.motion,
+        }),
       }),
     };
   },

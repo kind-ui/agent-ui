@@ -7,7 +7,7 @@ const BUDGETS = {
   conversationStream: { writes: 1, renders: 9, notified: 0 },
   conversationFollow: { layoutReads: 12 },
   markdownStream: { parses: 1, writes: 4, renders: 6, notified: 3 },
-  toolStream: { writes: 14, renders: 25, notified: 17 },
+  toolStream: { writes: 14, renders: 26, notified: 17 },
   terminalChunk: { writes: 6, renders: 7, notified: 4, layoutReads: 17 },
   // A new line in a full viewport reads layout 16 times (17 under StrictMode, which binds the new line twice). The
   // line that first fills the 10-line case's viewport both grows and scrolls it, which the virtualizer reads twice more.
@@ -21,6 +21,25 @@ const BUDGETS = {
   // Widths come from a ResizeObserver's entries, so fitting the chips reads no layout.
   contextChip: { writes: 27, renders: 8, notified: 9, layoutReads: 0 },
   remount: { nodes: 0, listeners: 0 },
+
+  // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its budgets right below its own line.
+
+  // wave-6-task-2: Thread List
+
+  // Rows are 36px in a 600px column, so as many are in view at 10 threads as at 1,000, whatever the fonts. Pinning
+  // moves every row in view down one; appending to 10 threads fills the column with new rows. A row's time is one more
+  // part per row: a render, a re-read and two writes (its `aria-hidden` and text) for each row a change reaches.
+  threadSelect: { writes: 5, renders: 11, notified: 16, layoutReads: 2 },
+  threadPin: { writes: 119, renders: 39, notified: 199, layoutReads: 2 },
+  threadAppend: { writes: 214, renders: 84, notified: 85, layoutReads: 2 },
+
+  // wave-6-task-11: Conversation Search
+
+  // The fixture's rows are 48px in a 480px viewport, so the same rows are in view at 100 and 5,000 messages, and the
+  // 480px track holds at most 120 marks, placed by index rather than measured. What a character costs beyond the rows
+  // in view is the marks it moves: at 100 messages, about 40 marks come and go (3 writes each on web, which also
+  // re-reads every mark); at 5,000 every 4px step holds a match whatever the search, so no mark moves.
+  conversationSearchType: { writes: 151, renders: 88, notified: 128, layoutReads: 4 },
 };
 const SIZES = [10, 500];
 
@@ -299,6 +318,54 @@ for (const chips of [10, 200]) {
     expect(counts.renders).toBeLessThanOrEqual(BUDGETS.contextChip.renders);
     expect(counts.notified).toBeLessThanOrEqual(BUDGETS.contextChip.notified);
     expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS.contextChip.layoutReads);
+  });
+}
+
+// Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its tests right below its own line.
+
+// wave-6-task-2: Thread List
+
+// Selecting, pinning and loading more reach the rows they change and the rows in view, at 10 threads as at 1,000.
+const THREAD_ACTIONS = {
+  threadSelect: `kindThreadList.setValue((window.kindSelected = window.kindSelected === "m3" ? "m1" : "m3"))`,
+  threadPin: `kindThreadList.setThreads((threads) =>
+    threads.map((thread) => (thread.id === "m5" ? { ...thread, pinned: !thread.pinned } : thread)))`,
+  threadAppend: `kindThreadList.setThreads((threads) => [...threads, ...kindThreadList.manyThreads(20, threads.length)])`,
+} as const;
+for (const threads of ["ten", "thousand"])
+  for (const [name, action] of Object.entries(THREAD_ACTIONS) as [keyof typeof THREAD_ACTIONS, string][])
+    test(`${name} among ${threads} threads`, async ({ page }) => {
+      await page.goto(`/?c=thread-list&case=${threads}`);
+      await expect(page.getByRole("link", { name: "Thread 1", exact: true })).toBeVisible();
+      const counts = await most(page, 4, action);
+      expect(counts.writes).toBeLessThanOrEqual(BUDGETS[name].writes);
+      expect(counts.renders).toBeLessThanOrEqual(BUDGETS[name].renders);
+      expect(counts.notified).toBeLessThanOrEqual(BUDGETS[name].notified);
+      expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS[name].layoutReads);
+    });
+
+// wave-6-task-11: Conversation Search
+
+// Typing a character re-renders the marks it moves and the rows in view, not the messages: at 100 as at 5,000.
+for (const messages of [100, 5000]) {
+  test(`typing a character in a search over ${messages} messages`, async ({ page }) => {
+    await page.goto(`/?c=conversation-search&case=many-${messages}`);
+    await expect(page.locator('[data-slot="kind-conversation-row"]').first()).toBeVisible();
+    await page.evaluate(() =>
+      (window as unknown as { kindSearch: { set(query: string): void } }).kindSearch.set("r"),
+    );
+    await expect(page.locator('[data-slot="kind-conversation-search-count"]')).not.toHaveText("");
+    const counts = await most(
+      page,
+      20,
+      'kindSearch.set(["re", "r", "ro", "r"][(window.kindStep = (window.kindStep ?? 0) + 1) % 4])',
+    );
+    const marks = await page.locator('[data-slot="kind-conversation-mark"]').count();
+    expect(marks).toBeLessThanOrEqual(120);
+    expect(counts.writes).toBeLessThanOrEqual(BUDGETS.conversationSearchType.writes);
+    expect(counts.renders).toBeLessThanOrEqual(BUDGETS.conversationSearchType.renders);
+    expect(counts.notified).toBeLessThanOrEqual(BUDGETS.conversationSearchType.notified);
+    expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS.conversationSearchType.layoutReads);
   });
 }
 

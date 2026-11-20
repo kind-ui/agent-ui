@@ -1,0 +1,105 @@
+---
+title: Thread Search
+description: Find a past conversation, or start a new one, from a search dialog.
+---
+
+import ThreadSearchExample from "../../../examples/thread-search/basic";
+
+Use a thread search to let people jump to any conversation they've had with the agent, by its title or what was said in it. The button opens a dialog with a search field over the threads, grouped by date, and a **New chat** row after them.
+
+<Example caption="Press Search chats, or press Cmd+K or Ctrl+K, type build, then press Enter to open the thread. Choose New chat to start one with what you typed.">
+  <ThreadSearchExample />
+
+  <include cwd lang="tsx">./examples/thread-search/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/thread-search
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/thread-search-web
+```
+
+## Composition
+
+```text
+ThreadSearch
+├── ThreadSearchTrigger
+│   └── ThreadSearchShortcut
+├── ThreadSearchBackdrop
+└── ThreadSearchContent
+    └── ThreadSearchList
+        └── ThreadSearchSectionRows
+            └── ThreadSearchRowItem
+                └── ThreadSearchItem
+                    └── ThreadSearchStatus
+```
+
+`ThreadSearchTrigger` is the button, with a search icon, the `label` and `ThreadSearchShortcut`, the `shortcut`'s keys. `ThreadSearchBackdrop` dims the page under the dialog, and a press on it closes the dialog. `ThreadSearchContent` is the dialog, and `ThreadSearchList` is UI SDK's Command inside it: the search field, its status line, the text shown while nothing matches, and the rows. To arrange the rows yourself, pass `ThreadSearchList` a function of its state that renders `ThreadSearchSectionRows` for each group. `ThreadSearchRowItem` is a row, and `ThreadSearchItem` is its content: the title, the snippet, `ThreadSearchStatus` (the thread's status mark, named in words) and the date.
+
+## Usage
+
+### Threads
+
+Pass `threads`, each with an `id` and a `title`, and optionally `updatedAt` (an ISO date-time), `pinned`, a `group`, a `snippet` (a second line under the title) and a `status` (`running`, `awaiting-input` or `error`, shown as a status mark named in words).
+
+Threads are grouped as Thread List groups them: pinned ones first, then each `group` in the order it first appears, then by date from `updatedAt`: Today, Yesterday, Previous 7 days, Previous 30 days, then months and years. A pinned or grouped thread shows its date at the end of its row, like Nov 2. Pass `groupLabels` to rename the fixed groups, by key (`pinned`, `today`, `previous-7-days`, …).
+
+The date groups depend on today. Pass `now`, an ISO date or an instant, so a server and a browser group the same; without it, it's today in `timeZone`, which is UTC by default. Set `locale` for the groups' words.
+
+### Searching
+
+While the search is empty, only the newest 20 threads show. Typing searches every thread for the text as typed, in its title and snippet, and marks it. Threads whose title holds it come first, and each group moves to where its best match is. When nothing matches, the list shows `emptyText` ("No chats found"). Set `placeholder` to change the field's "Search chats…", and `label` to rename the button and the dialog.
+
+### Choosing a Thread
+
+Choosing a thread calls `onSelect` with its `id`, with the reason `item-press` when a person chose it, or `imperative` from `select`, and closes the dialog. Cancel it with `details.cancel()` to keep the dialog open. The component doesn't follow a thread's `href`, so navigate in `onSelect`.
+
+### New Chat
+
+Pass `onNew` to add a **New chat** row after the threads (`newLabel` renames it). It shows whatever the search, below "No chats found" when nothing matches, and names what was typed, like **New chat: “launch plan”**. It gets the search text, so the new conversation can start with what the person typed, and closes the dialog unless you cancel it.
+
+### Shortcut
+
+Pass `shortcut`, like `"mod+k"`, to open the dialog from anywhere on the page. `mod` is Cmd on Apple platforms and Ctrl elsewhere, and the button shows the keys as the platform writes them, like ⌘K. There's no shortcut by default, and it does nothing while another modal dialog is open.
+
+### Server Search
+
+To search on your server, pass `filter={false}`. The dialog then shows `threads` as you pass them, in your order and ungrouped, with **Pinned** or the date at the end of each row. Follow `onQueryChange`, or control `query`, to run the search, and set `status` while it runs:
+
+```tsx
+<ThreadSearch
+  threads={results}
+  filter={false}
+  status={loading ? "loading" : failed ? "error" : "idle"}
+  onQueryChange={(query) => searchThreads(query)}
+  onSelect={(id) => router.push(`/chat/${id}`)}
+/>
+```
+
+While `status` is `"loading"`, the status line says `loadingText` ("Searching") and the list is `aria-busy`. With `"error"` it says `errorText` ("Search failed").
+
+### Keyboard
+
+The button is one Tab stop. Enter or Space opens the dialog with focus in the search field. The arrow keys move the highlight, and Enter chooses. Escape clears the search, then closes the dialog, and focus returns to the button. A line under the list, `ThreadSearchHints`, shows these keys to the eye; screen readers skip it, and touch screens hide it.
+
+### Presentation and Motion
+
+The search opens as a modal dialog over the page. With `presentation="auto"`, the default, it's a bottom sheet on small touch screens instead; pass `"sheet"` to always show a sheet. The dialog rises and fades in. Under `prefers-reduced-motion`, or with `motion="reduced"`, it only fades, over 120 ms, and with `motion="none"` it opens at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/thread-search/thread-search.ts" name="ThreadSearchOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the search by its label and reads `open` and `query`. Its `search` types into the field, as a person would. `select` takes a thread's `id` and refuses an unknown one, and is offered only while `onSelect` is set. `newThread` runs **New chat** with the search text and is offered only while `onNew` is set. None of them opens or closes the dialog, and none is offered while the search is `disabled`.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/thread-search/thread-search.ts" name="ThreadSearchAgentActions" type='Pick<ThreadSearchApi, "open" | "close" | "search" | "select" | "newThread">' />
+
+<Caption>
+  Runs in React and Web Components. Call `defineThreadSearch()` from the web entry, then on `<kind-thread-search shortcut="mod+k" can-select can-new>` set `threads` and `query` as properties, and listen for `threadselect`, with the thread's `id` as `event.detail.value`, `threadnew`, with the search text, `threadquerychange` and `openchange`. `can-select` and `can-new` offer choosing a thread and **New chat**.
+</Caption>

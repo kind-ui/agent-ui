@@ -11,34 +11,39 @@
     list-style: none;
   }
 
-  [data-step-part="item"] {
-    position: relative;
-    display: grid;
-    grid-template-columns: 16px minmax(0, 1fr);
-    column-gap: 8px;
-    align-items: start;
-    border-radius: calc(var(--kind-radius) / 2);
+  /* One row for every list in the family: Task and Plan items and Queue rows. Chain of Thought steps are Step
+     triggers, which have the same padding. */
+  :is([data-step-part="item"], [data-slot="kind-queue-item"]) {
+    border-radius: var(--kind-radius-md);
     padding: 4px 6px;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: var(--kind-text-md);
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
     color: var(--kind-color-fg);
     transition: background-color var(--kind-duration-fast);
 
     &:focus-visible {
-      background-color: var(--kind-color-hover);
-      outline: 1.5px solid color-mix(in oklab, var(--kind-color-ring) 50%, transparent);
-      outline-offset: -1.5px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
     }
 
     /* Centered on the first line. */
-    & > [data-step-part="icon"] {
+    & > :is([data-step-part="icon"], [data-slot="kind-queue-item-icon"]) {
       margin-block: calc(0.5lh - var(--kind-status-mark-size, 16px) / 2);
     }
+  }
+
+  [data-step-part="item"] {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--kind-status-mark-size, 16px) minmax(0, 1fr);
+    column-gap: 8px;
+    align-items: start;
 
     & > [data-step-part="title"] {
       overflow: visible;
       white-space: normal;
-      font-weight: 400;
+      font-weight: var(--kind-font-weight-regular);
       transition: color var(--kind-duration-fast);
     }
 
@@ -49,18 +54,27 @@
     &[data-status="skipped"] > [data-step-part="title"] {
       text-decoration: line-through;
     }
+  }
 
-    /* Runs from this item's mark to the next item's, 2px clear of each: the marks center on the item's 4px padding
-       plus half its line, and the list's gap is 2px. */
-    &:not(:last-child)::before {
-      content: "";
-      position: absolute;
-      inset-inline-start: 13.25px;
-      top: calc(4px + 0.5lh + 8px + 2px);
-      bottom: calc(-1 * (2px + 4px + 0.5lh - 8px - 2px));
-      width: 1.5px;
-      background-color: var(--kind-color-border);
-    }
+  /* One loop for one wait: while the list is open and an item in it runs, the summary's mark holds still. Between
+     items it spins again, so something always says the list is working. */
+  :where([data-step-part="root"]:has([data-step-part="item"][data-status="running"]))
+    > :where([data-step-part="trigger"][data-open])
+    > [data-step-part="icon"]::before {
+    animation: none;
+  }
+
+  /* The line joining a list's marks, from this row's mark to the next row's, 2px clear of each: the marks center on
+     the row's 4px padding plus half its line, and the list's gap is 2px. It runs past a Chain of Thought step's open
+     content. */
+  :is([data-step-part="item"], [data-slot="kind-chain-of-thought-item"]):not(:last-child)::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: var(--kind-step-guide);
+    top: calc(4px + 0.5lh + var(--kind-status-mark-size, 16px) / 2 + 2px);
+    bottom: calc(-1 * (2px + 4px + 0.5lh - var(--kind-status-mark-size, 16px) / 2 - 2px));
+    width: var(--kind-step-guide-width);
+    background-color: var(--kind-color-border);
   }
 
   [data-step-part="files"],
@@ -68,35 +82,31 @@
     grid-column: 2;
   }
 
+  /* Plain paths, not chips: the row is the container. */
   [data-step-part="files"] {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-    padding-block: 2px;
+    column-gap: 0.375rem;
+    color: var(--kind-color-muted);
 
     & > code {
-      border: 1px solid var(--kind-color-border);
-      border-radius: calc(var(--kind-radius) / 3);
-      padding: 0 5px;
       font-family: var(--kind-font-mono);
-      font-size: 0.75rem;
-      line-height: 1.125rem;
-      color: var(--kind-color-muted);
+      font-size: var(--kind-text-xs);
+      line-height: var(--kind-text-xs-leading);
+      letter-spacing: var(--kind-text-xs-tracking);
+      overflow-wrap: anywhere;
+    }
+    & > code:not(:last-child)::after {
+      content: "·";
+      margin-inline-start: 0.375rem;
     }
   }
 
   [data-step-part="description"] {
-    font-size: 0.8125rem;
-    line-height: 1.125rem;
+    font-size: var(--kind-text-sm);
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
     color: var(--kind-color-muted);
-  }
-
-  /* Open, the running item shows the activity, so the title above it holds still. */
-  :is([data-slot="kind-task"], [data-slot="kind-plan"])[data-open]
-    :is([data-slot="kind-task-title"], [data-slot="kind-plan-title"])[data-status="running"] {
-    color: var(--kind-color-fg);
-    background: none;
-    animation: none;
   }
 
   /* Web keeps parts that aren't present in the page, with `hidden`. */

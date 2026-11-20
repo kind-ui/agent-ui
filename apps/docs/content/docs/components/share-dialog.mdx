@@ -1,0 +1,105 @@
+---
+title: Share Dialog
+description: Let someone choose who can open a chat, then create, copy or stop sharing its link.
+---
+
+import ShareDialogExample from "../../../examples/share-dialog/basic";
+import SharedViewExample from "../../../examples/share-dialog/shared-view";
+
+Use a share dialog to put a **Share** button beside a chat. Its dialog chooses between **Only you** and **Anyone with the link**, and shows the link you make.
+
+<Example caption="Press Share, choose Anyone with the link, then press Create link. Press Copy link to copy it, or Stop sharing to make the chat private again. Press Done or Escape to close the dialog.">
+  <ShareDialogExample />
+
+  <include cwd lang="tsx">./examples/share-dialog/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/share-dialog
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/share-dialog-web
+```
+
+## Composition
+
+```text
+ShareDialog
+├── ShareDialogTrigger
+├── ShareDialogBackdrop
+└── ShareDialogContent
+    ├── ShareDialogTitle
+    ├── ShareDialogDescription
+    ├── ShareDialogVisibility
+    ├── ShareDialogCreate
+    ├── ShareDialogLink
+    ├── ShareDialogCopy
+    ├── ShareDialogError
+    ├── ShareDialogRevoke
+    └── ShareDialogClose
+```
+
+`ShareDialogTrigger` is the **Share** button, named by `label`. `ShareDialogContent` is a modal dialog over `ShareDialogBackdrop`, titled by `dialogLabel` ("Share chat") and described by `ShareDialogDescription`, which says what the choice means. `ShareDialogVisibility` is a UI SDK Segmented Control with the two choices, and `ShareDialogLink` the link in a read-only UI SDK Input. `ShareDialogCreate`, `ShareDialogCopy` and `ShareDialogRevoke` are **Create link**, **Copy link** and **Stop sharing**, `ShareDialogError` says what went wrong, and `ShareDialogClose` is **Done**. To arrange the parts yourself, pass them as children of `ShareDialog`.
+
+## Usage
+
+### Who Can Open the Chat
+
+A chat starts private. Pass `defaultVisibility`, or `visibility` with `onVisibilityChange`, to set it yourself. Choosing **Anyone with the link** only changes `visibility`: nothing is shared until there's a link.
+
+### Making the Link
+
+The component never builds a URL. While `visibility` is `"link"`, there's no `link` and `onCreateLink` is set, the dialog shows **Create link**. Make the link in `onCreateLink`, on your server, and pass it back as `link`:
+
+```tsx
+<ShareDialog
+  visibility={visibility}
+  onVisibilityChange={setVisibility}
+  link={chat.shareUrl}
+  onCreateLink={() => shareChat(chat.id)}
+  onRevoke={() => unshareChat(chat.id)}
+/>
+```
+
+Return a promise to keep **Create link** pending until it settles: it reads **Creating link** beside a running mark. If it rejects, the dialog shows "Couldn't create a link", tells screen readers, and offers **Create link** again.
+
+Once there's a `link`, the dialog shows it with **Copy link**, which copies it and reads **Copied** for 2 seconds. `onCopy` runs first, and `details.cancel()` keeps it from writing to the clipboard.
+
+### Stop Sharing
+
+**Stop sharing** shows while there's a `link` and `onRevoke` is set. Revoke the link in `onRevoke`, then clear `link`, and usually set `visibility` back to `"private"`, as the example does. A returned promise keeps it pending, reading **Stopping**, and a rejection shows and announces "Couldn't stop sharing".
+
+### Presentation and Motion
+
+With `presentation="auto"`, the default, the dialog is centered on the page, and a bottom sheet on small touch screens. Pass `"dialog"` or `"sheet"` to choose one. Escape, **Done** or a press outside closes it, and focus returns to **Share**. Pass `defaultOpen`, or `open` with `onOpenChange`, to open it yourself.
+
+The dialog rises in at full motion. Under `prefers-reduced-motion`, or with `motion="reduced"`, it only fades, over 120 ms, and with `motion="none"` it opens at once.
+
+### Shared View
+
+Someone who opens a share link should read the chat, not continue it. Render the [conversation](./conversation.mdx) with [messages](./message.mdx) that have no callbacks, so there's nothing to edit or regenerate, under a [notice](./notice.mdx) with a button that starts their own copy:
+
+<Example caption="A shared copy of a chat: the messages have no actions, and Continue this chat sits in the notice above them.">
+  <SharedViewExample />
+
+  <include cwd lang="tsx">./examples/share-dialog/shared-view.tsx</include>
+</Example>
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/share-dialog/share-dialog.ts" name="ShareDialogOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the dialog by its `label` and reads `open` and `visibility`. `open()` is offered while the dialog is closed, and the others while it's open: `setVisibility` while nothing is pending, `createLink` and `revoke` while their buttons show, and `copyLink` while there's a link.
+
+Making a chat public is a consequential change, so with `agentConfirm`, on by default, every agent action needs a person's go-ahead. Pass `agentConfirm={false}` only when your app asks for it another way.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/share-dialog/share-dialog.ts" name="ShareDialogAgentActions" type='Pick<ShareDialogApi, "open" | "close" | "setVisibility" | "createLink" | "copyLink" | "revoke">' />
+
+<Caption>
+  Runs in React and Web Components. On `<kind-share-dialog>`, the props are kebab-case attributes, so `dialogLabel` is `dialog-label`. The `can-create-link` attribute offers Create link, which fires `createlink`, and `can-revoke` offers Stop sharing, which fires `revoke`. `onVisibilityChange` is `sharevisibilitychange`, `onCopy` is `linkcopy` and `onOpenChange` is `openchange`. Set `link` once you've made one. The element fills in its trigger and dialog when it has no children.
+</Caption>

@@ -26,7 +26,7 @@ Send \`If-None-Match\` with the last \`ETag\`. A 304 doesn't count against the l
 
 const downloads = [
   { id: "md", label: "Markdown" },
-  { id: "txt", label: "Text" },
+  { id: "txt", label: "Plain text" },
 ];
 
 function save(formatId: string | undefined) {

@@ -1,6 +1,5 @@
 import "@ui-sdk/web/avatar";
 import {
-  avatarInitials,
   type StepApi,
   type StepOpenChangeReason,
   type SubagentState,
@@ -11,8 +10,8 @@ import { createParts, type UiActionDetail, wrappedButton } from "@ui-sdk/web";
 import type { AttributeProperties, UiChangeEvent, UiElement } from "@ui-sdk/web/events";
 import { defineMarkdown, type KindMarkdownElement } from "./markdown.js";
 
-const TRIGGER = `<kind-subagent-trigger><button><kind-subagent-avatar></kind-subagent-avatar><kind-subagent-title></kind-subagent-title><kind-subagent-icon></kind-subagent-icon><kind-subagent-meta></kind-subagent-meta></button></kind-subagent-trigger>`;
-const END = `<kind-subagent-cancel><button>Stop</button></kind-subagent-cancel><kind-subagent-result></kind-subagent-result>`;
+const TRIGGER = `<kind-subagent-trigger><button><kind-subagent-icon></kind-subagent-icon><kind-subagent-avatar></kind-subagent-avatar><kind-subagent-title></kind-subagent-title><kind-subagent-meta></kind-subagent-meta></button></kind-subagent-trigger>`;
+const END = `<kind-subagent-cancel><button><span data-kind-pending-mark="" data-status-mark="" data-status="running" aria-hidden="true"></span>Stop</button></kind-subagent-cancel><kind-subagent-result></kind-subagent-result>`;
 
 // Parts this element filled in. A part someone wrote into keeps what they wrote, as React's children do. Kept
 // across instances, because UI SDK rebuilds one when the element returns to the page.
@@ -28,25 +27,21 @@ const fill = (part: Element | null, text: string) => {
   if (claim(part) && part.textContent !== text) part.textContent = text;
 };
 
-/** Fills an empty avatar part with a UI SDK Avatar, and keeps the one it wrote current. */
-const drawAvatar = (part: Element | null, name: string, src: string | undefined) => {
+/** Fills an empty avatar part with a UI SDK Avatar of `src`, and keeps the one it wrote current. */
+const drawAvatar = (part: Element | null, src: string | undefined) => {
   if (!claim(part)) return;
-  let avatar = part.querySelector("ui-avatar");
-  if (!avatar) {
-    avatar = part.ownerDocument.createElement("ui-avatar");
-    avatar.append(part.ownerDocument.createElement("ui-avatar-fallback"));
+  let image = part.querySelector("ui-avatar > img");
+  if (!src) {
+    image?.remove();
+    return;
+  }
+  if (!image) {
+    const avatar = part.ownerDocument.createElement("ui-avatar");
+    image = avatar.appendChild(part.ownerDocument.createElement("img"));
+    image.setAttribute("alt", "");
     part.replaceChildren(avatar);
   }
-  let image = avatar.querySelector(":scope > img");
-  if (src) {
-    if (!image) {
-      image = part.ownerDocument.createElement("img");
-      image.setAttribute("alt", "");
-      avatar.prepend(image);
-    }
-    if (image.getAttribute("src") !== src) image.setAttribute("src", src);
-  } else image?.remove();
-  fill(avatar.querySelector("ui-avatar-fallback"), avatarInitials(name));
+  if (image.getAttribute("src") !== src) image.setAttribute("src", src);
 };
 
 /**
@@ -86,11 +81,10 @@ export function defineSubagent(): void {
           content.insertAdjacentHTML("afterend", END);
         }
         const draw = () => {
-          const { title, status, durationSeconds, agentName, avatarSrc, result } =
-            instance.get() as SubagentState;
+          const { title, status, durationSeconds, avatarSrc, result } = instance.get() as SubagentState;
           fill(own("kind-subagent-title"), title);
           fill(own("kind-subagent-meta"), subagentStatus(status, durationSeconds));
-          drawAvatar(own("kind-subagent-avatar"), agentName, avatarSrc);
+          drawAvatar(own("kind-subagent-avatar"), avatarSrc);
           const resultPart = own("kind-subagent-result");
           if (claim(resultPart)) {
             let markdown = resultPart.querySelector<KindMarkdownElement>(":scope > kind-markdown");

@@ -16,6 +16,26 @@
 - Used in: `.agents/skills/documentation-writer`, installed unchanged with `npx skills add` (`skills-lock.json`). Not shipped in the package.
 - Copyright GitHub, Inc. Licensed under the MIT License.
 
+## emilkowalski/skills (Apple Design)
+
+- Source: https://github.com/emilkowalski/skills, commit `64eb3deb9a5fbfa041faf783e0bc3fd635872e9c`, `skills/apple-design/SKILL.md`.
+- Used in: `.agents/skills/apple-design/SKILL.md`, unchanged. Not shipped in the package.
+- Copyright (c) 2026 Emil Kowalski. Licensed under the MIT License.
+
+## pbakaus/impeccable
+
+- Source: https://github.com/pbakaus/impeccable, commit `b49177d32788f2dc585c42831d845dacf1ebed2c` (version 4.10.0), the built skill in `.cursor/skills/impeccable/`: `SKILL.md` and `reference/audit.md`, `critique.md`, `critique-rubric.md`, `polish.md`, `distill.md` and `craft-floor.md`.
+- Used in: `.agents/skills/impeccable/`. Not shipped in the package.
+- Changes: `SKILL.md` cut to the `audit`, `critique`, `polish` and `distill` commands and the Operate and Read modes, with an "In this repository" section replacing the launcher setup; the references' launcher path (`.cursor/skills/impeccable/scripts/impeccable`) shortened to `impeccable`. The launcher, scripts, hooks, agents and the other commands and references are not included. The upstream `NOTICE.md` covers only files not included here.
+- Copyright Paul Bakaus. Licensed under the Apache License, Version 2.0.
+
+## vercel-labs/web-interface-guidelines
+
+- Source: https://github.com/vercel-labs/web-interface-guidelines, commit `434b7f91364665f2f733b310ec54809bf8f37937`, `AGENTS.md`.
+- Used in: `.agents/skills/web-interface-guidelines/SKILL.md`. Not shipped in the package.
+- Changes: a skill header (`name`, `description`) added before the unchanged text.
+- Copyright (c) 2025 Vercel Labs. Licensed under the MIT License.
+
 ## vercel/streamdown
 
 - Source: https://github.com/vercel/streamdown, `packages/streamdown/lib/parse-blocks.tsx`.
@@ -25,16 +45,51 @@
 
 ## Lucide
 
-- Source: https://github.com/lucide-icons/lucide, the `check`, `x`, `minus`, `arrow-down`, `copy`, `wrap-text`, `refresh-cw`, `pencil`, `chevron-left`, `chevron-right`, `arrow-up`, `paperclip`, `at-sign`, `square-slash`, `file`, `circle-alert`, `upload`, `thumbs-up`, `file-text`, `file-code`, `download`, `chevron-down`, `maximize-2`, `image-off`, `folder`, `folder-open`, `git-branch`, `plus`, `git-pull-request`, `book-open`, `settings-2`, `shield`, `mic` and `square` icon paths.
-- Used in: `packages/agent-ui/src/styles/step.css` (Step status glyphs), `packages/agent-ui/src/styles/conversation.css` (the jump control's arrow), `packages/agent-ui/src/styles/agent-ui.css` (copy and copied), `packages/agent-ui/src/styles/code-block.css` (wrap) and `packages/agent-ui/src/styles/message.css` (regenerate, edit and the branch arrows), `packages/agent-ui/src/styles/composer.css` (send, attach, token kinds and token removal), `packages/agent-ui/src/styles/attachments.css` (file, error and removal) `packages/agent-ui/src/styles/uploader.css` (drop zone, file, done, error, cancel and retry) `packages/agent-ui/src/styles/feedback.css` (the thumbs) `packages/agent-ui/src/styles/document.css` (the document's kind, download and Show more) and `packages/agent-ui/src/styles/generated-image.css` (download, View full size and the failed image) and `packages/agent-ui/src/styles/file-tree.css` (file, folder and open folder) and `packages/agent-ui/src/styles/picker.css` (the trigger's chevron, the check and a page's chevrons) and `packages/agent-ui/src/styles/menu.css` (a submenu's chevron and a radio item's check) and `packages/agent-ui/src/styles/add-menu.css` (the plus) and `packages/agent-ui/src/styles/settings-menu.css` (the settings trigger) and `packages/agent-ui/src/styles/dictation.css` (the mic, Stop's square and Cancel's `x`), as CSS mask images; `folder`, `git-branch` and `plus` are inline SVG in `apps/docs/examples/picker/` and `upload`, `at-sign`, `git-pull-request` and `book-open` in `apps/docs/examples/add-menu/` and `folder` an image in `packages/agent-ui/tests/fixtures/shared/picker.ts` and `upload` and `file-text` images in `packages/agent-ui/tests/fixtures/shared/add-menu.ts`, none shipped; `chevron-right` is also inline SVG in `packages/agent-ui/src/react/file-tree.tsx` and `packages/agent-ui/src/web/file-tree.ts` (File Tree's folder arrow).
+- Source: https://github.com/lucide-icons/lucide, the `check`, `x`, `minus`, `arrow-down`, `copy`, `wrap-text`, `refresh-cw`, `pencil`, `chevron-left`, `chevron-right`, `arrow-up`, `paperclip`, `at-sign`, `square-slash`, `file`, `circle-alert`, `upload`, `thumbs-up`, `file-text`, `download`, `chevron-down`, `maximize-2`, `image-off`, `folder`, `folder-open`, `git-branch`, `plus`, `git-pull-request`, `book-open`, `settings-2`, `shield`, `mic`, `square`, `grip-vertical` and `link` icon paths.
+- Used in: `packages/agent-ui/src/styles/step.css` (Step status glyphs), `packages/agent-ui/src/styles/conversation.css` (the jump control's arrow), `packages/agent-ui/src/styles/agent-ui.css` (copy and copied), `packages/agent-ui/src/styles/code-block.css` (wrap) and `packages/agent-ui/src/styles/message.css` (regenerate, edit and the branch arrows), `packages/agent-ui/src/styles/composer.css` (send, attach, token kinds and token removal), `packages/agent-ui/src/styles/attachments.css` (file, error and removal) `packages/agent-ui/src/styles/uploader.css` (drop zone, file, done, error, cancel and retry) `packages/agent-ui/src/styles/feedback.css` (the thumbs) `packages/agent-ui/src/styles/document.css` (the file glyph, download and Show more) and `packages/agent-ui/src/styles/generated-image.css` (download, View full size and the failed image) and `packages/agent-ui/src/styles/file-tree.css` (file, folder and open folder) and `packages/agent-ui/src/styles/picker.css` (the trigger's chevron, the check and a page's chevrons) and `packages/agent-ui/src/styles/menu.css` (a submenu's chevron and a radio item's check) and `packages/agent-ui/src/styles/add-menu.css` (the plus) and `packages/agent-ui/src/styles/settings-menu.css` (the settings trigger) and `packages/agent-ui/src/styles/dictation.css` (the mic, Stop's square and Cancel's `x`) and `packages/agent-ui/src/styles/queue.css` (the queued rows' grip) and `packages/agent-ui/src/styles/sources.css` and `packages/agent-ui/src/styles/inline-citation.css` (a source without a favicon), as CSS mask images; `folder`, `git-branch` and `plus` are inline SVG in `apps/docs/examples/picker/` and `upload`, `at-sign`, `git-pull-request` and `book-open` in `apps/docs/examples/add-menu/` and `folder` an image in `packages/agent-ui/tests/fixtures/shared/picker.ts` and `upload` and `file-text` images in `packages/agent-ui/tests/fixtures/shared/add-menu.ts`, none shipped; `chevron-right` is also inline SVG in `packages/agent-ui/src/react/file-tree.tsx` and `packages/agent-ui/src/web/file-tree.ts` (File Tree's folder arrow).
 - Changes: Step's check, `x` and `minus` scaled to 62.5% about the center of their viewBox (stroke width 2.1875) so they mask the whole status mark; stroke width set to 3.5 (Step), 2.5 (Conversation), 2.25 and 2.5 (Composer), 3 (Attachments) and 2.25 and 2.5 (Uploader); Feedback adds a filled `thumbs-up` and turns it over for down; Dictation fills `square`; the others are unchanged.
-- Licensed under the ISC License; the icons that derive from Feather (all but `wrap-text`, `pencil`, `paperclip`, `square-slash`, `file`, `file-code`, `image-off`, `folder-open` and `mic`) are also under the MIT License.
+- Licensed under the ISC License; the icons that derive from Feather (all but `wrap-text`, `pencil`, `paperclip`, `square-slash`, `file`, `image-off`, `folder-open`, `mic` and `grip-vertical`) are also under the MIT License.
+- Wave 6 icon paths, one line per component naming its stylesheet, its icons, any change and which icons derive from Feather (each task adds its line below its own marker, as `AGENTS.md` "Wave 6 shared-file markers" says):
+
+- `packages/agent-ui/src/styles/file-kind.css` (Attachments' and Uploader's file glyphs): `file`, `file-text`, `file-image`, `file-code`, `file-archive`, `file-spreadsheet`, `file-music` and `file-play`, unchanged; `file-text` derives from Feather.
+
+<!-- wave-6-task-2: Thread List -->
+
+  - `packages/agent-ui/src/styles/thread-list.css` (Thread List: New chat, More and the row menu's items): `plus`, `ellipsis`, `pencil`, `pin`, `share` and `trash-2`, unchanged; `plus`, `ellipsis` (`more-horizontal`), `share` and `trash-2` derive from Feather.
+
+<!-- wave-6-task-3: Thread Search -->
+
+  - `packages/agent-ui/src/styles/thread-search.css`: `search` (the trigger's icon), unchanged; derives from Feather.
+
+<!-- wave-6-task-4: Sidebar -->
+
+- `packages/agent-ui/src/styles/sidebar.css` (Sidebar's trigger): `panel-left` and `panel-right`, unchanged; both derive from Feather.
+
+<!-- wave-6-task-5: Launcher, dropped by the user -->
+
+<!-- wave-6-task-6: Day Separator -->
+
+<!-- wave-6-task-7: Connection Status -->
+
+<!-- wave-6-task-8: Share Dialog -->
+
+- Share Dialog: `packages/agent-ui/src/styles/share-dialog.css` (the trigger's glyph), `share`, unchanged, as a CSS mask image; it derives from Feather.
+
+<!-- wave-6-task-9: Message author, time and outcomes -->
+
+<!-- wave-6-task-10: Conversation states -->
+
+<!-- wave-6-task-11: Conversation Search -->
+
+- `packages/agent-ui/src/styles/conversation-search.css` (Conversation Search): `search`, `chevron-up`, `chevron-down` and `x`, unchanged; all derive from Feather.
+
+- `apps/docs/examples/context-bar/basic.tsx` (Context Bar example's chip icons, not shipped in the package): `file`, `folder`, `square-dashed-text` and `link`, unchanged; `file`, `folder` and `link` derive from Feather.
 
 ## Lobe Icons
 
-- Source: https://github.com/lobehub/lobe-icons, npm `@lobehub/icons-static-svg@1.103.0`, the `anthropic`, `openai`, `microsoft-color`, `gemini-color` and `xai` icons.
+- Source: https://github.com/lobehub/lobe-icons, npm `@lobehub/icons-static-svg@1.103.0`, the `anthropic`, `openai`, `microsoft-color` and `xai` icons.
 - Used in: `apps/docs/examples/model-selector/logos.tsx` (the Model Selector example and the Human Input showcase) and `packages/agent-ui/tests/fixtures/shared/model-logos.ts`. Not shipped in the package.
-- Changes: path data unchanged; dropped `width`, `height`, `style` and `<title>`, added `aria-hidden`, and renamed Gemini's gradient ids.
+- Changes: path data unchanged; dropped `width`, `height`, `style` and `<title>`, and added `aria-hidden`.
 - The logos are trademarks of their owners, used here only to name their models.
 - Copyright (c) 2023 LobeHub. Licensed under the MIT License.
 
@@ -272,6 +327,58 @@ SOFTWARE.
 MIT License
 
 Copyright GitHub, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## emilkowalski/skills license
+
+MIT License
+
+Copyright (c) 2026 Emil Kowalski
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## vercel-labs/web-interface-guidelines license
+
+MIT License
+
+Copyright (c) 2025 Vercel Labs
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

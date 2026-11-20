@@ -28,8 +28,41 @@ const consumers: Record<string, string> = {
   "question/question.ts": "kind-question-summary-icon",
   "queue/queue.ts": "kind-queue-item-icon",
   "item-list.ts": "kind-task-item-icon",
+  "plan/plan.ts": "kind-plan-outcome-icon",
   "test-results/test-results.ts": "kind-test-results-item-status",
   "dictation-button/dictation-button.ts": "kind-dictation-status-icon",
+
+  // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its consumers right below its own line.
+
+  // wave-6-task-2: Thread List
+
+  "thread-list/thread-list.ts": "kind-thread-list-status",
+
+  // wave-6-task-3: Thread Search
+
+  "thread-search/thread-search.ts": "kind-thread-search-status",
+
+  // wave-6-task-4: Sidebar
+
+  // wave-6-task-5: Launcher, dropped by the user
+
+  // wave-6-task-6: Day Separator
+
+  // wave-6-task-7: Connection Status
+
+  "connection-status/connection-status.ts": "kind-connection-status-mark",
+
+  // wave-6-task-8: Share Dialog
+
+  // wave-6-task-9: Message author, time and outcomes
+
+  "message/message.ts": "kind-message-outcome-icon",
+
+  // wave-6-task-10: Conversation states
+
+  "conversation/conversation.ts": "kind-conversation-error-icon",
+
+  // wave-6-task-11: Conversation Search
 };
 
 type Fixture = {
@@ -53,14 +86,13 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
       "kind-plan-icon",
       "kind-plan-item-icon",
       "kind-subagent-icon",
-      "kind-queue-item-icon",
       "kind-notice-icon",
       "kind-guardrail-notice-icon",
     ],
   },
   {
     url: "/?c=test-results&case=all",
-    slots: ["kind-test-results-icon", "kind-test-results-item-status", "kind-stack-trace-icon"],
+    slots: ["kind-test-results-icon", "kind-test-results-item-status"],
   },
   { url: "/?c=stack-trace&case=all", slots: ["kind-stack-trace-icon"] },
   { url: "/?c=terminal&case=all", slots: ["kind-terminal-icon"] },
@@ -73,6 +105,18 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
     },
   },
   { url: "/?c=confirmation&case=all", slots: ["kind-confirmation-outcome-icon"] },
+  // Only a completed row draws a mark; a queued one shows its grip.
+  { url: "/?c=queue&case=all", slots: ["kind-queue-item-icon"] },
+  {
+    url: "/?c=plan&case=all",
+    slots: ["kind-plan-outcome-icon"],
+    show: async (page) => {
+      await page.locator('#plan [data-slot="kind-plan-accept"]').click();
+      await page.evaluate(() =>
+        (window as unknown as { kindAccepts: { resolve(): void }[] }).kindAccepts[0]?.resolve(),
+      );
+    },
+  },
   {
     url: "/?c=question&case=all",
     slots: ["kind-question-summary-icon"],
@@ -99,6 +143,42 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
       await page.evaluate(() => (window as unknown as Fixture).kindDictation.push({ error: "denied" }));
     },
   },
+
+  // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its pages right below its own line.
+
+  // wave-6-task-2: Thread List
+
+  { url: "/?c=thread-list&case=all", slots: ["kind-thread-list-status"] },
+
+  // wave-6-task-3: Thread Search
+
+  {
+    url: "/?c=thread-search&case=all",
+    slots: ["kind-thread-search-status"],
+    show: (page) => page.getByRole("button", { name: "Search chats" }).click(),
+  },
+
+  // wave-6-task-4: Sidebar
+
+  // wave-6-task-5: Launcher, dropped by the user
+
+  // wave-6-task-6: Day Separator
+
+  // wave-6-task-7: Connection Status
+
+  { url: "/?c=connection-status&case=offline", slots: ["kind-connection-status-mark"] },
+
+  // wave-6-task-8: Share Dialog
+
+  // wave-6-task-9: Message author, time and outcomes
+
+  { url: "/?c=message&case=outcomes", slots: ["kind-message-outcome-icon"] },
+
+  // wave-6-task-10: Conversation states
+
+  { url: "/?c=conversation&case=error", slots: ["kind-conversation-error-icon"] },
+
+  // wave-6-task-11: Conversation Search
 ];
 
 test("every mark size is an even whole number of pixels", () => {

@@ -43,7 +43,7 @@ Picker
 
 ### Items
 
-Pass `items`, each with a `value` and a `label`, and optionally a `description` (a second line under the label), `meta` (trailing text), an `icon`, `keywords`, a `group` and `disabled`. Groups show in the order they first appear. A disabled item stays in the list, dimmed, and can't be chosen. Every `value` must be unique, on every page, and differ from every action's `id`.
+Pass `items`, each with a `value` and a `label`, and optionally a `description` (a second line under the label), `meta` (trailing text), an `icon`, `keywords`, a `group` and `disabled`. Groups show in the order they first appear. A disabled item stays in the list, its label dimmed and its description readable, so it can say why, and can't be chosen. Every `value` must be unique, on every page, and differ from every action's `id`.
 
 In React, `icon` is an image URL or an element, like an inline `<svg>`. Icons render at 16px and are hidden from assistive technology, so the label names the row.
 
@@ -51,7 +51,7 @@ Pass `value` and `onValueChange` to control the chosen item, or `defaultValue` t
 
 ### Searching
 
-Typing in the search field filters the list as you type. An item matches when its label, description or `keywords` hold the letters in order, and the matching letters are marked. When nothing matches, the list shows `emptyText` ("No matches"). Set `placeholder` to change the field's "Search".
+Typing in the search field filters the list as you type. An item matches when its label, description or `keywords` hold the letters in order, and the matching letters are marked. When nothing matches, the list shows `emptyText` ("No matches"). Set `placeholder` to change the field's "Search…".
 
 ### Actions
 

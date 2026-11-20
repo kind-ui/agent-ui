@@ -1,22 +1,28 @@
-/* Model Control (spec §7): a button reading "GPT-5 · High" that opens a Settings Menu (`settings-menu.css`) whose
-   Model and Effort rows are its own. The trigger, check, switch and menu are `menu.css`'s. Every effort label shares
-   one grid cell and only the chosen one shows, so the trigger keeps its width when the effort changes. */
+/* Model Control (spec §7): a button reading "GPT-5 · High" that opens one menu: the models under their group labels,
+   then the effort levels, then the host's own rows (`settings-menu.css`). The trigger is the shared one; the check,
+   switch and menu are `menu.css`'s. Every effort label shares one grid cell and only the chosen one shows, so the
+   trigger keeps its width when the effort changes. */
 @layer components {
-  /* The trigger shows the model and effort, so it's as wide as its text. */
-  :where([data-kind="model-control"] [data-menu-part="trigger"]) [data-slot="menu-trigger"] {
-    gap: 0.375rem;
-    width: auto;
-    padding-inline: 0.625rem 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    white-space: nowrap;
-  }
-
   :where([data-kind="model-control"] [data-menu-part="trigger"]) [data-menu-chevron] {
     margin-inline-start: 0.125rem;
     /* Down in either direction, so `menu.css`'s right-to-left mirror is off. */
     rotate: 90deg;
     scale: none;
+    transition: rotate var(--kind-duration-base) var(--kind-ease-enter);
+  }
+
+  /* The chevron turns up while the menu is open. */
+  :where([data-kind="model-control"] [data-menu-part="trigger"][data-open]) [data-menu-chevron] {
+    rotate: -90deg;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-kind="model-control"][data-motion="auto"] [data-menu-part="trigger"]) [data-menu-chevron] {
+      transition: none;
+    }
+  }
+  :where([data-kind="model-control"][data-motion="reduced"] [data-menu-part="trigger"]) [data-menu-chevron] {
+    transition: none;
   }
 
   [data-model-control-separator],
@@ -24,9 +30,10 @@
     color: var(--kind-color-muted);
   }
 
+  /* The room a shorter level leaves falls between the model and the effort, not before the chevron. */
   [data-model-control-effort] {
     display: grid;
-    justify-items: start;
+    justify-items: end;
   }
 
   :where([data-model-control-effort]) > * {
@@ -40,12 +47,16 @@
   /* In a narrow composer the trigger shows only the model's icon; its name still says the model and effort. A model
      without an icon keeps its name. */
   @container kind-composer (width < 28rem) {
-    :where([data-kind="model-control"] [data-menu-part="trigger"])
-      [data-slot="menu-trigger"]:where(:has([data-slot="menu-item-icon"])) {
-      width: 2rem;
-      padding-inline: 0;
-
-      & > :not([data-slot="menu-item-icon"]) {
+    :where([data-kind="model-control"]) [data-kind-trigger]:where(:has([data-slot="menu-item-icon"])) {
+      width: var(--kind-trigger-height);
+    }
+    :where([data-kind="model-control"] [data-menu-part="trigger"]:has([data-slot="menu-item-icon"])) {
+      & [data-slot="menu-item-icon"] {
+        position: absolute;
+        inset: 0;
+        margin: auto;
+      }
+      & [data-model-control-model] {
         display: none;
       }
     }

@@ -76,7 +76,7 @@ export type ApprovalModeRow = {
 export type ApprovalModeContentState = {
   /** The header's title: the `label`. */
   label: string;
-  /** Whether the header has a Learn more item: a `learnMoreHref` or an `onLearnMore`. */
+  /** Whether the menu ends with a Learn more item: a `learnMoreHref` or an `onLearnMore`. */
   learnMore: boolean;
   /** The Learn more item's link, if any. */
   learnMoreHref: string | undefined;
@@ -257,6 +257,7 @@ export const approvalModePrimitive: ApprovalModePrimitive = definePrimitive<
       (label: string, disabled: boolean, mode: ApprovalModeRow | undefined): ApprovalModeTriggerState => ({
         "aria-label": approvalModeName(label, mode),
         disabled,
+        "data-kind-trigger": "",
         mode,
       }),
     );

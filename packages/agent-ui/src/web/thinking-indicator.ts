@@ -2,7 +2,7 @@ import { thinkingIndicatorPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/web";
 import type { AttributeProperties, UiElement } from "@ui-sdk/web/events";
 
-const parts = `<kind-thinking-indicator-label></kind-thinking-indicator-label><kind-thinking-indicator-dots><kind-thinking-indicator-dot></kind-thinking-indicator-dot><kind-thinking-indicator-dot></kind-thinking-indicator-dot><kind-thinking-indicator-dot></kind-thinking-indicator-dot></kind-thinking-indicator-dots>`;
+const parts = `<kind-thinking-indicator-dots><kind-thinking-indicator-dot></kind-thinking-indicator-dot><kind-thinking-indicator-dot></kind-thinking-indicator-dot><kind-thinking-indicator-dot></kind-thinking-indicator-dot></kind-thinking-indicator-dots><kind-thinking-indicator-label></kind-thinking-indicator-label>`;
 
 /** `<kind-thinking-indicator label="…">` fills in its label and dots when it has no children. */
 export function defineThinkingIndicator(): void {

@@ -662,6 +662,7 @@ export const questionPrimitive: QuestionPrimitive = definePrimitive<
       state: (state) => labelState(state.submitLabel),
       attrs: (state) => ({
         type: "button",
+        "data-kind-button": "primary",
         "aria-disabled":
           isLocked(state) || missingOf(state.questions, state.value).length > 0 ? "true" : undefined,
         "data-pending": state.pressed === "submit" ? "" : undefined,
@@ -676,6 +677,7 @@ export const questionPrimitive: QuestionPrimitive = definePrimitive<
       state: (state) => labelState(state.skipLabel),
       attrs: (state) => ({
         type: "button",
+        "data-kind-button": "secondary",
         "aria-disabled": isLocked(state) ? "true" : undefined,
         "data-pending": state.pressed === "skip" ? "" : undefined,
       }),

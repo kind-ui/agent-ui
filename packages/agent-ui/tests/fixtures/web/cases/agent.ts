@@ -1,3 +1,4 @@
+import { createConversationController } from "@kind-ui/agent-ui/core";
 import type { AgentAction } from "@ui-sdk/web/agent";
 import { defineAction } from "../../../../src/web/action.js";
 import { defineAddMenu } from "../../../../src/web/add-menu.js";
@@ -7,9 +8,12 @@ import { defineChainOfThought } from "../../../../src/web/chain-of-thought.js";
 import { defineCheckpoint } from "../../../../src/web/checkpoint.js";
 import { defineComposer, type KindComposerElement } from "../../../../src/web/composer.js";
 import { defineConfirmation } from "../../../../src/web/confirmation.js";
+import { defineConnectionStatus } from "../../../../src/web/connection-status.js";
 import { defineContextBar } from "../../../../src/web/context-bar.js";
 import { defineContextMeter } from "../../../../src/web/context-meter.js";
-import { defineConversation } from "../../../../src/web/conversation.js";
+import { defineConversation, type KindConversationElement } from "../../../../src/web/conversation.js";
+import { defineConversationSearch } from "../../../../src/web/conversation-search.js";
+import { defineDaySeparator } from "../../../../src/web/day-separator.js";
 import { defineDictation } from "../../../../src/web/dictation.js";
 import { defineDocument } from "../../../../src/web/document.js";
 import { defineFeedback } from "../../../../src/web/feedback.js";
@@ -33,6 +37,8 @@ import { defineReasoning } from "../../../../src/web/reasoning.js";
 import { defineReasoningEffort } from "../../../../src/web/reasoning-effort.js";
 import { defineSelection } from "../../../../src/web/selection.js";
 import { defineSettingsMenu } from "../../../../src/web/settings-menu.js";
+import { defineShareDialog } from "../../../../src/web/share-dialog.js";
+import { defineSidebar } from "../../../../src/web/sidebar.js";
 import { defineSources } from "../../../../src/web/sources.js";
 import { defineStackTrace } from "../../../../src/web/stack-trace.js";
 import { defineStatus } from "../../../../src/web/status.js";
@@ -44,6 +50,8 @@ import { defineTask } from "../../../../src/web/task.js";
 import { defineTerminal } from "../../../../src/web/terminal.js";
 import { defineTestResults } from "../../../../src/web/test-results.js";
 import { defineThinkingIndicator } from "../../../../src/web/thinking-indicator.js";
+import { defineThreadList } from "../../../../src/web/thread-list.js";
+import { defineThreadSearch } from "../../../../src/web/thread-search.js";
 import { defineTool } from "../../../../src/web/tool.js";
 import { defineTranscript } from "../../../../src/web/transcript.js";
 import { defineTypingIndicator } from "../../../../src/web/typing-indicator.js";
@@ -63,6 +71,7 @@ import {
   queueItems,
   replies,
   selectionActions,
+  shellMessages,
   steps,
   taskItems,
   thoughts,
@@ -77,7 +86,7 @@ import { downloads, readme } from "../../shared/document.js";
 import { entries } from "../../shared/file-tree.js";
 import { lighthouse, size } from "../../shared/generated-image.js";
 import { answer } from "../../shared/markdown.js";
-import { regenerateOptions } from "../../shared/message.js";
+import { author, outcomeError, outcomeText, regenerateOptions } from "../../shared/message.js";
 import {
   levels as controlLevels,
   models as controlModels,
@@ -88,11 +97,13 @@ import { guardrails, type NoticeData, notices } from "../../shared/notice.js";
 import { placeActions, places } from "../../shared/picker.js";
 import { deployQuestions } from "../../shared/question.js";
 import { initialValues, settings } from "../../shared/settings-menu.js";
+import { shareLink } from "../../shared/share-dialog.js";
 import { sources } from "../../shared/sources.js";
 import { typeErrorStack } from "../../shared/stack-trace.js";
 import { suggestions } from "../../shared/suggestion.js";
 import { installRun } from "../../shared/terminal.js";
 import { suites } from "../../shared/test-results.js";
+import { NOW, threads } from "../../shared/thread-list.js";
 import { standup } from "../../shared/transcript.js";
 import { uploads } from "../../shared/uploader.js";
 
@@ -653,6 +664,139 @@ function wireComposing(wave: Element) {
   confirmable.push(approval, dictation);
 }
 
+const shell = `
+  <div class="flex w-[40rem] flex-col gap-8 p-6">
+    <section id="thread-list" data-case="thread-list" class="flex h-[22rem] flex-col"></section>
+    <section id="thread-search" data-case="thread-search"></section>
+    <section id="sidebar" data-case="sidebar">
+      <kind-sidebar label="History" class="h-48">
+        <kind-sidebar-panel><p class="p-2">Earlier chats</p></kind-sidebar-panel>
+        <kind-sidebar-inset><kind-sidebar-trigger><button></button></kind-sidebar-trigger></kind-sidebar-inset>
+      </kind-sidebar>
+    </section>
+    <section id="share" data-case="share-dialog"></section>
+    <section id="day" data-case="day-separator">
+      <kind-day-separator date="2026-11-18T09:30:00Z" time-zone="UTC"></kind-day-separator>
+    </section>
+    <section id="failed" data-case="message">
+      <kind-message aria-label="Failed answer" message-role="assistant" status="error" error="${outcomeError}"
+        text="${outcomeText}" can-retry>
+        <kind-message-avatar></kind-message-avatar>
+        <kind-message-header></kind-message-header>
+        <kind-message-content>${outcomeText}</kind-message-content>
+        <kind-message-outcome></kind-message-outcome>
+      </kind-message>
+    </section>
+    <section id="earlier" data-case="conversation">
+      <kind-conversation aria-label="Earlier chat" message-count="0" status="error" can-retry class="h-40">
+        <kind-conversation-viewport>
+          <kind-conversation-content>
+            <kind-conversation-skeleton hidden></kind-conversation-skeleton>
+            <kind-conversation-loading hidden></kind-conversation-loading>
+            <kind-conversation-error hidden></kind-conversation-error>
+          </kind-conversation-content>
+        </kind-conversation-viewport>
+      </kind-conversation>
+    </section>
+    <section id="connection" data-case="connection-status" class="relative h-16"></section>
+    <section id="find" data-case="conversation-search" class="relative">
+      <kind-conversation-search default-open motion="none"></kind-conversation-search>
+      <kind-conversation aria-label="Found chat" message-count="${shellMessages.length}" motion="none" class="h-48">
+        <kind-conversation-viewport>
+          <kind-conversation-content>${shellMessages
+            .map(
+              ({ id, text }, index) =>
+                `<kind-conversation-row value="${id}" index="${index}"><p>${text}</p></kind-conversation-row>`,
+            )
+            .join("")}</kind-conversation-content>
+        </kind-conversation-viewport>
+        <kind-conversation-marks></kind-conversation-marks>
+      </kind-conversation>
+    </section>
+  </div>`;
+
+function wireShell(wave: Element) {
+  const place = <Tag extends keyof HTMLElementTagNameMap>(id: string, tag: Tag, props: object) => {
+    const el = Object.assign(document.createElement(tag), props);
+    wave.querySelector(`#${id}`)?.append(el);
+    return el;
+  };
+  const list = place("thread-list", "kind-thread-list", {
+    threads,
+    value: "t2",
+    now: NOW,
+    timeZone: "UTC",
+    canSelect: true,
+    canNew: true,
+    canRename: true,
+    canPin: true,
+    canShare: true,
+    canDelete: true,
+  });
+  list.addEventListener("threadselect", (event) => recordChange("thread-select", event));
+  list.addEventListener("threadnew", (event) => host.decide("thread-new")(event.detail.value));
+  list.addEventListener("threadrename", decide("thread-rename"));
+  list.addEventListener("pinchange", decide("thread-pin"));
+  list.addEventListener("threadshare", decide("thread-share"));
+  list.addEventListener("threaddelete", decide("thread-delete"));
+  const search = place("thread-search", "kind-thread-search", {
+    threads,
+    now: NOW,
+    timeZone: "UTC",
+    canSelect: true,
+    canNew: true,
+  });
+  search.addEventListener("openchange", (event) => recordChange("thread-search", event));
+  search.addEventListener("threadquerychange", (event) => recordChange("thread-search-query", event));
+  search.addEventListener("threadselect", (event) => recordChange("thread-search-select", event));
+  search.addEventListener("threadnew", decide("thread-search-new"));
+  wave
+    .querySelector("kind-sidebar")
+    ?.addEventListener("openchange", (event) => recordChange("sidebar", event));
+  const share = place("share", "kind-share-dialog", {
+    defaultVisibility: "link",
+    canCreateLink: true,
+    canRevoke: true,
+  });
+  share.addEventListener("openchange", (event) => recordChange("share", event));
+  share.addEventListener("sharevisibilitychange", (event) => recordChange("share-visibility", event));
+  const answer = (action: string, link: string | undefined) => (event: CustomEvent) =>
+    event.detail.waitUntil(
+      host
+        .decide(action)(event.detail)
+        .then(() => (share.link = link)),
+    );
+  share.addEventListener("createlink", answer("share-create", shareLink));
+  share.addEventListener("revoke", answer("share-revoke", undefined));
+  share.addEventListener("linkcopy", decide("share-copy"));
+  const failed = wave.querySelector("#failed kind-message") as HTMLElementTagNameMap["kind-message"];
+  failed.author = author;
+  failed.addEventListener("retry", decide("message-retry"));
+  const history = wave.querySelector("#earlier kind-conversation") as KindConversationElement;
+  history.addEventListener("retry", (event) =>
+    event.detail.waitUntil(
+      host
+        .decide("conversation-retry")(event.detail)
+        .then(() => history.setAttribute("status", "loading")),
+    ),
+  );
+  const connection = place("connection", "kind-connection-status", { state: "offline", canRetry: true });
+  connection.addEventListener("connectionretry", decide("connection-retry"));
+  const bar = wave.querySelector(
+    "kind-conversation-search",
+  ) as HTMLElementTagNameMap["kind-conversation-search"];
+  const found = wave.querySelector("#find kind-conversation") as KindConversationElement;
+  const controller = createConversationController();
+  found.controller = controller;
+  Object.assign(bar, { messages: shellMessages, conversation: controller });
+  bar.addEventListener("markschange", (event) => {
+    found.marks = event.detail.value;
+  });
+  bar.addEventListener("querychange", (event) => recordChange("find-query", event));
+  bar.addEventListener("openchange", (event) => recordChange("find", event));
+  confirmable.push(share);
+}
+
 function waveFour(root: HTMLElement) {
   waveThree(root);
   defineSources();
@@ -670,27 +814,41 @@ function waveFour(root: HTMLElement) {
   wireArtifacts(root.lastElementChild as Element);
 }
 
+function waveFive(root: HTMLElement) {
+  waveFour(root);
+  const model = root.querySelector(
+    "kind-model-selector#model",
+  ) as HTMLElementTagNameMap["kind-model-selector"];
+  Object.assign(model, { actions: modelActions, canRun: true });
+  model.addEventListener("modelaction", decide("model-action"));
+  definePicker();
+  defineAddMenu();
+  defineSettingsMenu();
+  defineApprovalMode();
+  defineModelControl();
+  defineContextBar();
+  defineDictation();
+  defineInternalMenu();
+  root.insertAdjacentHTML("beforeend", composing);
+  wireComposing(root.lastElementChild as Element);
+}
+
 export const cases = {
   all: foundation,
   "wave-2": waveTwo,
   "wave-3": waveThree,
   "wave-4": waveFour,
-  "wave-5": (root: HTMLElement) => {
-    waveFour(root);
-    const model = root.querySelector(
-      "kind-model-selector#model",
-    ) as HTMLElementTagNameMap["kind-model-selector"];
-    Object.assign(model, { actions: modelActions, canRun: true });
-    model.addEventListener("modelaction", decide("model-action"));
-    definePicker();
-    defineAddMenu();
-    defineSettingsMenu();
-    defineApprovalMode();
-    defineModelControl();
-    defineContextBar();
-    defineDictation();
-    defineInternalMenu();
-    root.insertAdjacentHTML("beforeend", composing);
-    wireComposing(root.lastElementChild as Element);
+  "wave-5": waveFive,
+  "wave-6": (root: HTMLElement) => {
+    foundation(root);
+    defineThreadList();
+    defineThreadSearch();
+    defineSidebar();
+    defineShareDialog();
+    defineDaySeparator();
+    defineConnectionStatus();
+    defineConversationSearch();
+    root.insertAdjacentHTML("beforeend", shell);
+    wireShell(root.lastElementChild as Element);
   },
 };

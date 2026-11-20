@@ -7,11 +7,16 @@ export type ContextRow = { label: string; value: string };
 export const contextRatio = (used: number, total: number): number =>
   total > 0 ? Math.min(Math.max(used / total, 0), 1) : 0;
 
+/** The counts, like "57,600 of 128,000 tokens", which the details show under the percentage the button shows. */
+export function contextCountText(used: number, total: number, locale?: string): string {
+  const count = new Intl.NumberFormat(locale);
+  return `${count.format(used)} of ${count.format(total)} tokens`;
+}
+
 /** The meter's value for screen readers, like "57,600 of 128,000 tokens, 45%". */
 export function contextValueText(used: number, total: number, locale?: string): string {
-  const count = new Intl.NumberFormat(locale);
   const percent = new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0 });
-  return `${count.format(used)} of ${count.format(total)} tokens, ${percent.format(contextRatio(used, total))}`;
+  return `${contextCountText(used, total, locale)}, ${percent.format(contextRatio(used, total))}`;
 }
 
 const TOKEN_ROWS = [

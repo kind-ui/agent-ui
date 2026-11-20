@@ -1,11 +1,13 @@
 import type { MotionMode } from "@kind-ui/agent-ui/core";
 import { type ReactElement, useEffect } from "react";
+import { Composer, ComposerInput, ComposerSubmit } from "../../../../src/react/composer.js";
 import {
   ModelSelector,
   ModelSelectorContent,
   ModelSelectorTrigger,
 } from "../../../../src/react/model-selector.js";
 import { ReasoningEffort } from "../../../../src/react/reasoning-effort.js";
+import { controls } from "../../shared/full-composer.js";
 import { iconModels, levels, modelActions, models, selectionHost } from "../../shared/model-selector.js";
 
 const { host, record } = selectionHost();
@@ -104,11 +106,27 @@ function Logos() {
   );
 }
 
+function InComposer() {
+  return (
+    <div className="p-4">
+      <Composer aria-label="Message" onSubmit={() => undefined}>
+        <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
+        <div style={controls}>
+          <ModelSelector id="model" models={logoModels} defaultValue="claude-sonnet-5.5" />
+          <ReasoningEffort id="effort" levels={levels} defaultValue="medium" />
+        </div>
+        <ComposerSubmit />
+      </Composer>
+    </div>
+  );
+}
+
 export const cases = {
   all: () => <Toolbar />,
   plain: () => <Toolbar plain />,
   groups: () => <Toolbar pages="groups" />,
   logos: () => <Logos />,
+  composer: () => <InComposer />,
   reduced: () => <Toolbar motion="reduced" />,
   refusing: () => <Toolbar refusing />,
 };

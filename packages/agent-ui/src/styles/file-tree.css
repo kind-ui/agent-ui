@@ -7,8 +7,8 @@
     --kind-file-tree-folder-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z'/%3E%3C/svg%3E");
     --kind-file-tree-folder-open-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E");
 
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: var(--kind-text-md);
+    line-height: var(--kind-text-md-leading);
     color: var(--kind-color-fg);
   }
 
@@ -18,7 +18,7 @@
     pointer-events: none;
 
     & svg {
-      transition: rotate var(--kind-duration-base) var(--kind-ease);
+      transition: rotate var(--kind-duration-base) var(--kind-ease-in-out);
     }
   }
 
@@ -37,6 +37,7 @@
       height: 16px;
       background-color: var(--kind-color-muted);
       mask: var(--kind-file-tree-file-icon) center / contain no-repeat;
+      transition: background-color var(--kind-duration-fast) var(--kind-ease-in-out);
     }
     &:where([data-kind="folder"])::before {
       mask-image: var(--kind-file-tree-folder-icon);
@@ -53,13 +54,19 @@
       height: 6px;
       /* Centered on the badges' column. */
       margin-inline: 6px;
-      border-radius: 9999px;
+      border-radius: var(--kind-radius-full);
       /* Mixed toward the text color, so the warning dot keeps 3:1 on a light surface. */
       background-color: color-mix(in oklab, var(--kind-file-tree-change) 80%, var(--kind-color-fg));
     }
   }
 
-  :where([data-file-tree-part="item"], [data-file-tree-part="badge"]) {
+  /* The glyph turns to ink with the row's hover and selection, so the row under the pointer reads as one piece. */
+  :where([data-file-tree-part="root"] [data-slot="tree-label"]:is(:hover, [data-selected]))
+    > [data-file-tree-part="item"]::before {
+    background-color: var(--kind-color-fg);
+  }
+
+  :where([data-file-tree-part="item"]) {
     &[data-change="added"] {
       --kind-file-tree-change: var(--kind-color-success);
     }
@@ -71,6 +78,10 @@
     }
     &[data-change="renamed"] {
       --kind-file-tree-change: var(--kind-color-accent);
+    }
+    /* Red on a folder reads as broken; the deleted file's own badge says it. */
+    &[data-kind="folder"][data-change="deleted"] {
+      --kind-file-tree-change: var(--kind-color-muted);
     }
   }
 
@@ -92,39 +103,38 @@
      name starts with; the parts' labels give the words. Status colors mix toward the text color, so small text keeps
      its contrast in light and dark. */
   [data-file-tree-part="counts"] {
-    display: inline-flex;
+    /* Two right-aligned columns in figures of one width, so every row's additions and deletions line up. */
+    display: inline-grid;
     flex-shrink: 0;
-    gap: 4px;
-    font-size: 0.75rem;
+    grid-template-columns: minmax(3.5ch, auto) minmax(3.5ch, auto);
+    column-gap: 4px;
+    justify-items: end;
+    font-family: var(--kind-font-mono);
+    font-size: var(--kind-text-xs);
     font-variant-numeric: tabular-nums;
 
     &:where([data-additions])::before {
       content: attr(data-additions);
+      grid-column: 1;
       color: color-mix(in oklab, var(--kind-color-success) 55%, var(--kind-color-fg));
     }
     &:where([data-deletions])::after {
       content: attr(data-deletions);
+      grid-column: 2;
       color: color-mix(in oklab, var(--kind-color-danger) 60%, var(--kind-color-fg));
     }
   }
 
+  /* The shared badge (`data-kind-badge`), as wide as it is tall, so every letter lines up: the letter spans the
+     badge's padding and centers in it. */
   [data-file-tree-part="badge"] {
-    display: inline-flex;
-    flex-shrink: 0;
-    width: 18px;
-    height: 18px;
-    align-items: center;
-    justify-content: center;
-    border-radius: calc(var(--kind-radius) / 3);
-    background-color: color-mix(in oklab, var(--kind-file-tree-change) 14%, transparent);
-    color: color-mix(in oklab, var(--kind-file-tree-change) 55%, var(--kind-color-fg));
-    font-family: var(--kind-font-mono);
-    font-size: 0.6875rem;
-    font-weight: 600;
-    line-height: 1;
+    width: var(--kind-badge-height);
 
     &::before {
       content: attr(data-letter);
+      flex: 1;
+      margin-inline: -0.5rem;
+      text-align: center;
     }
   }
 
@@ -132,7 +142,7 @@
   :where([data-file-tree-part="root"]) [data-slot="tree-group"] {
     height: var(--tree-group-height);
     overflow: hidden;
-    transition: opacity var(--kind-duration-base) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-base) var(--kind-ease-in-out);
   }
   :where([data-file-tree-part="root"]:not([data-motion="none"]))
     [data-slot="tree-group"]:is([data-starting-style], [data-ending-style]) {
@@ -142,8 +152,8 @@
   @media (prefers-reduced-motion: no-preference) {
     [data-file-tree-part="root"][data-motion="auto"] [data-slot="tree-group"] {
       transition:
-        height var(--kind-duration-panel) var(--kind-ease),
-        opacity var(--kind-duration-base) var(--kind-ease-out);
+        height var(--kind-duration-panel) var(--kind-ease-enter),
+        opacity var(--kind-duration-base) var(--kind-ease-in-out);
 
       &:is([data-starting-style], [data-ending-style]) {
         height: 0;

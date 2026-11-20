@@ -12,7 +12,7 @@ import type { AttributeProperties, UiChangeEvent, UiElement, UiPartElement } fro
 
 type StackFrame = StackTraceState["frames"][number];
 
-const DEFAULT_PARTS = `<kind-stack-trace-trigger><button><kind-stack-trace-icon></kind-stack-trace-icon><kind-stack-trace-title></kind-stack-trace-title></button></kind-stack-trace-trigger><kind-stack-trace-content><div data-stack-trace-panel><kind-stack-trace-message></kind-stack-trace-message><kind-stack-trace-list></kind-stack-trace-list><kind-stack-trace-copy><button></button></kind-stack-trace-copy></div></kind-stack-trace-content>`;
+const DEFAULT_PARTS = `<kind-stack-trace-trigger><button><kind-stack-trace-icon></kind-stack-trace-icon><kind-stack-trace-title></kind-stack-trace-title></button></kind-stack-trace-trigger><kind-stack-trace-content><div data-stack-trace-panel data-kind-code><kind-stack-trace-message></kind-stack-trace-message><kind-stack-trace-list></kind-stack-trace-list><kind-stack-trace-copy><button></button></kind-stack-trace-copy></div></kind-stack-trace-content>`;
 
 // Parts this element wrote into. A part someone wrote into keeps what they wrote, as React's children do. Kept
 // across instances, because UI SDK rebuilds one when the element returns to the page.

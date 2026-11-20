@@ -8,10 +8,10 @@ export {
 } from "./summary.js";
 export {
   type TestResultsApi,
+  type TestResultsCountState,
   type TestResultsExpandedChangeReason,
   type TestResultsFailureState,
   type TestResultsFilterChangeReason,
-  type TestResultsFilterState,
   type TestResultsOptions,
   type TestResultsPrimitive,
   type TestResultsRow,

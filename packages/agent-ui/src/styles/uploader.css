@@ -1,9 +1,8 @@
 /* Uploader (spec §7), shared by both render layers. */
 @layer components {
   [data-slot="kind-uploader"] {
-    /* Lucide "upload", "file", "check", "circle-alert", "x" and "refresh-cw", see THIRD_PARTY_NOTICES.md. */
+    /* Lucide "upload", "check", "circle-alert", "x" and "refresh-cw", see THIRD_PARTY_NOTICES.md. */
     --kind-uploader-upload-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v12'/%3E%3Cpath d='m17 8-5-5-5 5'/%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3C/svg%3E");
-    --kind-uploader-file-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'/%3E%3Cpath d='M14 2v4a2 2 0 0 0 2 2h4'/%3E%3C/svg%3E");
     --kind-uploader-done-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
     --kind-uploader-error-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v4'/%3E%3Cpath d='M12 16h.01'/%3E%3C/svg%3E");
     --kind-uploader-cancel-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E");
@@ -13,8 +12,9 @@
     flex-direction: column;
     gap: 0.75rem;
     color: var(--kind-color-fg);
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: var(--kind-text-md);
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
 
     & [data-slot="file-input"] {
       display: block;
@@ -28,8 +28,8 @@
       gap: 0.75rem 0.25rem;
       padding: 1.5rem 1rem;
       border: 1px dashed color-mix(in oklab, var(--kind-color-muted) 40%, var(--kind-color-border));
-      border-radius: calc(var(--kind-radius) * 1.5);
-      background-color: var(--kind-color-surface);
+      border-radius: var(--kind-radius-lg);
+      background-color: var(--kind-color-raised);
       color: var(--kind-color-muted);
       transition:
         border-color var(--kind-duration-fast),
@@ -37,35 +37,31 @@
 
       &[data-dragging] {
         border-color: var(--kind-color-accent);
-        background-color: color-mix(in oklab, var(--kind-color-accent) 6%, var(--kind-color-surface));
+        background-color: color-mix(
+          in oklab,
+          var(--kind-color-accent) var(--kind-tint-fill),
+          var(--kind-color-raised)
+        );
       }
 
       &[data-drag-reject] {
         border-color: var(--kind-color-danger);
-        background-color: color-mix(in oklab, var(--kind-color-danger) 6%, var(--kind-color-surface));
+        background-color: color-mix(
+          in oklab,
+          var(--kind-color-danger) var(--kind-tint-fill),
+          var(--kind-color-raised)
+        );
       }
 
       & > [data-upload-icon] {
-        position: relative;
         display: flex;
         flex-basis: 100%;
         justify-content: center;
 
-        &::before {
-          content: "";
-          width: 2.5rem;
-          height: 2.5rem;
-          border-radius: 999px;
-          background-color: var(--kind-color-hover);
-        }
-
         &::after {
           content: "";
-          position: absolute;
-          inset: 0;
-          width: 1.125rem;
-          height: 1.125rem;
-          margin: auto;
+          width: 1.25rem;
+          height: 1.25rem;
           background-color: currentColor;
           mask: var(--kind-uploader-upload-icon) center / contain no-repeat;
         }
@@ -75,11 +71,11 @@
     & [data-slot="file-input-trigger"] {
       padding: 0;
       border: 0;
-      border-radius: calc(var(--kind-radius) / 3);
+      border-radius: var(--kind-radius-sm);
       background: none;
       color: var(--kind-color-fg);
       font: inherit;
-      font-weight: 500;
+      font-weight: var(--kind-font-weight-medium);
       text-decoration: underline;
       text-decoration-color: color-mix(in oklab, var(--kind-color-fg) 30%, transparent);
       text-underline-offset: 0.2em;
@@ -91,8 +87,8 @@
       }
 
       &:focus-visible {
-        outline: 2px solid var(--kind-color-ring);
-        outline-offset: 2px;
+        outline: var(--kind-focus-ring);
+        outline-offset: var(--kind-focus-offset);
       }
     }
   }
@@ -121,16 +117,17 @@
   [data-slot="kind-uploader-item"] {
     --kind-uploader-tone: var(--kind-color-accent);
 
+    /* The action column is kept when a row has no action, so every row's bar ends at the same place. */
     display: grid;
-    grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+    grid-template-columns: 1.125rem minmax(0, 1fr) var(--kind-control-height);
     grid-template-rows: auto auto;
     align-items: center;
     gap: 0.25rem 0.75rem;
-    padding: 0.625rem 0.75rem 0.625rem 0.625rem;
-    border: 1px solid var(--kind-color-border);
-    border-radius: var(--kind-radius);
-    background-color: var(--kind-color-surface);
-    transition: border-color var(--kind-duration-fast);
+    padding-block: 0.625rem;
+    padding-inline: 0.875rem 0.625rem;
+    border-radius: var(--kind-radius-lg);
+    background-color: var(--kind-color-raised);
+    box-shadow: 0 0 0 1px var(--kind-color-hairline);
 
     &[data-status="queued"],
     &[data-status="cancelled"] {
@@ -143,34 +140,26 @@
 
     &[data-status="error"] {
       --kind-uploader-tone: var(--kind-color-danger);
-
-      border-color: color-mix(in oklab, var(--kind-color-danger) 45%, var(--kind-color-border));
     }
 
     & > [data-icon] {
       display: grid;
       grid-row: span 2;
       place-items: center;
-      width: 2.25rem;
-      height: 2.25rem;
-      border-radius: calc(var(--kind-radius) * 2 / 3);
-      background-color: var(--kind-color-hover);
+      height: 1.125rem;
       color: var(--kind-color-muted);
-      transition:
-        color var(--kind-duration-base),
-        background-color var(--kind-duration-base);
+      transition: color var(--kind-duration-base);
 
       &::before {
         content: "";
         width: 1.125rem;
         height: 1.125rem;
         background-color: currentColor;
-        mask: var(--kind-uploader-file-icon) center / contain no-repeat;
+        mask: var(--kind-file-icon) center / contain no-repeat;
       }
     }
 
     &:is([data-status="done"], [data-status="error"]) > [data-icon] {
-      background-color: color-mix(in oklab, var(--kind-uploader-tone) 12%, transparent);
       color: var(--kind-uploader-tone);
     }
 
@@ -191,7 +180,7 @@
 
     & [data-slot="progress-label"] {
       overflow: hidden;
-      font-weight: 500;
+      font-weight: var(--kind-font-weight-medium);
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -200,7 +189,7 @@
       display: block;
       height: 0.25rem;
       overflow: hidden;
-      border-radius: 999px;
+      border-radius: var(--kind-radius-full);
       background-color: var(--kind-color-border);
     }
 
@@ -210,24 +199,39 @@
       border-radius: inherit;
       background-color: var(--kind-uploader-tone);
       transition:
-        width var(--kind-duration-panel) var(--kind-ease),
+        width var(--kind-duration-panel) var(--kind-ease-in-out),
         background-color var(--kind-duration-base);
     }
 
-    &[data-status="cancelled"] [data-slot="progress-indicator"] {
+    /* Only the mark says how it ended: a failed or cancelled bar stops where it was, in gray. */
+    &:is([data-status="error"], [data-status="cancelled"]) [data-slot="progress-indicator"] {
+      background-color: var(--kind-color-muted);
       opacity: 0.4;
+    }
+
+    /* A finished row fades its bar out but keeps its place, so nothing moves. */
+    & [data-slot="progress-track"] {
+      transition:
+        opacity var(--kind-duration-exit) var(--kind-ease-exit),
+        visibility 0s;
+    }
+
+    &[data-status="done"] [data-slot="progress-track"] {
+      opacity: 0;
+      visibility: hidden;
+      transition-delay: 0s, var(--kind-duration-exit);
     }
 
     & > [data-detail] {
       grid-column: 2;
       color: var(--kind-color-muted);
-      font-size: 0.75rem;
-      line-height: 1rem;
+      font-size: var(--kind-text-xs);
+      line-height: var(--kind-text-xs-leading);
       font-variant-numeric: tabular-nums;
     }
 
     &[data-status="error"] > [data-detail] {
-      color: var(--kind-color-danger);
+      color: var(--kind-color-fg);
     }
   }
 
@@ -238,24 +242,13 @@
     }
   }
 
+  /* The shared icon button (controls.css). Its glyph is on `::after`, since a coarse pointer's hit area takes
+     `::before`. */
   [data-slot="kind-uploader-action"] {
-    display: grid;
     grid-column: 3;
     grid-row: 1 / span 2;
-    place-items: center;
-    width: 2rem;
-    height: 2rem;
-    padding: 0;
-    border: 0;
-    border-radius: 999px;
-    background: none;
-    color: var(--kind-color-muted);
-    cursor: pointer;
-    transition:
-      color var(--kind-duration-fast),
-      background-color var(--kind-duration-fast);
 
-    &::before {
+    &::after {
       content: "";
       width: 1rem;
       height: 1rem;
@@ -263,23 +256,13 @@
       mask: var(--kind-uploader-cancel-icon) center / contain no-repeat;
     }
 
-    &[data-action="retry"]::before {
+    &[data-action="retry"]::after {
       mask-image: var(--kind-uploader-retry-icon);
-    }
-
-    &:hover {
-      background-color: var(--kind-color-hover);
-      color: var(--kind-color-fg);
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 1px;
     }
   }
 
   @media (forced-colors: active) {
-    [data-slot="kind-uploader-action"]::before {
+    [data-slot="kind-uploader-action"]::after {
       forced-color-adjust: none;
       background-color: ButtonText;
     }
@@ -293,6 +276,10 @@
 
   [data-slot="kind-uploader"]:is([data-motion="reduced"], [data-motion="none"])
     [data-slot="progress-indicator"] {
+    transition: none;
+  }
+
+  [data-slot="kind-uploader"][data-motion="none"] [data-slot="progress-track"] {
     transition: none;
   }
 

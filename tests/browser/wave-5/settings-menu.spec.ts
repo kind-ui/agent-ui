@@ -11,6 +11,11 @@ type Fixture = {
 const trigger = (page: Page) => page.getByRole("button", { name: "Settings" });
 const menu = (page: Page) => page.getByRole("menu").first();
 const toggle = (page: Page, name: string | RegExp) => page.getByRole("menuitemcheckbox", { name });
+// A pointer open moves focus into the menu after the click resolves, so wait for it before pressing inside.
+const openByPointer = async (page: Page) => {
+  await trigger(page).click();
+  await expect(page.locator('[role="menu"]:focus-within, [role="menu"]:focus')).toHaveCount(1);
+};
 const choice = (page: Page) => page.getByRole("menuitem", { name: /^Response style/ });
 const option = (page: Page, name: string) => page.getByRole("menuitemradio", { name });
 const content = (page: Page) => page.locator('[data-slot="menu-content"]');
@@ -126,9 +131,9 @@ test("agent actions: open, close, toggle and setValue; open, the bridge adds its
 for (const scheme of ["light", "dark"] as const)
   test(`axe passes with the menu and a submenu open, ${scheme}`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: scheme });
-    await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     await load(page);
-    await trigger(page).click();
+    await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
+    await openByPointer(page);
     await choice(page).press("ArrowRight");
     await expect(option(page, "Concise")).toBeFocused();
     await settled(page);
@@ -141,7 +146,7 @@ test("a value change or an equal settings copy redraws no row, and focus stays",
 }, testInfo) => {
   test.skip(layerOf(testInfo) !== "web", "React keys its rows; web redraws them");
   await load(page);
-  await trigger(page).click();
+  await openByPointer(page);
   await choice(page).press("ArrowRight");
   await page.keyboard.press("ArrowDown");
   await expect(option(page, "Balanced")).toBeFocused();
@@ -162,6 +167,25 @@ test("a value change or an equal settings copy redraws no row, and focus stays",
   expect(removed).toBe(0);
   await expect(option(page, "Balanced")).toBeFocused();
   await expect(toggle(page, /^Web search/)).toHaveAttribute("aria-checked", "true");
+});
+
+test("a pointer open highlights no item; a keyboard open highlights the first", async ({ page }) => {
+  await load(page);
+  const first = toggle(page, /^Web search/);
+  const background = () => first.evaluate((el) => getComputedStyle(el).backgroundColor);
+  await trigger(page).click();
+  await expect(menu(page)).toBeVisible();
+  await settled(page);
+  await expect(page.locator('[role^="menuitem"][data-highlighted]')).toHaveCount(0);
+  await expect(trigger(page)).not.toBeFocused();
+  expect(await background()).toBe("rgba(0, 0, 0, 0)");
+  await page.keyboard.press("Escape");
+  await expect(menu(page)).toBeHidden();
+  await expect(trigger(page)).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(first).toBeFocused();
+  await expect(first).toHaveAttribute("data-highlighted", "");
+  expect(await background()).not.toBe("rgba(0, 0, 0, 0)");
 });
 
 test("with reduced motion the menu only fades and the switch doesn't slide", async ({ page }) => {

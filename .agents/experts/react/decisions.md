@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
+Last reviewed: `bfb9bb7` (Design Wave 1 Batch D)
 
 ## Settled
 
@@ -25,7 +25,7 @@ Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 - **UI SDK `CommandGroup` renders `hidden` without `aria-labelledby` on the server (Wave 5 Task 1):** a server-rendered Kind Command shows an empty group until hydration. UI SDK's; matters once Command renders outside a closed popup. Picker (Wave 5 Task 2) renders Command only while its list is open, so needs no workaround.
 - **A streamed Test Results update renders every row's UI SDK Tree parts and item parts** (Wave 4 Task 9): the known options-change cost (as Chain of Thought, Task and Sources). Our `TestResultsRow` components skip suites the host kept, since core caches tree items per suite.
 - **File Tree: the root `group` and the Tree are both named "Files"** (Wave 4 Task 6), so a screen reader may say it twice; and a function `className` on the root gets the Tree's props. Not checked with a screen reader.
-- **A server-rendered ready Generated Image shows "Loading image" and a shimmer until it hydrates** (Wave 4 Task 5): the phase comes from the `<img>`'s `load`, which only the client hears; the frame keeps its size. Each progress tick renders every part (UI SDK options change), as Chain of Thought's steps do.
+- **A server-rendered ready Generated Image shows "Loading image" over its flat placeholder until it hydrates** (Wave 4 Task 5): the phase comes from the `<img>`'s `load`, which only the client hears; the frame keeps its size. Each progress tick renders every part (UI SDK options change), as Chain of Thought's steps do.
 - **Sources re-renders every item's parts on any `sources` change** (Wave 4 Task 2), once per update, not per token: the same UI SDK options-change behavior as Chain of Thought, Task and Plan items despite `selects`.
 - **A Context Meter root `className` or `render` function gets `{}`,** as Status's root does (Wave 3 Task 8): style by `data-level`. The docs should say this covers every root.
 - **Question's checkbox groups have no name of their own:** the item's group, named by its prompt, names them, as UI SDK Field's "Groups in a Field Set" says. A radio group points `aria-labelledby` at the prompt (Wave 5 Task 15), since `checkPattern` requires its name. Not checked with a screen reader.
@@ -52,6 +52,10 @@ Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 - **Chain of Thought: a host `steps` update renders every step's parts (Wave 2 Task 5),** 609 renders for one status change among 100 steps; `memo` on the items doesn't help, as the parts re-render from UI SDK's options change. A press reaches one step. Report to UI SDK; no budget, since it's per step, not per token.
 - **UI SDK Menu rendered open on the server leaves its radio group unnamed (Wave 5 Task 6):** `role="group"` has no `aria-labelledby` though its label is in the markup, like the known `CommandGroup` one; the client names it. UI SDK's; report upstream.
 - **Model Control's trigger repeats `KindMenuItemContent`'s string-or-element icon code** (Wave 5 Task 9); one internal icon helper would serve both.
+- Sidebar: no fixture or spec for a controlled `open` that refuses or follows changes; core's write-back was checked by hand in review.
+- **A custom `ConversationSearchInput` without `ConversationSearchCount` leaves the field's `aria-describedby` naming a missing id** (Wave 6 Task 11), as the `StepTitle` and `QuestionPrompt` items do.
+- **A server render of a `defaultOpen` Thread Search names its dialog by a title id not in the markup** (Wave 6 Task 3): the client names it by `aria-label`; UI SDK's, like the `CommandGroup` one.
+- **A narrow React Sidebar lists its Resizable in the agent snapshot** (Wave 6 Task 12). The Resizable stays mounted under `overlayBelow`, so the inset's page never mounts again, but the handle, whose `data-agent-hidden` keeps the Resizable out of the snapshot on wide screens, isn't rendered then, and every other Resizable part holds a Sidebar part. Web takes the Resizable out instead. Fixing it means keeping a hidden handle in the group while narrow, or a UI SDK way to hide a component that holds another's parts.
 
 ## Resolved
 
@@ -104,6 +108,8 @@ Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 - **`<Status>{false}</Status>` and `<Status>{null}</Status>` differed (Wave 2 Task 2).** Fixed: any `children` replace the default parts.
 - **Approval Mode fixtures (Wave 5 Task 6):** `onLearnMore` had no case and the fixtures carried an unused `id`; a `learning` case and spec test cover it, and the `id` is gone.
 - **A choice option's `icon` was `unknown` in React's `settings` props (Wave 5 Task 9):** `SettingsMenuSetting` narrows the options' icons too, and Model Control's `settings` use it.
+- **`MessageTime` warned "Invalid DOM property `datetime`" (Wave 6 Task 9):** UI SDK's React props don't rename it, so the core slot writes `dateTime`; the clock path (no `now`) is pinned in `message.spec.ts` with no console errors.
+- **Conversation Search ignored its `defaultQuery` at mount, didn't write back a controlled search the owner didn't take, left its marks when unmounted, and the docs example rendered every row on a marks change** (Wave 6 Task 11): fixed, with `preset` and `refused` cases; the example's rows are `memo`.
 
 ## Revisit
 

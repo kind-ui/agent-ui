@@ -1,5 +1,5 @@
 /* Menus built on `menuBase` (Add Menu, Settings Menu, …): UI SDK Menu inside a root keyed on `data-menu-part`, whose
-   items take the internal Menu's look. This adds what such menus share: an icon trigger, a submenu's chevron, a radio
+   items take the internal Menu's look. This adds what such menus share: a trigger icon, a submenu's chevron, a radio
    item's check, a checkbox item drawn as a switch and the popup's motion. */
 @layer components {
   [data-menu-part="root"] {
@@ -12,51 +12,16 @@
     display: contents;
   }
 
-  /* The menus' own trigger, an icon button whatever icon it holds; `[data-menu-trigger-icon]` draws the menu's
-     `--kind-menu-trigger-icon`. A menu whose trigger shows text widens it in its own stylesheet. */
-  :where(
-      [data-kind="add-menu"],
-      [data-kind="settings-menu"],
-      [data-kind="approval-mode"],
-      [data-kind="model-control"]
-    )
-    :where([data-menu-part="trigger"])
-    [data-slot="menu-trigger"] {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    padding: 0;
-    border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: var(--kind-color-surface);
-    color: var(--kind-color-fg);
-    cursor: default;
-    transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
-
-    &:hover,
-    &[data-open] {
-      background-color: var(--kind-color-hover);
-    }
-    &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
-    }
-    &:is(:disabled, [data-disabled]) {
-      opacity: 0.5;
-    }
-    & > :is(svg, img) {
-      width: 16px;
-      height: 16px;
-    }
+  :where([data-menu-part="trigger"]) :is(svg, img) {
+    width: var(--kind-icon-size);
+    height: var(--kind-icon-size);
   }
 
   [data-menu-trigger-icon] {
     flex-shrink: 0;
-    width: 16px;
-    height: 16px;
-    background-color: currentColor;
+    width: var(--kind-icon-size);
+    height: var(--kind-icon-size);
+    background-color: var(--kind-control-icon-color, currentColor);
     mask: var(--kind-menu-trigger-icon) center / contain no-repeat;
   }
 
@@ -92,9 +57,9 @@
       height: 18px;
       margin-inline-start: auto;
       padding: 2px;
-      border-radius: 999px;
-      background-color: var(--kind-color-border);
-      transition: background-color var(--kind-duration-fast) var(--kind-ease-out);
+      border-radius: var(--kind-radius-full);
+      background-color: var(--kind-color-pressed);
+      transition: background-color var(--kind-duration-fast) var(--kind-ease-in-out);
 
       &[data-checked] {
         --kind-menu-switch-shift: 14px;
@@ -103,15 +68,51 @@
       &[data-checked]:dir(rtl) {
         --kind-menu-switch-shift: -14px;
       }
+      /* Level with the label's first line when a description follows it. */
+      :where([data-slot="menu-checkbox-item"]:has([data-menu-description])) > & {
+        align-self: start;
+        margin-block-start: 1px;
+      }
       & > [data-menu-switch-thumb] {
         width: 14px;
         height: 14px;
-        border-radius: 999px;
-        background-color: var(--kind-color-surface);
-        box-shadow: 0 1px 2px color-mix(in srgb, var(--kind-color-shadow) 10%, transparent);
+        border-radius: var(--kind-radius-full);
+        background-color: var(--kind-color-raised);
+        box-shadow: var(--kind-shadow-control);
         translate: var(--kind-menu-switch-shift, 0) 0;
-        transition: translate var(--kind-duration-fast) var(--kind-ease-out);
+        transition:
+          translate var(--kind-duration-fast) var(--kind-ease-in-out),
+          scale var(--kind-duration-instant) var(--kind-ease-enter);
       }
+      /* Pressing the row stretches the thumb toward where it's going, as a finger would. */
+      :where([data-slot="menu-checkbox-item"]:active) > & > [data-menu-switch-thumb] {
+        scale: 1.2 1;
+        transform-origin: left;
+      }
+      :where([data-slot="menu-checkbox-item"]:active) > &[data-checked] > [data-menu-switch-thumb] {
+        transform-origin: right;
+      }
+    }
+    /* A group's label and a plain row start at the text column of the rows beside them: past the check and the
+       icon each takes, at the rows' 0.5rem gap. */
+    & [data-slot="menu-group"]:has(> * > [data-slot="menu-item-indicator"]) {
+      --kind-menu-check-inset: 1.5rem;
+    }
+    & [data-slot="menu-group"]:has(> * > [data-slot="menu-item-icon"]) {
+      --kind-menu-icon-inset: 1.5rem;
+    }
+    /* `text-indent`, since the internal Menu's padding is a utility. */
+    & [data-slot="menu-group-label"] {
+      text-indent: calc(var(--kind-menu-check-inset, 0px) + var(--kind-menu-icon-inset, 0px));
+    }
+    /* A plain row among checked ones, like "More models", starts past the check column. */
+    & [data-menu-inset]::before {
+      content: "";
+      flex-shrink: 0;
+      width: 1rem;
+    }
+    & [data-settings-menu-section] {
+      display: contents;
     }
     & [data-slot="menu-item-icon"] > :is(img, svg) {
       width: 16px;
@@ -151,29 +152,28 @@
     }
   }
 
-  /* Motion: a menu rises and fades in from its trigger. Reduced motion only fades, in 120 ms; `none` doesn't
+  /* Motion: a menu scales in from its trigger, as every shared popup does. Reduced motion only fades, in 120 ms; `none` doesn't
      animate. A sheet is UI SDK's, which slides whatever the motion settings. */
   :where([data-menu-part="root"]) [data-slot="menu-content"]:where(:not([data-presentation="sheet"])) {
     transition:
-      opacity var(--kind-duration-fast) var(--kind-ease-out),
-      translate var(--kind-duration-base) var(--kind-ease),
-      scale var(--kind-duration-base) var(--kind-ease);
+      opacity var(--kind-duration-base) var(--kind-ease-enter),
+      scale var(--kind-duration-base) var(--kind-ease-enter);
     transform-origin: var(--transform-origin);
 
     &:is([data-starting-style], [data-ending-style]) {
       opacity: 0;
-      translate: 0 -4px;
-      scale: 0.98;
+      scale: var(--kind-enter-scale);
     }
     &:where([data-ending-style]) {
-      transition-duration: var(--kind-duration-fast);
+      transition-duration: var(--kind-duration-exit);
+      transition-timing-function: var(--kind-ease-exit);
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
     :where([data-menu-part="root"][data-motion="auto"])
       [data-slot="menu-content"]:where(:not([data-presentation="sheet"])) {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
       &:is([data-starting-style], [data-ending-style]) {
         translate: none;
@@ -184,7 +184,7 @@
 
   :where([data-menu-part="root"][data-motion="reduced"])
     [data-slot="menu-content"]:where(:not([data-presentation="sheet"])) {
-    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
     &:is([data-starting-style], [data-ending-style]) {
       translate: none;
@@ -197,11 +197,13 @@
     :where([data-menu-part="root"][data-motion="auto"])
       :is([data-menu-switch], [data-menu-switch] > [data-menu-switch-thumb]) {
       transition: none;
+      scale: none;
     }
   }
   :where([data-menu-part="root"]:is([data-motion="reduced"], [data-motion="none"]))
     :is([data-menu-switch], [data-menu-switch] > [data-menu-switch-thumb]) {
     transition: none;
+    scale: none;
   }
 
   :where([data-menu-part="root"][data-motion="none"])

@@ -7,8 +7,9 @@ export type ReasoningOptions = Omit<StepOptions, "label" | "durationSeconds"> & 
   /** The model's thoughts so far, as markdown. Appending parses only the blocks that changed. */
   text?: string;
   /**
-   * Replaces the title, "Thinking" or "Thought for N s", and is announced on completion, so name the outcome in it.
-   * A failure or a stop still announces "Thinking failed" or "Thinking stopped".
+   * Replaces the title, "Thinking", "Thought for N s", "Thinking failed" or "Thinking stopped", and is announced on
+   * completion, so name the outcome in it. A failure or a stop still announces "Thinking failed" or "Thinking
+   * stopped".
    */
   label?: string;
   /**
@@ -19,7 +20,7 @@ export type ReasoningOptions = Omit<StepOptions, "label" | "durationSeconds"> & 
 };
 
 export type ReasoningState = StepState & {
-  /** The `label`, or "Thinking" until the step is done and "Thought for N s" after. */
+  /** The `label`, or "Thinking" until the step is done and then "Thought for N s", "Thinking failed" or "Thinking stopped". */
   title: string;
   /** The markdown the content renders, from `text`. */
   text: string;
@@ -47,22 +48,27 @@ export type ReasoningPrimitive = ReturnType<
 
 const THINKING: ReadonlySet<StepStatus> = new Set(["pending", "running", "awaiting-input"]);
 
-/** "Thinking" until the status is done, then "Thought for N s", rounded and at least 1, or "Thought" without one. */
+const ENDED: Partial<Record<StepStatus, string>> = {
+  error: "Thinking failed",
+  cancelled: "Thinking stopped",
+};
+
+/**
+ * "Thinking" until the status is done, then "Thought for N s", rounded and at least 1, or "Thought" without one; a
+ * failure or a stop reads "Thinking failed" or "Thinking stopped".
+ */
 export const reasoningTitle = (status: StepStatus, durationSeconds?: number): string => {
   if (THINKING.has(status)) return "Thinking";
+  const ended = ENDED[status];
+  if (ended) return ended;
   return durationSeconds === undefined || !Number.isFinite(durationSeconds)
     ? "Thought"
     : `Thought for ${Math.max(1, Math.round(durationSeconds))} s`;
 };
 
-const ANNOUNCEMENTS: Partial<Record<StepStatus, string>> = {
-  error: "Thinking failed",
-  cancelled: "Thinking stopped",
-};
-
 const base = stepBase<ReasoningState>({
   kind: "reasoning",
-  announcement: (status, _title, state) => (status === "complete" ? state.title : ANNOUNCEMENTS[status]),
+  announcement: (status, _title, state) => (status === "complete" ? state.title : ENDED[status]),
 });
 
 const presentation = (options: ReasoningOptions) => ({

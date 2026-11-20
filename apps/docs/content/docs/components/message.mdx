@@ -4,11 +4,13 @@ description: Show one turn of a chat, with copy, regenerate, edit and a switcher
 ---
 
 import MessageExample from "../../../examples/message/basic";
+import MessageAuthorExample from "../../../examples/message/author";
+import MessageOutcomesExample from "../../../examples/message/outcomes";
 import MessageRegenerateOptionsExample from "../../../examples/message/regenerate-options";
 
 Use a message for each turn in a conversation, from the person or the assistant. Its toolbar holds the actions you handle, and shows once the message is done streaming.
 
-<Example caption="Press Edit on the question to change it, then press Enter to save or Escape to cancel. Press Regenerate on the reply to add a response, and the arrows to switch between them.">
+<Example caption="Press Edit on the question to change it, then press Save or Enter to save, or Cancel or Escape to cancel. Press Regenerate on the reply to add a response, and the arrows to switch between them.">
   <MessageExample />
 
   <include cwd lang="tsx">./examples/message/basic.tsx</include>
@@ -29,8 +31,20 @@ npx shadcn@latest add @kind-ui/message-web
 ```text
 Message
 ├── MessageAvatar
+├── MessageHeader
+│   ├── MessageAuthor
+│   ├── MessageTime
+│   └── MessageDuration
 ├── MessageContent
 ├── MessageEditor
+│   └── MessageEditActions
+│       ├── MessageEditCancel
+│       └── MessageEditSave
+├── MessageOutcome
+│   ├── MessageOutcomeIcon
+│   ├── MessageOutcomeText
+│   ├── MessageRetry
+│   └── MessageContinue
 └── MessageToolbar
     ├── MessageBranch
     │   ├── MessageBranchPrevious
@@ -44,13 +58,41 @@ Message
         └── MessageEdit
 ```
 
-The content holds the message, rendered however you like, for example with Markdown. The editor is a text area that takes the content's place while a user message is edited. `MessageCopy`, `MessageRegenerate` and `MessageEdit` each wrap a `KindToolbarButton` and give it its icon and action. The toolbar they sit in is one Tab stop, and the arrow keys move between its buttons. `MessageBranch` switches between responses, with a label like "2 of 3". While the message has `regenerateOptions`, `MessageRegenerate` turns its button into UI SDK's `MenuTrigger` and adds `MessageRegenerateContent`, UI SDK's `MenuContent`, with `MessageRegenerateRows` inside it.
+The avatar and header show who wrote the message and when. The content holds the message, rendered however you like, for example with Markdown. The outcome sits after the content and says a response stopped or failed. The editor is a text area that takes the bubble's place while a user message is edited, with **Cancel** and **Save** after it in place of the toolbar: `MessageEditActions` by default, or the children you pass `MessageEditor`. `MessageCopy`, `MessageRegenerate` and `MessageEdit` each wrap a `KindToolbarButton` and give it its icon and action. The toolbar they sit in is one Tab stop, and the arrow keys move between its buttons. `MessageBranch` switches between responses, with a label like "2 of 3". While the message has `regenerateOptions`, `MessageRegenerate` turns its button into UI SDK's `MenuTrigger` and adds `MessageRegenerateContent`, UI SDK's `MenuContent`, with `MessageRegenerateRows` inside it.
 
 ## Usage
 
 ### Role and Status
 
-Set `messageRole` to `user` or `assistant`. A user message sits at the end of the line in a bubble. Set `status` as a response arrives: the toolbar stays hidden while it's `submitted` or `streaming`, and fades in when the message settles.
+Set `messageRole` to `user` or `assistant`. A user message sits at the end of the line in a bubble. Set `status` as a response arrives: the toolbar stays hidden while it's `submitted` or `streaming`, and fades in when the message settles. On a device with a pointer, a message that isn't the last one shows its actions only on hover or while focus is inside it; the last message, and every message on a touch screen, always shows them. A branch switcher always shows, since it says something. The last message is the last `ConversationRow`, or the last of sibling messages.
+
+### Author and Time
+
+Pass `author`, with an `id`, a `name` and optionally an `avatarUrl`, to fill `MessageAvatar` with their image, or their initials until it loads, and `MessageAuthor` with their name. Pass `createdAt`, an ISO 8601 date-time, for `MessageTime`, and `durationSeconds` for `MessageDuration`, which reads like "4 sec" or "1 min 12 sec". `MessageHeader` holds all three, and shows while any of them has something to show.
+
+<Example caption="Both replies are from the same author within a few minutes, so the second leaves out the avatar and the name, and keeps its time and how long it took.">
+  <MessageAuthorExample />
+
+  <include cwd lang="tsx">./examples/message/author.tsx</include>
+</Example>
+
+The time reads "9:41 AM" for a message from today, and "Nov 17, 9:41 AM" for one from another day. Server markup has no clock, so it shows the date and time, and the browser reads today from its clock once the page loads. Pass `now` to set today yourself. Times read in `timeZone`, UTC by default, and dates and durations in `locale`, English by default.
+
+Set `continued` on a message that follows its author's previous one, to leave out its avatar and name. The avatar keeps its space, so the messages stay lined up. `isContinuation(previous, next)` from `@kind-ui/agent-ui/core` says whether two messages have the same author `id` and were written within five minutes of each other; pass `{ withinMinutes }` to change that.
+
+### Stopped and Failed Answers
+
+When a response stops or fails, `MessageOutcome` says so after the content, so the streamed text above it never moves. Set `status` to `aborted` to show "Stopped", or to `error` to show the `error` option's words, "Something went wrong" by default. Pass `onContinue` to offer **Continue** on a stopped response, and `onRetry` to offer **Retry** on a failed one.
+
+<Example caption="Press Continue to finish the stopped answer, or Retry to try the failed one again. Each button stays unavailable while its request is pending.">
+  <MessageOutcomesExample />
+
+  <include cwd lang="tsx">./examples/message/outcomes.tsx</include>
+</Example>
+
+Both callbacks get `details.reason`: `retry-press` or `continue-press` for the button, `imperative` for a call through the api. Return a promise to keep the button unavailable until it settles. If it rejects, the button is available again. A new `status` ends the pending request too.
+
+The message tells screen readers "Response stopped" or "Response failed" politely, once, and only when it saw that response streaming, so a page of earlier messages stays quiet. With the [AI SDK adapter](../adapters/ai-sdk.mdx), `fromUIMessages(messages, { status, error })` puts the chat's error on the last message, so pass that message's `error.message` as `error`.
 
 ### Copy
 
@@ -58,7 +100,7 @@ Pass the message's `text`, which copy writes to the clipboard. The icon turns in
 
 ### Regenerate and Edit
 
-Each action shows only when you handle it. Pass `onRegenerate` to show regenerate. Pass `onEdit` to show edit on a user message: pressing it swaps the content for the editor, filled with `text`. Enter or moving focus away saves, and Escape cancels. `onEdit` gets the new text, and isn't called when the text didn't change.
+Each action shows only when you handle it. Pass `onRegenerate` to show regenerate. Pass `onEdit` to show edit on a user message: pressing it swaps the bubble for the editor, filled with `text`, in the same place. **Save**, Enter or moving focus away saves, and **Cancel** or Escape cancels. Tab moves from the editor to **Cancel** and **Save**. `onEdit` gets the new text, and isn't called when the text didn't change.
 
 ### Regenerate With
 
@@ -106,10 +148,10 @@ The switcher shows only when `branchCount` is more than 1.
 
 ### Agent
 
-An agent connected with `createAgent` reads each message's `status`, `branchIndex` and `branchCount`. It can run these actions, and press the buttons like a person would. Each one is offered only while the message shows it. `regenerate` takes a regenerate option's `id` or label, refuses an unknown one, and is **Try again** without one:
+An agent connected with `createAgent` reads each message's `status`, `branchIndex` and `branchCount`. It can run these actions, and press the buttons like a person would. Each one is offered only while the message shows it. `regenerate` takes a regenerate option's `id` or label, refuses an unknown one, and is **Try again** without one. `retry` and `continue` are offered on a failed or stopped response while you handle them and nothing is pending:
 
-<auto-type-table path="../../../../../packages/agent-ui/src/core/message/message.ts" name="MessageAgentActions" type='Pick<MessageApi, "copy" | "regenerate" | "edit" | "setBranch">' />
+<auto-type-table path="../../../../../packages/agent-ui/src/core/message/message.ts" name="MessageAgentActions" type='Pick<MessageApi, "copy" | "regenerate" | "edit" | "setBranch" | "retry" | "continue">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-message>`, each prop is a kebab-case attribute, so `messageRole` is `message-role`, and each callback is a lowercase event, so `onBranchChange` fires `branchchange`. `onCopy` fires `messagecopy`, since `copy` is a native event. Add the `can-regenerate` and `can-edit` attributes to offer those actions, which then fire `regenerate` and `edit`. Set `regenerateOptions` as a property, and read the chosen option from the `regenerate` event's `detail.optionId`. With options, write Regenerate as a UI SDK Menu inside `<kind-message-regenerate>`: a `<kind-message-regenerate-trigger>` holding the `<ui-toolbar-button>`, with `<ui-menu-trigger>` and its `<button>` inside it, and a `<kind-message-regenerate-content>` holding an empty `<ui-menu-content data-agent-hidden>`, which the element fills with the rows.
+  Runs in React and Web Components. On `<kind-message>`, each prop is a kebab-case attribute, so `messageRole` is `message-role`, and each callback is a lowercase event, so `onBranchChange` fires `branchchange`. `onCopy` fires `messagecopy`, since `copy` is a native event. Add the `can-regenerate`, `can-edit`, `can-retry` and `can-continue` attributes to offer those actions, which then fire `regenerate`, `edit`, `retry` and `continue`. Set `author` as a property. An empty `<kind-message-header>` or `<kind-message-outcome>` fills itself with its parts, and the editor gets a `<kind-message-edit-actions>` with **Cancel** and **Save** after it unless you write one; write yours `hidden`, so its buttons don't show before the element upgrades. Set `regenerateOptions` as a property, and read the chosen option from the `regenerate` event's `detail.optionId`. With options, write Regenerate as a UI SDK Menu inside `<kind-message-regenerate>`: a `<kind-message-regenerate-trigger>` holding the `<ui-toolbar-button>`, with `<ui-menu-trigger>` and its `<button>` inside it, and a `<kind-message-regenerate-content>` holding an empty `<ui-menu-content data-agent-hidden>`, which the element fills with the rows.
 </Caption>

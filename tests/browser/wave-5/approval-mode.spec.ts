@@ -48,10 +48,8 @@ test("arrow keys and Enter choose a mode and the menu closes", async ({ page }) 
   await expect(trigger(page)).toHaveAccessibleName("Approvals, Ask every time");
   await trigger(page).focus();
   await page.keyboard.press("Enter");
-  await expect(learnMore(page)).toBeFocused();
-  await expect(mode(page, /^Ask every time/)).toHaveAttribute("aria-checked", "true");
-  await page.keyboard.press("ArrowDown");
   await expect(mode(page, /^Ask every time/)).toBeFocused();
+  await expect(mode(page, /^Ask every time/)).toHaveAttribute("aria-checked", "true");
   await page.keyboard.press("ArrowDown");
   await expect(mode(page, /^Allow edits/)).toBeFocused();
   await page.keyboard.press("Enter");
@@ -61,34 +59,30 @@ test("arrow keys and Enter choose a mode and the menu closes", async ({ page }) 
   expect(await changes(page)).toEqual([{ value: "edits", reason: "item-press", source: "keyboard" }]);
 });
 
-test("the danger row reads as risky without color", async ({ page }) => {
-  await page.emulateMedia({ forcedColors: "active" });
+test("the danger row says Risky once, in words, and its label keeps the text color", async ({ page }) => {
   await load(page);
   await trigger(page).click();
   const full = mode(page, /^Full access/);
   await expect(full).toHaveAccessibleName(/Risky/);
   await expect(full).toHaveAttribute("data-danger", "");
-  const mark = full.locator("[data-approval-mode-risk] [data-status-mark][data-status=warning]");
-  const { glyph, fill, mask } = await mark.evaluate((el) => ({
-    glyph: getComputedStyle(el, "::after").backgroundColor,
-    fill: getComputedStyle(el).backgroundColor,
-    mask: getComputedStyle(el, "::after").maskImage,
-  }));
-  expect(glyph).not.toBe("rgba(0, 0, 0, 0)");
-  expect(glyph).not.toBe(fill);
-  expect(mask).not.toBe("none");
+  await expect(full.locator("[data-status-mark]")).toHaveCount(0);
+  const [label, other] = await Promise.all(
+    [full, mode(page, /^Ask every time/)].map((row) =>
+      row.locator("[data-menu-text] > :first-child").evaluate((el) => getComputedStyle(el).color),
+    ),
+  );
+  expect(label).toBe(other);
   await full.click();
   await expect(menu(page)).toBeHidden();
   await expect(trigger(page)).toHaveAccessibleName("Approvals, Full access, risky");
 });
 
-test("the header link is reached by the arrows and follows its href", async ({ page }) => {
+test("Learn more comes after the modes and follows its href", async ({ page }) => {
   await load(page);
   await trigger(page).focus();
   await page.keyboard.press("Enter");
-  await expect(mode(page, /^Ask every time/)).toBeVisible();
-  await page.keyboard.press("ArrowDown");
-  await page.keyboard.press("ArrowUp");
+  await expect(mode(page, /^Ask every time/)).toBeFocused();
+  await page.keyboard.press("End");
   await expect(learnMore(page)).toBeFocused();
   await page.keyboard.press("Enter");
   await expect.poll(() => page.evaluate(() => location.hash)).toBe("#approvals-help");
@@ -109,7 +103,6 @@ test("a value change or an equal modes copy redraws nothing, and focus stays", a
   await load(page);
   await trigger(page).focus();
   await page.keyboard.press("Enter");
-  await page.keyboard.press("ArrowDown");
   await page.keyboard.press("ArrowDown");
   await expect(mode(page, /^Allow edits/)).toBeFocused();
   const removed = await page.evaluate(async () => {
@@ -159,8 +152,8 @@ test("a change the host cancels keeps the old value and the menu open", async ({
 for (const scheme of ["light", "dark"] as const)
   test(`axe passes with the menu open, ${scheme}`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: scheme });
-    await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     await load(page);
+    await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     await trigger(page).click();
     await expect(menu(page)).toBeVisible();
     await settled(page);

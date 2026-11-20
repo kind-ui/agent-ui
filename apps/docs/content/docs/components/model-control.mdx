@@ -5,9 +5,9 @@ description: Pick the model and how hard it thinks from one button, with your ow
 
 import ModelControlExample from "../../../examples/model-control/basic";
 
-Use a model control in a [composer](./composer.mdx) when people choose both the model and its effort, and you'd rather show one button than a [Model Selector](./model-selector.mdx) beside [Reasoning Effort](./reasoning-effort.mdx). It's a [Settings Menu](./settings-menu.mdx) with two rows of its own: a button reading "Claude Opus 5.5 · Medium" that opens a menu with a Model submenu, an Effort submenu and any toggles and choices you add.
+Use a model control in a [composer](./composer.mdx) when people choose both the model and its effort, and you'd rather show one button than a [Model Selector](./model-selector.mdx) beside [Reasoning Effort](./reasoning-effort.mdx). It's a [Settings Menu](./settings-menu.mdx) with two sections of its own: a button reading "Claude Opus 5.5 · Medium" that opens one menu listing the models, then the effort levels, then any choices and toggles you add. Changing either takes one press after opening.
 
-<Example caption="Press Claude Opus 5.5 · Medium, open Model and choose GPT-6.1 Terra; the menu stays open and Effort shows the level it uses. Open Effort to see the levels Terra doesn't support dimmed. Choose More models to list another model.">
+<Example caption="Press Claude Opus 5.5 · Medium and choose GPT-6.1 Terra; the menu stays open, Effort checks the level it uses and dims the ones Terra doesn't support. Choose More models to list another model.">
   <ModelControlExample />
 
   <include cwd lang="tsx">./examples/model-control/basic.tsx</include>
@@ -38,15 +38,15 @@ ModelControl
 
 ### Models
 
-Pass `models`, each with an `id` and a `name`. A model's `group` lists it under that label in the Model submenu, its `icon` shows before its name there and on the button, and `disabled` dims it so it can't be chosen. In React, an icon is an image URL or an element, like an inline `<svg>`. Icons are hidden from assistive technology, so the name names the row.
+Pass `models`, each with an `id` and a `name`. A model's `group` lists it under that label in the menu, its `icon` shows before its name there and on the button, and `disabled` dims it so it can't be chosen. In React, an icon is an image URL or an element, like an inline `<svg>`. Icons are hidden from assistive technology, so the name names the row.
 
-Pass `model` and `onModelChange` to control the model, or `defaultModel` to start with one. Choosing a model keeps the menu open, as a choice in a Settings Menu does, so the Effort row already shows the level the new model uses. `onModelChange` gets the model's `id` with the reason `item-press`. Call `details.cancel()` to keep the old model.
+Pass `model` and `onModelChange` to control the model, or `defaultModel` to start with one. Choosing a model keeps the menu open, as a choice in a Settings Menu does, so the effort levels below already show the level the new model uses. `onModelChange` gets the model's `id` with the reason `item-press`. Call `details.cancel()` to keep the old model.
 
 ### Effort
 
-Pass `levels`, in order from least to most effort, each a `value` and a `label`. Without levels there's no Effort row. Pass `effort` and `onEffortChange` to control the level, or `defaultEffort` to start with one; it's the middle level by default.
+Pass `levels`, in order from least to most effort, each a `value` and a `label`. Without levels there's no Effort section. Pass `effort` and `onEffortChange` to control the level, or `defaultEffort` to start with one; it's the middle level by default.
 
-A model's `efforts` names the level values it supports. Without it, a model supports every level, and with `[]` it supports none and the Effort row is hidden. Levels a model doesn't support show dimmed in the Effort submenu and can't be chosen. When the chosen model doesn't support the effort, it falls back to the highest level it supports at or below it: the button shows that level, and `onEffortChange` reports it with the reason `model-change`. An uncontrolled effort starts on the level the starting model uses.
+A model's `efforts` names the level values it supports. Without it, a model supports every level, and with `[]` it supports none and the button shows no effort. Levels a model doesn't support show dimmed and can't be chosen. When the chosen model doesn't support the effort, it falls back to the highest level it supports at or below it: the button shows that level, and `onEffortChange` reports it with the reason `model-change`. An uncontrolled effort starts on the level the starting model uses.
 
 ```tsx
 const models = [
@@ -57,15 +57,15 @@ const models = [
 
 The Model Control doesn't send anything. When your app sends a request, `modelEffort(levels, model, effort)` from `@kind-ui/agent-ui/core` returns the level that model uses, or `null` when it has none.
 
-The button keeps its width when the effort changes, since every level's label shares one place and only the chosen one shows. It's named by the `label`, the model and the effort, like "Model, Claude Opus 5.5, Medium effort", or "Model, Claude Opus 5.5" without an effort. `modelLabel` and `effortLabel` name the two rows, "Model" and "Effort" by default, and `effortLabel` ends the button's name in lowercase.
+The button keeps its width when the effort changes, since every level's label shares one place and only the chosen one shows. It's named by the `label`, the model and the effort, like "Model, Claude Opus 5.5, Medium effort", or "Model, Claude Opus 5.5" without an effort. `modelLabel` and `effortLabel` head the two sections, "Model" and "Effort" by default; models with a `group` are listed under their group's label instead. `effortLabel` also ends the button's name in lowercase.
 
 ### Actions
 
-Pass `actions` and `onAction` to add items after the models in the Model submenu, below a separator, like **More models**. They show only while `onAction` is set. Choosing one closes the menu, and `onAction` gets its `id` with the reason `item-press`; call `details.cancel()` to keep the menu open.
+Pass `actions` and `onAction` to add items after the models, like **More models**. They show only while `onAction` is set. Choosing one closes the menu, and `onAction` gets its `id` with the reason `item-press`; call `details.cancel()` to keep the menu open.
 
 ### Settings
 
-Pass `settings` to add rows, as in a [Settings Menu](./settings-menu.mdx): toggles go above Model and Effort, and choices below them. Their values work the same way, through `values`, `defaultValues` and `onValuesChange`, whose `details.id` names the setting that changed. The ids `model` and `effort` are reserved, so a setting can't use them.
+Pass `settings` to add rows, as in a [Settings Menu](./settings-menu.mdx): they come after the models and effort levels, choices first, each in its own submenu, then toggles. Their values work the same way, through `values`, `defaultValues` and `onValuesChange`, whose `details.id` names the setting that changed. The ids `model` and `effort` are reserved, so a setting can't use them.
 
 ### Opening
 
@@ -73,7 +73,7 @@ Pass `open` and `onOpenChange` to control whether the menu is open, or `defaultO
 
 ### Keyboard
 
-The button is one Tab stop. Enter, Space or Down Arrow opens the menu, and the arrow keys move between rows. Right Arrow or Enter opens a submenu with focus on its first item, and Left Arrow or Escape closes only that submenu. Enter or Space chooses a model or level, and Space flips a toggle. Dimmed models and levels can be focused, as the menu pattern asks, but not chosen. Escape closes the menu, with focus back on the button.
+The button is one Tab stop. Enter, Space or Down Arrow opens the menu, and the arrow keys move between models, levels and your rows. Enter or Space chooses a model or level and keeps the menu open, and Space flips a toggle. Right Arrow opens one of your choices' submenus, and Left Arrow or Escape closes only that submenu. Dimmed models and levels can be focused, as the menu pattern asks, but not chosen. Escape closes the menu, with focus back on the button.
 
 ### Presentation and Motion
 

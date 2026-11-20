@@ -22,7 +22,7 @@ function GitBranchIcon() {
 }
 
 const initialBranches = [
-  { value: "main", label: "main", meta: "↑0 ↓0", icon: <GitBranchIcon /> },
+  { value: "main", label: "main", icon: <GitBranchIcon /> },
   {
     value: "picker",
     label: "picker",
@@ -39,14 +39,14 @@ export default function PickerBranchExample() {
   return (
     <Picker
       label="Branch"
-      placeholder="Search branches"
+      placeholder="Search branches…"
       items={branches}
       actions={[{ id: "new-branch", label: "New branch" }]}
       value={branch}
       onValueChange={setBranch}
       onAction={() => {
         const value = `branch-${branches.length - initialBranches.length + 1}`;
-        setBranches([...branches, { value, label: value, meta: "↑0 ↓0", icon: <GitBranchIcon /> }]);
+        setBranches([...branches, { value, label: value, icon: <GitBranchIcon /> }]);
         setBranch(value);
       }}
     />

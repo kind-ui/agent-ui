@@ -1,16 +1,18 @@
-/* Typing Indicator (spec §7), shared by both render layers. */
+/* Typing Indicator (spec §7), shared by both render layers. Every indicator's dots are `--kind-dot-size`. */
 @layer components {
   [data-slot="kind-typing-indicator"] {
     position: relative;
     display: inline-flex;
     align-items: center;
-    padding: 0.75rem 0.875rem;
-    border-radius: calc(var(--kind-radius) * 1.5);
-    background-color: var(--kind-color-hover);
+    gap: 0.5rem;
+    min-height: 1.25rem;
     color: var(--kind-color-muted);
+    font-size: var(--kind-text-md);
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
   }
 
-  /* Read by assistive technology only; the bubble speaks for itself. */
+  /* Read by assistive technology only: the dots sit where the reply's first line will start. */
   [data-slot="kind-typing-indicator-label"] {
     position: absolute;
     width: 1px;
@@ -22,13 +24,14 @@
 
   [data-slot="kind-typing-indicator-dots"] {
     display: inline-flex;
-    gap: 0.3125rem;
+    gap: calc(var(--kind-dot-size) * 0.8);
   }
 
+  /* The dot-flow loop drives opacity from its dim value; held dots sit a little brighter. */
   [data-slot="kind-typing-indicator-dot"] {
-    width: 0.4375rem;
-    height: 0.4375rem;
-    border-radius: 999px;
+    width: var(--kind-dot-size);
+    height: var(--kind-dot-size);
+    border-radius: var(--kind-radius-full);
     background-color: currentColor;
     opacity: 0.3;
   }

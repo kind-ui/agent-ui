@@ -1,11 +1,19 @@
-/* Suggestion (spec §7): a row of prompt chips that scrolls sideways when they don't fit, with Previous and Next after it. */
+/* Suggestion (spec §7): a row of prompt chips that scrolls sideways when they don't fit, with Previous and Next after
+   it, or wraps onto more lines with `layout="wrap"`. */
 @layer components {
   [data-slot="kind-suggestion"] {
     display: block;
     min-width: 0;
-    font-size: 0.8125rem;
-    line-height: 1.25rem;
+    font-size: var(--kind-text-md);
+    line-height: var(--kind-text-md-leading);
     color: var(--kind-color-fg);
+  }
+
+  [data-slot="kind-suggestion"]:where([data-layout="wrap"]) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
   }
 
   /* The edge with more chips past it fades. Carousel marks the slides in view once it has measured them, so a page
@@ -66,72 +74,34 @@
     display: none;
   }
 
+  /* Each chip is the shared soft pill; the description follows its label on the same line, muted. */
   [data-slot="kind-suggestion-item"] {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: flex-start;
     max-width: 18rem;
-    padding: 5px 12px;
-    border: 1px solid var(--kind-color-border);
-    border-radius: 999px;
-    background-color: var(--kind-color-surface);
-    color: var(--kind-color-fg);
-    text-align: start;
-    white-space: nowrap;
-    cursor: pointer;
-    transition:
-      background-color var(--kind-duration-fast) var(--kind-ease-out),
-      border-color var(--kind-duration-fast) var(--kind-ease-out),
-      scale var(--kind-duration-fast) var(--kind-ease-out);
-
-    &:where(:hover:not([aria-disabled="true"])) {
-      border-color: color-mix(in oklab, var(--kind-color-border) 60%, var(--kind-color-muted));
-      background-color: var(--kind-color-hover);
-    }
-    &:where(:active:not([aria-disabled="true"])) {
-      scale: 0.97;
-    }
-    &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
-    }
-    &:where([aria-disabled="true"]) {
-      cursor: default;
-    }
-    /* A chip with a description is a small card, two lines tall. */
-    &:where(:has([data-suggestion-description]:not(:empty))) {
-      padding-block: 6px;
-      border-radius: calc(var(--kind-radius) * 2 / 3);
-    }
 
     & > :where([data-suggestion-label], [data-suggestion-description]) {
-      max-width: 100%;
+      min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    & > :where([data-suggestion-label]) {
+      flex-shrink: 0;
+      max-width: 100%;
+    }
     & > :where([data-suggestion-description]) {
-      font-size: 0.75rem;
-      line-height: 1rem;
       color: var(--kind-color-muted);
+      font-weight: var(--kind-font-weight-regular);
     }
     & > :where([data-suggestion-description]:empty) {
       display: none;
     }
   }
 
-  /* Reduced motion: a press doesn't scale, and colors change in 120 ms. */
-  @media (prefers-reduced-motion: reduce) {
-    :where([data-slot="kind-suggestion"][data-motion="auto"]) [data-slot="kind-suggestion-item"] {
-      transition-duration: var(--kind-duration-reduced);
-      scale: none;
-    }
-  }
-  :where([data-slot="kind-suggestion"][data-motion="reduced"]) [data-slot="kind-suggestion-item"] {
-    transition-duration: var(--kind-duration-reduced);
+  /* The shared pill follows `prefers-reduced-motion`; the `motion` option reaches its press too. */
+  :where([data-slot="kind-suggestion"]:is([data-motion="reduced"], [data-motion="none"]))
+    [data-slot="kind-suggestion-item"] {
     scale: none;
   }
   :where([data-slot="kind-suggestion"][data-motion="none"]) [data-slot="kind-suggestion-item"] {
     transition: none;
-    scale: none;
   }
 }

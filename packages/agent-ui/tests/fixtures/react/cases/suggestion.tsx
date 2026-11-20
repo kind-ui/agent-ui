@@ -20,6 +20,7 @@ function Page({
   width,
   inForm,
   custom,
+  wrap,
 }: {
   initial?: Item[];
   motion?: MotionMode;
@@ -27,6 +28,7 @@ function Page({
   width?: number;
   inForm?: boolean;
   custom?: boolean;
+  wrap?: boolean;
 }) {
   const [items, setItems] = useState(initial);
   useEffect(() => {
@@ -43,7 +45,13 @@ function Page({
     });
   }, []);
   const suggestion = (
-    <Suggestion id="suggestion" suggestions={items} {...(pickable && { onPick: record })} motion={motion}>
+    <Suggestion
+      id="suggestion"
+      suggestions={items}
+      {...(pickable && { onPick: record })}
+      motion={motion}
+      {...(wrap && { layout: "wrap" as const })}
+    >
       {custom ? (
         <>
           <SuggestionViewport>
@@ -86,4 +94,5 @@ export const cases = {
   static: () => <Page pickable={false} />,
   form: () => <Page inForm />,
   custom: () => <Page custom />,
+  wrap: () => <Page initial={manySuggestions} width={360} wrap />,
 };

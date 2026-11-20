@@ -5,9 +5,9 @@ description: Ask a person to approve or deny what the agent wants to do, and kee
 
 import ConfirmationExample from "../../../examples/confirmation/basic";
 
-Use a confirmation when the agent needs a person's go-ahead before it acts, like deleting a file or sending an email. It offers the choices the host supplies, then shows the recorded outcome in their place.
+Use a confirmation when the agent needs a person's go-ahead before it acts, like deleting a file or sending an email. It names the request, offers the choices the host supplies, then shows the recorded outcome in their place.
 
-<Example caption="Type a reason and press Deny, or press Approve. The choices give way to the outcome, at the same height.">
+<Example caption="Press Approve, or press Deny to add a reason, then Deny again to send it. The choices give way to the outcome, at the same height.">
   <ConfirmationExample />
 
   <include cwd lang="tsx">./examples/confirmation/basic.tsx</include>
@@ -27,16 +27,18 @@ npx shadcn@latest add @kind-ui/confirmation-web
 
 ```text
 Confirmation
+├── ConfirmationTitle
 ├── ConfirmationReason
 ├── ConfirmationChoices
 │   ├── ConfirmationApprove
 │   ├── ConfirmationDeny
+│   ├── ConfirmationCancel
 │   └── ConfirmationError
 └── ConfirmationOutcome
     └── ConfirmationOutcomeIcon
 ```
 
-`Confirmation` renders these parts when you pass no children. It's a group named by its `label`. `ConfirmationReason` is a text box for the reason Deny sends, `ConfirmationApprove` and `ConfirmationDeny` are native buttons, and `ConfirmationError` says "Decision not sent. Try again." beside them. `ConfirmationOutcome` takes the choices' place once they're gone, with a status mark and where the request stands.
+`Confirmation` renders these parts when you pass no children. It's a group named by its `label`, which `ConfirmationTitle` shows above the choices and keeps above the outcome; inside a [Tool](./tool.mdx) the title is hidden, since the tool already names the request. `ConfirmationReason` is a text box for the reason Deny sends, `ConfirmationApprove` and `ConfirmationDeny` are native buttons, `ConfirmationCancel` closes the reason box, and `ConfirmationError` says "Decision not sent. Try again." beside them. `ConfirmationOutcome` takes the choices' place once they're gone, with a status mark and where the request stands.
 
 ## Usage
 
@@ -57,13 +59,13 @@ An `auto` request shows its outcome, like "Approved automatically", and no choic
 
 ### Sending a Decision
 
-A press disables both choices at once, so a second press, even on the other choice, calls nothing. Return a promise to keep them disabled until it settles; they stay disabled after that until the host reports on the request, whether it's `submitting`, `submit-failed` or `responded`. A rejection, or `submit-failed`, makes them available again, and `submit-failed` shows "Decision not sent. Try again." beside them.
+A press disables both choices at once, so a second press, even on the other choice, calls nothing. The pressed choice shows a running mark beside its label while its call is pending. Return a promise to keep them disabled until it settles; they stay disabled after that until the host reports on the request, whether it's `submitting`, `submit-failed` or `responded`. A rejection, or `submit-failed`, makes them available again, and `submit-failed` shows "Decision not sent. Try again." beside them.
 
 When the host replaces the request with a new `generation`, the choices are available again, and a late result for the old one changes nothing.
 
 ### Reasons
 
-Pass `reason` to show a box above the choices from the start. Deny sends its text as `decision.reason`, trimmed, and leaves it out when it's empty. It keeps its text through a new `generation` of the same request, and empties for a new `approvalId`. Once the decision is recorded, the box collapses and the outcome shows the reason after "Denied".
+Pass `reason` to ask why before a denial. Approve stays one press. The first press on Deny opens a box above the choices and moves focus into it, without calling `onDeny`; while it's open, **Deny** sends its text as `decision.reason`, trimmed, and leaves it out when it's empty, and **Cancel** closes the box and returns focus to Deny. Approve is hidden while the box is open. It keeps its text through a new `generation` of the same request, and empties for a new `approvalId`. Once the decision is recorded, the box collapses and the outcome shows the reason after "Denied".
 
 ### Outcome
 
@@ -73,7 +75,7 @@ Screen readers hear "Decision not sent" when a decision fails, and the outcome w
 
 ### Motion
 
-The choices and the outcome fade in when they swap, and the reason box collapses. Under `prefers-reduced-motion`, or with `motion="reduced"`, they fade over 120 ms and the box doesn't change height, and with `motion="none"` they swap at once.
+The choices and the outcome fade in when they swap, and the reason box expands as it opens and collapses as it closes. Under `prefers-reduced-motion`, or with `motion="reduced"`, they fade over 120 ms and the box doesn't change height, and with `motion="none"` they swap at once.
 
 ## API Reference
 
@@ -81,7 +83,7 @@ The choices and the outcome fade in when they swap, and the reason box collapses
 
 ### Agent
 
-An agent connected with `createAgent` finds the confirmation by its label and reads its `approvalState`. It can approve or deny while those choices show, and `deny` takes a reason, which fills the reason box. Every decision waits for a person to confirm, unless the host's `allow` lets it through; this can't be turned off.
+An agent connected with `createAgent` finds the confirmation by its label and reads its `approvalState`. It can approve or deny while those choices show, and `deny` takes a reason, which it sends at once without opening the reason box. Every decision waits for a person to confirm, unless the host's `allow` lets it through; this can't be turned off.
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/confirmation/confirmation.ts" name="ConfirmationAgentActions" type='Pick<ConfirmationApi, "approve" | "deny">' />
 

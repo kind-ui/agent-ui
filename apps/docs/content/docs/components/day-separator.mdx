@@ -1,0 +1,77 @@
+---
+title: Day Separator
+description: Mark where a new day starts in a conversation, with a heading that reads Today or Yesterday.
+---
+
+import DaySeparatorExample from "../../../examples/day-separator/basic";
+
+Use a day separator before the first message of each day, so a long conversation shows when things were said. It's a heading, so screen reader users can jump from one day to the next.
+
+<Example caption="Each day starts with a heading. Recent days read Today, Yesterday or their weekday, and older ones read their date.">
+  <DaySeparatorExample />
+
+  <include cwd lang="tsx">./examples/day-separator/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/day-separator
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/day-separator-web
+```
+
+## Composition
+
+```text
+DaySeparator
+└── DaySeparatorLabel
+```
+
+The root is the heading, with a line on each side drawn in CSS. `DaySeparatorLabel` renders a `<time>` whose `datetime` is the day as `YYYY-MM-DD`, and shows the day in words unless you pass children. `DaySeparator` renders its label when you pass none.
+
+## Usage
+
+### Date
+
+Pass `date`, an ISO date (`"2026-11-18"`) or date-time (`"2026-11-18T17:40:00Z"`). `timeZone` decides which day a date-time falls on, and which day is today, so pass the reader's zone. It's UTC by default.
+
+In the browser, the heading reads "Today", "Yesterday", its weekday up to 6 days back, and its date before that. Server markup always shows the date ("November 18, 2026"), and the words change once the page loads, so hydration never mismatches. A page left open past midnight moves "Today" to "Yesterday" on its own. Pass `relative={false}` to always show the date.
+
+The day reads in `locale`, else the page's language, else English. The heading is level 3; pass `level` (1 to 6) to fit it into your page's outline.
+
+### Between Messages
+
+Put a separator before each message whose day differs from the previous message's. `dayKey` turns a `createdAt` into the day it falls on in a time zone:
+
+```tsx
+import { dayKey } from "@kind-ui/agent-ui/core";
+
+{messages.map((message, index) => {
+  const previous = messages[index - 1];
+  const newDay =
+    !previous || dayKey(previous.createdAt, timeZone) !== dayKey(message.createdAt, timeZone);
+  return (
+    <Fragment key={message.id}>
+      {newDay && <DaySeparator date={message.createdAt} timeZone={timeZone} />}
+      <MessageView message={message} />
+    </Fragment>
+  );
+})}
+```
+
+Pass the same `timeZone` to `dayKey` and the separator, so the day you split on is the day the heading names. In a [virtualized conversation](./conversation.mdx), make each separator its own row, as the example does, so it's measured like any other.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/day-separator/day-separator.ts" name="DaySeparatorOptions" />
+
+### Agent
+
+A day separator is content, so it offers an agent connected with `createAgent` no actions.
+
+<Caption>
+  Runs in React and Web Components. Call `defineDaySeparator()`, then write `<kind-day-separator date="2026-11-18" time-zone="America/Los_Angeles">`: each prop is a kebab-case attribute, so `timeZone` is `time-zone`. The element fills in its label when it has no children, and leaves text you wrote into a `<kind-day-separator-label>` alone.
+</Caption>

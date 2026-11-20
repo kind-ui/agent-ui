@@ -44,6 +44,7 @@ test("a missing count reads as zero, and the value text is English until the pag
   assert.equal(meter.api.valueText(meter.get()), "0 of 128,000 tokens, 0%");
   meter.setOptions({ used: 57_600, total: 128_000, locale: "de-DE" });
   assert.equal(meter.api.valueText(meter.get()), "57.600 of 128.000 tokens, 45\u00a0%");
+  assert.equal(meter.api.countText(meter.get()), "57.600 of 128.000 tokens");
 });
 
 test("the same counts in a new usage object keep the rows", () => {

@@ -93,6 +93,8 @@ export type CheckpointDialogState = {
   controller: AlertDialogController;
   /** Pass it to the Alert Dialog. False while a restore is pending, so Escape waits for it. */
   dismissible: boolean;
+  /** Pass it to the Alert Dialog content as `aria-busy`: true while a restore is pending. */
+  busy: boolean;
   /** Pass it to the Alert Dialog content: Cancel's selector, the least destructive answer. */
   initialFocus: string;
   /** The `confirmTitle`. */
@@ -169,6 +171,7 @@ const showsRestore = (state: CheckpointState) => state.canRestore && !state.rest
 
 const pendingAttrs = (state: CheckpointState) => ({
   type: "button",
+  "data-kind-button": "secondary",
   "aria-disabled": state.pending ? "true" : undefined,
 });
 
@@ -251,6 +254,7 @@ export const checkpointPrimitive: CheckpointPrimitive = definePrimitive<
       (dismissible: boolean, title: string, description: string): CheckpointDialogState => ({
         controller,
         dismissible,
+        busy: !dismissible,
         initialFocus: '[data-slot="kind-checkpoint-cancel"]',
         title,
         description,
@@ -371,6 +375,7 @@ export const checkpointPrimitive: CheckpointPrimitive = definePrimitive<
       state: (state) => ({ pending: state.pending }),
       attrs: (state) => ({
         ...pendingAttrs(state),
+        "data-kind-button": "danger",
         "data-pending": state.pending ? "" : undefined,
         // Whatever `agentConfirm` says, an agent pressing it needs a person.
         "data-agent-confirm": "Restores the checkpoint, discarding the changes after it",

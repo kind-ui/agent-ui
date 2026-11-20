@@ -1,0 +1,41 @@
+/* Day Separator (spec §7), shared by both render layers: a heading with a line on each side. */
+@layer components {
+  [data-slot="kind-day-separator"] {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    /* More room than between messages, so the break between days reads. */
+    margin-block: 0.5rem;
+    margin-inline: 0;
+    color: var(--kind-color-muted);
+    font-size: var(--kind-text-xs);
+    font-weight: var(--kind-font-weight-medium);
+    line-height: var(--kind-text-xs-leading);
+    letter-spacing: var(--kind-text-xs-tracking);
+
+    &[hidden] {
+      display: none;
+    }
+
+    &::before,
+    &::after {
+      content: "";
+      flex: 1 1 0;
+      min-width: 1rem;
+      border-block-start: 1px solid var(--kind-color-border);
+    }
+  }
+
+  [data-slot="kind-day-separator-label"] {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+
+    /* `Intl` writes "today" and "yesterday" in lower case; a heading starts with a capital. */
+    &::first-letter {
+      text-transform: uppercase;
+    }
+  }
+}

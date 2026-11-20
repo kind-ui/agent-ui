@@ -150,8 +150,8 @@ for (const scheme of ["light", "dark"] as const)
   test(`axe passes at 390px with a sheet open, ${scheme}`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: scheme });
-    await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     await load(page);
+    await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     expect((await new AxeBuilder({ page }).include("#root").analyze()).violations).toEqual([]);
     await triggers(page).settings.click();
     await settled(page);

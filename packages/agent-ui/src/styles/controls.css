@@ -1,0 +1,415 @@
+/* Shared controls, listed in docs/design-principles.md "System". A part opts in with the `data-kind-*` attribute its
+   core slot writes; every selector is `:where()`, so a component stylesheet or a consumer class wins. Under a coarse
+   pointer `::before` is the hit area, so a component doesn't draw on `::before` of a shared control. */
+@layer components {
+  /* Pills: a 28 / 32 / 36 ladder through `data-kind-size="sm" | "lg"`, a press that scales, a release on a spring. */
+  :where([data-kind-button], [data-kind-icon-button], [data-kind-trigger]) {
+    --kind-control-block-size: var(--kind-control-height);
+    /* An icon reads quieter than its label on ghost controls, and turns to ink with it on hover. */
+    --kind-control-icon-color: currentColor;
+
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    box-sizing: border-box;
+    height: var(--kind-control-block-size);
+    margin: 0;
+    padding: 0 0.875rem;
+    border: 0;
+    border-radius: var(--kind-radius-full);
+    background-color: transparent;
+    color: var(--kind-color-fg);
+    font: inherit;
+    font-size: var(--kind-text-md);
+    font-weight: var(--kind-font-weight-medium);
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition:
+      background-color var(--kind-duration-fast) var(--kind-ease-in-out),
+      color var(--kind-duration-fast) var(--kind-ease-in-out),
+      box-shadow var(--kind-duration-fast) var(--kind-ease-in-out),
+      scale var(--kind-duration-spring) var(--kind-ease-spring);
+
+    &:where(:hover:not(:disabled, [data-disabled], [aria-disabled="true"])) {
+      background-color: var(--kind-color-hover);
+    }
+
+    &:where(:active:not(:disabled, [data-disabled], [aria-disabled="true"])) {
+      background-color: var(--kind-color-pressed);
+    }
+
+    &:where(:active:not([aria-haspopup], :disabled, [data-disabled], [aria-disabled="true"])) {
+      scale: var(--kind-press-scale);
+      transition-duration:
+        var(--kind-duration-fast), var(--kind-duration-fast), var(--kind-duration-fast),
+        var(--kind-duration-instant);
+      transition-timing-function:
+        var(--kind-ease-in-out), var(--kind-ease-in-out), var(--kind-ease-in-out), var(--kind-ease-enter);
+    }
+
+    &:where([aria-pressed="true"], [aria-expanded="true"], [data-pressed], [data-popup-open]) {
+      background-color: var(--kind-color-selected);
+    }
+
+    &:where(:focus-visible) {
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
+    }
+
+    &:where(:disabled, [data-disabled], [aria-disabled="true"]) {
+      cursor: not-allowed;
+      opacity: var(--kind-disabled-opacity);
+    }
+
+    /* Pending keeps its width: the label stays in the layout, and in the accessible name, but is drawn clear, and
+       the running mark sits centered over it, so nothing beside the button moves. */
+    &:where([data-pending]) {
+      cursor: progress;
+      opacity: 1;
+    }
+
+    & > :where([data-status-mark]) {
+      --kind-status-mark-size: 14px;
+    }
+
+    /* These outrank every variant's color and the mark's own `position: relative`. */
+    &[data-pending] {
+      color: transparent;
+    }
+
+    &[data-pending] > [data-status-mark] {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+    }
+
+    /* An icon sits a little closer to the edge than a label would, so the pill looks balanced. */
+    & > :where(svg) {
+      flex-shrink: 0;
+      width: var(--kind-icon-size);
+      height: var(--kind-icon-size);
+      margin-inline: -0.125rem;
+      color: var(--kind-control-icon-color);
+      pointer-events: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      &:where(:active) {
+        scale: none;
+      }
+    }
+  }
+
+  :where([data-kind-size="sm"]) {
+    --kind-control-block-size: var(--kind-control-height-sm);
+  }
+  :where([data-kind-button][data-kind-size="sm"]) {
+    gap: 0.25rem;
+    padding: 0 0.75rem;
+  }
+  :where([data-kind-size="lg"]) {
+    --kind-control-block-size: var(--kind-control-height-lg);
+  }
+  :where([data-kind-button][data-kind-size="lg"]) {
+    padding: 0 1rem;
+  }
+
+  :where(
+    [data-kind-button]:not([data-kind-button="primary"], [data-kind-button="danger"]),
+    [data-kind-trigger]
+  ) {
+    --kind-control-icon-color: var(--kind-color-muted);
+
+    &:where(
+        :hover:not(:disabled, [data-disabled], [aria-disabled="true"]),
+        [aria-expanded="true"],
+        [data-popup-open]
+      ) {
+      --kind-control-icon-color: currentColor;
+    }
+  }
+
+  :where([data-kind-button="secondary"]) {
+    background-color: var(--kind-color-raised);
+    box-shadow:
+      0 0 0 1px var(--kind-color-hairline),
+      inset 0 1px 0 light-dark(transparent, oklch(1 0 0 / 0.06)),
+      var(--kind-shadow-control);
+
+    &:where(:hover:not(:disabled, [data-disabled], [aria-disabled="true"])) {
+      background-color: var(--kind-color-raised);
+      background-image: linear-gradient(var(--kind-color-hover) 0 0);
+    }
+    &:where(:active, [aria-pressed="true"], [aria-expanded="true"], [data-pressed], [data-popup-open]) {
+      background-image: linear-gradient(var(--kind-color-pressed) 0 0);
+      box-shadow: 0 0 0 1px var(--kind-color-hairline);
+    }
+  }
+
+  :where([data-kind-button="primary"]) {
+    background-color: var(--kind-color-primary);
+    color: var(--kind-color-primary-fg);
+    box-shadow: inset 0 1px 0 light-dark(oklch(1 0 0 / 0.12), transparent);
+
+    &:where(
+        :hover:not(:disabled, [data-disabled], [aria-disabled="true"]),
+        [aria-expanded="true"],
+        [data-popup-open]
+      ) {
+      background-color: var(--kind-color-primary-hover);
+    }
+    &:where(:active, [data-pressed]) {
+      background-color: var(--kind-color-primary-hover);
+      box-shadow: inset 0 1px 0 oklch(0 0 0 / 0.08);
+    }
+  }
+
+  :where([data-kind-button="soft"]) {
+    background-color: var(--kind-color-bubble);
+
+    &:where(:hover:not(:disabled, [data-disabled], [aria-disabled="true"])) {
+      background-color: color-mix(in oklab, var(--kind-color-bubble), var(--kind-color-fg) 6%);
+    }
+    &:where(:active, [aria-pressed="true"], [aria-expanded="true"], [data-pressed], [data-popup-open]) {
+      background-color: color-mix(in oklab, var(--kind-color-bubble), var(--kind-color-fg) 10%);
+    }
+  }
+
+  :where([data-kind-button="danger"]) {
+    background-color: var(--kind-color-danger);
+    color: var(--kind-color-on-status);
+    box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.12);
+
+    &:where(:active, [data-pressed]) {
+      box-shadow: inset 0 1px 0 oklch(0 0 0 / 0.08);
+    }
+
+    &:where(
+        :hover:not(:disabled, [data-disabled], [aria-disabled="true"]),
+        :active,
+        [aria-pressed="true"],
+        [aria-expanded="true"],
+        [data-pressed],
+        [data-popup-open]
+      ) {
+      background-color: color-mix(in oklab, var(--kind-color-danger) 88%, black);
+    }
+  }
+
+  :where([data-kind-button="danger-ghost"]) {
+    color: var(--kind-color-danger);
+
+    &:where(:hover:not(:disabled, [data-disabled], [aria-disabled="true"])) {
+      background-color: color-mix(in oklab, var(--kind-color-danger) 10%, transparent);
+    }
+    &:where(:active, [aria-pressed="true"], [aria-expanded="true"], [data-pressed], [data-popup-open]) {
+      background-color: color-mix(in oklab, var(--kind-color-danger) 16%, transparent);
+    }
+  }
+
+  :where([data-kind-icon-button]) {
+    width: var(--kind-control-block-size);
+    padding: 0;
+    color: var(--kind-color-muted);
+
+    &:where(
+        :hover:not(:disabled, [data-disabled], [aria-disabled="true"]),
+        [aria-expanded="true"],
+        [data-popup-open]
+      ) {
+      color: var(--kind-color-fg);
+    }
+  }
+
+  /* Opens a menu, picker or popover: a ghost pill whose muted label turns to ink on hover and while open. It
+     doesn't scale on press, since what it opens moves instead. */
+  :where([data-kind-trigger]) {
+    height: var(--kind-trigger-height);
+    padding: 0 0.625rem 0 0.75rem;
+    color: var(--kind-color-muted);
+
+    &:where(
+        :hover:not(:disabled, [data-disabled], [aria-disabled="true"]),
+        [aria-expanded="true"],
+        [data-popup-open]
+      ) {
+      color: var(--kind-color-fg);
+    }
+    &:where(:active) {
+      scale: none;
+    }
+  }
+
+  @media (pointer: coarse) {
+    :where([data-kind-button], [data-kind-icon-button], [data-kind-trigger])::before {
+      content: "";
+      position: absolute;
+      inset: 50% auto auto 50%;
+      width: max(100%, var(--kind-hit-area));
+      height: max(100%, var(--kind-hit-area));
+      translate: -50% -50%;
+    }
+  }
+
+  :where([data-kind-badge]) {
+    --kind-badge-tone: var(--kind-color-muted);
+
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.25rem;
+    box-sizing: border-box;
+    height: var(--kind-badge-height);
+    padding: 0 0.5rem;
+    border-radius: var(--kind-radius-full);
+    background-color: color-mix(in oklab, var(--kind-badge-tone) var(--kind-tint-fill), transparent);
+    color: color-mix(in oklab, var(--kind-badge-tone) 60%, var(--kind-color-fg));
+    font-size: var(--kind-text-xs);
+    font-weight: var(--kind-font-weight-medium);
+    font-variant-numeric: tabular-nums;
+    line-height: var(--kind-text-xs-leading);
+    white-space: nowrap;
+  }
+
+  :where([data-kind-badge="success"]) {
+    --kind-badge-tone: var(--kind-color-success);
+  }
+  :where([data-kind-badge="warning"]) {
+    --kind-badge-tone: var(--kind-color-warning);
+  }
+  :where([data-kind-badge="danger"]) {
+    --kind-badge-tone: var(--kind-color-danger);
+  }
+  :where([data-kind-badge="accent"]) {
+    --kind-badge-tone: var(--kind-color-accent);
+  }
+
+  /* Floating surfaces: raised, edged by the hairline in their shadow rather than a border. They scale in from the
+     anchor on enter and fade quicker on exit; reduced motion only fades. */
+  :where([data-kind-popup], [data-kind-dialog]) {
+    box-sizing: border-box;
+    border: 0;
+    background-color: var(--kind-color-raised);
+    color: var(--kind-color-fg);
+    font-size: var(--kind-text-md);
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
+    transform-origin: var(--transform-origin, center);
+    transition:
+      opacity var(--kind-duration-base) var(--kind-ease-enter),
+      scale var(--kind-duration-base) var(--kind-ease-enter);
+
+    &:where(:focus-visible) {
+      outline: none;
+    }
+
+    &:where([data-ending-style]) {
+      transition-duration: var(--kind-duration-exit);
+      transition-timing-function: var(--kind-ease-exit);
+    }
+  }
+
+  :where([data-kind-popup]) {
+    padding: var(--kind-popup-padding);
+    border-radius: var(--kind-popup-radius);
+    box-shadow: var(--kind-shadow-popover);
+
+    &:where([data-starting-style]) {
+      opacity: 0;
+      scale: var(--kind-enter-scale);
+    }
+    &:where([data-ending-style]) {
+      opacity: 0;
+      scale: var(--kind-dialog-enter-scale);
+    }
+  }
+
+  :where([data-kind-dialog]) {
+    padding: 1.5rem;
+    border-radius: var(--kind-dialog-radius);
+    box-shadow: var(--kind-shadow-dialog);
+    transition-duration: 250ms;
+
+    &:where([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+      scale: var(--kind-dialog-enter-scale);
+    }
+
+    @media (max-width: 639px) {
+      padding: 1.25rem;
+    }
+  }
+
+  /* After every popup and dialog rule, so no entering or leaving scale outranks it. */
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-kind-popup], [data-kind-dialog]) {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
+
+      &:where([data-starting-style], [data-ending-style]) {
+        scale: none;
+      }
+    }
+  }
+
+  :where([data-kind-dialog-title]) {
+    margin: 0;
+    font-size: var(--kind-text-xl);
+    font-weight: var(--kind-font-weight-semibold);
+    line-height: var(--kind-text-xl-leading);
+    letter-spacing: var(--kind-text-xl-tracking);
+  }
+
+  :where([data-kind-scrim]) {
+    background-color: var(--kind-color-scrim);
+    backdrop-filter: blur(var(--kind-scrim-blur));
+  }
+
+  /* UI SDK draws every sheet's backdrop from this variable, which a backdrop inherits from its sheet. */
+  :where(:root) {
+    --sheet-backdrop: var(--kind-color-scrim);
+  }
+
+  :where([data-kind-code]) {
+    border-radius: var(--kind-code-radius);
+    background-color: var(--kind-code-surface);
+    font-family: var(--kind-font-mono);
+    font-size: var(--kind-code-font-size);
+    line-height: var(--kind-code-line-height);
+  }
+
+  /* A button's default markup holds its running mark, which shows only while the button is pending, over its label,
+     in the color the label would have, since a pending label is drawn clear. */
+  :where([data-kind-button]) {
+    --kind-pending-mark-color: var(--kind-color-fg);
+  }
+  :where([data-kind-button="primary"]) {
+    --kind-pending-mark-color: var(--kind-color-primary-fg);
+  }
+  :where([data-kind-button="danger"]) {
+    --kind-pending-mark-color: var(--kind-color-on-status);
+  }
+  :where([data-kind-button="danger-ghost"]) {
+    --kind-pending-mark-color: var(--kind-color-danger);
+  }
+  :where([data-kind-button]:not([data-pending])) > [data-kind-pending-mark] {
+    display: none;
+  }
+  :where([data-motion="reduced"], [data-motion="none"])
+    [data-kind-button]
+    > [data-kind-pending-mark][data-status-mark]::before {
+    animation: none;
+  }
+  [data-kind-button] > [data-kind-pending-mark][data-status-mark] {
+    border-color: color-mix(in oklab, var(--kind-pending-mark-color) 30%, transparent);
+
+    &::before {
+      border-top-color: var(--kind-pending-mark-color);
+    }
+  }
+}

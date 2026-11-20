@@ -144,7 +144,7 @@ const components = {
     title: "Test Results",
     description:
       "A test run's pass, fail and skip counts over a filterable tree of suites, each failure open to its stack trace.",
-    uses: ["stack-trace", "internal-tree", "internal-segmented-control"],
+    uses: ["stack-trace", "internal-tree"],
   },
   transcript: {
     title: "Transcript",
@@ -248,6 +248,72 @@ const components = {
     description: "Text whose appended chunks fade in, with an optional caret.",
     uses: [],
   },
+  // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its item right below its own line.
+
+  // wave-6-task-2: Thread List
+
+  "thread-list": {
+    title: "Thread List",
+    description: "Threads grouped by date, with one menu to rename, pin, share and delete.",
+    uses: ["internal-menu", "internal-alert-dialog"],
+  },
+
+  // wave-6-task-3: Thread Search
+
+  "thread-search": {
+    title: "Thread Search",
+    description: "A Search chats dialog over the threads, grouped by date, with New chat and a shortcut.",
+    uses: ["picker", "internal-command"],
+  },
+
+  // wave-6-task-4: Sidebar
+
+  sidebar: {
+    title: "Sidebar",
+    description:
+      "A panel beside the page that a person resizes and collapses, turning into a drawer on a narrow screen.",
+    uses: ["internal-resizable", "internal-drawer"],
+  },
+
+  // wave-6-task-5: Launcher, dropped by the user
+
+  // wave-6-task-6: Day Separator
+
+  "day-separator": {
+    title: "Day Separator",
+    description: "A heading between days that reads Today or Yesterday.",
+    uses: [],
+  },
+
+  // wave-6-task-7: Connection Status
+
+  "connection-status": {
+    title: "Connection Status",
+    description: "A pill over a conversation that says the connection dropped, counts down and retries.",
+    uses: [],
+  },
+
+  // wave-6-task-8: Share Dialog
+
+  "share-dialog": {
+    title: "Share Dialog",
+    description:
+      "A Share button whose dialog chooses who can open the chat and shows the link the host makes, with Copy link.",
+    uses: ["internal-segmented-control"],
+  },
+
+  // wave-6-task-9: Message author, time and outcomes
+
+  // wave-6-task-10: Conversation states
+
+  // wave-6-task-11: Conversation Search
+
+  "conversation-search": {
+    title: "Conversation Search",
+    description:
+      "A find bar over a conversation's messages that counts matches, moves between them and marks them on the scrollbar.",
+    uses: [],
+  },
 };
 
 const internals = [
@@ -273,6 +339,11 @@ const internals = [
   "tooltip",
   "tree",
   "trigger-menu",
+
+  // wave-6-task-4: Sidebar's internal items
+
+  "drawer",
+  "resizable",
 ];
 
 const layers = { react: { suffix: "", extension: ".tsx" }, web: { suffix: "-web", extension: ".ts" } };

@@ -246,7 +246,7 @@ test("a selection inside a shadow root shows the toolbar", async ({ page }, test
   await expect(toolbar(page)).toBeVisible();
 });
 
-type Motion = { property: string; duration: string; translate: string };
+type Motion = { property: string; duration: string; scale: string };
 
 // The toolbar's transition as it shows, and as it starts leaving after Escape.
 const transitions = async (page: Page) => {
@@ -254,7 +254,7 @@ const transitions = async (page: Page) => {
   await settled(page);
   const shown = await toolbar(page).evaluate((el) => {
     const style = getComputedStyle(el);
-    return { property: style.transitionProperty, duration: style.transitionDuration, translate: "" };
+    return { property: style.transitionProperty, duration: style.transitionDuration, scale: "" };
   });
   await toolbar(page).evaluate((el) => {
     const record = window as unknown as { leaving?: Motion };
@@ -265,7 +265,7 @@ const transitions = async (page: Page) => {
       record.leaving = {
         property: style.transitionProperty,
         duration: style.transitionDuration,
-        translate: style.translate,
+        scale: style.scale,
       };
     }).observe(el, { attributes: true, attributeFilter: ["data-ending-style"] });
   });
@@ -281,18 +281,18 @@ const seconds = (page: Page, token: string) =>
     token,
   );
 
-test("full motion fades and rises the toolbar; reduced motion only fades it", async ({ page }) => {
+test("full motion fades and scales the toolbar; reduced motion only fades it", async ({ page }) => {
   await open(page);
   const base = await seconds(page, "--kind-duration-base");
-  const fast = await seconds(page, "--kind-duration-fast");
+  const exit = await seconds(page, "--kind-duration-exit");
   const reducedDuration = await seconds(page, "--kind-duration-reduced");
   const full = await transitions(page);
-  expect(full.shown).toMatchObject({ property: "opacity, translate", duration: `${base}, ${base}` });
+  expect(full.shown).toMatchObject({ property: "opacity, scale", duration: `${base}, ${base}` });
   // `[data-ending-style]` sets one duration for both properties.
-  expect(full.leaving).toMatchObject({ property: "opacity, translate", duration: fast });
-  expect(full.leaving?.translate).not.toBe("none");
+  expect(full.leaving).toMatchObject({ property: "opacity, scale", duration: exit });
+  expect(full.leaving?.scale).not.toBe("none");
 
-  const fadeOnly = { property: "opacity", duration: reducedDuration, translate: "none" };
+  const fadeOnly = { property: "opacity", duration: reducedDuration, scale: "none" };
   await page.emulateMedia({ reducedMotion: "reduce" });
   await open(page);
   expect((await transitions(page)).leaving).toEqual(fadeOnly);

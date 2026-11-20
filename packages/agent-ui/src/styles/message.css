@@ -25,6 +25,7 @@
 
   [data-slot="kind-message-content"],
   [data-slot="kind-message-editor"],
+  [data-slot="kind-message-edit-actions"],
   [data-slot="kind-message-toolbar"] {
     grid-column: -2;
   }
@@ -38,30 +39,51 @@
     justify-items: end;
   }
 
+  /* The user's turn is a soft fill, a pill on one line and a soft card on more; the assistant's is prose. */
   [data-slot="kind-message-content"][data-role="user"] {
     max-width: min(80%, 36rem);
-    padding: 0.5rem 0.875rem;
-    border-radius: calc(var(--kind-radius) * 1.5);
-    background-color: var(--kind-color-hover);
+    padding: var(--kind-bubble-padding);
+    border-radius: var(--kind-bubble-radius);
+    background-color: var(--kind-color-bubble);
+    font-size: var(--kind-text-body);
+    line-height: var(--kind-text-body-leading);
+    letter-spacing: var(--kind-text-body-tracking);
   }
 
+  /* Edits in the bubble's place, with its alignment, fill, padding and type, growing with the text up to the bubble's
+     width. A text field shows its caret on focus and changes nothing else. */
   [data-slot="kind-message-editor"] {
     box-sizing: border-box;
-    width: min(100%, 36rem);
-    min-height: 2.5rem;
-    field-sizing: content;
-    padding: 0.5rem 0.875rem;
-    border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) * 1.5);
-    background-color: var(--kind-color-surface);
+    width: min(80%, 36rem);
+    min-width: min(100%, 12rem);
+    max-width: min(80%, 36rem);
+    min-height: calc(var(--kind-text-body-leading) + 1.25rem);
+    padding: var(--kind-bubble-padding);
+    border: 0;
+    border-radius: var(--kind-bubble-radius);
+    background-color: var(--kind-color-bubble);
     color: inherit;
     font: inherit;
+    font-size: var(--kind-text-body);
+    line-height: var(--kind-text-body-leading);
+    letter-spacing: var(--kind-text-body-tracking);
     resize: none;
 
-    &:focus-visible {
-      outline: 1.5px solid var(--kind-color-ring);
-      outline-offset: 1px;
+    &:focus {
+      outline: none;
     }
+
+    @supports (field-sizing: content) {
+      width: auto;
+      field-sizing: content;
+    }
+  }
+
+  [data-slot="kind-message-edit-actions"] {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.375rem;
+    margin-top: 0.5rem;
   }
 
   [data-slot="kind-message-toolbar"] {
@@ -76,6 +98,25 @@
 
   [data-slot="kind-message-toolbar"][data-role="user"] {
     margin-inline: 0 -0.375rem;
+  }
+
+  /* Earlier messages show their actions on hover and focus; the last one, and every one on a touch screen, always
+     does. A branch switcher says something, so it stays. */
+  @media (hover: hover) {
+    :where(
+        :is(
+            [data-slot="kind-conversation-row"]:not([data-last]) [data-slot="kind-message"],
+            [data-slot="kind-message"]:has(~ [data-slot="kind-message"])
+          ):not(:hover, :focus-within, :has([aria-expanded="true"]))
+          [data-slot="kind-message-toolbar"]
+      )
+      > :not(:where([data-slot="kind-message-branch"])) {
+      opacity: 0;
+    }
+
+    [data-slot="kind-message-toolbar"] > * {
+      transition: opacity var(--kind-duration-fast) var(--kind-ease-in-out);
+    }
   }
 
   :is(
@@ -125,7 +166,7 @@
   [data-slot="kind-message-branch"] {
     display: inline-flex;
     align-items: center;
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     font-variant-numeric: tabular-nums;
   }
 
@@ -134,54 +175,116 @@
     text-align: center;
   }
 
-  :is([data-slot="kind-message-branch-previous"], [data-slot="kind-message-branch-next"]) {
-    display: inline-grid;
-    padding: 0;
-    border: 0;
-    background-color: transparent;
-    place-items: center;
-    width: 1.5rem;
-    height: 1.75rem;
-    border-radius: calc(var(--kind-radius) / 2);
-    color: inherit;
-    transition:
-      color var(--kind-duration-fast),
-      background-color var(--kind-duration-fast);
-
-    &::before {
-      content: "";
-      width: 0.875rem;
-      height: 0.875rem;
-      background-color: currentColor;
-      mask: var(--kind-message-previous-icon) center / contain no-repeat;
-    }
-    &:hover:not([aria-disabled="true"]) {
-      color: var(--kind-color-fg);
-      background-color: var(--kind-color-hover);
-    }
-    &:focus-visible {
-      outline: 1.5px solid var(--kind-color-ring);
-      outline-offset: -1.5px;
-    }
-    &[aria-disabled="true"] {
-      opacity: 0.4;
-      cursor: default;
-    }
+  /* Shared icon buttons; the glyph sits on `::after`, since `::before` is the coarse-pointer hit area. */
+  :is([data-slot="kind-message-branch-previous"], [data-slot="kind-message-branch-next"])::after {
+    content: "";
+    width: 0.875rem;
+    height: 0.875rem;
+    background-color: currentColor;
+    mask: var(--kind-message-previous-icon) center / contain no-repeat;
   }
 
-  [data-slot="kind-message-branch-next"]::before {
+  [data-slot="kind-message-branch-next"]::after {
     mask-image: var(--kind-message-next-icon);
   }
 
   @media (forced-colors: active) {
-    :is([data-slot="kind-message-branch-previous"], [data-slot="kind-message-branch-next"])::before {
+    :is([data-slot="kind-message-branch-previous"], [data-slot="kind-message-branch-next"])::after {
       forced-color-adjust: none;
       background-color: ButtonText;
     }
   }
 
-  :is([data-slot="kind-message-branch-previous"], [data-slot="kind-message-branch-next"]):dir(rtl)::before {
+  :is([data-slot="kind-message-branch-previous"], [data-slot="kind-message-branch-next"]):dir(rtl)::after {
     scale: -1 1;
+  }
+
+  [data-slot="kind-message-avatar"][data-continued] {
+    visibility: hidden;
+  }
+
+  [data-slot="kind-message-avatar"]:where([data-author]) :where([data-slot="avatar"]) {
+    position: relative;
+    display: inline-flex;
+    --kind-message-avatar-size: 1.75rem;
+    width: var(--kind-message-avatar-size);
+    height: var(--kind-message-avatar-size);
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: var(--kind-radius-full);
+    background-color: color-mix(in oklab, var(--kind-color-accent) 18%, var(--kind-color-raised));
+    color: var(--kind-color-fg);
+    /* Initials scale with the avatar, not the type scale. */
+    font-size: calc(var(--kind-message-avatar-size) * 0.4);
+    font-weight: var(--kind-font-weight-semibold);
+    line-height: 1;
+    user-select: none;
+
+    & :where(img) {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  [data-slot="kind-message-header"],
+  [data-slot="kind-message-outcome"] {
+    grid-column: -2;
+  }
+
+  /* Holds its line before a web header fills itself in, so the content below doesn't move. */
+  kind-message-header:empty {
+    display: block;
+    min-height: 1.75rem;
+  }
+
+  [data-slot="kind-message-header"] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0.5rem;
+    min-height: 1.75rem;
+    align-content: center;
+    color: var(--kind-color-muted);
+    font-size: var(--kind-text-sm);
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
+  }
+
+  [data-slot="kind-message-author"] {
+    color: var(--kind-color-fg);
+    font-weight: var(--kind-font-weight-semibold);
+  }
+
+  :is([data-slot="kind-message-time"], [data-slot="kind-message-duration"]) {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :where([data-slot="kind-message-header"]:has([data-slot="kind-message-time"]:not([hidden])))
+    [data-slot="kind-message-duration"]::before {
+    content: "·" / "";
+    margin-inline-end: 0.5rem;
+  }
+
+  /* After the content, so the streamed text above never moves. */
+  [data-slot="kind-message-outcome"] {
+    --kind-status-mark-size: 14px;
+
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 1.75rem;
+    margin-top: 0.375rem;
+    color: var(--kind-color-muted);
+    font-size: var(--kind-text-sm);
+  }
+
+  :where([data-slot="kind-message-outcome"][data-outcome="failed"]) [data-slot="kind-message-outcome-text"] {
+    color: var(--kind-color-fg);
   }
 
   /* Web keeps parts that aren't present in the page, with `hidden`. */

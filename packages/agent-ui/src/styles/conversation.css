@@ -29,8 +29,9 @@
     display: flex;
     flex-direction: column;
     min-height: 0;
-    font-size: 0.875rem;
-    line-height: 1.5rem;
+    font-size: var(--kind-text-md);
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
     color: var(--kind-color-fg);
   }
 
@@ -51,8 +52,8 @@
 
   /* The viewport's edge fade would mask its own ring, so the root draws it. */
   [data-slot="kind-conversation"]:has(> [data-slot="kind-conversation-viewport"]:focus-visible) {
-    outline: 1.5px solid color-mix(in oklab, var(--kind-color-ring) 50%, transparent);
-    outline-offset: -1.5px;
+    outline: var(--kind-focus-ring);
+    outline-offset: var(--kind-focus-offset-inset);
   }
 
   /* The edges fade with the scroll position, through a scroll timeline: no script, and no fade
@@ -98,6 +99,14 @@
       min-height: 0;
       height: var(--kind-conversation-size);
     }
+
+    /* A virtualized list with no rows to place lays its state out as an unvirtualized one does. */
+    &[data-virtualize]:is([data-status], [data-empty]) {
+      display: flex;
+      box-sizing: border-box;
+      min-height: 100%;
+      height: auto;
+    }
   }
 
   /* Rows space themselves, so a virtualized row's measured height includes its share of the gap. */
@@ -112,14 +121,123 @@
     }
   }
 
-  [data-slot="kind-conversation-empty"] {
-    display: block;
+  [data-slot="kind-conversation-empty"],
+  [data-slot="kind-conversation-error"] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    box-sizing: border-box;
+    max-width: 100%;
     margin: auto;
-    padding: 3rem 1rem;
+    padding: 1.5rem 1rem;
     text-align: center;
     color: var(--kind-color-muted);
   }
 
+  /* Whatever follows the words, like a Suggestion, gets room and the row's width. */
+  [data-slot="kind-conversation-empty"]
+    > :is([data-slot="kind-conversation-empty-title"], [data-slot="kind-conversation-empty-description"])
+    ~ :not([data-slot="kind-conversation-empty-title"], [data-slot="kind-conversation-empty-description"]) {
+    align-self: stretch;
+    margin-top: 1rem;
+  }
+
+  [data-slot="kind-conversation-empty-title"] {
+    display: block;
+    font-size: var(--kind-text-2xl);
+    font-weight: var(--kind-font-weight-medium);
+    line-height: var(--kind-text-2xl-leading);
+    letter-spacing: var(--kind-text-2xl-tracking);
+    text-wrap: balance;
+    color: var(--kind-color-fg);
+  }
+
+  [data-slot="kind-conversation-empty-description"] {
+    display: block;
+    max-width: 28rem;
+    overflow-wrap: anywhere;
+  }
+
+  /* As a message's failed answer reads: its mark, its words, then Retry, wrapping when they don't fit. */
+  [data-slot="kind-conversation-error"] {
+    --kind-status-mark-size: 14px;
+
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  [data-slot="kind-conversation-error-text"] {
+    display: block;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--kind-color-fg);
+  }
+
+  /* Placeholders shaped as what loads, of a set height so they never depend on the fonts: a user's bubble, then an
+     answer's lines of text, which has no bubble. A host's own rows take the same places. */
+  [data-slot="kind-conversation-skeleton"] {
+    --kind-conversation-skeleton-line: 1.5rem;
+    --kind-conversation-skeleton-fill: var(--kind-color-bubble);
+
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-block: 0.75rem;
+
+    /* Still: nothing loops but a spinner, and the hidden status already says it's loading. */
+    & > * {
+      display: block;
+      position: relative;
+    }
+    & > :nth-child(odd) {
+      align-self: flex-end;
+      width: 45%;
+      height: 2.5rem;
+      border-radius: var(--kind-bubble-radius);
+      background-color: var(--kind-conversation-skeleton-fill);
+    }
+    & > :nth-child(2n + 3) {
+      width: 30%;
+    }
+    /* Three lines at the reading line height; the second is drawn by the first's shadow, the last is shorter. */
+    & > :nth-child(even) {
+      width: 100%;
+      height: calc(var(--kind-conversation-skeleton-line) * 3);
+
+      &::before,
+      &::after {
+        content: "";
+        position: absolute;
+        inset-inline-start: 0;
+        height: 0.625rem;
+        border-radius: var(--kind-radius-full);
+        background-color: var(--kind-conversation-skeleton-fill);
+      }
+      &::before {
+        top: calc(var(--kind-conversation-skeleton-line) * 0.5 - 0.3125rem);
+        width: 90%;
+        box-shadow: 0 var(--kind-conversation-skeleton-line) 0 var(--kind-conversation-skeleton-fill);
+      }
+      &::after {
+        top: calc(var(--kind-conversation-skeleton-line) * 2.5 - 0.3125rem);
+        width: 60%;
+      }
+    }
+  }
+
+  /* Read by assistive technology only; the skeleton speaks for itself. */
+  [data-slot="kind-conversation-loading"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* A secondary pill that floats over the log's end, its arrow before the count. */
   [data-slot="kind-conversation-jump"] {
     /* Lucide "arrow-down", see THIRD_PARTY_NOTICES.md. */
     --kind-conversation-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M19 12l-7 7-7-7'/%3E%3C/svg%3E");
@@ -128,50 +246,63 @@
     bottom: 1rem;
     left: 50%;
     translate: -50% 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    height: 2rem;
-    padding-inline: 0.75rem 0.875rem;
-    border: 1px solid var(--kind-color-border);
-    border-radius: 9999px;
-    background-color: var(--kind-color-surface);
-    box-shadow:
-      0 1px 2px color-mix(in oklab, var(--kind-color-shadow) 6%, transparent),
-      0 4px 16px -4px color-mix(in oklab, var(--kind-color-shadow) 12%, transparent);
-    font-size: 0.8125rem;
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-    color: var(--kind-color-fg);
-    transition: background-color var(--kind-duration-fast);
+    z-index: 1;
 
-    &::before {
+    /* `::before` is the shared control's hit area, so the arrow is `::after`, ordered first. */
+    &::after {
       content: "";
+      order: -1;
       width: 14px;
       height: 14px;
       background-color: var(--kind-color-muted);
       mask: var(--kind-conversation-arrow) center / contain no-repeat;
     }
-    &:hover {
-      background-color: var(--kind-color-hover);
-    }
-    &:focus-visible {
-      outline: 1.5px solid var(--kind-color-ring);
-      outline-offset: 2px;
-    }
   }
 
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
-    [data-slot="kind-conversation-jump"]::before {
+    [data-slot="kind-conversation-jump"]::after {
       forced-color-adjust: none;
       background-color: ButtonText;
     }
   }
 
   /* Web keeps parts that aren't present in the page, with `hidden`. */
-  :is([data-slot="kind-conversation-jump"], [data-slot="kind-conversation-empty"])[hidden] {
+  :is(
+    [data-slot="kind-conversation-jump"],
+    [data-slot="kind-conversation-empty"],
+    [data-slot="kind-conversation-skeleton"],
+    [data-slot="kind-conversation-loading"],
+    [data-slot="kind-conversation-error"],
+    [data-slot="kind-conversation-retry"]
+  )[hidden] {
     display: none;
+  }
+
+  /* Where search matches sit down the scrollbar, drawn over its edge: absolute, so the track takes no room, and never
+     animated. Marks are the current match's amber, toward the text color. */
+  [data-slot="kind-conversation-marks"] {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    width: 0.375rem;
+    pointer-events: none;
+  }
+
+  [data-slot="kind-conversation-mark"] {
+    position: absolute;
+    inset-inline: 0;
+    top: calc(var(--kind-conversation-mark, 0) * 100%);
+    height: 3px;
+    border-radius: 1px;
+    /* Darkened toward the text, so a mark reaches 3:1 on the light surface and its border. */
+    background-color: color-mix(in oklab, var(--kind-color-warning) 75%, var(--kind-color-fg));
+  }
+
+  @media (forced-colors: active) {
+    [data-slot="kind-conversation-mark"] {
+      forced-color-adjust: none;
+      background-color: Highlight;
+    }
   }
 }

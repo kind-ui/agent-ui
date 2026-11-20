@@ -8,7 +8,7 @@
     display: inline-flex;
     align-items: center;
     gap: 2px;
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     line-height: 1rem;
     color: var(--kind-color-muted);
   }
@@ -20,33 +20,6 @@
   :where([data-slot="kind-feedback"]) [data-slot="toggle-group"] {
     display: inline-flex;
     gap: 2px;
-  }
-
-  /* Quiet until pressed: muted and bare, then the thumb fills in the foreground color on a soft fill. */
-  :where([data-slot="kind-feedback"]) [data-slot="toggle"] {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    padding: 0;
-    border: 0;
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: transparent;
-    color: inherit;
-    transition:
-      background-color var(--kind-duration-fast) var(--kind-ease-out),
-      color var(--kind-duration-fast) var(--kind-ease-out);
-
-    &:hover,
-    &[data-pressed] {
-      background-color: var(--kind-color-hover);
-      color: var(--kind-color-fg);
-    }
-    &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
-    }
   }
 
   :where([data-slot="kind-feedback"]) [data-feedback-icon] {
@@ -70,35 +43,18 @@
     mask-image: var(--kind-feedback-thumb-pressed);
   }
 
-  /* "Add a comment" and the thanks share one place at the thumbs' height, so swapping them moves nothing above or
-     below; the row grows by the thanks' wider text. */
-  :is([data-slot="kind-feedback-comment"], [data-slot="kind-feedback-thanks"]) {
+  /* "Add a comment", a small shared button, and the thanks share one place at the thumbs' height, so swapping
+     them moves nothing above or below; the row grows by the thanks' wider text. */
+  [data-slot="kind-feedback-thanks"] {
     display: inline-flex;
     align-items: center;
-    height: 1.75rem;
-    padding-inline: 8px;
-    border-radius: calc(var(--kind-radius) / 2);
-    font: inherit;
-    color: inherit;
+    height: var(--kind-control-height-sm);
+    padding-inline: 0.75rem;
+    border-radius: var(--kind-radius-full);
 
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
-    }
-  }
-
-  [data-slot="kind-feedback-comment"] {
-    border: 0;
-    background-color: transparent;
-    font-weight: 500;
-    transition:
-      background-color var(--kind-duration-fast) var(--kind-ease-out),
-      color var(--kind-duration-fast) var(--kind-ease-out);
-
-    &:hover,
-    &[data-open] {
-      background-color: var(--kind-color-hover);
-      color: var(--kind-color-fg);
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
   }
 
@@ -108,24 +64,19 @@
     gap: 8px;
     width: 18rem;
     max-width: calc(100vw - 16px);
-    padding: 12px;
-    border: 1px solid var(--kind-color-border);
-    border-radius: var(--kind-radius);
-    background-color: var(--kind-color-surface);
-    box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--kind-color-shadow) 20%, transparent);
-    color: var(--kind-color-fg);
-    font-size: 0.8125rem;
-    line-height: 1.25rem;
-    outline: none;
-    transform-origin: var(--transform-origin);
+    padding: 0.75rem;
   }
 
+  /* Names the box for assistive technology; on screen it would repeat the button that opened it. */
   [data-slot="kind-feedback-title"] {
-    display: block;
-    margin: 0;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    line-height: 1.25rem;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   [data-slot="kind-feedback-comment-text"] {
@@ -137,7 +88,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    min-height: 1.75rem;
+    min-height: var(--kind-control-height);
   }
 
   [data-slot="kind-feedback-comment-status"] {
@@ -145,7 +96,7 @@
     align-items: center;
     gap: 6px;
     color: var(--kind-color-muted);
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
   }
 
   [data-slot="kind-feedback-comment-error"] {
@@ -154,64 +105,18 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     color: var(--kind-color-danger);
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
   }
 
   [data-slot="kind-feedback-comment-send"] {
-    display: inline-flex;
-    align-items: center;
-    height: 1.75rem;
     margin-inline-start: auto;
-    padding-inline: 12px;
-    border: 0;
-    border-radius: calc(var(--kind-radius) / 2);
-    background-color: var(--kind-color-accent);
-    color: var(--kind-color-on-accent);
-    font: inherit;
-    font-weight: 500;
-    transition:
-      background-color var(--kind-duration-fast),
-      opacity var(--kind-duration-fast);
-
-    &:hover:not([aria-disabled="true"]) {
-      background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-fg));
-    }
-    &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
-    }
-    &[aria-disabled="true"] {
-      cursor: default;
-    }
-    /* Empty text dims Send; a pending send keeps it solid beside its status. */
-    &[aria-disabled="true"]:not([data-pending]) {
-      opacity: 0.5;
-    }
-    &[data-pending] {
-      cursor: progress;
-    }
   }
 
-  /* Motion: the box rises in. Reduced motion only fades, in 120 ms; `none` doesn't animate. */
-  :where([data-slot="kind-feedback"]) [data-slot="kind-feedback-content"] {
-    transition:
-      opacity var(--kind-duration-base) var(--kind-ease),
-      translate var(--kind-duration-base) var(--kind-ease),
-      scale var(--kind-duration-base) var(--kind-ease);
-
-    &:is([data-starting-style], [data-ending-style]) {
-      opacity: 0;
-      translate: 0 4px;
-      scale: 0.98;
-    }
-    &[data-ending-style] {
-      transition-duration: var(--kind-duration-fast);
-    }
-  }
-
+  /* Motion is the shared popup's: the box scales in. Reduced motion only fades, in 120 ms; `none` doesn't
+     animate. */
   @media (prefers-reduced-motion: reduce) {
     :where([data-slot="kind-feedback"][data-motion="auto"]) [data-slot="kind-feedback-content"] {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
       &:is([data-starting-style], [data-ending-style]) {
         translate: none;
@@ -222,7 +127,7 @@
   }
 
   :where([data-slot="kind-feedback"][data-motion="reduced"]) [data-slot="kind-feedback-content"] {
-    transition: opacity var(--kind-duration-reduced) var(--kind-ease-out);
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
 
     &:is([data-starting-style], [data-ending-style]) {
       translate: none;

@@ -1,5 +1,6 @@
-/* Approval Mode (spec §7): a button showing the approval mode that opens a menu of modes, a risky one drawn in
-   `--kind-color-danger` with the warning mark and the word "Risky". The trigger, check and menu are `menu.css`'s. */
+/* Approval Mode (spec §7): a button showing the approval mode that opens a menu of modes, a risky one saying "Risky"
+   in `--kind-color-danger` and its trigger holding the warning mark. The trigger is the shared one; the check and
+   menu are `menu.css`'s. */
 @layer components {
   [data-kind="approval-mode"] {
     /* Lucide "shield", see THIRD_PARTY_NOTICES.md. */
@@ -7,63 +8,35 @@
     --kind-status-mark-size: 14px;
   }
 
-  /* The trigger shows the mode, so it's as wide as its text. */
-  :where([data-kind="approval-mode"] [data-menu-part="trigger"]) [data-slot="menu-trigger"] {
-    gap: 0.375rem;
-    width: auto;
-    padding-inline: 0.625rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    white-space: nowrap;
-  }
-  :where([data-kind="approval-mode"] [data-menu-part="trigger"][data-danger]) [data-slot="menu-trigger"] {
-    color: var(--kind-color-danger);
-  }
-
-  /* In a narrow composer the trigger shows only its shield; its name still says the mode. */
+  /* In a narrow composer the trigger shows only its shield, centered in a round trigger, or beside a risky mode's
+     mark; its name still says the mode. */
   @container kind-composer (width < 28rem) {
-    :where([data-kind="approval-mode"] [data-menu-part="trigger"]) [data-slot="menu-trigger"] {
-      width: 2rem;
-      padding-inline: 0;
+    :where([data-kind="approval-mode"] [data-menu-part="trigger"]:not([data-danger])) [data-kind-trigger] {
+      width: var(--kind-trigger-height);
     }
-    /* A risky mode keeps room for its warning mark beside the shield. */
-    :where([data-kind="approval-mode"] [data-menu-part="trigger"][data-danger]) [data-slot="menu-trigger"] {
-      width: auto;
-      padding-inline: 0.5rem;
+    :where([data-kind="approval-mode"] [data-menu-part="trigger"]:not([data-danger]))
+      [data-menu-trigger-icon] {
+      position: absolute;
+      inset: 0;
+      margin: auto;
     }
     [data-approval-mode-value] {
       display: none;
     }
   }
 
-  /* The header: the label, and Learn more at its end. */
-  [data-approval-mode-header] {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-  /* On web the link is inside `ui-menu-item as-child`, so the item isn't the header's child. */
-  :where([data-approval-mode-header]) [data-slot="menu-item"] {
-    color: var(--kind-color-accent);
-    font-size: 0.75rem;
-    text-decoration: none;
-  }
-
-  :where([data-kind="approval-mode"] [data-slot="menu-radio-item"][data-danger] [data-menu-text])
-    > :first-child {
-    color: var(--kind-color-danger);
+  /* The label starts at the modes' text, past their check. */
+  :where([data-approval-mode-header]) [data-slot="menu-group-label"] {
+    text-indent: 1.5rem;
   }
 
   [data-approval-mode-risk] {
-    display: inline-flex;
     flex-shrink: 0;
-    align-items: center;
-    gap: 0.25rem;
+    align-self: center;
     margin-inline-start: auto;
     padding-inline-start: 1rem;
     color: var(--kind-color-danger);
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     font-weight: 500;
   }
 }

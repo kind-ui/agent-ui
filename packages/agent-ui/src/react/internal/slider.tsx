@@ -12,7 +12,7 @@ import { withKindClass } from "./kind-class.js";
 
 export const KindSlider = withKindClass(
   Slider,
-  "flex w-full flex-col gap-1.5 data-disabled:opacity-50",
+  "flex w-full flex-col gap-1.5 data-disabled:opacity-[var(--kind-disabled-opacity)]",
   "KindSlider",
 );
 export const KindSliderControl = withKindClass(
@@ -32,11 +32,11 @@ export const KindSliderIndicator = withKindClass(
 );
 export const KindSliderThumb = withKindClass(
   SliderThumb,
-  "size-4 rounded-full border border-[var(--kind-color-border)] bg-[var(--kind-color-surface)] shadow-sm shadow-[color:var(--kind-color-shadow)]/10 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--kind-color-ring)]",
+  "size-4 rounded-full border border-[var(--kind-color-border)] bg-[var(--kind-color-surface)] shadow-sm shadow-[color:var(--kind-color-shadow)]/10 has-[:focus-visible]:[outline:var(--kind-focus-ring)] has-[:focus-visible]:[outline-offset:var(--kind-focus-offset)]",
   "KindSliderThumb",
 );
 export const KindSliderValue = withKindClass(
   SliderValue,
-  "text-xs tabular-nums text-[var(--kind-color-muted)]",
+  "text-[length:var(--kind-text-xs)]/4 tabular-nums text-[var(--kind-color-muted)]",
   "KindSliderValue",
 );

@@ -51,7 +51,7 @@ const webServer = servers.map(({ name, mode }, index) => ({
   reuseExistingServer: reuse,
 }));
 
-const waves = ["wave-1", "wave-2", "wave-3", "wave-4", "wave-5"];
+const waves = ["wave-1", "wave-2", "wave-3", "wave-4", "wave-5", "wave-6"];
 const layers = waves.flatMap((wave) => [
   { name: `${wave}-react`, wave, baseURL: origin(0) },
   { name: `${wave}-web`, wave, baseURL: origin(1) },

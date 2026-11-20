@@ -1,0 +1,147 @@
+---
+title: Sidebar
+description: Put a panel beside the page that people resize and collapse, and that turns into a drawer on narrow screens.
+---
+
+import SidebarAssistantExample from "../../../examples/sidebar/assistant";
+import SidebarExample from "../../../examples/sidebar/basic";
+import ChatShellExample from "../../../examples/sidebar/shell";
+
+Use a sidebar for what sits beside the page, like a list of chats at the start or an assistant docked at the end. It's built on UI SDK Resizable beside the page and UI SDK Drawer on narrow screens.
+
+Here's a whole chat app in one sidebar: [Thread Search](./thread-search.mdx) and a [Thread List](./thread-list.mdx) in the panel, and in the page a [Conversation](./conversation.mdx) of [Messages](./message.mdx) between [Day Separators](./day-separator.mdx), with [Conversation Search](./conversation-search.mdx) over it, a [Connection Status](./connection-status.mdx) that shows while the browser is offline, and the [Composer](./composer.mdx#controls-and-narrow-screens) with every control.
+
+<Example caption="Open a chat from the list, or press Search chats to find one. Press the search button in the header to find text in this chat, and type a prompt to add it. Under 768px wide, the chats move into a drawer that the button beside the title opens.">
+  <ChatShellExample />
+
+  <include cwd lang="tsx">./examples/sidebar/shell.tsx</include>
+</Example>
+
+<Example caption="Drag the handle, or focus it and press the arrow keys, to resize the chats. Press the button beside the title, or press Enter on the handle, to hide them.">
+  <SidebarExample />
+
+  <include cwd lang="tsx">./examples/sidebar/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="React"
+npx shadcn@latest add @kind-ui/sidebar
+```
+
+```bash tab="Web Components"
+npx shadcn@latest add @kind-ui/sidebar-web
+```
+
+## Composition
+
+```text
+Sidebar
+├── SidebarPanel
+├── SidebarHandle
+├── SidebarInset
+└── SidebarTrigger
+```
+
+`SidebarPanel` is the panel, an `aside` named by the sidebar's `label`, like "Chats". `SidebarHandle` is the resize handle between the panel and the page, named "Resize Chats", and `SidebarInset` is the page. `SidebarTrigger` is a button that shows and hides the panel, named "Hide Chats" or "Show Chats", with a panel icon when you give it no children.
+
+## Usage
+
+### Parts in Reading Order
+
+Write `SidebarPanel`, `SidebarHandle` and `SidebarInset` in reading order. With `side="start"`, the default, the panel comes first. With `side="end"`, the inset comes first and the panel last. Both follow the writing direction, so a start panel sits on the right in a right-to-left page. Put the `SidebarTrigger` in the page's header, at the edge the panel sits on: the start of the header for a start panel, the end for an end panel. There it stays in place whether the panel is open, closed or a drawer.
+
+<Example caption="Press the button in the header to hide the assistant, or drag its handle to resize it. Type a prompt and press Enter to add it to the conversation.">
+  <SidebarAssistantExample />
+
+  <include cwd lang="tsx">./examples/sidebar/assistant.tsx</include>
+</Example>
+
+### Opening and Closing
+
+The panel starts open. Pass `defaultOpen={false}` to start it closed, or `open` and `onOpenChange` to control it. The trigger toggles it, and so do Enter on the handle and a double-click on it. Dragging the handle past the panel's midpoint closes it too. `onOpenChange` gets why: `trigger-press`, `handle`, `drag`, `shortcut`, `outside-press` or `escape-key` from the drawer, `breakpoint` when the window crosses `overlayBelow`, or `imperative` from the api, like an agent's `open`.
+
+```tsx
+const [open, setOpen] = useState(true);
+
+<Sidebar label="Chats" open={open} onOpenChange={(next) => setOpen(next)}>
+  …
+</Sidebar>
+```
+
+When the trigger, the shortcut or the api opens or closes it, the panel slides in or out from its edge, and the page changes width once, as the panel starts to open or once it has closed, so its text doesn't wrap again on every frame. With a `collapsedSize` above 0, the width slides instead, so the rail stays in view. Under `prefers-reduced-motion`, or with `motion="reduced"` or `"none"`, it changes at once. It never slides while someone drags the handle.
+
+### Sizes
+
+The panel starts at `defaultSize`, 280px, and resizes between `minSize`, 220px, and `maxSize`, 420px. Each takes pixels, rem or a percentage of the sidebar, and pixel and rem sizes hold as the window resizes. Closed, it's `collapsedSize` wide, 0px by default. Pass a rail width, like `"48px"`, to keep the panel's icons in view while it's closed:
+
+```tsx
+<Sidebar label="Chats" defaultSize="260px" minSize="200px" maxSize="360px" collapsedSize="48px">
+```
+
+### Narrow Screens
+
+Under `overlayBelow`, `"(max-width: 767px)"` by default, the panel is a modal drawer that slides in from its side over the page, and the handle is gone. The drawer always starts closed, the trigger opens it, and Escape, a press outside it or a swipe closes it. Crossing `overlayBelow` reports `breakpoint`: getting narrower closes the drawer, and getting wider gives the panel back whether it was open before. The panel's content mounts again as it moves between the page and the drawer, so keep state you need in the host. Pass an empty string to keep the panel beside the page at every width. The query is read in the browser, so server markup under the default query already hides the panel; with another `overlayBelow`, give `[data-sidebar-frame="panel"]` no width under it yourself until the root has `data-bound`.
+
+### Saving the Layout
+
+Pass a `storageKey` to save the panel's width and whether it's open when someone resizes or collapses it, and restore them on the next visit. An uncontrolled sidebar takes the saved state over `defaultOpen`. It saves to `localStorage` unless you pass `storage`, anything with `getItem` and `setItem`.
+
+A server can't read `localStorage`, so the page renders `defaultSize` first and the saved width arrives as it hydrates. Save to a cookie instead, and the server can render the saved width on the first paint:
+
+```tsx title="app/chats.tsx"
+"use client";
+import type { ResizableStorage } from "@ui-sdk/core/resizable";
+
+const cookieStorage: ResizableStorage = {
+  getItem: (key) => {
+    const value = document.cookie.match(new RegExp(`(?:^|; )${key}=([^;]*)`))?.[1];
+    return value === undefined ? null : decodeURIComponent(value);
+  },
+  setItem: (key, value) => {
+    document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=31536000`;
+  },
+};
+
+export function Chats({ size }: { size: string }) {
+  return (
+    <Sidebar label="Chats" storageKey="chats" storage={cookieStorage} defaultSize={size}>
+      <SidebarPanel>…</SidebarPanel>
+      <SidebarHandle />
+      <SidebarInset>…</SidebarInset>
+    </Sidebar>
+  );
+}
+```
+
+The cookie is named by `resizableStorageKey(storageKey)` from `@ui-sdk/core/resizable`, which a server component can import, and holds the layout under the panels' ids, `${storageKey}-sidebar,${storageKey}-inset`, as percentages. Read the panel's and pass it back as `defaultSize`:
+
+```tsx title="app/page.tsx"
+import { resizableStorageKey } from "@ui-sdk/core/resizable";
+import { cookies } from "next/headers";
+import { Chats } from "./chats";
+
+export default async function Page() {
+  const saved = JSON.parse((await cookies()).get(resizableStorageKey("chats"))?.value ?? "{}");
+  const [percent] = saved["chats-sidebar,chats-inset"] ?? [];
+  return <Chats size={percent === undefined ? "280px" : `${percent}%`} />;
+}
+```
+
+### Shortcut
+
+The sidebar has no shortcut by default. Pass one, like `shortcut="mod+b"`, to open and close the panel from anywhere on the page; `mod` is Command on Apple platforms and Ctrl elsewhere. The trigger lists it in `aria-keyshortcuts`, and its render function gets the keys as the platform writes them, like "⌘B", as `shortcutLabel`.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/sidebar/sidebar.ts" name="SidebarOptions" />
+
+### Agent
+
+An agent connected with `createAgent` finds the sidebar by its `label` and reads `open` and `overlay`, whether the panel is a drawer. `open` is offered while the panel is closed, and `close` while it's open; the reason is `imperative`. Neither needs a person to confirm.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/sidebar/sidebar.ts" name="SidebarAgentActions" type='Pick<SidebarApi, "open" | "close">' />
+
+<Caption>
+  Runs in React and Web Components. Call `defineSidebar()`, then write a `<kind-sidebar>` holding a `kind-sidebar-panel` and a `kind-sidebar-inset` in reading order, with a `kind-sidebar-trigger` around a `button` anywhere inside. Each prop is a kebab-case attribute, so `defaultSize` is `default-size` and `overlayBelow` is `overlay-below`; set `storage` as a property, and `open` is a property too. Opening and closing fires `openchange`.
+</Caption>

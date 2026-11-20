@@ -38,7 +38,7 @@ Sources
             └── SourcesSnippet
 ```
 
-`SourcesTrigger` is a native button that shows the `label`, else "Used N sources", and shows or hides `SourcesContent`. `SourcesList` renders a `SourcesItem` for each source, keyed by its `id`. `SourcesLink` links to the source's `url` and opens it in a new tab. `SourcesIcon` shows the source's `favicon`, and the first letter of its host name until the image loads or without one. `SourcesHost` shows the host name without `www.`, and `SourcesSnippet` the `snippet`, up to two lines. To arrange the parts yourself, pass them as children of `Sources`.
+`SourcesTrigger` is a native button that shows the `label`, else "Used N sources", and shows or hides `SourcesContent`. `SourcesList` renders a `SourcesItem` for each source, keyed by its `id`. `SourcesLink` links to the source's `url` and opens it in a new tab. `SourcesIcon` shows the source's `favicon`, or a link glyph until the image loads or without one. `SourcesTitle` shows the `title`, up to two lines, `SourcesHost` the host name without `www.`, which narrows first when space runs short, and `SourcesSnippet` the `snippet`, up to two lines. To arrange the parts yourself, pass them as children of `Sources`.
 
 ## Usage
 
@@ -57,7 +57,7 @@ Pass `sources`, each with an `id` and a `title`, and optionally a `url`, `favico
 
 ### Streaming Sources
 
-Add sources as the agent finds them, keeping each `id`. A source added after the list first renders fades up once, and the count in the trigger updates without moving anything around it. A source whose title or URL changes updates in place, without fading in again. At full motion the list slides open; under `prefers-reduced-motion`, or with `motion="reduced"`, it fades in over 120 ms, and with `motion="none"` it shows at once.
+Add sources as the agent finds them, keeping each `id`. A source added to the open list after it first renders fades up once, and the count in the trigger updates without moving anything around it. A source whose title or URL changes updates in place, without fading in again. At full motion the list slides open; under `prefers-reduced-motion`, or with `motion="reduced"`, it fades in over 120 ms, and with `motion="none"` it shows at once.
 
 ### Opening
 

@@ -2,13 +2,14 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
+Last reviewed: `bfb9bb7` (Design Wave 1 Batch D)
 
 ## Settled
 
+- **`kind-connection-status` fires `connectionretry`, not `retry`** (Wave 6 Task 7): it sits inside a `kind-conversation`, which fires its own `retry` for its error state, and a capture listener on the conversation hears both (UI SDK events don't bubble, but capture still passes ancestors). A distinct name, as `uploadretry` is, keeps them apart without checking `event.target`.
 - **A Dictation in a shadow root nested inside the Composer doesn't reach it (Task 17):** `insertText` walks `parentElement`, as a button in a shadow root doesn't submit an outer form.
 - **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.
-- **A `kind-model-selector` element icon is cloned with its ids** (Wave 4 Task 12b): rewriting ids inside each copy would be fragile; the `models` JSDoc says to pass a logo with `defs` as an image URL, and the fixture's Gemini logo is one.
+- **A `kind-model-selector` element icon is cloned with its ids** (Wave 4 Task 12b): rewriting ids inside each copy would be fragile; the `models` JSDoc says to pass a logo with `defs` as an image URL, and the fixture's Google monogram, with a gradient in `defs`, is one.
 - **`drawIcon` compares icons by identity** (suspected, Wave 4 Task 12b): a host that builds new elements on every `models` write re-copies its icons, which is harmless.
 - **A hand-written empty `kind-inline-citation-content` stays empty** (Wave 4 Task 3), as React's bare `InlineCitationContent` does: the element fills in only the content it wrote.
 - **`kind-sources`' `api` leaves out `expand` and `collapse`** (Wave 4 Task 2): they are availability getters, and a web root's `api` list copies methods once, as Guardrail Notice's does; `open` and `setOpen` cover them.
@@ -23,9 +24,12 @@ Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 - **Internal host classes stay per file.** A shared `defineHost` helper in `src/web/internal/` would be a render file that neither calls `createParts` nor wraps a component, which the guard rejects.
 - **A status change while a `kind-status` is out of the document isn't announced when it returns:** nobody could see the change.
 - **`kind-model-control`'s `model` and `effort` setters refuse while disabled, and `effort` while the model has no levels,** as Settings Menu's `values` refuses while disabled (Wave 5 Task 9).
+- Sidebar with `side="end"`: the handle's `aria-valuenow` and `aria-controls` are the inset's, since UI SDK's splitter reports the panel before the handle. That's the window splitter pattern; kept.
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Switching a filled `kind-suggestion`'s `layout` rebuilds its chips and drops focus** (Design Wave 1 A): the two layouts usually sit in separate elements; move the items with `moveBefore` if a host switches one in place. In a shadow root, Escape on Save or Enter on Cancel leaves focus on `<body>`, as UI SDK's `keepFocus` reads the document's active element (report upstream beside focus recovery).
+- **Only Settings Menu pins the pointer-open highlight fix** (Design Wave 0): Add Menu, Approval Mode, Model Control and Message's regenerate menu share `menuBase` and passed a probe, but have no test of their own.
 - **Dictation's web `draw` runs on every level (Wave 5 Task 11):** cheap and guarded; no `written` or `moved` fixture case yet.
 - **An empty `<kind-dictation>` takes no room until defined (Wave 5 Task 11):** a `:not(:defined)` rule from its size variables would hold it.
 - **`kind-composer` removed and put back a tick later forgets "Draft restored"** (Wave 5 Task 13): the draft text comes back through `defaultValue`, but `@ui-sdk/web` carries a mapped root state only through a `default<Key>` option, and `restored` has none; a same-tick move keeps it. Fixing it needs a public `defaultRestored`-style option.
@@ -69,9 +73,17 @@ Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 - **An unknown `motion` attribute matches no `data-motion` rule,** so reduced motion stops applying. Every animated component shares it; validate `motion` once for all of them.
 - **An empty `<kind-chain-of-thought>` inserts its parts on upgrade** (same class as `kind-reasoning`), which can shift layout before the element is defined.
 - **No moved or shadow-root fixture case for `kind-model-control`;** checked by hand in review (Wave 5 Task 9), as Model Selector's gap.
+- **Inside a shadow root, a web popup's string `finalFocus` is looked up in `ownerDocument`** (UI SDK `popup.js`), so Thread List's menu and dialog return focus through UI SDK's trigger fallback, not to the row after a deleted one (report upstream).
+- Sidebar: `open` set as an attribute or property follows the `open` option, not the root `state` setter, so it changes silently and a present `open="false"` doesn't follow presses (same as the Picker and `menuBase` item above). A React-rendered `kind-sidebar` isn't supported, since the element moves the host's panel and inset.
+- **A Day Separator inside a shadow root doesn't read its host's `lang`** (Wave 6 Task 6): UI SDK `pageLocale` uses `closest("[lang]")`, which stops at the shadow boundary; report upstream. `locale` works around it.
+- **Share Dialog's fixture has no moved or shadow-root case** (Wave 6 Task 8): both were checked by hand in review (state kept across a move, ids and focus return inside a shadow root); only the `written` case is tested.
+- **A Retry or Continue pending when a `kind-message` is moved comes back pressable (Wave 6 Task 9):** `outcomePending` isn't carried to the rebuilt instance, as with Plan's Accept and Subagent's Stop.
+- **`kind-conversation-search`'s `open` property doesn't reflect to the `open` attribute** (Wave 6 Task 11), the same class as the Picker and `menuBase` entry.
+- **`kind-thread-search` has no moved, shadow-root or written-parts fixture case** (Wave 6 Task 3): all three, and a removal while open, were checked by hand in review; add cases with Picker's. Its uncontrolled search text isn't root state, so a move while open may lose it (not reproduced).
 
 ## Resolved
 
+- **`nearestTabStop` searched only `ownerDocument.body`** (found in Wave 6 Task 7, fixed in Task 12): it now walks the flat tree (open shadow roots and slots), so a Notice or Connection Status hands focus where Tab would go, inside a shadow root or out of a slot.
 - **An empty written `<kind-dictation-status>` showed nothing (Wave 5 Task 11):** `draw` fills in its mark and `[data-dictation-text]`.
 - **Context Bar (Wave 5 Task 10):** a list written with only whitespace inside is filled in; new chip objects with the same content keep their rows; the content's `initial-focus`, `side-offset` and `align` are set on every draw, so content added later opens as React's does (`written` case).
 - **A `kind-message` written with menu markup and no `regenerateOptions` both regenerated and opened a menu of "Try again" (Wave 5 Task 7):** the root now always controls its `ui-menu`, which refuses to open without options, and empties a content it owns; `message.spec.ts` has a `no-options` case.
@@ -125,6 +137,9 @@ Last reviewed: `c93c7e5` (Wave 5 Task 17 Dictation inside the Composer)
 - **`kind-status` overwrote text written into its `<kind-status-label>`, and missed a label added later (Wave 2 Task 2).** Fixed: it writes only into a label that was empty, and redraws when parts arrive.
 - **Approval Mode (Wave 5 Task 6):** the `value` JSDoc claimed a `modechange` and typed a setter that took `undefined`; the trigger redrew on every new `modes` array (now keyed by content); `approval-mode.spec.ts` gained a zero-removal redraw test and a `learnmore` case.
 - **Model Control's `effort` reflected to a stale attribute (Wave 5 Task 9):** it is a property-only `value` option now, as `model` is; the property JSDoc says setting fires no event.
+- **Day Separator (Wave 6 Task 6):** host text inside the element is kept (the fill-in checks `textContent`, and appends rather than writing `innerHTML`); a label written after connecting, or a `<time>` holding only whitespace, is filled in through a `MutationObserver`, as Status does.
+- **Message (Wave 6 Task 9):** clearing `author` left the old initials in an avatar the element filled (now emptied); an empty `kind-message-header` moved the content down when it filled in (`:empty` holds its line). Moved, shadow-root and adopted elements were checked by hand.
+- **`kind-conversation-search` lost its field's description when put back, opened and took focus on a `query` write, and drew into a host's own marks track; its fixture cast the element's `api` instead of passing a controller** (Wave 6 Task 11): fixed (element reflection when the count's id moves, `setQuery` behind the property, only an empty `kind-conversation-marks` is drawn, a `createConversationController()` on both).
 
 ## Revisit
 

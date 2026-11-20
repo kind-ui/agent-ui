@@ -13,13 +13,14 @@
     row-gap: 2px;
     box-sizing: border-box;
     padding-block: 10px;
-    padding-inline: 12px 10px;
-    border: 1px solid color-mix(in oklab, var(--kind-notice-tone) 28%, var(--kind-color-border));
-    border-radius: calc(var(--kind-radius) * 2 / 3);
-    background-color: color-mix(in oklab, var(--kind-notice-tone) 6%, var(--kind-color-surface));
+    padding-inline: 12px 8px;
+    border-radius: var(--kind-radius-lg);
+    background-color: var(--kind-color-raised);
+    box-shadow: 0 0 0 1px var(--kind-color-hairline);
     color: var(--kind-color-fg);
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: var(--kind-text-md);
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
 
     &[data-variant="success"] {
       --kind-notice-tone: var(--kind-color-success);
@@ -29,6 +30,16 @@
     }
     &[data-variant="error"] {
       --kind-notice-tone: var(--kind-color-danger);
+    }
+
+    /* Info and success are said by their mark. Warning and error also take a tint, in place of the border. */
+    &:is([data-variant="warning"], [data-variant="error"]) {
+      box-shadow: none;
+      background-color: color-mix(
+        in oklab,
+        var(--kind-notice-tone) var(--kind-tint-fill),
+        var(--kind-color-raised)
+      );
     }
   }
 
@@ -46,7 +57,7 @@
   }
 
   [data-notice-part="title"] {
-    font-weight: 600;
+    font-weight: var(--kind-font-weight-semibold);
   }
 
   [data-notice-part="description"] {
@@ -68,57 +79,27 @@
     }
   }
 
+  /* The small shared icon button (controls.css), centered on the first line. Its glyph is on `::after`, since a
+     coarse pointer's hit area takes `::before`. */
   [data-notice-part="dismiss"] {
     grid-row: 1;
     grid-column: 3;
-    display: inline-grid;
-    place-items: center;
-    width: 1.5rem;
-    height: 1.5rem;
-    margin-block: -2px;
-    border-radius: calc(var(--kind-radius) / 2);
-    color: var(--kind-color-muted);
-    transition:
-      color var(--kind-duration-fast),
-      background-color var(--kind-duration-fast);
+    margin-block: calc((var(--kind-text-md-leading) - var(--kind-control-height-sm)) / 2);
 
-    &::before {
+    &::after {
       content: "";
       width: 14px;
       height: 14px;
       background-color: currentColor;
       mask: var(--kind-notice-dismiss) center / contain no-repeat;
     }
-    &:hover {
-      color: var(--kind-color-fg);
-      background-color: color-mix(in oklab, var(--kind-notice-tone) 12%, transparent);
-    }
-    &:focus-visible {
-      color: var(--kind-color-fg);
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 1px;
-    }
   }
 
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
-    [data-notice-part="dismiss"]::before {
+    [data-notice-part="dismiss"]::after {
       forced-color-adjust: none;
       background-color: ButtonText;
     }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    [data-notice-part="dismiss"] {
-      transition-duration: var(--kind-duration-reduced);
-    }
-  }
-
-  [data-notice-part="dismiss"]:where([data-motion="reduced"] *) {
-    transition-duration: var(--kind-duration-reduced);
-  }
-
-  [data-notice-part="dismiss"]:where([data-motion="none"] *) {
-    transition: none;
   }
 }

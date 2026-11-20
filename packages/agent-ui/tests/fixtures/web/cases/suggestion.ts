@@ -12,12 +12,14 @@ const page =
     pickable = true,
     width,
     inForm = false,
+    wrap = false,
   }: {
     initial?: SuggestionItem[];
     motion?: MotionMode;
     pickable?: boolean;
     width?: number;
     inForm?: boolean;
+    wrap?: boolean;
   } = {}) =>
   (root: HTMLElement) => {
     defineSuggestion();
@@ -30,6 +32,7 @@ const page =
     suggestion.suggestions = initial;
     suggestion.canPick = pickable;
     if (motion) suggestion.motion = motion;
+    if (wrap) suggestion.layout = "wrap";
     suggestion.addEventListener("pick", (event) => record(event.detail.value, event.detail));
     const below = Object.assign(document.createElement("p"), { id: "below", textContent: "Below" });
     if (inForm) {
@@ -66,4 +69,5 @@ export const cases = {
   reduced: page({ motion: "reduced" }),
   static: page({ pickable: false }),
   form: page({ inForm: true }),
+  wrap: page({ initial: manySuggestions, width: 360, wrap: true }),
 };

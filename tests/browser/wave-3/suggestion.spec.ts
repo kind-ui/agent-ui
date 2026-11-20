@@ -107,6 +107,20 @@ test("Previous and Next show when the suggestions overflow, and Next brings late
   await expect(previous(page)).not.toHaveAttribute("aria-disabled", "true");
 });
 
+test('with layout="wrap" the suggestions wrap with no Carousel, and each is in reach', async ({ page }) => {
+  await open(page, "wrap");
+  await expect(row(page).locator('[data-slot="carousel"]')).toHaveCount(0);
+  const last = chip(page, "Suggest a test plan");
+  await expect(last).toBeInViewport();
+  const [first, end] = await Promise.all([
+    chip(page, "Summarize this thread").boundingBox(),
+    last.boundingBox(),
+  ]);
+  expect(end?.y).toBeGreaterThan(first?.y ?? 0);
+  await last.click();
+  expect((await picks(page)).map(({ id }) => id)).toEqual(["g"]);
+});
+
 test("a press or Enter picks a suggestion", async ({ page }) => {
   await open(page);
   await chip(page, "Draft a reply").click();

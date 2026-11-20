@@ -5,7 +5,7 @@ import { cancel, enter, flow, type MotionMode, onReducedMotionChange } from "./m
 export type IndicatorOptions = {
   /**
    * Names the status, and screen readers read it again when it changes. Loader and Thinking Indicator also show
-   * it; it defaults to "Loading", "Thinking" or "Typing".
+   * it; it defaults to "Loading…", "Thinking…" or "Typing".
    */
   label?: string;
   /**

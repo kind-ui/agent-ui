@@ -146,12 +146,12 @@ test("full motion animates height; reduced motion and motion reduced animate non
   expect(await openingTransitions(page)).not.toContain("height");
 });
 
-test("the Thinking title shimmers at full motion and holds still when reduced", async ({ page }) => {
+test("the running Thinking title is plain text: the status mark is the only loop", async ({ page }) => {
   await open(page);
   const title = reasoning(page, "live").locator('[data-slot="kind-reasoning-title"]');
-  await expect(title).toHaveCSS("animation-name", "kind-shimmer");
-  await set(page, "live", { motion: "reduced" });
+  await expect(title).toHaveAttribute("data-status", "running");
   await expect(title).toHaveCSS("animation-name", "none");
+  await expect(title).toHaveCSS("background-image", "none");
 });
 
 for (const colorScheme of ["light", "dark"] as const) {

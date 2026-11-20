@@ -201,3 +201,11 @@ test("toApprovalResponse uses approvalId", () => {
     reason: "no",
   });
 });
+
+test("fromUIMessages gives the chat's error to the last message", () => {
+  const messages = fromUIMessages(conversation, { status: "error", error: new Error("Rate limited") });
+  assert.equal(messages.at(-1).status, "error");
+  assert.deepEqual(messages.at(-1).error, { message: "Rate limited" });
+  assert.equal(messages[0].error, undefined);
+  assert.equal(fromUIMessages(conversation, { status: "ready" }).at(-1).error, undefined);
+});

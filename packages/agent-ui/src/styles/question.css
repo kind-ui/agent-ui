@@ -6,8 +6,9 @@
     flex-direction: column;
     gap: 16px;
     margin: 0;
-    font-size: 0.8125rem;
-    line-height: 1.25rem;
+    font-size: var(--kind-text-md);
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
     color: var(--kind-color-fg);
   }
 
@@ -23,12 +24,12 @@
     display: block;
     margin-bottom: 8px;
     padding: 0;
-    font-weight: 500;
+    font-weight: var(--kind-font-weight-medium);
 
     & [data-question-required] {
       margin-inline-start: 4px;
-      font-size: 0.6875rem;
-      font-weight: 400;
+      font-size: var(--kind-text-xs);
+      font-weight: var(--kind-font-weight-regular);
       color: var(--kind-color-muted);
     }
   }
@@ -37,26 +38,19 @@
     display: block;
   }
 
-  /* Each option is a row the whole of which checks it, as UI SDK's choice cards are. */
+  /* Each option is a row the whole of which checks it, as UI SDK's choice cards are. The radio or checkbox is the
+     chosen state, so the row itself only answers the pointer. */
   :where([data-slot="kind-question-choices"]) [data-question-option] {
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    padding: 8px 10px;
-    border: 1px solid var(--kind-color-border);
-    border-radius: calc(var(--kind-radius) * 2 / 3);
-    background-color: var(--kind-color-surface);
+    padding: 6px 8px;
+    border-radius: var(--kind-radius-md);
     cursor: pointer;
-    transition:
-      background-color var(--kind-duration-fast),
-      border-color var(--kind-duration-fast);
+    transition: background-color var(--kind-duration-fast);
 
     &:hover {
       background-color: var(--kind-color-hover);
-    }
-    &:has([data-checked]) {
-      border-color: var(--kind-color-accent);
-      background-color: color-mix(in oklab, var(--kind-color-accent) 6%, var(--kind-color-surface));
     }
     /* Centers the 16px control on the first 20px line. */
     & :is([data-slot="radio"], [data-slot="checkbox"]) {
@@ -74,7 +68,7 @@
   }
 
   [data-question-option-description] {
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     color: var(--kind-color-muted);
   }
 
@@ -82,8 +76,8 @@
   :where([data-slot="kind-question"][aria-busy="true"]) [data-question-option] {
     cursor: default;
 
-    &:hover:not(:has([data-checked])) {
-      background-color: var(--kind-color-surface);
+    &:hover {
+      background-color: transparent;
     }
   }
 
@@ -91,7 +85,7 @@
     :is([data-slot="radio-indicator"], [data-slot="checkbox-indicator"]) {
     transition:
       opacity var(--kind-duration-fast),
-      scale var(--kind-duration-fast) var(--kind-ease);
+      scale var(--kind-duration-fast) var(--kind-ease-enter);
 
     &:is([data-starting-style], [data-ending-style]) {
       opacity: 0;
@@ -104,63 +98,12 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    min-height: 2rem;
-  }
-
-  :is([data-slot="kind-question-submit"], [data-slot="kind-question-skip"]) {
-    display: inline-flex;
-    align-items: center;
-    height: 1.75rem;
-    padding-inline: 12px;
-    border: 1px solid transparent;
-    border-radius: calc(var(--kind-radius) / 2);
-    font-size: 0.8125rem;
-    font-weight: 500;
-    transition:
-      background-color var(--kind-duration-fast),
-      border-color var(--kind-duration-fast),
-      opacity var(--kind-duration-fast);
-
-    &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
-    }
-    /* The pressed button stays solid while its call is pending; a disabled one dims. */
-    &[aria-disabled="true"] {
-      cursor: default;
-    }
-    &[aria-disabled="true"]:not([data-pending]) {
-      opacity: 0.5;
-    }
-    &[data-pending] {
-      cursor: progress;
-    }
-  }
-
-  [data-slot="kind-question-submit"] {
-    background-color: var(--kind-color-accent);
-    color: var(--kind-color-on-accent);
-
-    &:hover:not([aria-disabled="true"]) {
-      background-color: color-mix(in oklab, var(--kind-color-accent) 88%, var(--kind-color-fg));
-    }
-  }
-
-  [data-slot="kind-question-skip"] {
-    border-color: var(--kind-color-border);
-    background-color: var(--kind-color-surface);
-    color: var(--kind-color-fg);
-
-    &:hover:not([aria-disabled="true"]) {
-      background-color: var(--kind-color-hover);
-    }
+    min-height: var(--kind-control-height);
   }
 
   [data-slot="kind-question-status"] {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
     margin-inline-start: 4px;
+    font-size: var(--kind-text-xs);
     color: var(--kind-color-muted);
   }
 
@@ -170,7 +113,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.75rem;
+    font-size: var(--kind-text-xs);
     color: var(--kind-color-danger);
   }
 
@@ -178,19 +121,19 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    border-radius: calc(var(--kind-radius) / 2);
+    border-radius: var(--kind-radius-sm);
 
     &:focus-visible {
-      outline: 2px solid var(--kind-color-ring);
-      outline-offset: 2px;
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
     }
 
     & [data-question-outcome] {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      min-height: 2rem;
-      font-weight: 500;
+      min-height: var(--kind-control-height);
+      font-weight: var(--kind-font-weight-medium);
     }
 
     & dl {
@@ -204,7 +147,7 @@
       display: none;
     }
     & dt {
-      font-size: 0.75rem;
+      font-size: var(--kind-text-xs);
       color: var(--kind-color-muted);
     }
     & dd {
@@ -220,14 +163,7 @@
   /* Reduced motion: a short fade, and the indicators don't scale. `none`: no transition at all. */
   @media (prefers-reduced-motion: reduce) {
     [data-slot="kind-question"][data-motion="auto"] {
-      &
-        :is(
-          [data-question-option],
-          [data-slot="radio"],
-          [data-slot="checkbox"],
-          [data-slot="kind-question-submit"],
-          [data-slot="kind-question-skip"]
-        ) {
+      & :is([data-question-option], [data-slot="radio"], [data-slot="checkbox"]) {
         transition-duration: var(--kind-duration-reduced);
       }
       & :is([data-slot="radio-indicator"], [data-slot="checkbox-indicator"]) {
@@ -238,14 +174,7 @@
   }
 
   [data-slot="kind-question"][data-motion="reduced"] {
-    &
-      :is(
-        [data-question-option],
-        [data-slot="radio"],
-        [data-slot="checkbox"],
-        [data-slot="kind-question-submit"],
-        [data-slot="kind-question-skip"]
-      ) {
+    & :is([data-question-option], [data-slot="radio"], [data-slot="checkbox"]) {
       transition-duration: var(--kind-duration-reduced);
     }
     & :is([data-slot="radio-indicator"], [data-slot="checkbox-indicator"]) {
@@ -260,9 +189,7 @@
       [data-slot="radio"],
       [data-slot="checkbox"],
       [data-slot="radio-indicator"],
-      [data-slot="checkbox-indicator"],
-      [data-slot="kind-question-submit"],
-      [data-slot="kind-question-skip"]
+      [data-slot="checkbox-indicator"]
     ) {
     transition: none;
   }
