@@ -25,7 +25,7 @@
     }
 
     &[data-disabled] {
-      opacity: 0.6;
+      opacity: var(--kind-disabled-opacity);
     }
 
     & [data-slot="file-input"] {
@@ -416,9 +416,9 @@
     }
   }
 
-  /* Nothing to send: the same circle, faded, so it doesn't read as busy. */
+  /* Nothing to send: the same circle, faded as anything disabled is, so it doesn't read as busy. */
   [data-slot="kind-composer-submit"]:where([aria-disabled="true"]:not([data-pending])) {
-    opacity: 0.3;
+    opacity: var(--kind-disabled-opacity);
     cursor: default;
   }
 
