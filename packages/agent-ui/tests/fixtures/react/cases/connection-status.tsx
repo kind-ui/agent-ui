@@ -1,5 +1,6 @@
 import type { ConnectionState, MotionMode } from "@kind-ui/agent-ui/core";
 import { useEffect, useState } from "react";
+import { flushSync } from "react-dom";
 import { ConnectionStatus } from "../../../../src/react/connection-status.js";
 import {
   Conversation,
@@ -18,7 +19,8 @@ function Page({ initial = "online", motion }: { initial?: ConnectionState; motio
     resuming?: boolean | undefined;
   }>({ state: initial });
   useEffect(() => {
-    const set: ConnectionHost["set"] = (state, options) => setConnection({ state, ...options });
+    const set: ConnectionHost["set"] = (state, options) =>
+      flushSync(() => setConnection({ state, ...options }));
     Object.assign(window, { kindHost: Object.assign(host, { set }) });
   }, []);
   return (
