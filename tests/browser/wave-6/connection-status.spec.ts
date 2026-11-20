@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 import { watchAnimations } from "../leaving.js";
 
 type ConnectionState = "online" | "connecting" | "reconnecting" | "offline";
@@ -99,7 +99,7 @@ test("the pill keeps its width as the countdown loses a digit", async ({ page })
 });
 
 test("words a host wrote get no room for lost digits", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web hosts write the words");
+  test.skip(!isWebElements(testInfo), "web hosts write the words");
   await page.clock.install({ time: new Date("2026-11-18T12:00:00Z") });
   await open(page, "written");
   await page.clock.pauseAt(new Date("2026-11-18T12:00:10Z"));
@@ -233,7 +233,7 @@ test("at full motion the pill drops in and fades out; reduced motion only fades"
 test("web keeps the words written into its parts and adds only the parts it lacks", async ({
   page,
 }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web markup");
+  test.skip(!isWebElements(testInfo), "web markup");
   await open(page, "written");
   await expect(pill(page)).toHaveText("Sin conexiónReintentar");
   await expect(pill(page).locator("> *")).toHaveCount(3);

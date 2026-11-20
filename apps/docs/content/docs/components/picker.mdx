@@ -12,18 +12,12 @@ Use a picker when people choose where or what the agent works on, from more item
 <Example caption="Press Work in, type doc to find docs, then press Enter. Choose New project to add one and choose it.">
   <PickerExample />
 
-  <include cwd lang="tsx">./examples/picker/basic.tsx</include>
+  <ExampleCode example="picker/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/picker
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/picker-web
-```
+<Install name="picker" />
 
 ## Composition
 
@@ -84,7 +78,7 @@ Group projects by their owner with `group`, and put what each is in `description
 <Example caption="Press Project, then type dash to find web by its description.">
   <PickerProjectExample />
 
-  <include cwd lang="tsx">./examples/picker/project.tsx</include>
+  <ExampleCode example="picker/project" />
 </Example>
 
 ### Branch
@@ -94,12 +88,14 @@ Put each branch's ahead and behind counts in `meta`, which sits at the end of it
 <Example caption="Press Branch to see each branch's counts, then choose New branch to add one.">
   <PickerBranchExample />
 
-  <include cwd lang="tsx">./examples/picker/branch.tsx</include>
+  <ExampleCode example="picker/branch" />
 </Example>
 
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/picker/picker.ts" name="PickerOptions" />
+
+<FrameworkNames name="picker" />
 
 ### Agent
 

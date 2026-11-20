@@ -22,11 +22,13 @@ import {
 } from "../../shared/composer.js";
 
 const unsettled = new Promise<void>(() => {});
-const params = new URLSearchParams(location.search);
-const { onSubmit, onStop } = recorder();
-const drafts = draftOptions(params);
+let recorded: ReturnType<typeof recorder> | undefined;
+let drafts: ReturnType<typeof draftOptions> | undefined;
 
-function Full({ submitOn }: { submitOn?: "enter" | "mod-enter" }) {
+function Full({ params, submitOn }: { params: URLSearchParams; submitOn?: "enter" | "mod-enter" }) {
+  recorded ??= recorder();
+  drafts ??= draftOptions(params);
+  const { onSubmit, onStop } = recorded;
   const [mounted, setMounted] = useState(true);
   const [draft, setDraft] = useState<ComposerDraft>({ text: "", tokens: [], attachments: [] });
   const [draftKey, setDraftKey] = useState(params.get("draftKey") ?? "chat-1");
@@ -79,7 +81,7 @@ function Full({ submitOn }: { submitOn?: "enter" | "mod-enter" }) {
   );
 }
 
-function AttachmentsCase() {
+function AttachmentsCase({ params }: { params: URLSearchParams }) {
   const [items, setItems] = useState(attachmentItems);
   useEffect(() => attachmentsHost(setItems), []);
   return (
@@ -105,7 +107,7 @@ export const cases = {
       <ComposerSubmit>Send</ComposerSubmit>
     </Composer>
   ),
-  full: () => <Full />,
-  "mod-enter": () => <Full submitOn="mod-enter" />,
-  attachments: () => <AttachmentsCase />,
+  full: (params: URLSearchParams) => <Full params={params} />,
+  "mod-enter": (params: URLSearchParams) => <Full params={params} submitOn="mod-enter" />,
+  attachments: (params: URLSearchParams) => <AttachmentsCase params={params} />,
 };

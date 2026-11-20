@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Fixture = {
   kindItems: {
@@ -80,7 +80,7 @@ test("a resolved accept leaves Accepted in its place, which takes focus", async 
 });
 
 test("an accepted kind-plan put back in the page stays accepted", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   await accept(page).click();
   await page.evaluate(() => (window as unknown as Fixture).kindAccepts[0]?.resolve());
@@ -156,7 +156,7 @@ test("Accept lines up with the title in right-to-left text", async ({ page }) =>
 });
 
 test("kind-plan keeps what someone wrote in its progress part", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   await page.evaluate(() => {
     const el = document.createElement("kind-plan");

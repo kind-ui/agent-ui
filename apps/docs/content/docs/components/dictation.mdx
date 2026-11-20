@@ -10,18 +10,12 @@ Use dictation inside a [composer](./composer.mdx) to let people speak a prompt i
 <Example caption="Press the mic button beside Send to start. The waveform takes the prompt's place while the words arrive. Press Stop to add them to the prompt, or Cancel to drop them. This example plays back a recording, so it never opens your microphone.">
   <DictationExample />
 
-  <include cwd lang="tsx">./examples/dictation/basic.tsx</include>
+  <ExampleCode example="dictation/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/dictation
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/dictation-web
-```
+<Install name="dictation" />
 
 ## Composition
 
@@ -129,6 +123,8 @@ On its own, Dictation keeps one size in every phase, so nothing beside it moves:
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/dictation-button/dictation-button.ts" name="DictationOptions" />
+
+<FrameworkNames name="dictation" />
 
 ### Agent
 

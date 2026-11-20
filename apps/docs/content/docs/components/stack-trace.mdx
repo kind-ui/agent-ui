@@ -10,18 +10,12 @@ Use a stack trace when a tool call or a test fails with an error, so readers see
 <Example caption="Press 2 library frames to show the frames from libraries and Node.js. Focus a frame and use the arrow keys to move between frames, then press Enter to open one.">
   <StackTraceExample />
 
-  <include cwd lang="tsx">./examples/stack-trace/basic.tsx</include>
+  <ExampleCode example="stack-trace/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/stack-trace
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/stack-trace-web
-```
+<Install name="stack-trace" />
 
 ## Composition
 
@@ -82,6 +76,8 @@ Tab reaches the header, each "N library frames" row and **Copy stack trace**. Wh
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/stack-trace/stack-trace.ts" name="StackTraceOptions" />
+
+<FrameworkNames name="stack-trace" />
 
 ### Agent
 

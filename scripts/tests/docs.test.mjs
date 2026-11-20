@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import catalog from "../../registry/catalog.mjs";
 
@@ -16,13 +16,11 @@ for (const name of components) {
     const source = page(name);
     assert.match(source, /^---\ntitle: .+\ndescription: .+\n---\n/);
     assert.match(source, /<Example caption=".+">/);
-    assert.ok(source.includes(`<include cwd lang="tsx">./examples/${name}/basic.tsx</include>`));
-    assert.ok(source.includes("\n## Installation\n"));
-    assert.ok(source.includes(`npx shadcn@latest add @kind-ui/${name}\n`));
-    assert.ok(source.includes(`npx shadcn@latest add @kind-ui/${name}-web\n`));
+    assert.ok(source.includes(`<ExampleCode example="${name}/basic" />`));
+    assert.ok(source.includes(`\n## Installation\n\n<Install name="${name}" />\n`));
     assert.ok(source.includes("\n## Usage\n"));
     assert.ok(source.includes("\n## API Reference\n\n<auto-type-table "));
-    assert.ok(source.includes("\n### Agent\n"));
+    assert.ok(source.includes(`\n<FrameworkNames name="${name}" />\n\n### Agent\n`));
     assert.match(source, /\n<Caption>\n {2}Runs in React and Web Components\. .+\n<\/Caption>\n$/);
   });
 }
@@ -69,11 +67,7 @@ for (const [group, names] of Object.entries(indexed)) {
 
 test("the Sidebar page leads with the full chat shell", () => {
   const source = page("sidebar");
-  const first = source.indexOf("<include cwd");
-  assert.equal(
-    source.slice(first, source.indexOf("</include>", first)),
-    '<include cwd lang="tsx">./examples/sidebar/shell.tsx',
-  );
+  assert.equal(source.match(/<ExampleCode example="([^"]+)" \/>/)?.[1], "sidebar/shell");
 });
 
 const showcases = {
@@ -96,7 +90,7 @@ test("the sidebar has a Showcase section with one live example per page", () => 
     assert.match(
       source,
       new RegExp(
-        `<Example caption=".+">\\n {2}<${component} />\\n\\n {2}<include cwd lang="tsx">\\./examples/showcase/${name}\\.tsx</include>\\n</Example>`,
+        `<Example caption=".+">\\n {2}<${component} />\\n\\n {2}<ExampleCode example="showcase/${name}" />\\n</Example>`,
       ),
       name,
     );
@@ -117,22 +111,23 @@ test("pages import examples and link pages by relative path", () => {
     assert.doesNotMatch(source, /from ["']@\//, file);
     assert.doesNotMatch(source, /\]\(\/|^\[[^\]]+\]:\s*\/|(?:href|src)=\{?["'`]\//m, file);
     assert.doesNotMatch(source, /kindui\.dev(?!\/r\/)|localhost/, file);
-    for (const [, cwd, path] of source.matchAll(/<include( cwd)?[^>]*>([^<]+)<\/include>/g)) {
-      const from = cwd ? docs : new URL(file, content);
-      assert.ok(new URL(path, from).href.startsWith(examples.href), `${file}: ${path}`);
+    assert.doesNotMatch(source, /<include[^>]*>[^<]*examples\//, file);
+    for (const [, example] of source.matchAll(/<ExampleCode example="([^"]+)" \/>/g)) {
+      const url = new URL(`${example}.tsx`, examples);
+      assert.ok(url.href.startsWith(examples.href) && existsSync(url), `${file}: ${example}`);
     }
   }
 });
 
-test("examples import only React, the package, ui components and other examples", () => {
+test("examples import only the frameworks, the package, ui components and other examples", () => {
   for (const file of readdirSync(examples, { recursive: true })) {
-    if (!/\.tsx?$/.test(file)) continue;
+    if (!/\.(?:tsx?|vue|svelte)$/.test(file)) continue;
     const url = new URL(file, examples);
     const source = readFileSync(url, "utf8");
     for (const [, specifier] of source.matchAll(/(?:\bfrom|\bimport)\s*\(?\s*["']([^"']+)["']/g)) {
       const allowed = specifier.startsWith(".")
         ? new URL(specifier, url).href.startsWith(examples.href)
-        : /^(?:react|@kind-ui\/agent-ui(?:\/(?:core|adapters\/ai-sdk|styles\.css))?|@\/components\/ui\/.+)$/.test(
+        : /^(?:react|vue|svelte|solid-js|@solidjs\/web|@kind-ui\/agent-ui(?:\/(?:core|adapters\/ai-sdk|styles\.css))?|@\/components\/ui\/.+)$/.test(
             specifier,
           );
       assert.ok(allowed, `${file}: ${specifier}`);

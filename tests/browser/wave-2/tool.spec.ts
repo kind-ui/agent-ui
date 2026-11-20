@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { allowClipboard, readClipboard } from "../clipboard.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Fixture = {
   kindTool: {
@@ -233,7 +233,7 @@ for (const colorScheme of ["light", "dark"] as const) {
 }
 
 test("kind-tool exposes live open state and its api", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   type KindTool = HTMLElement & { open: boolean; api: { collapse(): boolean } };
   const search = tool(page, "search");
@@ -243,7 +243,7 @@ test("kind-tool exposes live open state and its api", async ({ page }, testInfo)
 });
 
 test("kind-tool fills in input and output parts written empty", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   await page.evaluate(() => {
     const element = document.createElement("kind-tool");

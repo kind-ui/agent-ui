@@ -10,18 +10,12 @@ Use a confirmation when the agent needs a person's go-ahead before it acts, like
 <Example caption="Press Approve, or press Deny to add a reason, then Deny again to send it. The choices give way to the outcome, at the same height.">
   <ConfirmationExample />
 
-  <include cwd lang="tsx">./examples/confirmation/basic.tsx</include>
+  <ExampleCode example="confirmation/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/confirmation
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/confirmation-web
-```
+<Install name="confirmation" />
 
 ## Composition
 
@@ -80,6 +74,8 @@ The choices and the outcome fade in when they swap, and the reason box expands a
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/confirmation/confirmation.ts" name="ConfirmationOptions" />
+
+<FrameworkNames name="confirmation" />
 
 ### Agent
 

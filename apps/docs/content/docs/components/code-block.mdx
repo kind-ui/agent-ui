@@ -10,18 +10,12 @@ Use a code block for a file, a command or a snippet the agent wrote. Markdown re
 <Example caption="Press the wrap button to wrap long lines, or the copy button to copy the code. Tab reaches both, and Enter or Space presses them.">
   <CodeBlockExample />
 
-  <include cwd lang="tsx">./examples/code-block/basic.tsx</include>
+  <ExampleCode example="code-block/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/code-block
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/code-block-web
-```
+<Install name="code-block" />
 
 ## Usage
 
@@ -59,6 +53,8 @@ Set `streaming` while the code is still arriving, and the view follows its end. 
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/code-block/code-block.ts" name="CodeBlockOptions" />
+
+<FrameworkNames name="code-block" />
 
 ### Agent
 

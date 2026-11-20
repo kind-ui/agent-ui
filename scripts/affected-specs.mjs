@@ -9,10 +9,15 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
+import { manifests } from "../registry/layers/index.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const src = "packages/agent-ui/src/";
 const coreIndex = `${src}core/index.ts`;
+const layers = "react|web|vue|svelte|solid";
+const sourceFile = /\.(tsx?|vue|svelte)$/;
+// Parity runs every manifest-driven layer against React (framework layers plan D10).
+const paritySpec = "tests/browser/parity.spec.ts";
 
 const unrelated = [
   /^(docs|apps\/docs|registry|tests\/types|\.agents|\.claude|\.changeset|\.vscode)\//,
@@ -27,7 +32,10 @@ const read = (file) => readFileSync(join(root, file), "utf8");
 function resolveRelative(from, specifier) {
   const base = posix.join(posix.dirname(from), specifier.replace(/\?.*$/, ""));
   const stem = base.replace(/\.js$/, "");
-  return [base, `${stem}.ts`, `${stem}.tsx`].find((file) => existsSync(join(root, file))) ?? base;
+  return (
+    [base, `${stem}.ts`, `${stem}.tsx`, `${stem}/index.ts`].find((file) => existsSync(join(root, file))) ??
+    base
+  );
 }
 
 // Render files and fixtures import core by name through the package; each name leads to the module exporting it.
@@ -39,8 +47,12 @@ for (const [, names, from] of read(coreIndex).matchAll(
     coreModules.set(name.replace(/^\s*type\s+/, "").trim(), resolveRelative(coreIndex, from));
 }
 
-function importsOf(file) {
-  const text = read(file);
+// Vue and Svelte files import inside their `<script>` blocks.
+const scriptBlocks = (text) =>
+  [...text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]).join("\n");
+
+export function importsOf(file) {
+  const text = /\.(vue|svelte)$/.test(file) ? scriptBlocks(read(file)) : read(file);
   const imports = ts
     .preProcessFile(text, true, true)
     .importedFiles.filter(({ fileName }) => fileName.startsWith("."))
@@ -54,7 +66,10 @@ function importsOf(file) {
     }
   }
   // Component styles reach the page through agent-ui.css; credit each to its render files instead.
-  const name = file.match(/^packages\/agent-ui\/src\/(?:react|web)\/([^/]+)\.tsx?$/)?.[1];
+  const name = file
+    .match(/^packages\/agent-ui\/src\/(?:(?:react|web|vue|solid)\/([^/]+)\.tsx?|svelte\/([^/]+)\/index\.ts)$/)
+    ?.slice(1)
+    .find(Boolean);
   if (name && existsSync(join(root, `${src}styles/${name}.css`))) imports.push(`${src}styles/${name}.css`);
   return imports;
 }
@@ -68,7 +83,7 @@ function loadGraph() {
     .filter(Boolean);
   const dependents = new Map(files.map((file) => [file, new Set()]));
   for (const file of files) {
-    if (!/\.tsx?$/.test(file)) continue;
+    if (!sourceFile.test(file)) continue;
     for (const dependency of importsOf(file)) dependents.get(dependency)?.add(file);
   }
   const specs = new Map(
@@ -83,6 +98,13 @@ function loadGraph() {
 export function affectedSpecs(changed, { dependents, specs } = loadGraph()) {
   const affected = new Set();
   for (const file of changed) {
+    const layer = file.match(/^registry\/layers\/(\w+)\.mjs$/)?.[1];
+    if (layer) {
+      if (!manifests[layer]) return "all";
+      for (const each of [...manifests[layer].specs.map((spec) => `tests/browser/${spec}`), paritySpec])
+        affected.add(each);
+      continue;
+    }
     if (!dependents.has(file)) {
       if (unrelated.some((pattern) => pattern.test(file))) continue;
       return "all";
@@ -91,14 +113,14 @@ export function affectedSpecs(changed, { dependents, specs } = loadGraph()) {
     for (const each of reached) for (const dependent of dependents.get(each)) reached.add(dependent);
     const cases = new Set(
       [...reached]
-        .map((each) => each.match(/\/fixtures\/(?:react|web)\/cases\/([^/.]+)\./)?.[1])
+        .map((each) => each.match(new RegExp(`/fixtures/(?:${layers})/cases/([^/.]+)\\.`))?.[1])
         .filter(Boolean),
     );
     const hits = [...specs].filter(
       ([spec, used]) => reached.has(spec) || [...used].some((name) => cases.has(name)),
     );
     if (!hits.length) {
-      if ([...reached].some((each) => /\/tests\/fixtures\/|\/src\/(react|web|styles)\//.test(each)))
+      if ([...reached].some((each) => new RegExp(`/tests/fixtures/|/src/(${layers}|styles)/`).test(each)))
         return "all";
       continue;
     }

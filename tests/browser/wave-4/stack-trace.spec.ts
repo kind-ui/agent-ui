@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { allowClipboard, readClipboard } from "../clipboard.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Fixture = {
   kindStackTrace: { set(id: string, next: Record<string, unknown>): void };
@@ -225,7 +225,7 @@ for (const colorScheme of ["light", "dark"] as const) {
 }
 
 test("kind-stack-trace takes can-open-frame and keeps its list when put back", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   const frames = trace(page, "frames");
   await part(page, "frames", "library").first().click();
@@ -251,7 +251,7 @@ test("kind-stack-trace takes can-open-frame and keeps its list when put back", a
 });
 
 test("kind-stack-trace fills in the empty parts someone wrote", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page, "written");
   await expect(part(page, "written", "frame").first()).toHaveText("readConfigconfig/read.ts:12:9");
   await expect(part(page, "written", "library")).toHaveAccessibleName("2 library frames");

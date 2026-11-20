@@ -9,11 +9,13 @@ const specPath = join(repoRoot, "docs/superpowers/specs/2026-11-14-agent-ui-desi
 
 // `scrollTo(` and `scrollTop` must not match UI SDK APIs such as `createStickToBottom().scrollToBottom()`.
 const matches = (source, pattern) =>
-  pattern === "scrollTo"
-    ? /\bscrollTo\s*\(/.test(source)
-    : pattern === "scrollTop"
-      ? /\bscrollTop\b/.test(source)
-      : source.includes(pattern);
+  pattern instanceof RegExp
+    ? pattern.test(source)
+    : pattern === "scrollTo"
+      ? /\bscrollTo\s*\(/.test(source)
+      : pattern === "scrollTop"
+        ? /\bscrollTop\b/.test(source)
+        : source.includes(pattern);
 
 const CORE_EXEMPT_DIRS = new Set(["motion", "markdown"]);
 const RENDER_FORBIDDEN = [
@@ -29,6 +31,65 @@ const RENDER_FORBIDDEN = [
   "role:",
   'setAttribute("aria-',
 ];
+const spelled = (label, pattern) => Object.assign(pattern, { label });
+const SHARED_FORBIDDEN = [
+  "addEventListener",
+  "tabIndex",
+  "tabindex",
+  ".focus(",
+  "scrollTo",
+  "scrollTop",
+  "scrollIntoView",
+  "role=",
+  "role:",
+  'setAttribute("aria-',
+];
+// Each render layer: its files, the framework spelling of hand-written behavior, and the packages it must not import.
+const RENDER_LAYERS = [
+  { layer: "react", files: /\.tsx$/, partsFrom: "@ui-sdk/react/primitive", forbidden: RENDER_FORBIDDEN },
+  { layer: "web", files: /\.ts$/, partsFrom: "@ui-sdk/web", forbidden: RENDER_FORBIDDEN },
+  {
+    layer: "vue",
+    files: /\.ts$/,
+    forbidden: [
+      ...SHARED_FORBIDDEN,
+      spelled("onKeydown", /\bon(Key|Focus)\w*\s*:/),
+      spelled("@keydown", /[@:]key(down|up)\b/),
+      spelled("aria-*:", /["']aria-[\w-]+["']\s*:/),
+    ],
+  },
+  {
+    layer: "svelte",
+    files: /\.(ts|svelte)$/,
+    // A component is its folder: `index.ts` and its `.svelte` parts count together.
+    unit: (file) => file.slice(0, file.lastIndexOf("/")),
+    forbidden: [
+      ...SHARED_FORBIDDEN,
+      spelled("onkeydown=", /\bonkey(down|up)\s*=/),
+      spelled("{@attach} focus", /\{@attach[^}]*focus/),
+      spelled("aria-*=", /\baria-[\w-]+\s*=/),
+    ],
+  },
+  {
+    layer: "solid",
+    files: /\.tsx$/,
+    forbidden: [
+      ...SHARED_FORBIDDEN,
+      spelled("onKeyDown", /\bonKey(Down|Up)\b/),
+      spelled("on:keydown", /\bon:key(down|up)\b/),
+      spelled("aria-*=", /\baria-[\w-]+\s*=/),
+    ],
+  },
+];
+const LAYER_PACKAGES = ["react", "react-dom", "vue", "svelte", "solid-js", "@solidjs/web", "ai"];
+const OWN_PACKAGES = {
+  react: ["react", "react-dom"],
+  vue: ["vue"],
+  svelte: ["svelte"],
+  solid: ["solid-js", "@solidjs/web"],
+};
+// Kind class helpers pass UI SDK parts through; React's is a `.ts` file, which its layer doesn't scan.
+const RENDER_EXEMPT = new Set(["src/vue/internal/kind-class.ts", "src/svelte/internal/kind-class.ts"]);
 const CORE_FORBIDDEN = [
   "addEventListener",
   ".focus(",
@@ -148,31 +209,46 @@ export function checkUiSdkUsage(root, exceptions) {
     }
   }
 
-  // Rules 2 and 3: render files use createParts or wrap a UI SDK component, with no hand-written behavior.
-  const renderFiles = [
-    ...walk(join(root, "src/react")).filter((f) => f.endsWith(".tsx")),
-    ...walk(join(root, "src/web")).filter((f) => f.endsWith(".ts")),
-  ];
-  for (const path of renderFiles) {
-    const file = rel(path);
-    const raw = readFileSync(path, "utf8");
-    const source = stripComments(raw);
-    const usesParts =
-      (importsFrom(source, "createParts", "@ui-sdk/react/primitive") ||
-        importsFrom(source, "createParts", "@ui-sdk/web")) &&
-      /\bcreateParts\s*\(/.test(source);
-    // Web entries register their elements on import, so a bare `import "@ui-sdk/web/<name>"` wraps one too.
-    // Type-only imports and the agent bridge wrap nothing.
-    const valueImports = source.replace(/import\s+type\b[^;]*;/g, "");
-    const wrapsComponent =
-      /(from|import)\s*["']@ui-sdk\/(react\/(?!(primitive|agent)["'])|web\/(?!agent["']))[\w-]+["']/.test(
-        valueImports,
-      );
-    if (!usesParts && !wrapsComponent) {
-      errors.push(`${file}: render file must use createParts or wrap a UI SDK component`);
+  // Rules 2 and 3: render files use createParts or wrap a UI SDK component, with no hand-written behavior, and
+  // import core only through `@kind-ui/agent-ui/core` and no other layer.
+  for (const { layer, files, partsFrom = `@ui-sdk/${layer}/primitive`, unit, forbidden } of RENDER_LAYERS) {
+    const units = new Map();
+    for (const path of walk(join(root, "src", layer)).filter((f) => files.test(f))) {
+      const file = rel(path);
+      if (RENDER_EXEMPT.has(file)) continue;
+      const source = stripComments(readFileSync(path, "utf8"));
+      const key = unit ? unit(file) : file;
+      units.set(key, `${units.get(key) ?? ""}\n${source}`);
+      for (const pattern of forbidden) {
+        if (matches(source, pattern))
+          errors.push(`${file}: ${pattern.label ?? pattern} belongs in the primitive (UI SDK)`);
+      }
+      const specifiers = [...source.matchAll(/(?:from|import)\s*\(?\s*["']([^"']+)["']/g)].map((m) => m[1]);
+      for (const specifier of specifiers) {
+        const pkg = specifier.startsWith("@")
+          ? specifier.split("/").slice(0, 2).join("/")
+          : specifier.split("/")[0];
+        const crossLayer =
+          (/^@ui-sdk\/(?!core$)/.test(pkg) && pkg !== `@ui-sdk/${layer}`) ||
+          (LAYER_PACKAGES.includes(pkg) && !OWN_PACKAGES[layer]?.includes(pkg));
+        if (crossLayer || /^(\.\.\/)+core(\/|$)/.test(specifier)) {
+          errors.push(
+            `${file}: imports ${specifier}; a render file imports core through @kind-ui/agent-ui/core and no other layer`,
+          );
+        }
+      }
     }
-    for (const pattern of RENDER_FORBIDDEN) {
-      if (matches(source, pattern)) errors.push(`${file}: ${pattern} belongs in the primitive (UI SDK)`);
+    for (const [key, source] of units) {
+      const usesParts = importsFrom(source, "createParts", partsFrom) && /\bcreateParts\s*\(/.test(source);
+      // Web entries register their elements on import, so a bare `import "@ui-sdk/web/<name>"` wraps one too.
+      // Type-only imports and the agent bridge wrap nothing.
+      const valueImports = source.replace(/import\s+type\b[^;]*;/g, "");
+      const wrapsComponent = new RegExp(
+        `(from|import)\\s*["']@ui-sdk/${layer}/(?!(primitive|agent)["'])[\\w-]+["']`,
+      ).test(valueImports);
+      if (!usesParts && !wrapsComponent) {
+        errors.push(`${key}: render file must use createParts or wrap a UI SDK component`);
+      }
     }
   }
 

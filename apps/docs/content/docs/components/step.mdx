@@ -10,18 +10,12 @@ Use a step for each thing the agent does, like reading a file or running a comma
 <Example caption="Press Read the logs, or focus it and press Enter or Space, to show its details.">
   <StepExample />
 
-  <include cwd lang="tsx">./examples/step/basic.tsx</include>
+  <ExampleCode example="step/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/step
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/step-web
-```
+<Install name="step" />
 
 ## Composition
 
@@ -64,6 +58,8 @@ Put steps in a `StepList` so the keyboard moves between them with the arrow keys
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/step/base.ts" name="StepOptions" />
+
+<FrameworkNames name="step" />
 
 ### Agent
 

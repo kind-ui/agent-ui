@@ -20,23 +20,46 @@ import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
 import catalog from "../registry/catalog.mjs";
+import { selectedLayers } from "../registry/layers/index.mjs";
 import { NAMESPACE, SHADCN, targetOf, validateCatalog } from "./build-registry.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const registryDir = join(root, "artifacts/registry/r");
 const manifestFile = join(root, "artifacts/package/manifest.json");
 const evidenceFile = join(root, "artifacts/registry/consumer-evidence.json");
-const origin = "http://127.0.0.1:4320";
+// Set once the server listens on a free port.
+let origin = "";
 const pkg = JSON.parse(readFileSync(join(root, "packages/agent-ui/package.json"), "utf8"));
 const workspace = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).devDependencies;
 
+// `entry` is a file, or a folder of `main.<ext>` and `items/`, under `registry/consumers/`; `plugin` imports the
+// framework's Vite plugin as `framework`.
+const vite = ["vite", "tailwindcss", "@tailwindcss/vite"];
 const consumers = {
-  react: {
-    entry: "react.tsx",
-    devDependencies: ["vite", "tailwindcss", "@tailwindcss/vite", "react", "react-dom"],
+  react: { entry: "react.tsx", devDependencies: [...vite, "react", "react-dom"] },
+  web: { entry: "web.ts", devDependencies: vite },
+  vue: {
+    entry: "vue",
+    main: "main.ts",
+    plugin: 'import framework from "@vitejs/plugin-vue";',
+    devDependencies: [...vite, "vue", "@vitejs/plugin-vue"],
   },
-  web: { entry: "web.ts", devDependencies: ["vite", "tailwindcss", "@tailwindcss/vite"] },
+  svelte: {
+    entry: "svelte",
+    main: "main.ts",
+    plugin: 'import { svelte as framework } from "@sveltejs/vite-plugin-svelte";',
+    devDependencies: [...vite, "svelte", "@sveltejs/vite-plugin-svelte"],
+  },
+  solid: {
+    entry: "solid",
+    main: "main.tsx",
+    plugin: 'import framework from "@solidjs/vite-plugin";',
+    jsx: { jsx: "preserve", jsxImportSource: "@solidjs/web" },
+    devDependencies: [...vite, "solid-js", "@solidjs/web", "@solidjs/vite-plugin"],
+  },
 };
+const visibleItems = (layer) =>
+  catalog.items.filter((item) => item.layer === layer && !item.hidden).map((item) => item.name);
 
 /** Problems in the built registry that the shadcn CLI would only meet at install time. */
 export function checkRegistryIntegrity(dir) {
@@ -75,7 +98,7 @@ function run(command, args, cwd, stdout = "inherit") {
 function serve(tarball) {
   const bytes = readFileSync(tarball);
   const { devDependencies, scripts, ...manifest } = pkg;
-  const packument = {
+  const packument = () => ({
     name: pkg.name,
     "dist-tags": { latest: pkg.version },
     versions: {
@@ -88,7 +111,7 @@ function serve(tarball) {
         },
       },
     },
-  };
+  });
   const sites = {};
   const types = {
     ".html": "text/html",
@@ -102,7 +125,7 @@ function serve(tarball) {
     let file;
     if (area === "npm") {
       if (rest[0] === "agent-ui.tgz") return response.end(bytes);
-      if (rest.join("/") === pkg.name) return response.end(JSON.stringify(packument));
+      if (rest.join("/") === pkg.name) return response.end(JSON.stringify(packument()));
     } else if (area === "r") file = join(registryDir, ...rest);
     else if (sites[area]) file = join(sites[area], ...(rest.join("/") ? rest : ["index.html"]));
     if (!file || rest.includes("..") || !existsSync(file)) {
@@ -113,15 +136,16 @@ function serve(tarball) {
     response.end(readFileSync(file));
   });
   return new Promise((resolve, reject) => {
-    server.once("error", (error) =>
-      reject(error.code === "EADDRINUSE" ? new Error("port 4320 is in use") : error),
-    );
-    server.listen(4320, "127.0.0.1", () => resolve({ sites, close: () => server.close() }));
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      origin = `http://127.0.0.1:${server.address().port}`;
+      resolve({ sites, close: () => server.close() });
+    });
   });
 }
 
 async function install(layer, dir) {
-  const { entry, devDependencies } = consumers[layer];
+  const { entry, main = entry, plugin, jsx = { jsx: "react-jsx" }, devDependencies } = consumers[layer];
   const json = (file, value) => writeFileSync(join(dir, file), `${JSON.stringify(value, null, 2)}\n`);
   json("package.json", {
     name: `consumer-${layer}`,
@@ -134,7 +158,7 @@ async function install(layer, dir) {
     compilerOptions: {
       module: "ESNext",
       moduleResolution: "Bundler",
-      jsx: "react-jsx",
+      ...jsx,
       paths: { "@/*": ["./src/*"] },
     },
   });
@@ -155,17 +179,23 @@ async function install(layer, dir) {
   });
   writeFileSync(
     join(dir, "vite.config.mjs"),
-    `import tailwindcss from "@tailwindcss/vite";\nexport default { base: "./", plugins: [tailwindcss()] };\n`,
+    `import tailwindcss from "@tailwindcss/vite";\n${plugin ? `${plugin}\n` : ""}export default { base: "./", plugins: [tailwindcss()${plugin ? ", framework()" : ""}] };\n`,
   );
   writeFileSync(
     join(dir, "index.html"),
-    `<!doctype html>\n<html lang="en"><body><div id="root"></div><script type="module" src="/src/main${extname(entry)}"></script></body></html>\n`,
+    `<!doctype html>\n<html lang="en"><body><div id="root"></div><script type="module" src="/src/main${extname(main)}"></script></body></html>\n`,
   );
   writeFileSync(join(dir, "src/index.css"), '@import "tailwindcss";\n');
-  cpSync(join(root, "registry/consumers", entry), join(dir, `src/main${extname(entry)}`));
+  cpSync(
+    join(root, "registry/consumers", entry),
+    main === entry ? join(dir, `src/main${extname(entry)}`) : join(dir, "src"),
+    {
+      recursive: true,
+    },
+  );
 
   await run("npm", ["install", "--no-audit", "--no-fund"], dir);
-  const items = catalog.items.filter((item) => item.layer === layer && !item.hidden).map((item) => item.name);
+  const items = visibleItems(layer);
   await run("npx", ["--yes", SHADCN, "add", ...items.map((name) => `${NAMESPACE}/${name}`), "--yes"], dir);
   return items;
 }
@@ -212,22 +242,30 @@ async function render(browser, layer, items) {
   page.on("console", (message) => message.type() === "error" && problems.push(message.text()));
   await page.goto(`${origin}/${layer}/`);
   await page.locator("[data-item]").first().waitFor();
-  const { tokens, utilities, rendered } = await page.evaluate((names) => {
-    const button = document.querySelector('[data-slot="toolbar-button"]');
-    return {
-      tokens: getComputedStyle(document.documentElement).getPropertyValue("--kind-color-fg").trim() !== "",
-      utilities: button !== null && getComputedStyle(button).minWidth === "28px",
-      rendered: Object.fromEntries(
-        names.map((name) => {
-          const section = document.querySelector(`[data-item="${name.replace(/-web$/, "")}"]`);
-          return [name, Boolean(section?.querySelector("[data-slot]"))];
-        }),
-      ),
-    };
-  }, items);
+  const itemSuffix = layer === "react" ? "" : `-${layer}`;
+  const { tokens, utilities, rendered } = await page.evaluate(
+    ({ names, itemSuffix }) => {
+      const button = document.querySelector('[data-slot="toolbar-button"]');
+      return {
+        tokens: getComputedStyle(document.documentElement).getPropertyValue("--kind-color-fg").trim() !== "",
+        utilities: button !== null && getComputedStyle(button).minWidth === "28px",
+        rendered: Object.fromEntries(
+          names.map((name) => {
+            const section = document.querySelector(
+              `[data-item="${name.slice(0, name.length - itemSuffix.length)}"]`,
+            );
+            return [name, Boolean(section?.querySelector("[data-slot]"))];
+          }),
+        ),
+      };
+    },
+    { names: items, itemSuffix },
+  );
   await page.close();
   if (!tokens) problems.push(`the theme tokens from ${pkg.name}/styles.css are missing`);
-  if (!utilities) problems.push("Tailwind generated no utilities for the copied files");
+  // The internal Toolbar's button is the utility probe, so a layer is checked once it ships one.
+  if (!utilities && catalog.items.some((item) => item.name === `internal-toolbar${itemSuffix}`))
+    problems.push("Tailwind generated no utilities for the copied files");
   return { rendered, problems };
 }
 
@@ -249,7 +287,8 @@ async function check() {
   const evidence = { shadcn: SHADCN, tarball: manifest.tarball, sha256: manifest.sha256, consumers: {} };
   try {
     const errors = [];
-    for (const layer of Object.keys(consumers)) {
+    // `KIND_LAYERS` picks the consumers; a layer whose manifest lists nothing yet has none.
+    for (const layer of selectedLayers().filter((name) => visibleItems(name).length)) {
       // Outside the workspace, so nothing resolves from the repository's own node_modules.
       const dir = mkdtempSync(join(tmpdir(), `agent-ui-registry-${layer}-`));
       dirs.push(dir);

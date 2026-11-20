@@ -10,18 +10,12 @@ Use a thread search to let people jump to any conversation they've had with the 
 <Example caption="Press Search chats, or press Cmd+K or Ctrl+K, type build, then press Enter to open the thread. Choose New chat to start one with what you typed.">
   <ThreadSearchExample />
 
-  <include cwd lang="tsx">./examples/thread-search/basic.tsx</include>
+  <ExampleCode example="thread-search/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/thread-search
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/thread-search-web
-```
+<Install name="thread-search" />
 
 ## Composition
 
@@ -93,6 +87,8 @@ The search opens as a modal dialog over the page. With `presentation="auto"`, th
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/thread-search/thread-search.ts" name="ThreadSearchOptions" />
+
+<FrameworkNames name="thread-search" />
 
 ### Agent
 

@@ -10,18 +10,12 @@ Use a status badge beside a run, a job or a tool call to show whether it's waiti
 <Example caption="Each badge shows its run's status. When the status changes, the mark morphs into its new shape.">
   <StatusExample />
 
-  <include cwd lang="tsx">./examples/status/basic.tsx</include>
+  <ExampleCode example="status/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/status
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/status-web
-```
+<Install name="status" />
 
 ## Composition
 
@@ -52,6 +46,8 @@ The mark morphs from one status to the next. Under `prefers-reduced-motion`, or 
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/status/status.ts" name="StatusOptions" />
+
+<FrameworkNames name="status" />
 
 ### Agent
 

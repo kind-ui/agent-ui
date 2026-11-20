@@ -10,18 +10,12 @@ Use a document when the agent hands over a file, like a README, a script or note
 <Example caption="Press Show more to see the whole README, and Show less to collapse it. Press Copy to copy its source, or Markdown or Plain text to download it.">
   <DocumentExample />
 
-  <include cwd lang="tsx">./examples/document/basic.tsx</include>
+  <ExampleCode example="document/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/document
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/document-web
-```
+<Install name="document" />
 
 ## Composition
 
@@ -71,6 +65,8 @@ Set `streaming` while `content` arrives. The header holds still, the preview gro
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/document/document.ts" name="DocumentOptions" />
+
+<FrameworkNames name="document" />
 
 ### Agent
 

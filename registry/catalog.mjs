@@ -1,6 +1,7 @@
 // Every registry item (spec §9.2). `scripts/build-registry.mjs` builds them with the shadcn CLI.
 // `registryDependencies` use the `@kind-ui` namespace: a bare name means an item of shadcn's own registry.
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { manifests } from "./layers/index.mjs";
 
 const pkg = JSON.parse(readFileSync(new URL("../packages/agent-ui/package.json", import.meta.url), "utf8"));
 const packageVersion = pkg.version;
@@ -392,5 +393,57 @@ for (const [layer, { suffix }] of Object.entries(layers)) {
     });
   }
 }
+
+const frameworks = {
+  vue: { title: "Vue", file: (name) => [`${name}.ts`] },
+  svelte: { title: "Svelte", folder: true },
+  solid: { title: "Solid", file: (name) => [`${name}.tsx`] },
+};
+
+/**
+ * The items of the layers built from `registry/layers/<layer>.mjs` (framework layers plan D7, D10): one per
+ * component and internal its manifest lists. `list(dir)` names the files of a Svelte folder.
+ */
+export function layerItems(layerManifests, list) {
+  const result = [];
+  for (const [layer, { components: names, internals: wrappers }] of Object.entries(layerManifests)) {
+    const { title: framework, file, folder } = frameworks[layer];
+    const dir = `packages/agent-ui/src/${layer}/`;
+    const files = (name) =>
+      (folder ? list(`${dir}${name}`).map((each) => `${name}/${each}`) : file(name)).map(
+        (each) => dir + each,
+      );
+    for (const name of names) {
+      const { title, description, uses } = components[name];
+      result.push({
+        name: `${name}-${layer}`,
+        type: "registry:ui",
+        layer,
+        title: `${title} (${framework})`,
+        description,
+        files: files(name),
+        registryDependencies: [setup.name, ...uses.map((use) => `${use}-${layer}`)].map(
+          (use) => `@kind-ui/${use}`,
+        ),
+        dependencies: [`@kind-ui/agent-ui@${packageVersion}`, ...uiSdk(layer)],
+      });
+    }
+    for (const name of wrappers) {
+      result.push({
+        name: `internal-${name}-${layer}`,
+        type: "registry:ui",
+        layer,
+        hidden: true,
+        files: [...files(`internal/${name}`), `${dir}internal/kind-class.ts`],
+        registryDependencies: [],
+        dependencies: uiSdk(layer),
+      });
+    }
+  }
+  return result;
+}
+
+const listFiles = (dir) => readdirSync(new URL(`../${dir}`, import.meta.url)).sort();
+items.push(...layerItems(manifests, listFiles));
 
 export default { packageVersion, uiSdkVersion, items };

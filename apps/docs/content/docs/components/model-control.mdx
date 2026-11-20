@@ -10,18 +10,12 @@ Use a model control in a [composer](./composer.mdx) when people choose both the 
 <Example caption="Press Claude Opus 5.5 · Medium and choose GPT-6.1 Terra; the menu stays open, Effort checks the level it uses and dims the ones Terra doesn't support. Choose More models to list another model.">
   <ModelControlExample />
 
-  <include cwd lang="tsx">./examples/model-control/basic.tsx</include>
+  <ExampleCode example="model-control/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/model-control
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/model-control-web
-```
+<Install name="model-control" />
 
 ## Composition
 
@@ -82,6 +76,8 @@ The menu opens as a popover below the button. With `presentation="auto"`, the de
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/model-control/model-control.ts" name="ModelControlOptions" />
+
+<FrameworkNames name="model-control" />
 
 ### Agent
 

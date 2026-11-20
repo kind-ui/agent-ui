@@ -1,45 +1,26 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, type TestInfo, test } from "@playwright/test";
+import { type Budgets, budgets as react } from "../budgets/react.js";
+import { budgets as solid } from "../budgets/solid.js";
+import { budgets as svelte } from "../budgets/svelte.js";
+import { budgets as vue } from "../budgets/vue.js";
+import { budgets as web } from "../budgets/web.js";
+import { layerOf } from "../layer.js";
 
-// Count budgets: deterministic counts, never timings. Each runs at two list sizes against one limit, so
-// work that grows with the list fails. `renders` counts React component renders and `notified` the
-// shown parts UI SDK re-reads on web, so each is 0 in the other layer.
-const BUDGETS = {
-  conversationStream: { writes: 1, renders: 9, notified: 0 },
-  conversationFollow: { layoutReads: 12 },
-  markdownStream: { parses: 1, writes: 4, renders: 6, notified: 3 },
-  toolStream: { writes: 14, renders: 26, notified: 17 },
-  terminalChunk: { writes: 6, renders: 7, notified: 4, layoutReads: 17 },
-  // A new line in a full viewport reads layout 16 times (17 under StrictMode, which binds the new line twice). The
-  // line that first fills the 10-line case's viewport both grows and scrolls it, which the virtualizer reads twice more.
-  terminalLine: { writes: 8, renders: 9, notified: 5, layoutReads: 19 },
-  // The fixture's segments fit on one line and their header has a set height, so how many are in view doesn't depend
-  // on the platform's fonts.
-  transcriptWord: { writes: 3, renders: 3, notified: 3, layoutReads: 4 },
-  transcriptSegment: { writes: 32, renders: 32, notified: 35, layoutReads: 9 },
-  transcriptSearch: { writes: 72, renders: 201, notified: 140, layoutReads: 2 },
-  // The fixture's chips are all 120px wide, whatever the fonts, so the same two show at 10 and 200.
-  // Widths come from a ResizeObserver's entries, so fitting the chips reads no layout.
-  contextChip: { writes: 27, renders: 8, notified: 9, layoutReads: 0 },
-  remount: { nodes: 0, listeners: 0 },
+const tables = { react, web, vue, svelte, solid };
 
-  // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its budgets right below its own line.
-
-  // wave-6-task-2: Thread List
-
-  // Rows are 36px in a 600px column, so as many are in view at 10 threads as at 1,000, whatever the fonts. Pinning
-  // moves every row in view down one; appending to 10 threads fills the column with new rows. A row's time is one more
-  // part per row: a render, a re-read and two writes (its `aria-hidden` and text) for each row a change reaches.
-  threadSelect: { writes: 5, renders: 11, notified: 16, layoutReads: 2 },
-  threadPin: { writes: 119, renders: 39, notified: 199, layoutReads: 2 },
-  threadAppend: { writes: 214, renders: 84, notified: 85, layoutReads: 2 },
-
-  // wave-6-task-11: Conversation Search
-
-  // The fixture's rows are 48px in a 480px viewport, so the same rows are in view at 100 and 5,000 messages, and the
-  // 480px track holds at most 120 marks, placed by index rather than measured. What a character costs beyond the rows
-  // in view is the marks it moves: at 100 messages, about 40 marks come and go (3 writes each on web, which also
-  // re-reads every mark); at 5,000 every 4px step holds a match whatever the search, so no mark moves.
-  conversationSearchType: { writes: 151, renders: 88, notified: 128, layoutReads: 4 },
+// Count budgets: deterministic counts, never timings. Each runs at two list sizes against one limit, so work that
+// grows with the list fails. Each layer's limits are in `tests/browser/budgets/<layer>.ts` (plan D12); a case the
+// layer has no budget for yet is skipped.
+let BUDGETS: Budgets;
+const useBudgets = (testInfo: TestInfo) => {
+  const layer = layerOf(testInfo);
+  const table: Partial<Budgets> = tables[layer];
+  BUDGETS = new Proxy(table as Budgets, {
+    get(target, key: keyof Budgets) {
+      test.skip(!(key in target), `no ${layer} budget for ${String(key)} yet`);
+      return target[key];
+    },
+  });
 };
 const SIZES = [10, 500];
 
@@ -120,7 +101,10 @@ function instrument() {
     if (previous && previous.child === fiber.child) return;
     for (let child = fiber.child; child; child = child.sibling) countRenders(child);
   };
+  // Vue's development build reports each component update to its DevTools hook.
+  const vueHook = { emit: (event: string) => event === "component:updated" && renders++, on() {}, off() {} };
   Object.assign(window, {
+    __VUE_DEVTOOLS_GLOBAL_HOOK__: vueHook,
     __REACT_DEVTOOLS_GLOBAL_HOOK__: {
       supportsFiber: true,
       inject: () => 1,
@@ -153,7 +137,10 @@ function instrument() {
 
 // Trace snapshots read every element's layout and attributes.
 test.use({ trace: "off" });
-test.beforeEach(({ page }) => page.addInitScript(instrument));
+test.beforeEach(({ page }, testInfo) => {
+  useBudgets(testInfo);
+  return page.addInitScript(instrument);
+});
 
 const frames = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 

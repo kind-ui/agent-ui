@@ -9,8 +9,8 @@ const pkg = JSON.parse(
 test("package manifest follows spec §3", () => {
   assert.deepEqual(Object.keys(pkg.exports).sort(), [".", "./adapters/ai-sdk", "./core", "./styles.css"]);
   for (const [n, r] of Object.entries(pkg.dependencies)) assert.match(r, /^\d+\.\d+\.\d+(-[\w.]+)?$/, n);
-  assert.equal(pkg.devDependencies["@ui-sdk/react"], pkg.dependencies["@ui-sdk/core"]);
-  assert.equal(pkg.devDependencies["@ui-sdk/web"], pkg.dependencies["@ui-sdk/core"]);
+  for (const layer of ["react", "web", "vue", "svelte", "solid"])
+    assert.equal(pkg.devDependencies[`@ui-sdk/${layer}`], pkg.dependencies["@ui-sdk/core"], layer);
   assert.equal(pkg.peerDependenciesMeta.ai.optional, true);
   assert.equal(pkg.peerDependencies.react, undefined);
 });

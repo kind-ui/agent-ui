@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements, layerOf } from "../layer.js";
 import { addBack, travel, watchExit } from "../leaving.js";
 
 type Draft = { text: string; attachments: { name: string; error?: string }[] };
@@ -433,7 +433,7 @@ test("an edit the owner cancels puts the editor back to the draft", async ({ pag
 });
 
 test("kind-composer wires content added after it connects", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   await page.evaluate(() => {
     const form = document.querySelector("kind-composer form") as HTMLFormElement;

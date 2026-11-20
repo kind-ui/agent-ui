@@ -12,7 +12,6 @@ import {
 } from "../../shared/composer.js";
 
 const unsettled = new Promise<void>(() => {});
-const params = new URLSearchParams(location.search);
 
 const markup = (attributes: string) => `
   <div class="mx-auto max-w-xl p-6">
@@ -46,7 +45,7 @@ const markup = (attributes: string) => `
     </kind-composer>
   </div>`;
 
-function full(root: HTMLElement, submitOn: "enter" | "mod-enter") {
+function full(root: HTMLElement, params: URLSearchParams, submitOn: "enter" | "mod-enter") {
   defineComposer();
   root.innerHTML = markup(`accept="image/*,.txt,.md" max-size="3072" submit-on="${submitOn}"`);
   const composer = root.querySelector("kind-composer") as KindComposerElement;
@@ -71,7 +70,7 @@ function full(root: HTMLElement, submitOn: "enter" | "mod-enter") {
   });
   Object.assign(window, {
     unmountComposer: () => composer.remove(),
-    remountComposer: () => full(root, submitOn),
+    remountComposer: () => full(root, params, submitOn),
     setDraftKey: (key: string) => composer.setAttribute("draft-key", key),
   });
 }
@@ -87,9 +86,9 @@ export const cases = {
       event.detail.waitUntil(unsettled);
     });
   },
-  full: (root: HTMLElement) => full(root, "enter"),
-  "mod-enter": (root: HTMLElement) => full(root, "mod-enter"),
-  attachments: (root: HTMLElement) => {
+  full: (root: HTMLElement, params: URLSearchParams) => full(root, params, "enter"),
+  "mod-enter": (root: HTMLElement, params: URLSearchParams) => full(root, params, "mod-enter"),
+  attachments: (root: HTMLElement, params: URLSearchParams) => {
     defineAttachments();
     root.innerHTML = `<div class="p-6"><kind-attachments aria-label="Files"></kind-attachments></div>`;
     const list = root.querySelector("kind-attachments") as KindAttachmentsElement;

@@ -10,18 +10,12 @@ Use a question when the agent needs facts only a person has before it goes on, l
 <Example caption="Choose where to deploy, pick any checks and add a note, then press Submit. The form gives way to your answers.">
   <QuestionExample />
 
-  <include cwd lang="tsx">./examples/question/basic.tsx</include>
+  <ExampleCode example="question/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/question
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/question-web
-```
+<Install name="question" />
 
 ## Composition
 
@@ -94,6 +88,8 @@ Questions added after the form appears fade up, the summary fades in, and the ra
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/question/question.ts" name="QuestionOptions" />
+
+<FrameworkNames name="question" />
 
 ### Agent
 

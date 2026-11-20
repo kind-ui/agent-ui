@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "exactOptionalPropertyTypes": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "jsx": "preserve",
+    "jsxImportSource": "vue",
+    "types": ["node", "vite/client"],
+    "paths": { "@/components/ui/vue/*": ["./packages/agent-ui/src/vue/*"] }
+  },
+  "include": [
+    "packages/agent-ui/src/vue",
+    "packages/agent-ui/tests/fixtures/vue",
+    "apps/docs/examples/**/*.vue"
+  ]
+}

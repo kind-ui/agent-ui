@@ -13,7 +13,7 @@ import {
   snapshot,
 } from "../agent-conformance.js";
 import { allowClipboard } from "../clipboard.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 const threads = { component: "kind-thread-list", label: "Chats", id: "thread-list" };
 const search = { component: "kind-thread-search", label: "Search chats", id: "thread-search" };
@@ -365,7 +365,7 @@ test("actions that take an id refuse an unknown one", async ({ page }) => {
 });
 
 test("can-* attributes offer their actions", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web attributes only");
+  test.skip(!isWebElements(testInfo), "web attributes only");
   await open(page);
   await act(page, share.component, share.label, "open");
   await opened(share)(page).toBe(true);

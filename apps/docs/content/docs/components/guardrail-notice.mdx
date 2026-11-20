@@ -10,18 +10,12 @@ Use a guardrail notice where a response would have been when a safety or content
 <Example caption="Press Why? to read the policy, and press it again to hide it. Press Dismiss to remove the blocked notice.">
   <GuardrailNoticeExample />
 
-  <include cwd lang="tsx">./examples/guardrail-notice/basic.tsx</include>
+  <ExampleCode example="guardrail-notice/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/guardrail-notice
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/guardrail-notice-web
-```
+<Install name="guardrail-notice" />
 
 ## Composition
 
@@ -67,6 +61,8 @@ At full motion the detail slides open; under `prefers-reduced-motion`, or with `
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/guardrail-notice/guardrail-notice.ts" name="GuardrailNoticeOptions" />
+
+<FrameworkNames name="guardrail-notice" />
 
 ### Agent
 

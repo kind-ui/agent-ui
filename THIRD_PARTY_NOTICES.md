@@ -103,6 +103,56 @@
 
 - `apps/docs/examples/context-bar/basic.tsx` (Context Bar example's chip icons, not shipped in the package): `file`, `folder`, `square-dashed-text` and `link`, unchanged; `file`, `folder` and `link` derive from Feather.
 
+- Framework layer icon paths, if a Vue, Svelte or Solid file or example adds one (each task adds its line below its own marker, as `AGENTS.md` "Framework layers shared-file markers" says):
+
+<!-- framework-vue-1: groundwork, internal wrappers and Step -->
+
+<!-- framework-vue-2: chat core -->
+
+<!-- framework-vue-3: composer controls -->
+
+<!-- framework-vue-4: indicators, notices and files -->
+
+<!-- framework-vue-5: step family -->
+
+<!-- framework-vue-6: developer output -->
+
+<!-- framework-vue-7: Wave 6 shell -->
+
+<!-- framework-vue-8: conformance -->
+
+<!-- framework-svelte-1: groundwork, internal wrappers and Step -->
+
+<!-- framework-svelte-2: chat core -->
+
+<!-- framework-svelte-3: composer controls -->
+
+<!-- framework-svelte-4: indicators, notices and files -->
+
+<!-- framework-svelte-5: step family -->
+
+<!-- framework-svelte-6: developer output -->
+
+<!-- framework-svelte-7: Wave 6 shell -->
+
+<!-- framework-svelte-8: conformance -->
+
+<!-- framework-solid-1: groundwork, internal wrappers and Step -->
+
+<!-- framework-solid-2: chat core -->
+
+<!-- framework-solid-3: composer controls -->
+
+<!-- framework-solid-4: indicators, notices and files -->
+
+<!-- framework-solid-5: step family -->
+
+<!-- framework-solid-6: developer output -->
+
+<!-- framework-solid-7: Wave 6 shell -->
+
+<!-- framework-solid-8: conformance -->
+
 ## Lobe Icons
 
 - Source: https://github.com/lobehub/lobe-icons, npm `@lobehub/icons-static-svg@1.103.0`, the `anthropic`, `openai`, `microsoft-color` and `xai` icons.

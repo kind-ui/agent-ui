@@ -5,6 +5,7 @@ import type {
   ComposerTriggerItem,
 } from "@kind-ui/agent-ui/core";
 import { createLocalStorage, type ValueStorage } from "@ui-sdk/core";
+import { expose } from "./expose.js";
 
 export const mentions: ComposerTriggerItem[] = [
   { value: "ada", label: "Ada Lovelace", description: "Research" },
@@ -30,7 +31,7 @@ export function recorder() {
       submissions.push({ draft, resolve, reject: () => reject(new Error("failed")) }),
     );
   const onStop = () => void stops.push(submissions.length);
-  Object.assign(window, { kindComposer: { submissions, stops } });
+  expose({ kindComposer: { submissions, stops } });
   return { onSubmit, onStop };
 }
 
@@ -56,7 +57,7 @@ export const attachmentItems = (): AttachmentItem[] => [
 
 export function attachmentsHost(update: (change: (items: AttachmentItem[]) => AttachmentItem[]) => void) {
   const all = attachmentItems();
-  Object.assign(window, {
+  expose({
     kindAttachments: {
       remove: (id: string) => update((items) => items.filter((item) => item.id !== id)),
       add: (id: string) =>
@@ -80,6 +81,6 @@ export function draftOptions(params: URLSearchParams): Pick<ComposerOptions, "dr
     },
     remove: () => (calls.push("remove"), local.remove()),
   };
-  Object.assign(window, { kindDrafts: { calls } });
+  expose({ kindDrafts: { calls } });
   return { draftKey: params.get("draftKey") ?? "chat-1", draftStorage };
 }

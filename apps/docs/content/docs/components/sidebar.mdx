@@ -14,24 +14,18 @@ Here's a whole chat app in one sidebar: [Thread Search](./thread-search.mdx) and
 <Example caption="Open a chat from the list, or press Search chats to find one. Press the search button in the header to find text in this chat, and type a prompt to add it. Under 768px wide, the chats move into a drawer that the button beside the title opens.">
   <ChatShellExample />
 
-  <include cwd lang="tsx">./examples/sidebar/shell.tsx</include>
+  <ExampleCode example="sidebar/shell" />
 </Example>
 
 <Example caption="Drag the handle, or focus it and press the arrow keys, to resize the chats. Press the button beside the title, or press Enter on the handle, to hide them.">
   <SidebarExample />
 
-  <include cwd lang="tsx">./examples/sidebar/basic.tsx</include>
+  <ExampleCode example="sidebar/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/sidebar
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/sidebar-web
-```
+<Install name="sidebar" />
 
 ## Composition
 
@@ -54,7 +48,7 @@ Write `SidebarPanel`, `SidebarHandle` and `SidebarInset` in reading order. With 
 <Example caption="Press the button in the header to hide the assistant, or drag its handle to resize it. Type a prompt and press Enter to add it to the conversation.">
   <SidebarAssistantExample />
 
-  <include cwd lang="tsx">./examples/sidebar/assistant.tsx</include>
+  <ExampleCode example="sidebar/assistant" />
 </Example>
 
 ### Opening and Closing
@@ -135,6 +129,8 @@ The sidebar has no shortcut by default. Pass one, like `shortcut="mod+b"`, to op
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/sidebar/sidebar.ts" name="SidebarOptions" />
+
+<FrameworkNames name="sidebar" />
 
 ### Agent
 

@@ -10,18 +10,12 @@ Use test results when the agent runs a test suite, so readers see how many tests
 <Example caption="Press “1 failed” to show only the failing tests, and press it again to show every test. Focus a row and use the arrow keys to move between rows, Right Arrow and Left Arrow to open and close one, then press Tab to reach the stack trace inside a failure.">
   <TestResultsExample />
 
-  <include cwd lang="tsx">./examples/test-results/basic.tsx</include>
+  <ExampleCode example="test-results/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/test-results
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/test-results-web
-```
+<Install name="test-results" />
 
 ## Composition
 
@@ -78,6 +72,8 @@ Tab reaches each count, then the tree, which is one Tab stop. In the tree, Up Ar
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/test-results/test-results.ts" name="TestResultsOptions" />
+
+<FrameworkNames name="test-results" />
 
 ### Agent
 

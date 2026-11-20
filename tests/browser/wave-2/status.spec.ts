@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Fixture = {
   kindStatus: {
@@ -79,7 +79,7 @@ test("composed parts keep their order and their own label text", async ({ page }
 });
 
 test("kind-status writes its label into a label part added later", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web only");
+  test.skip(!isWebElements(testInfo), "web only");
   await open(page);
   await page.evaluate(() =>
     document.querySelector("#late")?.append(document.createElement("kind-status-label")),
@@ -221,7 +221,7 @@ for (const scale of [1, 2]) {
 test("kind-status keeps its label current after it leaves the page and comes back", async ({
   page,
 }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web only");
+  test.skip(!isWebElements(testInfo), "web only");
   await open(page);
   await live(page).evaluate(async (el) => {
     const parent = el.parentElement as HTMLElement;

@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Fixture = {
   kindHost: { actions: unknown[][]; dismissals: unknown[][] };
@@ -239,7 +239,7 @@ test("without onAction the buttons are disabled and agents can't run one", async
 });
 
 test("a selection inside a shadow root shows the toolbar", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "a web element in a shadow root");
+  test.skip(!isWebElements(testInfo), "a web element in a shadow root");
   await open(page, "shadow");
   await dragReply(page);
   expect(await page.evaluate(() => getSelection()?.toString())).toContain("Rate limits reset every");

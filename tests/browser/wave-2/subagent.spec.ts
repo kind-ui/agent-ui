@@ -170,7 +170,7 @@ test("a complete subagent without a result shows no result part", async ({ page 
 });
 
 test("React keeps rendering the steps of a kind-subagent", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) === "web", "React renders the element");
+  test.skip(layerOf(testInfo) !== "react", "a React fixture renders the web element");
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/?c=subagent&case=web-element");
