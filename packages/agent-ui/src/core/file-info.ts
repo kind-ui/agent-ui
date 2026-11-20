@@ -19,16 +19,13 @@ export type FileKind = "image" | "audio" | "video" | "archive" | "spreadsheet" |
 
 const BY_EXTENSION: Record<string, FileKind> = {};
 for (const [kind, extensions] of [
-  ["archive", "zip gz tgz tar rar 7z bz2 xz"],
-  ["spreadsheet", "csv tsv xls xlsx ods numbers"],
-  [
-    "code",
-    "js mjs cjs ts tsx jsx json py rb go rs java kt swift c h cpp cs php sh html css scss xml yaml yml toml sql",
-  ],
-  ["text", "txt md mdx pdf doc docx rtf odt pages log"],
-  ["image", "png jpg jpeg gif webp avif svg heic bmp ico"],
-  ["audio", "mp3 wav m4a aac ogg flac"],
-  ["video", "mp4 mov webm mkv avi"],
+  ["archive", "zip gz tar rar 7z"],
+  ["spreadsheet", "csv tsv xls xlsx"],
+  ["code", "js ts tsx jsx json py rb go rs java c cpp sh html css yaml sql"],
+  ["text", "txt md pdf doc docx rtf"],
+  ["image", "png jpg jpeg gif webp svg heic"],
+  ["audio", "mp3 wav m4a ogg flac"],
+  ["video", "mp4 mov webm"],
 ] as const) {
   for (const extension of extensions.split(" ")) BY_EXTENSION[extension] = kind;
 }
