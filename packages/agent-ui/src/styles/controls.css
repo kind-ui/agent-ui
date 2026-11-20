@@ -313,14 +313,6 @@
       transition-duration: var(--kind-duration-exit);
       transition-timing-function: var(--kind-ease-exit);
     }
-
-    @media (prefers-reduced-motion: reduce) {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
-
-      &:where([data-starting-style], [data-ending-style]) {
-        scale: none;
-      }
-    }
   }
 
   :where([data-kind-popup]) {
@@ -351,6 +343,17 @@
 
     @media (max-width: 639px) {
       padding: 1.25rem;
+    }
+  }
+
+  /* After every popup and dialog rule, so no entering or leaving scale outranks it. */
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-kind-popup], [data-kind-dialog]) {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
+
+      &:where([data-starting-style], [data-ending-style]) {
+        scale: none;
+      }
     }
   }
 

@@ -34,3 +34,28 @@ test("a pending shared button keeps its width, and its label stays its name", as
   });
   expect(offCenter).toBeLessThan(1);
 });
+
+test("under reduced motion, popups and dialogs only fade as they enter and leave", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?c=step&case=list");
+  await expect(page.locator('[data-slot="kind-step"]').first()).toHaveAttribute("data-status", /.+/);
+  const scales = await page.evaluate(() =>
+    ["data-kind-popup", "data-kind-dialog"].flatMap((kind) =>
+      ["data-starting-style", "data-ending-style"].map((state) => {
+        const el = document.createElement("div");
+        el.setAttribute(kind, "");
+        el.setAttribute(state, "");
+        document.body.append(el);
+        const { scale, transitionProperty } = getComputedStyle(el);
+        el.remove();
+        return `${kind} ${state}: ${scale} ${transitionProperty}`;
+      }),
+    ),
+  );
+  expect(scales).toEqual([
+    "data-kind-popup data-starting-style: none opacity",
+    "data-kind-popup data-ending-style: none opacity",
+    "data-kind-dialog data-starting-style: none opacity",
+    "data-kind-dialog data-ending-style: none opacity",
+  ]);
+});

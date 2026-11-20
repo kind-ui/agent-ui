@@ -19,3 +19,4 @@ Design system foundation: shared tokens and controls every component can draw on
 - Focus rings show only for the keyboard (`:focus-visible`), in neutral ink, inside rows, chips and scrollers; text fields, the composer included, show none and no longer change their border or glow on focus.
 - A pending shared button keeps its exact width: its label stays in the layout, drawn clear, and its running mark sits centered over it.
 - Shared controls fade to `--kind-disabled-opacity` (0.64) when disabled, as the internal wrappers now do; icons sit 2px closer to a pill's edge and read muted on ghost controls until hover; a filled pill carries a soft top highlight at rest and a slight inner shade while pressed.
+- Under reduced motion, every shared popup and dialog only fades as it enters and leaves; the entering and leaving scales no longer outrank the reset.
