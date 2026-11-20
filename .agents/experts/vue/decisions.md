@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: Task Vue-1 (framework layers plan)
+Last reviewed: `8bcbf59` (Task Vue-1)
 
 ## Settled
 
@@ -15,3 +15,4 @@ Last reviewed: Task Vue-1 (framework layers plan)
 
 - **A server-rendered `KindAvatar` whose image loads before hydration warns "Hydration node mismatch" (Task Vue-1):** the `<img>` (a `data:` URL in `?c=internal&case=avatar`) has loaded by the time Vue hydrates, so UI SDK's Avatar is `loaded` and its client render drops the `AvatarFallback` the server rendered. UI SDK's; report upstream. `hydration.spec.ts` joins the manifest in Task Vue-8.
 - **`internal.spec.ts`'s composition test ("a Kind part rendered as a toolbar button gets one class list") skips every layer but React:** the spec is shared, so Vue's run waits for a shared change; `parity.spec.ts` on `?c=internal&case=toolbar-menu` compares the trigger's sorted class list with React's and passes.
+- **A template `ref` on a part inside a `#render` slot stays `null` (Task Vue-1):** the slot's `props` carry the part's own `ref`, and `v-bind="props"` replaces the caller's, for bare UI SDK parts as for Kind ones. UI SDK's; report upstream.

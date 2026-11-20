@@ -1,4 +1,13 @@
-import { type Component, defineComponent, h, isVNode, type Slots, type VNode } from "vue";
+import {
+  type Component,
+  cloneVNode,
+  defineComponent,
+  Fragment,
+  h,
+  isVNode,
+  type Slots,
+  type VNode,
+} from "vue";
 
 type RenderSlot = (scope: Record<string, unknown>) => VNode[];
 
@@ -8,9 +17,16 @@ const bareParts = new WeakMap<object, Component>();
 // the target's bare UI SDK part, so the element gets the outer base classes once instead of both lists.
 function bareNodes(nodes: VNode[]): VNode[] {
   return nodes.map((node) => {
-    const bare = isVNode(node) ? bareParts.get(node.type as object) : undefined;
+    if (!isVNode(node)) return node;
+    if (node.type === Fragment && Array.isArray(node.children))
+      return h(Fragment, { key: node.key ?? undefined }, bareNodes(node.children as VNode[]));
+    const bare = bareParts.get(node.type as object);
     if (!bare) return node;
-    return h(bare, node.props, bareSlots(node.children as Slots | null) ?? undefined);
+    // A clone keeps the node's directives (`v-show`), transition, key and ref.
+    const clone = cloneVNode(node);
+    clone.type = bare;
+    clone.children = bareSlots(node.children as Slots | null);
+    return clone;
   });
 }
 
