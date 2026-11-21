@@ -85,6 +85,7 @@ export default {
     "wave-3/confirmation.spec.ts",
     "wave-3/question.spec.ts",
     "wave-3/checkpoint.spec.ts",
+    "wave-1/budgets.spec.ts",
 
     // framework-vue-3: composer controls
 
