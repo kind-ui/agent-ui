@@ -15,11 +15,12 @@ Last reviewed: 4aad9b0d (framework layers Task Svelte-5)
 - **Sibling elements and blocks are written without whitespace where React's JSX has a line break** (Task Svelte-5): Svelte keeps a space there and JSX doesn't, so text and accessible names differ from React's; the line break moves inside the closing `>`.
 - **Part state is read key by key:** snippet state is a `get`-only Proxy, so spreading it passes nothing.
 - **Picker-based components share Picker's parts through `setPickerConfig`, and values core owns are bound to a setter that keeps nothing** (Task Svelte-3, AGENTS.md "Svelte composer controls").
+- **Virtualized rows loop over indexes or ids, not row objects** (Task Svelte-6): a row that stays in view keeps its props when the virtualizer's `rows` change.
 - Everything in AGENTS.md "UI SDK API notes".
 
 ## Known and open (don't report again, check whether fixed)
 
-- **Passing `id` to a component's root unnames it in agent snapshots** (`@ui-sdk/svelte` 0.1.0-beta.1 keys the root by `id`; AGENTS.md "Svelte chat core"). Four agent cases skip on Svelte until UI SDK fixes it; Context Meter and Context Bar put the `id` on the element instead (Task Svelte-3). Report upstream.
+- **Passing `id` to a component's root unnames it in agent snapshots** (`@ui-sdk/svelte` 0.1.0-beta.1 keys the root by `id`; AGENTS.md "Svelte chat core"). Four agent cases (Task Svelte-2) and five more (Task Svelte-6: File Tree, Generated Image, Selection) skip on Svelte until UI SDK fixes it; Context Meter and Context Bar put the `id` on the element instead (Task Svelte-3). Report upstream.
 - **`ComposerTriggerMenu` mounts its Trigger Menu one effect late** to work around UI SDK connecting it before the Token Input's editor exists (AGENTS.md "Svelte chat core"). Remove it once UI SDK fixes the order. Report upstream.
 
 - **UI SDK Slider renders its hidden form input after its root, not inside it as React's does** (`@ui-sdk/svelte` 0.1.0-beta.1, `slider/slider.svelte`). `internal-slider` isn't listed in the Svelte manifest until UI SDK matches React; no component composes it. Report upstream.
