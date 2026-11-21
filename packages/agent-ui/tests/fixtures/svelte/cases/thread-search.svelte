@@ -18,7 +18,6 @@
 </script>
 
 {#if variant === "server"}
-  <!-- The host searches: its results in its order, and a status it sets. -->
   <div class="p-6">
     <ThreadSearch
       id="search"
@@ -31,7 +30,6 @@
     />
   </div>
 {:else if variant === "owned"}
-  <!-- Controls `query` and never takes a change. -->
   <div class="p-6">
     <ThreadSearch id="search" {threads} now={NOW} bind:query={() => "", () => {}} onQueryChange={record("query")} />
   </div>

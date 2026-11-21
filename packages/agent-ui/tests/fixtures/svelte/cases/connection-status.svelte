@@ -23,7 +23,6 @@
   let connection: { state: ConnectionState; retryAt?: string | undefined; resuming?: boolean | undefined } =
     $state.raw({ state: untrack(() => (variant === "online" ? "online" : "offline")) });
 
-  // Each call renders before it returns, so two calls in a row aren't batched into the second.
   const set: ConnectionHost["set"] = (state, options) => flushSync(() => (connection = { state, ...options }));
   expose({ kindHost: Object.assign(host, { set }) });
 </script>

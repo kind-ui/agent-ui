@@ -10,7 +10,6 @@
 </script>
 
 <parts.Menu>
-  <!-- Part state can't be spread, so each key Menu takes is read by name. -->
   {#snippet children(menu: MenuPartState)}
     <KindMenu
       controller={menu.controller}
