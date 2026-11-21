@@ -59,7 +59,11 @@ function kindOf(node: MdNode): string {
 
 function Node(props: { node: MdNode; context: Context }) {
   const kind = createMemo(() => kindOf(props.node));
-  const element = createMemo(() => untrack(() => view(kind(), props)));
+  // Tracks the kind alone: a node that changes kind is built again, one that keeps it updates in place.
+  const element = createMemo(() => {
+    const current = kind();
+    return untrack(() => view(current, props));
+  });
   return <>{element()}</>;
 }
 

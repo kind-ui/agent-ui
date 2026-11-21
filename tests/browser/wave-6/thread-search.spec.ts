@@ -143,6 +143,16 @@ test("the shortcut opens it and the trigger shows its keys", async ({ page }) =>
   await page.keyboard.press("ControlOrMeta+k");
   await expect(search(page)).toBeFocused();
   await page.keyboard.press("Escape");
+  // The dialog stays in the page until every animation inside it ends, so its rows' status marks stop looping.
+  expect(
+    await page.evaluate(() =>
+      [
+        ...(document
+          .querySelector('#search [data-slot="kind-thread-search-content"]')
+          ?.getAnimations({ subtree: true }) ?? []),
+      ].filter((animation) => "animationName" in animation),
+    ),
+  ).toEqual([]);
   await expect(dialog(page)).toBeHidden();
 });
 

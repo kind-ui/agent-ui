@@ -4,7 +4,8 @@ import { settled } from "./agent-conformance.js";
 /**
  * The page's body as lines a diff reads (plan D6): element names with custom element wrappers dropped, `role`,
  * every `aria-*` and `data-*` attribute, `hidden`, `inert`, `disabled`, sorted classes and text, adjacent text nodes
- * joined. Ids are compared by reference: each becomes `#<n>` in document order, and so does any attribute value that
+ * joined. Whitespace at a text node's ends counts only where it renders, so a space between inline siblings that one
+ * layer shows and another collapses is a difference, and template whitespace that collapses isn't. Ids are compared by reference: each becomes `#<n>` in document order, and so does any attribute value that
  * names one. Inline styles, `tabindex`, scripts, the announcer region and the fixture root's mount markers are left
  * out.
  */
@@ -21,18 +22,71 @@ export function normalizedTree(page: Page, omit: readonly Omitted[] = []): Promi
         .map((token) => ids.get(token) ?? token)
         .join(" ");
     const lines: string[] = [];
+    const range = document.createRange();
+    const block = (node: Node) => {
+      let el = node.parentElement;
+      while (el && /^(inline|contents)/.test(getComputedStyle(el).display)) el = el.parentElement;
+      return el ?? document.body;
+    };
+    // The next non-whitespace character after `offset` in `node`'s block, as a node and offset.
+    const nextCharacter = (node: Text, offset: number): [Text, number] | undefined => {
+      const walker = document.createTreeWalker(block(node), NodeFilter.SHOW_TEXT);
+      walker.currentNode = node;
+      let current: Text | null = node;
+      let from = offset;
+      while (current) {
+        const index = current.data.slice(from).search(/\S/);
+        if (index >= 0) return [current, from + index];
+        current = walker.nextNode() as Text | null;
+        from = 0;
+      }
+      return undefined;
+    };
+    const shows = (node: Text, start: number, end: number) => {
+      range.setStart(node, start);
+      range.setEnd(node, end);
+      const rects = [...range.getClientRects()];
+      if (rects.some((rect) => rect.width > 0)) return true;
+      // A space where a line wraps hangs at the line's end with no width, but still separates the words around it.
+      const space = rects[0];
+      const next = space && nextCharacter(node, end);
+      if (!next) return false;
+      range.setStart(next[0], next[1]);
+      range.setEnd(next[0], next[1] + 1);
+      const after = range.getClientRects()[0];
+      return !!after && after.top >= space.bottom;
+    };
+    // A text node's text with its leading and trailing whitespace kept as one space only where it renders. Text
+    // that doesn't render (hidden, in a closed popup) keeps its whitespace and is trimmed as a run.
+    let shown = false;
+    const boxed = (node: Text) => {
+      let el = node.parentElement;
+      while (el && getComputedStyle(el).display === "contents") el = el.parentElement;
+      return el?.checkVisibility() ?? false;
+    };
+    const rendered = (node: Text) => {
+      const value = node.data;
+      if (!boxed(node)) return value;
+      shown = true;
+      const lead = /^\s*/.exec(value)?.[0].length ?? 0;
+      if (lead === value.length) return lead && shows(node, 0, lead) ? " " : "";
+      const trail = /\s*$/.exec(value)?.[0].length ?? 0;
+      const end = value.length - trail;
+      return `${lead && shows(node, 0, lead) ? " " : ""}${value.slice(lead, end)}${trail && shows(node, end, value.length) ? " " : ""}`;
+    };
     // Text nodes with no element line between them read as one, since layers split text differently: React
     // renders `Pressed {n}` as two nodes, Svelte as one.
     let text = "";
     const flush = (depth: number) => {
-      const joined = text.replace(/\s+/g, " ").trim();
+      const joined = shown ? text.replace(/\s+/g, " ") : text.replace(/\s+/g, " ").trim();
       if (joined) lines.push(`${"  ".repeat(depth)}"${joined}"`);
       text = "";
+      shown = false;
     };
     const walk = (node: Node, depth: number) => {
       for (const child of node.childNodes) {
         if (child.nodeType === Node.TEXT_NODE) {
-          text += child.textContent ?? "";
+          text += rendered(child as Text);
           continue;
         }
         if (!(child instanceof Element) || child.matches(skip)) continue;
