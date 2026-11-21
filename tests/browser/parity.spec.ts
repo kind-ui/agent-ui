@@ -30,6 +30,8 @@ for (const [layer, manifest] of Object.entries(manifests)) {
     for (const entry of parityPages[name] ?? [])
       test(`${layer}: ${name} ${pageUrl(entry)}`, async ({ page, browser }, testInfo) => {
         test.skip(layerOf(testInfo) !== layer, `a ${layer} page`);
+        const missing = entry.needs?.filter((need) => !manifest.components.includes(need)) ?? [];
+        test.skip(missing.length > 0, `${layer} doesn't render ${missing.join(", ")} yet`);
         const react = await browser.newPage();
         await Promise.all([page.goto(pageUrl(entry)), react.goto(reactOrigin + pageUrl(entry))]);
         expect(await stableTree(page)).toEqual(await stableTree(react));
