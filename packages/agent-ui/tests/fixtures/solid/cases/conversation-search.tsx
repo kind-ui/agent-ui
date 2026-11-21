@@ -102,11 +102,16 @@ function Search(props: {
   );
 }
 
+const fifty = searchMessages(50);
+const withMarkdown = [...searchMessages(3), markdownMessage];
+const hundred = searchMessages(100);
+const fiveThousand = searchMessages(5000);
+
 export const cases = {
-  basic: () => <Search messages={searchMessages(50)} />,
-  refused: () => <Search messages={searchMessages(50)} controlled refused />,
-  preset: () => <Search messages={searchMessages(50)} defaultQuery="rollout" />,
-  markdown: () => <Search messages={[...searchMessages(3), markdownMessage]} />,
-  "many-100": () => <Search messages={searchMessages(100)} virtualize controlled />,
-  "many-5000": () => <Search messages={searchMessages(5000)} virtualize controlled />,
+  basic: () => <Search messages={fifty} />,
+  refused: () => <Search messages={fifty} controlled refused />,
+  preset: () => <Search messages={fifty} defaultQuery="rollout" />,
+  markdown: () => <Search messages={withMarkdown} />,
+  "many-100": () => <Search messages={hundred} virtualize controlled />,
+  "many-5000": () => <Search messages={fiveThousand} virtualize controlled />,
 };
