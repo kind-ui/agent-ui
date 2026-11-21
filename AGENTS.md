@@ -320,6 +320,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- framework-solid-5: step family -->
 
+- **Solid step family (framework layers plan, Task Solid-5):** no `@ui-sdk/solid` gap and no core change. React's shared `DEFAULT_PARTS` constants (kept so a streamed chunk doesn't render the default wrappers again) are unneeded: Solid builds each component's default parts once per instance in a small component, and a chunk updates only the parts whose state it reaches, so streaming one tool's input among 10 or 500 writes 6 DOM nodes and notifies 3 parts (React 14 and 17). Item lists (Chain of Thought's steps, Task's and Plan's items, Queue's rows) are `<For>` keyed by id, so a moved or completed row keeps or gets its element as React's keys give it. Subagent's `children` go in its children part inside the content, as React's do, and its fixture leaves out `web-element`, a React-only case. The fixtures' `flushSync` calls are Solid's `flush()`. The development warning that `agent.actions` names a method the api lacks (`cancel`, `accept`, `copyOutput`, `reorder`, `remove`) is the known one for actions offered through getters.
+
 <!-- framework-solid-6: developer output -->
 
 <!-- framework-solid-7: Wave 6 shell -->
