@@ -8,9 +8,10 @@ const parts = createParts(streamingTextPrimitive, { root: "span", chunk: "span",
 export const StreamingText = defineComponent({
   name: "StreamingText",
   inheritAttrs: false,
-  setup(_, { attrs }) {
+  setup(_, { attrs, slots }) {
     return () =>
       h(parts.Root, attrs, {
+        ...slots,
         default: ({ state }: { state: StreamingTextState }) => [
           ...state.chunks.map((chunk) =>
             h(parts.Chunk, { key: chunk.id, value: chunk.id }, () => chunk.text),

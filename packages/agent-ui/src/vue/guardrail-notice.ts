@@ -2,10 +2,12 @@ import { type GuardrailNoticeState, guardrailNoticePrimitive } from "@kind-ui/ag
 import { createParts } from "@ui-sdk/vue/primitive";
 import { type Component, defineComponent, h, type Slot, type SlotsType, type VNode } from "vue";
 
-// The root's own slots, plus `#actions`.
-type WithActions<C extends abstract new (...args: never) => object> = new (
+// The root's props and `#render` slot, with plain `default` and `#actions` slots for the notice's content.
+type WithActions<C extends abstract new (...args: never) => { $slots: { render?: unknown } }> = new (
   ...args: never
-) => InstanceType<C> & { $slots: { actions?: () => VNode[] } };
+) => Omit<InstanceType<C>, "$slots"> & {
+  $slots: { default?: () => VNode[]; actions?: () => VNode[]; render?: InstanceType<C>["$slots"]["render"] };
+};
 
 const parts = createParts(guardrailNoticePrimitive, {
   root: "div",
@@ -69,18 +71,21 @@ export const GuardrailNoticeDetail = withDefault(parts.Detail, "GuardrailNoticeD
 export const GuardrailNotice = defineComponent({
   name: "GuardrailNotice",
   inheritAttrs: false,
-  slots: Object as SlotsType<{ default?: () => VNode[]; actions?: () => VNode[] }>,
+  slots: Object as SlotsType<{ default?: () => VNode[]; actions?: () => VNode[]; render?: Slot }>,
   setup(_, { attrs, slots }) {
     return () =>
-      h(parts.Root, attrs, () => [
-        h(GuardrailNoticeIcon),
-        h(GuardrailNoticeTitle),
-        h(GuardrailNoticeReason),
-        h(GuardrailNoticeDetailTrigger),
-        h(GuardrailNoticeDetail),
-        slots.default ? h(GuardrailNoticeDescription, null, () => slots.default?.()) : null,
-        h(GuardrailNoticeActions, null, () => slots.actions?.()),
-        h(GuardrailNoticeDismiss),
-      ]);
+      h(parts.Root, attrs, {
+        render: slots.render,
+        default: () => [
+          h(GuardrailNoticeIcon),
+          h(GuardrailNoticeTitle),
+          h(GuardrailNoticeReason),
+          h(GuardrailNoticeDetailTrigger),
+          h(GuardrailNoticeDetail),
+          slots.default ? h(GuardrailNoticeDescription, null, () => slots.default?.()) : null,
+          h(GuardrailNoticeActions, null, () => slots.actions?.()),
+          h(GuardrailNoticeDismiss),
+        ],
+      });
   },
 }) as unknown as WithActions<typeof parts.Root>;

@@ -1,11 +1,13 @@
 import { noticePrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/vue/primitive";
-import { defineComponent, h, type SlotsType, type VNode } from "vue";
+import { defineComponent, h, type Slot, type SlotsType, type VNode } from "vue";
 
-// The root's own slots, plus `#actions`.
-type WithActions<C extends abstract new (...args: never) => object> = new (
+// The root's props and `#render` slot, with plain `default` and `#actions` slots for the notice's content.
+type WithActions<C extends abstract new (...args: never) => { $slots: { render?: unknown } }> = new (
   ...args: never
-) => InstanceType<C> & { $slots: { actions?: () => VNode[] } };
+) => Omit<InstanceType<C>, "$slots"> & {
+  $slots: { default?: () => VNode[]; actions?: () => VNode[]; render?: InstanceType<C>["$slots"]["render"] };
+};
 
 const parts = createParts(noticePrimitive, {
   root: "div",
@@ -43,15 +45,18 @@ export const NoticeTitle = defineComponent({
 export const Notice = defineComponent({
   name: "Notice",
   inheritAttrs: false,
-  slots: Object as SlotsType<{ default?: () => VNode[]; actions?: () => VNode[] }>,
+  slots: Object as SlotsType<{ default?: () => VNode[]; actions?: () => VNode[]; render?: Slot }>,
   setup(_, { attrs, slots }) {
     return () =>
-      h(parts.Root, attrs, () => [
-        h(NoticeIcon),
-        h(NoticeTitle),
-        h(NoticeDescription, null, () => slots.default?.()),
-        h(NoticeActions, null, () => slots.actions?.()),
-        h(NoticeDismiss),
-      ]);
+      h(parts.Root, attrs, {
+        render: slots.render,
+        default: () => [
+          h(NoticeIcon),
+          h(NoticeTitle),
+          h(NoticeDescription, null, () => slots.default?.()),
+          h(NoticeActions, null, () => slots.actions?.()),
+          h(NoticeDismiss),
+        ],
+      });
   },
 }) as unknown as WithActions<typeof parts.Root>;

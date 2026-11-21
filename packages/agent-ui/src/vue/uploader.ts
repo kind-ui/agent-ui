@@ -8,7 +8,7 @@ import {
   uploaderPrimitive,
 } from "@kind-ui/agent-ui/core";
 import { FileInput, FileInputDropzone, FileInputTrigger } from "@ui-sdk/vue/file-input";
-import { createParts, usePart, usePrimitive } from "@ui-sdk/vue/primitive";
+import { createParts, type PartSlots, usePart, usePrimitive } from "@ui-sdk/vue/primitive";
 import { Progress, ProgressIndicator, ProgressLabel, ProgressTrack } from "@ui-sdk/vue/progress";
 import { defineComponent, h, type PropType } from "vue";
 
@@ -19,12 +19,13 @@ export const UploaderItem = defineComponent({
   name: "UploaderItem",
   inheritAttrs: false,
   props: { value: { type: String, required: true } },
-  setup(props, { attrs }) {
+  setup(props, { attrs, slots }) {
     return () =>
       h(
         parts.Item,
         { ...attrs, value: props.value },
         {
+          ...slots,
           default: ({ state: { item, detail } }: { state: UploadItemState }) => [
             h("span", { "data-icon": "" }),
             h(Progress, { value: item?.progress ?? null }, () => [
@@ -63,6 +64,7 @@ export const Uploader = defineComponent({
     files: (..._args: Parameters<NonNullable<UploaderOptions["onFiles"]>>) => true,
     reject: (..._args: Parameters<NonNullable<UploaderOptions["onReject"]>>) => true,
   },
+  slots: Object as PartSlots<typeof uploaderPrimitive, "root">,
   setup(props, { emit }) {
     const handle = usePrimitive(uploaderPrimitive, () => ({
       items: props.items,
