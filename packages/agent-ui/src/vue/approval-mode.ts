@@ -5,6 +5,7 @@ import {
   type ApprovalModeRow,
   type ApprovalModeTriggerState,
   approvalModePrimitive,
+  type MenuPartState,
 } from "@kind-ui/agent-ui/core";
 import { MenuTrigger } from "@ui-sdk/vue/menu";
 import { createParts } from "@ui-sdk/vue/primitive";
@@ -80,7 +81,10 @@ const triggerValue = (mode: ApprovalModeRow | undefined) => [
 export const ApprovalModeTrigger = defineComponent({
   name: "ApprovalModeTrigger",
   inheritAttrs: false,
-  slots: Object as SlotsType<{ default?: { state: ApprovalModeTriggerState } }>,
+  slots: Object as SlotsType<{
+    default?: { state: ApprovalModeTriggerState };
+    render?: Record<string, unknown>;
+  }>,
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Trigger, null, {
@@ -93,7 +97,8 @@ export const ApprovalModeTrigger = defineComponent({
             { ...trigger, "data-agent-hidden": "", ...attrs },
             {
               render: slots.render,
-              default: () => (slots.default ? slots.default({ state: { ...trigger, mode } }) : triggerValue(mode)),
+              default: () =>
+                slots.default ? slots.default({ state: { ...trigger, mode } }) : triggerValue(mode),
             },
           );
         },
@@ -108,7 +113,10 @@ export const ApprovalModeTrigger = defineComponent({
 export const ApprovalModeContent = defineComponent({
   name: "ApprovalModeContent",
   inheritAttrs: false,
-  slots: Object as SlotsType<{ default?: { state: ApprovalModeContentState } }>,
+  slots: Object as SlotsType<{
+    default?: { state: ApprovalModeContentState };
+    render?: Record<string, unknown>;
+  }>,
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Content, null, {
@@ -121,42 +129,48 @@ export const ApprovalModeContent = defineComponent({
             value: state.value,
           };
           const href = content.learnMoreHref;
-          return h(KindMenuContent, { align: "start", sideOffset: 6, ...attrs }, {
-            render: slots.render,
-            default: () => [
-            h(KindMenuRadioGroup, { name: APPROVAL_MODE_GROUP, value: content.value }, () => [
-              h("div", { "data-approval-mode-header": "" }, [
-                h(KindMenuGroupLabel, null, () => content.label),
-              ]),
-              slots.default ? slots.default({ state: content }) : h(ApprovalModeRows, { rows: content.rows }),
-            ]),
-            content.learnMore
-              ? [
-                  h(KindMenuSeparator, { "data-approval-mode-learn-more": "" }),
-                  h(
-                    KindMenuItem,
-                    {
-                      value: APPROVAL_MODE_LEARN_MORE,
-                      "data-approval-mode-learn-more": "",
-                      "data-menu-inset": "",
-                    },
-                    {
-                      default: () => "Learn more",
-                      ...(href && {
-                        render: ({
-                          props,
-                          children,
-                        }: {
-                          props: Record<string, unknown>;
-                          children: Component;
-                        }) => h("a", { ...props, href }, [h(children)]),
-                      }),
-                    },
-                  ),
-                ]
-              : null,
-          ],
-          });
+          return h(
+            KindMenuContent,
+            { align: "start", sideOffset: 6, ...attrs },
+            {
+              render: slots.render,
+              default: () => [
+                h(KindMenuRadioGroup, { name: APPROVAL_MODE_GROUP, value: content.value }, () => [
+                  h("div", { "data-approval-mode-header": "" }, [
+                    h(KindMenuGroupLabel, null, () => content.label),
+                  ]),
+                  slots.default
+                    ? slots.default({ state: content })
+                    : h(ApprovalModeRows, { rows: content.rows }),
+                ]),
+                content.learnMore
+                  ? [
+                      h(KindMenuSeparator, { "data-approval-mode-learn-more": "" }),
+                      h(
+                        KindMenuItem,
+                        {
+                          value: APPROVAL_MODE_LEARN_MORE,
+                          "data-approval-mode-learn-more": "",
+                          "data-menu-inset": "",
+                        },
+                        {
+                          default: () => "Learn more",
+                          ...(href && {
+                            render: ({
+                              props,
+                              children,
+                            }: {
+                              props: Record<string, unknown>;
+                              children: Component;
+                            }) => h("a", { ...props, href }, [h(children)]),
+                          }),
+                        },
+                      ),
+                    ]
+                  : null,
+              ],
+            },
+          );
         },
       });
   },
@@ -176,7 +190,7 @@ export const ApprovalMode = defineComponent({
     return () =>
       h(parts.Root, attrs, {
         ...slots,
-        default: ({ state }: { state: Parameters<typeof menuProps>[0] }) =>
+        default: ({ state }: { state: MenuPartState }) =>
           h(KindMenu, menuProps(state), { default: slots.default ?? defaultParts }),
       });
   },

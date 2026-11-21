@@ -4,6 +4,8 @@ import {
   type AddMenuRow,
   type AddMenuSection,
   addMenuPrimitive,
+  type MenuPartState,
+  type MenuTriggerState,
 } from "@kind-ui/agent-ui/core";
 import { MenuTrigger } from "@ui-sdk/vue/menu";
 import { createParts } from "@ui-sdk/vue/primitive";
@@ -83,7 +85,7 @@ export const AddMenuTrigger = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Trigger, null, {
-        default: ({ state }: { state: Parameters<typeof menuTriggerProps>[0] }) =>
+        default: ({ state }: { state: MenuTriggerState }) =>
           // Hidden from agents, which use the Add Menu's own actions.
           h(
             MenuTrigger,
@@ -98,7 +100,7 @@ export const AddMenuTrigger = defineComponent({
 export const AddMenuContent = defineComponent({
   name: "AddMenuContent",
   inheritAttrs: false,
-  slots: Object as SlotsType<{ default?: { state: AddMenuContentState } }>,
+  slots: Object as SlotsType<{ default?: { state: AddMenuContentState }; render?: Record<string, unknown> }>,
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Content, null, {
@@ -108,7 +110,8 @@ export const AddMenuContent = defineComponent({
             { align: "start", sideOffset: 6, ...attrs },
             {
               render: slots.render,
-              default: () => (slots.default ? slots.default({ state }) : h(AddMenuRows, { sections: state.sections })),
+              default: () =>
+                slots.default ? slots.default({ state }) : h(AddMenuRows, { sections: state.sections }),
             },
           ),
       });
@@ -128,7 +131,7 @@ export const AddMenu = defineComponent({
     return () =>
       h(parts.Root, attrs, {
         ...slots,
-        default: ({ state }: { state: Parameters<typeof menuProps>[0] }) =>
+        default: ({ state }: { state: MenuPartState }) =>
           h(KindMenu, menuProps(state), { default: slots.default ?? defaultParts }),
       });
   },

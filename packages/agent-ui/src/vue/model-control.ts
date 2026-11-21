@@ -1,4 +1,5 @@
 import {
+  type MenuPartState,
   type ModelControlOptions,
   type ModelControlTriggerState,
   modelControlPrimitive,
@@ -71,7 +72,10 @@ const triggerContent = ({ model, effort }: Pick<ModelControlTriggerState, "model
 export const ModelControlTrigger = defineComponent({
   name: "ModelControlTrigger",
   inheritAttrs: false,
-  slots: Object as SlotsType<{ default?: { state: ModelControlTriggerState } }>,
+  slots: Object as SlotsType<{
+    default?: { state: ModelControlTriggerState };
+    render?: Record<string, unknown>;
+  }>,
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Trigger, null, {
@@ -96,7 +100,10 @@ export const ModelControlTrigger = defineComponent({
 export const ModelControlContent = defineComponent({
   name: "ModelControlContent",
   inheritAttrs: false,
-  slots: Object as SlotsType<{ default?: { state: SettingsMenuContentState } }>,
+  slots: Object as SlotsType<{
+    default?: { state: SettingsMenuContentState };
+    render?: Record<string, unknown>;
+  }>,
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Content, null, {
@@ -106,7 +113,8 @@ export const ModelControlContent = defineComponent({
             { align: "start", sideOffset: 6, ...attrs },
             {
               render: slots.render,
-              default: () => (slots.default ? slots.default({ state }) : h(SettingsMenuRows, { rows: state.rows })),
+              default: () =>
+                slots.default ? slots.default({ state }) : h(SettingsMenuRows, { rows: state.rows }),
             },
           ),
       });
@@ -127,7 +135,7 @@ export const ModelControl = defineComponent({
     return () =>
       h(parts.Root, attrs, {
         ...slots,
-        default: ({ state }: { state: Parameters<typeof menuProps>[0] }) =>
+        default: ({ state }: { state: MenuPartState }) =>
           h(KindMenu, menuProps(state), { default: slots.default ?? defaultParts }),
       });
   },
