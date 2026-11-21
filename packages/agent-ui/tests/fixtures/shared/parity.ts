@@ -1,6 +1,12 @@
 export type ParityStep = { press: string } | { key: string; focus?: string } | { hover: string };
 
-export type ParityPage = { c: string; case: string; interaction?: readonly ParityStep[] };
+/** `needs` names the other components the page renders, so a layer checks it only once its manifest lists them. */
+export type ParityPage = {
+  c: string;
+  case: string;
+  interaction?: readonly ParityStep[];
+  needs?: readonly string[];
+};
 
 const press = (selector: string): readonly ParityStep[] => [{ press: selector }];
 const openMenu = press('[aria-haspopup="menu"]');
@@ -94,7 +100,7 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
   dictation: [
     { c: "dictation", case: "default" },
     { c: "dictation", case: "no-source" },
-    { c: "dictation", case: "composer" },
+    { c: "dictation", case: "composer", needs: ["composer"] },
   ],
   document: [
     { c: "document", case: "all", interaction: press('[data-slot="kind-document-expand"]') },
@@ -163,7 +169,7 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
     modelSelector,
     { c: "model-selector", case: "groups", interaction: press('[data-slot="kind-model-selector-trigger"]') },
     { c: "model-selector", case: "logos" },
-    { c: "model-selector", case: "composer" },
+    { c: "model-selector", case: "composer", needs: ["composer"] },
   ],
   notice: [
     { c: "notice", case: "all" },
