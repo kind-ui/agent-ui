@@ -23,6 +23,9 @@ export const budgets: Partial<Budgets> = {
 
   // framework-vue-5: step family
 
+  // Streamed input renders one tool's parts, each default part a wrapper and its part, at 10 tools as at 500.
+  toolStream: { writes: 6, renders: 30, notified: 3 },
+
   // framework-vue-6: developer output
 
   // framework-vue-7: Wave 6 shell

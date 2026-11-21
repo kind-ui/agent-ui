@@ -17,6 +17,7 @@ Last reviewed: `9484e6dc` (Task Vue-2)
 
 - **Hand-written roots for callbacks that offer an action (Task Vue-2):** Suggestion, Attachments, Message and Composer build their root with `usePrimitive` and `usePart`, taking the generated root's runtime `props` plus their callbacks as `Function` props, because the generated root always passes an emitter for every `kind: "callback"` option (AGENTS.md "Vue chat core"). Composer's keeps `v-model` and `v-model:value`.
 - **Slots that hand part state to the host get plain objects (Task Vue-2):** `CheckpointRestore`, `FeedbackCommentText` and `MessageRegenerateContent` build `{ state }` key by key, since UI SDK's slot state proxy doesn't survive `v-bind` or a spread.
+- **Queue's `onReorder` and `onRemove` are actions on a derived primitive (Task Vue-5):** the generated root stays; `@reorder` and `@remove` bind them, and without a listener moving and removing aren't offered, as in React.
 - **`conversation.vue` builds its cases with `defineComponent` and `h()` (Task Vue-2):** `Row`, `Chat`, `Remount` and `States` need their own component boundaries for the render counts `budgets.spec.ts` measures.
 
 ## Known and open (don't report again, check whether fixed)
