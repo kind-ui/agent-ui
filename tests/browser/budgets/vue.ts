@@ -28,6 +28,18 @@ export const budgets: Partial<Budgets> = {
 
   // framework-vue-6: developer output
 
+  // A chunk updates the last line's two components; a chunk that wraps it shifts the window at 1,000 lines, which
+  // renders the output part twice, never the other lines.
+  terminalChunk: { writes: 4, renders: 10, notified: 0, layoutReads: 11 },
+  // A new line renders the output part and the line that was last, and mounts the new one, at 10 lines as at 1,000.
+  terminalLine: { writes: 4, renders: 11, notified: 0, layoutReads: 18 },
+  // Playback writes the word's mark straight to the element, so no segment or word renders.
+  transcriptWord: { writes: 2, renders: 4, notified: 2, layoutReads: 4 },
+  // Following the next segment renders the list and mounts the segments it scrolls into view.
+  transcriptSegment: { writes: 7, renders: 24, notified: 4, layoutReads: 8 },
+  // A search renders the segments in view whose marks changed, at 100 segments as at 5,000.
+  transcriptSearch: { writes: 44, renders: 48, notified: 0, layoutReads: 2 },
+
   // framework-vue-7: Wave 6 shell
 
   // Rows are their own components with stable slots, so selecting, pinning and loading more render only the rows they
