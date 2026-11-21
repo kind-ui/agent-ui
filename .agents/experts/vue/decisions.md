@@ -10,6 +10,8 @@ Last reviewed: `8bcbf59` (Task Vue-1)
 - **A Kind wrapper's `class` can't be a function of the part's state (Task Vue-1):** Vue binds `class` as a string, an array or an object, and `@ui-sdk/vue` passes it to the element unchanged (`styling-and-animation.md`). React's `className` function becomes a `data-*` selector or a `#render` slot.
 - **Fixtures match React's attributes, not Vue's defaults (Task Vue-1):** where React writes a boolean JSX attribute as `"true"` (`<span data-menu-text>`), the Vue case writes the same. Text split into nodes differently isn't a difference: `tests/browser/tree.ts` joins adjacent text nodes in every layer.
 - **`tsconfig.vue.json` resolves like a Vite app (Bundler), not NodeNext (Task Vue-1):** docs examples import `@/components/ui/vue/<name>` without an extension, as React's do, and render files keep their `.js` suffixes, which Bundler accepts too.
+- **Default children are wrapper components (Task Vue-4):** a part that renders default children in React (`StatusLabel`, `NoticeTitle`, `GuardrailNoticeDetail`, the indicators' dots and label) is a `defineComponent` around the `createParts` part that fills an empty default slot from the part's state, cast to the part's type. A React `ReactNode` prop for content (`actions`) is a named slot.
+- **A callback whose presence offers an action needs a hand-written root (Task Vue-4):** `createParts`' root hands the primitive every `"callback"` option, so Uploader's root uses `usePrimitive` and `usePart` and declares `onCancel`/`onRetry` as props, set only when `@cancel`/`@retry` is bound. `"action"` options are already props.
 
 ## Known and open (don't report again, check whether fixed)
 

@@ -284,6 +284,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- framework-vue-4: indicators, notices and files -->
 
+- **Vue indicators, notices and files (Task Vue-4):** a part with default children is a `defineComponent` that renders the `createParts` part with `attrs` and the caller's slots, filling `default` from the part's state (`({ state }) => state.label`) when the caller leaves it empty, cast to the part's own type so templates keep its props and slots. React's `actions` prop on Notice and Guardrail Notice is an `#actions` slot, and their text the default slot. `@ui-sdk/vue`'s `createParts` root passes the primitive every `"callback"` option, listened to or not (its `emitters`), so a callback whose presence offers an action is always set; `"action"` options are props and stay `undefined` until bound (`:on-dismiss`). Uploader offers Cancel and Retry by `onCancel`/`onRetry` being set, so its root is written by hand with `usePrimitive` and `usePart` (`@ui-sdk/vue/primitive`, "Custom Parts"), declaring `onCancel` and `onRetry` as props, which `@cancel` and `@retry` bind only when the host listens; `files` and `reject` stay events. Its list, rows and action are `createParts`' and find that root through `usePrimitive`.
+
 <!-- framework-vue-5: step family -->
 
 <!-- framework-vue-6: developer output -->
