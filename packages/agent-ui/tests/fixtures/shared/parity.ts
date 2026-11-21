@@ -81,18 +81,7 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
   ],
   composer: [
     { c: "composer", case: "shell" },
-    {
-      c: "composer",
-      case: "full",
-      known: [
-        {
-          layer: "solid",
-          selector: '[data-slot="token-input-editor"]',
-          attributes: ["aria-autocomplete", "aria-haspopup"],
-          note: "Solid chat core: Trigger Menu writes its editor attributes only once the editor changes",
-        },
-      ],
-    },
+    { c: "composer", case: "full" },
     {
       c: "full-composer",
       case: "all",
