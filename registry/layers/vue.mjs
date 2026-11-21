@@ -8,13 +8,56 @@ export default {
   components: [
     // framework-vue-1: groundwork, internal wrappers and Step
 
+    "step",
+
     // framework-vue-2: chat core
+
+    "markdown",
+    "code-block",
+    "markdown-table",
+    "conversation",
+    "message",
+    "composer",
+    "attachments",
+    "suggestion",
+    "feedback",
+    "confirmation",
+    "question",
+    "checkpoint",
 
     // framework-vue-3: composer controls
 
+    "picker",
+    "model-selector",
+    "add-menu",
+    "settings-menu",
+    "approval-mode",
+    "model-control",
+    "reasoning-effort",
+    "context-bar",
+    "context-meter",
+    "dictation",
+
     // framework-vue-4: indicators, notices and files
 
+    "guardrail-notice",
+    "loader",
+    "notice",
+    "status",
+    "streaming-text",
+    "thinking-indicator",
+    "typing-indicator",
+    "uploader",
+
     // framework-vue-5: step family
+
+    "reasoning",
+    "tool",
+    "chain-of-thought",
+    "task",
+    "plan",
+    "subagent",
+    "queue",
 
     // framework-vue-6: developer output
 
@@ -25,18 +68,88 @@ export default {
   // Internal wrapper names, without the `internal-` prefix.
   internals: [
     // framework-vue-1: groundwork, internal wrappers and Step
+
+    "avatar",
+    "button",
+    "collapsible",
+    "command",
+    "file-input",
+    "menu",
+    "progress",
+    "scroll-area",
+    "slider",
+    "switch",
+    "toggle",
+    "token-input",
+    "trigger-menu",
+
+    // framework-vue-2: chat core
+
+    "alert-dialog",
+    "carousel",
+    "checkbox",
+    "radio",
+    "textarea",
+    "toolbar",
+    "tooltip",
+
+    // framework-vue-3: composer controls
+
+    "segmented-control",
+
   ],
   // Spec files the layer's projects run, relative to `tests/browser/`.
   specs: [
     // framework-vue-1: groundwork, internal wrappers and Step
 
+    "wave-1/step.spec.ts",
+    "wave-1/internal.spec.ts",
+    "parity.spec.ts",
+
     // framework-vue-2: chat core
+
+    "wave-1/markdown.spec.ts",
+    "wave-1/conversation.spec.ts",
+    "wave-1/message.spec.ts",
+    "wave-1/composer.spec.ts",
+    "wave-3/suggestion.spec.ts",
+    "wave-3/feedback.spec.ts",
+    "wave-3/confirmation.spec.ts",
+    "wave-3/question.spec.ts",
+    "wave-3/checkpoint.spec.ts",
+    "wave-1/budgets.spec.ts",
 
     // framework-vue-3: composer controls
 
+    "wave-3/reasoning-effort.spec.ts",
+    "wave-3/context-meter.spec.ts",
+    "wave-3/model-selector.spec.ts",
+    "wave-5/picker.spec.ts",
+    "wave-5/add-menu.spec.ts",
+    "wave-5/settings-menu.spec.ts",
+    "wave-5/approval-mode.spec.ts",
+    "wave-5/model-control.spec.ts",
+    "wave-5/context-bar.spec.ts",
+    "wave-5/dictation.spec.ts",
+    "wave-5/composed-events.spec.ts",
+
     // framework-vue-4: indicators, notices and files
 
+    "wave-1/indicators.spec.ts",
+    "wave-1/uploader.spec.ts",
+    "wave-2/status.spec.ts",
+    "wave-3/notice.spec.ts",
+    "wave-3/guardrail-notice.spec.ts",
+
     // framework-vue-5: step family
+
+    "wave-2/reasoning.spec.ts",
+    "wave-2/tool.spec.ts",
+    "wave-2/chain-of-thought.spec.ts",
+    "wave-2/task.spec.ts",
+    "wave-2/plan.spec.ts",
+    "wave-2/subagent.spec.ts",
+    "wave-2/queue.spec.ts",
 
     // framework-vue-6: developer output
 
