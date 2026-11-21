@@ -60,7 +60,6 @@ const bubble = (m: Message) =>
       )
     : h("p", { "data-message": m.id }, m.text);
 
-// Renders again only when its message or index changes, as React's `memo` row does.
 const Row = defineComponent({
   name: "Row",
   props: {
