@@ -30,8 +30,8 @@
           <MenuTrigger>
             {#snippet render({ props: trigger }: { props: Record<string, unknown> })}{@render button(trigger)}{/snippet}
           </MenuTrigger>
-        </parts.RegenerateTrigger>
-        {#if menuContent}{@render menuContent()}{:else}<MessageRegenerateContent />{/if}
+        </parts.RegenerateTrigger
+        >{#if menuContent}{@render menuContent()}{:else}<MessageRegenerateContent />{/if}
       </KindMenu>
     {:else}
       {@render button?.({})}

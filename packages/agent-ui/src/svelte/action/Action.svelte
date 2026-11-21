@@ -14,12 +14,12 @@
 
 {#snippet fallback()}
   <parts.Trigger>
-    <parts.Icon />
-    <ActionTitle />
-  </parts.Trigger>
-  <parts.Content>
-    <ActionQuote />
-    <ActionResult />
+    <parts.Icon
+    /><ActionTitle />
+  </parts.Trigger
+  ><parts.Content>
+    <ActionQuote
+    /><ActionResult />
   </parts.Content>
 {/snippet}
 

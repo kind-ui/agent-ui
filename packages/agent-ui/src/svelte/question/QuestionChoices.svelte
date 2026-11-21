@@ -34,10 +34,10 @@
           </svg>
         </KindCheckboxIndicator>
       </KindCheckbox>
-    {/if}
-    <span data-question-option-text="">
-      <span>{option.label}</span>
-      {#if option.description}<span data-question-option-description="">{option.description}</span>{/if}
+    {/if}<span data-question-option-text=""
+    >
+      <span>{option.label}</span
+      >{#if option.description}<span data-question-option-description="">{option.description}</span>{/if}
     </span>
   </label>
 {/snippet}

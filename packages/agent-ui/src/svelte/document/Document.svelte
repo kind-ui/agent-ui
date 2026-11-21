@@ -15,11 +15,11 @@
 
 {#snippet fallback()}
   <parts.Header>
-    <DocumentTitle />
-    <DocumentMeta />
-    <DocumentToolbar />
-  </parts.Header>
-  <DocumentBody />
+    <DocumentTitle
+    /><DocumentMeta
+    /><DocumentToolbar />
+  </parts.Header
+  ><DocumentBody />
 {/snippet}
 
 <parts.Root {...props} bind:open children={children ?? fallback} />

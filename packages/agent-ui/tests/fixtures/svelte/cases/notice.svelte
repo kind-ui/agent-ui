@@ -31,8 +31,8 @@
 </script>
 
 <div class="flex w-[30rem] flex-col gap-3 p-6">
-  <button id="above" type="button">Above</button>
-  {#each items as item (item.id)}
+  <button id="above" type="button">Above</button
+  >{#each items as item (item.id)}
     <Notice
       id={`notice-${item.id}`}
       variant={item.variant}
@@ -44,6 +44,6 @@
       {item.text}
       {#snippet actions()}{#if item.action}<button type="button">{item.action}</button>{/if}{/snippet}
     </Notice>
-  {/each}
-  <button id="below" type="button">Below</button>
+  {/each}<button id="below" type="button"
+  >Below</button>
 </div>

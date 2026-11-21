@@ -23,8 +23,8 @@
 {#if variant === "composer" || variant === "composer-cancel"}
   <div class="p-4" style="width: 480px">
     <Composer aria-label="Message">
-      <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
-      {#if variant === "composer-cancel"}
+      <ComposerInput aria-label="Prompt" placeholder="Ask anything"
+      />{#if variant === "composer-cancel"}
         <Dictation
           {source}
           onText={(text: string, details: ChangeDetails<string>) => {
@@ -34,8 +34,8 @@
         />
       {:else}
         <Dictation {source} />
-      {/if}
-      <ComposerSubmit />
+      {/if}<ComposerSubmit
+      />
     </Composer>
   </div>
 {:else}

@@ -18,10 +18,10 @@
     <KindTooltip type="label">
       <KindTooltipTrigger data-checkpoint-trigger="" data-kind-icon-button="">
         {#snippet render({ props })}<KindAlertDialogTrigger {...props} />{/snippet}
-      </KindTooltipTrigger>
-      <KindTooltipContent>Restore checkpoint</KindTooltipContent>
-    </KindTooltip>
-    <CheckpointDialog {title} {description} {initialFocus} {busy} />
+      </KindTooltipTrigger
+      ><KindTooltipContent>Restore checkpoint</KindTooltipContent>
+    </KindTooltip
+    ><CheckpointDialog {title} {description} {initialFocus} {busy} />
   </KindAlertDialog>
 {/snippet}
 

@@ -33,17 +33,17 @@
 </script>
 
 <div class="flex w-[32rem] flex-col gap-4 px-6 pt-60 pb-[150vh]">
-  <p id="before">Text before the reply, outside the selection root.</p>
-  <button id="outside" type="button">Elsewhere</button>
-  <Selection
+  <p id="before">Text before the reply, outside the selection root.</p
+  ><button id="outside" type="button">Elsewhere</button
+  ><Selection
     id="selection"
     {actions}
     {motion}
     onAction={variant === "static" ? undefined : onAction}
     {onDismiss}
   >
-    <p id="reply">Rate limits reset every hour. Each response carries the remaining count in its headers.</p>
-    <p id="reply-2">Back off exponentially when a request is refused.</p>
-  </Selection>
-  <p id="after">Text after the reply, outside the selection root.</p>
+    <p id="reply">Rate limits reset every hour. Each response carries the remaining count in its headers.</p
+    ><p id="reply-2">Back off exponentially when a request is refused.</p>
+  </Selection
+  ><p id="after">Text after the reply, outside the selection root.</p>
 </div>

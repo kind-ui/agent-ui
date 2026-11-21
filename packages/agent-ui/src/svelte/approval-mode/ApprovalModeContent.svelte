@@ -38,12 +38,12 @@
       <KindMenuRadioGroup name={APPROVAL_MODE_GROUP} bind:value={() => state.value, keep}>
         <div data-approval-mode-header="">
           <KindMenuGroupLabel>{state.label}</KindMenuGroupLabel>
-        </div>
-        {#if content}{@render content(state)}{:else}<ApprovalModeRows rows={state.rows} />{/if}
-      </KindMenuRadioGroup>
-      {#if state.learnMore}
-        <KindMenuSeparator data-approval-mode-learn-more="" />
-        <KindMenuItem
+        </div
+        >{#if content}{@render content(state)}{:else}<ApprovalModeRows rows={state.rows} />{/if}
+      </KindMenuRadioGroup
+      >{#if state.learnMore}
+        <KindMenuSeparator data-approval-mode-learn-more=""
+        /><KindMenuItem
           value={APPROVAL_MODE_LEARN_MORE}
           data-approval-mode-learn-more=""
           data-menu-inset=""

@@ -9,9 +9,9 @@
 </script>
 
 {#snippet content()}
-  <parts.ErrorIcon />
-  <ConversationErrorText />
-  <ConversationRetry />
+  <parts.ErrorIcon
+  /><ConversationErrorText
+  /><ConversationRetry />
 {/snippet}
 
 <parts.Error {...props} children={children ?? content} />

@@ -7,10 +7,10 @@
 </script>
 
 <parts.Root {...props}>
-  <parts.Label>{#snippet children({ label }: { label: string })}{label}{/snippet}</parts.Label>
-  <parts.Dots>
-    <parts.Dot />
-    <parts.Dot />
-    <parts.Dot />
+  <parts.Label>{#snippet children({ label }: { label: string })}{label}{/snippet}</parts.Label
+  ><parts.Dots>
+    <parts.Dot
+    /><parts.Dot
+    /><parts.Dot />
   </parts.Dots>
 </parts.Root>

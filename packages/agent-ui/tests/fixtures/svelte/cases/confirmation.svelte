@@ -28,26 +28,24 @@
 </script>
 
 <div class="flex w-[28rem] flex-col gap-4 p-6">
-  <p id="above">Above</p>
-  <Confirmation
+  <p id="above">Above</p
+  ><Confirmation
     id="confirm"
     label="Run search_docs?"
     approval={approvals.confirm}
     onApprove={approve}
     onDeny={deny}
     motion={variant === "reduced" ? "reduced" : undefined}
-  />
-  <p id="below">Below</p>
-  <Confirmation
+  /><p id="below">Below</p
+  ><Confirmation
     id="reason"
     label="Delete notes.md?"
     approval={approvals.reason}
     onApprove={approve}
     onDeny={deny}
     reason
-  />
-  <Confirmation id="approve-only" label="Open the link?" approval={request("requested")} onApprove={approve} />
-  <Confirmation
+  /><Confirmation id="approve-only" label="Open the link?" approval={request("requested")} onApprove={approve}
+  /><Confirmation
     id="auto"
     label="Read README.md?"
     approval={request("auto", 1, { approved: true })}

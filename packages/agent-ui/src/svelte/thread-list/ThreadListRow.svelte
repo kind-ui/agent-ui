@@ -19,13 +19,13 @@
 
 <parts.Row {...props}>
   <parts.LinkCell value={props.value}>
-    <ThreadListLink value={props.value} {children} />
-    <parts.Editor value={props.value} type="text" />
-    <parts.Time value={props.value}>
+    <ThreadListLink value={props.value} {children}
+    /><parts.Editor value={props.value} type="text"
+    /><parts.Time value={props.value}>
       {#snippet children({ label }: ThreadListTimeState)}{label}{/snippet}
     </parts.Time>
-  </parts.LinkCell>
-  <parts.MoreCell value={props.value}>
+  </parts.LinkCell
+  ><parts.MoreCell value={props.value}>
     <parts.More value={props.value} data-kind-icon-button="" data-kind-size="sm">
       <span data-thread-list-icon="more" aria-hidden="true"></span>
     </parts.More>

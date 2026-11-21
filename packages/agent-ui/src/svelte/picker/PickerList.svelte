@@ -25,10 +25,10 @@
 <parts.Command {...props}>
   {#snippet children(state: PickerCommandState)}
     <KindCommand {...state.props}>
-      <KindCommandInput aria-label={state.label} placeholder={state.placeholder} data-agent-hidden="" />
-      {#if state.statusText !== undefined}<KindCommandStatus>{state.statusText}</KindCommandStatus>{/if}
-      <KindCommandEmpty>{state.emptyText}</KindCommandEmpty>
-      <KindCommandList>
+      <KindCommandInput aria-label={state.label} placeholder={state.placeholder} data-agent-hidden=""
+      />{#if state.statusText !== undefined}<KindCommandStatus>{state.statusText}</KindCommandStatus>{/if}<KindCommandEmpty
+      >{state.emptyText}</KindCommandEmpty
+      ><KindCommandList>
         {#if rows}{@render rows(state)}{:else}
           {#each state.pages as { page, sections } (page ?? "")}
             <KindCommandPage value={page}>

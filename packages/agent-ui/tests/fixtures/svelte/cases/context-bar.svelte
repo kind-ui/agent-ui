@@ -40,6 +40,5 @@
       if (refusing) details.cancel();
       else chips = chips.filter((chip) => chip.id !== id);
     }}
-  />
-  <textarea id="below" aria-label="Message"></textarea>
+  /><textarea id="below" aria-label="Message"></textarea>
 </div>

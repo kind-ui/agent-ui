@@ -8,9 +8,9 @@
 
 <parts.Root {...props}>
   <parts.Dots>
-    <parts.Dot />
-    <parts.Dot />
-    <parts.Dot />
-  </parts.Dots>
-  <parts.Label>{#snippet children({ label }: { label: string })}{label}{/snippet}</parts.Label>
+    <parts.Dot
+    /><parts.Dot
+    /><parts.Dot />
+  </parts.Dots
+  ><parts.Label>{#snippet children({ label }: { label: string })}{label}{/snippet}</parts.Label>
 </parts.Root>

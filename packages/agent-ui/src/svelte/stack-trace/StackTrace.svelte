@@ -19,14 +19,14 @@
 
 {#snippet defaultParts()}
   <parts.Trigger>
-    <parts.Icon />
-    <StackTraceTitle />
-  </parts.Trigger>
-  <parts.Content>
+    <parts.Icon
+    /><StackTraceTitle />
+  </parts.Trigger
+  ><parts.Content>
     <div data-stack-trace-panel="" data-kind-code="">
-      <StackTraceMessage />
-      <StackTraceList />
-      <parts.Copy />
+      <StackTraceMessage
+      /><StackTraceList
+      /><parts.Copy />
     </div>
   </parts.Content>
 {/snippet}

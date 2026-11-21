@@ -9,11 +9,11 @@
 </script>
 
 {#snippet fallback()}
-  <parts.FullImage />
-  <div data-generated-image-actions="">
-    <GeneratedImageTitle />
-    <parts.Download>Download</parts.Download>
-    <GeneratedImageClose />
+  <parts.FullImage
+  /><div data-generated-image-actions="">
+    <GeneratedImageTitle
+    /><parts.Download>Download</parts.Download
+    ><GeneratedImageClose />
   </div>
 {/snippet}
 

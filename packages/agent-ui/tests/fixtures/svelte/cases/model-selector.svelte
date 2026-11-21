@@ -32,12 +32,12 @@
 {#if variant === "composer"}
   <div class="p-4">
     <Composer aria-label="Message" onSubmit={() => undefined}>
-      <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
-      <div style="grid-area: attach; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0">
-        <ModelSelector id="model" models={logoModels} defaultValue="claude-sonnet-5.5" />
-        <ReasoningEffort id="effort" {levels} defaultValue="medium" />
-      </div>
-      <ComposerSubmit />
+      <ComposerInput aria-label="Prompt" placeholder="Ask anything"
+      /><div style="grid-area: attach; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0">
+        <ModelSelector id="model" models={logoModels} defaultValue="claude-sonnet-5.5"
+        /><ReasoningEffort id="effort" {levels} defaultValue="medium" />
+      </div
+      ><ComposerSubmit />
     </Composer>
   </div>
 {:else if variant === "logos"}
@@ -47,26 +47,25 @@
       models={logoModels}
       defaultValue="claude-sonnet-5.5"
       onValueChange={record("model")}
-    />
-    <div class="ps-32">
+    /><div class="ps-32">
       <ModelSelector
         id="second"
         models={logoModels}
         defaultValue="mai-code-2"
         onValueChange={record("second")}
       />
-    </div>
-    <div class="ps-64">
+    </div
+    ><div class="ps-64">
       <ModelSelector id="third" models={logoModels} defaultValue="gpt-6-astra">
-        <ModelSelectorTrigger id="mine" />
-        <ModelSelectorContent />
+        <ModelSelectorTrigger id="mine"
+        /><ModelSelectorContent />
       </ModelSelector>
     </div>
   </div>
 {:else}
   <div class="flex flex-col gap-4 p-6">
-    <p id="above">Above</p>
-    <div id="toolbar" class="flex items-center gap-2">
+    <p id="above">Above</p
+    ><div id="toolbar" class="flex items-center gap-2">
       <ModelSelector
         id="model"
         {models}
@@ -86,8 +85,7 @@
               },
             }}
         {motion}
-      />
-      {#if refusing}
+      />{#if refusing}
         <ReasoningEffort
           id="effort"
           {levels}
@@ -97,8 +95,8 @@
         />
       {:else}
         <ReasoningEffort id="effort" {levels} defaultValue="medium" onValueChange={record("effort")} {motion} />
-      {/if}
-      <span id="beside">Beside</span>
+      {/if}<span id="beside"
+      >Beside</span>
     </div>
   </div>
 {/if}

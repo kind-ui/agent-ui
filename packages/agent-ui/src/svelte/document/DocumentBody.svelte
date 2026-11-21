@@ -21,12 +21,12 @@
       <KindScrollAreaContent>
         <DocumentContent />
       </KindScrollAreaContent>
-    </KindScrollAreaViewport>
-    <KindScrollAreaScrollbar>
+    </KindScrollAreaViewport
+    ><KindScrollAreaScrollbar>
       <KindScrollAreaThumb />
     </KindScrollAreaScrollbar>
-  </KindScrollArea>
-  <DocumentExpand />
+  </KindScrollArea
+  ><DocumentExpand />
 {/snippet}
 
 <parts.Body {...props} children={children ?? fallback} />

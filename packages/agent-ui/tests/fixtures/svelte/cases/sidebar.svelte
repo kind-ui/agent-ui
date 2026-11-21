@@ -26,16 +26,16 @@
       <main>
         <header class="flex items-center justify-end gap-2 p-2">
           <SidebarTrigger />
-        </header>
-        <p class="px-4">The page.</p>
+        </header
+        ><p class="px-4">The page.</p>
       </main>
-    </SidebarInset>
-    <SidebarHandle />
-    <SidebarPanel>
+    </SidebarInset
+    ><SidebarHandle
+    /><SidebarPanel>
       <div class="mt-auto p-2">
         <Composer aria-label="Message" onSubmit={() => undefined}>
-          <ComposerInput aria-label="Prompt" placeholder="Ask the assistant" />
-          <ComposerSubmit />
+          <ComposerInput aria-label="Prompt" placeholder="Ask the assistant"
+          /><ComposerSubmit />
         </Composer>
       </div>
     </SidebarPanel>
@@ -57,15 +57,15 @@
           {/each}
         </ul>
       </nav>
-    </SidebarPanel>
-    <SidebarHandle />
-    <SidebarInset>
+    </SidebarPanel
+    ><SidebarHandle
+    /><SidebarInset>
       <main>
         <header class="flex items-center gap-2 p-2">
-          <SidebarTrigger />
-          <h1 class="m-0 text-base">Release checklist</h1>
-        </header>
-        <p class="px-4">Ship the docs, then tag the release.</p>
+          <SidebarTrigger
+          /><h1 class="m-0 text-base">Release checklist</h1>
+        </header
+        ><p class="px-4">Ship the docs, then tag the release.</p>
       </main>
     </SidebarInset>
   </Sidebar>

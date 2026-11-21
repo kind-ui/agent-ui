@@ -61,26 +61,26 @@
         <StepListItem value={row.id}>
           {#snippet render({ props }: { props: Record<string, unknown> })}
             <StepTrigger {...props}>
-              <StepIcon />
-              <StepTitle>{row.title}</StepTitle>
-              {#if row.meta}<StepMeta>{row.meta}</StepMeta>{/if}
+              <StepIcon
+              /><StepTitle>{row.title}</StepTitle
+              >{#if row.meta}<StepMeta>{row.meta}</StepMeta>{/if}
             </StepTrigger>
           {/snippet}
-        </StepListItem>
-        <StepContent>
+        </StepListItem
+        ><StepContent>
           <p>{row.body}</p>
-        </StepContent>
-        <StepChildren />
+        </StepContent
+        ><StepChildren />
       </Step>
     {/each}
   </StepList>
 {:else}
   <Step motion={variant === "reduced" ? "reduced" : "none"} {status}>
     <StepTrigger>
-      <StepIcon />
-      <StepTitle>{variant === "reduced" ? "Reduced" : "Instant"}</StepTitle>
-    </StepTrigger>
-    <StepContent>
+      <StepIcon
+      /><StepTitle>{variant === "reduced" ? "Reduced" : "Instant"}</StepTitle>
+    </StepTrigger
+    ><StepContent>
       <p>Step details.</p>
     </StepContent>
   </Step>

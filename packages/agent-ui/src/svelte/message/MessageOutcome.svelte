@@ -13,10 +13,10 @@
 </script>
 
 {#snippet outcome()}
-  <parts.OutcomeIcon />
-  <MessageOutcomeText />
-  <MessageRetry />
-  <MessageContinue />
+  <parts.OutcomeIcon
+  /><MessageOutcomeText
+  /><MessageRetry
+  /><MessageContinue />
 {/snippet}
 
 <parts.Outcome {...props} children={children ?? outcome} />

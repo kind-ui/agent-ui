@@ -28,8 +28,8 @@
         aria-label={control["aria-label"]}
         data-agent-hidden=""
       >
-        <KindSegmentedControlIndicator />
-        {#each control.options as option (option.value)}
+        <KindSegmentedControlIndicator
+        />{#each control.options as option (option.value)}
           <KindSegmentedControlItem value={option.value}>{option.label}</KindSegmentedControlItem>
         {/each}
       </KindSegmentedControl>

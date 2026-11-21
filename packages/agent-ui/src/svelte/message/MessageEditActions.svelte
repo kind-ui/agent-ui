@@ -9,8 +9,8 @@
 </script>
 
 {#snippet actions()}
-  <MessageEditCancel />
-  <MessageEditSave />
+  <MessageEditCancel
+  /><MessageEditSave />
 {/snippet}
 
 <parts.EditActions {...props} children={children ?? actions} />

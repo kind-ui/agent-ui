@@ -14,8 +14,8 @@
 </script>
 
 {#snippet fallback()}
-  <parts.Link><InlineCitationIcon /><InlineCitationSourceTitle /><InlineCitationHost /></parts.Link>
-  <InlineCitationSnippet />
+  <parts.Link><InlineCitationIcon /><InlineCitationSourceTitle /><InlineCitationHost /></parts.Link
+  ><InlineCitationSnippet />
 {/snippet}
 
 <parts.Item {...props} children={children ?? fallback} />

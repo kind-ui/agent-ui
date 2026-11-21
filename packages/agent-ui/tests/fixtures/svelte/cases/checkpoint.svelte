@@ -21,13 +21,12 @@
 </script>
 
 <div class="flex w-[28rem] flex-col gap-4 p-6">
-  <p id="above">Above</p>
-  <Checkpoint
+  <p id="above">Above</p
+  ><Checkpoint
     id="checkpoint"
     description="Before editing auth.ts"
     onRestore={restore}
     {restored}
     motion={variant === "reduced" ? "reduced" : undefined}
-  />
-  <p id="below">Below</p>
+  /><p id="below">Below</p>
 </div>
