@@ -42,5 +42,13 @@ export const budgets: Partial<Budgets> = {
 
   // framework-vue-7: Wave 6 shell
 
+  // Rows are their own components with stable slots, so selecting, pinning and loading more render only the rows they
+  // change and those that come into view, at 10 threads as at 1,000.
+  threadSelect: { writes: 4, renders: 12, notified: 0, layoutReads: 0 },
+  threadPin: { writes: 46, renders: 52, notified: 0, layoutReads: 2 },
+  threadAppend: { writes: 24, renders: 50, notified: 0, layoutReads: 2 },
+  // A search renders the rows whose marks changed; at 5,000 messages the mark track is already full.
+  conversationSearchType: { writes: 51, renders: 24, notified: 0, layoutReads: 4 },
+
   // framework-vue-8: conformance
 };
