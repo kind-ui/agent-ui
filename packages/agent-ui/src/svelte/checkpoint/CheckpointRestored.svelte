@@ -6,10 +6,6 @@
   let { children, ...props }: ComponentProps<typeof parts.Restored> = $props();
 </script>
 
-{#if children}
-  <parts.Restored {...props} {children} />
-{:else}
-  <parts.Restored {...props}
-    ><span aria-hidden="true" data-status-mark="" data-status="complete"></span>Restored</parts.Restored
-  >
-{/if}
+{#snippet fallback()}<span aria-hidden="true" data-status-mark="" data-status="complete"></span>Restored{/snippet}
+
+<parts.Restored {...props} children={children ?? fallback} />

@@ -54,6 +54,8 @@ Last reviewed: `e3ab23a` (framework layers Task 1)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **Step base `onOptions` reads `open` from the store** (`step/base.ts`): under `@ui-sdk/svelte`, which hands options over through `follow`, that is the new controlled `open`, so an owner changing `open` and `status` together might see one more or fewer auto `onOpenChange`. Not reproduced (Task Svelte-2 review); check with the Svelte step family.
+
 - **`menuBase` holds `partState.menu`'s `open` while a `ui-menu` reports its own `openchange`** (Design Wave 0): UI SDK web highlights the first item and leaves focus on the trigger when `open` is written back during that event, as its own controlled example does. Ask upstream; remove `applying` once fixed.
 - **The waveform's default of 128 bars writes 128 `--kind-dictation-level-*` properties per level (Task 17):** not profiled; lower the default or size it to the box if it shows up.
 - **Transcript with a controlled `query` reads `window` and `navigator` on a server (found in Wave 5 Task 15):** `searchSegments` runs UI SDK's `fuzzyScore`, whose text folding reads the user's locale, so a server and a browser with different locales may filter differently. The server case covers default options only; a fix needs `fuzzyScore` to take a locale.

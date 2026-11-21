@@ -13,20 +13,16 @@
   let { children, ...props }: ComponentProps<typeof parts.Restore> = $props();
 </script>
 
-{#if children}
-  <parts.Restore {...props} {children} />
-{:else}
-  <parts.Restore {...props}>
-    {#snippet children({ controller, dismissible, title, description, initialFocus, busy }: CheckpointDialogState)}
-      <KindAlertDialog {controller} {dismissible}>
-        <KindTooltip type="label">
-          <KindTooltipTrigger data-checkpoint-trigger="" data-kind-icon-button="">
-            {#snippet render({ props })}<KindAlertDialogTrigger {...props} />{/snippet}
-          </KindTooltipTrigger>
-          <KindTooltipContent>Restore checkpoint</KindTooltipContent>
-        </KindTooltip>
-        <CheckpointDialog {title} {description} {initialFocus} {busy} />
-      </KindAlertDialog>
-    {/snippet}
-  </parts.Restore>
-{/if}
+{#snippet fallback({ controller, dismissible, title, description, initialFocus, busy }: CheckpointDialogState)}
+  <KindAlertDialog {controller} {dismissible}>
+    <KindTooltip type="label">
+      <KindTooltipTrigger data-checkpoint-trigger="" data-kind-icon-button="">
+        {#snippet render({ props })}<KindAlertDialogTrigger {...props} />{/snippet}
+      </KindTooltipTrigger>
+      <KindTooltipContent>Restore checkpoint</KindTooltipContent>
+    </KindTooltip>
+    <CheckpointDialog {title} {description} {initialFocus} {busy} />
+  </KindAlertDialog>
+{/snippet}
+
+<parts.Restore {...props} children={children ?? fallback} />

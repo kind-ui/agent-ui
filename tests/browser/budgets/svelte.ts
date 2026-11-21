@@ -12,7 +12,7 @@ export const budgets: Partial<Budgets> = {
   conversationStream: { writes: 1, renders: 0, notified: 1 },
   conversationFollow: { layoutReads: 12 },
   remount: { nodes: 0, listeners: 0 },
-  // A chunk rewrites the streaming block's last text node and reads one attribute; `renders` stay 0.
+  // A chunk rewrites the streaming block's last text node and its `data-block-key`.
   markdownStream: { parses: 1, writes: 2, renders: 0, notified: 1 },
 
   // framework-svelte-3: composer controls

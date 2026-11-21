@@ -6,12 +6,8 @@
   let { children, ...props }: ComponentProps<typeof parts.Confirm> = $props();
 </script>
 
-{#if children}
-  <parts.Confirm {...props} {children} />
-{:else}
-  <!-- The mark shows only while the restore is pending (controls.css). -->
-  <parts.Confirm {...props}
-    ><span data-kind-pending-mark="" data-status-mark="" data-status="running" aria-hidden="true"></span
-    >Restore</parts.Confirm
-  >
-{/if}
+<!-- The mark shows only while the restore is pending (controls.css). -->
+{#snippet fallback()}<span data-kind-pending-mark="" data-status-mark="" data-status="running" aria-hidden="true"
+  ></span>Restore{/snippet}
+
+<parts.Confirm {...props} children={children ?? fallback} />

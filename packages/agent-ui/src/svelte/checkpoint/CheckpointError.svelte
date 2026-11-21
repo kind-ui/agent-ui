@@ -6,8 +6,8 @@
   let { children, ...props }: ComponentProps<typeof parts.Error> = $props();
 </script>
 
-{#if children}
-  <parts.Error {...props} {children} />
-{:else}
-  <parts.Error {...props}>Couldn't restore. Try again.</parts.Error>
-{/if}
+{#snippet fallback()}
+  Couldn't restore. Try again.
+{/snippet}
+
+<parts.Error {...props} children={children ?? fallback} />

@@ -6,10 +6,6 @@
   let { children, ...props }: ComponentProps<typeof parts.Description> = $props();
 </script>
 
-{#if children}
-  <parts.Description {...props} {children} />
-{:else}
-  <parts.Description {...props}
-    >{#snippet children({ description }: { description: string })}{description}{/snippet}</parts.Description
-  >
-{/if}
+{#snippet fallback({ description }: { description: string })}{description}{/snippet}
+
+<parts.Description {...props} children={children ?? fallback} />

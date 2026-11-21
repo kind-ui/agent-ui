@@ -18,6 +18,7 @@ Last reviewed: framework layers Task Svelte-2
 ## Known and open (don't report again, check whether fixed)
 
 - **Passing `id` to a component's root unnames it in agent snapshots** (`@ui-sdk/svelte` 0.1.0-beta.1 keys the root by `id`; AGENTS.md "Svelte chat core"). Four agent cases skip on Svelte until UI SDK fixes it. Report upstream.
+- **`ComposerTriggerMenu` mounts its Trigger Menu one effect late** to work around UI SDK connecting it before the Token Input's editor exists (AGENTS.md "Svelte chat core"). Remove it once UI SDK fixes the order. Report upstream.
 
 - **UI SDK Slider renders its hidden form input after its root, not inside it as React's does** (`@ui-sdk/svelte` 0.1.0-beta.1, `slider/slider.svelte`). `internal-slider` isn't listed in the Svelte manifest until UI SDK matches React; no component composes it. Report upstream.
 - **Eleven wrappers exist but aren't listed in the manifest yet** (Task Svelte-1): the ten checked only on a component's parity page (alert-dialog, carousel, checkbox, drawer, radio, resizable, segmented-control, textarea, tooltip, tree) join with that component, and `toolbar` with the first component that composes it, since `check:registry-consumers` then needs a rendered toolbar button. Their exports match React's.

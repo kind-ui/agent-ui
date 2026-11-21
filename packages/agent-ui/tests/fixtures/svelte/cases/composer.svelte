@@ -50,16 +50,12 @@
   };
   let items: AttachmentItem[] = $state.raw(attachmentItems());
 
-  $effect(() => {
-    if (isFull) {
-      expose({
-        unmountComposer: () => (mounted = false),
-        remountComposer: () => (mounted = true),
-        setDraftKey: (next: string) => (draftKey = next),
-      });
-    }
-    if (variant === "attachments") attachmentsHost((change) => (items = change(items)));
+  expose({
+    unmountComposer: () => (mounted = false),
+    remountComposer: () => (mounted = true),
+    setDraftKey: (next: string) => (draftKey = next),
   });
+  attachmentsHost((change) => (items = change(items)));
 </script>
 
 {#if variant === "shell"}

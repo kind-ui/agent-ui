@@ -6,8 +6,6 @@
   let { children, ...props }: ComponentProps<typeof parts.Label> = $props();
 </script>
 
-{#if children}
-  <parts.Label {...props} {children} />
-{:else}
-  <parts.Label {...props}>{#snippet children({ label }: { label: string })}{label}{/snippet}</parts.Label>
-{/if}
+{#snippet fallback({ label }: { label: string })}{label}{/snippet}
+
+<parts.Label {...props} children={children ?? fallback} />
