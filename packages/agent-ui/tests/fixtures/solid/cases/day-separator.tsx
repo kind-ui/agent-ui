@@ -14,4 +14,11 @@ export const cases = {
       <DaySeparator id="undated" timeZone="UTC" />
     </div>
   ),
+  hydrate: () => (
+    <div>
+      <div id="hydrated">
+        <DaySeparator date="2026-11-18T09:30:00Z" timeZone="UTC" />
+      </div>
+    </div>
+  ),
 };
