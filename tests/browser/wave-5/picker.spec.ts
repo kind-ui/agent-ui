@@ -152,6 +152,8 @@ test.describe("on a small touch screen", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 
   test("the list is a sheet in its viewport, flush with the screen's bottom and sides", async ({ page }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
     await load(page);
     await trigger(page).tap();
     await expect(content(page)).toBeVisible();
@@ -162,6 +164,9 @@ test.describe("on a small touch screen", () => {
     await expect
       .poll(() => content(page).evaluate((el) => el.getBoundingClientRect().toJSON()))
       .toMatchObject({ left: 0, right: 390, bottom: 844 });
+    // A sheet that resizes before its opening motion's first frame throws from `@ui-sdk/core` (AGENTS.md).
+    await settled(page);
+    expect(errors).toEqual([]);
   });
 });
 
