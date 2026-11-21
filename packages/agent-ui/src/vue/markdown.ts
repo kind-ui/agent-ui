@@ -132,11 +132,12 @@ type MarkdownSlotState = { blocks: MarkdownBlock[]; highlight: Highlight | undef
 export const Markdown = defineComponent({
   name: "Markdown",
   inheritAttrs: false,
-  setup(_, { attrs }) {
+  setup(_, { attrs, slots }) {
     const highlight: HighlightRef = { current: undefined };
     provide(HIGHLIGHT, highlight);
     return () =>
       h(parts.Root, attrs, {
+        ...slots,
         default: ({ state }: { state: MarkdownSlotState }) => {
           highlight.current = state.highlight;
           // Keyed by place, not `block.key`, which changes with the streaming tail's text, so the tail updates in place.

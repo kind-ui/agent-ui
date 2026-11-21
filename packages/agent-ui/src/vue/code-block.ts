@@ -56,18 +56,25 @@ export const CodeBlock = defineComponent({
     header: { type: Boolean, default: true },
     streaming: { type: Boolean, default: undefined },
   },
-  setup(props, { attrs }) {
+  setup(props, { attrs, slots }) {
     return () =>
-      h(parts.Root, { ...attrs, streaming: props.streaming }, () => [
-        props.header &&
-          h(parts.Header, null, () => [
-            h(parts.Language, null, {
-              default: ({ state }: { state: { language: string | undefined } }) => state.language,
-            }),
-            h(parts.Wrap),
-            h(parts.Copy),
-          ]),
-        h(KindScrollArea, { stickToEnd: props.streaming ?? false }, scrollContent),
-      ]);
+      h(
+        parts.Root,
+        { ...attrs, streaming: props.streaming },
+        {
+          ...slots,
+          default: () => [
+            props.header &&
+              h(parts.Header, null, () => [
+                h(parts.Language, null, {
+                  default: ({ state }: { state: { language: string | undefined } }) => state.language,
+                }),
+                h(parts.Wrap),
+                h(parts.Copy),
+              ]),
+            h(KindScrollArea, { stickToEnd: props.streaming ?? false }, scrollContent),
+          ],
+        },
+      );
   },
 });

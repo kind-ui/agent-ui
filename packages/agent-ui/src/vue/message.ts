@@ -135,6 +135,7 @@ export const MessageAvatar = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(message.Avatar, attrs, {
+        ...slots,
         default:
           slots.default ??
           (({ state }: { state: MessageAvatarState }) =>
@@ -155,9 +156,9 @@ export const MessageHeader = message.Header;
 export const MessageAuthor = defineComponent({
   name: "MessageAuthor",
   inheritAttrs: false,
-  setup(_, { attrs }) {
+  setup(_, { attrs, slots }) {
     return () =>
-      h(message.Author, attrs, { default: ({ state }: { state: { name: string } }) => state.name });
+      h(message.Author, attrs, { ...slots, default: ({ state }: { state: { name: string } }) => state.name });
   },
 });
 
@@ -165,9 +166,9 @@ export const MessageAuthor = defineComponent({
 export const MessageTime = defineComponent({
   name: "MessageTime",
   inheritAttrs: false,
-  setup(_, { attrs }) {
+  setup(_, { attrs, slots }) {
     return () =>
-      h(message.Time, attrs, { default: ({ state }: { state: { label: string } }) => state.label });
+      h(message.Time, attrs, { ...slots, default: ({ state }: { state: { label: string } }) => state.label });
   },
 });
 
@@ -175,9 +176,12 @@ export const MessageTime = defineComponent({
 export const MessageDuration = defineComponent({
   name: "MessageDuration",
   inheritAttrs: false,
-  setup(_, { attrs }) {
+  setup(_, { attrs, slots }) {
     return () =>
-      h(message.Duration, attrs, { default: ({ state }: { state: { label: string } }) => state.label });
+      h(message.Duration, attrs, {
+        ...slots,
+        default: ({ state }: { state: { label: string } }) => state.label,
+      });
   },
 });
 
@@ -187,9 +191,12 @@ export const MessageOutcomeIcon = message.OutcomeIcon;
 export const MessageOutcomeText = defineComponent({
   name: "MessageOutcomeText",
   inheritAttrs: false,
-  setup(_, { attrs }) {
+  setup(_, { attrs, slots }) {
     return () =>
-      h(message.OutcomeText, attrs, { default: ({ state }: { state: { text: string } }) => state.text });
+      h(message.OutcomeText, attrs, {
+        ...slots,
+        default: ({ state }: { state: { text: string } }) => state.text,
+      });
   },
 });
 
@@ -198,7 +205,7 @@ export const MessageRetry = defineComponent({
   name: "MessageRetry",
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
-    return () => h(message.Retry, attrs, { default: slots.default ?? (() => "Retry") });
+    return () => h(message.Retry, attrs, { ...slots, default: slots.default ?? (() => "Retry") });
   },
 });
 
@@ -207,7 +214,7 @@ export const MessageContinue = defineComponent({
   name: "MessageContinue",
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
-    return () => h(message.Continue, attrs, { default: slots.default ?? (() => "Continue") });
+    return () => h(message.Continue, attrs, { ...slots, default: slots.default ?? (() => "Continue") });
   },
 });
 
@@ -221,7 +228,7 @@ export const MessageOutcome = defineComponent({
   name: "MessageOutcome",
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
-    return () => h(message.Outcome, attrs, { default: slots.default ?? outcome });
+    return () => h(message.Outcome, attrs, { ...slots, default: slots.default ?? outcome });
   },
 });
 
@@ -232,7 +239,7 @@ export const MessageEditCancel = defineComponent({
   name: "MessageEditCancel",
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
-    return () => h(message.EditCancel, attrs, { default: slots.default ?? (() => "Cancel") });
+    return () => h(message.EditCancel, attrs, { ...slots, default: slots.default ?? (() => "Cancel") });
   },
 });
 
@@ -241,7 +248,7 @@ export const MessageEditSave = defineComponent({
   name: "MessageEditSave",
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
-    return () => h(message.EditSave, attrs, { default: slots.default ?? (() => "Save") });
+    return () => h(message.EditSave, attrs, { ...slots, default: slots.default ?? (() => "Save") });
   },
 });
 
@@ -252,7 +259,7 @@ export const MessageEditActions = defineComponent({
   name: "MessageEditActions",
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
-    return () => h(message.EditActions, attrs, { default: slots.default ?? editActions });
+    return () => h(message.EditActions, attrs, { ...slots, default: slots.default ?? editActions });
   },
 });
 
@@ -264,7 +271,10 @@ export const MessageEditor = defineComponent({
   name: "MessageEditor",
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
-    return () => [h(message.Editor, attrs), slots.default ? slots.default() : h(MessageEditActions)];
+    return () => [
+      h(message.Editor, attrs, slots.render ? { render: slots.render } : undefined),
+      slots.default ? slots.default() : h(MessageEditActions),
+    ];
   },
 });
 
@@ -313,7 +323,7 @@ export const MessageRegenerateRows = defineComponent({
 
 /**
  * The regenerate menu: UI SDK's `MenuContent` holding the rows unless you pass a default slot, which gets the rows'
- * state (`v-slot="{ options }"`). Attributes go to it.
+ * state (`v-slot="{ state }"`, with `state.tryAgain` and `state.options`). Attributes go to it.
  */
 export const MessageRegenerateContent = defineComponent({
   name: "MessageRegenerateContent",
@@ -321,17 +331,18 @@ export const MessageRegenerateContent = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(message.RegenerateContent, null, {
-        default: ({ state }: { state: MessageRegenerateContentState }) =>
+        render: slots.render,
+        default: ({ state }: { state: MessageRegenerateContentState }) => {
+          // Each key by name: the slot's state lists none, so a spread or `v-bind` would be empty.
+          const rows: MessageRegenerateContentState = { tryAgain: state.tryAgain, options: state.options };
           // Hidden from agents, which use the Message's own `regenerate`. Kept in the page while closed, as on web,
           // so the mark keeps Menu out of the snapshot while only its trigger would show.
-          h(
+          return h(
             KindMenuContent,
             { align: "start", sideOffset: 6, keepMounted: true, "data-agent-hidden": "", ...attrs },
-            () =>
-              slots.default
-                ? slots.default(state)
-                : h(MessageRegenerateRows, { tryAgain: state.tryAgain, options: state.options }),
-          ),
+            () => (slots.default ? slots.default({ state: rows }) : h(MessageRegenerateRows, rows)),
+          );
+        },
       });
   },
 });
@@ -361,6 +372,7 @@ export const MessageRegenerate = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(message.Regenerate, attrs, {
+        render: slots.render,
         default: ({ state }: { state: MessageRegenerateState }) => {
           const children = slots.default?.() ?? [];
           const menu = state.menu;
@@ -396,9 +408,12 @@ export const MessageBranchPrevious = message.BranchPrevious;
 export const MessageBranchLabel = defineComponent({
   name: "MessageBranchLabel",
   inheritAttrs: false,
-  setup(_, { attrs }) {
+  setup(_, { attrs, slots }) {
     return () =>
-      h(message.BranchLabel, attrs, { default: ({ state }: { state: { label: string } }) => state.label });
+      h(message.BranchLabel, attrs, {
+        ...slots,
+        default: ({ state }: { state: { label: string } }) => state.label,
+      });
   },
 });
 export const MessageBranchNext = message.BranchNext;

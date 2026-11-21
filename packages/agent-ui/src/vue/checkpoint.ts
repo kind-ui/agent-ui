@@ -34,17 +34,18 @@ export const Checkpoint = defineComponent({
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
     return () =>
-      h(parts.Root, attrs, () =>
-        slots.default
-          ? slots.default()
-          : [
-              h(CheckpointLabel),
-              h(CheckpointDescription),
-              h(CheckpointLine),
-              h(CheckpointRestore),
-              h(CheckpointRestored),
-            ],
-      );
+      h(parts.Root, attrs, {
+        ...slots,
+        default:
+          slots.default ??
+          (() => [
+            h(CheckpointLabel),
+            h(CheckpointDescription),
+            h(CheckpointLine),
+            h(CheckpointRestore),
+            h(CheckpointRestored),
+          ]),
+      });
   },
 });
 
@@ -57,7 +58,8 @@ export const CheckpointLabel = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Label, attrs, {
-        default: (scope: Scope<{ label: string }>) => slots.default?.(scope) ?? scope.state.label,
+        ...slots,
+        default: slots.default ?? (({ state }: Scope<{ label: string }>) => state.label),
       });
   },
 });
@@ -69,8 +71,8 @@ export const CheckpointDescription = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Description, attrs, {
-        default: (scope: Scope<{ description?: string }>) =>
-          slots.default?.(scope) ?? scope.state.description,
+        ...slots,
+        default: slots.default ?? (({ state }: Scope<{ description?: string }>) => state.description),
       });
   },
 });
@@ -98,10 +100,20 @@ export const CheckpointRestore = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Restore, attrs, {
-        default: (scope: Scope<CheckpointDialogState>) => {
-          if (slots.default) return slots.default(scope);
-          // The slot's state is a proxy that tracks each key read and lists none, so a rest spread would be empty.
-          const { controller, dismissible, busy, initialFocus, title, description } = scope.state;
+        ...slots,
+        default: ({ state }: Scope<CheckpointDialogState>) => {
+          // The slot's state is a proxy that tracks each key read and lists none, so it's copied key by key for a
+          // slot that binds it with `v-bind`.
+          const dialog: CheckpointDialogState = {
+            controller: state.controller,
+            dismissible: state.dismissible,
+            busy: state.busy,
+            initialFocus: state.initialFocus,
+            title: state.title,
+            description: state.description,
+          };
+          if (slots.default) return slots.default({ state: dialog });
+          const { controller, dismissible, busy, initialFocus, title, description } = dialog;
           return h(KindAlertDialog, { controller, dismissible }, () => [
             restoreTrigger(),
             h(CheckpointDialog, { busy, initialFocus, title, description }),
@@ -150,14 +162,15 @@ export const CheckpointRestored = defineComponent({
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
     return () =>
-      h(parts.Restored, attrs, () =>
-        slots.default
-          ? slots.default()
-          : [
-              h("span", { "aria-hidden": "true", "data-status-mark": "", "data-status": "complete" }),
-              "Restored",
-            ],
-      );
+      h(parts.Restored, attrs, {
+        ...slots,
+        default:
+          slots.default ??
+          (() => [
+            h("span", { "aria-hidden": "true", "data-status-mark": "", "data-status": "complete" }),
+            "Restored",
+          ]),
+      });
   },
 });
 
@@ -166,7 +179,8 @@ export const CheckpointError = defineComponent({
   name: "CheckpointError",
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
-    return () => h(parts.Error, attrs, () => slots.default?.() ?? "Couldn't restore. Try again.");
+    return () =>
+      h(parts.Error, attrs, { ...slots, default: slots.default ?? (() => "Couldn't restore. Try again.") });
   },
 });
 
@@ -175,7 +189,7 @@ export const CheckpointCancel = defineComponent({
   name: "CheckpointCancel",
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
-    return () => h(parts.Cancel, attrs, () => slots.default?.() ?? "Cancel");
+    return () => h(parts.Cancel, attrs, { ...slots, default: slots.default ?? (() => "Cancel") });
   },
 });
 
@@ -185,19 +199,20 @@ export const CheckpointConfirm = defineComponent({
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
     return () =>
-      h(parts.Confirm, attrs, () =>
-        slots.default
-          ? slots.default()
-          : [
-              // The mark shows only while the restore is pending (controls.css).
-              h("span", {
-                "data-kind-pending-mark": "",
-                "data-status-mark": "",
-                "data-status": "running",
-                "aria-hidden": "true",
-              }),
-              "Restore",
-            ],
-      );
+      h(parts.Confirm, attrs, {
+        ...slots,
+        default:
+          slots.default ??
+          (() => [
+            // The mark shows only while the restore is pending (controls.css).
+            h("span", {
+              "data-kind-pending-mark": "",
+              "data-status-mark": "",
+              "data-status": "running",
+              "aria-hidden": "true",
+            }),
+            "Restore",
+          ]),
+      });
   },
 });

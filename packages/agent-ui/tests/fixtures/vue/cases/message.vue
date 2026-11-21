@@ -247,8 +247,8 @@ onMounted(() => {
           <MessageRegenerate>
             <KindToolbarButton aria-label="Regenerate" />
             <template v-if="variant === 'custom-rows'" #menuContent>
-              <MessageRegenerateContent v-slot="{ options }">
-                <KindMenuItem v-for="option in options" :key="option.id" :value="option.id" :label="option.label">
+              <MessageRegenerateContent v-slot="{ state }">
+                <KindMenuItem v-for="option in state.options" :key="option.id" :value="option.id" :label="option.label">
                   {{ option.label.toUpperCase() }}
                 </KindMenuItem>
               </MessageRegenerateContent>

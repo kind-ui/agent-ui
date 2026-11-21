@@ -5,7 +5,7 @@ import {
   suggestionPrimitive,
 } from "@kind-ui/agent-ui/core";
 import { createParts, usePart, usePrimitive } from "@ui-sdk/vue/primitive";
-import { type Component, defineComponent, h, type PropType } from "vue";
+import { type Component, type ComponentObjectPropsOptions, defineComponent, h, type PropType } from "vue";
 import {
   KindCarousel,
   KindCarouselContent,
@@ -34,25 +34,24 @@ const chevronLeft = chevron("m15 18-6-6 6-6");
 const chevronRight = chevron("m9 18 6-6-6-6");
 
 // The generated root always hands the primitive an `onPick` that emits `pick`, so the chips would stay pickable
-// without a listener. This root passes `onPick` only while the host listens, as React's does.
+// without a listener. This root passes `onPick` only while the host listens, as React's does, and takes every other
+// option from the generated root's props.
+const optionProps = (parts.Root as unknown as { props: ComponentObjectPropsOptions }).props;
+const optionKeys = Object.keys(optionProps);
+
 const Root = defineComponent({
   name: "SuggestionRoot",
   inheritAttrs: false,
   props: {
-    suggestions: Array as PropType<SuggestionOptions["suggestions"]>,
-    label: String,
-    layout: String as PropType<SuggestionOptions["layout"]>,
-    motion: String as PropType<SuggestionOptions["motion"]>,
+    ...optionProps,
     onPick: Function as PropType<NonNullable<SuggestionOptions["onPick"]>>,
   },
   setup(props, { attrs }) {
-    const handle = usePrimitive(suggestionPrimitive, () => ({
-      suggestions: props.suggestions,
-      label: props.label,
-      layout: props.layout,
-      motion: props.motion,
-      onPick: props.onPick,
-    }));
+    const handle = usePrimitive(suggestionPrimitive, () => {
+      const options: Record<string, unknown> = { onPick: props.onPick };
+      for (const key of optionKeys) options[key] = (props as Record<string, unknown>)[key];
+      return options as SuggestionOptions;
+    });
     return usePart(handle, "root", undefined, () => attrs, "div");
   },
 });
@@ -68,6 +67,7 @@ export const Suggestion = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(Root, attrs, {
+        ...slots,
         default: ({ state }: { state: SuggestionRootState }) =>
           state.layout === "wrap"
             ? (slots.default?.() ??
@@ -95,7 +95,11 @@ export const SuggestionViewport = defineComponent({
   name: "SuggestionViewport",
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
-    return () => h(KindCarouselViewport, attrs, () => h(KindCarouselContent, null, () => slots.default?.()));
+    return () =>
+      h(KindCarouselViewport, attrs, {
+        ...slots,
+        default: () => h(KindCarouselContent, null, () => slots.default?.()),
+      });
   },
 }) as unknown as typeof KindCarouselViewport;
 

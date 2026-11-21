@@ -81,6 +81,7 @@ export const FeedbackThumbs = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Thumbs, attrs, {
+        ...slots,
         default: ({ state }: { state: FeedbackThumbsState }) =>
           // Hidden from agents, which use the Feedback's own `rate`.
           h(
@@ -106,20 +107,32 @@ export const FeedbackThanks = withDefault(parts.Thanks, "FeedbackThanks", () => 
 /** "Add a comment", unless you fill its slot. Names the comment box; the styles keep it for assistive technology only. */
 export const FeedbackTitle = withDefault(parts.Title, "FeedbackTitle", () => "Add a comment");
 
-/** UI SDK's Textarea, unless you fill its slot, which gets its props as `state`, its placeholder keyed on the rating. */
-export const FeedbackCommentText = withDefault(
-  parts.CommentText,
-  "FeedbackCommentText",
-  ({ state }: { state: FeedbackCommentTextState }) =>
-    h(KindTextarea, {
-      controller: state.controller,
-      defaultValue: state.defaultValue,
-      readOnly: state.readOnly,
-      placeholder: state.placeholder,
-      "aria-label": state["aria-label"],
-      rows: 3,
-    }),
-);
+/**
+ * UI SDK's Textarea, unless you fill its slot, which gets its props as `state` (`<textarea v-bind="state">`), its
+ * placeholder keyed on the rating.
+ */
+export const FeedbackCommentText = defineComponent({
+  name: "FeedbackCommentText",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () =>
+      h(parts.CommentText, attrs, {
+        ...slots,
+        default: ({ state }: { state: FeedbackCommentTextState }) => {
+          // The slot's state is a proxy that tracks each key read and lists none, so it's copied key by key for a
+          // slot that binds it with `v-bind`.
+          const props: FeedbackCommentTextState = {
+            controller: state.controller,
+            defaultValue: state.defaultValue,
+            readOnly: state.readOnly,
+            placeholder: state.placeholder,
+            "aria-label": state["aria-label"],
+          };
+          return slots.default ? slots.default({ state: props }) : h(KindTextarea, { ...props, rows: 3 });
+        },
+      });
+  },
+}) as unknown as typeof parts.CommentText;
 
 /** Sends the comment through `onComment`. Reads "Send" unless you fill its slot. */
 export const FeedbackCommentSend = withDefault(parts.CommentSend, "FeedbackCommentSend", () => "Send");

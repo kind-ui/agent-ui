@@ -25,14 +25,17 @@ export const MarkdownTable = defineComponent({
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
     return () =>
-      h(parts.Root, attrs, () => [
-        h(parts.Header, null, () => h(parts.Copy)),
-        h(KindScrollArea, null, () => [
-          h(KindScrollAreaViewport, null, () =>
-            h(KindScrollAreaContent, null, () => h(parts.Table, null, () => slots.default?.())),
-          ),
-          h(KindScrollAreaScrollbar, { orientation: "horizontal" }, () => h(KindScrollAreaThumb)),
-        ]),
-      ]);
+      h(parts.Root, attrs, {
+        ...slots,
+        default: () => [
+          h(parts.Header, null, () => h(parts.Copy)),
+          h(KindScrollArea, null, () => [
+            h(KindScrollAreaViewport, null, () =>
+              h(KindScrollAreaContent, null, () => h(parts.Table, null, () => slots.default?.())),
+            ),
+            h(KindScrollAreaScrollbar, { orientation: "horizontal" }, () => h(KindScrollAreaThumb)),
+          ]),
+        ],
+      });
   },
 });

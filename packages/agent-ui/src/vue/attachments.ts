@@ -5,28 +5,29 @@ import {
   attachmentsPrimitive,
 } from "@kind-ui/agent-ui/core";
 import { createParts, usePart, usePrimitive } from "@ui-sdk/vue/primitive";
-import { defineComponent, h, type PropType } from "vue";
+import { type ComponentObjectPropsOptions, defineComponent, h, type PropType } from "vue";
 
 const parts = createParts(attachmentsPrimitive, { root: "ul", item: "li", remove: "span" });
 
 // The generated root always hands the primitive an `onRemove` that emits `remove`, so chips would stay removable
-// without a listener. This root passes `onRemove` only while the host listens, as React's does.
+// without a listener. This root passes `onRemove` only while the host listens, as React's does, and takes every other
+// option from the generated root's props.
+const optionProps = (parts.Root as unknown as { props: ComponentObjectPropsOptions }).props;
+const optionKeys = Object.keys(optionProps);
+
 const Root = defineComponent({
   name: "AttachmentsRoot",
   inheritAttrs: false,
   props: {
-    items: Array as PropType<AttachmentsOptions["items"]>,
+    ...optionProps,
     onRemove: Function as PropType<NonNullable<AttachmentsOptions["onRemove"]>>,
-    focusFallback: Function as PropType<AttachmentsOptions["focusFallback"]>,
-    motion: String as PropType<AttachmentsOptions["motion"]>,
   },
   setup(props, { attrs }) {
-    const handle = usePrimitive(attachmentsPrimitive, () => ({
-      items: props.items,
-      onRemove: props.onRemove,
-      focusFallback: props.focusFallback,
-      motion: props.motion,
-    }));
+    const handle = usePrimitive(attachmentsPrimitive, () => {
+      const options: Record<string, unknown> = { onRemove: props.onRemove };
+      for (const key of optionKeys) options[key] = (props as Record<string, unknown>)[key];
+      return options as AttachmentsOptions;
+    });
     return usePart(handle, "root", undefined, () => attrs, "ul");
   },
 });
@@ -36,12 +37,13 @@ export const Attachment = defineComponent({
   name: "Attachment",
   inheritAttrs: false,
   props: { value: { type: String, required: true } },
-  setup(props, { attrs }) {
+  setup(props, { attrs, slots }) {
     return () =>
       h(
         parts.Item,
         { ...attrs, value: props.value },
         {
+          ...slots,
           default: ({ state }: { state: AttachmentState }) => [
             state.preview
               ? h("img", { "data-preview": "", src: state.preview, alt: "" })
@@ -68,6 +70,6 @@ export const Attachments = defineComponent({
   name: "Attachments",
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
-    return () => h(Root, attrs, { default: slots.default ?? rows });
+    return () => h(Root, attrs, { ...slots, default: slots.default ?? rows });
   },
 }) as unknown as typeof parts.Root;

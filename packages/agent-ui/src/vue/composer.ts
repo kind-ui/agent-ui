@@ -16,7 +16,7 @@ import {
   TokenInputToken,
   TokenInputTokenRemove,
 } from "@ui-sdk/vue/token-input";
-import { defineComponent, h, type PropType } from "vue";
+import { type ComponentObjectPropsOptions, defineComponent, h, type PropType } from "vue";
 import { Attachments } from "./attachments.js";
 import {
   KindTriggerMenu,
@@ -54,55 +54,36 @@ const tokenInputProps = (tokenInput: ComposerInputState["tokenInput"]) => ({
   disabled: tokenInput.disabled,
 });
 
-const optional = { type: Boolean, default: undefined } as const;
-
 // The generated root always hands the primitive an `onStop` that emits `stop`, so Stop would take Send's place
-// without a listener. This root passes `onStop` only while the host listens, as React's does.
+// without a listener. This root passes `onStop` only while the host listens, as React's does, and takes every other
+// option from the generated root's props, `modelValue` included, so a bare `v-model` still works.
+const { modelValue, ...optionProps } = (parts.Root as unknown as { props: ComponentObjectPropsOptions })
+  .props;
+const optionKeys = Object.keys(optionProps);
+
 const Root = defineComponent({
   name: "ComposerRoot",
   inheritAttrs: false,
   props: {
-    value: Object as PropType<ComposerOptions["value"]>,
-    defaultValue: Object as PropType<ComposerOptions["defaultValue"]>,
+    ...optionProps,
+    modelValue: modelValue as PropType<ComposerOptions["value"]>,
     onValueChange: Function as PropType<NonNullable<ComposerOptions["onValueChange"]>>,
-    onSubmit: Function as PropType<ComposerOptions["onSubmit"]>,
     onStop: Function as PropType<NonNullable<ComposerOptions["onStop"]>>,
-    submitOn: String as PropType<ComposerOptions["submitOn"]>,
-    mentions: Array as PropType<ComposerOptions["mentions"]>,
-    commands: Array as PropType<ComposerOptions["commands"]>,
-    accept: String,
-    maxSize: Number,
-    history: Array as PropType<ComposerOptions["history"]>,
-    draftKey: String,
-    draftStorage: Object as PropType<ComposerOptions["draftStorage"]>,
-    disabled: optional,
-    agentConfirm: optional,
-    motion: String as PropType<ComposerOptions["motion"]>,
   },
-  emits: ["update:value"],
+  emits: ["update:value", "update:modelValue"],
   setup(props, { attrs, emit }) {
     const onValueChange: NonNullable<ComposerOptions["onValueChange"]> = (value, details) => {
       props.onValueChange?.(value, details);
-      if (!details.canceled) emit("update:value", value);
+      if (details.canceled) return;
+      emit("update:value", value);
+      emit("update:modelValue", value);
     };
-    const handle = usePrimitive(composerPrimitive, () => ({
-      value: props.value,
-      defaultValue: props.defaultValue,
-      onValueChange,
-      onSubmit: props.onSubmit,
-      onStop: props.onStop,
-      submitOn: props.submitOn,
-      mentions: props.mentions,
-      commands: props.commands,
-      accept: props.accept,
-      maxSize: props.maxSize,
-      history: props.history,
-      draftKey: props.draftKey,
-      draftStorage: props.draftStorage,
-      disabled: props.disabled,
-      agentConfirm: props.agentConfirm,
-      motion: props.motion,
-    }));
+    const handle = usePrimitive(composerPrimitive, () => {
+      const options: Record<string, unknown> = { onValueChange, onStop: props.onStop };
+      for (const key of optionKeys) options[key] = (props as Record<string, unknown>)[key];
+      options.value ??= props.modelValue;
+      return options as ComposerOptions;
+    });
     return usePart(handle, "root", undefined, () => attrs, "form");
   },
 });
@@ -117,6 +98,7 @@ export const Composer = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(Root, attrs, {
+        ...slots,
         default: ({ state }: { state: ComposerRootState }) =>
           h(FileInput, fileInputProps(state.fileInput), () =>
             h(FileInputDropzone, null, () => slots.default?.()),
@@ -139,6 +121,7 @@ export const ComposerInput = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Input, null, {
+        render: slots.render,
         default: ({ state }: { state: ComposerInputState }) =>
           h(TokenInput, tokenInputProps(state.tokenInput), {
             default: () => [h(TokenInputEditor, attrs), slots.default?.()],
@@ -152,9 +135,10 @@ export const ComposerInput = defineComponent({
 export const ComposerTriggerMenu = defineComponent({
   name: "ComposerTriggerMenu",
   inheritAttrs: false,
-  setup(_, { attrs }) {
+  setup(_, { attrs, slots }) {
     return () =>
       h(parts.TriggerMenu, null, {
+        render: slots.render,
         default: ({ state }: { state: ComposerTriggerMenuState }) =>
           h(KindTriggerMenu, { triggers: state.triggers }, () =>
             h(KindTriggerMenuContent, attrs, () => [
@@ -181,6 +165,7 @@ export const ComposerAttachments = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Attachments, null, {
+        render: slots.render,
         default: ({ state }: { state: ComposerAttachmentsState }) =>
           h(
             Attachments,
@@ -192,7 +177,8 @@ export const ComposerAttachments = defineComponent({
               focusFallback: state.focusFallback,
               onRemove: state.onRemove,
             },
-            slots,
+            // `#render` is the part's; the chips' slot is the Attachments'.
+            slots.default ? { default: slots.default } : undefined,
           ),
       });
   },
@@ -216,13 +202,11 @@ export const ComposerRestored = defineComponent({
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
     return () =>
-      h(
-        parts.Restored,
-        attrs,
-        slots.default
-          ? slots
-          : () => [h("span", "Draft restored"), h(ComposerDiscard, null, () => "Discard")],
-      );
+      h(parts.Restored, attrs, {
+        ...slots,
+        default:
+          slots.default ?? (() => [h("span", "Draft restored"), h(ComposerDiscard, null, () => "Discard")]),
+      });
   },
 });
 
