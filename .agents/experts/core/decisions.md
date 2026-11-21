@@ -6,6 +6,7 @@ Last reviewed: `bfb9bb7` (Design Wave 1 Batch D)
 
 ## Settled
 
+- **Core is the one contract for five render layers (framework layers plan, 2026-11-20):** the Vue, Svelte and Solid layers call `createParts` on the same primitives. A behavior gap a new layer finds is fixed here, with React's and Web's specs for that component run again; never patched in one render layer. Don't propose framework-specific options, state or actions.
 - **`appendText` returns `true` for a controlled composer before the owner applies the value (Task 17):** it goes through `createChange`, as `setValue` does.
 - **Dictation keeps its run when the host passes a new `source` object (Wave 5 Task 11):** only dropping `source` cancels, since React hosts often write the source inline, a new object each render; the new source is used from the next start.
 - **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio group in Model Control, a Settings Menu (`settingsBase`), listed in the menu itself after the models since Design Wave 1 Batch B (`inline` choice rows). Don't propose a slider, a submenu or a nested popover for effort.

@@ -6,6 +6,7 @@ Last reviewed: `bfb9bb7` (Design Wave 1 Batch D)
 
 ## Settled
 
+- **React is the structural reference for the Vue, Svelte and Solid layers (framework layers plan, 2026-11-20):** they export the same part names and render the same default children and classes, which `scripts/tests/parity.test.mjs` and `tests/browser/parity.spec.ts` compare against React. Renaming or restructuring a React part is a change to all five layers.
 - **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.
 - **Fixture `main` files carry no comment for the case `<script type="module">`** (Wave 4 Task 12): fixtures hold no comments; the reason is in AGENTS.md "Fixture servers".
 - **A streamed Reasoning chunk renders its step parts once each** (`text` lives in step state): a fixed cost per chunk that doesn't grow with the text, so `budgets.spec.ts` has no Reasoning case. The default parts are one shared element tree.

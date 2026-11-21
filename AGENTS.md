@@ -17,7 +17,7 @@ Every component is built on [UI SDK](https://ui-sdk.dev/docs), not around it. Fr
 **Before writing or changing a component, read:**
 
 1. The `ui-sdk` skill: `.agents/skills/ui-sdk/SKILL.md` (installed with `npx skills add`; the same skill ships at `node_modules/@ui-sdk/core/skills/ui-sdk/SKILL.md`). Follow it.
-2. `node_modules/@ui-sdk/<framework>/docs/llms.txt`, where `<framework>` is `react` or `web`. It is the index; read it first.
+2. `node_modules/@ui-sdk/<framework>/docs/llms.txt`, where `<framework>` is `react`, `web`, `vue`, `svelte` or `solid`. It is the index; read it first. For Vue, Svelte and Solid, read that framework's skill next ("Skills and experts").
 3. To build a new component, search `node_modules/@ui-sdk/<framework>/docs/core.md` by heading for the behaviors you need, and read `docs/rendering.md` next to it.
 4. The docs page of every UI SDK component you compose, for example `docs/components/collapsible.md`.
 
@@ -34,7 +34,7 @@ The installed docs describe the exact pinned version. Where the spec or plan nam
 
 ## Skills and experts
 
-Project skills live in `.agents/skills/` (`.claude/skills` links to it); [its README](.agents/skills/README.md) says when to use each. Write with [`write-code`](.agents/skills/write-code/SKILL.md), finish with [`unslop`](.agents/skills/unslop/SKILL.md), then run [`expert-review`](.agents/skills/expert-review/SKILL.md). For the docs site, write with [`write-docs`](.agents/skills/write-docs/SKILL.md) and [`fumadocs`](.agents/skills/fumadocs/SKILL.md); `.mcp.json` and `.vscode/mcp.json` register Fumadocs' docs MCP server. Layer experts (core, react, web, styles, markdown) live in `.agents/experts/`; `node scripts/expert-scope.mjs --base <ref>` shows which ones a diff reaches. Third-party attribution lives only in `THIRD_PARTY_NOTICES.md`.
+Project skills live in `.agents/skills/` (`.claude/skills` links to it); [its README](.agents/skills/README.md) says when to use each. Write with [`write-code`](.agents/skills/write-code/SKILL.md), finish with [`unslop`](.agents/skills/unslop/SKILL.md), then run [`expert-review`](.agents/skills/expert-review/SKILL.md). For the docs site, write with [`write-docs`](.agents/skills/write-docs/SKILL.md) and [`fumadocs`](.agents/skills/fumadocs/SKILL.md); `.mcp.json` and `.vscode/mcp.json` register Fumadocs' docs MCP server. The Vue, Svelte and Solid layers (the framework layers plan, `docs/superpowers/plans/2026-11-20-agent-ui-framework-layers.md`) each have one framework skill: [`vue-best-practices`](.agents/skills/vue-best-practices/SKILL.md) for `src/vue/`, [`svelte-core-bestpractices`](.agents/skills/svelte-core-bestpractices/SKILL.md) for `src/svelte/` and [`solid-best-practices`](.agents/skills/solid-best-practices/SKILL.md) (Solid 2) for `src/solid/`, read after `ui-sdk` and that framework's `llms.txt`. Layer experts (core, react, web, styles, markdown) live in `.agents/experts/`; `node scripts/expert-scope.mjs --base <ref>` shows which ones a diff reaches. Third-party attribution lives only in `THIRD_PARTY_NOTICES.md`.
 
 Design: [`docs/design-principles.md`](docs/design-principles.md) says what we build and when not to. Three design skills check it: [`apple-design`](.agents/skills/apple-design/SKILL.md) for motion and interaction feel, [`impeccable`](.agents/skills/impeccable/SKILL.md) (`audit`, `critique`, `polish`, `distill`) for the rendered result, and [`web-interface-guidelines`](.agents/skills/web-interface-guidelines/SKILL.md) as the interaction checklist. Boundaries: `unslop` owns the code's prose and shape, `expert-review` owns each layer's rules (tokens, reduced motion, layout shift, UI SDK's focus and ARIA), and the design skills judge what a person sees and feels. Don't report a finding twice; where a design skill restates an expert's checklist item, the expert's `decisions.md` wins.
 
@@ -273,6 +273,9 @@ Composite scripts go through `scripts/run-checks.mjs`, and every stage is requir
 | `adapters/ai-sdk` | `packages/agent-ui/src/adapters/ai-sdk/` | `types`, `ai` types | `core`, React, `@ui-sdk/*` |
 | `react` | `packages/agent-ui/src/react/` | `@kind-ui/agent-ui/core`, `@ui-sdk/react` | `ai`, `web` |
 | `web` | `packages/agent-ui/src/web/` | `@kind-ui/agent-ui/core`, `@ui-sdk/web` | React, `ai` |
+| `vue` (framework layers plan) | `packages/agent-ui/src/vue/` | `@kind-ui/agent-ui/core`, `@ui-sdk/vue`, `vue` | React, `ai`, other layers |
+| `svelte` (framework layers plan) | `packages/agent-ui/src/svelte/` | `@kind-ui/agent-ui/core`, `@ui-sdk/svelte`, `svelte` | React, `ai`, other layers |
+| `solid` (framework layers plan) | `packages/agent-ui/src/solid/` | `@kind-ui/agent-ui/core`, `@ui-sdk/solid`, `solid-js`, `@solidjs/web` | React, `ai`, other layers |
 
 Render layers import core only through `@kind-ui/agent-ui/core`, never a relative path, so the registry can copy them byte-for-byte.
 
