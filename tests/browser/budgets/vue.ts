@@ -9,6 +9,12 @@ export const budgets: Partial<Budgets> = {
 
   // framework-vue-2: chat core
 
+  // A streamed token updates only the last row's components, as many at 10 rows as at 500.
+  conversationStream: { writes: 1, renders: 11, notified: 0 },
+  conversationFollow: { layoutReads: 12 },
+  markdownStream: { parses: 1, writes: 2, renders: 5, notified: 0 },
+  remount: { nodes: 0, listeners: 0 },
+
   // framework-vue-3: composer controls
 
   contextChip: { writes: 5, renders: 9, notified: 0, layoutReads: 0 },

@@ -12,6 +12,19 @@ export default {
 
     // framework-vue-2: chat core
 
+    "markdown",
+    "code-block",
+    "markdown-table",
+    "conversation",
+    "message",
+    "composer",
+    "attachments",
+    "suggestion",
+    "feedback",
+    "confirmation",
+    "question",
+    "checkpoint",
+
     // framework-vue-3: composer controls
 
     "picker",
@@ -53,6 +66,16 @@ export default {
     "token-input",
     "trigger-menu",
 
+    // framework-vue-2: chat core
+
+    "alert-dialog",
+    "carousel",
+    "checkbox",
+    "radio",
+    "textarea",
+    "toolbar",
+    "tooltip",
+
     // framework-vue-3: composer controls
 
     "segmented-control",
@@ -68,9 +91,19 @@ export default {
 
     // framework-vue-2: chat core
 
+    "wave-1/markdown.spec.ts",
+    "wave-1/conversation.spec.ts",
+    "wave-1/message.spec.ts",
+    "wave-1/composer.spec.ts",
+    "wave-3/suggestion.spec.ts",
+    "wave-3/feedback.spec.ts",
+    "wave-3/confirmation.spec.ts",
+    "wave-3/question.spec.ts",
+    "wave-3/checkpoint.spec.ts",
+    "wave-1/budgets.spec.ts",
+
     // framework-vue-3: composer controls
 
-    "wave-1/budgets.spec.ts",
     "wave-3/reasoning-effort.spec.ts",
     "wave-3/context-meter.spec.ts",
     "wave-3/model-selector.spec.ts",

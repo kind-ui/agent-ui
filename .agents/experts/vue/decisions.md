@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `8bcbf59` (Task Vue-1)
+Last reviewed: `9484e6dc` (Task Vue-2)
 
 ## Settled
 
@@ -13,8 +13,14 @@ Last reviewed: `8bcbf59` (Task Vue-1)
 - **Part state is read key by key (Task Vue-3):** `@ui-sdk/vue`'s slot `state` is a get-only tracking proxy, so a spread copies nothing; render files read each key (`menuProps`, `menuTriggerProps`).
 - **Presence-offered callbacks are function props (Task Vue-3):** `createParts` always sets a callback to an emitter, so an option core reads with `typeof options.onX === "function"` is re-declared `"action"` on a derived primitive in its render file (`picker.ts`); `@x` still binds it.
 
+- **Hand-written roots for callbacks that offer an action (Task Vue-2):** Suggestion, Attachments, Message and Composer build their root with `usePrimitive` and `usePart`, taking the generated root's runtime `props` plus their callbacks as `Function` props, because the generated root always passes an emitter for every `kind: "callback"` option (AGENTS.md "Vue chat core"). Composer's keeps `v-model` and `v-model:value`.
+- **Slots that hand part state to the host get plain objects (Task Vue-2):** `CheckpointRestore`, `FeedbackCommentText` and `MessageRegenerateContent` build `{ state }` key by key, since UI SDK's slot state proxy doesn't survive `v-bind` or a spread.
+- **`conversation.vue` builds its cases with `defineComponent` and `h()` (Task Vue-2):** `Row`, `Chat`, `Remount` and `States` need their own component boundaries for the render counts `budgets.spec.ts` measures.
+
 ## Known and open (don't report again, check whether fixed)
 
 - **A server-rendered `KindAvatar` whose image loads before hydration warns "Hydration node mismatch" (Task Vue-1):** the `<img>` (a `data:` URL in `?c=internal&case=avatar`) has loaded by the time Vue hydrates, so UI SDK's Avatar is `loaded` and its client render drops the `AvatarFallback` the server rendered. UI SDK's; report upstream. `hydration.spec.ts` joins the manifest in Task Vue-8.
 - **`internal.spec.ts`'s composition test ("a Kind part rendered as a toolbar button gets one class list") skips every layer but React:** the spec is shared, so Vue's run waits for a shared change; `parity.spec.ts` on `?c=internal&case=toolbar-menu` compares the trigger's sorted class list with React's and passes.
 - **A template `ref` on a part inside a `#render` slot stays `null` (Task Vue-1):** the slot's `props` carry the part's own `ref`, and `v-bind="props"` replaces the caller's, for bare UI SDK parts as for Kind ones. UI SDK's; report upstream.
+- **Slot `state` is a proxy with no keys (Task Vue-2):** it answers reads, but a spread, `v-bind` and `in` see nothing. UI SDK's; report upstream.
+- **The generated root reports every callback as set (Task Vue-2):** `createParts`' root passes an emitter for every `kind: "callback"` option whether the host listens or not. UI SDK's; report upstream, then drop the hand-written roots.
