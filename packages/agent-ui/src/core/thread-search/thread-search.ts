@@ -246,6 +246,15 @@ const rank = (items: PickerItem<unknown>[], actions: PickerAction<unknown>[], qu
   };
 };
 
+// One array per label: a layer that runs `sync` on every store write (Solid) compares it by identity, and a new array
+// each time made opening the dialog update forever.
+const newActions = new Map<string, PickerAction<unknown>[]>();
+const newAction = (label: string) => {
+  let actions = newActions.get(label);
+  if (!actions) newActions.set(label, (actions = [{ id: NEW, label }]));
+  return actions;
+};
+
 const base = pickerBase<ThreadSearchOptions>({
   kind: "thread-search",
   label: "Search chats",
@@ -259,8 +268,7 @@ const base = pickerBase<ThreadSearchOptions>({
   toItems: (options) => rows(options).items,
   emptyItems: (options) => rows(options).recent,
   actions: {
-    of: (options) =>
-      typeof options.onNew === "function" ? [{ id: NEW, label: options.newLabel ?? "New chat" }] : [],
+    of: (options) => (typeof options.onNew === "function" ? newAction(options.newLabel ?? "New chat") : []),
     run: (context, _id, details) => dispatch(context, "onNew", context.store.get().query, details),
   },
 });
