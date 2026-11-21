@@ -20,6 +20,8 @@ export const budgets: Partial<Budgets> = {
 
   // framework-solid-5: step family
 
+  toolStream: { writes: 6, renders: 0, notified: 3 },
+
   // framework-solid-6: developer output
 
   // framework-solid-7: Wave 6 shell
