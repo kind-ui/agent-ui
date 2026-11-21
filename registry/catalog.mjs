@@ -384,6 +384,9 @@ for (const [layer, { suffix }] of Object.entries(layers)) {
       type: "registry:ui",
       layer,
       hidden: true,
+      title: `Internal ${name.replace(/(^|-)(\w)/g, (_, dash, letter) => (dash && " ") + letter.toUpperCase())}${layer === "web" ? " (Web Components)" : ""}`,
+      description: "Internal primitive used by Agent UI components; add a component instead.",
+      categories: ["internal"],
       files:
         layer === "react"
           ? [source(layer, `internal/${name}`), "packages/agent-ui/src/react/internal/kind-class.ts"]

@@ -55,13 +55,14 @@ test("a relative import no dependency ships fails", () => {
   assert.match(errorsWith({ items }), /imports \.\/internal\/scroll-area\.js/);
 });
 
-test("unknown registry dependencies and visible internals fail", () => {
+test("unknown registry dependencies, visible internals and missing descriptions fail", () => {
   const items = [
     ...catalog.items,
     { ...item("step"), name: "y", registryDependencies: ["@kind-ui/missing", "agent-ui-setup"] },
-    { ...item("internal-button"), name: "internal-z", hidden: false },
+    { ...item("internal-button"), name: "internal-z", hidden: false, description: undefined },
   ];
   const errors = errorsWith({ items });
+  assert.match(errors, /"internal-z": has no description/);
   assert.match(errors, /@kind-ui\/missing is not an item/);
   assert.match(errors, /agent-ui-setup is not an item/);
   assert.match(errors, /"internal-z": only internal-<name> items are hidden/);
