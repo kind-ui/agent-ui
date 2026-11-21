@@ -236,6 +236,16 @@ test.describe("on a touch screen", () => {
     await expect(dialog(page)).toBeVisible();
     await expect(dialog(page)).toHaveAttribute("data-presentation", "sheet");
   });
+
+  test("the sheet fits the screen, with Copy link in full", async ({ page }) => {
+    await load(page, "linked");
+    await trigger(page).tap();
+    await expect(linkBox(page)).toHaveValue(shareLink);
+    await settled(page);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+    const copy = await button(page, "Copy link").boundingBox();
+    expect(copy && copy.x >= 0 && copy.x + copy.width <= 390).toBe(true);
+  });
 });
 
 for (const colorScheme of ["light", "dark"] as const)
