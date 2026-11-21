@@ -42,6 +42,18 @@ export default {
 
     // framework-svelte-6: developer output
 
+    "sources",
+    "inline-citation",
+    "document",
+    "generated-image",
+    "file-tree",
+    "terminal",
+    "stack-trace",
+    "test-results",
+    "transcript",
+    "selection",
+    "action",
+
     // framework-svelte-7: Wave 6 shell
 
     // framework-svelte-8: conformance
@@ -80,6 +92,8 @@ export default {
     // framework-svelte-5: step family
 
     // framework-svelte-6: developer output
+
+    "tree",
 
     // framework-svelte-7: Wave 6 shell
 
@@ -120,6 +134,18 @@ export default {
     // framework-svelte-5: step family
 
     // framework-svelte-6: developer output
+
+    "wave-4/sources.spec.ts",
+    "wave-4/inline-citation.spec.ts",
+    "wave-4/document.spec.ts",
+    "wave-4/generated-image.spec.ts",
+    "wave-4/file-tree.spec.ts",
+    "wave-4/terminal.spec.ts",
+    "wave-4/stack-trace.spec.ts",
+    "wave-4/test-results.spec.ts",
+    "wave-4/transcript.spec.ts",
+    "wave-4/selection.spec.ts",
+    "wave-4/action.spec.ts",
 
     // framework-svelte-7: Wave 6 shell
 
