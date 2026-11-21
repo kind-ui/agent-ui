@@ -1,12 +1,9 @@
 <script lang="ts">
-import type { AgentAction } from "@ui-sdk/vue/agent";
 import { confirmationHost } from "../../shared/confirmation.js";
 
 export const variants = ["all", "many-10", "many-500"] as const;
 
 const { host, approve, deny } = confirmationHost();
-
-export const allow = (step: AgentAction) => !step.confirm || host.permit;
 </script>
 
 <script setup lang="ts">

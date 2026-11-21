@@ -56,7 +56,7 @@ onMounted(() =>
       :duration-seconds="status === 'complete' ? 12 : undefined"
       :result="RESULT"
       :motion="motion"
-      :on-cancel="cancel"
+      @cancel="cancel"
     >
       <StepList aria-label="Code reviewer steps">
         <Tool v-for="c in calls" :key="c.toolCallId" :call="c">
@@ -79,7 +79,7 @@ onMounted(() =>
       :avatar-src="AVATAR"
       status="running"
       :agent-confirm="false"
-      :on-cancel="cancelQuick"
+      @cancel="cancelQuick"
     />
     <Subagent id="readonly" agent-name="Test runner" status="running" />
     <Subagent id="done" agent-name="Release notes bot" status="complete" :duration-seconds="4" :result="RESULT" />

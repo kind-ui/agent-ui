@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { shallowRef } from "vue";
 import { Queue } from "@/components/ui/vue/queue";
 
 const todo = [
@@ -15,7 +15,7 @@ const todo = [
   { id: "read", status: "complete" as const, title: "Read the request handlers" },
 ];
 
-const items = ref(todo);
+const items = shallowRef(todo);
 
 const onReorder = (id: string, { index }: { index: number }) => {
   const moved = items.value.find((item) => item.id === id);

@@ -66,7 +66,7 @@ onMounted(() =>
       :motion="motion"
       :on-accept="accepting ? accept : undefined"
     />
-    <Plan id="quick" label="Quick plan" :items="quickItems" :agent-confirm="false" :on-accept="acceptQuick" />
+    <Plan id="quick" label="Quick plan" :items="quickItems" :agent-confirm="false" @accept="acceptQuick" />
     <Plan id="readonly" label="Read-only plan" :items="readonlyItems" />
   </div>
 </template>
