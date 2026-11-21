@@ -162,8 +162,9 @@ export type ComposerApi = {
   /** Takes in what File Input accepted or rejected. */
   intake: FileIntake;
   /**
-   * Starts syncing the draft and the Token Input once the Token Input has attached the controller, which on web
-   * can happen after the input part binds. Returns a cleanup; calling it again while connected does nothing.
+   * Starts syncing the draft and the Token Input once the Token Input has attached the controller, which can happen
+   * after the input part binds (web, and Vue, whose template ref binds before the nested Token Input mounts); the input
+   * part tries again a microtask after it binds. Returns a cleanup; calling it again while connected does nothing.
    */
   connectInput: () => () => void;
   history: ReturnType<typeof createInputHistory<string>>;
@@ -670,9 +671,9 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       bind: (_el, { api }) => {
         // Vue binds a part before the Token Input nested in it attaches the controller, so try again a microtask later.
         let bound = true;
-        let disconnect = api.connectInput();
+        const disconnect = api.connectInput();
         queueMicrotask(() => {
-          if (bound) disconnect = api.connectInput();
+          if (bound) api.connectInput();
         });
         return () => {
           bound = false;
