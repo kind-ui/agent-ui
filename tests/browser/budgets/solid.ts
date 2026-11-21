@@ -22,6 +22,12 @@ export const budgets: Partial<Budgets> = {
 
   // framework-solid-6: developer output
 
+  terminalChunk: { writes: 4, renders: 0, notified: 0, layoutReads: 15 },
+  terminalLine: { writes: 4, renders: 0, notified: 0, layoutReads: 18 },
+  transcriptWord: { writes: 4, renders: 0, notified: 2, layoutReads: 4 },
+  transcriptSegment: { writes: 9, renders: 0, notified: 4, layoutReads: 8 },
+  transcriptSearch: { writes: 66, renders: 0, notified: 0, layoutReads: 2 },
+
   // framework-solid-7: Wave 6 shell
 
   // framework-solid-8: conformance

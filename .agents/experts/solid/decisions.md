@@ -13,6 +13,8 @@ Last reviewed: `2a99a303` (Task Solid-2)
 - **Default children are `props.children ?? <Default />`** (Task Solid-2): one lazy read, built only when used; a part that reads `props.children` more than once reads it through a `createMemo`, since each read builds an element child again.
 - **`MessageRegenerate` takes its button as a function child** (Task Solid-2): Solid can't clone an element child into `MenuTrigger`'s `render`, as React does; an element child still regenerates, without the menu.
 - **Trigger Menu's editor attributes are missing at rest** (Task Solid-2): an `@ui-sdk/solid` gap, listed under `known` on `?c=composer&case=full` and recorded in AGENTS.md "UI SDK API notes".
+- **Virtualized rows are keyed `<For>` lists over the primitive's row objects** (Task Solid-6): Terminal by `row.index`, Transcript by `row.key`, Test Results by item value, so a chunk, a word or a test updates one row; React's `memo`'d rows are unneeded.
+- **Transcript's played word writes `data-current` twice** (Task Solid-6): an `@ui-sdk/solid` gap (`directNames` ignored), recorded in AGENTS.md "UI SDK API notes" and in `budgets/solid.ts`.
 - Everything in AGENTS.md "UI SDK API notes".
 
 ## Known and open (don't report again, check whether fixed)
