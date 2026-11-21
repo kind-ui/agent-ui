@@ -1,7 +1,7 @@
 import type { Budgets } from "./react.js";
 
-// Solid's count budgets (plan D12), measured on Linux CI. Solid has no component re-render, so its budgets
-// are `writes`, `layoutReads` and `parses` only. Each track task adds the cases it measures below its own
+// Solid's count budgets (plan D12), measured on Linux CI. Solid has no component re-render, so its `renders`
+// are 0; `notified` is counted on every layer. Each track task adds the cases it measures below its own
 // marker; `budgets.spec.ts` skips a case with no entry here.
 // biome-ignore format: the blank line under each marker keeps two tasks' lines apart, so git merges them cleanly
 export const budgets: Partial<Budgets> = {
@@ -9,13 +9,29 @@ export const budgets: Partial<Budgets> = {
 
   // framework-solid-2: chat core
 
+  conversationStream: { writes: 1, renders: 0, notified: 0 },
+  conversationFollow: { layoutReads: 12 },
+  markdownStream: { parses: 1, writes: 4, renders: 0, notified: 3 },
+  remount: { nodes: 0, listeners: 0 },
+
   // framework-solid-3: composer controls
+
+  // 5 writes, or 13 when the new chip's first measure lands inside the counted window, as it does under load.
+  contextChip: { writes: 13, renders: 0, notified: 0, layoutReads: 0 },
 
   // framework-solid-4: indicators, notices and files
 
   // framework-solid-5: step family
 
+  toolStream: { writes: 6, renders: 0, notified: 3 },
+
   // framework-solid-6: developer output
+
+  terminalChunk: { writes: 4, renders: 0, notified: 0, layoutReads: 15 },
+  terminalLine: { writes: 4, renders: 0, notified: 0, layoutReads: 18 },
+  transcriptWord: { writes: 4, renders: 0, notified: 2, layoutReads: 4 },
+  transcriptSegment: { writes: 9, renders: 0, notified: 4, layoutReads: 8 },
+  transcriptSearch: { writes: 66, renders: 0, notified: 0, layoutReads: 2 },
 
   // framework-solid-7: Wave 6 shell
 
