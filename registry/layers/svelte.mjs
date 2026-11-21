@@ -55,6 +55,14 @@ export default {
 
     // framework-svelte-7: Wave 6 shell
 
+    "thread-list",
+    "thread-search",
+    "sidebar",
+    "day-separator",
+    "connection-status",
+    "share-dialog",
+    "conversation-search",
+
     // framework-svelte-8: conformance
   ],
   // Internal wrapper names, without the `internal-` prefix.
@@ -95,6 +103,9 @@ export default {
     // framework-svelte-6: developer output
 
     // framework-svelte-7: Wave 6 shell
+
+    "drawer",
+    "resizable",
 
     // framework-svelte-8: conformance
   ],
@@ -147,6 +158,14 @@ export default {
     // framework-svelte-6: developer output
 
     // framework-svelte-7: Wave 6 shell
+
+    "wave-6/thread-list.spec.ts",
+    "wave-6/thread-search.spec.ts",
+    "wave-6/sidebar.spec.ts",
+    "wave-6/day-separator.spec.ts",
+    "wave-6/connection-status.spec.ts",
+    "wave-6/share-dialog.spec.ts",
+    "wave-6/conversation-search.spec.ts",
 
     // framework-svelte-8: conformance
   ],
