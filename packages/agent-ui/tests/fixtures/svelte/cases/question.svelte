@@ -18,8 +18,6 @@
 
   let submitted: Answers | undefined = $state.raw();
   let value: Answers = $state.raw({ env: "staging" });
-  // Svelte keeps an unbound value the component changed until the parent passes another, so the owner refuses
-  // through a function binding's setter, as React's owner does by not setting its state.
   let refusing = $state(true);
 
   expose({

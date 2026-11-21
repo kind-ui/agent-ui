@@ -25,7 +25,6 @@
   <p id="above">Above</p>
   <div class="flex items-center gap-2">
     {#if controlled}
-      <!-- A refusing host ignores the change, so the rating stays what it passes. -->
       <Feedback
         id="feedback"
         bind:rating={() => rating, (next) => {

@@ -31,8 +31,6 @@
   const unsettled = new Promise<void>(() => {});
   const isFull = $derived(variant === "full" || variant === "mod-enter");
   const motion = $derived(params.has("motion") ? (params.get("motion") as MotionMode) : undefined);
-
-  // The full composer
   let mounted = $state(true);
   let draft: ComposerDraft = $state.raw({ text: "", tokens: [], attachments: [] });
   let draftKey = $derived(params.get("draftKey") ?? "chat-1");
@@ -50,8 +48,6 @@
     if ((window as { refuseEdits?: boolean }).refuseEdits) details.cancel();
     else draft = value;
   };
-
-  // The attachments
   let items: AttachmentItem[] = $state.raw(attachmentItems());
 
   $effect(() => {
