@@ -35,8 +35,8 @@
   </div>
 {:else}
   <div class="flex flex-col gap-4 p-6">
-    <p id="above">Above</p>
-    <ThreadSearch
+    <p id="above">Above</p
+    ><ThreadSearch
       id="search"
       {threads}
       now={NOW}

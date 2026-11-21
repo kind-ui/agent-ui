@@ -8,9 +8,9 @@
 </script>
 
 {#snippet fallback()}
-  <TestResultsCount value="pass" />
-  <TestResultsCount value="fail" />
-  <TestResultsCount value="skip" />
+  <TestResultsCount value="pass"
+  /><TestResultsCount value="fail"
+  /><TestResultsCount value="skip" />
 {/snippet}
 
 <parts.Filter {...props} children={children ?? fallback} />

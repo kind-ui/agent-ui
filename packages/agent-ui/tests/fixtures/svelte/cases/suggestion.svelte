@@ -56,21 +56,21 @@
     {#each items as item (item.id)}
       <SuggestionItem value={item.id} />
     {/each}
-  </SuggestionViewport>
-  <SuggestionControls>
-    <SuggestionPrevious />
-    <SuggestionNext />
+  </SuggestionViewport
+  ><SuggestionControls>
+    <SuggestionPrevious
+    /><SuggestionNext />
   </SuggestionControls>
 {/snippet}
 
 <div class="flex flex-col gap-4 p-6" style:width={width ? `${width}px` : undefined}>
-  <p id="above">Above</p>
-  {#if variant === "form"}
+  <p id="above">Above</p
+  >{#if variant === "form"}
     <form onsubmit={submit}>
       {@render suggestion()}
     </form>
   {:else}
     {@render suggestion()}
-  {/if}
-  <p id="below">Below</p>
+  {/if}<p id="below"
+  >Below</p>
 </div>

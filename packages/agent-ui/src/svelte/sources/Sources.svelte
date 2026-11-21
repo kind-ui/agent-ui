@@ -12,8 +12,8 @@
 </script>
 
 {#snippet fallback()}
-  <SourcesTrigger />
-  <parts.Content>
+  <SourcesTrigger
+  /><parts.Content>
     <SourcesList />
   </parts.Content>
 {/snippet}

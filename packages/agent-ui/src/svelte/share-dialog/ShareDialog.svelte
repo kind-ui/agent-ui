@@ -13,23 +13,12 @@
   let {
     open = $bindable(),
     visibility = $bindable(),
-    id,
-    render: own,
     children: content,
     ...props
   }: RootProps = $props();
 </script>
 
-<!--
-  The `id` goes on the element, not the part: `@ui-sdk/svelte` keys a part by its `id`, and the agent bridge names a
-  component only by a root without a key.
--->
 <parts.Root bind:open bind:visibility {...props}>
-  {#snippet render(handed: Parameters<NonNullable<RootProps["render"]>>[0])}
-    {#if own}{@render own({ ...handed, props: { ...handed.props, id } })}{:else}
-      <div {...handed.props} {id}>{@render handed.children?.(handed.state)}</div>
-    {/if}
-  {/snippet}
   {#snippet children(state: Parameters<NonNullable<RootProps["children"]>>[0])}
     {#if content}{@render content(state)}{:else}<ShareDialogTrigger /><parts.Backdrop /><ShareDialogContent />{/if}
   {/snippet}

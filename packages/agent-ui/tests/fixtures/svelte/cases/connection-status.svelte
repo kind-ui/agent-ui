@@ -40,8 +40,8 @@
         </ConversationRow>
       {/each}
     </ConversationContent>
-  </ConversationViewport>
-  <ConnectionStatus
+  </ConversationViewport
+  ><ConnectionStatus
     id="connection"
     state={connection.state}
     retryAt={connection.retryAt}

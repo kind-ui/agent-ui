@@ -19,5 +19,5 @@
   <KindMenuItemIcon>
     {#if typeof icon === "string"}<img src={icon} alt="" />{:else}{@render icon()}{/if}
   </KindMenuItemIcon>
-{/if}
-<span data-menu-text=""><span>{label}</span>{#if description}<span data-menu-description="">{description}</span>{/if}</span>
+{/if}<span data-menu-text=""
+><span>{label}</span>{#if description}<span data-menu-description="">{description}</span>{/if}</span>

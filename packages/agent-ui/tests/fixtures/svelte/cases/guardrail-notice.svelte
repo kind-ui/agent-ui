@@ -24,8 +24,8 @@
 </script>
 
 <div class="flex w-[30rem] flex-col gap-3 p-6">
-  <button id="above" type="button">Above</button>
-  {#if shown.blocking}
+  <button id="above" type="button">Above</button
+  >{#if shown.blocking}
     {#if refuse}
       <GuardrailNotice
         id="guardrail-blocking"
@@ -39,12 +39,10 @@
     {:else}
       <GuardrailNotice id="guardrail-blocking" {...guardrails.blocking} blocking {motion} onDismiss={dismiss("blocking")} />
     {/if}
-  {/if}
-  {#if shown.filtered}
+  {/if}{#if shown.filtered}
     <GuardrailNotice id="guardrail-filtered" variant="info" {...guardrails.filtered} {motion} />
-  {/if}
-  {#if shown.late}
+  {/if}{#if shown.late}
     <GuardrailNotice id="guardrail-late" label="Request blocked" reason="The prompt asked for malware." blocking />
-  {/if}
-  <button id="below" type="button">Below</button>
+  {/if}<button id="below" type="button"
+  >Below</button>
 </div>

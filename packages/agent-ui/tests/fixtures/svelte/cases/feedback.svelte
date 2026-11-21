@@ -22,8 +22,8 @@
 </script>
 
 <div class="flex flex-col items-start gap-4 p-6">
-  <p id="above">Above</p>
-  <div class="flex items-center gap-2">
+  <p id="above">Above</p
+  ><div class="flex items-center gap-2">
     {#if controlled}
       <Feedback
         id="feedback"
@@ -37,7 +37,7 @@
       />
     {:else}
       <Feedback id="feedback" onRatingChange={record} onComment={comment} {commentSent} {motion} />
-    {/if}
-    <button type="button" id="beside">Beside</button>
+    {/if}<button type="button" id="beside"
+    >Beside</button>
   </div>
 </div>

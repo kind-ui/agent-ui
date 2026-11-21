@@ -1,7 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { isWebElements, layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
+import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 type Log = { selected: string[]; values: string[]; expanded: string[][] };
 type Fixture = {
@@ -139,9 +140,7 @@ test("closing a folder animates its height at full motion and only fades under r
 test("agents expand, collapse and select by path, and an unknown path changes nothing", async ({
   page,
 }, testInfo) => {
-  // framework-svelte-6: developer output. `@ui-sdk/svelte` keys a root by its `id`, which unnames the component in the
-  // agent snapshot (AGENTS.md "UI SDK API notes", Svelte chat core). Remove once UI SDK fixes it.
-  test.skip(layerOf(testInfo) === "svelte", "@ui-sdk/svelte keys a root by its id");
+  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
   await open(page);
   await expectAgentActions(page, "Files", ["expand", "collapse", "select"]);
   expect(JSON.parse(String(await act(page, "expand", "nope")))).toMatchObject({ ok: false });
@@ -156,9 +155,7 @@ test("agents expand, collapse and select by path, and an unknown path changes no
 });
 
 test("without onSelect agents can't select", async ({ page }, testInfo) => {
-  // framework-svelte-6: developer output. `@ui-sdk/svelte` keys a root by its `id`, which unnames the component in the
-  // agent snapshot (AGENTS.md "UI SDK API notes", Svelte chat core). Remove once UI SDK fixes it.
-  test.skip(layerOf(testInfo) === "svelte", "@ui-sdk/svelte keys a root by its id");
+  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
   await open(page, "static");
   await expectAgentActions(page, "Files", ["expand", "collapse"]);
 });

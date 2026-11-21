@@ -29,8 +29,8 @@
 
 {#if variant === "all" || variant === "reduced"}
   <div class="flex w-[28rem] flex-col gap-4 p-6">
-    <p id="above">Above</p>
-    <Question
+    <p id="above">Above</p
+    ><Question
       id="deploy"
       label="Deploy questions"
       questions={deployQuestions}
@@ -38,8 +38,7 @@
       onSubmit={submit}
       onSkip={skip}
       motion={variant === "reduced" ? "reduced" : undefined}
-    />
-    <p id="below">Below</p>
+    /><p id="below">Below</p>
   </div>
 {:else if variant === "refused"}
   <div class="flex w-[28rem] flex-col gap-4 p-6">

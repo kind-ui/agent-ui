@@ -20,14 +20,14 @@
 {#snippet defaultParts({ questions }: { questions: Question[] })}
   {#each questions as question (question.id)}
     <QuestionItem value={question.id} />
-  {/each}
-  <parts.Actions>
-    <QuestionSubmit />
-    <QuestionSkip />
-    <QuestionStatus />
-    <QuestionError />
-  </parts.Actions>
-  <QuestionSummary />
+  {/each}<parts.Actions
+  >
+    <QuestionSubmit
+    /><QuestionSkip
+    /><QuestionStatus
+    /><QuestionError />
+  </parts.Actions
+  ><QuestionSummary />
 {/snippet}
 
 <parts.Root {...props} bind:value children={children ?? defaultParts} />

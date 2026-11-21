@@ -54,7 +54,6 @@
     {items}
     motion={variant === "reduced" ? "reduced" : undefined}
     onAccept={accepting ? onAccept : undefined}
-  />
-  <Plan id="quick" label="Quick plan" items={quickItems} agentConfirm={false} onAccept={() => {}} />
-  <Plan id="readonly" label="Read-only plan" items={readonlyItems} />
+  /><Plan id="quick" label="Quick plan" items={quickItems} agentConfirm={false} onAccept={() => {}}
+  /><Plan id="readonly" label="Read-only plan" items={readonlyItems} />
 </div>

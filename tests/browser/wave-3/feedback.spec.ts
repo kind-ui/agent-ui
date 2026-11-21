@@ -1,7 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { isWebElements, layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
+import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 type Fixture = {
   kindHost: {
@@ -235,9 +236,7 @@ test("with reduced motion the box only fades", async ({ page }) => {
 });
 
 test("an agent rates and comments, each offered only when it applies", async ({ page }, testInfo) => {
-  // framework-svelte-2: chat core. `@ui-sdk/svelte` keys a root by its `id`, which unnames the component in the agent
-  // snapshot (AGENTS.md "UI SDK API notes", Svelte chat core). Remove once UI SDK fixes it.
-  test.skip(layerOf(testInfo) === "svelte", "@ui-sdk/svelte keys a root by its id");
+  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
   await open(page);
   // The bridge adds its generic `press` to any component holding a button.
   await expectAgentActions(page, "Feedback", ["press", "rate"]);

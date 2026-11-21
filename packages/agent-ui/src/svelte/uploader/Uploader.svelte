@@ -15,12 +15,12 @@
   {#snippet children({ fileInput }: UploaderRootState)}
     <FileInput {...fileInput}>
       <FileInputDropzone>
-        <span data-upload-icon=""></span>
-        <span data-hint="">Drop files here, or</span>
-        <FileInputTrigger>browse</FileInputTrigger>
+        <span data-upload-icon=""></span
+        ><span data-hint="">Drop files here, or</span
+        ><FileInputTrigger>browse</FileInputTrigger>
       </FileInputDropzone>
-    </FileInput>
-    <parts.List>
+    </FileInput
+    ><parts.List>
       {#snippet children({ rows }: UploaderListState)}
         {#each rows as row (row.item.id)}<UploaderItem value={row.item.id} />{/each}
       {/snippet}

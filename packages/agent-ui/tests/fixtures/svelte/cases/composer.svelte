@@ -64,8 +64,8 @@
     class="border-[rgb(1,2,3)] data-[pending]:opacity-50"
     onSubmit={() => unsettled}
   >
-    <ComposerInput aria-label="Prompt" />
-    <ComposerSubmit>Send</ComposerSubmit>
+    <ComposerInput aria-label="Prompt"
+    /><ComposerSubmit>Send</ComposerSubmit>
   </Composer>
 {:else if isFull && mounted}
   <div class="mx-auto max-w-xl p-6">
@@ -81,8 +81,8 @@
       {...options}
       {onValueChange}
     >
-      <ComposerAttachments />
-      <ComposerInput
+      <ComposerAttachments
+      /><ComposerInput
         aria-label="Prompt"
         placeholder="Ask anything. Type @ to mention, / for commands"
         onkeydowncapture={(event: KeyboardEvent) => {
@@ -90,11 +90,11 @@
         }}
       >
         <ComposerTriggerMenu />
-      </ComposerInput>
-      <ComposerAttach />
-      <ComposerRestored />
-      <ComposerSubmit />
-      <ComposerStop />
+      </ComposerInput
+      ><ComposerAttach
+      /><ComposerRestored
+      /><ComposerSubmit
+      /><ComposerStop />
     </Composer>
   </div>
 {:else if variant === "attachments"}

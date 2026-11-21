@@ -19,10 +19,10 @@
 </script>
 
 {#snippet fallback()}
-  <FeedbackThumbs />
-  <FeedbackComment />
-  <FeedbackThanks />
-  <FeedbackContent />
+  <FeedbackThumbs
+  /><FeedbackComment
+  /><FeedbackThanks
+  /><FeedbackContent />
 {/snippet}
 
 <parts.Root {...props} bind:rating bind:open children={children ?? fallback} />

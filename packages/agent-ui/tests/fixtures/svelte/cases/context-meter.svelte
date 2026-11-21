@@ -17,8 +17,8 @@
 </script>
 
 <div class="flex flex-col items-start gap-4 p-6">
-  <p id="above">Above</p>
-  <div class="flex items-center gap-2">
+  <p id="above">Above</p
+  ><div class="flex items-center gap-2">
     <ContextMeter
       id="context"
       {...context}
@@ -26,7 +26,6 @@
       onOpenChange={record}
       motion={variant === "reduced" ? "reduced" : undefined}
       locale={variant === "german" ? "de-DE" : undefined}
-    />
-    <span id="beside">Beside</span>
+    /><span id="beside">Beside</span>
   </div>
 </div>

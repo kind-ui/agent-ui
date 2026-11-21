@@ -1,7 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { isWebElements, layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
+import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 type Call = { type: string; id: string; index?: number; reason: string; source: string };
 
@@ -179,8 +180,6 @@ test("the host removing the item being moved cancels the move and moves focus on
 });
 
 test("without onReorder and onRemove, nothing can be picked up or removed", async ({ page }, testInfo) => {
-  // framework-svelte-5: step family. `@ui-sdk/svelte` keys a root by its `id`, which unnames the component in the agent
-  // snapshot (AGENTS.md "UI SDK API notes", Svelte chat core). Remove once UI SDK fixes it.
   await open(page, "readonly");
   await expect(pending(page)).not.toHaveAttribute("aria-roledescription");
   await row(page, "Write the migration").focus();
@@ -189,7 +188,7 @@ test("without onReorder and onRemove, nothing can be picked up or removed", asyn
   await page.keyboard.press("Delete");
   await expect(row(page, "Write the migration")).toBeVisible();
   await expect(queue(page).locator('[data-slot="kind-queue-item-remove"]').first()).toBeHidden();
-  if (layerOf(testInfo) !== "svelte") await expectAgentActions(page, "Queue", []);
+  if (!rootIdGap(testInfo)) await expectAgentActions(page, "Queue", []);
 });
 
 test("completed items can't be picked up", async ({ page }) => {
@@ -321,9 +320,7 @@ test("an item already asked to be removed is asked again only once the host pass
 });
 
 test("agents can reorder and remove items", async ({ page }, testInfo) => {
-  // framework-svelte-5: step family. `@ui-sdk/svelte` keys a root by its `id`, which unnames the component in the agent
-  // snapshot (AGENTS.md "UI SDK API notes", Svelte chat core). Remove once UI SDK fixes it.
-  test.skip(layerOf(testInfo) === "svelte", "@ui-sdk/svelte keys a root by its id");
+  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
   await open(page);
   await expectAgentActions(page, "Queue", ["remove", "reorder"]);
   const result = await page.evaluate(() =>

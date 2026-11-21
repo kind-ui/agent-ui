@@ -12,12 +12,12 @@
 </script>
 
 {#snippet fallback()}
-  <FeedbackTitle />
-  <FeedbackCommentText />
-  <div data-feedback-actions="">
-    <FeedbackCommentStatus />
-    <FeedbackCommentError />
-    <FeedbackCommentSend />
+  <FeedbackTitle
+  /><FeedbackCommentText
+  /><div data-feedback-actions="">
+    <FeedbackCommentStatus
+    /><FeedbackCommentError
+    /><FeedbackCommentSend />
   </div>
 {/snippet}
 

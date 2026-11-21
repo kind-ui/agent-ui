@@ -16,9 +16,9 @@
 <parts.Trigger {...props}>
   {#snippet children(state: PickerTriggerState)}
     {#if content}{@render content(state)}{:else}
-      {#if state.icon !== undefined}<span data-picker-icon=""><PickerIcon icon={state.icon} /></span>{/if}
-      <span data-picker-text="">{state.text}</span>
-      <span data-picker-chevron=""></span>
+      {#if state.icon !== undefined}<span data-picker-icon=""><PickerIcon icon={state.icon} /></span>{/if}<span data-picker-text=""
+      >{state.text}</span
+      ><span data-picker-chevron=""></span>
     {/if}
   {/snippet}
 </parts.Trigger>

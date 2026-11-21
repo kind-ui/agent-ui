@@ -10,14 +10,14 @@
 
 <parts.Item {...props}>
   {#snippet children({ item, detail }: UploadItemState)}
-    <span data-icon=""></span>
-    <Progress value={item?.progress ?? null}>
-      <ProgressLabel>{item?.name}</ProgressLabel>
-      <ProgressTrack>
+    <span data-icon=""></span
+    ><Progress value={item?.progress ?? null}>
+      <ProgressLabel>{item?.name}</ProgressLabel
+      ><ProgressTrack>
         <ProgressIndicator />
       </ProgressTrack>
-    </Progress>
-    <span data-detail="">{detail}</span>
-    <parts.Action value={props.value} />
+    </Progress
+    ><span data-detail="">{detail}</span
+    ><parts.Action value={props.value} />
   {/snippet}
 </parts.Item>

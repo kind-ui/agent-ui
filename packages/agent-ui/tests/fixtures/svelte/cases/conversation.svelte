@@ -153,13 +153,13 @@
                 {#if m}{@render row(m, r.index)}{/if}
               {/each}
             {:else}
-              {#each all as m, i (m.id)}{@render row(m, i)}{/each}
-              <ConversationEmpty>No messages yet.</ConversationEmpty>
+              {#each all as m, i (m.id)}{@render row(m, i)}{/each}<ConversationEmpty
+              >No messages yet.</ConversationEmpty>
             {/if}
           {/snippet}
         </ConversationContent>
-      </ConversationViewport>
-      <ConversationJump />
+      </ConversationViewport
+      ><ConversationJump />
     </Conversation>
   {/if}
 {:else}
@@ -173,16 +173,15 @@
   >
     <ConversationViewport>
       <ConversationContent>
-        {#each messages(0, view.count) as m, i (m.id)}{@render row(m, i)}{/each}
-        <ConversationSkeleton />
-        <ConversationLoading />
-        <ConversationError />
-        <ConversationEmpty>
-          <ConversationEmptyTitle>What can I help with?</ConversationEmptyTitle>
-          <ConversationEmptyDescription>Ask about your code, your docs or your last deploy.</ConversationEmptyDescription>
+        {#each messages(0, view.count) as m, i (m.id)}{@render row(m, i)}{/each}<ConversationSkeleton
+                /><ConversationLoading
+        /><ConversationError
+        /><ConversationEmpty>
+          <ConversationEmptyTitle>What can I help with?</ConversationEmptyTitle
+          ><ConversationEmptyDescription>Ask about your code, your docs or your last deploy.</ConversationEmptyDescription>
         </ConversationEmpty>
       </ConversationContent>
-    </ConversationViewport>
-    <ConversationJump />
+    </ConversationViewport
+    ><ConversationJump />
   </Conversation>
 {/if}

@@ -26,8 +26,8 @@
 <parts.Input>
   {#snippet children({ tokenInput })}
     <TokenInput {...tokenInput} {token}>
-      <TokenInputEditor {...props} />
-      {@render content?.()}
+      <TokenInputEditor {...props}
+      />{@render content?.()}
     </TokenInput>
   {/snippet}
 </parts.Input>

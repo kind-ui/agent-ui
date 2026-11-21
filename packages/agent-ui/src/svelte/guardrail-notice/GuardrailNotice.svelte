@@ -33,12 +33,12 @@
 </script>
 
 <parts.Root {...props}>
-  <GuardrailNoticeIcon />
-  <GuardrailNoticeTitle />
-  <GuardrailNoticeReason />
-  <GuardrailNoticeDetailTrigger />
-  <GuardrailNoticeDetail />
-  {#if children}<GuardrailNoticeDescription>{@render children()}</GuardrailNoticeDescription>{/if}
-  <GuardrailNoticeActions>{@render actions?.()}</GuardrailNoticeActions>
-  <GuardrailNoticeDismiss />
+  <GuardrailNoticeIcon
+  /><GuardrailNoticeTitle
+  /><GuardrailNoticeReason
+  /><GuardrailNoticeDetailTrigger
+  /><GuardrailNoticeDetail
+  />{#if children}<GuardrailNoticeDescription>{@render children()}</GuardrailNoticeDescription>{/if}<GuardrailNoticeActions
+  >{@render actions?.()}</GuardrailNoticeActions
+  ><GuardrailNoticeDismiss />
 </parts.Root>

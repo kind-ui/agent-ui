@@ -31,19 +31,17 @@
         {@const effort = trigger.effort}
         {#if icon !== undefined}
           <KindMenuItemIcon>{#if typeof icon === "string"}<img src={icon} alt="" />{:else}{@render icon()}{/if}</KindMenuItemIcon>
-        {/if}
-        <span data-model-control-model="">{trigger.model.label}</span>
-        {#if effort}
+        {/if}<span data-model-control-model="">{trigger.model.label}</span
+        >{#if effort}
           <!-- Spaces around the "·", so the accessible name reads "GPT-5 · High"; the trigger's gap spaces it on screen. -->
-          <span data-model-control-separator="">·</span>
-          <!-- Every level's label shares one cell and only the chosen one shows, so the trigger keeps its width. -->
-          <span data-model-control-effort=""
+          {" "}<span data-model-control-separator="">·</span>{" "}<!--
+            Every level's label shares one cell and only the chosen one shows, so the trigger keeps its width.
+          --><span data-model-control-effort=""
             >{#each effort.options as option (option.value)}<span
                 data-current={option.value === effort.value ? "" : undefined}>{option.label}</span
               >{/each}</span
           >
-        {/if}
-        <span data-menu-chevron=""></span>
+        {/if}<span data-menu-chevron=""></span>
       {/if}
     </MenuTrigger>
   {/snippet}

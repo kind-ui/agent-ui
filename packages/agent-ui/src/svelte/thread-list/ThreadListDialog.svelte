@@ -30,15 +30,15 @@
     description,
   }: ThreadListDialogState)}
     <KindAlertDialog {controller} {dismissible}>
-      <KindAlertDialogBackdrop />
-      <KindAlertDialogContent {initialFocus} {finalFocus}>
-        <KindAlertDialogTitle>{title}</KindAlertDialogTitle>
-        <KindAlertDialogDescription>{description}</KindAlertDialogDescription>
-        {#if answers}{@render answers()}{:else}
+      <KindAlertDialogBackdrop
+      /><KindAlertDialogContent {initialFocus} {finalFocus}>
+        <KindAlertDialogTitle>{title}</KindAlertDialogTitle
+        ><KindAlertDialogDescription>{description}</KindAlertDialogDescription
+        >{#if answers}{@render answers()}{:else}
           <div data-thread-list-answers="">
-            <ThreadListDialogError />
-            <ThreadListDialogCancel />
-            <ThreadListDialogDelete />
+            <ThreadListDialogError
+            /><ThreadListDialogCancel
+            /><ThreadListDialogDelete />
           </div>
         {/if}
       </KindAlertDialogContent>

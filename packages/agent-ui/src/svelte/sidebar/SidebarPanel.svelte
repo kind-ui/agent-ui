@@ -24,8 +24,8 @@
           modal={drawer.modal}
           onOpenChange={drawer.onOpenChange}
         >
-          <KindDrawerBackdrop data-agent-hidden="" />
-          <KindDrawerContent {...drawerContent}>{@render element(handed)}</KindDrawerContent>
+          <KindDrawerBackdrop data-agent-hidden=""
+          /><KindDrawerContent {...drawerContent}>{@render element(handed)}</KindDrawerContent>
         </KindDrawer>
       {:else}
         {@render element(handed)}

@@ -118,8 +118,8 @@
   ><output>Pressed {presses}</output>
 {:else if variant === "collapsible"}
   <KindCollapsible>
-    <KindCollapsibleTrigger>Details</KindCollapsibleTrigger>
-    <KindCollapsiblePanel>Hidden details</KindCollapsiblePanel>
+    <KindCollapsibleTrigger>Details</KindCollapsibleTrigger
+    ><KindCollapsiblePanel>Hidden details</KindCollapsiblePanel>
   </KindCollapsible>
 {:else if variant === "scroll-area"}
   <KindScrollArea class="h-24 w-48">
@@ -129,17 +129,17 @@
           <p>{line}</p>
         {/each}
       </KindScrollAreaContent>
-    </KindScrollAreaViewport>
-    <KindScrollAreaScrollbar orientation="vertical">
+    </KindScrollAreaViewport
+    ><KindScrollAreaScrollbar orientation="vertical">
       <KindScrollAreaThumb />
     </KindScrollAreaScrollbar>
   </KindScrollArea>
 {:else if variant === "toolbar"}
   <KindToolbar aria-label="Formatting">
-    <KindToolbarButton>Undo</KindToolbarButton>
-    <KindToolbarButton>Redo</KindToolbarButton>
-    <KindToolbarSeparator />
-    <KindToolbarButton>Copy</KindToolbarButton>
+    <KindToolbarButton>Undo</KindToolbarButton
+    ><KindToolbarButton>Redo</KindToolbarButton
+    ><KindToolbarSeparator
+    /><KindToolbarButton>Copy</KindToolbarButton>
   </KindToolbar>
 {:else if variant === "toolbar-menu"}
   <KindToolbar aria-label="Sharing">
@@ -152,18 +152,18 @@
             {/snippet}
           </KindMenuTrigger>
         {/snippet}
-      </KindToolbarButton>
-      <KindMenuContent>
+      </KindToolbarButton
+      ><KindMenuContent>
         <KindMenuItem value="link">Copy link</KindMenuItem>
       </KindMenuContent>
-    </KindMenu>
-    <KindMenu>
+    </KindMenu
+    ><KindMenu>
       <KindToolbarButton>
         {#snippet render({ props })}
           <KindMenuTrigger {...props}>Export</KindMenuTrigger>
         {/snippet}
-      </KindToolbarButton>
-      <KindMenuContent>
+      </KindToolbarButton
+      ><KindMenuContent>
         <KindMenuItem value="pdf">PDF</KindMenuItem>
       </KindMenuContent>
     </KindMenu>
@@ -172,18 +172,18 @@
   <KindToggle>Bold</KindToggle>
 {:else if variant === "menu"}
   <KindMenu>
-    <KindMenuTrigger>Actions</KindMenuTrigger>
-    <KindMenuContent>
-      <KindMenuItem value="rename">Rename</KindMenuItem>
-      <KindMenuItem value="duplicate">Duplicate</KindMenuItem>
-      <KindMenuSeparator />
-      <KindMenuItem value="delete">Delete</KindMenuItem>
+    <KindMenuTrigger>Actions</KindMenuTrigger
+    ><KindMenuContent>
+      <KindMenuItem value="rename">Rename</KindMenuItem
+      ><KindMenuItem value="duplicate">Duplicate</KindMenuItem
+      ><KindMenuSeparator
+      /><KindMenuItem value="delete">Delete</KindMenuItem>
     </KindMenuContent>
   </KindMenu>
 {:else if variant === "avatar"}
   <KindAvatar>
-    <KindAvatarImage alt="Ada Lovelace" src={avatarSrc} />
-    <KindAvatarFallback>AL</KindAvatarFallback>
+    <KindAvatarImage alt="Ada Lovelace" src={avatarSrc}
+    /><KindAvatarFallback>AL</KindAvatarFallback>
   </KindAvatar>
 {:else if variant === "token-input"}
   <KindTokenInput
@@ -192,60 +192,60 @@
   >
     {#snippet token(token)}
       <KindTokenInputToken>
-        {token.label}
-        <KindTokenInputTokenRemove>×</KindTokenInputTokenRemove>
+        {token.label}<KindTokenInputTokenRemove
+        >×</KindTokenInputTokenRemove>
       </KindTokenInputToken>
     {/snippet}
     <KindTokenInputEditor aria-label="Prompt" />
   </KindTokenInput>
 {:else if variant === "trigger-menu"}
   <KindTriggerMenu triggers={[{ char: "@" }]}>
-    <KindTriggerMenuInput aria-label="Message" />
-    <KindTriggerMenuContent>
+    <KindTriggerMenuInput aria-label="Message"
+    /><KindTriggerMenuContent>
       <KindTriggerMenuList>
-        <KindTriggerMenuItem label="Hollis Grant" value="hollis">Hollis Grant</KindTriggerMenuItem>
-        <KindTriggerMenuItem label="Inès Moreau" value="ines">Inès Moreau</KindTriggerMenuItem>
+        <KindTriggerMenuItem label="Hollis Grant" value="hollis">Hollis Grant</KindTriggerMenuItem
+        ><KindTriggerMenuItem label="Inès Moreau" value="ines">Inès Moreau</KindTriggerMenuItem>
       </KindTriggerMenuList>
     </KindTriggerMenuContent>
   </KindTriggerMenu>
 {:else if variant === "file-input"}
   <KindFileInput multiple>
     <KindFileInputDropzone>
-      <p>Drop files here</p>
-      <KindFileInputTrigger>Attach files</KindFileInputTrigger>
-    </KindFileInputDropzone>
-    <KindFileInputList aria-label="Files">
+      <p>Drop files here</p
+      ><KindFileInputTrigger>Attach files</KindFileInputTrigger>
+    </KindFileInputDropzone
+    ><KindFileInputList aria-label="Files">
       <KindFileInputItem>
         {#snippet children({ file })}
-          <span>{file.name}</span>
-          <KindFileInputItemRemove>×</KindFileInputItemRemove>
+          <span>{file.name}</span
+          ><KindFileInputItemRemove>×</KindFileInputItemRemove>
         {/snippet}
       </KindFileInputItem>
     </KindFileInputList>
   </KindFileInput>
 {:else if variant === "progress"}
   <KindProgress value={40}>
-    <KindProgressLabel>Uploading</KindProgressLabel>
-    <KindProgressValue />
-    <KindProgressTrack>
+    <KindProgressLabel>Uploading</KindProgressLabel
+    ><KindProgressValue
+    /><KindProgressTrack>
       <KindProgressIndicator />
     </KindProgressTrack>
   </KindProgress>
 {:else if variant === "command"}
   <KindCommand>
-    <KindCommandInput aria-label="Search commands" placeholder="Search" />
-    <KindCommandEmpty>No commands found</KindCommandEmpty>
-    <KindCommandList>
+    <KindCommandInput aria-label="Search commands" placeholder="Search"
+    /><KindCommandEmpty>No commands found</KindCommandEmpty
+    ><KindCommandList>
       <KindCommandGroup>
-        <KindCommandGroupLabel>Files</KindCommandGroupLabel>
-        <KindCommandItem value="new-file">
-          <KindCommandItemIcon>+</KindCommandItemIcon>
-          <KindCommandItemText>New file</KindCommandItemText>
-        </KindCommandItem>
-        <KindCommandItem value="open-recent">
+        <KindCommandGroupLabel>Files</KindCommandGroupLabel
+        ><KindCommandItem value="new-file">
+          <KindCommandItemIcon>+</KindCommandItemIcon
+          ><KindCommandItemText>New file</KindCommandItemText>
+        </KindCommandItem
+        ><KindCommandItem value="open-recent">
           <KindCommandItemText>Open recent</KindCommandItemText>
-        </KindCommandItem>
-        <KindCommandItem value="rename">
+        </KindCommandItem
+        ><KindCommandItem value="rename">
           <KindCommandItemText>Rename</KindCommandItemText>
         </KindCommandItem>
       </KindCommandGroup>
@@ -253,11 +253,11 @@
   </KindCommand>
 {:else if variant === "slider"}
   <KindSlider defaultValue={40}>
-    <KindSliderValue />
-    <KindSliderControl>
+    <KindSliderValue
+    /><KindSliderControl>
       <KindSliderTrack>
-        <KindSliderIndicator />
-        <KindSliderThumb aria-label="Volume" />
+        <KindSliderIndicator
+        /><KindSliderThumb aria-label="Volume" />
       </KindSliderTrack>
     </KindSliderControl>
   </KindSlider>
@@ -267,42 +267,39 @@
   </KindSwitch>
 {:else if variant === "menu-data"}
   <KindMenu>
-    <KindMenuTrigger>Settings</KindMenuTrigger>
-    <KindMenuContent>
+    <KindMenuTrigger>Settings</KindMenuTrigger
+    ><KindMenuContent>
       <KindMenuGroup>
-        <KindMenuGroupLabel>View</KindMenuGroupLabel>
-        <KindMenuItem value="archive">
-          <KindMenuItemIcon>▣</KindMenuItemIcon>
-          <span data-menu-text="true">
-            <span>Archive</span>
-            <span data-menu-description="true">Hide it from the list</span>
+        <KindMenuGroupLabel>View</KindMenuGroupLabel
+        ><KindMenuItem value="archive">
+          <KindMenuItemIcon>▣</KindMenuItemIcon
+          ><span data-menu-text="true">
+            <span>Archive</span
+            ><span data-menu-description="true">Hide it from the list</span>
           </span>
-        </KindMenuItem>
-        <KindMenuCheckboxItem value="wrap">
-          <KindMenuItemIndicator keepMounted>✓</KindMenuItemIndicator>
-          Word wrap
-        </KindMenuCheckboxItem>
-      </KindMenuGroup>
-      <KindMenuSeparator />
-      <KindMenuRadioGroup defaultValue="comfortable">
-        <KindMenuGroupLabel>Density</KindMenuGroupLabel>
-        <KindMenuRadioItem value="compact">
-          <KindMenuItemIndicator keepMounted>•</KindMenuItemIndicator>
-          Compact
-        </KindMenuRadioItem>
-        <KindMenuRadioItem value="comfortable">
-          <KindMenuItemIndicator keepMounted>•</KindMenuItemIndicator>
-          Comfortable
-        </KindMenuRadioItem>
-      </KindMenuRadioGroup>
-      <KindMenuSeparator />
-      <KindMenuSub>
-        <KindMenuSubTrigger>Move to</KindMenuSubTrigger>
-        <KindMenuSubContent>
+        </KindMenuItem
+        ><KindMenuCheckboxItem value="wrap">
+          <KindMenuItemIndicator keepMounted>✓</KindMenuItemIndicator
+          >Word wrap</KindMenuCheckboxItem>
+      </KindMenuGroup
+      ><KindMenuSeparator
+      /><KindMenuRadioGroup defaultValue="comfortable">
+        <KindMenuGroupLabel>Density</KindMenuGroupLabel
+        ><KindMenuRadioItem value="compact">
+          <KindMenuItemIndicator keepMounted>•</KindMenuItemIndicator
+          >Compact</KindMenuRadioItem
+        ><KindMenuRadioItem value="comfortable">
+          <KindMenuItemIndicator keepMounted>•</KindMenuItemIndicator
+          >Comfortable</KindMenuRadioItem>
+      </KindMenuRadioGroup
+      ><KindMenuSeparator
+      /><KindMenuSub>
+        <KindMenuSubTrigger>Move to</KindMenuSubTrigger
+        ><KindMenuSubContent>
           <KindMenuItem value="inbox">Inbox</KindMenuItem>
         </KindMenuSubContent>
-      </KindMenuSub>
-      <KindMenuItem value="delete" destructive>Delete</KindMenuItem>
+      </KindMenuSub
+      ><KindMenuItem value="delete" destructive>Delete</KindMenuItem>
     </KindMenuContent>
   </KindMenu>
 {/if}

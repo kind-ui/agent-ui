@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { layerOf } from "../layer.js";
+import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 type Fixture = {
   kindHost: {
@@ -193,9 +194,7 @@ test("with reduced motion a new suggestion only fades", async ({ page }) => {
 });
 
 test("without onPick the suggestions show, but can't be picked", async ({ page }, testInfo) => {
-  // framework-svelte-2: chat core. `@ui-sdk/svelte` keys a root by its `id`, which unnames the component in the agent
-  // snapshot (AGENTS.md "UI SDK API notes", Svelte chat core). Remove once UI SDK fixes it.
-  test.skip(layerOf(testInfo) === "svelte", "@ui-sdk/svelte keys a root by its id");
+  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
   await open(page, "static");
   await expect(chip(page, "Draft a reply")).toHaveAttribute("aria-disabled", "true");
   await chip(page, "Draft a reply").click({ force: true });
@@ -204,9 +203,7 @@ test("without onPick the suggestions show, but can't be picked", async ({ page }
 });
 
 test("an agent picks a listed suggestion and is refused an unknown one", async ({ page }, testInfo) => {
-  // framework-svelte-2: chat core. `@ui-sdk/svelte` keys a root by its `id`, which unnames the component in the agent
-  // snapshot (AGENTS.md "UI SDK API notes", Svelte chat core). Remove once UI SDK fixes it.
-  test.skip(layerOf(testInfo) === "svelte", "@ui-sdk/svelte keys a root by its id");
+  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
   await open(page);
   await expectAgentActions(page, "Suggestions", ["pick"]);
   expect(await act(page, "unknown")).not.toContain('"ok":true');

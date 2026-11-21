@@ -14,11 +14,11 @@
 </script>
 
 {#snippet fallback()}
-  <CheckpointLabel />
-  <CheckpointDescription />
-  <parts.Line />
-  <CheckpointRestore />
-  <CheckpointRestored />
+  <CheckpointLabel
+  /><CheckpointDescription
+  /><parts.Line
+  /><CheckpointRestore
+  /><CheckpointRestored />
 {/snippet}
 
 <parts.Root {...props} bind:open children={children ?? fallback} />

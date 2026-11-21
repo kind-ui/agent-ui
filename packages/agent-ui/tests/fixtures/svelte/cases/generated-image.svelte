@@ -47,8 +47,7 @@
     {src}
     {...size}
     {motion}
-  />
-  <GeneratedImage
+  /><GeneratedImage
     id="loaded"
     alt="A lighthouse at dusk"
     src={lighthouse}
@@ -60,8 +59,7 @@
       });
     }}
     {motion}
-  />
-  <GeneratedImage
+  /><GeneratedImage
     id="failed"
     alt="A lighthouse in a storm"
     status="error"

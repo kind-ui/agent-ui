@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 type Fixture = {
   kindHost: { removes: { id: string; reason: string; source?: string }[] };
@@ -145,7 +146,10 @@ test("removing the last chip behind +N closes the list and focus stays in the ba
   await expect(shown(page).last()).toBeFocused();
 });
 
-test("an agent sees one Context entry, removes by id, and refuses an unknown one", async ({ page }) => {
+test("an agent sees one Context entry, removes by id, and refuses an unknown one", async ({
+  page,
+}, testInfo) => {
+  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
   await load(page);
   await expectAgentActions(page, "Context", ["remove", "open", "press"]);
   const act = (action: string, args: unknown[]) =>

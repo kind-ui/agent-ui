@@ -63,8 +63,8 @@
 {/snippet}
 
 <div class="flex flex-col gap-3 bg-[var(--kind-color-surface)] p-4">
-  <button type="button" id="before">Before</button>
-  <div class="relative w-[32rem]">
+  <button type="button" id="before">Before</button
+  ><div class="relative w-[32rem]">
     {#if controlled}
       <ConversationSearch
         {messages}
@@ -89,8 +89,7 @@
         {onOpenChange}
         {defaultQuery}
       />
-    {/if}
-    <Conversation
+    {/if}<Conversation
       aria-label="Conversation"
       messageCount={messages.length}
       {virtualize}
@@ -114,9 +113,9 @@
             {/if}
           {/snippet}
         </ConversationContent>
-      </ConversationViewport>
-      <ConversationJump />
-      <ConversationMarks />
+      </ConversationViewport
+      ><ConversationJump
+      /><ConversationMarks />
     </Conversation>
   </div>
 </div>
