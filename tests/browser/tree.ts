@@ -4,7 +4,8 @@ import { settled } from "./agent-conformance.js";
 /**
  * The page's body as lines a diff reads (plan D6): element names with custom element wrappers dropped, `role`,
  * every `aria-*` and `data-*` attribute, `hidden`, `inert`, `disabled`, sorted classes and text, adjacent text nodes
- * joined. Ids are compared by reference: each becomes `#<n>` in document order, and so does any attribute value that
+ * joined. Whitespace at a text node's ends counts only where it renders, so a space between inline siblings that one
+ * layer shows and another collapses is a difference, and template whitespace that collapses isn't. Ids are compared by reference: each becomes `#<n>` in document order, and so does any attribute value that
  * names one. Inline styles, `tabindex`, scripts, the announcer region and the fixture root's mount markers are left
  * out.
  */
@@ -21,18 +22,43 @@ export function normalizedTree(page: Page, omit: readonly Omitted[] = []): Promi
         .map((token) => ids.get(token) ?? token)
         .join(" ");
     const lines: string[] = [];
+    const range = document.createRange();
+    const shows = (node: Text, start: number, end: number) => {
+      range.setStart(node, start);
+      range.setEnd(node, end);
+      return [...range.getClientRects()].some((rect) => rect.width > 0);
+    };
+    // A text node's text with its leading and trailing whitespace kept as one space only where it renders. Text
+    // that doesn't render (hidden, in a closed popup) keeps its whitespace and is trimmed as a run.
+    let shown = false;
+    const boxed = (node: Text) => {
+      let el = node.parentElement;
+      while (el && getComputedStyle(el).display === "contents") el = el.parentElement;
+      return el?.checkVisibility() ?? false;
+    };
+    const rendered = (node: Text) => {
+      const value = node.data;
+      if (!boxed(node)) return value;
+      shown = true;
+      const lead = /^\s*/.exec(value)?.[0].length ?? 0;
+      if (lead === value.length) return lead && shows(node, 0, lead) ? " " : "";
+      const trail = /\s*$/.exec(value)?.[0].length ?? 0;
+      const end = value.length - trail;
+      return `${lead && shows(node, 0, lead) ? " " : ""}${value.slice(lead, end)}${trail && shows(node, end, value.length) ? " " : ""}`;
+    };
     // Text nodes with no element line between them read as one, since layers split text differently: React
     // renders `Pressed {n}` as two nodes, Svelte as one.
     let text = "";
     const flush = (depth: number) => {
-      const joined = text.replace(/\s+/g, " ").trim();
+      const joined = shown ? text.replace(/\s+/g, " ") : text.replace(/\s+/g, " ").trim();
       if (joined) lines.push(`${"  ".repeat(depth)}"${joined}"`);
       text = "";
+      shown = false;
     };
     const walk = (node: Node, depth: number) => {
       for (const child of node.childNodes) {
         if (child.nodeType === Node.TEXT_NODE) {
-          text += child.textContent ?? "";
+          text += rendered(child as Text);
           continue;
         }
         if (!(child instanceof Element) || child.matches(skip)) continue;
