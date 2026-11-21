@@ -3,7 +3,6 @@
   whitespace between them, which would join the chip's text.
 -->
 <script lang="ts">
-  import type { AttachmentState } from "@kind-ui/agent-ui/core";
   import type { ComponentProps } from "svelte";
   import { parts } from "./parts.js";
 

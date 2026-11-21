@@ -1,6 +1,5 @@
 <!-- A `<time>` of `createdAt`: the time of day, with the date when it isn't today. -->
 <script lang="ts">
-  import type { MessageTimeState } from "@kind-ui/agent-ui/core";
   import type { ComponentProps } from "svelte";
   import { parts } from "./parts.js";
 

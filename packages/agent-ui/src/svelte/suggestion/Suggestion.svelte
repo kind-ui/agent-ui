@@ -4,7 +4,6 @@
   `SuggestionItem`s inside the Carousel, or `SuggestionChip`s when it wraps.
 -->
 <script lang="ts">
-  import type { SuggestionRootState } from "@kind-ui/agent-ui/core";
   import type { ComponentProps, Snippet } from "svelte";
   import { KindCarousel } from "../internal/carousel/index.js";
   import { parts } from "./parts.js";

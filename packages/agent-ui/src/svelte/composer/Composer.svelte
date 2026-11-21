@@ -3,7 +3,6 @@
   Name it with `aria-label`.
 -->
 <script lang="ts">
-  import type { ComposerRootState } from "@kind-ui/agent-ui/core";
   import { FileInput, FileInputDropzone } from "@ui-sdk/svelte/file-input";
   import type { ComponentProps, Snippet } from "svelte";
   import { parts } from "./parts.js";

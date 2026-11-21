@@ -3,7 +3,6 @@
   (`onApprove`, `onDeny`) render. Any `children` replace the default parts.
 -->
 <script lang="ts">
-  import type { ConfirmationState } from "@kind-ui/agent-ui/core";
   import type { ComponentProps } from "svelte";
   import ConfirmationApprove from "./ConfirmationApprove.svelte";
   import ConfirmationCancel from "./ConfirmationCancel.svelte";

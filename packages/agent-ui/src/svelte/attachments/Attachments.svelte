@@ -5,7 +5,6 @@
   instead leave at once.
 -->
 <script lang="ts">
-  import type { AttachmentsRootState } from "@kind-ui/agent-ui/core";
   import type { ComponentProps } from "svelte";
   import Attachment from "./Attachment.svelte";
   import { parts } from "./parts.js";

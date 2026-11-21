@@ -1,7 +1,6 @@
 <!-- Suggests `mentions` after `@` and `commands` after `/`; choosing one inserts a token. -->
 <script lang="ts">
-  import type { ComposerTriggerItem, ComposerTriggerMenuState } from "@kind-ui/agent-ui/core";
-  import type { TriggerMenuContentState } from "@ui-sdk/svelte/trigger-menu";
+  import type { ComposerTriggerItem } from "@kind-ui/agent-ui/core";
   import type { ComponentProps } from "svelte";
   import {
     KindTriggerMenu,

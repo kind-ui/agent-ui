@@ -1,6 +1,5 @@
 <!-- A code block with its language, a wrap toggle and a copy button. Name it with `aria-label`. -->
 <script lang="ts">
-  import type { CodeBlockState } from "@kind-ui/agent-ui/core";
   import type { ComponentProps } from "svelte";
   import {
     KindScrollArea,

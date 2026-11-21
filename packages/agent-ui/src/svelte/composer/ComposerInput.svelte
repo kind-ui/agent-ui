@@ -3,7 +3,6 @@
   To cancel a key, like Enter, use `onkeydowncapture`: the Token Input handles keys before `onkeydown` runs.
 -->
 <script lang="ts">
-  import type { ComposerInputState } from "@kind-ui/agent-ui/core";
   import {
     type Token,
     TokenInput,

@@ -1,6 +1,5 @@
 <!-- The draft's attachments, hidden while there are none. -->
 <script lang="ts">
-  import type { ComposerAttachmentsState } from "@kind-ui/agent-ui/core";
   import { Attachments, type AttachmentsProps } from "../attachments/index.js";
   import { parts } from "./parts.js";
 

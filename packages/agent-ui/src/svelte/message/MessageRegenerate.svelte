@@ -3,7 +3,6 @@
   them instead, rendered through UI SDK's `MenuTrigger`, so it keeps its place in the toolbar's arrow-key order.
 -->
 <script lang="ts">
-  import type { MessageRegenerateState } from "@kind-ui/agent-ui/core";
   import { MenuTrigger } from "@ui-sdk/svelte/menu";
   import type { ComponentProps, Snippet } from "svelte";
   import { KindMenu } from "../internal/menu/index.js";

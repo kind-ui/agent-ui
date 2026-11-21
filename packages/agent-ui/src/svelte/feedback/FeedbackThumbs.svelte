@@ -1,6 +1,5 @@
 <!-- UI SDK's Toggle group, holding the thumbs unless you pass children. One Tab stop, with arrow keys between. -->
 <script lang="ts">
-  import type { FeedbackThumbsState } from "@kind-ui/agent-ui/core";
   import { ToggleGroup } from "@ui-sdk/svelte/toggle";
   import type { ComponentProps, Snippet } from "svelte";
   import FeedbackDown from "./FeedbackDown.svelte";

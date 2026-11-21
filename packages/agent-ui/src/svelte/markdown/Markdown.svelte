@@ -1,6 +1,5 @@
 <!-- Renders `source` as it streams in, with code blocks and tables. -->
 <script lang="ts">
-  import type { MarkdownState } from "@kind-ui/agent-ui/core";
   import type { ComponentProps } from "svelte";
   import MarkdownBlock from "./MarkdownBlock.svelte";
   import { parts } from "./parts.js";

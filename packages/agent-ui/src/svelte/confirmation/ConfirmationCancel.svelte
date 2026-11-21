@@ -1,6 +1,5 @@
 <!-- Closes the reason box without deciding. Reads "Cancel" unless you pass children. Rendered while the box is open. -->
 <script lang="ts">
-  import type { ConfirmationState } from "@kind-ui/agent-ui/core";
   import type { ComponentProps } from "svelte";
   import { parts } from "./parts.js";
 

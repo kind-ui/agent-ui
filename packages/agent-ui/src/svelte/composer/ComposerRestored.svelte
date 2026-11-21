@@ -1,6 +1,5 @@
 <!-- "Draft restored" with Discard, shown while a draft restored from `draftStorage` is still unedited. -->
 <script lang="ts">
-  import type { ComposerState } from "@kind-ui/agent-ui/core";
   import type { ComponentProps } from "svelte";
   import { parts } from "./parts.js";
 

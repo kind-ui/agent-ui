@@ -3,7 +3,6 @@
   opens it.
 -->
 <script lang="ts">
-  import type { ConfirmationReasonState } from "@kind-ui/agent-ui/core";
   import type { ComponentProps } from "svelte";
   import { KindTextarea } from "../internal/textarea/index.js";
   import { parts } from "./parts.js";

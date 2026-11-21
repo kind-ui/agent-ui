@@ -1,6 +1,5 @@
 <!-- A suggestion's button, whose `value` is its `id`. Reads its label and description unless you pass children. -->
 <script lang="ts">
-  import type { SuggestionItemState } from "@kind-ui/agent-ui/core";
   import type { ComponentProps } from "svelte";
   import { parts } from "./parts.js";
 
