@@ -84,3 +84,41 @@ export const KindMenuItemContent: FunctionalComponent<KindMenuItemContentProps> 
   ]),
 ];
 KindMenuItemContent.props = ["icon", "label", "description"];
+
+// `@ui-sdk/vue` hands a part's state as a proxy that tracks each key read and has no keys of its own, so a spread
+// copies nothing: these read what `menuBase`'s parts hand UI SDK Menu key by key.
+
+type MenuState = {
+  controller: unknown;
+  presentation: unknown;
+  open: boolean;
+  onOpenChange: unknown;
+  onAction: unknown;
+  onCheckedChange: unknown;
+  onValueChange: unknown;
+};
+type MenuTriggerState = {
+  "aria-label": string;
+  disabled: boolean;
+  "data-kind-trigger"?: "";
+  "data-kind-icon-button"?: "";
+};
+
+/** The root's state as UI SDK `Menu`'s props: `h(KindMenu, menuProps(state), …)`. */
+export const menuProps = <State extends MenuState>(state: State) => ({
+  controller: state.controller as State["controller"],
+  presentation: state.presentation as State["presentation"],
+  open: state.open,
+  onOpenChange: state.onOpenChange as State["onOpenChange"],
+  onAction: state.onAction as State["onAction"],
+  onCheckedChange: state.onCheckedChange as State["onCheckedChange"],
+  onValueChange: state.onValueChange as State["onValueChange"],
+});
+
+/** The trigger's state as UI SDK `MenuTrigger`'s props. */
+export const menuTriggerProps = <State extends MenuTriggerState>(state: State) => ({
+  "aria-label": state["aria-label"],
+  disabled: state.disabled,
+  "data-kind-trigger": state["data-kind-trigger"],
+  "data-kind-icon-button": state["data-kind-icon-button"],
+});

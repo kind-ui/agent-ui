@@ -17,6 +17,8 @@ export const budgets: Partial<Budgets> = {
 
   // framework-vue-3: composer controls
 
+  contextChip: { writes: 5, renders: 9, notified: 0, layoutReads: 0 },
+
   // framework-vue-4: indicators, notices and files
 
   // framework-vue-5: step family
