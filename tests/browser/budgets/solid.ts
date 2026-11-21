@@ -35,5 +35,15 @@ export const budgets: Partial<Budgets> = {
 
   // framework-solid-7: Wave 6 shell
 
+  // Thread List: pinning moves every row in view (29 writes at 10 threads, 48 at 1,000, where the column is full);
+  // appending writes only the new rows in view (24 at 10, 1 at 1,000). No row renders again, nor is any part notified.
+  threadSelect: { writes: 4, renders: 0, notified: 0, layoutReads: 0 },
+  threadPin: { writes: 48, renders: 0, notified: 0, layoutReads: 2 },
+  threadAppend: { writes: 24, renders: 0, notified: 0, layoutReads: 2 },
+
+  // At 100 messages the writes are the marks a character moves; at 5,000 every step holds a match, so only the count
+  // changes: the rows in view keep their nodes, since the highlights are painted, not rendered.
+  conversationSearchType: { writes: 115, renders: 0, notified: 0, layoutReads: 4 },
+
   // framework-solid-8: conformance
 };
