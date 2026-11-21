@@ -1,0 +1,22 @@
+import { Tree, TreeItem, TreeItemIndicator, TreeItemLabel } from "@ui-sdk/svelte/tree";
+import { withKindClass } from "../kind-class.js";
+
+// No Kind group: a `display` utility would outrank the `hidden` a closed group gets.
+export { TreeGroup as KindTreeGroup } from "@ui-sdk/svelte/tree";
+
+export const KindTree = withKindClass(
+  Tree,
+  "flex flex-col text-[length:var(--kind-text-md)]/5 text-[var(--kind-color-fg)]",
+);
+export const KindTreeItem = withKindClass(
+  TreeItem,
+  "outline-hidden [&:focus-visible>[data-slot=tree-label]]:[outline:var(--kind-focus-ring)] [&:focus-visible>[data-slot=tree-label]]:[outline-offset:var(--kind-focus-offset-inset)]",
+);
+export const KindTreeItemLabel = withKindClass(
+  TreeItemLabel,
+  "flex min-h-7 cursor-default items-center gap-1.5 rounded-[var(--kind-radius-md)] ps-[calc((var(--tree-level)-1)*1rem+0.25rem)] pe-2 select-none hover:bg-[var(--kind-color-hover)] data-selected:bg-[var(--kind-color-selected)] data-disabled:opacity-[var(--kind-disabled-opacity)]",
+);
+export const KindTreeItemIndicator = withKindClass(
+  TreeItemIndicator,
+  "inline-flex size-4 shrink-0 items-center justify-center text-[var(--kind-color-muted)] [&_svg]:size-3.5 rtl:[&_svg]:-scale-x-100 data-expanded:[&_svg]:rotate-90 rtl:data-expanded:[&_svg]:-rotate-90",
+);
