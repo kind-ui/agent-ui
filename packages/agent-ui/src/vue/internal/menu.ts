@@ -1,3 +1,4 @@
+import type { MenuPartState, MenuTriggerState } from "@kind-ui/agent-ui/core";
 import {
   Menu,
   MenuCheckboxItem,
@@ -84,3 +85,25 @@ export const KindMenuItemContent: FunctionalComponent<KindMenuItemContentProps> 
   ]),
 ];
 KindMenuItemContent.props = ["icon", "label", "description"];
+
+// `@ui-sdk/vue` hands a part's state as a proxy that tracks each key read and has no keys of its own, so a spread
+// copies nothing: these read what `menuBase`'s parts hand UI SDK Menu key by key.
+
+/** The root's state as UI SDK `Menu`'s props: `h(KindMenu, menuProps(state), …)`. */
+export const menuProps = (state: MenuPartState) => ({
+  controller: state.controller,
+  presentation: state.presentation,
+  open: state.open,
+  onOpenChange: state.onOpenChange,
+  onAction: state.onAction,
+  onCheckedChange: state.onCheckedChange,
+  onValueChange: state.onValueChange,
+});
+
+/** The trigger's state as UI SDK `MenuTrigger`'s props. */
+export const menuTriggerProps = (state: MenuTriggerState) => ({
+  "aria-label": state["aria-label"],
+  disabled: state.disabled,
+  "data-kind-trigger": state["data-kind-trigger"],
+  "data-kind-icon-button": state["data-kind-icon-button"],
+});
