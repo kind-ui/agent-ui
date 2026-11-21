@@ -223,7 +223,13 @@ export const checkpointPrimitive: CheckpointPrimitive = definePrimitive<
     const watch = () => {
       watching = true;
       store.set({ failed: false });
-      void controller.open().then(({ reason, source }) => {
+      // Undefined until an Alert Dialog attaches the controller.
+      const closed = controller.open() as ReturnType<typeof controller.open> | undefined;
+      if (!closed) {
+        watching = false;
+        return;
+      }
+      void closed.then(({ reason, source }) => {
         watching = false;
         if (destroyed) return;
         if (store.get().open)
@@ -245,9 +251,12 @@ export const checkpointPrimitive: CheckpointPrimitive = definePrimitive<
     };
     store.subscribe(sync);
 
-    context.onOptions(({ restored }) => {
-      if (!mounting && restored && !store.get().restored)
-        announce("Checkpoint restored", { priority: "polite" });
+    // Compared with the last options rather than the store: a framework that hands its props over through
+    // `follow` (Svelte) shows the new value in `store.get()` before `onOptions` runs.
+    let wasRestored = store.get().restored;
+    context.onOptions(({ restored = false }) => {
+      if (!mounting && restored && !wasRestored) announce("Checkpoint restored", { priority: "polite" });
+      wasRestored = restored;
     });
 
     const dialogState = memo(
@@ -297,7 +306,8 @@ export const checkpointPrimitive: CheckpointPrimitive = definePrimitive<
       },
       bindDialog: () => {
         dialogBound = true;
-        sync();
+        // `@ui-sdk/svelte` binds this part before the Alert Dialog inside it attaches the controller.
+        queueMicrotask(() => dialogBound && sync());
         return () => {
           dialogBound = false;
         };

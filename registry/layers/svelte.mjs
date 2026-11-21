@@ -12,6 +12,19 @@ export default {
 
     // framework-svelte-2: chat core
 
+    "markdown",
+    "code-block",
+    "markdown-table",
+    "conversation",
+    "message",
+    "composer",
+    "attachments",
+    "suggestion",
+    "feedback",
+    "confirmation",
+    "question",
+    "checkpoint",
+
     // framework-svelte-3: composer controls
 
     // framework-svelte-4: indicators, notices and files
@@ -43,6 +56,14 @@ export default {
 
     // framework-svelte-2: chat core
 
+    "alert-dialog",
+    "carousel",
+    "checkbox",
+    "radio",
+    "textarea",
+    "toolbar",
+    "tooltip",
+
     // framework-svelte-3: composer controls
 
     // framework-svelte-4: indicators, notices and files
@@ -65,6 +86,17 @@ export default {
     "hydration.spec.ts",
 
     // framework-svelte-2: chat core
+
+    "wave-1/markdown.spec.ts",
+    "wave-1/conversation.spec.ts",
+    "wave-1/message.spec.ts",
+    "wave-1/composer.spec.ts",
+    "wave-3/suggestion.spec.ts",
+    "wave-3/feedback.spec.ts",
+    "wave-3/confirmation.spec.ts",
+    "wave-3/question.spec.ts",
+    "wave-3/checkpoint.spec.ts",
+    "wave-1/budgets.spec.ts",
 
     // framework-svelte-3: composer controls
 
