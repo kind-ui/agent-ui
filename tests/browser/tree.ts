@@ -3,9 +3,10 @@ import { settled } from "./agent-conformance.js";
 
 /**
  * The page's body as lines a diff reads (plan D6): element names with custom element wrappers dropped, `role`,
- * every `aria-*` and `data-*` attribute, `hidden`, `inert`, `disabled`, sorted classes and text. Ids are compared by
- * reference: each becomes `#<n>` in document order, and so does any attribute value that names one. Inline styles,
- * `tabindex`, scripts, the announcer region and the fixture root's mount markers are left out.
+ * every `aria-*` and `data-*` attribute, `hidden`, `inert`, `disabled`, sorted classes and text, adjacent text nodes
+ * joined. Ids are compared by reference: each becomes `#<n>` in document order, and so does any attribute value that
+ * names one. Inline styles, `tabindex`, scripts, the announcer region and the fixture root's mount markers are left
+ * out.
  */
 export function normalizedTree(page: Page): Promise<string[]> {
   return page.evaluate(() => {
@@ -20,11 +21,18 @@ export function normalizedTree(page: Page): Promise<string[]> {
         .map((token) => ids.get(token) ?? token)
         .join(" ");
     const lines: string[] = [];
+    // Text nodes with no element line between them read as one, since layers split text differently: React
+    // renders `Pressed {n}` as two nodes, Svelte as one.
+    let text = "";
+    const flush = (depth: number) => {
+      const joined = text.replace(/\s+/g, " ").trim();
+      if (joined) lines.push(`${"  ".repeat(depth)}"${joined}"`);
+      text = "";
+    };
     const walk = (node: Node, depth: number) => {
       for (const child of node.childNodes) {
         if (child.nodeType === Node.TEXT_NODE) {
-          const text = child.textContent?.replace(/\s+/g, " ").trim();
-          if (text) lines.push(`${"  ".repeat(depth)}"${text}"`);
+          text += child.textContent ?? "";
           continue;
         }
         if (!(child instanceof Element) || child.matches(skip)) continue;
@@ -33,6 +41,7 @@ export function normalizedTree(page: Page): Promise<string[]> {
           walk(child, depth);
           continue;
         }
+        flush(depth);
         const attributes = [...child.attributes]
           .filter(
             (attribute) => kept.test(attribute.name) && !["data-ssr", "data-v-app"].includes(attribute.name),
@@ -45,9 +54,11 @@ export function normalizedTree(page: Page): Promise<string[]> {
           .sort();
         lines.push(`${"  ".repeat(depth)}<${[name, ...attributes].join(" ")}>`);
         walk(child, depth + 1);
+        flush(depth + 1);
       }
     };
     walk(document.body, 0);
+    flush(0);
     return lines;
   });
 }
