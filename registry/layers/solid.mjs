@@ -61,6 +61,18 @@ export default {
 
     // framework-solid-6: developer output
 
+    "sources",
+    "inline-citation",
+    "document",
+    "generated-image",
+    "file-tree",
+    "terminal",
+    "stack-trace",
+    "test-results",
+    "transcript",
+    "selection",
+    "action",
+
     // framework-solid-7: Wave 6 shell
 
     "thread-list",
@@ -104,6 +116,10 @@ export default {
     // framework-solid-3: composer controls
 
     "segmented-control",
+
+    // framework-solid-6: developer output
+
+    "tree",
 
     // framework-solid-7: Wave 6 shell
 
@@ -165,6 +181,18 @@ export default {
     "wave-2/queue.spec.ts",
 
     // framework-solid-6: developer output
+
+    "wave-4/sources.spec.ts",
+    "wave-4/inline-citation.spec.ts",
+    "wave-4/document.spec.ts",
+    "wave-4/generated-image.spec.ts",
+    "wave-4/file-tree.spec.ts",
+    "wave-4/terminal.spec.ts",
+    "wave-4/stack-trace.spec.ts",
+    "wave-4/test-results.spec.ts",
+    "wave-4/transcript.spec.ts",
+    "wave-4/selection.spec.ts",
+    "wave-4/action.spec.ts",
 
     // framework-solid-7: Wave 6 shell
 
