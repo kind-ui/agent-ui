@@ -11,6 +11,8 @@ const tables = { react, web, vue, svelte, solid };
 // Count budgets: deterministic counts, never timings. Each runs at two list sizes against one limit, so work that
 // grows with the list fails. Each layer's limits are in `tests/browser/budgets/<layer>.ts` (plan D12); a case the
 // layer has no budget for yet is skipped.
+// Each test reads its budget before it loads a page, so a layer with no entry for a case skips it (plan D12)
+// rather than failing on a page it hasn't ported yet.
 let BUDGETS: Budgets;
 const useBudgets = (testInfo: TestInfo) => {
   const layer = layerOf(testInfo);
@@ -169,22 +171,25 @@ const openConversation = async (page: Page, name: string) => {
 
 for (const size of SIZES) {
   test(`a streamed token in a ${size}-row conversation`, async ({ page }) => {
+    const limit = BUDGETS.conversationStream;
     await openConversation(page, `chat-${size}`);
     const counts = await most(page, 20, 'kindConversation.stream(" streamed")');
-    expect(counts.writes).toBeLessThanOrEqual(BUDGETS.conversationStream.writes);
-    expect(counts.renders).toBeLessThanOrEqual(BUDGETS.conversationStream.renders);
-    expect(counts.notified).toBeLessThanOrEqual(BUDGETS.conversationStream.notified);
+    expect(counts.writes).toBeLessThanOrEqual(limit.writes);
+    expect(counts.renders).toBeLessThanOrEqual(limit.renders);
+    expect(counts.notified).toBeLessThanOrEqual(limit.notified);
   });
 
   test(`following a new message in a ${size}-row conversation`, async ({ page }) => {
+    const limit = BUDGETS.conversationFollow;
     await openConversation(page, `chat-${size}`);
     // WebKit fires the opening scroll-to-end's scroll event late; let it land before counting.
     await page.evaluate(frames);
     const counts = await most(page, 5, "kindConversation.append()");
-    expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS.conversationFollow.layoutReads);
+    expect(counts.layoutReads).toBeLessThanOrEqual(limit.layoutReads);
   });
 
   test(`a streamed chunk after ${size} markdown blocks`, async ({ page }) => {
+    const limit = BUDGETS.markdownStream;
     await page.goto("/?c=markdown&case=stream");
     await expect(page.locator('[data-slot="kind-markdown"]')).toBeAttached();
     await page.evaluate((blocks) => {
@@ -197,13 +202,14 @@ for (const size of SIZES) {
         ...(window as unknown as Fixture).kindMarkdown.records.slice(-20).map((record) => record.parses),
       ),
     );
-    expect(parses).toBeLessThanOrEqual(BUDGETS.markdownStream.parses);
-    expect(counts.writes).toBeLessThanOrEqual(BUDGETS.markdownStream.writes);
-    expect(counts.renders).toBeLessThanOrEqual(BUDGETS.markdownStream.renders);
-    expect(counts.notified).toBeLessThanOrEqual(BUDGETS.markdownStream.notified);
+    expect(parses).toBeLessThanOrEqual(limit.parses);
+    expect(counts.writes).toBeLessThanOrEqual(limit.writes);
+    expect(counts.renders).toBeLessThanOrEqual(limit.renders);
+    expect(counts.notified).toBeLessThanOrEqual(limit.notified);
   });
 
   test(`streamed input in one of ${size} tools`, async ({ page }) => {
+    const limit = BUDGETS.toolStream;
     await page.goto(`/?c=tool&case=many-${size}`);
     await expect(page.locator("#tool-0")).toHaveAttribute("data-open", "");
     // A step drops `data-mounting` in its second frame; stream once it's at rest.
@@ -213,9 +219,9 @@ for (const size of SIZES) {
       20,
       `kindTool.setCall("tool-0", { input: { state: "streaming", value: { query: "q".repeat(window.kindChunk = (window.kindChunk ?? 0) + 1) } } })`,
     );
-    expect(counts.writes).toBeLessThanOrEqual(BUDGETS.toolStream.writes);
-    expect(counts.renders).toBeLessThanOrEqual(BUDGETS.toolStream.renders);
-    expect(counts.notified).toBeLessThanOrEqual(BUDGETS.toolStream.notified);
+    expect(counts.writes).toBeLessThanOrEqual(limit.writes);
+    expect(counts.renders).toBeLessThanOrEqual(limit.renders);
+    expect(counts.notified).toBeLessThanOrEqual(limit.notified);
   });
 }
 
@@ -229,21 +235,23 @@ for (const lines of [10, 1000]) {
   };
 
   test(`a chunk on the last of ${lines} terminal lines`, async ({ page }) => {
+    const limit = BUDGETS.terminalChunk;
     await openTerminal(page);
     const counts = await most(page, 20, 'kindTerminal.append("stream", " \\x1b[32mok\\x1b[0m")');
-    expect(counts.writes).toBeLessThanOrEqual(BUDGETS.terminalChunk.writes);
-    expect(counts.renders).toBeLessThanOrEqual(BUDGETS.terminalChunk.renders);
-    expect(counts.notified).toBeLessThanOrEqual(BUDGETS.terminalChunk.notified);
-    expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS.terminalChunk.layoutReads);
+    expect(counts.writes).toBeLessThanOrEqual(limit.writes);
+    expect(counts.renders).toBeLessThanOrEqual(limit.renders);
+    expect(counts.notified).toBeLessThanOrEqual(limit.notified);
+    expect(counts.layoutReads).toBeLessThanOrEqual(limit.layoutReads);
   });
 
   test(`a new line after ${lines} terminal lines`, async ({ page }) => {
+    const limit = BUDGETS.terminalLine;
     await openTerminal(page);
     const counts = await most(page, 20, 'kindTerminal.append("stream", "\\nnext line")');
-    expect(counts.writes).toBeLessThanOrEqual(BUDGETS.terminalLine.writes);
-    expect(counts.renders).toBeLessThanOrEqual(BUDGETS.terminalLine.renders);
-    expect(counts.notified).toBeLessThanOrEqual(BUDGETS.terminalLine.notified);
-    expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS.terminalLine.layoutReads);
+    expect(counts.writes).toBeLessThanOrEqual(limit.writes);
+    expect(counts.renders).toBeLessThanOrEqual(limit.renders);
+    expect(counts.notified).toBeLessThanOrEqual(limit.notified);
+    expect(counts.layoutReads).toBeLessThanOrEqual(limit.layoutReads);
   });
 }
 
@@ -264,6 +272,7 @@ for (const segments of [100, 5000]) {
   };
 
   test(`playback moving to the next word among ${segments} segments`, async ({ page }) => {
+    const limit = BUDGETS.transcriptWord;
     await openTranscript(page);
     // Each segment's words run from its start for about 6 s, a word every 0.7 s or so.
     const counts = await most(
@@ -271,40 +280,43 @@ for (const segments of [100, 5000]) {
       20,
       'kindTranscript.set("many", { currentTime: 20 + ((window.kindStep = (window.kindStep ?? 0) + 1) % 8) * 0.7 })',
     );
-    budget(counts, BUDGETS.transcriptWord);
+    budget(counts, limit);
   });
 
   test(`playback moving to the next of ${segments} segments`, async ({ page }) => {
+    const limit = BUDGETS.transcriptSegment;
     await openTranscript(page);
     const counts = await most(
       page,
       20,
       'kindTranscript.set("many", { currentTime: (window.kindStep = (window.kindStep ?? 0) + 1) * 10 + 0.1 })',
     );
-    budget(counts, BUDGETS.transcriptSegment);
+    budget(counts, limit);
   });
 
   test(`a search over ${segments} segments`, async ({ page }) => {
+    const limit = BUDGETS.transcriptSearch;
     await openTranscript(page);
     const counts = await most(
       page,
       20,
       'kindTranscript.set("many", { query: ["rollout", "agenda", "follow", ""][(window.kindStep = (window.kindStep ?? 0) + 1) % 4] })',
     );
-    budget(counts, BUDGETS.transcriptSearch);
+    budget(counts, limit);
   });
 }
 
 // Adding a chip renders the new chip and the parts around the list, not every chip: at 10 chips as at 200.
 for (const chips of [10, 200]) {
   test(`adding a chip among ${chips}`, async ({ page }) => {
+    const limit = BUDGETS.contextChip;
     await page.goto(`/?c=context-bar&case=many-${chips}`);
     await expect(page.locator('[data-context-bar-part="overflow"]')).toHaveText(`+${chips - 2}`);
     const counts = await most(page, 5, "kindContext.add()");
-    expect(counts.writes).toBeLessThanOrEqual(BUDGETS.contextChip.writes);
-    expect(counts.renders).toBeLessThanOrEqual(BUDGETS.contextChip.renders);
-    expect(counts.notified).toBeLessThanOrEqual(BUDGETS.contextChip.notified);
-    expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS.contextChip.layoutReads);
+    expect(counts.writes).toBeLessThanOrEqual(limit.writes);
+    expect(counts.renders).toBeLessThanOrEqual(limit.renders);
+    expect(counts.notified).toBeLessThanOrEqual(limit.notified);
+    expect(counts.layoutReads).toBeLessThanOrEqual(limit.layoutReads);
   });
 }
 
@@ -322,13 +334,14 @@ const THREAD_ACTIONS = {
 for (const threads of ["ten", "thousand"])
   for (const [name, action] of Object.entries(THREAD_ACTIONS) as [keyof typeof THREAD_ACTIONS, string][])
     test(`${name} among ${threads} threads`, async ({ page }) => {
+      const limit = BUDGETS[name];
       await page.goto(`/?c=thread-list&case=${threads}`);
       await expect(page.getByRole("link", { name: "Thread 1", exact: true })).toBeVisible();
       const counts = await most(page, 4, action);
-      expect(counts.writes).toBeLessThanOrEqual(BUDGETS[name].writes);
-      expect(counts.renders).toBeLessThanOrEqual(BUDGETS[name].renders);
-      expect(counts.notified).toBeLessThanOrEqual(BUDGETS[name].notified);
-      expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS[name].layoutReads);
+      expect(counts.writes).toBeLessThanOrEqual(limit.writes);
+      expect(counts.renders).toBeLessThanOrEqual(limit.renders);
+      expect(counts.notified).toBeLessThanOrEqual(limit.notified);
+      expect(counts.layoutReads).toBeLessThanOrEqual(limit.layoutReads);
     });
 
 // wave-6-task-11: Conversation Search
@@ -336,6 +349,7 @@ for (const threads of ["ten", "thousand"])
 // Typing a character re-renders the marks it moves and the rows in view, not the messages: at 100 as at 5,000.
 for (const messages of [100, 5000]) {
   test(`typing a character in a search over ${messages} messages`, async ({ page }) => {
+    const limit = BUDGETS.conversationSearchType;
     await page.goto(`/?c=conversation-search&case=many-${messages}`);
     await expect(page.locator('[data-slot="kind-conversation-row"]').first()).toBeVisible();
     await page.evaluate(() =>
@@ -349,10 +363,10 @@ for (const messages of [100, 5000]) {
     );
     const marks = await page.locator('[data-slot="kind-conversation-mark"]').count();
     expect(marks).toBeLessThanOrEqual(120);
-    expect(counts.writes).toBeLessThanOrEqual(BUDGETS.conversationSearchType.writes);
-    expect(counts.renders).toBeLessThanOrEqual(BUDGETS.conversationSearchType.renders);
-    expect(counts.notified).toBeLessThanOrEqual(BUDGETS.conversationSearchType.notified);
-    expect(counts.layoutReads).toBeLessThanOrEqual(BUDGETS.conversationSearchType.layoutReads);
+    expect(counts.writes).toBeLessThanOrEqual(limit.writes);
+    expect(counts.renders).toBeLessThanOrEqual(limit.renders);
+    expect(counts.notified).toBeLessThanOrEqual(limit.notified);
+    expect(counts.layoutReads).toBeLessThanOrEqual(limit.layoutReads);
   });
 }
 
@@ -360,6 +374,7 @@ test("mounting and unmounting a conversation leaves no nodes or listeners behind
   page,
   browserName,
 }) => {
+  const limit = BUDGETS.remount;
   test.skip(browserName !== "chromium", "DOM and listener counters come from CDP, which only Chromium has");
   await openConversation(page, "remount");
   const cdp = await page.context().newCDPSession(page);
@@ -380,6 +395,6 @@ test("mounting and unmounting a conversation leaves no nodes or listeners behind
   const before = await counters();
   await remount(20);
   const after = await counters();
-  expect(after.nodes - before.nodes).toBeLessThanOrEqual(BUDGETS.remount.nodes);
-  expect(after.jsEventListeners - before.jsEventListeners).toBeLessThanOrEqual(BUDGETS.remount.listeners);
+  expect(after.nodes - before.nodes).toBeLessThanOrEqual(limit.nodes);
+  expect(after.jsEventListeners - before.jsEventListeners).toBeLessThanOrEqual(limit.listeners);
 });
