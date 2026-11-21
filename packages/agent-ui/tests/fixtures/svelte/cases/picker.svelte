@@ -16,7 +16,6 @@
 </script>
 
 {#if variant === "plain"}
-  <!-- A picker whose items have no icons and nothing chosen. -->
   <div class="p-6">
     <Picker
       id="picker"

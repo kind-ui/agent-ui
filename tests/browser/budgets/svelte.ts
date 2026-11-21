@@ -11,6 +11,10 @@ export const budgets: Partial<Budgets> = {
 
   // framework-svelte-3: composer controls
 
+  // Writes stay flat; UI SDK Svelte re-reads each chip's attributes on a store change (`notified`), which D12 doesn't
+  // budget for Svelte, so it holds the count at 200 chips.
+  contextChip: { writes: 13, renders: 0, notified: 412, layoutReads: 0 },
+
   // framework-svelte-4: indicators, notices and files
 
   // framework-svelte-5: step family

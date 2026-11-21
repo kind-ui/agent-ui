@@ -76,7 +76,6 @@
         {motion}
       />
       {#if refusing}
-        <!-- An owner that holds its value and never takes a change. -->
         <ReasoningEffort
           id="effort"
           {levels}
