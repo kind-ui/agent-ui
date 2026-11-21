@@ -1,6 +1,6 @@
 # @kind-ui/agent-ui
 
-AI interface components that people and agents can both use, for React, Web Components, Vue, Svelte and Solid, built on [UI SDK](https://ui-sdk.dev/docs).
+AI chat and agent interface components for React, Vue, Svelte, Solid and Web Components: messages, tool calls, reasoning, plans and approvals that people and agents can both use. Built on [UI SDK](https://ui-sdk.dev/docs), works with the AI SDK and shadcn.
 
 [![npm version](https://img.shields.io/npm/v/@kind-ui/agent-ui?color=0368FF&label=npm)](https://www.npmjs.com/package/@kind-ui/agent-ui)
 [![CI](https://github.com/kind-ui/agent-ui/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/kind-ui/agent-ui/actions/workflows/ci.yml)
