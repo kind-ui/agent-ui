@@ -1,5 +1,11 @@
 # @kind-ui/agent-ui
 
+## 0.6.1
+
+### Patch Changes
+
+- 53608d6: Fix the Inline Citation docs link to Sources, which pointed at a missing page on sites that mount these docs.
+
 ## 0.6.0
 
 ### Minor Changes
