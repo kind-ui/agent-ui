@@ -31,8 +31,8 @@ for (const name of components) {
 
 const frameworkFiles = { vue: "basic.vue", svelte: "basic.svelte", solid: "basic.solid.tsx" };
 
-// Wave 6 shell components the Svelte and Solid tracks haven't ported yet (Tasks Svelte-7 and Solid-7). Remove
-// this once both land, so every page must show every tab.
+// Wave 6 shell components the Svelte track hasn't ported yet (Task Svelte-7). Remove this once it lands, so
+// every page must show every tab.
 const shell = new Set([
   "thread-list",
   "thread-search",
@@ -42,7 +42,7 @@ const shell = new Set([
   "share-dialog",
   "conversation-search",
 ]);
-const unported = { svelte: shell, solid: shell };
+const unported = { svelte: shell };
 
 for (const name of components) {
   const pending = Object.keys(frameworkFiles).filter((layer) => unported[layer]?.has(name));
