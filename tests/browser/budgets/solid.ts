@@ -16,9 +16,14 @@ export const budgets: Partial<Budgets> = {
 
   // framework-solid-3: composer controls
 
+  // 5 writes, or 13 when the new chip's first measure lands inside the counted window, as it does under load.
+  contextChip: { writes: 13, renders: 0, notified: 0, layoutReads: 0 },
+
   // framework-solid-4: indicators, notices and files
 
   // framework-solid-5: step family
+
+  toolStream: { writes: 6, renders: 0, notified: 3 },
 
   // framework-solid-6: developer output
 
