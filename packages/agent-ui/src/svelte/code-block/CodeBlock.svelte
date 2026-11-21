@@ -19,10 +19,10 @@
     header?: boolean;
   };
 
-  let { header = true, ...props }: Props = $props();
+  let { header = true, wrap = $bindable(), ...props }: Props = $props();
 </script>
 
-<parts.Root {...props}>
+<parts.Root {...props} bind:wrap>
   {#if header}
     <parts.Header>
       <parts.Language>{#snippet children({ language }: CodeBlockState)}{language}{/snippet}</parts.Language>

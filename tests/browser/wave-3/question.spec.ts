@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { isWebElements } from "../layer.js";
+import { isWebElements, layerOf } from "../layer.js";
 
 type Call = {
   action: string;
@@ -202,7 +202,10 @@ test("a change the owner refuses goes back, and Submit sends what the owner hold
 });
 
 // UI SDK marks a whole component, so while `agentConfirm` is on every action of it needs a person.
-test("an agent answers and submits once a person allows it", async ({ page }) => {
+test("an agent answers and submits once a person allows it", async ({ page }, testInfo) => {
+  // framework-svelte-2: chat core. `@ui-sdk/svelte` keys a root by its `id`, which unnames the component in the agent
+  // snapshot (AGENTS.md "UI SDK API notes", Svelte chat core). Remove once UI SDK fixes it.
+  test.skip(layerOf(testInfo) === "svelte", "@ui-sdk/svelte keys a root by its id");
   await open(page);
   await expectAgentActions(page, "Deploy questions", ["select", "setText", "skip"]);
   expect(await act(page, "select", ["env", "prod"])).toContain("The person said no");
