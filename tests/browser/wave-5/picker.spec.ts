@@ -22,12 +22,18 @@ const act = (page: Page, ref: string, action: string, args: unknown[]) =>
         .then(JSON.stringify, (error: Error) => error.message),
     { ref, action, args },
   );
-// The list shows a frame before its entrance starts: UI SDK holds `data-starting-style` on it for that frame.
+// The list shows a frame before its entrance starts: UI SDK holds `data-starting-style` on it for that frame. A sheet's
+// scroll-driven animations follow its scroll and never finish.
 const settled = (page: Page) =>
   page.waitForFunction(
     () =>
       !document.querySelector("[data-starting-style]") &&
-      document.getAnimations().every((animation) => animation.playState !== "running"),
+      document
+        .getAnimations()
+        .every(
+          (animation) =>
+            animation.playState !== "running" || !(animation.timeline instanceof DocumentTimeline),
+        ),
   );
 
 const load = async (page: Page, name = "all") => {
