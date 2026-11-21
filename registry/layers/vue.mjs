@@ -29,6 +29,15 @@ export default {
 
     // framework-vue-4: indicators, notices and files
 
+    "guardrail-notice",
+    "loader",
+    "notice",
+    "status",
+    "streaming-text",
+    "thinking-indicator",
+    "typing-indicator",
+    "uploader",
+
     // framework-vue-5: step family
 
     "reasoning",
@@ -98,6 +107,12 @@ export default {
     // framework-vue-3: composer controls
 
     // framework-vue-4: indicators, notices and files
+
+    "wave-1/indicators.spec.ts",
+    "wave-1/uploader.spec.ts",
+    "wave-2/status.spec.ts",
+    "wave-3/notice.spec.ts",
+    "wave-3/guardrail-notice.spec.ts",
 
     // framework-vue-5: step family
 
