@@ -1,7 +1,8 @@
 <script lang="ts">
-  import type { ComponentProps } from "svelte";
+  
   import type { EffortLevel, SettingsValues } from "@kind-ui/agent-ui";
   import type { DictationEvent, DictationSource } from "@kind-ui/agent-ui/core";
+import type { ComponentProps } from "svelte";
   import { AddMenu } from "@/components/ui/svelte/add-menu/index.js";
   import { ApprovalMode } from "@/components/ui/svelte/approval-mode/index.js";
   import { Composer, ComposerInput, ComposerSubmit } from "@/components/ui/svelte/composer/index.js";
