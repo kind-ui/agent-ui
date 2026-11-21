@@ -60,6 +60,9 @@ process.env.KIND_LAYERS = layers.join(",");
 const origin = (index) => `http://localhost:${base + index}`;
 const originOf = (layer) => origin(allServers.find((server) => server.layer === layer).index);
 
+// `tests/browser/warm-up.ts` reads which servers to warm.
+process.env.KIND_FIXTURE_SERVERS = JSON.stringify(servers.map(({ layer, index }) => ({ layer, url: origin(index) })));
+
 const webServer = servers.map(({ layer, mode, index }) => ({
   command: `npx vite --config packages/agent-ui/tests/fixtures/${layer}/vite.config.mjs --port ${base + index} --strictPort --mode ${mode}`,
   url: origin(index),
@@ -123,4 +126,6 @@ export default defineConfig({
     ...crossBrowser,
   ],
   webServer,
+  // Runs once the servers answer and before any worker starts.
+  globalSetup: "./tests/browser/warm-up.ts",
 });
