@@ -115,8 +115,7 @@
 
 {#if variant === "button"}
   <KindButton onclick={() => presses++}>Save</KindButton>
-  {#snippet count()}{presses}{/snippet}
-  <output>Pressed {@render count()}</output>
+  <output>Pressed {presses}</output>
 {:else if variant === "collapsible"}
   <KindCollapsible>
     <KindCollapsibleTrigger>Details</KindCollapsibleTrigger>
