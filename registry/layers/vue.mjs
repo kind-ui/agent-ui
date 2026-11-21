@@ -63,6 +63,14 @@ export default {
 
     // framework-vue-7: Wave 6 shell
 
+    "thread-list",
+    "thread-search",
+    "sidebar",
+    "day-separator",
+    "connection-status",
+    "share-dialog",
+    "conversation-search",
+
     // framework-vue-8: conformance
   ],
   // Internal wrapper names, without the `internal-` prefix.
@@ -96,6 +104,11 @@ export default {
     // framework-vue-3: composer controls
 
     "segmented-control",
+
+    // framework-vue-7: Wave 6 shell
+
+    "drawer",
+    "resizable",
 
   ],
   // Spec files the layer's projects run, relative to `tests/browser/`.
@@ -154,6 +167,14 @@ export default {
     // framework-vue-6: developer output
 
     // framework-vue-7: Wave 6 shell
+
+    "wave-6/thread-list.spec.ts",
+    "wave-6/thread-search.spec.ts",
+    "wave-6/sidebar.spec.ts",
+    "wave-6/day-separator.spec.ts",
+    "wave-6/connection-status.spec.ts",
+    "wave-6/share-dialog.spec.ts",
+    "wave-6/conversation-search.spec.ts",
 
     // framework-vue-8: conformance
   ],
