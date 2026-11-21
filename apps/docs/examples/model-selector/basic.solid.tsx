@@ -1,4 +1,5 @@
 import { createSignal } from "solid-js";
+import { Composer, ComposerInput, ComposerSubmit } from "@/components/ui/solid/composer";
 import { ModelSelector } from "@/components/ui/solid/model-selector";
 import { ReasoningEffort } from "@/components/ui/solid/reasoning-effort";
 import { AnthropicLogo, GoogleMonogram, MicrosoftLogo, OpenAILogo, XAILogo } from "./logos.solid";
@@ -58,15 +59,19 @@ export default function ModelSelectorExample() {
   const [effort, setEffort] = createSignal<string | null>("medium");
   const [showAll, setShowAll] = createSignal(false);
   return (
-    <div class="flex min-w-0 flex-wrap items-center gap-2">
-      <ModelSelector
-        models={showAll() ? allModels : models}
-        value={model()}
-        onValueChange={(value) => setModel(value)}
-        actions={showAll() ? undefined : actions}
-        onAction={showAll() ? undefined : () => setShowAll(true)}
-      />
-      <ReasoningEffort value={effort()} onValueChange={(value) => setEffort(value)} />
-    </div>
+    <Composer aria-label="Message" class="w-full max-w-xl" onSubmit={() => undefined}>
+      <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
+      <div class="flex min-w-0 flex-wrap items-center gap-2" style={{ "grid-area": "attach" }}>
+        <ModelSelector
+          models={showAll() ? allModels : models}
+          value={model()}
+          onValueChange={(value) => setModel(value)}
+          actions={showAll() ? undefined : actions}
+          onAction={showAll() ? undefined : () => setShowAll(true)}
+        />
+        <ReasoningEffort value={effort()} onValueChange={(value) => setEffort(value)} />
+      </div>
+      <ComposerSubmit />
+    </Composer>
   );
 }

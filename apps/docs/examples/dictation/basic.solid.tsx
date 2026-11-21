@@ -1,5 +1,5 @@
 import type { DictationEvent, DictationSource } from "@kind-ui/agent-ui/core";
-import { createSignal } from "solid-js";
+import { Composer, ComposerInput, ComposerSubmit } from "@/components/ui/solid/composer";
 import { Dictation } from "@/components/ui/solid/dictation";
 
 const words = "Add a retry with backoff to the fetch client".split(" ");
@@ -25,11 +25,13 @@ const demoSource: DictationSource = {
 };
 
 export default function DictationExample() {
-  const [text, setText] = createSignal("");
   return (
-    <div class="flex w-full max-w-md flex-col gap-3">
-      <Dictation source={demoSource} onText={setText} />
-      <p>{text() || "Press the mic and dictate a prompt."}</p>
+    <div class="w-full max-w-md">
+      <Composer aria-label="Message">
+        <ComposerInput aria-label="Prompt" placeholder="Type or dictate a prompt" />
+        <Dictation source={demoSource} />
+        <ComposerSubmit />
+      </Composer>
     </div>
   );
 }

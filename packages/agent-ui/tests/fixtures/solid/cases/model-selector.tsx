@@ -1,6 +1,7 @@
 import type { MotionMode } from "@kind-ui/agent-ui/core";
 import type { JSX } from "@solidjs/web";
 import { onSettled } from "solid-js";
+import { Composer, ComposerInput, ComposerSubmit } from "../../../../src/solid/composer.js";
 import {
   ModelSelector,
   ModelSelectorContent,
@@ -91,11 +92,38 @@ function Logos() {
   );
 }
 
+// `shared/full-composer.ts`'s `controls`, in the kebab-case keys a Solid `style` takes.
+const controls = {
+  "grid-area": "attach",
+  display: "flex",
+  "flex-wrap": "wrap",
+  "align-items": "center",
+  gap: "6px",
+  "min-width": "0",
+};
+
+function InComposer() {
+  const logoModels = iconModels(logo);
+  return (
+    <div class="p-4">
+      <Composer aria-label="Message" onSubmit={() => undefined}>
+        <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
+        <div style={controls}>
+          <ModelSelector id="model" models={logoModels} defaultValue="claude-sonnet-5.5" />
+          <ReasoningEffort id="effort" levels={levels} defaultValue="medium" />
+        </div>
+        <ComposerSubmit />
+      </Composer>
+    </div>
+  );
+}
+
 export const cases = {
   all: () => <Toolbar />,
   plain: () => <Toolbar plain />,
   groups: () => <Toolbar pages="groups" />,
   logos: () => <Logos />,
+  composer: () => <InComposer />,
   reduced: () => <Toolbar motion="reduced" />,
   refusing: () => <Toolbar refusing />,
 };

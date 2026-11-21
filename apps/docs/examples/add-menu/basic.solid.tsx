@@ -1,6 +1,8 @@
+import type { ComposerDraft } from "@kind-ui/agent-ui/core";
 import type { JSX } from "@solidjs/web";
 import { createSignal } from "solid-js";
 import { AddMenu } from "@/components/ui/solid/add-menu";
+import { Composer, ComposerAttachments, ComposerInput, ComposerSubmit } from "@/components/ui/solid/composer";
 
 function Icon(props: { children: JSX.Element }) {
   return (
@@ -74,7 +76,6 @@ const items = [
 ];
 
 const inserts: Record<string, string> = {
-  upload: "Chose files to upload",
   context: "[@client.ts](mention:src/client.ts)",
   "github-issue": "Fixes #128",
   "github-pr": "Review #131",
@@ -82,12 +83,53 @@ const inserts: Record<string, string> = {
 };
 
 export default function AddMenuExample() {
-  const [text, setText] = createSignal("");
+  const [draft, setDraft] = createSignal<ComposerDraft>({ text: "", tokens: [], attachments: [] });
+  let files: HTMLInputElement | undefined;
 
   return (
-    <div class="flex items-center gap-2">
-      <AddMenu items={items} onAction={(id) => setText(inserts[id] ?? "")} />
-      <output class="text-sm">{text()}</output>
-    </div>
+    <>
+      <Composer
+        aria-label="Message"
+        value={draft()}
+        onValueChange={(value) => setDraft(value)}
+        onSubmit={() => new Promise<void>((resolve) => setTimeout(resolve, 1000))}
+      >
+        <ComposerAttachments />
+        <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
+        <AddMenu
+          style={{ "grid-area": "attach" }}
+          items={items}
+          onAction={(id) => {
+            if (id === "upload") files?.click();
+            else
+              setDraft((draft) => ({
+                ...draft,
+                text: `${draft.text.trimEnd()} ${inserts[id]} `.trimStart(),
+              }));
+          }}
+        />
+        <ComposerSubmit />
+      </Composer>
+      <input
+        ref={(el) => {
+          files = el;
+        }}
+        type="file"
+        multiple
+        hidden
+        onChange={(event) => {
+          const input = event.currentTarget;
+          const chosen = Array.from(input.files ?? [], (file) => ({
+            id: crypto.randomUUID(),
+            file,
+            name: file.name,
+            size: file.size,
+            mediaType: file.type,
+          }));
+          setDraft((draft) => ({ ...draft, attachments: [...draft.attachments, ...chosen] }));
+          input.value = "";
+        }}
+      />
+    </>
   );
 }

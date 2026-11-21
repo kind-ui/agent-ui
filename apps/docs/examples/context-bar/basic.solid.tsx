@@ -1,5 +1,6 @@
 import type { JSX } from "@solidjs/web";
 import { createSignal, For } from "solid-js";
+import { Composer, ComposerInput, ComposerSubmit } from "@/components/ui/solid/composer";
 import { ContextBar } from "@/components/ui/solid/context-bar";
 
 // Lucide "file", "folder", "square-dashed-text" and "link".
@@ -62,7 +63,7 @@ const context = [
 
 export default function ContextBarExample() {
   const [chips, setChips] = createSignal(context);
-  let editor: HTMLTextAreaElement | undefined;
+  let editor: HTMLDivElement | undefined;
 
   return (
     <div class="flex w-full max-w-md flex-col gap-2">
@@ -71,14 +72,16 @@ export default function ContextBarExample() {
         onRemove={(id) => setChips((current) => current.filter((chip) => chip.id !== id))}
         focusFallback={() => editor ?? null}
       />
-      <textarea
-        ref={(el) => {
-          editor = el;
-        }}
-        aria-label="Prompt"
-        placeholder="Ask about this context"
-        class="min-h-16 rounded-lg border p-2"
-      />
+      <Composer aria-label="Message">
+        <ComposerInput
+          ref={(el) => {
+            editor = el;
+          }}
+          aria-label="Prompt"
+          placeholder="Ask about this context"
+        />
+        <ComposerSubmit />
+      </Composer>
     </div>
   );
 }
