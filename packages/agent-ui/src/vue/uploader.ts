@@ -70,6 +70,6 @@ export const Uploader = defineComponent({
   name: "Uploader",
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
-    return () => h(parts.Root, attrs, { ...slots, default: slots.default ?? children });
+    return () => h(parts.Root, attrs, { ...slots, default: children });
   },
 }) as unknown as typeof parts.Root;

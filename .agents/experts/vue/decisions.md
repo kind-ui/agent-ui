@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: Task Vue-8 (conformance)
+Last reviewed: `6c371d1a` (Task Vue-8)
 
 ## Settled
 
@@ -21,6 +21,7 @@ Last reviewed: Task Vue-8 (conformance)
 - **`withDefault` stays copied per render file (Task Vue-8):** a registry item ships its own file plus the items its catalog `uses` names, and `uses` is shared with React and Web in `registry/catalog.mjs`, so a shared Vue helper would need a hidden internal that every one of those components `uses` in every layer, or a Vue-only `uses` the catalog doesn't have. Each copy is a few lines typed to its own parts.
 - **Server-rendered Vue pages hydrate inside `<Suspense>` (Task Vue-8):** `@ui-sdk/vue` runs a part's `bind` as the part hydrates, unless a `<Suspense>` above it is pending, so a `bind` that changes state (an Avatar or Generated Image `<img>` that loaded before hydration, Terminal's and Transcript's measured viewport) changes parts that haven't hydrated yet and Vue reports a mismatch. The fixtures' `hydratedApp` (`tests/fixtures/vue/cases.ts`) renders the `?ssr` case inside `<Suspense>` on the server and the client, as Nuxt pages do; `hydration.spec.ts` passes on every Vue case.
 - **Conformance (Task Vue-8):** every wave's `agent.spec.ts`, both `aria-patterns.spec.ts` (no `known` entries), `wave-5/composer-compact.spec.ts`, `wave-1/{controls,motion,theme,status-mark,forced-colors}.spec.ts`, `budgets.spec.ts` with every React case, `hydration.spec.ts` and `parity.spec.ts` over every case run on Vue, and `check:registry-consumers` installs and renders every visible `-vue` item.
+- **The agent fixtures bind handlers as `:onX` (Task Vue-8):** their handlers are built by host factories (`host.decide("thread-new")`, `change("thread-select")`), and `@x="factory()"` compiles to a handler that calls the factory on each event instead of binding its result. Cases with plain handler names bind `@x`.
 
 ## Known and open (don't report again, check whether fixed)
 
