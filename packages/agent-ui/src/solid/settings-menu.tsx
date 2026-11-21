@@ -33,7 +33,8 @@ const parts = createParts(settingsMenuPrimitive, { root: "div", trigger: "span",
 
 type Entry = NonNullable<SettingsMenuOptions["settings"]>[number];
 type Choice = Extract<Entry, { type: "choice" }>;
-type Icon = string | JSX.Element;
+// A function draws a new copy wherever the icon shows, since an element sits in one place only.
+type Icon = string | JSX.Element | (() => JSX.Element);
 
 /** A setting, whose `icon` and options' `icon`s are image URLs or elements such as an inline `svg`. */
 export type SettingsMenuSetting =
@@ -53,7 +54,11 @@ function Choices(props: { row: ChoiceRow }) {
   const radios = (options: ChoiceRow["groups"][number]["options"]) => (
     <For each={options} keyed={(option) => option.value}>
       {(option) => (
-        <KindMenuRadioItem value={option().value} label={option().label} disabled={option().disabled ?? false}>
+        <KindMenuRadioItem
+          value={option().value}
+          label={option().label}
+          disabled={option().disabled ?? false}
+        >
           <KindMenuItemIndicator keepMounted>
             <span data-menu-check="" aria-hidden="true" />
           </KindMenuItemIndicator>
@@ -103,7 +108,11 @@ function Row(props: { row: SettingsMenuRow }) {
     <Switch>
       <Match when={props.row.type === "toggle"}>
         <KindMenuCheckboxItem value={toggle().id} label={toggle().label} checked={toggle().checked}>
-          <KindMenuItemContent icon={toggle().icon} label={toggle().label} description={toggle().description} />
+          <KindMenuItemContent
+            icon={toggle().icon}
+            label={toggle().label}
+            description={toggle().description}
+          />
           <MenuItemIndicator keepMounted data-menu-switch="" aria-hidden="true">
             <span data-menu-switch-thumb="" />
           </MenuItemIndicator>
@@ -119,7 +128,9 @@ function Row(props: { row: SettingsMenuRow }) {
             <span data-settings-menu-value="">
               <For each={choice().options} keyed={(option) => option.value}>
                 {(option) => (
-                  <span data-current={option().value === choice().value ? "" : undefined}>{option().label}</span>
+                  <span data-current={option().value === choice().value ? "" : undefined}>
+                    {option().label}
+                  </span>
                 )}
               </For>
             </span>
@@ -147,7 +158,9 @@ export function SettingsMenuRows(props: SettingsMenuRowsProps) {
       {(row, index) => (
         <>
           <Row row={row()} />
-          <Show when={row().type === "choice" && (row() as ChoiceRow).inline && index() < props.rows.length - 1}>
+          <Show
+            when={row().type === "choice" && (row() as ChoiceRow).inline && index() < props.rows.length - 1}
+          >
             <KindMenuSeparator />
           </Show>
         </>
@@ -164,7 +177,9 @@ export function SettingsMenuRows(props: SettingsMenuRowsProps) {
 export function SettingsMenu(props: SettingsMenuProps) {
   return (
     <parts.Root {...omit(props, "children")}>
-      {(menu: MenuPartState) => <KindMenu {...menuProps(menu)}>{props.children ?? <DefaultParts />}</KindMenu>}
+      {(menu: MenuPartState) => (
+        <KindMenu {...menuProps(menu)}>{props.children ?? <DefaultParts />}</KindMenu>
+      )}
     </parts.Root>
   );
 }

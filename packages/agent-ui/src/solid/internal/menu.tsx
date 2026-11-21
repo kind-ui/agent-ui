@@ -1,4 +1,3 @@
-import type { MenuPartState, MenuTriggerState } from "@kind-ui/agent-ui/core";
 import type { JSX } from "@solidjs/web";
 import {
   Menu,
@@ -94,18 +93,22 @@ const readKeys = <State extends object, Key extends keyof State>(state: State, k
     Object.fromEntries(keys.map((key) => [key, { enumerable: true, get: () => state[key] }])),
   ) as Pick<State, Key>;
 
+const MENU_KEYS = [
+  "controller",
+  "presentation",
+  "open",
+  "onOpenChange",
+  "onAction",
+  "onCheckedChange",
+  "onValueChange",
+] as const;
+const TRIGGER_KEYS = ["aria-label", "disabled", "data-kind-trigger", "data-kind-icon-button"] as const;
+
 /** What a `menuBase` root hands UI SDK Menu: `<KindMenu {...menuProps(menu)}>`. */
-export const menuProps = (menu: MenuPartState) =>
-  readKeys(menu, [
-    "controller",
-    "presentation",
-    "open",
-    "onOpenChange",
-    "onAction",
-    "onCheckedChange",
-    "onValueChange",
-  ] as const);
+export const menuProps = <State extends Record<(typeof MENU_KEYS)[number], unknown>>(menu: State) =>
+  readKeys(menu, MENU_KEYS);
 
 /** What a `menuBase` trigger slot hands UI SDK's `MenuTrigger`: `<MenuTrigger {...menuTriggerProps(trigger)}>`. */
-export const menuTriggerProps = (trigger: MenuTriggerState) =>
-  readKeys(trigger, ["aria-label", "disabled", "data-kind-trigger", "data-kind-icon-button"] as const);
+export const menuTriggerProps = <State extends Partial<Record<(typeof TRIGGER_KEYS)[number], unknown>>>(
+  trigger: State,
+) => readKeys(trigger, TRIGGER_KEYS);

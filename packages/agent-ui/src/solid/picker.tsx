@@ -34,15 +34,18 @@ const parts = createParts(pickerPrimitive, {
   item: "span",
 });
 
-/** An item, whose `icon` is an image URL or an element such as an inline `svg`. */
+/**
+ * An item, whose `icon` is an image URL, an element such as an inline `svg`, or a function returning one, which draws a
+ * new copy wherever the icon shows: the chosen item's shows in the trigger and in its row.
+ */
 export type PickerChoice = Omit<NonNullable<PickerOptions["items"]>[number], "icon" | "items"> & {
-  icon?: string | JSX.Element;
+  icon?: string | JSX.Element | (() => JSX.Element);
   items?: PickerChoice[];
 };
 
 /** A footer action, whose `icon` is an image URL or an element. */
 export type PickerFooterAction = Omit<NonNullable<PickerOptions["actions"]>[number], "icon"> & {
-  icon?: string | JSX.Element;
+  icon?: string | JSX.Element | (() => JSX.Element);
 };
 
 const iconOf = (icon: unknown) =>
@@ -151,8 +154,13 @@ export function pickerParts(
     <For each={state.pages} keyed={(page) => page.page ?? ""}>
       {(page) => (
         <KindCommandPage value={page().page}>
-          <For each={page().sections} keyed={(section) => (section.footer ? "\u0000footer" : (section.label ?? ""))}>
-            {(section, index) => <SectionRows section={section()} separated={section().footer && index() > 0} />}
+          <For
+            each={page().sections}
+            keyed={(section) => (section.footer ? "\u0000footer" : (section.label ?? ""))}
+          >
+            {(section, index) => (
+              <SectionRows section={section()} separated={section().footer && index() > 0} />
+            )}
           </For>
         </KindCommandPage>
       )}

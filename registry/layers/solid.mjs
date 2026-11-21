@@ -81,6 +81,7 @@ export default {
     "wave-3/reasoning-effort.spec.ts",
     "wave-3/context-meter.spec.ts",
     "wave-3/model-selector.spec.ts",
+    "wave-1/budgets.spec.ts",
 
     // framework-solid-4: indicators, notices and files
 
