@@ -164,6 +164,15 @@
     }
   }
 
+  /* UI SDK hides a leaving popup or panel once every animation inside it has finished, so a mark's spin (endless)
+     or pulse (4.8 s) inside one held it in the page, faded and inert, for seconds. They stop as it starts leaving. */
+  [data-ending-style] [data-status-mark][data-status] {
+    &::before,
+    &::after {
+      animation: none;
+    }
+  }
+
   /* Forced colors replace backgrounds, which is all a mask draws: the mark keeps its glyph in system colors. */
   @media (forced-colors: active) {
     [data-status-mark][data-status] {
