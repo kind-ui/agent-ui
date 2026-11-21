@@ -34,11 +34,11 @@ export default function ConversationStatesExample() {
           {(value) => (
             <button
               type="button"
-              aria-pressed={status() === value()}
-              onClick={() => setStatus(value())}
+              aria-pressed={status() === value ? "true" : "false"}
+              onClick={() => setStatus(value)}
               class="rounded-md border border-[var(--kind-color-border)] px-2.5 py-1 text-sm capitalize aria-pressed:bg-[var(--kind-color-selected)]"
             >
-              {value()}
+              {value}
             </button>
           )}
         </For>

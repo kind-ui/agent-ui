@@ -17,10 +17,6 @@ const parts = createParts(confirmationPrimitive, {
   "outcome-icon": "span",
 });
 
-// Reads `children` once and builds the default only when used, since JSX builds its elements as it runs.
-const or = <T,>(children: T | undefined, fallback: () => T): T =>
-  children === undefined ? fallback() : children;
-
 export type ConfirmationProps = ComponentProps<typeof parts.Root>;
 
 /**
@@ -28,13 +24,7 @@ export type ConfirmationProps = ComponentProps<typeof parts.Root>;
  * (`onApprove`, `onDeny`) render. Any `children` replace the default parts.
  */
 export function Confirmation(props: ConfirmationProps) {
-  return (
-    <parts.Root {...omit(props, "children")}>
-      {or(props.children, () => (
-        <DefaultParts />
-      ))}
-    </parts.Root>
-  );
+  return <parts.Root {...omit(props, "children")}>{props.children ?? <DefaultParts />}</parts.Root>;
 }
 
 export const ConfirmationChoices = parts.Choices;
@@ -46,7 +36,7 @@ export type ConfirmationTitleProps = ComponentProps<typeof parts.Title>;
 export function ConfirmationTitle(props: ConfirmationTitleProps) {
   return (
     <parts.Title {...omit(props, "children")}>
-      {or(props.children, () => (state: { label: string }) => state.label)}
+      {props.children ?? ((state: { label: string }) => state.label)}
     </parts.Title>
   );
 }
@@ -60,15 +50,16 @@ export type ConfirmationReasonProps = ComponentProps<typeof parts.Reason>;
 export function ConfirmationReason(props: ConfirmationReasonProps) {
   return (
     <parts.Reason {...omit(props, "children")}>
-      {or(props.children, () => (state) => (
-        <KindTextarea
-          controller={state.controller}
-          readonly={state.readOnly}
-          aria-label="Reason for denying"
-          placeholder="Add a reason (optional)"
-          rows={2}
-        />
-      ))}
+      {props.children ??
+        ((state) => (
+          <KindTextarea
+            controller={state.controller}
+            readonly={state.readOnly}
+            aria-label="Reason for denying"
+            placeholder="Add a reason (optional)"
+            rows={2}
+          />
+        ))}
     </parts.Reason>
   );
 }
@@ -77,9 +68,7 @@ export type ConfirmationApproveProps = ComponentProps<typeof parts.Approve>;
 
 /** Calls `onApprove`. Reads the `approveLabel` unless you pass children. Rendered only while `onApprove` is set. */
 export function ConfirmationApprove(props: ConfirmationApproveProps) {
-  return (
-    <parts.Approve {...omit(props, "children")}>{or(props.children, () => withPendingMark)}</parts.Approve>
-  );
+  return <parts.Approve {...omit(props, "children")}>{props.children ?? withPendingMark}</parts.Approve>;
 }
 
 export type ConfirmationDenyProps = ComponentProps<typeof parts.Deny>;
@@ -89,14 +78,14 @@ export type ConfirmationDenyProps = ComponentProps<typeof parts.Deny>;
  * you pass children. Rendered only while `onDeny` is set.
  */
 export function ConfirmationDeny(props: ConfirmationDenyProps) {
-  return <parts.Deny {...omit(props, "children")}>{or(props.children, () => withPendingMark)}</parts.Deny>;
+  return <parts.Deny {...omit(props, "children")}>{props.children ?? withPendingMark}</parts.Deny>;
 }
 
 export type ConfirmationCancelProps = ComponentProps<typeof parts.Cancel>;
 
 /** Closes the reason box without deciding. Reads "Cancel" unless you pass children. Rendered while the box is open. */
 export function ConfirmationCancel(props: ConfirmationCancelProps) {
-  return <parts.Cancel {...omit(props, "children")}>{or(props.children, () => "Cancel")}</parts.Cancel>;
+  return <parts.Cancel {...omit(props, "children")}>{props.children ?? "Cancel"}</parts.Cancel>;
 }
 
 export type ConfirmationErrorProps = ComponentProps<typeof parts.Error>;
@@ -105,7 +94,7 @@ export type ConfirmationErrorProps = ComponentProps<typeof parts.Error>;
 export function ConfirmationError(props: ConfirmationErrorProps) {
   return (
     <parts.Error {...omit(props, "children")}>
-      {or(props.children, () => "Decision not sent. Try again.")}
+      {props.children ?? "Decision not sent. Try again."}
     </parts.Error>
   );
 }
@@ -116,15 +105,16 @@ export type ConfirmationOutcomeProps = ComponentProps<typeof parts.Outcome>;
 export function ConfirmationOutcome(props: ConfirmationOutcomeProps) {
   return (
     <parts.Outcome {...omit(props, "children")}>
-      {or(props.children, () => (state) => (
-        <>
-          <ConfirmationOutcomeIcon />
-          <span data-confirmation-label="">{state.label}</span>
-          <Show when={state.reason}>
-            <span data-confirmation-reason="">{state.reason}</span>
-          </Show>
-        </>
-      ))}
+      {props.children ??
+        ((state) => (
+          <>
+            <ConfirmationOutcomeIcon />
+            <span data-confirmation-label="">{state.label}</span>
+            <Show when={state.reason}>
+              <span data-confirmation-reason="">{state.reason}</span>
+            </Show>
+          </>
+        ))}
     </parts.Outcome>
   );
 }

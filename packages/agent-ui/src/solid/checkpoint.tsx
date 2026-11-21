@@ -24,10 +24,6 @@ const parts = createParts(checkpointPrimitive, {
   confirm: "button",
 });
 
-// Reads `children` once and builds the default only when used, since JSX builds its elements as it runs.
-const or = <T,>(children: T | undefined, fallback: () => T): T =>
-  children === undefined ? fallback() : children;
-
 export type CheckpointProps = ComponentProps<typeof parts.Root>;
 
 /**
@@ -35,13 +31,7 @@ export type CheckpointProps = ComponentProps<typeof parts.Root>;
  * `onRestore`. Any `children` replace the default parts.
  */
 export function Checkpoint(props: CheckpointProps) {
-  return (
-    <parts.Root {...omit(props, "children")}>
-      {or(props.children, () => (
-        <DefaultParts />
-      ))}
-    </parts.Root>
-  );
+  return <parts.Root {...omit(props, "children")}>{props.children ?? <DefaultParts />}</parts.Root>;
 }
 
 export const CheckpointLine = parts.Line;
@@ -52,7 +42,7 @@ export type CheckpointLabelProps = ComponentProps<typeof parts.Label>;
 export function CheckpointLabel(props: CheckpointLabelProps) {
   return (
     <parts.Label {...omit(props, "children")}>
-      {or(props.children, () => (state: { label: string }) => state.label)}
+      {props.children ?? ((state: { label: string }) => state.label)}
     </parts.Label>
   );
 }
@@ -63,7 +53,7 @@ export type CheckpointDescriptionProps = ComponentProps<typeof parts.Description
 export function CheckpointDescription(props: CheckpointDescriptionProps) {
   return (
     <parts.Description {...omit(props, "children")}>
-      {or(props.children, () => (state: { description: string | undefined }) => state.description)}
+      {props.children ?? ((state: { description: string | undefined }) => state.description)}
     </parts.Description>
   );
 }
@@ -77,24 +67,25 @@ export type CheckpointRestoreProps = ComponentProps<typeof parts.Restore>;
 export function CheckpointRestore(props: CheckpointRestoreProps) {
   return (
     <parts.Restore {...omit(props, "children")}>
-      {or(props.children, () => (state: CheckpointDialogState) => (
-        <KindAlertDialog controller={state.controller} dismissible={state.dismissible}>
-          <KindTooltip type="label">
-            <KindTooltipTrigger
-              render={(trigger) => <KindAlertDialogTrigger {...trigger} />}
-              data-checkpoint-trigger=""
-              data-kind-icon-button=""
+      {props.children ??
+        ((state: CheckpointDialogState) => (
+          <KindAlertDialog controller={state.controller} dismissible={state.dismissible}>
+            <KindTooltip type="label">
+              <KindTooltipTrigger
+                render={(trigger) => <KindAlertDialogTrigger {...trigger} />}
+                data-checkpoint-trigger=""
+                data-kind-icon-button=""
+              />
+              <KindTooltipContent>Restore checkpoint</KindTooltipContent>
+            </KindTooltip>
+            <CheckpointDialog
+              title={state.title}
+              description={state.description}
+              initialFocus={state.initialFocus}
+              busy={state.busy}
             />
-            <KindTooltipContent>Restore checkpoint</KindTooltipContent>
-          </KindTooltip>
-          <CheckpointDialog
-            title={state.title}
-            description={state.description}
-            initialFocus={state.initialFocus}
-            busy={state.busy}
-          />
-        </KindAlertDialog>
-      ))}
+          </KindAlertDialog>
+        ))}
     </parts.Restore>
   );
 }
@@ -112,9 +103,7 @@ export function CheckpointDialog(props: CheckpointDialogProps) {
       <KindAlertDialogContent initialFocus={props.initialFocus} aria-busy={props.busy ? "true" : undefined}>
         <KindAlertDialogTitle>{props.title}</KindAlertDialogTitle>
         <KindAlertDialogDescription>{props.description}</KindAlertDialogDescription>
-        {or(props.children, () => (
-          <DefaultAnswers />
-        ))}
+        {props.children ?? <DefaultAnswers />}
       </KindAlertDialogContent>
     </>
   );
@@ -126,12 +115,12 @@ export type CheckpointRestoredProps = ComponentProps<typeof parts.Restored>;
 export function CheckpointRestored(props: CheckpointRestoredProps) {
   return (
     <parts.Restored {...omit(props, "children")}>
-      {or(props.children, () => (
+      {props.children ?? (
         <>
           <span aria-hidden="true" data-status-mark="" data-status="complete" />
           Restored
         </>
-      ))}
+      )}
     </parts.Restored>
   );
 }
@@ -141,9 +130,7 @@ export type CheckpointErrorProps = ComponentProps<typeof parts.Error>;
 /** "Couldn't restore. Try again." after a restore fails, unless you pass children. */
 export function CheckpointError(props: CheckpointErrorProps) {
   return (
-    <parts.Error {...omit(props, "children")}>
-      {or(props.children, () => "Couldn't restore. Try again.")}
-    </parts.Error>
+    <parts.Error {...omit(props, "children")}>{props.children ?? "Couldn't restore. Try again."}</parts.Error>
   );
 }
 
@@ -151,7 +138,7 @@ export type CheckpointCancelProps = ComponentProps<typeof parts.Cancel>;
 
 /** Closes the dialog. Reads "Cancel" unless you pass children. */
 export function CheckpointCancel(props: CheckpointCancelProps) {
-  return <parts.Cancel {...omit(props, "children")}>{or(props.children, () => "Cancel")}</parts.Cancel>;
+  return <parts.Cancel {...omit(props, "children")}>{props.children ?? "Cancel"}</parts.Cancel>;
 }
 
 export type CheckpointConfirmProps = ComponentProps<typeof parts.Confirm>;
@@ -160,16 +147,15 @@ export type CheckpointConfirmProps = ComponentProps<typeof parts.Confirm>;
 export function CheckpointConfirm(props: CheckpointConfirmProps) {
   return (
     <parts.Confirm {...omit(props, "children")}>
-      {or(
-        props.children,
+      {
         // The mark shows only while the restore is pending (controls.css).
-        () => (
+        props.children ?? (
           <>
             <span data-kind-pending-mark="" data-status-mark="" data-status="running" aria-hidden="true" />
             Restore
           </>
-        ),
-      )}
+        )
+      }
     </parts.Confirm>
   );
 }

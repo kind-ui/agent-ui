@@ -22,10 +22,6 @@ const parts = createParts(questionPrimitive, {
   "summary-icon": "span",
 });
 
-// Reads `children` once and builds the default only when used, since JSX builds its elements as it runs.
-const or = <T,>(children: T | undefined, fallback: () => T): T =>
-  children === undefined ? fallback() : children;
-
 type Single = Extract<QuestionChoicesState, { kind: "single" }>;
 type Multiple = Extract<QuestionChoicesState, { kind: "multiple" }>;
 
@@ -38,20 +34,21 @@ export type QuestionProps = ComponentProps<typeof parts.Root>;
 export function Question(props: QuestionProps) {
   return (
     <parts.Root {...omit(props, "children")}>
-      {or(props.children, () => (state: { questions: { id: string }[] }) => (
-        <>
-          <For each={state.questions} keyed={(question) => question.id}>
-            {(question) => <QuestionItem value={question().id} />}
-          </For>
-          <QuestionActions>
-            <QuestionSubmit />
-            <QuestionSkip />
-            <QuestionStatus />
-            <QuestionError />
-          </QuestionActions>
-          <QuestionSummary />
-        </>
-      ))}
+      {props.children ??
+        ((state: { questions: { id: string }[] }) => (
+          <>
+            <For each={state.questions} keyed={(question) => question.id}>
+              {(question) => <QuestionItem value={question().id} />}
+            </For>
+            <QuestionActions>
+              <QuestionSubmit />
+              <QuestionSkip />
+              <QuestionStatus />
+              <QuestionError />
+            </QuestionActions>
+            <QuestionSummary />
+          </>
+        ))}
     </parts.Root>
   );
 }
@@ -66,13 +63,13 @@ export type QuestionItemProps = ComponentProps<typeof parts.Item>;
 export function QuestionItem(props: QuestionItemProps) {
   return (
     <parts.Item {...omit(props, "children")}>
-      {or(props.children, () => (
+      {props.children ?? (
         <>
           <QuestionPrompt />
           <QuestionChoices />
           <QuestionText />
         </>
-      ))}
+      )}
     </parts.Item>
   );
 }
@@ -83,15 +80,16 @@ export type QuestionPromptProps = ComponentProps<typeof parts.Prompt>;
 export function QuestionPrompt(props: QuestionPromptProps) {
   return (
     <parts.Prompt {...omit(props, "children")}>
-      {or(props.children, () => (state: { prompt: string; required: boolean }) => (
-        <>
-          {state.prompt}
-          <Show when={state.required}>
-            {" "}
-            <span data-question-required="">Required</span>
-          </Show>
-        </>
-      ))}
+      {props.children ??
+        ((state: { prompt: string; required: boolean }) => (
+          <>
+            {state.prompt}
+            <Show when={state.required}>
+              {" "}
+              <span data-question-required="">Required</span>
+            </Show>
+          </>
+        ))}
     </parts.Prompt>
   );
 }
@@ -102,60 +100,61 @@ export type QuestionChoicesProps = ComponentProps<typeof parts.Choices>;
 export function QuestionChoices(props: QuestionChoicesProps) {
   return (
     <parts.Choices {...omit(props, "children")}>
-      {or(props.children, () => (state: Partial<QuestionChoicesState>) => {
-        const options = () => (
-          <For each={state.options} keyed={(option) => option.value}>
-            {(option) => (
-              // biome-ignore lint/a11y/noLabelWithoutControl: the label wraps UI SDK's radio or checkbox, which it names.
-              <label data-question-option="">
-                <Show
-                  when={state.kind === "single"}
-                  fallback={
-                    <KindCheckbox value={option().value}>
-                      <KindCheckboxIndicator>
-                        <Check />
-                      </KindCheckboxIndicator>
-                    </KindCheckbox>
-                  }
-                >
-                  <KindRadio value={option().value}>
-                    <KindRadioIndicator />
-                  </KindRadio>
-                </Show>
-                <span data-question-option-text="">
-                  <span>{option().label}</span>
-                  <Show when={option().description}>
-                    <span data-question-option-description="">{option().description}</span>
+      {props.children ??
+        ((state: Partial<QuestionChoicesState>) => {
+          const options = () => (
+            <For each={state.options} keyed={(option) => option.value}>
+              {(option) => (
+                // biome-ignore lint/a11y/noLabelWithoutControl: the label wraps UI SDK's radio or checkbox, which it names.
+                <label data-question-option="">
+                  <Show
+                    when={state.kind === "single"}
+                    fallback={
+                      <KindCheckbox value={option().value}>
+                        <KindCheckboxIndicator>
+                          <Check />
+                        </KindCheckboxIndicator>
+                      </KindCheckbox>
+                    }
+                  >
+                    <KindRadio value={option().value}>
+                      <KindRadioIndicator />
+                    </KindRadio>
                   </Show>
-                </span>
-              </label>
-            )}
-          </For>
-        );
-        return (
-          <Switch>
-            <Match when={state.kind === "single"}>
-              <KindRadioGroup
-                aria-labelledby={(state as Single).labelledBy}
-                controller={(state as Single).controller}
-                defaultValue={(state as Single).defaultValue}
-                readOnly={(state as Single).readOnly}
-              >
-                {options()}
-              </KindRadioGroup>
-            </Match>
-            <Match when={state.kind === "multiple"}>
-              <KindCheckboxGroup
-                controller={(state as Multiple).controller}
-                defaultValue={(state as Multiple).defaultValue}
-                readOnly={(state as Multiple).readOnly}
-              >
-                {options()}
-              </KindCheckboxGroup>
-            </Match>
-          </Switch>
-        );
-      })}
+                  <span data-question-option-text="">
+                    <span>{option().label}</span>
+                    <Show when={option().description}>
+                      <span data-question-option-description="">{option().description}</span>
+                    </Show>
+                  </span>
+                </label>
+              )}
+            </For>
+          );
+          return (
+            <Switch>
+              <Match when={state.kind === "single"}>
+                <KindRadioGroup
+                  aria-labelledby={(state as Single).labelledBy}
+                  controller={(state as Single).controller}
+                  defaultValue={(state as Single).defaultValue}
+                  readOnly={(state as Single).readOnly}
+                >
+                  {options()}
+                </KindRadioGroup>
+              </Match>
+              <Match when={state.kind === "multiple"}>
+                <KindCheckboxGroup
+                  controller={(state as Multiple).controller}
+                  defaultValue={(state as Multiple).defaultValue}
+                  readOnly={(state as Multiple).readOnly}
+                >
+                  {options()}
+                </KindCheckboxGroup>
+              </Match>
+            </Switch>
+          );
+        })}
     </parts.Choices>
   );
 }
@@ -166,18 +165,19 @@ export type QuestionTextProps = ComponentProps<typeof parts.Text>;
 export function QuestionText(props: QuestionTextProps) {
   return (
     <parts.Text {...omit(props, "children")}>
-      {or(props.children, () => (state: Partial<QuestionTextState>) => (
-        <Show when={state.controller}>
-          <KindTextarea
-            controller={state.controller}
-            defaultValue={state.defaultValue}
-            readonly={state.readOnly}
-            placeholder={state.placeholder}
-            aria-label={state.label}
-            rows={3}
-          />
-        </Show>
-      ))}
+      {props.children ??
+        ((state: Partial<QuestionTextState>) => (
+          <Show when={state.controller}>
+            <KindTextarea
+              controller={state.controller}
+              defaultValue={state.defaultValue}
+              readonly={state.readOnly}
+              placeholder={state.placeholder}
+              aria-label={state.label}
+              rows={3}
+            />
+          </Show>
+        ))}
     </parts.Text>
   );
 }
@@ -186,16 +186,14 @@ export type QuestionSubmitProps = ComponentProps<typeof parts.Submit>;
 
 /** Calls `onSubmit`. Reads the `submitLabel` unless you pass children. Rendered only while `onSubmit` is set. */
 export function QuestionSubmit(props: QuestionSubmitProps) {
-  return (
-    <parts.Submit {...omit(props, "children")}>{or(props.children, () => withPendingMark)}</parts.Submit>
-  );
+  return <parts.Submit {...omit(props, "children")}>{props.children ?? withPendingMark}</parts.Submit>;
 }
 
 export type QuestionSkipProps = ComponentProps<typeof parts.Skip>;
 
 /** Calls `onSkip`. Reads the `skipLabel` unless you pass children. Rendered only while `onSkip` is set. */
 export function QuestionSkip(props: QuestionSkipProps) {
-  return <parts.Skip {...omit(props, "children")}>{or(props.children, () => withPendingMark)}</parts.Skip>;
+  return <parts.Skip {...omit(props, "children")}>{props.children ?? withPendingMark}</parts.Skip>;
 }
 
 export type QuestionStatusProps = ComponentProps<typeof parts.Status>;
@@ -207,7 +205,7 @@ export type QuestionStatusProps = ComponentProps<typeof parts.Status>;
 export function QuestionStatus(props: QuestionStatusProps) {
   return (
     <parts.Status {...omit(props, "children")}>
-      {or(props.children, () => (state: { label: string }) => state.label)}
+      {props.children ?? ((state: { label: string }) => state.label)}
     </parts.Status>
   );
 }
@@ -217,9 +215,7 @@ export type QuestionErrorProps = ComponentProps<typeof parts.Error>;
 /** "Answers not sent. Try again." after a submission fails, unless you pass children. */
 export function QuestionError(props: QuestionErrorProps) {
   return (
-    <parts.Error {...omit(props, "children")}>
-      {or(props.children, () => "Answers not sent. Try again.")}
-    </parts.Error>
+    <parts.Error {...omit(props, "children")}>{props.children ?? "Answers not sent. Try again."}</parts.Error>
   );
 }
 
@@ -229,28 +225,29 @@ export type QuestionSummaryProps = ComponentProps<typeof parts.Summary>;
 export function QuestionSummary(props: QuestionSummaryProps) {
   return (
     <parts.Summary {...omit(props, "children")}>
-      {or(props.children, () => (state) => (
-        <>
-          <span data-question-outcome="">
-            <QuestionSummaryIcon />
-            {state.outcome}
-          </span>
-          <Show when={state.items.length > 0}>
-            <dl>
-              <For each={state.items} keyed={(item) => item.id}>
-                {(item) => (
-                  <div>
-                    <dt>{item().prompt}</dt>
-                    <dd data-empty={item().answer === undefined ? "" : undefined}>
-                      {item().answer ?? "No answer"}
-                    </dd>
-                  </div>
-                )}
-              </For>
-            </dl>
-          </Show>
-        </>
-      ))}
+      {props.children ??
+        ((state) => (
+          <>
+            <span data-question-outcome="">
+              <QuestionSummaryIcon />
+              {state.outcome}
+            </span>
+            <Show when={state.items.length > 0}>
+              <dl>
+                <For each={state.items} keyed={(item) => item.id}>
+                  {(item) => (
+                    <div>
+                      <dt>{item().prompt}</dt>
+                      <dd data-empty={item().answer === undefined ? "" : undefined}>
+                        {item().answer ?? "No answer"}
+                      </dd>
+                    </div>
+                  )}
+                </For>
+              </dl>
+            </Show>
+          </>
+        ))}
     </parts.Summary>
   );
 }

@@ -7,7 +7,7 @@ import type { ComponentProps, JSX } from "@solidjs/web";
 import { Avatar, AvatarFallback, AvatarImage } from "@ui-sdk/solid/avatar";
 import { MenuTrigger } from "@ui-sdk/solid/menu";
 import { createParts } from "@ui-sdk/solid/primitive";
-import { For, omit, Show } from "solid-js";
+import { createMemo, For, omit, Show } from "solid-js";
 import {
   KindMenu,
   KindMenuContent,
@@ -146,10 +146,11 @@ export type MessageEditorProps = Omit<ComponentProps<typeof message.Editor>, "ch
 
 /** Shown in place of the content while a user message is edited, with Cancel and Save after it unless you pass children. */
 export function MessageEditor(props: MessageEditorProps) {
+  const child = createMemo(() => props.children);
   return (
     <>
       <message.Editor {...omit(props, "children")} />
-      {props.children === undefined ? <MessageEditActions /> : props.children}
+      {child() === undefined ? <MessageEditActions /> : child()}
     </>
   );
 }
@@ -202,11 +203,15 @@ export type MessageRegenerateProps = Omit<ComponentProps<typeof message.Regenera
  * them instead, rendered through UI SDK's `MenuTrigger`, so it keeps its place in the toolbar's arrow-key order.
  */
 export function MessageRegenerate(props: MessageRegenerateProps) {
-  const button = () =>
-    typeof props.children === "function" ? (props.children as MessageRegenerateButton) : undefined;
+  // Read once: each read of an element child builds it again.
+  const child = createMemo(() => props.children);
+  const button = () => {
+    const value = child();
+    return typeof value === "function" ? (value as MessageRegenerateButton) : undefined;
+  };
   const plain = () => {
     const render = button();
-    return render ? render({}) : (props.children as JSX.Element);
+    return render ? render({}) : (child() as JSX.Element);
   };
   return (
     <message.Regenerate {...omit(props, "children", "menuContent")}>
@@ -281,6 +286,7 @@ export type MessageRegenerateContentProps = Omit<ComponentProps<typeof KindMenuC
 
 /** The regenerate menu: UI SDK's `MenuContent` holding the rows unless you pass children. Props go to it. */
 export function MessageRegenerateContent(props: MessageRegenerateContentProps) {
+  const child = createMemo(() => props.children);
   return (
     <message.RegenerateContent>
       {(state) => (
@@ -293,9 +299,12 @@ export function MessageRegenerateContent(props: MessageRegenerateContentProps) {
           data-agent-hidden=""
           {...omit(props, "children")}
         >
-          {typeof props.children === "function"
-            ? props.children(state)
-            : (props.children ?? <MessageRegenerateRows tryAgain={state.tryAgain} options={state.options} />)}
+          {(() => {
+            const value = child();
+            return typeof value === "function"
+              ? value(state)
+              : (value ?? <MessageRegenerateRows tryAgain={state.tryAgain} options={state.options} />);
+          })()}
         </KindMenuContent>
       )}
     </message.RegenerateContent>
