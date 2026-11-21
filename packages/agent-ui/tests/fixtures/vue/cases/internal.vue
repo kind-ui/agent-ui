@@ -113,7 +113,7 @@ const presses = ref(0);
 <template>
   <template v-if="variant === 'button'">
     <KindButton @click="presses++">Save</KindButton>
-    <output>Pressed <template v-for="count in [presses]" :key="count">{{ count }}</template></output>
+    <output>Pressed {{ presses }}</output>
   </template>
   <KindCollapsible v-else-if="variant === 'collapsible'">
     <KindCollapsibleTrigger>Details</KindCollapsibleTrigger>

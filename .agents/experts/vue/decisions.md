@@ -8,7 +8,7 @@ Last reviewed: `8bcbf59` (Task Vue-1)
 
 - Everything in AGENTS.md "UI SDK API notes", and the framework layers plan's D3 to D6 (render-function `.ts` files, React's part names, `#render` composition, Composition API only).
 - **A Kind wrapper's `class` can't be a function of the part's state (Task Vue-1):** Vue binds `class` as a string, an array or an object, and `@ui-sdk/vue` passes it to the element unchanged (`styling-and-animation.md`). React's `className` function becomes a `data-*` selector or a `#render` slot.
-- **Fixtures match React's DOM, not Vue's defaults (Task Vue-1):** where React writes a boolean JSX attribute as `"true"` (`<span data-menu-text>`) or splits text around an expression into two nodes, the Vue case writes the same, so the parity spec compares components rather than JSX.
+- **Fixtures match React's attributes, not Vue's defaults (Task Vue-1):** where React writes a boolean JSX attribute as `"true"` (`<span data-menu-text>`), the Vue case writes the same. Text split into nodes differently isn't a difference: `tests/browser/tree.ts` joins adjacent text nodes in every layer.
 - **`tsconfig.vue.json` resolves like a Vite app (Bundler), not NodeNext (Task Vue-1):** docs examples import `@/components/ui/vue/<name>` without an extension, as React's do, and render files keep their `.js` suffixes, which Bundler accepts too.
 
 ## Known and open (don't report again, check whether fixed)
