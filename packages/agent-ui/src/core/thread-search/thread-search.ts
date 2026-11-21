@@ -250,8 +250,8 @@ const rank = (items: PickerItem<unknown>[], actions: PickerAction<unknown>[], qu
 // each time made opening the dialog update forever.
 const newActions = new Map<string, PickerAction<unknown>[]>();
 const newAction = (label: string) => {
-  let actions = newActions.get(label);
-  if (!actions) newActions.set(label, (actions = [{ id: NEW, label }]));
+  const actions = newActions.get(label) ?? [{ id: NEW, label }];
+  newActions.set(label, actions);
   return actions;
 };
 
