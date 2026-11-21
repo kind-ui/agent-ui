@@ -1,3 +1,4 @@
+import type { MenuPartState, MenuTriggerState } from "@kind-ui/agent-ui/core";
 import type { JSX } from "@solidjs/web";
 import {
   Menu,
@@ -84,3 +85,27 @@ export function KindMenuItemContent(props: KindMenuItemContentProps) {
     </>
   );
 }
+
+// A part's state reaches a function child as a proxy that reads each key on its own, which a spread can't list. These
+// name the keys, so each prop keeps following its own key.
+const readKeys = <State extends object, Key extends keyof State>(state: State, keys: readonly Key[]) =>
+  Object.defineProperties(
+    {},
+    Object.fromEntries(keys.map((key) => [key, { enumerable: true, get: () => state[key] }])),
+  ) as Pick<State, Key>;
+
+/** What a `menuBase` root hands UI SDK Menu: `<KindMenu {...menuProps(menu)}>`. */
+export const menuProps = (menu: MenuPartState) =>
+  readKeys(menu, [
+    "controller",
+    "presentation",
+    "open",
+    "onOpenChange",
+    "onAction",
+    "onCheckedChange",
+    "onValueChange",
+  ] as const);
+
+/** What a `menuBase` trigger slot hands UI SDK's `MenuTrigger`: `<MenuTrigger {...menuTriggerProps(trigger)}>`. */
+export const menuTriggerProps = (trigger: MenuTriggerState) =>
+  readKeys(trigger, ["aria-label", "disabled", "data-kind-trigger", "data-kind-icon-button"] as const);
