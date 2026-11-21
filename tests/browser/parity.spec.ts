@@ -32,7 +32,9 @@ for (const [layer, manifest] of Object.entries(manifests)) {
         test.skip(layerOf(testInfo) !== layer, `a ${layer} page`);
         const react = await browser.newPage();
         await Promise.all([page.goto(pageUrl(entry)), react.goto(reactOrigin + pageUrl(entry))]);
-        expect(await stableTree(page)).toEqual(await stableTree(react));
+        // A known difference is left out of both trees at rest only, so it can't spread past its page.
+        const known = (entry.known ?? []).filter((difference) => difference.layer === layer);
+        expect(await stableTree(page, known)).toEqual(await stableTree(react, known));
         if (entry.interaction) {
           await run(page, entry.interaction);
           await run(react, entry.interaction);

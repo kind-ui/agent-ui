@@ -8,8 +8,8 @@ import { settled } from "./agent-conformance.js";
  * names one. Inline styles, `tabindex`, scripts, the announcer region and the fixture root's mount markers are left
  * out.
  */
-export function normalizedTree(page: Page): Promise<string[]> {
-  return page.evaluate(() => {
+export function normalizedTree(page: Page, omit: readonly Omitted[] = []): Promise<string[]> {
+  return page.evaluate((omit) => {
     const skip = "script, style, template, vite-error-overlay, [data-ui-sdk-announcer]";
     const kept = /^(role|aria-.+|data-.+|class|hidden|inert|disabled|id)$/;
     const ids = new Map<string, string>();
@@ -44,7 +44,12 @@ export function normalizedTree(page: Page): Promise<string[]> {
         flush(depth);
         const attributes = [...child.attributes]
           .filter(
-            (attribute) => kept.test(attribute.name) && !["data-ssr", "data-v-app"].includes(attribute.name),
+            (attribute) =>
+              kept.test(attribute.name) &&
+              !["data-ssr", "data-v-app"].includes(attribute.name) &&
+              !omit.some(
+                ({ selector, attributes }) => attributes.includes(attribute.name) && child.matches(selector),
+              ),
           )
           .map(({ name: key, value }) =>
             key === "class"
@@ -60,18 +65,21 @@ export function normalizedTree(page: Page): Promise<string[]> {
     walk(document.body, 0);
     flush(0);
     return lines;
-  });
+  }, omit);
 }
 
+/** Attributes left out of a tree on the elements `selector` matches. */
+export type Omitted = { selector: string; attributes: readonly string[] };
+
 /** The tree once animations have settled and two reads a frame apart agree. */
-export async function stableTree(page: Page) {
+export async function stableTree(page: Page, omit: readonly Omitted[] = []) {
   await settled(page);
-  let previous = await normalizedTree(page);
+  let previous = await normalizedTree(page, omit);
   for (let tries = 0; tries < 20; tries++) {
     await page.evaluate(
       () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
     );
-    const next = await normalizedTree(page);
+    const next = await normalizedTree(page, omit);
     if (JSON.stringify(next) === JSON.stringify(previous)) return next;
     previous = next;
   }

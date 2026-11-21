@@ -1,6 +1,22 @@
 export type ParityStep = { press: string } | { key: string; focus?: string } | { hover: string };
 
-export type ParityPage = { c: string; case: string; interaction?: readonly ParityStep[] };
+/**
+ * Attributes one layer lacks at rest on the elements `selector` matches, through a gap in that layer's UI SDK
+ * package. Each names its "UI SDK API notes" entry in `AGENTS.md`, and goes once UI SDK fixes the gap.
+ */
+export type KnownDifference = {
+  layer: "vue" | "svelte" | "solid";
+  selector: string;
+  attributes: readonly string[];
+  note: string;
+};
+
+export type ParityPage = {
+  c: string;
+  case: string;
+  interaction?: readonly ParityStep[];
+  known?: readonly KnownDifference[];
+};
 
 const press = (selector: string): readonly ParityStep[] => [{ press: selector }];
 const openMenu = press('[aria-haspopup="menu"]');
@@ -57,7 +73,18 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
   ],
   composer: [
     { c: "composer", case: "shell" },
-    { c: "composer", case: "full" },
+    {
+      c: "composer",
+      case: "full",
+      known: [
+        {
+          layer: "solid",
+          selector: '[data-slot="token-input-editor"]',
+          attributes: ["aria-autocomplete", "aria-haspopup"],
+          note: "Solid chat core: Trigger Menu writes its editor attributes only once the editor changes",
+        },
+      ],
+    },
     { c: "full-composer", case: "all", interaction: openMenu },
   ],
   confirmation: [confirmation],
