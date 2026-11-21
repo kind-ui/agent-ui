@@ -147,6 +147,16 @@ test("@ and / open the Trigger Menu; choosing inserts a token, Escape closes it"
   await expect(page.getByRole("listbox")).toBeHidden();
 });
 
+// Solid's Trigger Menu writes these only once the editor changes (a known parity difference at rest), so every layer
+// checks them after the first keystroke.
+test("the first keystroke gives the editor its Trigger Menu attributes", async ({ page }) => {
+  const editor = await open(page);
+  await editor.click();
+  await page.keyboard.type("a");
+  await expect(editor).toHaveAttribute("aria-autocomplete", "list");
+  await expect(editor).toHaveAttribute("aria-haspopup", "listbox");
+});
+
 test("ArrowUp in an empty editor brings back the last prompt", async ({ page }) => {
   const editor = await open(page);
   await editor.click();
