@@ -181,7 +181,6 @@ test("the host removing the item being moved cancels the move and moves focus on
 test("without onReorder and onRemove, nothing can be picked up or removed", async ({ page }, testInfo) => {
   // framework-svelte-5: step family. `@ui-sdk/svelte` keys a root by its `id`, which unnames the component in the agent
   // snapshot (AGENTS.md "UI SDK API notes", Svelte chat core). Remove once UI SDK fixes it.
-  test.skip(layerOf(testInfo) === "svelte", "@ui-sdk/svelte keys a root by its id");
   await open(page, "readonly");
   await expect(pending(page)).not.toHaveAttribute("aria-roledescription");
   await row(page, "Write the migration").focus();
@@ -190,7 +189,7 @@ test("without onReorder and onRemove, nothing can be picked up or removed", asyn
   await page.keyboard.press("Delete");
   await expect(row(page, "Write the migration")).toBeVisible();
   await expect(queue(page).locator('[data-slot="kind-queue-item-remove"]').first()).toBeHidden();
-  await expectAgentActions(page, "Queue", []);
+  if (layerOf(testInfo) !== "svelte") await expectAgentActions(page, "Queue", []);
 });
 
 test("completed items can't be picked up", async ({ page }) => {

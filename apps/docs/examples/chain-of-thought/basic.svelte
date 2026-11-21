@@ -37,22 +37,20 @@
   ];
 </script>
 
-<ChainOfThought label="Researching flights" status="running" {steps}>
-  <ChainOfThoughtTrigger>
-    <ChainOfThoughtIcon />
-    <ChainOfThoughtTitle />
-    <ChainOfThoughtMeta />
-  </ChainOfThoughtTrigger>
-  <ChainOfThoughtContent>
-    <ChainOfThoughtList>
-      {#each steps as step (step.id)}
-        <ChainOfThoughtItem value={step.id}>
-          <ChainOfThoughtItemTrigger />
-          <ChainOfThoughtItemContent>
-            <p>{step.detail}</p>
-          </ChainOfThoughtItemContent>
-        </ChainOfThoughtItem>
-      {/each}
-    </ChainOfThoughtList>
-  </ChainOfThoughtContent>
-</ChainOfThought>
+<ChainOfThought label="Researching flights" status="running" {steps}
+  ><ChainOfThoughtTrigger
+    ><ChainOfThoughtIcon
+    /><ChainOfThoughtTitle
+    /><ChainOfThoughtMeta
+  /></ChainOfThoughtTrigger
+  ><ChainOfThoughtContent
+    ><ChainOfThoughtList
+      >{#each steps as step (step.id)}<ChainOfThoughtItem value={step.id}
+          ><ChainOfThoughtItemTrigger
+          /><ChainOfThoughtItemContent
+            ><p>{step.detail}</p
+          ></ChainOfThoughtItemContent
+        ></ChainOfThoughtItem
+      >{/each}</ChainOfThoughtList
+  ></ChainOfThoughtContent
+></ChainOfThought>

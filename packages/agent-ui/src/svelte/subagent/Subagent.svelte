@@ -11,14 +11,13 @@
   import SubagentResult from "./SubagentResult.svelte";
   import SubagentTitle from "./SubagentTitle.svelte";
 
-  let {
-    children: steps,
-    open = $bindable(),
-    ...props
-  }: ComponentProps<typeof parts.Root> & {
+  type RootProps = ComponentProps<typeof parts.Root>;
+  type Props = { [K in keyof RootProps as K extends "children" ? never : K]: RootProps[K] } & {
     /** The subagent's own steps, like a `StepList` of `Tool`s. */
     children?: Snippet;
-  } = $props();
+  };
+
+  let { children: steps, open = $bindable(), ...props }: Props = $props();
 </script>
 
 <parts.Root {...props} bind:open

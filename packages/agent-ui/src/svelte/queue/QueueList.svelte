@@ -1,4 +1,4 @@
-<!-- An item for each of the section's rows, leaving ones included, unless you pass children. -->
+<!-- An item for each of the section's rows, unless you pass children. -->
 <script lang="ts">
   import type { ComponentProps } from "svelte";
   import { parts } from "./parts.js";
