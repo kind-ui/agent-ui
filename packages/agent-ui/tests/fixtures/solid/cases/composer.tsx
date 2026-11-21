@@ -49,7 +49,6 @@ function Full(props: FullProps) {
         flush();
       },
     });
-    // React's `onKeyDownCapture`: a listener that cancels Enter before the Token Input handles it.
     const blockEnter = (event: KeyboardEvent) => {
       if (event.key === "Enter" && (window as { blockEnter?: boolean }).blockEnter) event.preventDefault();
     };

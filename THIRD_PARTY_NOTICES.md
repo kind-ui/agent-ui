@@ -141,6 +141,8 @@
 
 <!-- framework-solid-2: chat core -->
 
+- Lucide (ISC, as above): `chevron-left` and `chevron-right` inline in `packages/agent-ui/src/solid/suggestion.tsx` and `check` inline in `packages/agent-ui/src/solid/question.tsx`, unchanged, as in the React layer.
+
 <!-- framework-solid-3: composer controls -->
 
 <!-- framework-solid-4: indicators, notices and files -->

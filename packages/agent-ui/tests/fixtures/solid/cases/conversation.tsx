@@ -34,7 +34,6 @@ const messages = (from: number, count: number, prefix?: string) =>
   Array.from({ length: count }, (_, i) => message(from + i, prefix));
 
 function Bubble(props: { message: Message }) {
-  // A streamed token gives the message a new object with the same id; the memo keeps the attribute from being written.
   const id = createMemo(() => props.message.id);
   return (
     <Show when={props.message.role === "user"} fallback={<p data-message={id()}>{props.message.text}</p>}>

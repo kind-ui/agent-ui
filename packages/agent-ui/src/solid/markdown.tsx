@@ -43,7 +43,6 @@ function Row(props: { node: Parent; align: Align; header: boolean }) {
   );
 }
 
-// What decides the element a node renders, beside its type.
 function kindOf(node: MdNode): string {
   switch (node.type) {
     case "link":
