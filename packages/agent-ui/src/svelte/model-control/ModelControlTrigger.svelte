@@ -6,7 +6,8 @@
   import { KindMenuItemIcon } from "../internal/menu/index.js";
   import { parts } from "./parts.js";
 
-  type Props = Omit<ComponentProps<typeof MenuTrigger>, "children"> & {
+  type TriggerProps = ComponentProps<typeof MenuTrigger>;
+  type Props = { [K in keyof TriggerProps as K extends "children" ? never : K]: TriggerProps[K] } & {
     /** What the button shows: the model's icon and name, then its effort, by default. */
     children?: Snippet<[ModelControlTriggerState]>;
   };

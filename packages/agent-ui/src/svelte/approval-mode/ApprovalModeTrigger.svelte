@@ -5,7 +5,8 @@
   import type { ComponentProps, Snippet } from "svelte";
   import { parts } from "./parts.js";
 
-  type Props = Omit<ComponentProps<typeof MenuTrigger>, "children"> & {
+  type TriggerProps = ComponentProps<typeof MenuTrigger>;
+  type Props = { [K in keyof TriggerProps as K extends "children" ? never : K]: TriggerProps[K] } & {
     /** What the button shows, from its state: a shield, the mode's label and a risky mode's mark. */
     children?: Snippet<[ApprovalModeTriggerState]>;
   };

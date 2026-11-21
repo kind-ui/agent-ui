@@ -6,7 +6,8 @@
   import { SettingsMenuRows } from "../settings-menu/index.js";
   import { parts } from "./parts.js";
 
-  type Props = Omit<ComponentProps<typeof KindMenuContent>, "children"> & {
+  type ContentProps = ComponentProps<typeof KindMenuContent>;
+  type Props = { [K in keyof ContentProps as K extends "children" ? never : K]: ContentProps[K] } & {
     /** What the menu holds, from its rows: the rows by default. */
     children?: Snippet<[SettingsMenuContentState]>;
   };

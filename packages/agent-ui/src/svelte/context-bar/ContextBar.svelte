@@ -11,7 +11,7 @@
   import { parts } from "./parts.js";
 
   type RootProps = ComponentProps<typeof parts.Root>;
-  type Props = Omit<RootProps, "chips"> & {
+  type Props = { [K in keyof RootProps as K extends "chips" ? never : K]: RootProps[K] } & {
     chips?: readonly ContextBarChipData[];
     children?: RootProps["children"];
   };

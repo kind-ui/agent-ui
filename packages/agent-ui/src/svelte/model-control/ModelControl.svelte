@@ -13,7 +13,10 @@
   import ModelControlTrigger from "./ModelControlTrigger.svelte";
   import { parts } from "./parts.js";
 
-  type Props = Omit<ComponentProps<typeof parts.Root>, "children" | "models" | "actions" | "settings"> & {
+  type RootProps = ComponentProps<typeof parts.Root>;
+  type Props = {
+    [K in keyof RootProps as K extends "children" | "models" | "actions" | "settings" ? never : K]: RootProps[K];
+  } & {
     models?: ModelControlModel[];
     /** Items after the models, like "More models". */
     actions?: ModelControlAction[];

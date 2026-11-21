@@ -1,5 +1,5 @@
 <script module lang="ts">
-  export const variants = ["all", "plain", "groups", "logos", "reduced", "refusing"];
+  export const variants = ["all", "plain", "groups", "logos", "composer", "reduced", "refusing"];
 </script>
 
 <script lang="ts">
@@ -10,6 +10,7 @@
     ModelSelectorContent,
     ModelSelectorTrigger,
   } from "../../../../src/svelte/model-selector/index.js";
+  import { Composer, ComposerInput, ComposerSubmit } from "../../../../src/svelte/composer/index.js";
   import { ReasoningEffort } from "../../../../src/svelte/reasoning-effort/index.js";
   import { expose } from "../../shared/expose.js";
   import { iconModels, levels, modelActions, models, selectionHost } from "../../shared/model-selector.js";
@@ -28,7 +29,18 @@
   const logoModels = iconModels(logo);
 </script>
 
-{#if variant === "logos"}
+{#if variant === "composer"}
+  <div class="p-4">
+    <Composer aria-label="Message" onSubmit={() => undefined}>
+      <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
+      <div style="grid-area: attach; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0">
+        <ModelSelector id="model" models={logoModels} defaultValue="claude-sonnet-5.5" />
+        <ReasoningEffort id="effort" {levels} defaultValue="medium" />
+      </div>
+      <ComposerSubmit />
+    </Composer>
+  </div>
+{:else if variant === "logos"}
   <div class="flex flex-col gap-4 p-6">
     <ModelSelector
       id="model"
