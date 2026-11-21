@@ -18,6 +18,8 @@ Last reviewed: `9484e6dc` (Task Vue-2)
 - **Hand-written roots for callbacks that offer an action (Task Vue-2):** Suggestion, Attachments, Message and Composer build their root with `usePrimitive` and `usePart`, taking the generated root's runtime `props` plus their callbacks as `Function` props, because the generated root always passes an emitter for every `kind: "callback"` option (AGENTS.md "Vue chat core"). Composer's keeps `v-model` and `v-model:value`.
 - **Slots that hand part state to the host get plain objects (Task Vue-2):** `CheckpointRestore`, `FeedbackCommentText` and `MessageRegenerateContent` build `{ state }` key by key, since UI SDK's slot state proxy doesn't survive `v-bind` or a spread.
 - **`conversation.vue` builds its cases with `defineComponent` and `h()` (Task Vue-2):** `Row`, `Chat`, `Remount` and `States` need their own component boundaries for the render counts `budgets.spec.ts` measures.
+- **Rows that must not update with their list pass `$stable` slots (Task Vue-7):** a slot object handed to `h()` makes the child update whenever its parent renders, so Thread List's row components mark the slots they pass to their parts `$stable` (unstable only while the host passes its own link slot), standing in for React's `memo`.
+- **Sidebar keeps its Resizable mounted (Task Vue-7):** the root's default slot always renders `KindResizable` and the inset always sits in its `KindResizablePanel`, so crossing `overlayBelow` patches the panel's frame and never remounts the inset's page.
 
 ## Known and open (don't report again, check whether fixed)
 

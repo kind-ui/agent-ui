@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { EffortLevel, ModelOption, SettingsEntry, SettingsValues } from "@kind-ui/agent-ui";
-import type { DictationEvent, DictationSource } from "@kind-ui/agent-ui/core";
+import type { ComposerDraft, DictationEvent, DictationSource } from "@kind-ui/agent-ui/core";
 import { shallowRef } from "vue";
 import { AddMenu } from "@/components/ui/vue/add-menu";
 import { ApprovalMode } from "@/components/ui/vue/approval-mode";
@@ -10,7 +10,7 @@ import { Dictation } from "@/components/ui/vue/dictation";
 import { ModelControl } from "@/components/ui/vue/model-control";
 
 const props = withDefaults(
-  defineProps<{ onSubmit?: () => Promise<void> | void; disabled?: boolean; placeholder?: string }>(),
+  defineProps<{ onSubmit?: (draft: ComposerDraft) => Promise<void> | void; disabled?: boolean; placeholder?: string }>(),
   { onSubmit: () => new Promise<void>((resolve) => setTimeout(resolve, 1000)), placeholder: "Ask anything…" },
 );
 
