@@ -16,6 +16,9 @@ import {
 import { KindToolbar, KindToolbarButton } from "./internal/toolbar.js";
 import { Markdown } from "./markdown.js";
 
+// `$stable` tells Vue these slots never change, so a part that renders again doesn't render the parts inside it.
+const stable = (slot: () => unknown) => ({ default: slot, $stable: true });
+
 const parts = createParts(documentPrimitive, {
   root: "div",
   header: "div",
@@ -120,18 +123,36 @@ export const DocumentExpand = withDefault(
 );
 
 const scrollContent = () => [
-  h(KindScrollAreaViewport, null, () => h(KindScrollAreaContent, null, () => h(DocumentContent))),
-  h(KindScrollAreaScrollbar, null, () => h(KindScrollAreaThumb)),
+  h(
+    KindScrollAreaViewport,
+    null,
+    stable(() =>
+      h(
+        KindScrollAreaContent,
+        null,
+        stable(() => h(DocumentContent)),
+      ),
+    ),
+  ),
+  h(
+    KindScrollAreaScrollbar,
+    null,
+    stable(() => h(KindScrollAreaThumb)),
+  ),
 ];
 
 /** The preview: a `KindScrollArea` holding the content, followed by Show more, unless you fill the default slot. */
 export const DocumentBody = withDefault(parts.Body, "DocumentBody", (state: { streaming: boolean }) => [
-  h(KindScrollArea, { stickToEnd: state.streaming }, scrollContent),
+  h(KindScrollArea, { stickToEnd: state.streaming }, stable(scrollContent)),
   h(DocumentExpand),
 ]);
 
 const defaultParts = () => [
-  h(DocumentHeader, null, () => [h(DocumentTitle), h(DocumentMeta), h(DocumentToolbar)]),
+  h(
+    DocumentHeader,
+    null,
+    stable(() => [h(DocumentTitle), h(DocumentMeta), h(DocumentToolbar)]),
+  ),
   h(DocumentBody),
 ];
 

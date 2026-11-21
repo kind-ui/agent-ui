@@ -85,6 +85,7 @@ export const FileTree = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Root, attrs, {
+        ...slots,
         default: ({ state }: { state: FileTreeTreeState }) =>
           // The slot's state is a proxy that lists no keys, so the Tree's props are read one by one.
           h(

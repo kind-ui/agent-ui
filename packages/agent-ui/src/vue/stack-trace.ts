@@ -13,6 +13,9 @@ const primitive = Object.defineProperty(
   { value: stackTracePrimitive.name },
 ) as typeof stackTracePrimitive;
 
+// `$stable` tells Vue these slots never change, so a part that renders again doesn't render the parts inside it.
+const stable = (slot: () => unknown) => ({ default: slot, $stable: true });
+
 const parts = createParts(primitive, {
   root: "div",
   trigger: "button",
@@ -99,12 +102,8 @@ export const StackTraceLibrary = withDefault(parts.Library, "StackTraceLibrary",
 });
 
 /** A group's frames, which open in place, unless you fill the default slot. */
-export const StackTraceLibraryFrames = withDefault(
-  parts.LibraryFrames,
-  "StackTraceLibraryFrames",
-  (state) => {
-    return state.indexes.map((index) => h(StackTraceFrame, { key: index, value: String(index) }));
-  },
+export const StackTraceLibraryFrames = withDefault(parts.LibraryFrames, "StackTraceLibraryFrames", (state) =>
+  state.indexes.map((index) => h(StackTraceFrame, { key: index, value: String(index) })),
 );
 
 /**
@@ -117,25 +116,33 @@ export const StackTraceGroup = withDefault(parts.Group, "StackTraceGroup", () =>
 ]);
 
 /** A frame for each app frame and a group for each run of library frames, unless you fill the default slot. */
-export const StackTraceList = withDefault(parts.List, "StackTraceList", (state) => {
-  return state.rows.map((row: StackTraceRow) =>
+export const StackTraceList = withDefault(parts.List, "StackTraceList", (state) =>
+  state.rows.map((row: StackTraceRow) =>
     row.type === "frame"
       ? h(StackTraceFrame, { key: row.index, value: String(row.index) })
       : h(StackTraceGroup, { key: `library-${row.start}`, value: String(row.start) }),
-  );
-});
+  ),
+);
 
 /**
  * An error as a step: its name and message, then its frames, with consecutive library frames folded into one row.
  * A default slot replaces the default parts.
  */
 export const StackTrace = withDefault(parts.Root, "StackTrace", () => [
-  h(StackTraceTrigger, null, () => [h(StackTraceIcon), h(StackTraceTitle)]),
-  h(StackTraceContent, null, () =>
-    h("div", { "data-stack-trace-panel": "", "data-kind-code": "" }, [
-      h(StackTraceMessage),
-      h(StackTraceList),
-      h(StackTraceCopy),
-    ]),
+  h(
+    StackTraceTrigger,
+    null,
+    stable(() => [h(StackTraceIcon), h(StackTraceTitle)]),
+  ),
+  h(
+    StackTraceContent,
+    null,
+    stable(() =>
+      h("div", { "data-stack-trace-panel": "", "data-kind-code": "" }, [
+        h(StackTraceMessage),
+        h(StackTraceList),
+        h(StackTraceCopy),
+      ]),
+    ),
   ),
 ]);

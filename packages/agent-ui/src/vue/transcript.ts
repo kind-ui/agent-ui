@@ -1,7 +1,7 @@
 import { type TranscriptSearchState, transcriptPrimitive } from "@kind-ui/agent-ui/core";
 import { Input, InputClear, InputGroup } from "@ui-sdk/vue/input";
 import { createParts } from "@ui-sdk/vue/primitive";
-import { defineComponent, Fragment, h, type Slots } from "vue";
+import { defineComponent, Fragment, h } from "vue";
 
 type MatchSegment = { text: string; match: boolean };
 
@@ -162,7 +162,7 @@ const defaultParts = () => [
 export const Transcript = defineComponent({
   name: "Transcript",
   inheritAttrs: false,
-  setup(_, { attrs, slots }: { attrs: Record<string, unknown>; slots: Slots }) {
+  setup(_, { attrs, slots }) {
     return () => h(parts.Root, attrs, { ...slots, default: slots.default ?? defaultParts });
   },
 }) as unknown as typeof parts.Root;

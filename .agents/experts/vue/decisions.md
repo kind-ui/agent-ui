@@ -16,6 +16,8 @@ Last reviewed: `9484e6dc` (Task Vue-2)
 - **Hand-written roots for callbacks that offer an action (Task Vue-2):** Suggestion, Attachments, Message and Composer build their root with `usePrimitive` and `usePart`, taking the generated root's runtime `props` plus their callbacks as `Function` props, because the generated root always passes an emitter for every `kind: "callback"` option (AGENTS.md "Vue chat core"). Composer's keeps `v-model` and `v-model:value`.
 - **Slots that hand part state to the host get plain objects (Task Vue-2):** `CheckpointRestore`, `FeedbackCommentText` and `MessageRegenerateContent` build `{ state }` key by key, since UI SDK's slot state proxy doesn't survive `v-bind` or a spread.
 - **`conversation.vue` builds its cases with `defineComponent` and `h()` (Task Vue-2):** `Row`, `Chat`, `Remount` and `States` need their own component boundaries for the render counts `budgets.spec.ts` measures.
+- **Gated callbacks are `"action"` options on a derived primitive (Task Vue-6, after Vue-3):** File Tree, Stack Trace, Transcript and Selection keep `createParts`' generated root and re-declare `onSelect`, `onOpenFrame`, `onSeek` and `onAction` as `"action"`, so they stay `undefined` until bound.
+- **Streamed rows are child components with `$stable` slots (Task Vue-6):** Terminal's lines and Transcript's segments render through their own components keyed by index and id; no `memo` equivalent is needed.
 
 ## Known and open (don't report again, check whether fixed)
 

@@ -184,6 +184,7 @@ export const InlineCitationCarousel = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Carousel, attrs, {
+        ...slots,
         default: ({ state }: Scope<InlineCitationCarouselState>) =>
           h(
             CarouselRoot,

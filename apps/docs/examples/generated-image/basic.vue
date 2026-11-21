@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref, watch } from "vue";
+import { onWatcherCleanup, ref, watch } from "vue";
 import { GeneratedImage } from "@/components/ui/vue/generated-image";
 import lighthouse from "./lighthouse.png";
 import preview from "./lighthouse-preview.png";
 
 const progress = ref(0);
 
-let timer: ReturnType<typeof setTimeout> | undefined;
 watch(
   progress,
   (value) => {
-    if (value < 100) timer = setTimeout(() => (progress.value = value + 5), 250);
+    if (value >= 100) return;
+    const timer = setTimeout(() => (progress.value = value + 5), 250);
+    onWatcherCleanup(() => clearTimeout(timer));
   },
   { immediate: true },
 );
-onBeforeUnmount(() => clearTimeout(timer));
 
 function save() {
   const link = document.createElement("a");

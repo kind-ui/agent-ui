@@ -1,6 +1,6 @@
 import { type AnsiSpan, terminalPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/vue/primitive";
-import { defineComponent, h, type Slots } from "vue";
+import { defineComponent, h } from "vue";
 
 const parts = createParts(terminalPrimitive, {
   root: "div",
@@ -148,7 +148,7 @@ const defaultParts = () => [
 export const Terminal = defineComponent({
   name: "Terminal",
   inheritAttrs: false,
-  setup(_, { attrs, slots }: { attrs: Record<string, unknown>; slots: Slots }) {
+  setup(_, { attrs, slots }) {
     return () => h(parts.Root, attrs, { ...slots, default: slots.default ?? defaultParts });
   },
 }) as unknown as typeof parts.Root;

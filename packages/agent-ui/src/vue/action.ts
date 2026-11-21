@@ -3,6 +3,9 @@ import { createParts } from "@ui-sdk/vue/primitive";
 import { type Component, defineComponent, h, type Slot, type VNode } from "vue";
 import { Markdown } from "./markdown.js";
 
+// `$stable` tells Vue these slots never change, so a part that renders again doesn't render the parts inside it.
+const stable = (slot: () => unknown) => ({ default: slot, $stable: true });
+
 const parts = createParts(actionPrimitive, {
   root: "div",
   trigger: "button",
@@ -49,6 +52,14 @@ export const ActionResult = withDefault(parts.Result, "ActionResult", (state) =>
  * A default slot replaces the default trigger and content.
  */
 export const Action = withDefault(parts.Root, "Action", () => [
-  h(ActionTrigger, null, () => [h(ActionIcon), h(ActionTitle)]),
-  h(ActionContent, null, () => [h(ActionQuote), h(ActionResult)]),
+  h(
+    ActionTrigger,
+    null,
+    stable(() => [h(ActionIcon), h(ActionTitle)]),
+  ),
+  h(
+    ActionContent,
+    null,
+    stable(() => [h(ActionQuote), h(ActionResult)]),
+  ),
 ]);

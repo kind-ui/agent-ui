@@ -75,6 +75,9 @@ export const Selection = defineComponent({
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
     return () =>
-      h(parts.Root, attrs, () => [h(SelectionContent, null, () => slots.default?.()), h(SelectionToolbar)]);
+      h(parts.Root, attrs, {
+        render: slots.render,
+        default: () => [h(SelectionContent, null, () => slots.default?.()), h(SelectionToolbar)],
+      });
   },
 }) as unknown as typeof parts.Root;
