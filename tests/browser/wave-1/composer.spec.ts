@@ -147,7 +147,7 @@ test("@ and / open the Trigger Menu; choosing inserts a token, Escape closes it"
   await expect(page.getByRole("listbox")).toBeHidden();
 });
 
-// Solid's Trigger Menu writes these only once the editor changes (a known parity difference at rest), so every layer
+// A Trigger Menu that connects before its editor attaches writes these only once the editor changes, so every layer
 // checks them after the first keystroke.
 test("the first keystroke gives the editor its Trigger Menu attributes", async ({ page }) => {
   const editor = await open(page);

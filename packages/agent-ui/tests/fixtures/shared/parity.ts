@@ -119,7 +119,10 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
     { c: "conversation-search", case: "basic" },
     { c: "conversation-search", case: "markdown" },
   ],
-  "day-separator": [{ c: "day-separator", case: "all" }],
+  "day-separator": [
+    { c: "day-separator", case: "all" },
+    { c: "day-separator", case: "hydrate" },
+  ],
   dictation: [
     { c: "dictation", case: "default" },
     { c: "dictation", case: "no-source" },
