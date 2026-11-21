@@ -207,7 +207,7 @@
       <ConversationSearch
         messages={searchable}
         conversation={controller}
-        bind:open={() => searching, (value: boolean) => (searching = value)}
+        bind:open={searching}
         onMarksChange={(value: readonly number[]) => (marks = value)}
       />
       {#key current}
@@ -259,7 +259,7 @@
       <FullComposer
         disabled={!online}
         placeholder={online ? "Ask anything…" : "Offline"}
-        onSubmit={((draft: { text: string }) => send(draft.text)) as () => void}
+        onSubmit={(draft) => send(draft.text)}
       />
     </div>
   </SidebarInset>
