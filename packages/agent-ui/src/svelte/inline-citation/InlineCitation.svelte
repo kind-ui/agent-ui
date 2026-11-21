@@ -20,8 +20,8 @@
     {#if content}
       {@render content()}
     {:else}
-      <InlineCitationTrigger />
-      <InlineCitationContent>
+      <!-- A citation sits in running text, so no whitespace between its parts. -->
+      <InlineCitationTrigger /><InlineCitationContent>
         {#if ids.length > 1}
           <InlineCitationCarousel />
         {:else if ids[0]}
