@@ -8,7 +8,17 @@ import {
   pickerPrimitive,
 } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/vue/primitive";
-import { type Component, defineComponent, Fragment, h, type PropType, type SlotsType, type VNode } from "vue";
+import {
+  type Component,
+  defineComponent,
+  Fragment,
+  h,
+  nextTick,
+  onMounted,
+  type PropType,
+  type SlotsType,
+  type VNode,
+} from "vue";
 import {
   KindCommand,
   KindCommandEmpty,
@@ -53,6 +63,50 @@ export type PickerChoice = Omit<NonNullable<PickerOptions["items"]>[number], "ic
 export type PickerFooterAction = Omit<NonNullable<PickerOptions["actions"]>[number], "icon"> & {
   icon?: string | VNode;
 };
+
+type ElementRef = (el: unknown) => void;
+
+const Settled = defineComponent({
+  name: "PickerSettled",
+  props: { run: { type: Function as PropType<() => void>, required: true } },
+  setup(props) {
+    onMounted(() => nextTick(props.run));
+    return () => null;
+  },
+});
+
+// The content binds after its rows, as React's effects run children first: a sheet measures the content as it binds,
+// and Command shows a group only once its rows have bound and that update has flushed. Bound first, the sheet measured
+// an empty list and resized during its opening motion, which `@ui-sdk/core` mishandles (AGENTS.md, Solid conformance).
+// A last child's `onMounted` runs once the rows have mounted, and `nextTick` once the update their binds caused has.
+function afterChildren() {
+  let bind: ElementRef | undefined;
+  let el: unknown = null;
+  let bound = false;
+  const ref: ElementRef = (node) => {
+    el = node;
+    if (node === null) {
+      if (bound) bind?.(null);
+      bound = false;
+    } else if (bound) bind?.(node);
+  };
+  const run = () => {
+    if (bound || !(el instanceof Element) || !el.isConnected) return;
+    bound = true;
+    bind?.(el);
+  };
+  let inner: Component | undefined;
+  let children: Component | undefined;
+  return <S extends { props: Record<string, unknown>; children: Component }>(scope: S): S => {
+    bind = scope.props.ref as ElementRef | undefined;
+    if (inner !== scope.children) {
+      const given = scope.children;
+      inner = given;
+      children = () => [h(given), h(Settled, { run })];
+    }
+    return { ...scope, props: { ...scope.props, ref }, children } as S;
+  };
+}
 
 const iconOf = (icon: unknown) =>
   typeof icon === "string" ? h("img", { src: icon, alt: "" }) : (icon as VNode | undefined);
@@ -210,6 +264,7 @@ export function pickerParts<P extends PickerParts>(
     name: `${name}Content`,
     inheritAttrs: false,
     setup(_, { attrs, slots }) {
+      const later = afterChildren();
       return () =>
         h(
           Part.Content,
@@ -217,11 +272,12 @@ export function pickerParts<P extends PickerParts>(
           {
             default: slots.default ?? (() => h(List)),
             // A sheet sits in a full-screen viewport, which renders only while the content presents as one.
-            render: (scope: {
+            render: (given: {
               props: Record<string, unknown>;
               state: { presentation: string };
               children: Component;
             }) => {
+              const scope = later(given);
               const element = slots.render ? slots.render(scope) : h("div", scope.props, [h(scope.children)]);
               return [scope.state.presentation === "sheet" ? h(Part.Viewport, null, () => element) : element];
             },
