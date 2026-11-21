@@ -10,9 +10,11 @@ import { stableTree } from "./tree.js";
 for (const [layer, manifest] of Object.entries(manifests)) {
   const names = [...manifest.components, ...manifest.internals.map((name) => `internal-${name}`)];
   for (const name of names)
-    for (const { c, case: variant } of parityPages[name] ?? [])
+    for (const { c, case: variant, needs } of parityPages[name] ?? [])
       test(`${layer}: ${name} ?c=${c}&case=${variant}`, async ({ page, browser }, testInfo) => {
         test.skip(layerOf(testInfo) !== layer, `a ${layer} page`);
+        const missing = needs?.filter((need) => !manifest.components.includes(need)) ?? [];
+        test.skip(missing.length > 0, `${layer} doesn't render ${missing.join(", ")} yet`);
         const warnings = mismatches(page);
         await page.goto(`/?c=${c}&case=${variant}&ssr`);
         await expect(page.locator("#root[data-ssr]")).toBeAttached();
