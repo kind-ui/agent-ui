@@ -13,6 +13,7 @@ Last reviewed: `2a99a303` (Task Solid-2)
 - **Default children are `props.children ?? <Default />`** (Task Solid-2): one lazy read, built only when used; a part that reads `props.children` more than once reads it through a `createMemo`, since each read builds an element child again.
 - **`MessageRegenerate` takes its button as a function child** (Task Solid-2): Solid can't clone an element child into `MenuTrigger`'s `render`, as React does; an element child still regenerates, without the menu.
 - **Trigger Menu's editor attributes are missing at rest** (Task Solid-2): an `@ui-sdk/solid` gap, listed under `known` on `?c=composer&case=full` and recorded in AGENTS.md "UI SDK API notes".
+- **Step family default parts are built per instance, not shared** (Task Solid-5): React's module-level `DEFAULT_PARTS` exists to skip re-rendering wrappers per chunk, which Solid never does; item lists are `<For>` keyed by id.
 - Everything in AGENTS.md "UI SDK API notes".
 
 ## Known and open (don't report again, check whether fixed)

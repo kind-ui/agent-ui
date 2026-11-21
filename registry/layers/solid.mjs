@@ -40,6 +40,14 @@ export default {
 
     // framework-solid-5: step family
 
+    "reasoning",
+    "tool",
+    "chain-of-thought",
+    "task",
+    "plan",
+    "subagent",
+    "queue",
+
     // framework-solid-6: developer output
 
     // framework-solid-7: Wave 6 shell
@@ -107,6 +115,14 @@ export default {
     "wave-3/guardrail-notice.spec.ts",
 
     // framework-solid-5: step family
+
+    "wave-2/reasoning.spec.ts",
+    "wave-2/tool.spec.ts",
+    "wave-2/chain-of-thought.spec.ts",
+    "wave-2/task.spec.ts",
+    "wave-2/plan.spec.ts",
+    "wave-2/subagent.spec.ts",
+    "wave-2/queue.spec.ts",
 
     // framework-solid-6: developer output
 
