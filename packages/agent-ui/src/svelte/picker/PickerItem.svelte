@@ -16,22 +16,16 @@
 
 <parts.Item {...props}>
   {#snippet children(state: PickerItemState)}
-    {#if content}{@render content(state)}{:else}
-      {#if state.row.icon !== undefined && icon !== null}
-        <KindCommandItemIcon>
-          {#if icon}{@render icon(state.row)}{:else}<PickerIcon icon={state.row.icon} />{/if}
-        </KindCommandItemIcon>
-      {/if}
-      <span data-picker-item-text=""
+    {#if content}{@render content(state)}{:else}{#if state.row.icon !== undefined && icon !== null}<KindCommandItemIcon
+          >{#if icon}{@render icon(state.row)}{:else}<PickerIcon icon={state.row.icon} />{/if}</KindCommandItemIcon
+        >{/if}<span data-picker-item-text=""
         ><KindCommandItemText>{state.row.label}</KindCommandItemText
         >{#if state.description.length}<span data-picker-description=""
             >{#each state.description as segment, index (index)}{#if segment.match}<mark>{segment.text}</mark
                 >{:else}{segment.text}{/if}{/each}</span
           >{/if}</span
-      >
-      {#if state.row.meta}<span data-picker-meta="">{state.row.meta}</span>{/if}
-      {@render trailing?.(state.row)}
-      <span data-picker-mark=""></span>
-    {/if}
+      >{#if state.row.meta}<span data-picker-meta="">{state.row.meta}</span>{/if}{@render trailing?.(
+        state.row,
+      )}<span data-picker-mark=""></span>{/if}
   {/snippet}
 </parts.Item>
