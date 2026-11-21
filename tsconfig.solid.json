@@ -2,6 +2,8 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
     "exactOptionalPropertyTypes": false,
     "declaration": false,
     "declarationMap": false,
