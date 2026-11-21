@@ -32,8 +32,8 @@
       data-agent-hidden=""
     >
       {#if content}{@render content()}{:else}
-        <KindSegmentedControlIndicator />
-        {#each control.levels as level (level.value)}
+        <KindSegmentedControlIndicator
+        />{#each control.levels as level (level.value)}
           <KindSegmentedControlItem value={level.value}>{level.label}</KindSegmentedControlItem>
         {/each}
       {/if}

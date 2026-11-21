@@ -22,9 +22,9 @@
 </script>
 
 <parts.Root {...props}>
-  <NoticeIcon />
-  <NoticeTitle />
-  <NoticeDescription>{@render children?.()}</NoticeDescription>
-  <NoticeActions>{@render actions?.()}</NoticeActions>
-  <NoticeDismiss />
+  <NoticeIcon
+  /><NoticeTitle
+  /><NoticeDescription>{@render children?.()}</NoticeDescription
+  ><NoticeActions>{@render actions?.()}</NoticeActions
+  ><NoticeDismiss />
 </parts.Root>

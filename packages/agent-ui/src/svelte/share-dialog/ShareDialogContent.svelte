@@ -29,19 +29,19 @@
   {#snippet children(state: Parameters<NonNullable<ContentProps["children"]>>[0])}
     {#if content}{@render content(state)}{:else}
       <div data-share-dialog-header="">
-        <ShareDialogTitle />
-        <ShareDialogDescription />
-      </div>
-      <ShareDialogVisibility />
-      <div data-share-dialog-link-row="">
-        <ShareDialogCreate />
-        <ShareDialogLink />
-        <ShareDialogCopy />
-      </div>
-      <div data-share-dialog-footer="">
-        <ShareDialogError />
-        <ShareDialogRevoke />
-        <ShareDialogClose />
+        <ShareDialogTitle
+        /><ShareDialogDescription />
+      </div
+      ><ShareDialogVisibility
+      /><div data-share-dialog-link-row="">
+        <ShareDialogCreate
+        /><ShareDialogLink
+        /><ShareDialogCopy />
+      </div
+      ><div data-share-dialog-footer="">
+        <ShareDialogError
+        /><ShareDialogRevoke
+        /><ShareDialogClose />
       </div>
     {/if}
   {/snippet}

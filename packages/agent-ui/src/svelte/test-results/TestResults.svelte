@@ -23,15 +23,15 @@
 
 {#snippet defaultParts()}
   <parts.Trigger>
-    <parts.Icon />
-    <TestResultsTitle />
-    <TestResultsMeta />
-  </parts.Trigger>
-  <TestResultsFilter />
-  <parts.Content>
+    <parts.Icon
+    /><TestResultsTitle
+    /><TestResultsMeta />
+  </parts.Trigger
+  ><TestResultsFilter
+  /><parts.Content>
     <div data-test-results-panel="">
-      <TestResultsTree />
-      <TestResultsEmpty />
+      <TestResultsTree
+      /><TestResultsEmpty />
     </div>
   </parts.Content>
 {/snippet}

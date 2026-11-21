@@ -36,8 +36,8 @@
             {#each suggestions as suggestion (suggestion.id)}
               <SuggestionItem value={suggestion.id} />
             {/each}
-          </SuggestionViewport>
-          <SuggestionControls />
+          </SuggestionViewport
+          ><SuggestionControls />
         {/if}
       </KindCarousel>
     {/if}

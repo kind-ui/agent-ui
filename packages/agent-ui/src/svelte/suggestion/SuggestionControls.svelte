@@ -11,7 +11,7 @@
   {#if children}
     {@render children()}
   {:else}
-    <SuggestionPrevious />
-    <SuggestionNext />
+    <SuggestionPrevious
+    /><SuggestionNext />
   {/if}
 </div>

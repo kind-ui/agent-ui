@@ -16,11 +16,11 @@
 <parts.Root {...props}>
   {#snippet children(state: Parameters<NonNullable<Props["children"]>>[0])}
     {#if content}{@render content(state)}{:else}
-      <DictationWaveform />
-      <DictationStatus />
-      <parts.Start />
-      <parts.Cancel />
-      <parts.Stop />
+      <DictationWaveform
+      /><DictationStatus
+      /><parts.Start
+      /><parts.Cancel
+      /><parts.Stop />
     {/if}
   {/snippet}
 </parts.Root>

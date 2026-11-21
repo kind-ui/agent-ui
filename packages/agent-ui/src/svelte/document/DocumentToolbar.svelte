@@ -12,8 +12,8 @@
 
 {#snippet fallback({ downloads, canDownload }: { downloads: Download[]; canDownload: boolean })}
   <KindToolbar aria-label="Document actions">
-    <DocumentCopy />
-    {#if canDownload}
+    <DocumentCopy
+    />{#if canDownload}
       {#if downloads.length > 1}
         {#each downloads as { id } (id)}
           <DocumentDownload value={id} />

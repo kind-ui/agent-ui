@@ -21,8 +21,8 @@
         aria-label={meter.label}
         data-agent-hidden=""
       >
-        <MeterTrack />
-        <MeterValue />
+        <MeterTrack
+        /><MeterValue />
       </Meter>
     {/if}
   {/snippet}

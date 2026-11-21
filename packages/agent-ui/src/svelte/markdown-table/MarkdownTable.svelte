@@ -24,14 +24,14 @@
 <parts.Root {...props}>
   <parts.Header>
     <parts.Copy />
-  </parts.Header>
-  <KindScrollArea>
+  </parts.Header
+  ><KindScrollArea>
     <KindScrollAreaViewport>
       <KindScrollAreaContent>
         <parts.Table>{@render children?.()}</parts.Table>
       </KindScrollAreaContent>
-    </KindScrollAreaViewport>
-    <KindScrollAreaScrollbar orientation="horizontal">
+    </KindScrollAreaViewport
+    ><KindScrollAreaScrollbar orientation="horizontal">
       <KindScrollAreaThumb />
     </KindScrollAreaScrollbar>
   </KindScrollArea>

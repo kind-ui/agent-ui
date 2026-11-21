@@ -17,7 +17,7 @@
     children?: Snippet;
   };
 
-  let { open = $bindable(), query = $bindable(), id, render: own, children, ...props }: Props = $props();
+  let { open = $bindable(), query = $bindable(), children, ...props }: Props = $props();
   // Its parts are Picker's, with state the picker parts never read. The status mark ends the row, after the date,
   // since Command hides an item's icon from assistive technology and a status needs its words.
   setPickerConfig({ parts: parts as unknown as PickerParts, icon: null, trailing });
@@ -27,22 +27,13 @@
   {#if row.icon !== undefined}<parts.Status value={row.option.value} />{/if}
 {/snippet}
 
-<!--
-  The `id` goes on the element, not the part: `@ui-sdk/svelte` keys a part by its `id`, and the agent bridge names a
-  component only by a root without a key.
--->
 <parts.Root bind:open bind:query {...props}>
-  {#snippet render(handed: Parameters<NonNullable<RootProps["render"]>>[0])}
-    {#if own}{@render own({ ...handed, props: { ...handed.props, id } })}{:else}
-      <div {...handed.props} {id}>{@render handed.children?.(handed.state)}</div>
-    {/if}
-  {/snippet}
   {#if children}{@render children()}{:else}
-    <ThreadSearchTrigger />
-    <parts.Backdrop />
-    <PickerContent>
-      <PickerList />
-      <ThreadSearchHints />
+    <ThreadSearchTrigger
+    /><parts.Backdrop
+    /><PickerContent>
+      <PickerList
+      /><ThreadSearchHints />
     </PickerContent>
   {/if}
 </parts.Root>

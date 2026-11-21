@@ -39,16 +39,15 @@
       {chips}
       style="--kind-context-chip-max-width: 120px"
       onRemove={(id: string) => (chips = chips.filter((chip) => chip.id !== id))}
-    />
-    <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
-    <div style="grid-area: attach; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0">
-      <AddMenu items={addItems} onAction={() => undefined} />
-      <ModelControl {models} {levels} defaultModel="opus" defaultEffort="high" />
-      <ApprovalMode {modes} bind:value={mode} />
-      <SettingsMenu {settings} bind:values />
-    </div>
-    <ComposerRestored />
-    <Dictation {source} />
-    <ComposerSubmit />
+    /><ComposerInput aria-label="Prompt" placeholder="Ask anything"
+    /><div style="grid-area: attach; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0">
+      <AddMenu items={addItems} onAction={() => undefined}
+      /><ModelControl {models} {levels} defaultModel="opus" defaultEffort="high"
+      /><ApprovalMode {modes} bind:value={mode}
+      /><SettingsMenu {settings} bind:values />
+    </div
+    ><ComposerRestored
+    /><Dictation {source}
+    /><ComposerSubmit />
   </Composer>
 </div>

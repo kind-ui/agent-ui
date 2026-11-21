@@ -70,8 +70,7 @@
       {downloads}
       onDownload={(id, details) => void recorded.downloads.push([id, details.source])}
       {motion}
-    />
-    <Document id="code" label="backoff.ts" format="code" language="ts" content={code} />
-    <Document id="notes" label="notes.txt" format="text" content={notes} />
+    /><Document id="code" label="backoff.ts" format="code" language="ts" content={code}
+    /><Document id="notes" label="notes.txt" format="text" content={notes} />
   </div>
 {/if}

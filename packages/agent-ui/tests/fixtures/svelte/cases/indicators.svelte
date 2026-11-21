@@ -14,10 +14,10 @@
 </script>
 
 <div class="flex max-w-md flex-col items-start gap-6 p-6">
-  <Loader />
-  <ThinkingIndicator />
-  <TypingIndicator />
-  <p class="text-sm leading-6">
+  <Loader
+  /><ThinkingIndicator
+  /><TypingIndicator
+  /><p class="text-sm leading-6">
     <StreamingText {text} caret />
   </p>
 </div>

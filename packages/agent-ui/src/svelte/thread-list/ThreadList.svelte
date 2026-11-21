@@ -13,28 +13,19 @@
 
   type RootProps = ComponentProps<typeof parts.Root>;
 
-  let { id, render: own, children: content, ...props }: RootProps = $props();
+  let { children: content, ...props }: RootProps = $props();
 </script>
 
-<!--
-  The `id` goes on the element, not the part: `@ui-sdk/svelte` keys a part by its `id`, and the agent bridge names a
-  component only by a root without a key.
--->
 <parts.Root {...props}>
-  {#snippet render(handed: Parameters<NonNullable<RootProps["render"]>>[0])}
-    {#if own}{@render own({ ...handed, props: { ...handed.props, id } })}{:else}
-      <nav {...handed.props} {id}>{@render handed.children?.(handed.state)}</nav>
-    {/if}
-  {/snippet}
   {#snippet children(state: Parameters<NonNullable<RootProps["children"]>>[0])}
     {#if content}{@render content(state)}{:else}
-      <ThreadListNew />
-      <parts.Viewport>
-        <ThreadListGrid />
-        <ThreadListEnd />
-      </parts.Viewport>
-      <ThreadListMenu />
-      <ThreadListDialog />
+      <ThreadListNew
+      /><parts.Viewport>
+        <ThreadListGrid
+        /><ThreadListEnd />
+      </parts.Viewport
+      ><ThreadListMenu
+      /><ThreadListDialog />
     {/if}
   {/snippet}
 </parts.Root>

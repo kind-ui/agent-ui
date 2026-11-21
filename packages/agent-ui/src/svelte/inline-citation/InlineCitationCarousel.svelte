@@ -35,11 +35,11 @@
               </CarouselItem>
             {/each}
           </CarouselContent>
-        </CarouselViewport>
-        <span data-inline-citation-controls="">
-          <InlineCitationPrevious />
-          <InlineCitationIndex />
-          <InlineCitationNext />
+        </CarouselViewport
+        ><span data-inline-citation-controls="">
+          <InlineCitationPrevious
+          /><InlineCitationIndex
+          /><InlineCitationNext />
         </span>
       {/if}
     </Carousel>

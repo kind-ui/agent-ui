@@ -12,5 +12,5 @@
   let { children, ...props }: Props = $props();
 </script>
 
-<parts.Editor {...props} />
-{#if children}{@render children()}{:else}<MessageEditActions />{/if}
+<parts.Editor {...props}
+/>{#if children}{@render children()}{:else}<MessageEditActions />{/if}

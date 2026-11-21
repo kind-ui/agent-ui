@@ -12,9 +12,9 @@
 </script>
 
 {#snippet fallback()}
-  <GeneratedImageFrame />
-  <parts.Backdrop />
-  <GeneratedImageDialog />
+  <GeneratedImageFrame
+  /><parts.Backdrop
+  /><GeneratedImageDialog />
 {/snippet}
 
 <parts.Root {...props} bind:open children={children ?? fallback} />

@@ -27,8 +27,8 @@
     {#if mounted}
       <KindTriggerMenu {triggers}>
         <KindTriggerMenuContent {...props}>
-          <KindTriggerMenuEmpty>No matches</KindTriggerMenuEmpty>
-          <KindTriggerMenuList>
+          <KindTriggerMenuEmpty>No matches</KindTriggerMenuEmpty
+          ><KindTriggerMenuList>
             {#snippet children(state)}
               {#each state.items as ComposerTriggerItem[] as item (item.value)}
                 <KindTriggerMenuItem value={item.value} label={item.label}>

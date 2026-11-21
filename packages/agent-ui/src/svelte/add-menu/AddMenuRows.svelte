@@ -26,22 +26,21 @@
   {:else}
     <KindMenuSub>
       <KindMenuSubTrigger disabled={row.disabled}>
-        <KindMenuItemContent icon={row.icon as Icon} label={row.label} description={row.description} />
-        <span data-menu-chevron=""></span>
-      </KindMenuSubTrigger>
-      <KindMenuSubContent><AddMenuRows sections={row.sections} /></KindMenuSubContent>
+        <KindMenuItemContent icon={row.icon as Icon} label={row.label} description={row.description}
+        /><span data-menu-chevron=""></span>
+      </KindMenuSubTrigger
+      ><KindMenuSubContent><AddMenuRows sections={row.sections} /></KindMenuSubContent>
     </KindMenuSub>
   {/if}
 {/snippet}
 
 {#each sections as section, index (section.label ?? "")}
-  {#if index > 0}<KindMenuSeparator />{/if}
-  {#if section.label === undefined}
+  {#if index > 0}<KindMenuSeparator />{/if}{#if section.label === undefined}
     {#each section.rows as entry (entry.id)}{@render row(entry)}{/each}
   {:else}
     <KindMenuGroup>
-      <KindMenuGroupLabel>{section.label}</KindMenuGroupLabel>
-      {#each section.rows as entry (entry.id)}{@render row(entry)}{/each}
+      <KindMenuGroupLabel>{section.label}</KindMenuGroupLabel
+      >{#each section.rows as entry (entry.id)}{@render row(entry)}{/each}
     </KindMenuGroup>
   {/if}
 {/each}

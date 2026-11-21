@@ -12,8 +12,8 @@
 </script>
 
 {#snippet fallback()}
-  <StackTraceLibrary />
-  <StackTraceLibraryFrames />
+  <StackTraceLibrary
+  /><StackTraceLibraryFrames />
 {/snippet}
 
 <parts.Group {...props} children={children ?? fallback} />

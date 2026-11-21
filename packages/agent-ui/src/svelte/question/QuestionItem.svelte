@@ -10,9 +10,9 @@
 </script>
 
 {#snippet defaultParts()}
-  <QuestionPrompt />
-  <QuestionChoices />
-  <QuestionText />
+  <QuestionPrompt
+  /><QuestionChoices
+  /><QuestionText />
 {/snippet}
 
 <parts.Item {...props} children={children ?? defaultParts} />

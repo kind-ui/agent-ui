@@ -28,8 +28,8 @@
   </div>
 {:else}
   <div class="flex flex-col gap-4 p-6">
-    <p id="above">Above</p>
-    <div class="flex items-center gap-2">
+    <p id="above">Above</p
+    ><div class="flex items-center gap-2">
       <Picker
         id="picker"
         label="Work in"
@@ -46,8 +46,7 @@
         }}
         motion={variant === "reduced" ? "reduced" : undefined}
         presentation={variant === "sheet" ? "sheet" : undefined}
-      />
-      <span id="beside">Beside</span>
+      /><span id="beside">Beside</span>
     </div>
   </div>
 {/if}

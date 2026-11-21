@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, type Route, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 type Fixture = {
   kindHost: {
@@ -172,9 +172,7 @@ test("the preview sharpens as progress rises and nothing loops while generating"
 });
 
 test("agents open, close and download once the image is loaded", async ({ page }, testInfo) => {
-  // framework-svelte-6: developer output. `@ui-sdk/svelte` keys a root by its `id`, which unnames the component in the
-  // agent snapshot (AGENTS.md "UI SDK API notes", Svelte chat core). Remove once UI SDK fixes it.
-  test.skip(layerOf(testInfo) === "svelte", "@ui-sdk/svelte keys a root by its id");
+  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
   await open(page);
   // UI SDK's bridge offers its generic `press` to every component that opens.
   await expectAgentActions(page, "A lighthouse at dusk", ["open", "download", "press"]);

@@ -25,12 +25,11 @@
 <div class="flex flex-col items-start gap-3 bg-[var(--kind-color-surface)] p-6">
   {#each statuses as each (each)}
     <Status status={each} />
-  {/each}
-  <Status id="live" {status} {label} {motion} />
-  <Status id="composed" status="complete">
+  {/each}<Status id="live" {status} {label} {motion}
+    /><Status id="composed" status="complete">
     <StatusLabel>
       {#snippet children({ label }: { label: string })}{`Build ${label.toLowerCase()}`}{/snippet}
-    </StatusLabel>
-    <StatusIcon />
+    </StatusLabel
+    ><StatusIcon />
   </Status>
 </div>

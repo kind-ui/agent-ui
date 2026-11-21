@@ -20,17 +20,17 @@
   let { title, description, initialFocus, busy, children }: Props = $props();
 </script>
 
-<KindAlertDialogBackdrop />
-<KindAlertDialogContent {initialFocus} aria-busy={busy || undefined}>
-  <KindAlertDialogTitle>{title}</KindAlertDialogTitle>
-  <KindAlertDialogDescription>{description}</KindAlertDialogDescription>
-  {#if children}
+<KindAlertDialogBackdrop
+/><KindAlertDialogContent {initialFocus} aria-busy={busy || undefined}>
+  <KindAlertDialogTitle>{title}</KindAlertDialogTitle
+  ><KindAlertDialogDescription>{description}</KindAlertDialogDescription
+  >{#if children}
     {@render children()}
   {:else}
     <div data-checkpoint-answers="">
-      <CheckpointError />
-      <CheckpointCancel />
-      <CheckpointConfirm />
+      <CheckpointError
+      /><CheckpointCancel
+      /><CheckpointConfirm />
     </div>
   {/if}
 </KindAlertDialogContent>

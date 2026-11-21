@@ -11,8 +11,8 @@
 </script>
 
 {#snippet fallback()}
-  <parts.Link><SourcesIcon /><SourcesTitle /><SourcesHost /></parts.Link>
-  <SourcesSnippet />
+  <parts.Link><SourcesIcon /><SourcesTitle /><SourcesHost /></parts.Link
+  ><SourcesSnippet />
 {/snippet}
 
 <parts.Item {...props} children={children ?? fallback} />

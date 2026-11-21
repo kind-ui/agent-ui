@@ -210,5 +210,21 @@ export default {
     "wave-6/conversation-search.spec.ts",
 
     // framework-svelte-8: conformance
+
+    "wave-1/agent.spec.ts",
+    "wave-2/agent.spec.ts",
+    "wave-3/agent.spec.ts",
+    "wave-4/agent.spec.ts",
+    "wave-5/agent.spec.ts",
+    "wave-6/agent.spec.ts",
+    "wave-5/aria-patterns.spec.ts",
+    "wave-6/aria-patterns.spec.ts",
+    "wave-5/composer-compact.spec.ts",
+    "wave-1/controls.spec.ts",
+    "wave-1/motion.spec.ts",
+    "wave-1/theme.spec.ts",
+    "wave-1/status-mark.spec.ts",
+    "wave-1/forced-colors.spec.ts",
+
   ],
 };

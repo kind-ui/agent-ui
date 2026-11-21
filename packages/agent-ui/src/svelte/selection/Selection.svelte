@@ -10,6 +10,6 @@
 </script>
 
 <parts.Root {...props}>
-  <parts.Content>{@render children?.()}</parts.Content>
-  <SelectionToolbar />
+  <parts.Content>{@render children?.()}</parts.Content
+  ><SelectionToolbar />
 </parts.Root>

@@ -32,9 +32,6 @@ export const budgets: Partial<Budgets> = {
 
   // framework-svelte-6: developer output
 
-  // Once the last line wraps in a full viewport, the first line in view leaves it, with the comment anchors Svelte
-  // keeps around each line: one node removal each.
-  terminalChunk: { writes: 11, renders: 0, notified: 2, layoutReads: 11 },
   // The new line comes in and the first line in view leaves, each with its comment anchors.
   terminalLine: { writes: 22, renders: 0, notified: 4, layoutReads: 18 },
   transcriptWord: { writes: 2, renders: 0, notified: 3, layoutReads: 4 },
@@ -53,4 +50,8 @@ export const budgets: Partial<Budgets> = {
   conversationSearchType: { writes: 451, renders: 0, notified: 57, layoutReads: 4 },
 
   // framework-svelte-8: conformance
+
+  // The wrap (4 writes, 9 reads) and the scroll it causes, which removes the first line in view with its 8 anchors
+  // (9 writes, 6 reads), land in one measurement under load (AGENTS.md "Svelte conformance").
+  terminalChunk: { writes: 13, renders: 0, notified: 2, layoutReads: 15 },
 };

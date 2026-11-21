@@ -23,10 +23,10 @@
     {#if option.items}
       <KindMenuSub>
         <KindMenuSubTrigger>
-          <KindMenuItemContent icon={icon(option)} label={option.label} description={option.description} />
-          <span data-menu-chevron=""></span>
-        </KindMenuSubTrigger>
-        <KindMenuSubContent>{@render rows(option.items)}</KindMenuSubContent>
+          <KindMenuItemContent icon={icon(option)} label={option.label} description={option.description}
+          /><span data-menu-chevron=""></span>
+        </KindMenuSubTrigger
+        ><KindMenuSubContent>{@render rows(option.items)}</KindMenuSubContent>
       </KindMenuSub>
     {:else}
       <KindMenuItem value={option.id} label={option.label}>
@@ -36,6 +36,5 @@
   {/each}
 {/snippet}
 
-{@render rows([tryAgain])}
-<KindMenuSeparator />
-{@render rows(options)}
+{@render rows([tryAgain])}<KindMenuSeparator
+/>{@render rows(options)}

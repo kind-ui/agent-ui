@@ -116,8 +116,8 @@
   <KindToolbar aria-label="Message actions">
     <MessageCopy>
       <KindToolbarButton aria-label="Copy" />
-    </MessageCopy>
-    {@render extra?.()}
+    </MessageCopy
+    >{@render extra?.()}
   </KindToolbar>
 {/snippet}
 
@@ -147,17 +147,17 @@
       <KindAvatar>
         <KindAvatarFallback>AI</KindAvatarFallback>
       </KindAvatar>
-    </MessageAvatar>
-    <MessageContent>
+    </MessageAvatar
+    ><MessageContent>
       <Markdown source={text} />
-    </MessageContent>
-    <MessageToolbar>
+    </MessageContent
+    ><MessageToolbar>
       <MessageBranch>
-        <MessageBranchPrevious />
-        <MessageBranchLabel />
-        <MessageBranchNext />
-      </MessageBranch>
-      {@render actions(regenerate)}
+        <MessageBranchPrevious
+        /><MessageBranchLabel
+        /><MessageBranchNext />
+      </MessageBranch
+      >{@render actions(regenerate)}
     </MessageToolbar>
   </Message>
 {/snippet}
@@ -194,8 +194,8 @@
         if (refusing) details.cancel();
       }}
     >
-      <MessageContent>{replies[0]}</MessageContent>
-      <MessageToolbar>
+      <MessageContent>{replies[0]}</MessageContent
+      ><MessageToolbar>
         {@render actions(custom ? customMenu : plainMenu)}
       </MessageToolbar>
     </Message>
@@ -218,9 +218,9 @@
       userText = next;
     }}
   >
-    <MessageContent>{userText}</MessageContent>
-    <MessageEditor />
-    <MessageToolbar>
+    <MessageContent>{userText}</MessageContent
+    ><MessageEditor
+    /><MessageToolbar>
       {@render actions(edit)}
     </MessageToolbar>
   </Message>
@@ -228,8 +228,7 @@
 
 {#if variant === "all"}
   <div class="m-4 flex w-[36rem] flex-col gap-6">
-    {@render user()}
-    {@render assistant(true)}
+    {@render user()}{@render assistant(true)}
   </div>
 {:else if variant === "no-callbacks"}
   <div class="m-4 w-[36rem]">{@render assistant(false)}</div>
@@ -241,8 +240,8 @@
   >
     <ConversationViewport>
       <ConversationContent>
-        <ConversationRow value="q" index={0}>{@render user()}</ConversationRow>
-        <ConversationRow value="a" index={1}>
+        <ConversationRow value="q" index={0}>{@render user()}</ConversationRow
+        ><ConversationRow value="a" index={1}>
           <Message
             aria-label="Assistant message"
             messageRole="assistant"
@@ -252,8 +251,8 @@
           >
             <MessageContent>
               <Markdown source={reply.text} streaming={reply.status === "streaming"} />
-            </MessageContent>
-            <MessageToolbar>{@render actions(regenerate)}</MessageToolbar>
+            </MessageContent
+            ><MessageToolbar>{@render actions(regenerate)}</MessageToolbar>
           </Message>
         </ConversationRow>
       </ConversationContent>
@@ -275,13 +274,13 @@
         {...clock ? {} : { now: timing.now }}
         {...rest}
       >
-        <MessageAvatar />
-        <MessageHeader>
-          <MessageAuthor />
-          <MessageTime />
-          <MessageDuration />
-        </MessageHeader>
-        <MessageContent>{text}</MessageContent>
+        <MessageAvatar
+        /><MessageHeader>
+          <MessageAuthor
+          /><MessageTime
+          /><MessageDuration />
+        </MessageHeader
+        ><MessageContent>{text}</MessageContent>
       </Message>
     {/each}
   </div>
@@ -289,10 +288,10 @@
   <div class="m-4 flex w-[36rem] flex-col gap-6">
     {#each outcomeRows as { id, label, props } (id)}
       <Message {id} aria-label={label} status={statuses[id]} text={outcomeText} {...props}>
-        <MessageContent>{outcomeText}</MessageContent>
-        <MessageOutcome />
+        <MessageContent>{outcomeText}</MessageContent
+        ><MessageOutcome />
       </Message>
-    {/each}
-    <input aria-label="Reply" class="w-full" />
+    {/each}<input aria-label="Reply" class="w-full"
+    />
   </div>
 {/if}

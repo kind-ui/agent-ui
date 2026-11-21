@@ -11,8 +11,8 @@
 {#snippet avatar({ name, initials, src }: MessageAvatarState)}
   {#if name}
     <Avatar>
-      {#if src}<AvatarImage {src} alt="" />{/if}
-      <AvatarFallback>{initials}</AvatarFallback>
+      {#if src}<AvatarImage {src} alt="" />{/if}<AvatarFallback
+      >{initials}</AvatarFallback>
     </Avatar>
   {/if}
 {/snippet}

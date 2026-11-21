@@ -9,12 +9,12 @@
 </script>
 
 {#snippet fallback()}
-  <parts.Preview />
-  <parts.Image />
-  <GeneratedImageProgress />
-  <GeneratedImageError />
-  <parts.Trigger />
-  <parts.Download />
+  <parts.Preview
+  /><parts.Image
+  /><GeneratedImageProgress
+  /><GeneratedImageError
+  /><parts.Trigger
+  /><parts.Download />
 {/snippet}
 
 <parts.Frame {...props} children={children ?? fallback} />
