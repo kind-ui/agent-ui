@@ -61,7 +61,9 @@ const origin = (index) => `http://localhost:${base + index}`;
 const originOf = (layer) => origin(allServers.find((server) => server.layer === layer).index);
 
 // `tests/browser/warm-up.ts` reads which servers to warm.
-process.env.KIND_FIXTURE_SERVERS = JSON.stringify(servers.map(({ layer, index }) => ({ layer, url: origin(index) })));
+process.env.KIND_FIXTURE_SERVERS = JSON.stringify(
+  servers.map(({ layer, index }) => ({ layer, url: origin(index) })),
+);
 
 const webServer = servers.map(({ layer, mode, index }) => ({
   command: `npx vite --config packages/agent-ui/tests/fixtures/${layer}/vite.config.mjs --port ${base + index} --strictPort --mode ${mode}`,
