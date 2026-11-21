@@ -370,7 +370,8 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
           if (!opening || el.hidden) return;
           opening = false;
           void enter(el, "expand", { motion: store.get().motion });
-          controller.focus();
+          // `@ui-sdk/svelte` binds this part before the Textarea inside it attaches to the controller.
+          queueMicrotask(() => controller.focus());
         };
         const collapse = () => {
           if (!store.get().reasonClosing) return;
