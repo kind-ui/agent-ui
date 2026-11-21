@@ -27,7 +27,7 @@ function Page({
     Object.assign(window, { kindHost: host });
   }, []);
   return (
-    <div className="w-[30rem] p-6">
+    <div className="max-w-[30rem] p-6">
       <ShareDialog
         id="share"
         visibility={visibility}
