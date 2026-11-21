@@ -7,11 +7,11 @@
   import type { ComponentProps } from "svelte";
   import { parts } from "./parts.js";
 
-  let props: Omit<ComponentProps<typeof parts.Item>, "children"> = $props();
+  let props: ComponentProps<typeof parts.Item> & { children?: never } = $props();
 </script>
 
 <parts.Item {...props}>
-  {#snippet children({ item, preview, detail }: AttachmentState)}{#if preview}<img
+  {#snippet children({ item, preview, detail })}{#if preview}<img
         data-preview=""
         src={preview}
         alt=""

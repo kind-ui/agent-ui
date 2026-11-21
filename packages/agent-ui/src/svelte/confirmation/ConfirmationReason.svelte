@@ -12,7 +12,7 @@
 </script>
 
 <parts.Reason {...props}>
-  {#snippet children(state: ConfirmationReasonState)}
+  {#snippet children(state)}
     {#if content}
       {@render content(state)}
     {:else}

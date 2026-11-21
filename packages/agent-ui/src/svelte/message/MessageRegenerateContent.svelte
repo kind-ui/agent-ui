@@ -6,7 +6,9 @@
   import MessageRegenerateRows from "./MessageRegenerateRows.svelte";
   import { parts } from "./parts.js";
 
-  type Props = Omit<ComponentProps<typeof KindMenuContent>, "children"> & {
+  type ContentProps = ComponentProps<typeof KindMenuContent>;
+  // `Omit` would turn the known props into the index signature's `unknown`.
+  type Props = { [K in keyof ContentProps as K extends "children" ? never : K]: ContentProps[K] } & {
     /** What the menu holds, given its rows: the rows by default. */
     children?: Snippet<[MessageRegenerateContentState]>;
   };
@@ -15,7 +17,7 @@
 </script>
 
 <parts.RegenerateContent>
-  {#snippet children(state: MessageRegenerateContentState)}
+  {#snippet children(state)}
     <!--
       Hidden from agents, which use the Message's own `regenerate`. Kept in the page while closed, as on web, so the
       mark keeps Menu out of the snapshot while only its trigger would show.

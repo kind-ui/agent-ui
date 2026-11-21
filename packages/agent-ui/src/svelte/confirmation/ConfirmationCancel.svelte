@@ -8,7 +8,7 @@
 </script>
 
 <parts.Cancel {...props}>
-  {#snippet children(state: ConfirmationState)}
+  {#snippet children(state)}
     {#if content}{@render content(state)}{:else}Cancel{/if}
   {/snippet}
 </parts.Cancel>

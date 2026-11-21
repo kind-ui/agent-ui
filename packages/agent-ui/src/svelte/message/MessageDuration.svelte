@@ -3,9 +3,9 @@
   import type { ComponentProps } from "svelte";
   import { parts } from "./parts.js";
 
-  let props: Omit<ComponentProps<typeof parts.Duration>, "children"> = $props();
+  let props: ComponentProps<typeof parts.Duration> & { children?: never } = $props();
 </script>
 
 <parts.Duration {...props}>
-  {#snippet children({ label }: { label: string })}{label}{/snippet}
+  {#snippet children({ label })}{label}{/snippet}
 </parts.Duration>

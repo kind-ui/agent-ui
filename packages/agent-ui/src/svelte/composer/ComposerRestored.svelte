@@ -8,7 +8,7 @@
 </script>
 
 <parts.Restored {...props}>
-  {#snippet children(state: ComposerState)}
+  {#snippet children(state)}
     {#if content}
       {@render content(state)}
     {:else}

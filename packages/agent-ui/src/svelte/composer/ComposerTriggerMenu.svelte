@@ -24,13 +24,13 @@
 </script>
 
 <parts.TriggerMenu>
-  {#snippet children({ triggers }: ComposerTriggerMenuState)}
+  {#snippet children({ triggers })}
     {#if mounted}
       <KindTriggerMenu {triggers}>
         <KindTriggerMenuContent {...props}>
           <KindTriggerMenuEmpty>No matches</KindTriggerMenuEmpty>
           <KindTriggerMenuList>
-            {#snippet children(state: TriggerMenuContentState)}
+            {#snippet children(state)}
               {#each state.items as ComposerTriggerItem[] as item (item.value)}
                 <KindTriggerMenuItem value={item.value} label={item.label}>
                   <span>{item.label}</span>{#if item.description}<span data-description="">{item.description}</span>{/if}

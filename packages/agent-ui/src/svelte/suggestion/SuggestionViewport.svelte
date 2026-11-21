@@ -3,7 +3,7 @@
   import type { ComponentProps, Snippet } from "svelte";
   import { KindCarouselContent, KindCarouselViewport } from "../internal/carousel/index.js";
 
-  type Props = Omit<ComponentProps<typeof KindCarouselViewport>, "children"> & { children?: Snippet };
+  type Props = ComponentProps<typeof KindCarouselViewport> & { children?: Snippet };
 
   let { children, ...props }: Props = $props();
 </script>

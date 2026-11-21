@@ -11,7 +11,7 @@
   } from "../internal/scroll-area/index.js";
   import { parts } from "./parts.js";
 
-  type Props = Omit<ComponentProps<typeof parts.Root>, "children"> & {
+  type Props = ComponentProps<typeof parts.Root> & {
     /**
      * Shows the language, the wrap toggle and the copy button.
      * @default true
@@ -25,7 +25,7 @@
 <parts.Root {...props} bind:wrap>
   {#if header}
     <parts.Header>
-      <parts.Language>{#snippet children({ language }: CodeBlockState)}{language}{/snippet}</parts.Language>
+      <parts.Language>{#snippet children({ language })}{language}{/snippet}</parts.Language>
       <parts.Wrap />
       <parts.Copy />
     </parts.Header>
@@ -34,7 +34,7 @@
     <KindScrollAreaViewport>
       <KindScrollAreaContent>
         <parts.Code>
-          {#snippet children({ lines }: CodeBlockState)}<code
+          {#snippet children({ lines })}<code
               >{#each lines as line}<span data-line=""
                   >{#each line as token}<span
                       data-font-style={token.fontStyle}

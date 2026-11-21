@@ -10,11 +10,11 @@
   let {
     children: custom,
     ...props
-  }: Omit<ComponentProps<typeof parts.Thumbs>, "children"> & { children?: Snippet } = $props();
+  }: ComponentProps<typeof parts.Thumbs> & { children?: Snippet } = $props();
 </script>
 
 <parts.Thumbs {...props}>
-  {#snippet children(group: FeedbackThumbsState)}
+  {#snippet children(group)}
     <!-- Hidden from agents, which use the Feedback's own `rate`. Part state is a proxy that can't be spread. -->
     <ToggleGroup
       controller={group.controller}

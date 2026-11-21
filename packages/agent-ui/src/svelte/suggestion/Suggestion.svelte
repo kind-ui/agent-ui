@@ -13,13 +13,13 @@
   import SuggestionItem from "./SuggestionItem.svelte";
   import SuggestionViewport from "./SuggestionViewport.svelte";
 
-  type Props = Omit<ComponentProps<typeof parts.Root>, "children"> & { children?: Snippet };
+  type Props = ComponentProps<typeof parts.Root> & { children?: Snippet };
 
   let { children: content, ...props }: Props = $props();
 </script>
 
 <parts.Root {...props}>
-  {#snippet children({ label, layout, suggestions }: SuggestionRootState)}
+  {#snippet children({ label, layout, suggestions })}
     {#if layout === "wrap"}
       {#if content}
         {@render content()}

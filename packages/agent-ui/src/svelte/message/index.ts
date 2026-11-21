@@ -29,7 +29,11 @@ export type MessageRegenerateOption = Omit<
 
 /** Name it with `aria-label`, like "Assistant message". */
 export const Message = parts.Root;
-export type MessageProps = Omit<ComponentProps<typeof parts.Root>, "regenerateOptions"> & {
+type RootProps = ComponentProps<typeof parts.Root>;
+// `Omit` would turn the known props into the index signature's `unknown`.
+export type MessageProps = {
+  [K in keyof RootProps as K extends "regenerateOptions" ? never : K]: RootProps[K];
+} & {
   regenerateOptions?: MessageRegenerateOption[];
 };
 

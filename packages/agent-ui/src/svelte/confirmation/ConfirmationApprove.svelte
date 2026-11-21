@@ -9,7 +9,7 @@
 </script>
 
 <parts.Approve {...props}>
-  {#snippet children(state: { label: string; pending: boolean })}
+  {#snippet children(state)}
     {#if content}
       {@render content(state)}
     {:else}

@@ -4,7 +4,7 @@
   import MessageEditActions from "./MessageEditActions.svelte";
   import { parts } from "./parts.js";
 
-  type Props = Omit<ComponentProps<typeof parts.Editor>, "children"> & {
+  type Props = ComponentProps<typeof parts.Editor> & {
     /** What follows the text area: `<MessageEditActions />` by default. Pass an empty snippet for none. */
     children?: Snippet;
   };

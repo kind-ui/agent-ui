@@ -10,7 +10,7 @@
   import MessageRegenerateContent from "./MessageRegenerateContent.svelte";
   import { parts } from "./parts.js";
 
-  type Props = Omit<ComponentProps<typeof parts.Regenerate>, "children"> & {
+  type Props = ComponentProps<typeof parts.Regenerate> & {
     /**
      * The `KindToolbarButton` that regenerates, or opens the menu while there are `regenerateOptions`. Spread the
      * props it's handed onto it: `{#snippet children(props)}<KindToolbarButton {...props} aria-label="Regenerate" />{/snippet}`.
@@ -24,7 +24,7 @@
 </script>
 
 <parts.Regenerate {...props}>
-  {#snippet children({ menu }: MessageRegenerateState)}
+  {#snippet children({ menu })}
     {#if menu && button}
       <KindMenu {...menu}>
         <parts.RegenerateTrigger>

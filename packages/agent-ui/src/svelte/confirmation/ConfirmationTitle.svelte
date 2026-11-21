@@ -7,7 +7,7 @@
 </script>
 
 <parts.Title {...props}>
-  {#snippet children(state: { label: string })}
+  {#snippet children(state)}
     {#if content}{@render content(state)}{:else}{state.label}{/if}
   {/snippet}
 </parts.Title>

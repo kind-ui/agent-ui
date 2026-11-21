@@ -13,7 +13,7 @@
   } from "../internal/scroll-area/index.js";
   import { parts } from "./parts.js";
 
-  type Props = Omit<ComponentProps<typeof parts.Root>, "children"> & {
+  type Props = ComponentProps<typeof parts.Root> & {
     /** The table's `thead` and `tbody`. */
     children?: Snippet;
   };

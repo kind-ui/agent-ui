@@ -19,7 +19,7 @@
 
 <script lang="ts">
   import type { MessageStatus } from "@kind-ui/agent-ui";
-  import type { MessageRegenerateContentState, MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
+  import type { MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
   import { flushSync, type Snippet } from "svelte";
   import {
     Conversation,
@@ -164,13 +164,23 @@
 
 {#snippet customRows()}
   <MessageRegenerateContent>
-    {#snippet children({ options }: MessageRegenerateContentState)}
+    {#snippet children({ options })}
       {#each options as option (option.id)}
         <KindMenuItem value={option.id} label={option.label}>{option.label.toUpperCase()}</KindMenuItem>
       {/each}
     {/snippet}
   </MessageRegenerateContent>
 {/snippet}
+
+{#snippet regenerateMenu(custom: boolean)}
+  <MessageRegenerate {...custom ? { menuContent: customRows } : {}}>
+    {#snippet children(props)}<KindToolbarButton {...props} aria-label="Regenerate" />{/snippet}
+  </MessageRegenerate>
+{/snippet}
+
+{#snippet plainMenu()}{@render regenerateMenu(false)}{/snippet}
+
+{#snippet customMenu()}{@render regenerateMenu(true)}{/snippet}
 
 {#snippet withOptions(custom: boolean)}
   <div class="m-4 w-[36rem]">
@@ -186,18 +196,16 @@
     >
       <MessageContent>{replies[0]}</MessageContent>
       <MessageToolbar>
-        {#snippet regenerateMenu()}
-          <MessageRegenerate {...custom ? { menuContent: customRows } : {}}>
-            {#snippet children(props: Record<string, unknown>)}<KindToolbarButton
-                {...props}
-                aria-label="Regenerate"
-              />{/snippet}
-          </MessageRegenerate>
-        {/snippet}
-        {@render actions(regenerateMenu)}
+        {@render actions(custom ? customMenu : plainMenu)}
       </MessageToolbar>
     </Message>
   </div>
+{/snippet}
+
+{#snippet edit()}
+  <MessageEdit>
+    <KindToolbarButton aria-label="Edit" />
+  </MessageEdit>
 {/snippet}
 
 {#snippet user()}
@@ -213,11 +221,6 @@
     <MessageContent>{userText}</MessageContent>
     <MessageEditor />
     <MessageToolbar>
-      {#snippet edit()}
-        <MessageEdit>
-          <KindToolbarButton aria-label="Edit" />
-        </MessageEdit>
-      {/snippet}
       {@render actions(edit)}
     </MessageToolbar>
   </Message>

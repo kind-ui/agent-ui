@@ -8,7 +8,7 @@
 </script>
 
 <parts.Error {...props}>
-  {#snippet children(state: ConfirmationState)}
+  {#snippet children(state)}
     {#if content}{@render content(state)}{:else}Decision not sent. Try again.{/if}
   {/snippet}
 </parts.Error>

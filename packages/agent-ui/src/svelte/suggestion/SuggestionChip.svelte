@@ -8,7 +8,7 @@
 </script>
 
 <parts.Item {...props}>
-  {#snippet children(state: SuggestionItemState)}
+  {#snippet children(state)}
     {#if content}
       {@render content(state)}
     {:else}

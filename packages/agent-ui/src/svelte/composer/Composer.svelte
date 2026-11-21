@@ -12,11 +12,11 @@
     children: content,
     value = $bindable(),
     ...props
-  }: Omit<ComponentProps<typeof parts.Root>, "children"> & { children?: Snippet } = $props();
+  }: ComponentProps<typeof parts.Root> & { children?: Snippet } = $props();
 </script>
 
 <parts.Root {...props} bind:value>
-  {#snippet children({ fileInput }: ComposerRootState)}
+  {#snippet children({ fileInput })}
     <FileInput {...fileInput}>
       <FileInputDropzone>{@render content?.()}</FileInputDropzone>
     </FileInput>

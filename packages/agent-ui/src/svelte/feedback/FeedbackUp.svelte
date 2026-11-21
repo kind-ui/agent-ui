@@ -13,7 +13,7 @@
   data-kind-size="sm"
   {...props}
 >
-  {#snippet children(state: ToggleState)}
+  {#snippet children(state)}
     {#if custom}{@render custom(state)}{:else}<ToggleIcon data-feedback-icon="up" />{/if}
   {/snippet}
 </Toggle>

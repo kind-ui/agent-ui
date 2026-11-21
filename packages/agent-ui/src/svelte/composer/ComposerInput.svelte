@@ -17,7 +17,7 @@
   let {
     children: content,
     ...props
-  }: Omit<ComponentProps<typeof TokenInputEditor>, "children"> & { children?: Snippet } = $props();
+  }: ComponentProps<typeof TokenInputEditor> & { children?: Snippet } = $props();
 </script>
 
 {#snippet token(token: Token)}
@@ -25,7 +25,7 @@
 {/snippet}
 
 <parts.Input>
-  {#snippet children({ tokenInput }: ComposerInputState)}
+  {#snippet children({ tokenInput })}
     <TokenInput {...tokenInput} {token}>
       <TokenInputEditor {...props} />
       {@render content?.()}

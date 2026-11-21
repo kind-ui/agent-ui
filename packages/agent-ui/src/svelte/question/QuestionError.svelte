@@ -6,6 +6,6 @@
   let { children, ...props }: ComponentProps<typeof parts.Error> = $props();
 </script>
 
-<parts.Error {...props}>
-  {#if children}{@render children()}{:else}Answers not sent. Try again.{/if}
-</parts.Error>
+{#snippet fallback()}Answers not sent. Try again.{/snippet}
+
+<parts.Error {...props} children={children ?? fallback} />
