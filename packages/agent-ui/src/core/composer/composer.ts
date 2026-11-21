@@ -667,7 +667,18 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
           if (!event.defaultPrevented) api.history.keydown(event as KeyboardEvent);
         },
       },
-      bind: (_el, { api }) => api.connectInput(),
+      bind: (_el, { api }) => {
+        // Vue binds a part before the Token Input nested in it attaches the controller, so try again a microtask later.
+        let bound = true;
+        let disconnect = api.connectInput();
+        queueMicrotask(() => {
+          if (bound) disconnect = api.connectInput();
+        });
+        return () => {
+          bound = false;
+          disconnect();
+        };
+      },
     }),
     "trigger-menu": slot<BaseSlotProps, ComposerTriggerMenuState>({
       state: (state, { api }) => api.partState.triggerMenu(state),
