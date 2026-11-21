@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { layerHas } from "../layer.js";
 
 type DictationEvent = { level: number } | { text: string; final: boolean } | { error: string };
 type Fixture = {
@@ -188,6 +189,9 @@ for (const scheme of ["light", "dark"] as const)
   });
 
 test.describe("inside a Composer", () => {
+  test.beforeEach(({ page: _ }, testInfo) => {
+    test.skip(!layerHas(testInfo, "composer"), "the layer doesn't render Composer yet");
+  });
   const composer = (page: Page) => page.locator('[data-slot="kind-composer"]');
   const editor = (page: Page) => page.getByRole("textbox", { name: "Prompt" });
   const send = (page: Page) => page.locator('button[data-slot="kind-composer-submit"]');
