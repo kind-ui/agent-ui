@@ -27,7 +27,27 @@ export default {
 
     // framework-svelte-3: composer controls
 
+    "picker",
+    "settings-menu",
+    "model-selector",
+    "reasoning-effort",
+    "add-menu",
+    "approval-mode",
+    "model-control",
+    "context-bar",
+    "context-meter",
+    "dictation",
+
     // framework-svelte-4: indicators, notices and files
+
+    "loader",
+    "thinking-indicator",
+    "typing-indicator",
+    "streaming-text",
+    "status",
+    "notice",
+    "guardrail-notice",
+    "uploader",
 
     // framework-svelte-5: step family
 
@@ -78,6 +98,8 @@ export default {
 
     // framework-svelte-3: composer controls
 
+    "segmented-control",
+
     // framework-svelte-4: indicators, notices and files
 
     // framework-svelte-5: step family
@@ -114,7 +136,25 @@ export default {
 
     // framework-svelte-3: composer controls
 
+    "wave-5/picker.spec.ts",
+    "wave-5/settings-menu.spec.ts",
+    "wave-3/model-selector.spec.ts",
+    "wave-3/reasoning-effort.spec.ts",
+    "wave-5/add-menu.spec.ts",
+    "wave-5/approval-mode.spec.ts",
+    "wave-5/model-control.spec.ts",
+    "wave-5/context-bar.spec.ts",
+    "wave-3/context-meter.spec.ts",
+    "wave-5/dictation.spec.ts",
+    "wave-5/composed-events.spec.ts",
+
     // framework-svelte-4: indicators, notices and files
+
+    "wave-1/indicators.spec.ts",
+    "wave-1/uploader.spec.ts",
+    "wave-2/status.spec.ts",
+    "wave-3/notice.spec.ts",
+    "wave-3/guardrail-notice.spec.ts",
 
     // framework-svelte-5: step family
 
