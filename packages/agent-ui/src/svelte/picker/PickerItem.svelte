@@ -16,7 +16,8 @@
 
 <parts.Item {...props}>
   {#snippet children(state: PickerItemState)}
-    {#if content}{@render content(state)}{:else}{#if state.row.icon !== undefined && icon !== null}<KindCommandItemIcon
+    <!-- A row the list just dropped reads its state once more before Svelte removes it, and has none. -->
+    {#if !state.row}{:else if content}{@render content(state)}{:else}{#if state.row.icon !== undefined && icon !== null}<KindCommandItemIcon
           >{#if icon}{@render icon(state.row)}{:else}<PickerIcon icon={state.row.icon} />{/if}</KindCommandItemIcon
         >{/if}<span data-picker-item-text=""
         ><KindCommandItemText>{state.row.label}</KindCommandItemText

@@ -43,5 +43,14 @@ export const budgets: Partial<Budgets> = {
 
   // framework-svelte-7: Wave 6 shell
 
+  // Keyed rows: selecting touches only the two rows whose state changed, at 10 threads as at 1,000.
+  threadSelect: { writes: 6, renders: 0, notified: 5, layoutReads: 0 },
+  threadPin: { writes: 105, renders: 0, notified: 28, layoutReads: 2 },
+  threadAppend: { writes: 105, renders: 0, notified: 46, layoutReads: 2 },
+  // Each `@ui-sdk/svelte` part leaves block anchors (empty text and comment nodes) beside its element, which Svelte
+  // removes one by one, so a mark leaving is about 9 mutation records where React's is 1: at 100 messages, about 34
+  // marks leave per character. At 5,000 no mark moves, and Svelte writes 1.
+  conversationSearchType: { writes: 451, renders: 0, notified: 57, layoutReads: 4 },
+
   // framework-svelte-8: conformance
 };
