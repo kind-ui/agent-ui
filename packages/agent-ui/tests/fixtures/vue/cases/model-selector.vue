@@ -1,5 +1,5 @@
 <script lang="ts">
-export const variants = ["all", "plain", "groups", "logos", "reduced", "refusing"] as const;
+export const variants = ["all", "plain", "groups", "logos", "composer", "reduced", "refusing"] as const;
 </script>
 
 <script setup lang="ts">
@@ -10,8 +10,10 @@ import {
   ModelSelectorContent,
   ModelSelectorTrigger,
 } from "../../../../src/vue/model-selector.js";
+import { Composer, ComposerInput, ComposerSubmit } from "../../../../src/vue/composer.js";
 import { ReasoningEffort } from "../../../../src/vue/reasoning-effort.js";
 import { expose } from "../../shared/expose.js";
+import { controls } from "../../shared/full-composer.js";
 import { iconModels, levels, modelActions, models, selectionHost } from "../../shared/model-selector.js";
 
 const props = defineProps<{ variant: string; params: URLSearchParams }>();
@@ -34,6 +36,7 @@ const logoModels = iconModels(logo);
 const onLogoModel = record("model");
 const onSecond = record("second");
 const onEffort = record("effort");
+const ignore = () => undefined;
 
 function onModel(value: string | null, details: ChangeDetails) {
   record("model")(value, details);
@@ -48,7 +51,17 @@ onMounted(() => expose({ kindHost: host }));
 </script>
 
 <template>
-  <div v-if="variant === 'logos'" class="flex flex-col gap-4 p-6">
+  <div v-if="variant === 'composer'" class="p-4">
+    <Composer aria-label="Message" :on-submit="ignore">
+      <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
+      <div :style="controls">
+        <ModelSelector id="model" :models="logoModels" default-value="claude-sonnet-5.5" />
+        <ReasoningEffort id="effort" :levels="levels" default-value="medium" />
+      </div>
+      <ComposerSubmit />
+    </Composer>
+  </div>
+  <div v-else-if="variant === 'logos'" class="flex flex-col gap-4 p-6">
     <ModelSelector
       id="model"
       :models="logoModels"
