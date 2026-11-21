@@ -19,7 +19,7 @@ const page =
   (root: HTMLElement) => {
     defineShareDialog();
     const { host, call, answer } = shareDialogHost();
-    const wrapper = Object.assign(document.createElement("div"), { className: "w-[30rem] p-6" });
+    const wrapper = Object.assign(document.createElement("div"), { className: "max-w-[30rem] p-6" });
     const dialog = document.createElement("kind-share-dialog");
     dialog.id = "share";
     if (written)
