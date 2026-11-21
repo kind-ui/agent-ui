@@ -25,7 +25,7 @@ export default function ThreadListExample() {
   const [threads, setThreads] = createSignal(initialThreads);
   const [current, setCurrent] = createSignal("login");
   const update = (id: string, change: Partial<Thread>) =>
-    setThreads(threads().map((thread) => (thread.id === id ? { ...thread, ...change } : thread)));
+    setThreads((list) => list.map((thread) => (thread.id === id ? { ...thread, ...change } : thread)));
 
   return (
     <div style={{ height: "420px", width: "280px" }}>
@@ -40,12 +40,12 @@ export default function ThreadListExample() {
         }}
         onNew={() => {
           const id = crypto.randomUUID();
-          setThreads([{ id, title: "New chat", updatedAt: now, href: `#${id}` }, ...threads()]);
+          setThreads((list) => [{ id, title: "New chat", updatedAt: now, href: `#${id}` }, ...list]);
           setCurrent(id);
         }}
         onRename={(id, { title }) => update(id, { title })}
         onPinChange={(id, { pinned }) => update(id, { pinned })}
-        onDelete={(id) => setThreads(threads().filter((thread) => thread.id !== id))}
+        onDelete={(id) => setThreads((list) => list.filter((thread) => thread.id !== id))}
       />
     </div>
   );
