@@ -29,6 +29,15 @@ export default {
 
     // framework-svelte-4: indicators, notices and files
 
+    "loader",
+    "thinking-indicator",
+    "typing-indicator",
+    "streaming-text",
+    "status",
+    "notice",
+    "guardrail-notice",
+    "uploader",
+
     // framework-svelte-5: step family
 
     "reasoning",
@@ -109,6 +118,12 @@ export default {
     // framework-svelte-3: composer controls
 
     // framework-svelte-4: indicators, notices and files
+
+    "wave-1/indicators.spec.ts",
+    "wave-1/uploader.spec.ts",
+    "wave-2/status.spec.ts",
+    "wave-3/notice.spec.ts",
+    "wave-3/guardrail-notice.spec.ts",
 
     // framework-svelte-5: step family
 
