@@ -330,6 +330,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- framework-solid-7: Wave 6 shell -->
 
+- **Solid Wave 6 shell (framework layers plan, Task Solid-7):** no `@ui-sdk/solid` gap. Thread List's rows render through `<For keyed>` by row key, so React's memoized `ThreadListHeading` and `ThreadListRow` are unneeded: selecting, pinning and appending render no row again, and Conversation Search's typing notifies no part (Solid's budgets: pinning writes 29 nodes at 10 threads and 48 at 1,000, a typed character 115 at 100 messages and 1 at 5,000, where every mark step already holds a match). Sidebar's `<Show when={state.overlay}>` sits inside the panel's `ResizablePanel`, so crossing `overlayBelow` rebuilds only the `aside` and the inset's `ResizablePanel` and page keep their nodes, as React's do; `SidebarHandle`'s `class` goes to the Resizable handle. Solid's `Input` takes the native `readonly`, so Share Dialog's link passes `readonly={state.readOnly}` and its other keys by name. Thread Search found a core bug, fixed in #158: `actions.of` returned a new "New chat" array per call, and Solid runs `sync` on every store write and compares keys by identity, so opening the dialog with `onNew` updated until the stack overflowed. Day Separator's React-only `hydrate` variant isn't ported; `hydration.spec.ts` covers Solid's server markup.
+
 <!-- framework-solid-8: conformance -->
 
 ## Root scripts
