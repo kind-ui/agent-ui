@@ -1,13 +1,12 @@
 import {
   type MessageAvatarState,
-  type MessageOptions,
   type MessageRegenerateContentState,
   type MessageRegenerateState,
   messagePrimitive,
 } from "@kind-ui/agent-ui/core";
 import { Avatar, AvatarFallback, AvatarImage } from "@ui-sdk/vue/avatar";
 import { MenuTrigger } from "@ui-sdk/vue/menu";
-import { createParts, usePart, usePrimitive } from "@ui-sdk/vue/primitive";
+import { createParts } from "@ui-sdk/vue/primitive";
 import {
   Comment,
   cloneVNode,
@@ -31,7 +30,18 @@ import {
   KindMenuSubTrigger,
 } from "./internal/menu.js";
 
-const message = createParts(messagePrimitive, {
+// `@ui-sdk/vue`'s `createParts` hands the primitive an emitter for every callback, whether or not anything listens, so
+// `onRegenerate` and `onEdit`, whose presence offers Regenerate and Edit, are declared function props instead, which
+// `@regenerate` and `@edit` bind. `@branch-change` and `@copy` stay events.
+const primitive = Object.defineProperty(
+  Object.assign((options: never) => messagePrimitive(options), messagePrimitive, {
+    options: { ...messagePrimitive.options, onRegenerate: "action", onEdit: "action" },
+  }),
+  "name",
+  { value: messagePrimitive.name },
+) as typeof messagePrimitive;
+
+const message = createParts(primitive, {
   root: "div",
   avatar: "div",
   content: "div",
@@ -60,73 +70,11 @@ const message = createParts(messagePrimitive, {
   continue: "button",
 });
 
-type Options = MessageOptions;
-const optional = { type: Boolean, default: undefined };
-
-// The generated root always hands the primitive an `onRegenerate` and an `onEdit` that emit, so Regenerate and Edit
-// would show without a listener. This root passes them only while the host listens, as React's does; `@branch-change`
-// and `@copy` stay events.
 /**
  * Name it with `aria-label`, like "Assistant message". A `regenerateOptions` row's `icon` is an image URL or a node
- * such as an inline `svg`.
+ * such as an inline `svg`. Regenerate and Edit are offered while `@regenerate` and `@edit` are bound.
  */
-export const Message = defineComponent({
-  name: "Message",
-  inheritAttrs: false,
-  props: {
-    messageRole: String as PropType<Options["messageRole"]>,
-    status: String as PropType<Options["status"]>,
-    text: String,
-    branchIndex: Number,
-    branchCount: Number,
-    onRegenerate: Function as PropType<NonNullable<Options["onRegenerate"]>>,
-    regenerateOptions: Array as PropType<Options["regenerateOptions"]>,
-    presentation: String as PropType<Options["presentation"]>,
-    onEdit: Function as PropType<NonNullable<Options["onEdit"]>>,
-    author: Object as PropType<Options["author"]>,
-    continued: optional,
-    createdAt: String,
-    now: String,
-    durationSeconds: Number,
-    locale: String,
-    timeZone: String,
-    error: String,
-    onRetry: Function as PropType<NonNullable<Options["onRetry"]>>,
-    onContinue: Function as PropType<NonNullable<Options["onContinue"]>>,
-    motion: String as PropType<Options["motion"]>,
-    debug: optional,
-  },
-  emits: ["branchChange", "copy"],
-  setup(props, { attrs, emit }) {
-    const handle = usePrimitive(messagePrimitive, () => ({
-      messageRole: props.messageRole,
-      status: props.status,
-      text: props.text,
-      branchIndex: props.branchIndex,
-      branchCount: props.branchCount,
-      onBranchChange: (...args: Parameters<NonNullable<Options["onBranchChange"]>>) =>
-        emit("branchChange", ...args),
-      onCopy: (...args: Parameters<NonNullable<Options["onCopy"]>>) => emit("copy", ...args),
-      onRegenerate: props.onRegenerate,
-      regenerateOptions: props.regenerateOptions,
-      presentation: props.presentation,
-      onEdit: props.onEdit,
-      author: props.author,
-      continued: props.continued,
-      createdAt: props.createdAt,
-      now: props.now,
-      durationSeconds: props.durationSeconds,
-      locale: props.locale,
-      timeZone: props.timeZone,
-      error: props.error,
-      onRetry: props.onRetry,
-      onContinue: props.onContinue,
-      motion: props.motion,
-      debug: props.debug,
-    }));
-    return usePart(handle, "root", undefined, () => attrs, "div");
-  },
-});
+export const Message = message.Root;
 
 /** With an `author`, a UI SDK Avatar of their image, showing their initials until it loads, unless you pass children. */
 export const MessageAvatar = defineComponent({

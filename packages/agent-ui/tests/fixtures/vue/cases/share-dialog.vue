@@ -43,7 +43,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="w-[30rem] p-6">
+  <div class="max-w-[30rem] p-6">
     <ShareDialog
       id="share"
       :visibility="visibility"

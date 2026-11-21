@@ -304,6 +304,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- framework-vue-8: conformance -->
 
+- **Vue conformance (Task Vue-8):** every wave's agent page (`?c=agent&case=all`, `wave-2` … `wave-6`, `tests/fixtures/vue/cases/agent.vue`) lists each component once by React's name and actions, and every spec the plan names runs on Vue, `hydration.spec.ts` over every case included. One `@ui-sdk/vue` gap: a part's `bind` runs as the part hydrates unless a `<Suspense>` above it is pending, so a `bind` that changes state (an `<img>` that loaded before hydration, a measured viewport) changes parts that haven't hydrated and Vue warns of a mismatch; the fixtures' `?ssr` path renders the case inside `<Suspense>` (`hydratedApp` in `tests/fixtures/vue/cases.ts`) on the server and the client, as Nuxt pages do, and a Vue app that server-renders outside Nuxt needs the same. This resolves the Avatar mismatch Task Vue-1 deferred. Every callback whose presence offers an action is now an `"action"` option on a derived primitive with the generated root, Suggestion, Attachments, Message, Composer and Uploader included; no Vue component hand-writes its root.
+
 <!-- framework-svelte-1: groundwork, internal wrappers and Step -->
 
 <!-- framework-svelte-2: chat core -->

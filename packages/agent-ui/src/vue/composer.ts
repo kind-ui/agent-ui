@@ -1,14 +1,13 @@
 import {
   type ComposerAttachmentsState,
   type ComposerInputState,
-  type ComposerOptions,
   type ComposerRootState,
   type ComposerTriggerItem,
   type ComposerTriggerMenuState,
   composerPrimitive,
 } from "@kind-ui/agent-ui/core";
 import { FileInput, FileInputDropzone, FileInputTrigger } from "@ui-sdk/vue/file-input";
-import { createParts, usePart, usePrimitive } from "@ui-sdk/vue/primitive";
+import { createParts } from "@ui-sdk/vue/primitive";
 import {
   type Token,
   TokenInput,
@@ -16,7 +15,7 @@ import {
   TokenInputToken,
   TokenInputTokenRemove,
 } from "@ui-sdk/vue/token-input";
-import { type ComponentObjectPropsOptions, defineComponent, h, type PropType } from "vue";
+import { defineComponent, h } from "vue";
 import { Attachments } from "./attachments.js";
 import {
   KindTriggerMenu,
@@ -26,7 +25,18 @@ import {
   KindTriggerMenuList,
 } from "./internal/trigger-menu.js";
 
-const parts = createParts(composerPrimitive, {
+// `@ui-sdk/vue`'s `createParts` hands the primitive an emitter for every callback, whether or not anything listens, so
+// `onStop`, whose presence puts Stop in Send's place while pending, is declared a function prop instead, which `@stop`
+// binds. The generated root keeps `v-model` and `v-model:value`.
+const primitive = Object.defineProperty(
+  Object.assign((options: never) => composerPrimitive(options), composerPrimitive, {
+    options: { ...composerPrimitive.options, onStop: "action" },
+  }),
+  "name",
+  { value: composerPrimitive.name },
+) as typeof composerPrimitive;
+
+const parts = createParts(primitive, {
   root: "form",
   input: "div",
   "trigger-menu": "div",
@@ -54,40 +64,6 @@ const tokenInputProps = (tokenInput: ComposerInputState["tokenInput"]) => ({
   disabled: tokenInput.disabled,
 });
 
-// The generated root always hands the primitive an `onStop` that emits `stop`, so Stop would take Send's place
-// without a listener. This root passes `onStop` only while the host listens, as React's does, and takes every other
-// option from the generated root's props, `modelValue` included, so a bare `v-model` still works.
-const { modelValue, ...optionProps } = (parts.Root as unknown as { props: ComponentObjectPropsOptions })
-  .props;
-const optionKeys = Object.keys(optionProps);
-
-const Root = defineComponent({
-  name: "ComposerRoot",
-  inheritAttrs: false,
-  props: {
-    ...optionProps,
-    modelValue: modelValue as PropType<ComposerOptions["value"]>,
-    onValueChange: Function as PropType<NonNullable<ComposerOptions["onValueChange"]>>,
-    onStop: Function as PropType<NonNullable<ComposerOptions["onStop"]>>,
-  },
-  emits: ["update:value", "update:modelValue"],
-  setup(props, { attrs, emit }) {
-    const onValueChange: NonNullable<ComposerOptions["onValueChange"]> = (value, details) => {
-      props.onValueChange?.(value, details);
-      if (details.canceled) return;
-      emit("update:value", value);
-      emit("update:modelValue", value);
-    };
-    const handle = usePrimitive(composerPrimitive, () => {
-      const options: Record<string, unknown> = { onValueChange, onStop: props.onStop };
-      for (const key of optionKeys) options[key] = (props as Record<string, unknown>)[key];
-      options.value ??= props.modelValue;
-      return options as ComposerOptions;
-    });
-    return usePart(handle, "root", undefined, () => attrs, "form");
-  },
-});
-
 /**
  * A form whose content is a File Input drop zone: files attach by choosing, dropping, or pasting while focus is in it.
  * Name it with `aria-label`.
@@ -97,7 +73,7 @@ export const Composer = defineComponent({
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
     return () =>
-      h(Root, attrs, {
+      h(parts.Root, attrs, {
         ...slots,
         default: ({ state }: { state: ComposerRootState }) =>
           h(FileInput, fileInputProps(state.fileInput), () =>
