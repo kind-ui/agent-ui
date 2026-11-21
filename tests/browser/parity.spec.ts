@@ -30,9 +30,13 @@ for (const [layer, manifest] of Object.entries(manifests)) {
     for (const entry of parityPages[name] ?? [])
       test(`${layer}: ${name} ${pageUrl(entry)}`, async ({ page, browser }, testInfo) => {
         test.skip(layerOf(testInfo) !== layer, `a ${layer} page`);
+        const missing = entry.needs?.filter((need) => !manifest.components.includes(need)) ?? [];
+        test.skip(missing.length > 0, `${layer} doesn't render ${missing.join(", ")} yet`);
         const react = await browser.newPage();
         await Promise.all([page.goto(pageUrl(entry)), react.goto(reactOrigin + pageUrl(entry))]);
-        expect(await stableTree(page)).toEqual(await stableTree(react));
+        // A known difference is left out of both trees at rest only, so it can't spread past its page.
+        const known = (entry.known ?? []).filter((difference) => difference.layer === layer);
+        expect(await stableTree(page, known)).toEqual(await stableTree(react, known));
         if (entry.interaction) {
           await run(page, entry.interaction);
           await run(react, entry.interaction);

@@ -1,4 +1,5 @@
 import type { TestInfo } from "@playwright/test";
+import { manifests } from "../../registry/layers/index.mjs";
 
 export type Layer = "react" | "web" | "vue" | "svelte" | "solid";
 
@@ -11,3 +12,9 @@ export function layerOf(testInfo: TestInfo): Layer {
 
 /** Whether the page renders Web Components markup: `kind-*` custom elements with attributes for options. */
 export const isWebElements = (testInfo: TestInfo): boolean => layerOf(testInfo) === "web";
+
+/** Whether the project's layer renders `component`: React and Web render every one, the others those their manifest lists. */
+export function layerHas(testInfo: TestInfo, component: string): boolean {
+  const manifest = (manifests as Record<string, { components: string[] }>)[layerOf(testInfo)];
+  return !manifest || manifest.components.includes(component);
+}
