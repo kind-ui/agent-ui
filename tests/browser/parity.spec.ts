@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import {
+  missingNeeds,
   type ParityPage,
   type ParityStep,
   parityPages,
@@ -30,6 +31,8 @@ for (const [layer, manifest] of Object.entries(manifests)) {
     for (const entry of parityPages[name] ?? [])
       test(`${layer}: ${name} ${pageUrl(entry)}`, async ({ page, browser }, testInfo) => {
         test.skip(layerOf(testInfo) !== layer, `a ${layer} page`);
+        const missing = missingNeeds(entry, manifest.components);
+        test.skip(missing.length > 0, `${layer} doesn't list ${missing.join(", ")} yet`);
         const react = await browser.newPage();
         await Promise.all([page.goto(pageUrl(entry)), react.goto(reactOrigin + pageUrl(entry))]);
         expect(await stableTree(page)).toEqual(await stableTree(react));

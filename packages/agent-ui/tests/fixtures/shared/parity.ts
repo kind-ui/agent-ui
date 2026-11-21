@@ -1,30 +1,57 @@
 export type ParityStep = { press: string } | { key: string; focus?: string } | { hover: string };
 
-export type ParityPage = { c: string; case: string; interaction?: readonly ParityStep[] };
+// `needs` names the other components a page renders (registry names). A layer whose manifest doesn't list one
+// yet skips the page, since a track may port a component before the batch the page also draws from.
+export type ParityPage = {
+  c: string;
+  case: string;
+  interaction?: readonly ParityStep[];
+  needs?: readonly string[];
+};
+
+/** The components a page needs that a layer's manifest doesn't list yet. */
+export const missingNeeds = (page: ParityPage, components: readonly string[]) =>
+  (page.needs ?? []).filter((name) => !components.includes(name));
 
 const press = (selector: string): readonly ParityStep[] => [{ press: selector }];
 const openMenu = press('[aria-haspopup="menu"]');
 
-const checkpoint = { c: "checkpoint", case: "all", interaction: press('[aria-haspopup="dialog"]') };
-const confirmation = {
+const checkpoint: ParityPage = {
+  c: "checkpoint",
+  case: "all",
+  interaction: press('[aria-haspopup="dialog"]'),
+};
+const confirmation: ParityPage = {
   c: "confirmation",
   case: "all",
   interaction: press('[data-slot="kind-confirmation-deny"]'),
 };
-const fileTree = {
+const fileTree: ParityPage = {
   c: "file-tree",
   case: "all",
   interaction: press('[role="treeitem"][aria-expanded="false"]'),
 };
 const indicators = { c: "indicators", case: "all" };
-const modelSelector = {
+const modelSelector: ParityPage = {
   c: "model-selector",
   case: "all",
   interaction: press('[data-slot="kind-model-selector-trigger"]'),
 };
-const question = { c: "question", case: "all", interaction: press('[role="radio"][aria-checked="false"]') };
-const sidebar = { c: "sidebar", case: "all", interaction: press('[data-slot="kind-sidebar-trigger"]') };
-const suggestion = { c: "suggestion", case: "all" };
+const question: ParityPage = {
+  c: "question",
+  case: "all",
+  interaction: press('[role="radio"][aria-checked="false"]'),
+};
+const sidebar: ParityPage = {
+  c: "sidebar",
+  case: "all",
+  interaction: press('[data-slot="kind-sidebar-trigger"]'),
+};
+const suggestion: ParityPage = { c: "suggestion", case: "all" };
+// An internal wrapper checked on a component's page needs that component.
+const on = (page: ParityPage, ...needs: string[]): readonly ParityPage[] => [
+  { ...page, needs: [...(page.needs ?? []), ...needs] },
+];
 const internal = (variant: string, interaction?: readonly ParityStep[]): readonly ParityPage[] => [
   interaction ? { c: "internal", case: variant, interaction } : { c: "internal", case: variant },
 ];
@@ -58,12 +85,17 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
   composer: [
     { c: "composer", case: "shell" },
     { c: "composer", case: "full" },
-    { c: "full-composer", case: "all", interaction: openMenu },
+    {
+      c: "full-composer",
+      case: "all",
+      interaction: openMenu,
+      needs: ["add-menu", "approval-mode", "context-bar", "dictation", "model-control", "settings-menu"],
+    },
   ],
   confirmation: [confirmation],
   "connection-status": [
-    { c: "connection-status", case: "offline" },
-    { c: "connection-status", case: "online" },
+    { c: "connection-status", case: "offline", needs: ["conversation"] },
+    { c: "connection-status", case: "online", needs: ["conversation"] },
   ],
   "context-bar": [
     { c: "context-bar", case: "all", interaction: press('[data-slot="kind-context-bar-overflow"]') },
@@ -86,15 +118,16 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
       c: "conversation-search",
       case: "preset",
       interaction: press('[data-slot="kind-conversation-search-next"]'),
+      needs: ["conversation", "markdown"],
     },
-    { c: "conversation-search", case: "basic" },
-    { c: "conversation-search", case: "markdown" },
+    { c: "conversation-search", case: "basic", needs: ["conversation", "markdown"] },
+    { c: "conversation-search", case: "markdown", needs: ["conversation", "markdown"] },
   ],
   "day-separator": [{ c: "day-separator", case: "all" }],
   dictation: [
     { c: "dictation", case: "default" },
     { c: "dictation", case: "no-source" },
-    { c: "dictation", case: "composer" },
+    { c: "dictation", case: "composer", needs: ["composer"] },
   ],
   document: [
     { c: "document", case: "all", interaction: press('[data-slot="kind-document-expand"]') },
@@ -118,29 +151,29 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
   "inline-citation": [
     { c: "inline-citation", case: "all", interaction: press('[data-slot="kind-inline-citation-trigger"]') },
   ],
-  "internal-alert-dialog": [checkpoint],
+  "internal-alert-dialog": on(checkpoint, "checkpoint"),
   "internal-avatar": internal("avatar"),
   "internal-button": internal("button"),
-  "internal-carousel": [suggestion],
-  "internal-checkbox": [question],
+  "internal-carousel": on(suggestion, "suggestion"),
+  "internal-checkbox": on(question, "question"),
   "internal-collapsible": internal("collapsible", press("[aria-expanded]")),
   "internal-command": internal("command"),
-  "internal-drawer": [sidebar],
+  "internal-drawer": on(sidebar, "sidebar"),
   "internal-file-input": internal("file-input"),
   "internal-menu": [...internal("menu", openMenu), ...internal("menu-data", openMenu)],
   "internal-progress": internal("progress"),
-  "internal-radio": [question],
-  "internal-resizable": [sidebar],
+  "internal-radio": on(question, "question"),
+  "internal-resizable": on(sidebar, "sidebar"),
   "internal-scroll-area": internal("scroll-area"),
-  "internal-segmented-control": [modelSelector],
+  "internal-segmented-control": on(modelSelector, "model-selector", "reasoning-effort"),
   "internal-slider": internal("slider"),
   "internal-switch": internal("switch", press('[role="switch"]')),
-  "internal-textarea": [confirmation],
+  "internal-textarea": on(confirmation, "confirmation"),
   "internal-toggle": internal("toggle", press("[aria-pressed]")),
   "internal-token-input": internal("token-input"),
   "internal-toolbar": [...internal("toolbar"), ...internal("toolbar-menu", openMenu)],
-  "internal-tooltip": [checkpoint],
-  "internal-tree": [fileTree],
+  "internal-tooltip": on(checkpoint, "checkpoint"),
+  "internal-tree": on(fileTree, "file-tree"),
   "internal-trigger-menu": internal("trigger-menu"),
   loader: [indicators],
   markdown: [
@@ -163,7 +196,7 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
     modelSelector,
     { c: "model-selector", case: "groups", interaction: press('[data-slot="kind-model-selector-trigger"]') },
     { c: "model-selector", case: "logos" },
-    { c: "model-selector", case: "composer" },
+    { c: "model-selector", case: "composer", needs: ["composer"] },
   ],
   notice: [
     { c: "notice", case: "all" },
@@ -196,7 +229,7 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
     { c: "share-dialog", case: "all", interaction: press('[data-slot="kind-share-dialog-trigger"]') },
     { c: "share-dialog", case: "linked", interaction: press('[data-slot="kind-share-dialog-trigger"]') },
   ],
-  sidebar: [sidebar, { c: "sidebar", case: "end" }, { c: "sidebar", case: "saved" }],
+  sidebar: [sidebar, { c: "sidebar", case: "end", needs: ["composer"] }, { c: "sidebar", case: "saved" }],
   sources: [{ c: "sources", case: "all", interaction: press('[data-slot="kind-sources-trigger"]') }],
   "stack-trace": [
     { c: "stack-trace", case: "all", interaction: press('[data-slot="kind-stack-trace-library"]') },

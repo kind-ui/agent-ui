@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { parityPages } from "../../packages/agent-ui/tests/fixtures/shared/parity.js";
+import { missingNeeds, parityPages } from "../../packages/agent-ui/tests/fixtures/shared/parity.js";
 import { manifests } from "../../registry/layers/index.mjs";
 import { mismatches } from "./hydration.js";
 import { layerOf } from "./layer.js";
@@ -10,9 +10,12 @@ import { stableTree } from "./tree.js";
 for (const [layer, manifest] of Object.entries(manifests)) {
   const names = [...manifest.components, ...manifest.internals.map((name) => `internal-${name}`)];
   for (const name of names)
-    for (const { c, case: variant } of parityPages[name] ?? [])
-      test(`${layer}: ${name} ?c=${c}&case=${variant}`, async ({ page, browser }, testInfo) => {
+    for (const entry of parityPages[name] ?? [])
+      test(`${layer}: ${name} ?c=${entry.c}&case=${entry.case}`, async ({ page, browser }, testInfo) => {
         test.skip(layerOf(testInfo) !== layer, `a ${layer} page`);
+        const missing = missingNeeds(entry, manifest.components);
+        test.skip(missing.length > 0, `${layer} doesn't list ${missing.join(", ")} yet`);
+        const { c, case: variant } = entry;
         const warnings = mismatches(page);
         await page.goto(`/?c=${c}&case=${variant}&ssr`);
         await expect(page.locator("#root[data-ssr]")).toBeAttached();
