@@ -20,10 +20,7 @@ export default defineConfig({
   cacheDir: here("../../../../../node_modules/.vite/fixture-solid"),
   plugins: [solid({ ssr: true }), tailwindcss(), identityPlugin("solid"), ssrPlugin()],
   // A file written during a run would otherwise reload open pages and destroy the context a test evaluates in.
-  server: {
-    hmr: false,
-    warmup: { ssrFiles: ["./server.ts", "./cases/*.tsx"], clientFiles: ["./main.ts", "./cases/*.tsx"] },
-  },
+  server: { hmr: false },
   resolve: { alias: { "@kind-ui/agent-ui/core": here("../../../src/core/index.ts") } },
   optimizeDeps: { include: ["solid-js", "@solidjs/web", ...coreEntries], exclude: ["@ui-sdk/solid"] },
 });
