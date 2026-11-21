@@ -10,7 +10,11 @@ import { Dictation } from "@/components/ui/vue/dictation";
 import { ModelControl } from "@/components/ui/vue/model-control";
 
 const props = withDefaults(
-  defineProps<{ onSubmit?: (draft: ComposerDraft) => Promise<void> | void; disabled?: boolean; placeholder?: string }>(),
+  defineProps<{
+    onSubmit?: (draft: ComposerDraft) => Promise<void> | void;
+    disabled?: boolean;
+    placeholder?: string;
+  }>(),
   { onSubmit: () => new Promise<void>((resolve) => setTimeout(resolve, 1000)), placeholder: "Ask anything…" },
 );
 
