@@ -1,6 +1,8 @@
 <script lang="ts">
+  
   import type { EffortLevel, SettingsValues } from "@kind-ui/agent-ui";
   import type { DictationEvent, DictationSource } from "@kind-ui/agent-ui/core";
+import type { ComponentProps } from "svelte";
   import { AddMenu } from "@/components/ui/svelte/add-menu/index.js";
   import { ApprovalMode } from "@/components/ui/svelte/approval-mode/index.js";
   import { Composer, ComposerInput, ComposerSubmit } from "@/components/ui/svelte/composer/index.js";
@@ -14,7 +16,11 @@
     onSubmit = () => new Promise<void>((resolve) => setTimeout(resolve, 1000)),
     disabled,
     placeholder = "Ask anything…",
-  }: { onSubmit?: () => Promise<void> | void; disabled?: boolean; placeholder?: string } = $props();
+  }: {
+    onSubmit?: ComponentProps<typeof Composer>["onSubmit"];
+    disabled?: boolean;
+    placeholder?: string;
+  } = $props();
 
   const addItems = [
     { id: "client", label: "Open file", description: "src/lib/client.ts" },
