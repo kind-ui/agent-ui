@@ -31,24 +31,8 @@ for (const name of components) {
 
 const frameworkFiles = { vue: "basic.vue", svelte: "basic.svelte", solid: "basic.solid.tsx" };
 
-// Wave 6 shell components the Svelte track hasn't ported yet (Task Svelte-7). Remove this once it lands, so
-// every page must show every tab.
-const shell = new Set([
-  "thread-list",
-  "thread-search",
-  "sidebar",
-  "day-separator",
-  "connection-status",
-  "share-dialog",
-  "conversation-search",
-]);
-const unported = { svelte: shell };
-
 for (const name of components) {
-  const pending = Object.keys(frameworkFiles).filter((layer) => unported[layer]?.has(name));
-  test(`${name} shows four framework tabs and five install tabs`, {
-    todo: pending.length ? `not ported to ${pending.join(" and ")} yet` : false,
-  }, () => {
+  test(`${name} shows four framework tabs and five install tabs`, () => {
     assert.ok(existsSync(new URL(`${name}/basic.tsx`, examples)), `${name}/basic.tsx`);
     for (const [layer, file] of Object.entries(frameworkFiles)) {
       assert.ok(existsSync(new URL(`${name}/${file}`, examples)), `${name}/${file}`);

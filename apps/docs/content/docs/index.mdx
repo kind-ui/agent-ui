@@ -90,6 +90,15 @@ Point `@/*` at `src/*` in your `tsconfig.json`, where the CLI looks the aliases 
 }
 ```
 
+A Vue app that server-renders outside Nuxt renders its root inside `<Suspense>`, on the server and in the browser, as Nuxt pages already do. `@ui-sdk/vue` waits to bind parts until hydration ends only below a pending `<Suspense>`, so without one an Avatar whose image loaded early, or a measured Terminal, doesn't match its server markup:
+
+```ts title="entry.ts"
+import { createSSRApp, h, Suspense } from "vue";
+import App from "./App.vue";
+
+export const createApp = () => createSSRApp({ render: () => h(Suspense, null, { default: () => h(App) }) });
+```
+
 Then add components by name. Each component page lists its item for every layer:
 
 <Install name="composer" />
