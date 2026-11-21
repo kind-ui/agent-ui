@@ -35,7 +35,6 @@ const feedback = { component: "kind-feedback", label: "Feedback", id: "feedback"
 const notice = { component: "kind-notice", label: "Rate limited", id: "notice" };
 const guardrail = { component: "kind-guardrail-notice", label: "Model output withheld", id: "guardrail" };
 
-// framework-svelte-8: conformance
 const rootNamed = [question.component, context.component, suggestion.component];
 const gapped = ({ target, action }: Conformance) =>
   target === question ||

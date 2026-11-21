@@ -47,7 +47,6 @@ const wave4 = [
   action,
 ];
 
-// framework-svelte-8: conformance
 const rootNamed: Target[] = [image, fileTree, selection];
 
 const open = async (page: Page) => {

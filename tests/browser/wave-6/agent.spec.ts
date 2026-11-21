@@ -278,7 +278,7 @@ test("only Share Dialog, while agentConfirm, and Thread List's delete dialog ask
   await expect.poll(asking).toEqual([deleteButton]);
 });
 
-// framework-svelte-8: conformance. `@ui-sdk/svelte` writes a Segmented Control's hidden radio `checked` as an
+// `@ui-sdk/svelte` writes a Segmented Control's hidden radio `checked` as an
 // attribute when a person's press renders the item again, and only the property when its controller sets the value,
 // so the Share Dialog's hidden inputs are compared by the items' `aria-checked` alone there.
 const svelteIgnore: Partial<Record<string, string>> = { [share.id]: '[data-slot="segmented-control-input"]' };
