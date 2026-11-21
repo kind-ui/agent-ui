@@ -296,6 +296,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- framework-vue-6: developer output -->
 
+- **Vue developer output (Task Vue-6):** no new `@ui-sdk/vue` gap. Callbacks whose presence offers an action (File Tree's `onSelect`, Stack Trace's `onOpenFrame`, Transcript's `onSeek`, Selection's `onAction`) are re-declared as `"action"` options on a primitive derived in the render file, keeping the generated root, so `@select`, `:on-open-frame`, `@seek` and `@action` offer them. Inline Citation's Carousel parts render `span`s through their `#render` slot, which must return an array of vnodes. Terminal lines (keyed by index) and Transcript segments (keyed by id) are child components, and the parts' default slots are `$stable`, so a chunk renders the last line's two components and a played word renders none: React's `memo` on `TerminalLine`, `TranscriptSegment`, `TranscriptWord`, `TestResultsRow` and File Tree's rows is unneeded, since Vue skips a child whose props didn't change. Content props (`children` that replace the rows) are the default slot. The `tree` internal joins the manifest with File Tree.
+
 <!-- framework-vue-7: Wave 6 shell -->
 
 <!-- framework-vue-8: conformance -->

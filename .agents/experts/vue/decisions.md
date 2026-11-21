@@ -19,6 +19,8 @@ Last reviewed: `9484e6dc` (Task Vue-2)
 - **Slots that hand part state to the host get plain objects (Task Vue-2):** `CheckpointRestore`, `FeedbackCommentText` and `MessageRegenerateContent` build `{ state }` key by key, since UI SDK's slot state proxy doesn't survive `v-bind` or a spread.
 - **Queue's `onReorder` and `onRemove` are actions on a derived primitive (Task Vue-5):** the generated root stays; `@reorder` and `@remove` bind them, and without a listener moving and removing aren't offered, as in React.
 - **`conversation.vue` builds its cases with `defineComponent` and `h()` (Task Vue-2):** `Row`, `Chat`, `Remount` and `States` need their own component boundaries for the render counts `budgets.spec.ts` measures.
+- **Gated callbacks are `"action"` options on a derived primitive (Task Vue-6, after Vue-3):** File Tree, Stack Trace, Transcript and Selection keep `createParts`' generated root and re-declare `onSelect`, `onOpenFrame`, `onSeek` and `onAction` as `"action"`, so they stay `undefined` until bound.
+- **Streamed rows are child components with `$stable` slots (Task Vue-6):** Terminal's lines and Transcript's segments render through their own components keyed by index and id; no `memo` equivalent is needed.
 
 ## Known and open (don't report again, check whether fixed)
 
