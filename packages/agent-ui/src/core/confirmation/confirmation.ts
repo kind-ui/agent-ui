@@ -279,7 +279,8 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
       const done = id !== reported.id || isResolved(state);
       reported = { key, id, state };
       if (replaced || state === "submit-failed" || isResolved(state)) pending.release();
-      const closing = !mounting && isResolved(state) && showsReason({ ...store.get(), ...presentation(before) });
+      const closing =
+        !mounting && isResolved(state) && showsReason({ ...store.get(), ...presentation(before) });
       store.set({
         sent: false,
         ...(!store.get().pending && { pressed: undefined }),
