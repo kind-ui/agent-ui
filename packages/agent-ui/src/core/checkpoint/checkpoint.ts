@@ -245,9 +245,12 @@ export const checkpointPrimitive: CheckpointPrimitive = definePrimitive<
     };
     store.subscribe(sync);
 
-    context.onOptions(({ restored }) => {
-      if (!mounting && restored && !store.get().restored)
-        announce("Checkpoint restored", { priority: "polite" });
+    // Compared with the last options rather than the store: a framework that hands its props over through
+    // `follow` (Svelte) shows the new value in `store.get()` before `onOptions` runs.
+    let wasRestored = store.get().restored;
+    context.onOptions(({ restored = false }) => {
+      if (!mounting && restored && !wasRestored) announce("Checkpoint restored", { priority: "polite" });
+      wasRestored = restored;
     });
 
     const dialogState = memo(
