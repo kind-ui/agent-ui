@@ -12,6 +12,10 @@ export default {
 
     // framework-vue-2: chat core
 
+    "markdown",
+    "code-block",
+    "markdown-table",
+
     // framework-vue-3: composer controls
 
     // framework-vue-4: indicators, notices and files
@@ -52,6 +56,8 @@ export default {
     "parity.spec.ts",
 
     // framework-vue-2: chat core
+
+    "wave-1/markdown.spec.ts",
 
     // framework-vue-3: composer controls
 
