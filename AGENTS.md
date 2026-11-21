@@ -306,6 +306,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- framework-svelte-6: developer output -->
 
+- **Svelte developer output (framework layers Task Svelte-6):** Terminal and Transcript loop over plain indexes and segment ids, not the virtualizer's row objects, so a row that stays in view keeps its props when `rows` changes and a chunk rewrites one line; Svelte has no `memo`, and File Tree's and Test Results' rows are keyed `{#each}` over core's cached items, which a fixture keeps through `$state.raw` (a deep `$state` proxy would give core new objects to cache). Svelte keeps comment anchors around each `{#each}` row, so a line or segment that leaves the virtualized view costs a few node removals: `terminalChunk` is 4 writes at 10 lines and 11 at 1,000, flat past that. Inline Citation's Carousel parts render a `span` through a shared `render` snippet, the Svelte form of React's `render={<span />}`. Default children whose text a spec reads exactly (a link's title and host, Progress's label, Download's label) are written with no whitespace between tags, since Svelte keeps a space there. The root `id` gap (Svelte chat core) also skips the agent cases of File Tree, Generated Image (its snapshot label falls through to the trigger) and Selection.
+
 <!-- framework-svelte-7: Wave 6 shell -->
 
 <!-- framework-svelte-8: conformance -->
