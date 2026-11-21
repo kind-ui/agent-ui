@@ -6,8 +6,5 @@
   let { children: content, ...props }: ComponentProps<typeof parts.Title> = $props();
 </script>
 
-<parts.Title {...props}>
-  {#snippet children(state)}
-    {#if content}{@render content(state)}{:else}{state.label}{/if}
-  {/snippet}
-</parts.Title>
+<parts.Title {...props}
+  >{#snippet children(state)}{#if content}{@render content(state)}{:else}{state.label}{/if}{/snippet}</parts.Title>

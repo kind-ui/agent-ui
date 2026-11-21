@@ -16,20 +16,14 @@
   let { children: content, ...props }: ComponentProps<typeof parts.Root> = $props();
 </script>
 
-<parts.Root {...props}>
-  {#snippet children(state)}
-    {#if content}
-      {@render content(state)}
-    {:else}
-      <ConfirmationTitle />
-      <ConfirmationReason />
-      <parts.Choices>
-        <ConfirmationApprove />
-        <ConfirmationDeny />
-        <ConfirmationCancel />
-        <ConfirmationError />
-      </parts.Choices>
-      <ConfirmationOutcome />
-    {/if}
-  {/snippet}
-</parts.Root>
+<parts.Root {...props}
+  >{#snippet children(state)}{#if content}{@render content(state)}{:else}<ConfirmationTitle
+      /><ConfirmationReason
+      /><parts.Choices
+        ><ConfirmationApprove
+        /><ConfirmationDeny
+        /><ConfirmationCancel
+        /><ConfirmationError
+      /></parts.Choices
+      ><ConfirmationOutcome
+    />{/if}{/snippet}</parts.Root>

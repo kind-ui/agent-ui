@@ -51,6 +51,14 @@ export default {
 
     // framework-svelte-5: step family
 
+    "reasoning",
+    "tool",
+    "chain-of-thought",
+    "task",
+    "plan",
+    "subagent",
+    "queue",
+
     // framework-svelte-6: developer output
 
     "sources",
@@ -157,6 +165,14 @@ export default {
     "wave-3/guardrail-notice.spec.ts",
 
     // framework-svelte-5: step family
+
+    "wave-2/reasoning.spec.ts",
+    "wave-2/tool.spec.ts",
+    "wave-2/chain-of-thought.spec.ts",
+    "wave-2/task.spec.ts",
+    "wave-2/plan.spec.ts",
+    "wave-2/subagent.spec.ts",
+    "wave-2/queue.spec.ts",
 
     // framework-svelte-6: developer output
 
