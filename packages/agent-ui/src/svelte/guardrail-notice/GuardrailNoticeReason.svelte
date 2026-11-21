@@ -6,6 +6,6 @@
   let { children, ...props }: ComponentProps<typeof parts.Reason> = $props();
 </script>
 
-{#snippet reason({ reason }: { reason: string | undefined })}{reason}{/snippet}
+{#snippet reason({ reason }: { reason: string })}{reason}{/snippet}
 
 <parts.Reason {...props} children={children ?? reason} />
