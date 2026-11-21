@@ -79,5 +79,5 @@ An agent connected with `createAgent` finds the plan by its title and reads its 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/plan/plan.ts" name="PlanAgentActions" type='Pick<PlanApi, "expand" | "collapse" | "accept">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-plan>`, `items` is a property only, other props are kebab-case attributes, so `agentConfirm` is `agent-confirm`, and `onOpenChange` fires `openchange`. Accept needs the `can-accept` attribute and fires `accept`: call `event.detail.waitUntil(promise)` to keep it pending. The element fills in its parts when it has no children, and keeps a `<kind-plan-item>` in its list for each item.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-plan>`, `items` is a property only, other props are kebab-case attributes, so `agentConfirm` is `agent-confirm`, and `onOpenChange` fires `openchange`. Accept needs the `can-accept` attribute and fires `accept`: call `event.detail.waitUntil(promise)` to keep it pending. The element fills in its parts when it has no children, and keeps a `<kind-plan-item>` in its list for each item.
 </Caption>

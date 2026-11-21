@@ -86,5 +86,5 @@ An agent connected with `createAgent` finds the connection status by its state's
 <auto-type-table path="../../../../../packages/agent-ui/src/core/connection-status/connection-status.ts" name="ConnectionStatusAgentActions" type='Pick<ConnectionStatusApi, "retry">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-connection-status>`, props are kebab-case attributes (`state="offline"`, `retry-at`) and `labels` is a property. The element adds its mark, words and Retry. The `can-retry` attribute shows Retry, which fires `connectionretry`: call `event.detail.waitUntil(promise)` to show **Reconnecting** until the promise settles.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-connection-status>`, props are kebab-case attributes (`state="offline"`, `retry-at`) and `labels` is a property. The element adds its mark, words and Retry. The `can-retry` attribute shows Retry, which fires `connectionretry`: call `event.detail.waitUntil(promise)` to show **Reconnecting** until the promise settles.
 </Caption>

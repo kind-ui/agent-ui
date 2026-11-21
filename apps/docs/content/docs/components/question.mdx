@@ -98,5 +98,5 @@ An agent connected with `createAgent` finds the question by its label and reads 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/question/question.ts" name="QuestionAgentActions" type='Pick<QuestionApi, "select" | "setText" | "submit" | "skip">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-question>`, `questions`, `value`, `defaultValue` and `submitted` are properties, and other props are kebab-case attributes, so `submitLabel` is `submit-label`. Submit and Skip need the `can-submit` and `can-skip` attributes and fire `questionsubmit` and `skip` with the answers as `detail.value`: call `event.detail.waitUntil(promise)` to keep the form locked. The element fills in its form when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-question>`, `questions`, `value`, `defaultValue` and `submitted` are properties, and other props are kebab-case attributes, so `submitLabel` is `submit-label`. Submit and Skip need the `can-submit` and `can-skip` attributes and fire `questionsubmit` and `skip` with the answers as `detail.value`: call `event.detail.waitUntil(promise)` to keep the form locked. The element fills in its form when it has no children.
 </Caption>

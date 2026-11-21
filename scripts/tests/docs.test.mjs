@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import catalog from "../../registry/catalog.mjs";
+import { manifests } from "../../registry/layers/index.mjs";
 
 const docs = new URL("../../apps/docs/", import.meta.url);
 const content = new URL("content/docs/", docs);
@@ -21,9 +22,71 @@ for (const name of components) {
     assert.ok(source.includes("\n## Usage\n"));
     assert.ok(source.includes("\n## API Reference\n\n<auto-type-table "));
     assert.ok(source.includes(`\n<FrameworkNames name="${name}" />\n\n### Agent\n`));
-    assert.match(source, /\n<Caption>\n {2}Runs in React and Web Components\. .+\n<\/Caption>\n$/);
+    assert.match(
+      source,
+      /\n<Caption>\n {2}Runs in React, Vue, Svelte, Solid and Web Components\. .+\n<\/Caption>\n$/,
+    );
   });
 }
+
+const frameworkFiles = { vue: "basic.vue", svelte: "basic.svelte", solid: "basic.solid.tsx" };
+
+// Wave 6 shell components the Svelte and Solid tracks haven't ported yet (Tasks Svelte-7 and Solid-7). Remove
+// this once both land, so every page must show every tab.
+const shell = new Set([
+  "thread-list",
+  "thread-search",
+  "sidebar",
+  "day-separator",
+  "connection-status",
+  "share-dialog",
+  "conversation-search",
+]);
+const unported = { svelte: shell, solid: shell };
+
+for (const name of components) {
+  const pending = Object.keys(frameworkFiles).filter((layer) => unported[layer]?.has(name));
+  test(`${name} shows four framework tabs and five install tabs`, {
+    todo: pending.length ? `not ported to ${pending.join(" and ")} yet` : false,
+  }, () => {
+    assert.ok(existsSync(new URL(`${name}/basic.tsx`, examples)), `${name}/basic.tsx`);
+    for (const [layer, file] of Object.entries(frameworkFiles)) {
+      assert.ok(existsSync(new URL(`${name}/${file}`, examples)), `${name}/${file}`);
+      assert.ok(manifests[layer].components.includes(name), `registry/layers/${layer}.mjs lists ${name}`);
+    }
+  });
+}
+
+test("a layer that ships a component has its example", () => {
+  for (const [layer, file] of Object.entries(frameworkFiles)) {
+    for (const name of manifests[layer].components) {
+      assert.ok(existsSync(new URL(`${name}/${file}`, examples)), `${name}/${file}`);
+    }
+  }
+});
+
+test("the docs index names the five layers and their registry suffixes", () => {
+  const index = readFileSync(new URL("index.mdx", content), "utf8");
+  const [, description] = index.match(/^---\ntitle: .+\ndescription: (.+)\n/) ?? [];
+  for (const layer of ["React", "Web Components", "Vue", "Svelte", "Solid"]) {
+    assert.ok(description?.includes(layer), `the index description doesn't name ${layer}`);
+  }
+  for (const suffix of ["-web", "-vue", "-svelte", "-solid"]) {
+    assert.ok(index.includes(`<name>${suffix}`), `the index doesn't name <name>${suffix}`);
+  }
+});
+
+test("the Agents page creates the bridge from each layer's agent entry", () => {
+  const root = JSON.parse(readFileSync(new URL("meta.json", content), "utf8"));
+  assert.ok(root.pages.includes("agents"), "meta.json doesn't list agents");
+  const source = readFileSync(new URL("agents.mdx", content), "utf8");
+  for (const layer of ["react", "web", "vue", "svelte", "solid"]) {
+    assert.ok(
+      source.includes(`import { createAgent } from "@ui-sdk/${layer}/agent";`),
+      `agents.mdx doesn't import @ui-sdk/${layer}/agent`,
+    );
+  }
+});
 
 test("the sidebar lists every component page", () => {
   const meta = JSON.parse(readFileSync(new URL("components/meta.json", content), "utf8"));
