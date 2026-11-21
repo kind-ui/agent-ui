@@ -292,6 +292,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- framework-vue-5: step family -->
 
+- **Vue step family (Task Vue-5):** Reasoning, Tool, Chain of Thought, Task, Plan, Subagent and Queue are React's parts with a default slot in place of each default `children` (`withDefault`, as Confirmation's). Queue's `onReorder` and `onRemove` are `"callback"` options whose presence offers moving and removing, so `queue.ts` re-declares them as `"action"` on a derived primitive, as Context Bar does (Task Vue-3), and the generated root stays; Plan's `onAccept`, Subagent's `onCancel` and Tool's `onApprove`/`onDeny` are already actions. Tool's approval part hands Confirmation its props key by key, since slot state is a keyless proxy. Vue `Subagent` puts its default slot in `SubagentChildren` inside the content, as React's `children` do, with `SubagentRoot` for arranging the parts. Not needed in Vue: React's shared `DEFAULT_PARTS` elements and the fixture's `memo`'d `ToolRow`, since a child whose props didn't change doesn't update; a streamed input renders one tool's parts (30 Vue updates, each default part a wrapper and its part) at 10 tools as at 500.
+
 <!-- framework-vue-6: developer output -->
 
 <!-- framework-vue-7: Wave 6 shell -->
