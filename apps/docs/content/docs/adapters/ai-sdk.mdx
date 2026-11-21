@@ -18,6 +18,8 @@ addToolApprovalResponse(toApprovalResponse(approval, { approved: true }));
 
 `fromUIMessages` gives the last message the chat's status and error, and marks earlier ones complete. Each tool call becomes a step with a status. A part type the components don't have becomes a `data` part named after its type, so nothing is dropped.
 
+For whole chats built on the adapter, see the guides: [AI Chat with the AI SDK in React](../guides/ai-sdk-chat.mdx), [Tool Calls and Approvals](../guides/tool-approvals.mdx) and [Reasoning and Agent Steps](../guides/reasoning-and-steps.mdx).
+
 ## API Reference
 
 | Export | Maps |

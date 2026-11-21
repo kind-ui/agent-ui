@@ -1,0 +1,174 @@
+---
+title: Reasoning and Agent Steps
+description: Show a model's reasoning as it thinks, and an agent's plan and tool calls as it works, from AI SDK messages in React.
+---
+
+To show what an AI agent is doing in React, render each part of its message with the component that fits: AI SDK reasoning parts as [Reasoning](../components/reasoning.mdx), which streams the model's thoughts and collapses to "Thought" when it's done, tool calls as [Tool](../components/tool.mdx), and the agent's to-do list as a [Plan](../components/plan.mdx), here written by an `update_plan` tool the model calls before it starts and again as each item's status changes. Each one is a collapsible [Step](../components/step.mdx) with a status mark, so the run reads as one list of what happened.
+
+## Installation
+
+Set up the `@kind-ui` registry as [Get Started](../index.mdx#install-with-the-shadcn-cli) shows, then add the components, the AI SDK and Zod for the tool schemas:
+
+```bash
+npx shadcn@latest add @kind-ui/conversation @kind-ui/message @kind-ui/markdown @kind-ui/composer @kind-ui/reasoning @kind-ui/tool @kind-ui/plan
+npm install ai @ai-sdk/react zod
+```
+
+## The Server Route
+
+`update_plan` takes the whole plan each time: a title and the items, each with an `id`, a `title` and a status Plan understands. `sendReasoning` is on by default; it's set here to show where reasoning comes from. The model must send its reasoning too, which some providers turn on through their own options.
+
+```ts title="app/api/chat/route.ts"
+import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from "ai";
+import { z } from "zod";
+
+const tools = {
+  update_plan: tool({
+    description: "Write down your plan before you start, then update it as each step's status changes",
+    inputSchema: z.object({
+      title: z.string(),
+      items: z.array(
+        z.object({
+          id: z.string(),
+          title: z.string(),
+          status: z.enum(["pending", "running", "complete", "skipped"]),
+        }),
+      ),
+    }),
+    execute: async () => "Plan updated.",
+  }),
+  search_docs: tool({
+    description: "Search the product docs",
+    inputSchema: z.object({ query: z.string() }),
+    execute: async ({ query }) => [`Results for ${query}`],
+  }),
+};
+
+export async function POST(request: Request) {
+  const { messages }: { messages: UIMessage[] } = await request.json();
+  const result = streamText({
+    model: "openai/gpt-5",
+    messages: await convertToModelMessages(messages, { tools }),
+    tools,
+    stopWhen: stepCountIs(10),
+  });
+  return result.toUIMessageStreamResponse({ sendReasoning: true });
+}
+```
+
+## The Chat Page
+
+```tsx title="app/page.tsx"
+"use client";
+import { useChat } from "@ai-sdk/react";
+import type { Message as ChatMessage, Part, PlanItem, ToolCall } from "@kind-ui/agent-ui";
+import { fromUIMessages } from "@kind-ui/agent-ui/adapters/ai-sdk";
+import { Composer, ComposerInput, ComposerStop, ComposerSubmit } from "@/components/ui/composer";
+import {
+  Conversation,
+  ConversationContent,
+  ConversationJump,
+  ConversationRow,
+  ConversationViewport,
+} from "@/components/ui/conversation";
+import { Markdown } from "@/components/ui/markdown";
+import { Message, MessageContent } from "@/components/ui/message";
+import { Plan } from "@/components/ui/plan";
+import { Reasoning } from "@/components/ui/reasoning";
+import { Tool } from "@/components/ui/tool";
+
+const toolCall = (part: Part): ToolCall | undefined =>
+  part.type === "step" && part.step.kind === "tool" ? part.step.call : undefined;
+
+function planOf(call: ToolCall) {
+  const input = (call.input.value ?? {}) as { title?: string; items?: Partial<PlanItem>[] };
+  const items = (input.items ?? []).filter(
+    (item): item is PlanItem => Boolean(item?.id && item.title && item.status),
+  );
+  return { title: input.title, items };
+}
+
+function MessageParts({ message }: { message: ChatMessage }) {
+  const plans = message.parts.filter((part) => toolCall(part)?.name === "update_plan");
+  const latest = plans.at(-1);
+
+  return message.parts.map((part) => {
+    if (part.type === "text") {
+      return <Markdown key={part.id} source={part.text} streaming={part.state === "streaming"} />;
+    }
+    if (part.type === "reasoning") {
+      return (
+        <Reasoning key={part.id} status={part.state === "streaming" ? "running" : "complete"} text={part.text} />
+      );
+    }
+    const call = toolCall(part);
+    if (!call) return null;
+    if (call.name === "update_plan") {
+      if (part !== plans[0] || !latest) return null;
+      const { title, items } = planOf(toolCall(latest) as ToolCall);
+      return <Plan key={part.id} label={title} items={items} />;
+    }
+    return <Tool key={part.id} call={call} />;
+  });
+}
+
+export default function Chat() {
+  const { messages, status, error, sendMessage, stop } = useChat();
+  const rendered = fromUIMessages(messages, { status, error });
+
+  return (
+    <main className="mx-auto flex h-dvh max-w-2xl flex-col gap-4 p-4">
+      <Conversation aria-label="Chat" messageCount={rendered.length} className="min-h-0 flex-1">
+        <ConversationViewport>
+          <ConversationContent>
+            {rendered.map((message, index) => (
+              <ConversationRow key={message.id} value={message.id} index={index}>
+                <Message
+                  aria-label={message.role === "user" ? "Your message" : "Assistant message"}
+                  messageRole={message.role}
+                  status={message.status}
+                >
+                  <MessageContent>
+                    <MessageParts message={message} />
+                  </MessageContent>
+                </Message>
+              </ConversationRow>
+            ))}
+          </ConversationContent>
+        </ConversationViewport>
+        <ConversationJump />
+      </Conversation>
+      <Composer aria-label="Message" onSubmit={(draft) => sendMessage({ text: draft.text })} onStop={stop}>
+        <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
+        <ComposerSubmit />
+        <ComposerStop />
+      </Composer>
+    </main>
+  );
+}
+```
+
+## How It Works
+
+- **Reasoning:** a reasoning part is `streaming` until the model stops thinking, so the Reasoning is `running` and open, showing its thoughts as Markdown, then `complete`, when it collapses to "Thought". Pass `durationSeconds` when you measure it, and the title reads "Thought for N s".
+- **Plan:** the tool's input streams in, so `planOf` keeps only items that have arrived whole. Every `update_plan` call rewrites the plan, so the page renders the latest call's items where the first call was, and hides the rest: the plan stays in one place and its items tick off. Without a `status`, the Plan takes it from its items, like `running` until all are done, and its header counts them, like "2 of 3".
+- **Tools:** every other tool call renders as a Tool, which closes into its header when it completes.
+- **Opening and closing:** each step opens while it runs and closes when it completes, until someone opens or closes it themselves. Screen readers hear each step's outcome as it finishes.
+
+To accept a plan before the agent starts, pass the Plan `onAccept`, which shows **Accept**. To show work of your own that isn't a tool call, like a build your server runs, compose a Step:
+
+```tsx
+<Step status="running" defaultOpen>
+  <StepTrigger>
+    <StepIcon />
+    <StepTitle>Build the preview</StepTitle>
+  </StepTrigger>
+  <StepContent>Bundling 214 modules.</StepContent>
+</Step>
+```
+
+## Next Steps
+
+- Group many steps under one summary with [Chain of Thought](../components/chain-of-thought.mdx), or show nested work with [Subagent](../components/subagent.mdx) and [Task](../components/task.mdx).
+- Ask before a tool runs: [Tool Calls and Approvals](./tool-approvals.mdx).
+- See every agent activity component working together in the [Agent Activity](../showcase/agent-activity.mdx) showcase.

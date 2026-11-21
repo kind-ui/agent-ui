@@ -1,0 +1,113 @@
+---
+title: AI Chat with the AI SDK in React
+description: Build a streaming AI chat in React with the AI SDK's useChat and Agent UI's Conversation, Message, Markdown and Composer.
+---
+
+To build an AI chat UI in React, keep the chat state in the AI SDK's `useChat` hook, map its messages with `fromUIMessages` from `@kind-ui/agent-ui/adapters/ai-sdk`, and render them with Agent UI's components: a [Conversation](../components/conversation.mdx) that scrolls the messages and follows the newest one, a [Message](../components/message.mdx) for each turn, [Markdown](../components/markdown.mdx) that renders the reply as it streams, and a [Composer](../components/composer.mdx) that sends the prompt and stops the answer. The page below is the whole chat, with one server route.
+
+## Installation
+
+Set up the `@kind-ui` registry as [Get Started](../index.mdx#install-with-the-shadcn-cli) shows, then add the components and the AI SDK:
+
+```bash
+npx shadcn@latest add @kind-ui/conversation @kind-ui/message @kind-ui/markdown @kind-ui/composer
+npm install ai @ai-sdk/react
+```
+
+## The Chat Page
+
+```tsx title="app/page.tsx"
+"use client";
+import { useChat } from "@ai-sdk/react";
+import { fromUIMessages } from "@kind-ui/agent-ui/adapters/ai-sdk";
+import { Composer, ComposerInput, ComposerStop, ComposerSubmit } from "@/components/ui/composer";
+import {
+  Conversation,
+  ConversationContent,
+  ConversationEmpty,
+  ConversationEmptyTitle,
+  ConversationJump,
+  ConversationRow,
+  ConversationViewport,
+} from "@/components/ui/conversation";
+import { Markdown } from "@/components/ui/markdown";
+import { Message, MessageContent, MessageOutcome } from "@/components/ui/message";
+
+export default function Chat() {
+  const { messages, status, error, sendMessage, stop, regenerate } = useChat();
+  const rendered = fromUIMessages(messages, { status, error });
+
+  return (
+    <main className="mx-auto flex h-dvh max-w-2xl flex-col gap-4 p-4">
+      <Conversation aria-label="Chat" messageCount={rendered.length} className="min-h-0 flex-1">
+        <ConversationViewport>
+          <ConversationContent>
+            {rendered.map((message, index) => (
+              <ConversationRow key={message.id} value={message.id} index={index}>
+                <Message
+                  aria-label={message.role === "user" ? "Your message" : "Assistant message"}
+                  messageRole={message.role}
+                  status={message.status}
+                  error={message.error?.message}
+                  onRetry={() => regenerate()}
+                >
+                  <MessageContent>
+                    {message.parts.map((part) =>
+                      part.type === "text" ? (
+                        <Markdown key={part.id} source={part.text} streaming={part.state === "streaming"} />
+                      ) : null,
+                    )}
+                  </MessageContent>
+                  <MessageOutcome />
+                </Message>
+              </ConversationRow>
+            ))}
+            <ConversationEmpty>
+              <ConversationEmptyTitle>Ask anything</ConversationEmptyTitle>
+            </ConversationEmpty>
+          </ConversationContent>
+        </ConversationViewport>
+        <ConversationJump />
+      </Conversation>
+      <Composer aria-label="Message" onSubmit={(draft) => sendMessage({ text: draft.text })} onStop={stop}>
+        <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
+        <ComposerSubmit />
+        <ComposerStop />
+      </Composer>
+    </main>
+  );
+}
+```
+
+## The Server Route
+
+The route streams the model's answer as AI SDK UI messages, which `useChat` posts to `/api/chat` by default. A model id like `"openai/gpt-5"` goes through the AI Gateway; pass any AI SDK provider's model instead.
+
+```ts title="app/api/chat/route.ts"
+import { convertToModelMessages, streamText, type UIMessage } from "ai";
+
+export async function POST(request: Request) {
+  const { messages }: { messages: UIMessage[] } = await request.json();
+  const result = streamText({
+    model: "openai/gpt-5",
+    messages: await convertToModelMessages(messages),
+  });
+  return result.toUIMessageStreamResponse();
+}
+```
+
+## How It Works
+
+- **Messages:** `fromUIMessages(messages, { status, error })` turns `useChat`'s messages into Agent UI's `Message` type. The chat's `status` becomes the last message's, so the answer that's streaming is `streaming` and earlier ones are `complete`, and the chat's `error` lands on the last message.
+- **Following:** `messageCount` tells the conversation how many rows it has. While the reader is at the end, new messages and growing text stay in view; once they scroll up, it stops following and **Jump to latest** brings them back. Each row needs a stable `value` and its `index`.
+- **Streaming Markdown:** each text part renders in a `Markdown` with `streaming` set while the part is still arriving, so a half-written code fence, table or link renders cleanly, and only the blocks that changed are parsed again.
+- **Sending and stopping:** `onSubmit` gets the draft and returns `sendMessage`'s promise, so the composer stays pending until the answer finishes, and Stop takes Send's place and calls `stop`. Enter sends, and Shift+Enter starts a new line.
+- **Failures:** when the request fails, `MessageOutcome` shows the error after the content, with **Retry**, which calls `regenerate`.
+- **Empty state:** `ConversationEmpty` shows until the first message.
+
+## Next Steps
+
+- Show the tools the model calls, and ask before it runs one: [Tool Calls and Approvals](./tool-approvals.mdx).
+- Show the model's reasoning and its plan: [Reasoning and Agent Steps](./reasoning-and-steps.mdx).
+- Add copy, regenerate and edit buttons with `MessageToolbar` on the [Message](../components/message.mdx) page, and mentions, commands and attachments on the [Composer](../components/composer.mdx) page.
+- See every adapter function on the [AI SDK](../adapters/ai-sdk.mdx) page.
