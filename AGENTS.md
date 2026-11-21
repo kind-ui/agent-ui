@@ -304,6 +304,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- framework-svelte-5: step family -->
 
+- **Svelte step family (framework layers Task Svelte-5):** Reasoning, Tool, Chain of Thought, Task, Plan, Subagent and Queue follow Svelte-2's folder shape; React's shared `DEFAULT_PARTS` and `memo`'d rows need nothing here, since a part's default children are a snippet that reads only the keys it shows and each blocks skip unchanged rows. `ToolApproval` passes the approval part's state to Confirmation key by key (`approval`, `label`, `reason`, `focusFallback`, `motion`, `onApprove`, `onDeny`), since snippet state can't be spread. `Subagent`'s `children` is a snippet with no argument, rendered inside `SubagentChildren` in the content, as React's children are. Queue's `openSections` is uncontrolled in core (only `defaultOpenSections`), so its root binds nothing. **Gap, to report upstream:** a part whose state changes rewrites its whole `style` attribute with the same declarations whenever core or UI SDK also wrote inline styles to it (`@ui-sdk/svelte` `styleFor` hands Svelte the element's current style, and Svelte's `set_style` compares with the last value it wrote), so a Tool's first streamed chunk writes 16 DOM changes against React's 6 (`budgets/svelte.ts`); later chunks write 1. The root-`id` gap (Svelte chat core) skips Queue's two agent cases.
+
 <!-- framework-svelte-6: developer output -->
 
 <!-- framework-svelte-7: Wave 6 shell -->

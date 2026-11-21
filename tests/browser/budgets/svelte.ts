@@ -21,6 +21,11 @@ export const budgets: Partial<Budgets> = {
 
   // framework-svelte-5: step family
 
+  // The first chunk also rewrites 10 unchanged `style` attributes on the Code Block's `pre` and scroll area parts:
+  // `@ui-sdk/svelte` hands Svelte each part's current inline style, which Svelte compares with the last style it
+  // wrote, not the element's. Later chunks write 1.
+  toolStream: { writes: 16, renders: 0, notified: 16 },
+
   // framework-svelte-6: developer output
 
   // framework-svelte-7: Wave 6 shell

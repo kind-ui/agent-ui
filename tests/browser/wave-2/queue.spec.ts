@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { isWebElements } from "../layer.js";
+import { isWebElements, layerOf } from "../layer.js";
 
 type Call = { type: string; id: string; index?: number; reason: string; source: string };
 
@@ -178,7 +178,10 @@ test("the host removing the item being moved cancels the move and moves focus on
   expect(await calls(page)).toEqual([]);
 });
 
-test("without onReorder and onRemove, nothing can be picked up or removed", async ({ page }) => {
+test("without onReorder and onRemove, nothing can be picked up or removed", async ({ page }, testInfo) => {
+  // framework-svelte-5: step family. `@ui-sdk/svelte` keys a root by its `id`, which unnames the component in the agent
+  // snapshot (AGENTS.md "UI SDK API notes", Svelte chat core). Remove once UI SDK fixes it.
+  test.skip(layerOf(testInfo) === "svelte", "@ui-sdk/svelte keys a root by its id");
   await open(page, "readonly");
   await expect(pending(page)).not.toHaveAttribute("aria-roledescription");
   await row(page, "Write the migration").focus();
@@ -318,7 +321,10 @@ test("an item already asked to be removed is asked again only once the host pass
   await expect(queue(page).locator('[data-slot="kind-queue-item"]')).toHaveCount(3);
 });
 
-test("agents can reorder and remove items", async ({ page }) => {
+test("agents can reorder and remove items", async ({ page }, testInfo) => {
+  // framework-svelte-5: step family. `@ui-sdk/svelte` keys a root by its `id`, which unnames the component in the agent
+  // snapshot (AGENTS.md "UI SDK API notes", Svelte chat core). Remove once UI SDK fixes it.
+  test.skip(layerOf(testInfo) === "svelte", "@ui-sdk/svelte keys a root by its id");
   await open(page);
   await expectAgentActions(page, "Queue", ["remove", "reorder"]);
   const result = await page.evaluate(() =>
