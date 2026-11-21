@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `e3ab23a` (framework layers Task 1)
+Last reviewed: f92b42e5 (framework layers Task Svelte-2)
 
 ## Settled
 
@@ -53,6 +53,8 @@ Last reviewed: `e3ab23a` (framework layers Task 1)
 - **Thread Search's Escape closes its dialog** (`@ui-sdk/core/testing`, Wave 6 Task 12): as with "A picker's Escape closes its popover", Command's search is a `combobox` whose list is always shown, here inside a modal dialog, so Escape closes the dialog and focus returns to the trigger, where `checkPattern("combobox")` expects only the list to close and focus to stay. `wave-6/aria-patterns.spec.ts` accepts those two problems; the dialog check passes.
 
 ## Known and open (don't report again, check whether fixed)
+
+- **Step base `onOptions` reads `open` from the store** (`step/base.ts`): under `@ui-sdk/svelte`, which hands options over through `follow`, that is the new controlled `open`, so an owner changing `open` and `status` together might see one more or fewer auto `onOpenChange`. Not reproduced (Task Svelte-2 review); check with the Svelte step family.
 
 - **`menuBase` holds `partState.menu`'s `open` while a `ui-menu` reports its own `openchange`** (Design Wave 0): UI SDK web highlights the first item and leaves focus on the trigger when `open` is written back during that event, as its own controlled example does. Ask upstream; remove `applying` once fixed.
 - **The waveform's default of 128 bars writes 128 `--kind-dictation-level-*` properties per level (Task 17):** not profiled; lower the default or size it to the box if it shows up.

@@ -8,7 +8,70 @@ export default {
   components: [
     // framework-svelte-1: groundwork, internal wrappers and Step
 
+    "step",
+
     // framework-svelte-2: chat core
+
+    "markdown",
+    "code-block",
+    "markdown-table",
+    "conversation",
+    "message",
+    "composer",
+    "attachments",
+    "suggestion",
+    "feedback",
+    "confirmation",
+    "question",
+    "checkpoint",
+
+    // framework-svelte-3: composer controls
+
+    // framework-svelte-4: indicators, notices and files
+
+    "loader",
+    "thinking-indicator",
+    "typing-indicator",
+    "streaming-text",
+    "status",
+    "notice",
+    "guardrail-notice",
+    "uploader",
+
+    // framework-svelte-5: step family
+
+    // framework-svelte-6: developer output
+
+    // framework-svelte-7: Wave 6 shell
+
+    // framework-svelte-8: conformance
+  ],
+  // Internal wrapper names, without the `internal-` prefix.
+  internals: [
+    // framework-svelte-1: groundwork, internal wrappers and Step
+
+    "avatar",
+    "button",
+    "collapsible",
+    "command",
+    "file-input",
+    "menu",
+    "progress",
+    "scroll-area",
+    "switch",
+    "toggle",
+    "token-input",
+    "trigger-menu",
+
+    // framework-svelte-2: chat core
+
+    "alert-dialog",
+    "carousel",
+    "checkbox",
+    "radio",
+    "textarea",
+    "toolbar",
+    "tooltip",
 
     // framework-svelte-3: composer controls
 
@@ -22,19 +85,37 @@ export default {
 
     // framework-svelte-8: conformance
   ],
-  // Internal wrapper names, without the `internal-` prefix.
-  internals: [
-    // framework-svelte-1: groundwork, internal wrappers and Step
-  ],
   // Spec files the layer's projects run, relative to `tests/browser/`.
   specs: [
     // framework-svelte-1: groundwork, internal wrappers and Step
 
+    "wave-1/step.spec.ts",
+    "wave-1/internal.spec.ts",
+    "parity.spec.ts",
+    "hydration.spec.ts",
+
     // framework-svelte-2: chat core
+
+    "wave-1/markdown.spec.ts",
+    "wave-1/conversation.spec.ts",
+    "wave-1/message.spec.ts",
+    "wave-1/composer.spec.ts",
+    "wave-3/suggestion.spec.ts",
+    "wave-3/feedback.spec.ts",
+    "wave-3/confirmation.spec.ts",
+    "wave-3/question.spec.ts",
+    "wave-3/checkpoint.spec.ts",
+    "wave-1/budgets.spec.ts",
 
     // framework-svelte-3: composer controls
 
     // framework-svelte-4: indicators, notices and files
+
+    "wave-1/indicators.spec.ts",
+    "wave-1/uploader.spec.ts",
+    "wave-2/status.spec.ts",
+    "wave-3/notice.spec.ts",
+    "wave-3/guardrail-notice.spec.ts",
 
     // framework-svelte-5: step family
 
