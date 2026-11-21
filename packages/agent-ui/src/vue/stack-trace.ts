@@ -65,7 +65,7 @@ export const StackTraceFrameOpen = parts.FrameOpen;
 /** The `label`, else the message's first line with the error's name set apart, unless you fill the default slot. */
 export const StackTraceTitle = withDefault(parts.Title, "StackTraceTitle", (state) => {
   const { name, summary } = state;
-  return name ? [h("span", { "data-stack-trace-name": "" }, name), `: ${summary}`] : summary;
+  return name ? [h("span", { "data-stack-trace-name": "" }, name), ": ", summary] : summary;
 });
 
 /** The message's lines after its first, unless you fill the default slot. Rendered only while there are any. */
