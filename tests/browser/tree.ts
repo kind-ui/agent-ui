@@ -36,15 +36,24 @@ export function normalizedTree(page: Page, omit: readonly Omitted[] = []): Promi
       while (el && getComputedStyle(el).display === "contents") el = el.parentElement;
       return el?.checkVisibility() ?? false;
     };
+    // Whitespace beside another text node is inside a run, so it always reads as a space: a layer that splits a
+    // run into nodes may put it at a line wrap, where it takes no width.
+    const besideText = (node: Node, side: "previousSibling" | "nextSibling") => {
+      let next = node[side];
+      while (next?.nodeType === Node.COMMENT_NODE) next = next[side];
+      return next?.nodeType === Node.TEXT_NODE;
+    };
     const rendered = (node: Text) => {
       const value = node.data;
       if (!boxed(node)) return value;
       shown = true;
       const lead = /^\s*/.exec(value)?.[0].length ?? 0;
-      if (lead === value.length) return lead && shows(node, 0, lead) ? " " : "";
       const trail = /\s*$/.exec(value)?.[0].length ?? 0;
-      const end = value.length - trail;
-      return `${lead && shows(node, 0, lead) ? " " : ""}${value.slice(lead, end)}${trail && shows(node, end, value.length) ? " " : ""}`;
+      const end = Math.max(lead, value.length - trail);
+      const before = lead > 0 && (besideText(node, "previousSibling") || shows(node, 0, lead));
+      if (lead === value.length) return before || besideText(node, "nextSibling") ? " " : "";
+      const after = trail > 0 && (besideText(node, "nextSibling") || shows(node, end, value.length));
+      return `${before ? " " : ""}${value.slice(lead, end)}${after ? " " : ""}`;
     };
     // Text nodes with no element line between them read as one, since layers split text differently: React
     // renders `Pressed {n}` as two nodes, Svelte as one.
