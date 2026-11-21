@@ -80,7 +80,7 @@ const triggerValue = (mode: ApprovalModeRow | undefined) => [
 export const ApprovalModeTrigger = defineComponent({
   name: "ApprovalModeTrigger",
   inheritAttrs: false,
-  slots: Object as SlotsType<{ default?: ApprovalModeTriggerState }>,
+  slots: Object as SlotsType<{ default?: { state: ApprovalModeTriggerState } }>,
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Trigger, null, {
@@ -91,7 +91,10 @@ export const ApprovalModeTrigger = defineComponent({
           return h(
             MenuTrigger,
             { ...trigger, "data-agent-hidden": "", ...attrs },
-            { default: () => (slots.default ? slots.default({ ...trigger, mode }) : triggerValue(mode)) },
+            {
+              render: slots.render,
+              default: () => (slots.default ? slots.default({ state: { ...trigger, mode } }) : triggerValue(mode)),
+            },
           );
         },
       });
@@ -105,7 +108,7 @@ export const ApprovalModeTrigger = defineComponent({
 export const ApprovalModeContent = defineComponent({
   name: "ApprovalModeContent",
   inheritAttrs: false,
-  slots: Object as SlotsType<{ default?: ApprovalModeContentState }>,
+  slots: Object as SlotsType<{ default?: { state: ApprovalModeContentState } }>,
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Content, null, {
@@ -118,12 +121,14 @@ export const ApprovalModeContent = defineComponent({
             value: state.value,
           };
           const href = content.learnMoreHref;
-          return h(KindMenuContent, { align: "start", sideOffset: 6, ...attrs }, () => [
+          return h(KindMenuContent, { align: "start", sideOffset: 6, ...attrs }, {
+            render: slots.render,
+            default: () => [
             h(KindMenuRadioGroup, { name: APPROVAL_MODE_GROUP, value: content.value }, () => [
               h("div", { "data-approval-mode-header": "" }, [
                 h(KindMenuGroupLabel, null, () => content.label),
               ]),
-              slots.default ? slots.default(content) : h(ApprovalModeRows, { rows: content.rows }),
+              slots.default ? slots.default({ state: content }) : h(ApprovalModeRows, { rows: content.rows }),
             ]),
             content.learnMore
               ? [
@@ -150,7 +155,8 @@ export const ApprovalModeContent = defineComponent({
                   ),
                 ]
               : null,
-          ]);
+          ],
+          });
         },
       });
   },
@@ -169,6 +175,7 @@ export const ApprovalMode = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Root, attrs, {
+        ...slots,
         default: ({ state }: { state: Parameters<typeof menuProps>[0] }) =>
           h(KindMenu, menuProps(state), { default: slots.default ?? defaultParts }),
       });

@@ -10,6 +10,8 @@ Last reviewed: `8bcbf59` (Task Vue-1)
 - **A Kind wrapper's `class` can't be a function of the part's state (Task Vue-1):** Vue binds `class` as a string, an array or an object, and `@ui-sdk/vue` passes it to the element unchanged (`styling-and-animation.md`). React's `className` function becomes a `data-*` selector or a `#render` slot.
 - **Fixtures match React's attributes, not Vue's defaults (Task Vue-1):** where React writes a boolean JSX attribute as `"true"` (`<span data-menu-text>`), the Vue case writes the same. Text split into nodes differently isn't a difference: `tests/browser/tree.ts` joins adjacent text nodes in every layer.
 - **`tsconfig.vue.json` resolves like a Vite app (Bundler), not NodeNext (Task Vue-1):** docs examples import `@/components/ui/vue/<name>` without an extension, as React's do, and render files keep their `.js` suffixes, which Bundler accepts too.
+- **Part state is read key by key (Task Vue-3):** `@ui-sdk/vue`'s slot `state` is a get-only tracking proxy, so a spread copies nothing; render files read each key (`menuProps`, `menuTriggerProps`).
+- **Presence-offered callbacks are function props (Task Vue-3):** `createParts` always sets a callback to an emitter, so an option core reads with `typeof options.onX === "function"` is re-declared `"action"` on a derived primitive in its render file (`picker.ts`); `@x` still binds it.
 
 ## Known and open (don't report again, check whether fixed)
 

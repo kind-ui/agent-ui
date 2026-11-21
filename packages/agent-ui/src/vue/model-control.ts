@@ -66,37 +66,48 @@ const triggerContent = ({ model, effort }: Pick<ModelControlTriggerState, "model
 
 /**
  * Opens the menu: UI SDK's `MenuTrigger`, named by the `label`, the model and the effort. A default slot, which gets
- * the model and the effort, replaces what it shows.
+ * its `{ state }` (the model, the effort and the trigger's props), replaces what it shows.
  */
 export const ModelControlTrigger = defineComponent({
   name: "ModelControlTrigger",
   inheritAttrs: false,
-  slots: Object as SlotsType<{ default?: Pick<ModelControlTriggerState, "model" | "effort"> }>,
+  slots: Object as SlotsType<{ default?: { state: ModelControlTriggerState } }>,
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Trigger, null, {
         default: ({ state }: { state: ModelControlTriggerState }) => {
-          const shown = { model: state.model, effort: state.effort };
+          const trigger = menuTriggerProps(state);
+          const shown: ModelControlTriggerState = { ...trigger, model: state.model, effort: state.effort };
           // Hidden from agents, which use the Model Control's own actions.
-          return h(MenuTrigger, { ...menuTriggerProps(state), "data-agent-hidden": "", ...attrs }, () =>
-            slots.default ? slots.default(shown) : triggerContent(shown),
+          return h(
+            MenuTrigger,
+            { ...trigger, "data-agent-hidden": "", ...attrs },
+            {
+              render: slots.render,
+              default: () => (slots.default ? slots.default({ state: shown }) : triggerContent(shown)),
+            },
           );
         },
       });
   },
 });
 
-/** The menu: UI SDK's `MenuContent` holding the rows unless you pass a slot, which gets the rows. Attributes go to it. */
+/** The menu: UI SDK's `MenuContent` holding the rows unless you pass a slot, which gets the content's `{ state }`. Attributes go to it. */
 export const ModelControlContent = defineComponent({
   name: "ModelControlContent",
   inheritAttrs: false,
-  slots: Object as SlotsType<{ default?: SettingsMenuContentState }>,
+  slots: Object as SlotsType<{ default?: { state: SettingsMenuContentState } }>,
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Content, null, {
         default: ({ state }: { state: SettingsMenuContentState }) =>
-          h(KindMenuContent, { align: "start", sideOffset: 6, ...attrs }, () =>
-            slots.default ? slots.default({ rows: state.rows }) : h(SettingsMenuRows, { rows: state.rows }),
+          h(
+            KindMenuContent,
+            { align: "start", sideOffset: 6, ...attrs },
+            {
+              render: slots.render,
+              default: () => (slots.default ? slots.default({ state }) : h(SettingsMenuRows, { rows: state.rows })),
+            },
           ),
       });
   },
@@ -115,6 +126,7 @@ export const ModelControl = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Root, attrs, {
+        ...slots,
         default: ({ state }: { state: Parameters<typeof menuProps>[0] }) =>
           h(KindMenu, menuProps(state), { default: slots.default ?? defaultParts }),
       });

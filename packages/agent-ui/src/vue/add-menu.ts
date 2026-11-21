@@ -94,19 +94,22 @@ export const AddMenuTrigger = defineComponent({
   },
 });
 
-/** The menu: UI SDK's `MenuContent` holding the rows unless you pass a slot, which gets the rows. Attributes go to it. */
+/** The menu: UI SDK's `MenuContent` holding the rows unless you pass a slot, which gets the content's `{ state }`. Attributes go to it. */
 export const AddMenuContent = defineComponent({
   name: "AddMenuContent",
   inheritAttrs: false,
-  slots: Object as SlotsType<{ default?: AddMenuContentState }>,
+  slots: Object as SlotsType<{ default?: { state: AddMenuContentState } }>,
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Content, null, {
         default: ({ state }: { state: AddMenuContentState }) =>
-          h(KindMenuContent, { align: "start", sideOffset: 6, ...attrs }, () =>
-            slots.default
-              ? slots.default({ sections: state.sections })
-              : h(AddMenuRows, { sections: state.sections }),
+          h(
+            KindMenuContent,
+            { align: "start", sideOffset: 6, ...attrs },
+            {
+              render: slots.render,
+              default: () => (slots.default ? slots.default({ state }) : h(AddMenuRows, { sections: state.sections })),
+            },
           ),
       });
   },
@@ -124,6 +127,7 @@ export const AddMenu = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Root, attrs, {
+        ...slots,
         default: ({ state }: { state: Parameters<typeof menuProps>[0] }) =>
           h(KindMenu, menuProps(state), { default: slots.default ?? defaultParts }),
       });

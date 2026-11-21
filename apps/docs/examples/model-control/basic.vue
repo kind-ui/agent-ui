@@ -79,15 +79,12 @@ const shown = computed(() => (showAll.value ? [...models, ...moreModels] : model
 <template>
   <ModelControl
     :models="shown"
-    :model="model"
+    v-model:model="model"
     :levels="levels"
-    :effort="effort"
+    v-model:effort="effort"
     :settings="settings"
-    :values="values"
+    v-model:values="values"
     :actions="showAll ? undefined : actions"
-    @model-change="(next) => (model = next)"
-    @effort-change="(next) => (effort = next)"
-    @values-change="(next) => (values = next)"
     :on-action="showAll ? undefined : () => (showAll = true)"
   />
 </template>

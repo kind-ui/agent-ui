@@ -13,5 +13,5 @@ const value = ref("ask");
 </script>
 
 <template>
-  <ApprovalMode :modes="modes" :value="value" learn-more-href="#agent" @value-change="value = $event" />
+  <ApprovalMode :modes="modes" v-model:value="value" learn-more-href="#agent" />
 </template>

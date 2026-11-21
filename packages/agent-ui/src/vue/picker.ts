@@ -102,6 +102,7 @@ export function pickerParts<P extends PickerParts>(
     setup(_, { attrs, slots }) {
       return () =>
         h(Part.Command, attrs, {
+          ...slots,
           default: ({ state }: { state: PickerCommandState }) =>
             h(KindCommand, state.props, () => [
               h(KindCommandInput, {

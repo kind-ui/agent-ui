@@ -282,6 +282,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- framework-vue-3: composer controls -->
 
+- **Vue composer controls (Task Vue-3):** `@ui-sdk/vue` hands a part's state to its default and `#render` slots as a proxy that tracks each key read and has no keys of its own, so `{ ...state }` copies nothing: render files read each key (`menuProps` and `menuTriggerProps` in `src/vue/internal/menu.ts` for `menuBase`'s root and trigger; nested plain objects such as Picker's `state.props` spread fine). Its `createParts` makes every `"callback"` option an event and always hands the primitive an emitter, listener or not, so an option whose presence offers an action (`onAction` on Picker, Model Selector, Add Menu and Model Control; Approval Mode's `onLearnMore`; Context Bar's `onRemove`) is re-declared as an `"action"` option on a derived primitive in that render file (`picker.ts` shows it): a function prop, which `@action` still binds, so without a listener the action isn't offered, as in React. `pickerParts(parts, name)` is `src/vue/picker.ts`'s, as React's. Default slots replace React's `children` functions and get the part's state as `{ state }`; Settings Menu's content slot gets `{ rows }`. React's `memo` on Context Bar chips isn't needed: a chip whose props didn't change doesn't update. Examples that render Composer (Settings Menu, Add Menu, Context Bar, Dictation, Model Selector's `basic`) get their `.vue` with Composer (Task Vue-2), and the `composer` fixture variants of Model Selector and Dictation wait for it too.
+
 <!-- framework-vue-4: indicators, notices and files -->
 
 <!-- framework-vue-5: step family -->

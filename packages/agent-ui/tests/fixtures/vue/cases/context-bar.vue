@@ -4,7 +4,7 @@ export const variants = ["all", "reduced", "none", "refusing", "written", "many-
 
 <script setup lang="ts">
 import type { ChangeDetails } from "@ui-sdk/core";
-import { onMounted, ref } from "vue";
+import { onMounted, shallowRef } from "vue";
 import { ContextBar } from "../../../../src/vue/context-bar.js";
 import { contextChips, contextHost } from "../../shared/context-bar.js";
 import { expose } from "../../shared/expose.js";
@@ -15,7 +15,7 @@ const { host, record } = contextHost();
 const count = props.variant === "many-10" ? 10 : props.variant === "many-200" ? 200 : 6;
 const motion = props.variant === "reduced" ? "reduced" : props.variant === "none" ? "none" : undefined;
 const refusing = props.variant === "refusing";
-const chips = ref(contextChips(count));
+const chips = shallowRef(contextChips(count));
 
 function onRemove(id: string, details: ChangeDetails<string>) {
   record(id, details);

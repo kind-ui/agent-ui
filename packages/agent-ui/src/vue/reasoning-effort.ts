@@ -19,6 +19,7 @@ export const ReasoningEffort = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Root, attrs, {
+        ...slots,
         default: ({ state }: { state: ReasoningEffortControlState }) =>
           // Hidden from agents, which use the Reasoning Effort's own `setValue`.
           h(

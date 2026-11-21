@@ -6,5 +6,5 @@ const effort = ref<string | null>("medium");
 </script>
 
 <template>
-  <ReasoningEffort :value="effort" @value-change="(value) => (effort = value)" />
+  <ReasoningEffort v-model:value="effort" />
 </template>

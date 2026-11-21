@@ -70,6 +70,7 @@ export default {
 
     // framework-vue-3: composer controls
 
+    "wave-1/budgets.spec.ts",
     "wave-3/reasoning-effort.spec.ts",
     "wave-3/context-meter.spec.ts",
     "wave-3/model-selector.spec.ts",
