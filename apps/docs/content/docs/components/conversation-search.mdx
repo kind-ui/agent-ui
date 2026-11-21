@@ -10,18 +10,12 @@ Use a conversation search to let readers find something said earlier in a long c
 <Example caption="Type in the search field, or keep billing, then press Enter or Next to move to the next match and Shift+Enter or Previous to go back. Press Escape to clear the search, and again to close the bar.">
   <ConversationSearchExample />
 
-  <include cwd lang="tsx">./examples/conversation-search/basic.tsx</include>
+  <ExampleCode example="conversation-search/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/conversation-search
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/conversation-search-web
-```
+<Install name="conversation-search" />
 
 ## Composition
 
@@ -97,6 +91,8 @@ The search registers no keys of its own by default. Pass `shortcut` to open it w
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/conversation-search/conversation-search.ts" name="ConversationSearchOptions" />
+
+<FrameworkNames name="conversation-search" />
 
 ### Agent
 

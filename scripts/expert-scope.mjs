@@ -23,6 +23,9 @@ const owners = {
   ],
   react: [/^packages\/agent-ui\/src\/react\//, /^packages\/agent-ui\/tests\/fixtures\/react\//],
   web: [/^packages\/agent-ui\/src\/web\//, /^packages\/agent-ui\/tests\/fixtures\/web\//],
+  vue: [/^packages\/agent-ui\/src\/vue\//, /^packages\/agent-ui\/tests\/fixtures\/vue\//],
+  svelte: [/^packages\/agent-ui\/src\/svelte\//, /^packages\/agent-ui\/tests\/fixtures\/svelte\//],
+  solid: [/^packages\/agent-ui\/src\/solid\//, /^packages\/agent-ui\/tests\/fixtures\/solid\//],
   styles: [
     /^packages\/agent-ui\/src\/styles\//,
     /^packages\/agent-ui\/src\/core\/motion\//,
@@ -32,10 +35,14 @@ const owners = {
   markdown: [/^packages\/agent-ui\/src\/core\/markdown\//, /^packages\/agent-ui\/tests\/core\/markdown/],
 };
 
-// Both render layers render core primitives, and the browser specs run against both.
+// Every render layer renders core primitives, and the browser specs run against each.
+const rendersCore = (file) => file.startsWith(`${pkg}src/core/`) || file.startsWith("tests/browser/");
 const shared = {
-  react: (file) => file.startsWith(`${pkg}src/core/`) || file.startsWith("tests/browser/"),
-  web: (file) => file.startsWith(`${pkg}src/core/`) || file.startsWith("tests/browser/"),
+  react: rendersCore,
+  web: rendersCore,
+  vue: rendersCore,
+  svelte: rendersCore,
+  solid: rendersCore,
 };
 
 const { values: flags, positionals } = parseArgs({
@@ -76,6 +83,11 @@ function changed(base) {
 
 const plan = [];
 for (const expert of experts) {
+  // A framework layer's expert arrives with its track's first task.
+  if (!existsSync(path.join(root, ".agents/experts", expert, "expert.md"))) {
+    plan.push({ expert, base: null, own: [], shared: [], note: "no expert.md yet; skipped" });
+    continue;
+  }
   const base = flags.base ?? lastReviewed(expert);
   if (!base) {
     plan.push({ expert, base: null, own: [], shared: [], note: "no Last reviewed commit; pass --base" });

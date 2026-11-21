@@ -13,7 +13,7 @@ import {
   snapshot,
 } from "../agent-conformance.js";
 import { allowClipboard } from "../clipboard.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 const open = async (page: Page) => {
   await page.goto("/?c=agent&case=wave-2");
@@ -236,7 +236,7 @@ test("plan.accept and subagent.cancel need a person, unless agentConfirm is fals
 });
 
 test("can-accept, can-cancel, can-reorder and can-remove offer their actions", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web attributes only");
+  test.skip(!isWebElements(testInfo), "web attributes only");
   await open(page);
   const cases = [
     { tag: "kind-plan", label: "Retry plan", attribute: "can-accept", action: "accept" },

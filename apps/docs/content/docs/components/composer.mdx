@@ -11,18 +11,12 @@ Use a composer where someone writes a prompt. It holds the text, the mentions an
 <Example caption="Type @ or / to pick a suggestion, then press Enter to send. While it sends, press Stop to end it early.">
   <ComposerExample />
 
-  <include cwd lang="tsx">./examples/composer/basic.tsx</include>
+  <ExampleCode example="composer/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/composer
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/composer-web
-```
+<Install name="composer" />
 
 ## Composition
 
@@ -105,7 +99,7 @@ Put the controls a prompt needs in the composer's actions row: wrap them in one 
 <Example caption="Press the model or the shield to open its menu; the model's menu also holds Web search and Memory. Press the mic to dictate a prompt.">
   <FullComposerExample />
 
-  <include cwd lang="tsx">./examples/composer/full.tsx</include>
+  <ExampleCode example="composer/full" />
 </Example>
 
 The composer is a CSS container named `kind-composer`. Below 28rem, [Model Control](./model-control.mdx) and [Approval Mode](./approval-mode.mdx) show only their icon and keep their names for screen readers, and **Draft restored** shows only **Discard**. On a small touch screen, every menu opens as a sheet. The same composer at 20rem:
@@ -115,7 +109,7 @@ The composer is a CSS container named `kind-composer`. Below 28rem, [Model Contr
     <FullComposerExample />
   </div>
 
-  <include cwd lang="tsx">./examples/composer/full.tsx</include>
+  <ExampleCode example="composer/full" />
 </Example>
 
 The composer measures its own width, not the screen's, so give it one when it sits in a row or a centered flex column: a container's content doesn't size it.
@@ -123,6 +117,8 @@ The composer measures its own width, not the screen's, so give it one when it si
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/composer/composer.ts" name="ComposerOptions" />
+
+<FrameworkNames name="composer" />
 
 ### Agent
 

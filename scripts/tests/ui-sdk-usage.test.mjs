@@ -21,3 +21,20 @@ test("bypassing UI SDK fails", () => {
   assert.match(errors, /styles\/widget.css: width on \[data-status-mark\] belongs in status-mark.css/);
   assert.match(errors, /styles\/widget.css: mask-size on \[data-status-mark\] belongs in status-mark.css/);
 });
+
+test("each new layer's hand-written behavior fails", () => {
+  const errors = checkUiSdkUsage(fx("bad"), {}).join("\n");
+  assert.match(errors, /src\/vue\/widget\.ts: onKeydown belongs in the primitive/);
+  assert.match(errors, /src\/vue\/widget\.ts: imports \.\.\/\.\.\/core\/widget\/widget\.js/);
+  assert.match(errors, /src\/svelte\/widget\/Part\.svelte: onkeydown= belongs in the primitive/);
+  assert.match(errors, /src\/solid\/widget\.tsx: tabIndex belongs in the primitive/);
+  assert.doesNotMatch(errors, /src\/(vue|svelte|solid)\/[\w/]*: render file must use createParts/);
+});
+
+test("listener shorthands, other layers and other file types fail", () => {
+  const errors = checkUiSdkUsage(fx("bad"), {}).join("\n");
+  assert.match(errors, /svelte\/widget\/Field\.svelte: \{onfocusout\} belongs in the primitive/);
+  assert.match(errors, /solid\/widget\.tsx: onFocusIn belongs in the primitive/);
+  assert.match(errors, /vue\/widget\.ts: imports \.\.\/react\/widget\.js/);
+  assert.match(errors, /solid\/helper\.ts: Solid render files are \.tsx \(plan D4\)/);
+});

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { affectedSpecs } from "../affected-specs.mjs";
+import { affectedSpecs, importsOf } from "../affected-specs.mjs";
 
 const spec = (name) => `tests/browser/wave-1/${name}.spec.ts`;
 
@@ -37,4 +37,34 @@ test("a file of unknown reach runs every spec", () => {
   assert.equal(affectedSpecs(["package-lock.json"]), "all");
   assert.equal(affectedSpecs(["packages/agent-ui/src/styles/agent-ui.css"]), "all");
   assert.equal(affectedSpecs(["packages/agent-ui/tests/fixtures/react/main.tsx"]), "all");
+});
+
+test("a Svelte file's script imports are followed", () => {
+  const imports = importsOf("scripts/tests/fixtures/affected-specs/Part.svelte");
+  assert.ok(imports.includes("scripts/tests/fixtures/affected-specs/helper.ts"));
+  assert.ok(imports.includes("packages/agent-ui/src/core/step/index.ts"));
+});
+
+test("a framework fixture case reaches the specs that load it", () => {
+  const svelteCase = "packages/agent-ui/tests/fixtures/svelte/cases/step.svelte";
+  const graph = {
+    dependents: new Map([[svelteCase, new Set()]]),
+    specs: new Map([[spec("step"), new Set(["step"])]]),
+  };
+  assert.deepEqual(affectedSpecs([svelteCase], graph), [spec("step")]);
+});
+
+test("a layer manifest reaches the specs it lists", () => {
+  const listed = { vue: { specs: ["parity.spec.ts", "wave-1/step.spec.ts"] } };
+  assert.deepEqual(affectedSpecs(["registry/layers/vue.mjs"], undefined, listed), [
+    "tests/browser/parity.spec.ts",
+    spec("step"),
+  ]);
+});
+
+test("a layer fixture case reaches the root specs its manifest lists", () => {
+  const vueCase = "packages/agent-ui/tests/fixtures/vue/cases/step.ts";
+  const graph = { dependents: new Map([[vueCase, new Set()]]), specs: new Map() };
+  const listed = { vue: { specs: ["parity.spec.ts"] }, svelte: { specs: ["hydration.spec.ts"] } };
+  assert.deepEqual(affectedSpecs([vueCase], graph, listed), ["tests/browser/parity.spec.ts"]);
 });

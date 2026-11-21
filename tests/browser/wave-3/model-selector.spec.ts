@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements, layerHas, layerOf } from "../layer.js";
 
 type Fixture = {
   kindHost: { changes: { component: string; value: string | null; reason: string }[] };
@@ -127,7 +127,7 @@ test("a host that refuses keeps the chosen model and the list open", async ({ pa
 test("a web host moving a model into a new group or switching pages redraws the open list", async ({
   page,
 }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "draws the list in the web layer");
+  test.skip(!isWebElements(testInfo), "draws the list in the web layer");
   await load(page);
   await openList(page);
   await page.evaluate(() => {
@@ -160,6 +160,9 @@ test("the trigger grows with the chosen name up to its widest, then cuts the nam
 });
 
 test.describe("in a composer at 390px", () => {
+  test.beforeEach(({ page: _ }, testInfo) => {
+    test.skip(!layerHas(testInfo, "composer"), "the layer doesn't render Composer yet");
+  });
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 
   test("the trigger shows only its icon, keeps its name, and nothing overflows", async ({ page }) => {

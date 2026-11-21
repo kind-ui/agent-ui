@@ -6,9 +6,7 @@ import { uploadHost, uploads } from "../../shared/uploader.js";
 
 defineUploader();
 
-const motion = new URLSearchParams(location.search).get("motion") as MotionMode | null;
-
-function Mixed() {
+function Mixed({ motion }: { motion: MotionMode | null }) {
   const [items, setItems] = useState<UploadItem[]>(uploads);
   const [{ fixture, ...host }] = useState(() => uploadHost(setItems));
   useEffect(() => {
@@ -64,4 +62,7 @@ function WebElement() {
   );
 }
 
-export const cases = { mixed: () => <Mixed />, "web-element": () => <WebElement /> };
+export const cases = {
+  mixed: (params: URLSearchParams) => <Mixed motion={params.get("motion") as MotionMode | null} />,
+  "web-element": () => <WebElement />,
+};

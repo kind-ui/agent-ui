@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Call = { type: string; id: string; index?: number; reason: string; source: string };
 
@@ -338,7 +338,7 @@ test("agents can reorder and remove items", async ({ page }) => {
 test("kind-queue keeps its open sections when it leaves the page and comes back", async ({
   page,
 }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   await page.getByRole("button", { name: "Completed" }).click();
   await page.evaluate(async () => {
@@ -353,7 +353,7 @@ test("kind-queue keeps its open sections when it leaves the page and comes back"
 });
 
 test("kind-queue fills in sections written after it connects", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   await page.evaluate(() => {
     const element = document.createElement("kind-queue");

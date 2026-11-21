@@ -10,18 +10,12 @@ Use Markdown for the text of an assistant's reply. Pass the text so far as `sour
 <Example caption="Press the copy button above the code or the table to copy it, or the wrap button to wrap long lines.">
   <MarkdownExample />
 
-  <include cwd lang="tsx">./examples/markdown/basic.tsx</include>
+  <ExampleCode example="markdown/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/markdown
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/markdown-web
-```
+<Install name="markdown" />
 
 ## Usage
 
@@ -48,6 +42,8 @@ No highlighter ships with Markdown. Pass a `highlight` function and every code b
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/markdown-view/markdown-view.ts" name="MarkdownOptions" />
+
+<FrameworkNames name="markdown" />
 
 ### Agent
 

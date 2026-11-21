@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Item = { id: string; status: string; title: string; files?: string[] };
 
@@ -182,7 +182,7 @@ for (const colorScheme of ["light", "dark"] as const) {
 }
 
 test("kind-task given its items after it connects announces nothing", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   await page.evaluate(() => {
     const late = document.createElement("kind-task");
@@ -198,7 +198,7 @@ test("kind-task given its items after it connects announces nothing", async ({ p
 });
 
 test("kind-task keeps the items someone wrote, and fills a list written late", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   const written = page.locator("#written");
   await page.evaluate(() => {

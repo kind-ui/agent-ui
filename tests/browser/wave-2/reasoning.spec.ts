@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Fixture = {
   kindReasoning: {
@@ -179,7 +179,7 @@ test("agents expand and collapse it by its title", async ({ page }) => {
 });
 
 test("kind-reasoning exposes live open state and its api", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   type KindReasoning = HTMLElement & { open: boolean; api: { expand(): boolean } };
   const done = reasoning(page, "done");
@@ -191,7 +191,7 @@ test("kind-reasoning exposes live open state and its api", async ({ page }, test
 test("kind-reasoning keeps its title current after it leaves the page and comes back", async ({
   page,
 }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   await reasoning(page, "live").evaluate(async (el) => {
     const parent = el.parentElement as HTMLElement;

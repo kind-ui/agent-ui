@@ -10,18 +10,12 @@ Use a checkpoint where the agent saved its work, like before it edits a file, so
 <Example caption="Press Restore checkpoint, then Restore. The dialog waits for the restore, then the checkpoint reads Restored.">
   <CheckpointExample />
 
-  <include cwd lang="tsx">./examples/checkpoint/basic.tsx</include>
+  <ExampleCode example="checkpoint/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/checkpoint
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/checkpoint-web
-```
+<Install name="checkpoint" />
 
 ## Composition
 
@@ -75,6 +69,8 @@ The dialog rises and fades in, its backdrop and the tooltip fade, and "Restored"
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/checkpoint/checkpoint.ts" name="CheckpointOptions" />
+
+<FrameworkNames name="checkpoint" />
 
 ### Agent
 

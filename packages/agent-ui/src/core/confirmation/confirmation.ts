@@ -259,8 +259,14 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
       state: store.get().approvalState,
     };
 
+    // `store.get()` may already hold the new options here (`@ui-sdk/svelte` hands them over through `follow`), so
+    // whether the box was shown is read from the last options.
+    let previous = context.options();
     // Spec §4.1: the lock holds until the host reports on the request or replaces it; `submitting` keeps it.
-    context.onOptions(({ approval }) => {
+    context.onOptions((options) => {
+      const before = previous;
+      previous = options;
+      const { approval } = options;
       const key = approval ? approvalKey(approval) : "";
       const id = approval?.approvalId ?? "";
       const state = approval?.state;
@@ -273,8 +279,8 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
       const done = id !== reported.id || isResolved(state);
       reported = { key, id, state };
       if (replaced || state === "submit-failed" || isResolved(state)) pending.release();
-      // The store takes the new options after this listener, so it still says whether the box was shown.
-      const closing = !mounting && isResolved(state) && showsReason(store.get());
+      const closing =
+        !mounting && isResolved(state) && showsReason({ ...store.get(), ...presentation(before) });
       store.set({
         sent: false,
         ...(!store.get().pending && { pressed: undefined }),
@@ -370,7 +376,8 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
           if (!opening || el.hidden) return;
           opening = false;
           void enter(el, "expand", { motion: store.get().motion });
-          controller.focus();
+          // `@ui-sdk/svelte` binds this part before the Textarea inside it attaches to the controller.
+          queueMicrotask(() => controller.focus());
         };
         const collapse = () => {
           if (!store.get().reasonClosing) return;

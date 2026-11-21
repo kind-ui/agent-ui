@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Fixture = {
   kindHost: {
@@ -99,7 +99,7 @@ test("without a link, Learn more calls onLearnMore once and closes the menu", as
 });
 
 test("a value change or an equal modes copy redraws nothing, and focus stays", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "React keys its rows; web redraws them");
+  test.skip(!isWebElements(testInfo), "React keys its rows; web redraws them");
   await load(page);
   await trigger(page).focus();
   await page.keyboard.press("Enter");

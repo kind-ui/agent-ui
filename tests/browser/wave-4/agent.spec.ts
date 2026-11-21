@@ -12,7 +12,7 @@ import {
   snapshot,
 } from "../agent-conformance.js";
 import { allowClipboard } from "../clipboard.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 const sources = { component: "kind-sources", label: "Used 3 sources", id: "sources" };
 const citation = {
@@ -428,7 +428,7 @@ test("actions that take an id, a path or an index refuse an unknown one", async 
 });
 
 test("can-* attributes offer their actions", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web attributes only");
+  test.skip(!isWebElements(testInfo), "web attributes only");
   await open(page);
   await selectText(page);
   const cases = [

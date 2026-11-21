@@ -10,18 +10,12 @@ Use an uploader when people send files that take a while to upload. It has a dro
 <Example caption="Drop a file or press browse to add it. Press Cancel on the report to stop it, or Retry on the failed file.">
   <UploaderExample />
 
-  <include cwd lang="tsx">./examples/uploader/basic.tsx</include>
+  <ExampleCode example="uploader/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/uploader
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/uploader-web
-```
+<Install name="uploader" />
 
 ## Usage
 
@@ -44,6 +38,8 @@ Pass `onCancel` to show Cancel on queued and uploading rows, and `onRetry` to sh
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/uploader/uploader.ts" name="UploaderOptions" />
+
+<FrameworkNames name="uploader" />
 
 ### Agent
 

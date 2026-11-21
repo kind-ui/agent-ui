@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Fixture = {
   kindHost: { changes: { open: boolean; reason: string; source: string }[]; setUsed(used: number): void };
@@ -86,7 +86,7 @@ test("keyboard focus opens the details and leaves focus on the trigger; Escape c
 });
 
 test("details written by hand also leave focus on the trigger", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "Web Components only");
+  test.skip(!isWebElements(testInfo), "Web Components only");
   await open(page, "written");
   await page.keyboard.press("Tab");
   await expect(page.getByRole("dialog", { name: "Context window" })).toBeVisible();

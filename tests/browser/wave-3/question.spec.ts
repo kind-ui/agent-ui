@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Call = {
   action: string;
@@ -244,7 +244,7 @@ test("with reduced motion the summary only fades", async ({ page }) => {
 });
 
 test("new questions with the same content keep the focused choice", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   const unit = form(page).getByRole("checkbox", { name: "Unit tests" });
   await unit.focus();
@@ -258,7 +258,7 @@ test("new questions with the same content keep the focused choice", async ({ pag
 test("a written item replaces the one the element added, and one written empty is filled in", async ({
   page,
 }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   await page.evaluate(() => {
     const form = document.querySelector("kind-question form");
@@ -272,7 +272,7 @@ test("a written item replaces the one the element added, and one written empty i
 });
 
 test("a button written without a label span gets its label", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   await page.evaluate(() => {
     for (const part of document.querySelectorAll("kind-question-submit, kind-question-skip"))
@@ -283,7 +283,7 @@ test("a button written without a label span gets its label", async ({ page }, te
 });
 
 test("a written item's radio group keeps the name the page gave it", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   await page.evaluate(() => {
     const env = document.createElement("kind-question-item");

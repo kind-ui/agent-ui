@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Fixture = {
   kindHost: {
@@ -78,7 +78,7 @@ test("the comment box asks what went well after a thumbs up, what could be bette
 });
 
 test("a comment box a web host wrote keeps its own placeholder and name", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "React hands them to a render function to override");
+  test.skip(!isWebElements(testInfo), "React hands them to a render function to override");
   await open(page);
   const written = await page.evaluate(async () => {
     const source = document.querySelector("kind-feedback");
@@ -203,7 +203,7 @@ test("Escape closes the box and returns focus to its button, and the text waits 
 test("an element put back in the page keeps the comment its box held, and sends it", async ({
   page,
 }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "Web Components only");
+  test.skip(!isWebElements(testInfo), "Web Components only");
   await open(page);
   await openBox(page);
   await text(page).fill("Kept text");

@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Fixture = {
   kindHost: { actions: { id: string; reason: string; source?: string }[] };
@@ -137,7 +137,7 @@ test("without onAction every item is disabled and run isn't offered, but a subme
 });
 
 test("new items while the menu is open keep focus on the row it was on", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "React keys its rows; web redraws them");
+  test.skip(!isWebElements(testInfo), "React keys its rows; web redraws them");
   await load(page);
   await trigger(page).focus();
   await page.keyboard.press("ArrowDown");

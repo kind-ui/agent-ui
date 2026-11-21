@@ -10,18 +10,12 @@ Use a connection status inside a [Conversation](./conversation.mdx) to say that 
 <Example caption="Press Offline to drop the connection and disable the composer, or Reconnecting to count down to the next try. Press Retry in the pill, or Online, to get the connection back.">
   <ConnectionStatusExample />
 
-  <include cwd lang="tsx">./examples/connection-status/basic.tsx</include>
+  <ExampleCode example="connection-status/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/connection-status
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/connection-status-web
-```
+<Install name="connection-status" />
 
 ## Composition
 
@@ -82,6 +76,8 @@ The pill fades in as it drops into place, and fades out where it is. Under `pref
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/connection-status/connection-status.ts" name="ConnectionStatusOptions" />
+
+<FrameworkNames name="connection-status" />
 
 ### Agent
 

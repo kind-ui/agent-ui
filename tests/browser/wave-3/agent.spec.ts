@@ -13,7 +13,7 @@ import {
   snapshot,
 } from "../agent-conformance.js";
 import { allowClipboard } from "../clipboard.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 const open = async (page: Page) => {
   await page.goto("/?c=agent&case=wave-3");
@@ -271,7 +271,7 @@ test("approve, deny, restore and submit need a person; only Confirmation keeps a
 });
 
 test("can-* attributes offer their actions", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web attributes only");
+  test.skip(!isWebElements(testInfo), "web attributes only");
   await open(page);
   await act(page, question.component, question.label, "select", ["env", "staging"]);
   await act(page, feedback.component, feedback.label, "rate", ["up"]);

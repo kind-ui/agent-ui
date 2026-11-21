@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Fixture = {
   kindHost: { changes: { id: string; value: boolean | string; reason: string; source?: string }[] };
@@ -144,7 +144,7 @@ for (const scheme of ["light", "dark"] as const)
 test("a value change or an equal settings copy redraws no row, and focus stays", async ({
   page,
 }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "React keys its rows; web redraws them");
+  test.skip(!isWebElements(testInfo), "React keys its rows; web redraws them");
   await load(page);
   await openByPointer(page);
   await choice(page).press("ArrowRight");

@@ -14,7 +14,7 @@ import { controls } from "../../shared/full-composer.js";
 import { levels, models } from "../../shared/model-control.js";
 import { initialValues, settings } from "../../shared/settings-menu.js";
 
-function page(root: HTMLElement) {
+function page(root: HTMLElement, params: URLSearchParams) {
   defineComposer();
   defineDictation();
   defineContextBar();
@@ -42,7 +42,7 @@ function page(root: HTMLElement) {
       </kind-composer>
     </div>`;
   const composer = root.querySelector("kind-composer") as KindComposerElement;
-  Object.assign(composer, draftOptions(new URLSearchParams(location.search)));
+  Object.assign(composer, draftOptions(params));
 
   const bar = document.createElement("kind-context-bar");
   bar.style.setProperty("--kind-context-chip-max-width", "120px");

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import catalog from "../../registry/catalog.mjs";
+import catalog, { layerItems } from "../../registry/catalog.mjs";
 import { toRegistry, validateCatalog } from "../build-registry.mjs";
 import { checkRegistryIntegrity } from "../check-registry-consumers.mjs";
 import { liveCatalog } from "../check-registry-namespace.mjs";
@@ -137,3 +137,53 @@ test("the setup note is a plain file beside the components", () =>
   assert.deepEqual(toRegistry(catalog).items.find((each) => each.name === "agent-ui-setup").files, [
     { path: "registry/agent-ui-setup/AGENTS.md", type: "registry:file", target: "@ui/AGENTS.md" },
   ]));
+
+test("a manifest's components and internals become that layer's items", () => {
+  const manifest = { components: ["code-block"], internals: ["scroll-area"] };
+  const list = (dir) =>
+    ({ "packages/agent-ui/src/svelte/code-block": ["CodeBlock.svelte", "index.ts"] })[dir] ?? ["index.ts"];
+  const items = layerItems({ vue: manifest, svelte: manifest }, list);
+  const targets = (name) =>
+    toRegistry({ items: [items.find((each) => each.name === name)] }).items[0].files.map(
+      (file) => file.target,
+    );
+  assert.deepEqual(
+    items.map((each) => each.name),
+    ["code-block-vue", "internal-scroll-area-vue", "code-block-svelte", "internal-scroll-area-svelte"],
+  );
+  assert.deepEqual(items[0].registryDependencies, [
+    "@kind-ui/agent-ui-setup",
+    "@kind-ui/internal-scroll-area-vue",
+  ]);
+  assert.deepEqual(
+    items[0].dependencies.map((each) => each.split("@").slice(0, -1).join("@")),
+    ["@kind-ui/agent-ui", "@ui-sdk/core", "@ui-sdk/vue"],
+  );
+  assert.deepEqual(targets("code-block-vue"), ["@ui/vue/code-block.ts"]);
+  assert.deepEqual(targets("internal-scroll-area-vue"), [
+    "@ui/vue/internal/scroll-area.ts",
+    "@ui/vue/internal/kind-class.ts",
+  ]);
+  assert.deepEqual(targets("code-block-svelte"), [
+    "@ui/svelte/code-block/CodeBlock.svelte",
+    "@ui/svelte/code-block/index.ts",
+  ]);
+  assert.deepEqual(targets("internal-scroll-area-svelte"), [
+    "@ui/svelte/internal/scroll-area/index.ts",
+    "@ui/svelte/internal/kind-class.ts",
+  ]);
+});
+
+test("a manifest naming an unknown component or internal throws, and a missing Svelte folder lists nothing", () => {
+  const none = () => [];
+  assert.throws(
+    () => layerItems({ vue: { components: ["nope"], internals: [] } }, none),
+    /registry\/layers\/vue\.mjs: unknown component nope/,
+  );
+  assert.throws(
+    () => layerItems({ solid: { components: [], internals: ["nope"] } }, none),
+    /registry\/layers\/solid\.mjs: unknown internal nope/,
+  );
+  const [step] = layerItems({ svelte: { components: ["step"], internals: [] } }, none);
+  assert.match(errorsWith({ items: [...catalog.items, step] }), /"step-svelte": ships no files/);
+});

@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 import { watchAnimations } from "../leaving.js";
 
 type Fixture = {
@@ -133,7 +133,7 @@ test("a notice the host removes during its exit doesn't call onDismiss", async (
 });
 
 test("Dismiss stays after buttons added to a connected notice", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "the element adds Dismiss itself");
+  test.skip(!isWebElements(testInfo), "the element adds Dismiss itself");
   await open(page);
   await page.locator("#notice-warning").evaluate((el) => {
     const actions = document.createElement("kind-notice-actions");
@@ -150,7 +150,7 @@ test("Dismiss stays after buttons added to a connected notice", async ({ page },
 });
 
 test("a notice put back on the page neither comes in nor is announced again", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "React puts back a new element, which is a new notice");
+  test.skip(!isWebElements(testInfo), "React puts back a new element, which is a new notice");
   await open(page);
   await afterFrames(page);
   const entrance = await watchAnimations(page, "#notice-warning");

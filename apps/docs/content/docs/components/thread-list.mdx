@@ -10,18 +10,12 @@ Use a thread list beside a [conversation](./conversation.mdx) to move between ch
 <Example caption="Press a chat to open it, or press its More button to rename, pin or delete it. Focus a chat and press F2 to rename it in place, or the arrow keys to move between chats.">
   <ThreadListExample />
 
-  <include cwd lang="tsx">./examples/thread-list/basic.tsx</include>
+  <ExampleCode example="thread-list/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/thread-list
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/thread-list-web
-```
+<Install name="thread-list" />
 
 ## Composition
 
@@ -105,6 +99,8 @@ Only the rows in view render, at a fixed height of `--kind-thread-row-height` (3
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/thread-list/thread-list.ts" name="ThreadListOptions" />
+
+<FrameworkNames name="thread-list" />
 
 ### Agent
 

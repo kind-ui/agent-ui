@@ -4,6 +4,9 @@ import defaultMdxComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
 import { Caption } from "./caption";
 import { Example } from "./example";
+import { ExampleCode } from "./example-code";
+import { FrameworkNames } from "./framework-names";
+import { Install } from "./install";
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -13,6 +16,9 @@ export function getMDXComponents(components?: MDXComponents) {
     TypeTable,
     Caption,
     Example,
+    ExampleCode,
+    FrameworkNames,
+    Install,
     ...components,
   } satisfies MDXComponents;
 }

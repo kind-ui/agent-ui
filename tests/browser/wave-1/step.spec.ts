@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Steps = { kindSteps: { setStatus(id: string, status: string): void; remove(id: string): void } };
 
@@ -195,7 +195,7 @@ test("is a live UI SDK primitive agents can collapse", async ({ page }) => {
 });
 
 test("kind-step exposes live open state and its api", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   const el = step(page, "Plan the answer");
   type KindStep = HTMLElement & { open: boolean; api: { isOpen(): boolean; collapse(): boolean } };
@@ -210,7 +210,7 @@ test("kind-step exposes live open state and its api", async ({ page }, testInfo)
 });
 
 test("setting kind-step open keeps auto close", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   const el = step(page, "Draft the summary");
   await el.evaluate((s: HTMLElement & { open: boolean }) => {

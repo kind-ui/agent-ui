@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "exactOptionalPropertyTypes": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "types": ["node", "vite/client", "svelte"],
+    "paths": { "@/components/ui/svelte/*": ["./packages/agent-ui/src/svelte/*"] }
+  },
+  "include": [
+    "packages/agent-ui/src/svelte/**/*.ts",
+    "packages/agent-ui/src/svelte/**/*.svelte",
+    "packages/agent-ui/tests/fixtures/svelte/**/*.ts",
+    "packages/agent-ui/tests/fixtures/svelte/**/*.svelte",
+    "apps/docs/examples/**/*.svelte"
+  ]
+}

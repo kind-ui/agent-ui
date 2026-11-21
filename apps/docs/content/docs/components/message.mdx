@@ -13,18 +13,12 @@ Use a message for each turn in a conversation, from the person or the assistant.
 <Example caption="Press Edit on the question to change it, then press Save or Enter to save, or Cancel or Escape to cancel. Press Regenerate on the reply to add a response, and the arrows to switch between them.">
   <MessageExample />
 
-  <include cwd lang="tsx">./examples/message/basic.tsx</include>
+  <ExampleCode example="message/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/message
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/message-web
-```
+<Install name="message" />
 
 ## Composition
 
@@ -73,7 +67,7 @@ Pass `author`, with an `id`, a `name` and optionally an `avatarUrl`, to fill `Me
 <Example caption="Both replies are from the same author within a few minutes, so the second leaves out the avatar and the name, and keeps its time and how long it took.">
   <MessageAuthorExample />
 
-  <include cwd lang="tsx">./examples/message/author.tsx</include>
+  <ExampleCode example="message/author" />
 </Example>
 
 The time reads "9:41 AM" for a message from today, and "Nov 17, 9:41 AM" for one from another day. Server markup has no clock, so it shows the date and time, and the browser reads today from its clock once the page loads. Pass `now` to set today yourself. Times read in `timeZone`, UTC by default, and dates and durations in `locale`, English by default.
@@ -87,7 +81,7 @@ When a response stops or fails, `MessageOutcome` says so after the content, so t
 <Example caption="Press Continue to finish the stopped answer, or Retry to try the failed one again. Each button stays unavailable while its request is pending.">
   <MessageOutcomesExample />
 
-  <include cwd lang="tsx">./examples/message/outcomes.tsx</include>
+  <ExampleCode example="message/outcomes" />
 </Example>
 
 Both callbacks get `details.reason`: `retry-press` or `continue-press` for the button, `imperative` for a call through the api. Return a promise to keep the button unavailable until it settles. If it rejects, the button is available again. A new `status` ends the pending request too.
@@ -109,7 +103,7 @@ Pass `regenerateOptions` to offer ways to regenerate, like a shorter reply or an
 <Example caption="Press Regenerate, then choose More concise, or open Try with another model and choose a model. Try again regenerates with no option.">
   <MessageRegenerateOptionsExample />
 
-  <include cwd lang="tsx">./examples/message/regenerate-options.tsx</include>
+  <ExampleCode example="message/regenerate-options" />
 </Example>
 
 `onRegenerate` keeps its signature, and `details.optionId` says which option was chosen: its `id`, or `undefined` for **Try again** or a plain regenerate. `details.reason` is `regenerate-press` for the button, `item-press` for a menu row and `imperative` for a call through the api. Cancel a menu choice with `details.cancel()` to keep the menu open. Without `regenerateOptions`, Regenerate stays a plain button.
@@ -145,6 +139,8 @@ The switcher shows only when `branchCount` is more than 1.
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/message/message.ts" name="MessageOptions" />
+
+<FrameworkNames name="message" />
 
 ### Agent
 

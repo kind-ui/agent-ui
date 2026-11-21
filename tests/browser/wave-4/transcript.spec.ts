@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Fixture = {
   kindTranscript: {
@@ -258,7 +258,7 @@ for (const colorScheme of ["light", "dark"] as const) {
 test("kind-transcript put back in the page draws its segments and keeps its search", async ({
   page,
 }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   await transcript(page).getByRole("searchbox").fill("billing");
   await expect(part(page, "segment")).toHaveCount(2);

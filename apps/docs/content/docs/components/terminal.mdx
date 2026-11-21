@@ -10,18 +10,12 @@ Use a terminal when the agent runs a shell command, so readers can follow its ou
 <Example caption="Press npm test, or focus it and press Enter or Space, to hide and show the output. Focus the output and use the arrow keys to scroll it.">
   <TerminalExample />
 
-  <include cwd lang="tsx">./examples/terminal/basic.tsx</include>
+  <ExampleCode example="terminal/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/terminal
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/terminal-web
-```
+<Install name="terminal" />
 
 ## Composition
 
@@ -76,6 +70,8 @@ Tab reaches the header, **Copy output** and the output, which scrolls with the a
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/terminal/terminal.ts" name="TerminalOptions" />
+
+<FrameworkNames name="terminal" />
 
 ### Agent
 

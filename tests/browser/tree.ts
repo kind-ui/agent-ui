@@ -1,0 +1,87 @@
+import type { Page } from "@playwright/test";
+import { settled } from "./agent-conformance.js";
+
+/**
+ * The page's body as lines a diff reads (plan D6): element names with custom element wrappers dropped, `role`,
+ * every `aria-*` and `data-*` attribute, `hidden`, `inert`, `disabled`, sorted classes and text, adjacent text nodes
+ * joined. Ids are compared by reference: each becomes `#<n>` in document order, and so does any attribute value that
+ * names one. Inline styles, `tabindex`, scripts, the announcer region and the fixture root's mount markers are left
+ * out.
+ */
+export function normalizedTree(page: Page, omit: readonly Omitted[] = []): Promise<string[]> {
+  return page.evaluate((omit) => {
+    const skip = "script, style, template, vite-error-overlay, [data-ui-sdk-announcer]";
+    const kept = /^(role|aria-.+|data-.+|class|hidden|inert|disabled|id)$/;
+    const ids = new Map<string, string>();
+    for (const el of document.body.querySelectorAll("[id]"))
+      if (!el.closest(skip) && el.id !== "root") ids.set(el.id, `#${ids.size}`);
+    const reference = (value: string) =>
+      value
+        .split(/\s+/)
+        .map((token) => ids.get(token) ?? token)
+        .join(" ");
+    const lines: string[] = [];
+    // Text nodes with no element line between them read as one, since layers split text differently: React
+    // renders `Pressed {n}` as two nodes, Svelte as one.
+    let text = "";
+    const flush = (depth: number) => {
+      const joined = text.replace(/\s+/g, " ").trim();
+      if (joined) lines.push(`${"  ".repeat(depth)}"${joined}"`);
+      text = "";
+    };
+    const walk = (node: Node, depth: number) => {
+      for (const child of node.childNodes) {
+        if (child.nodeType === Node.TEXT_NODE) {
+          text += child.textContent ?? "";
+          continue;
+        }
+        if (!(child instanceof Element) || child.matches(skip)) continue;
+        const name = child.localName;
+        if (name.includes("-")) {
+          walk(child, depth);
+          continue;
+        }
+        flush(depth);
+        const attributes = [...child.attributes]
+          .filter(
+            (attribute) =>
+              kept.test(attribute.name) &&
+              !["data-ssr", "data-v-app"].includes(attribute.name) &&
+              !omit.some(
+                ({ selector, attributes }) => attributes.includes(attribute.name) && child.matches(selector),
+              ),
+          )
+          .map(({ name: key, value }) =>
+            key === "class"
+              ? `class="${value.split(/\s+/).filter(Boolean).sort().join(" ")}"`
+              : `${key}="${reference(value)}"`,
+          )
+          .sort();
+        lines.push(`${"  ".repeat(depth)}<${[name, ...attributes].join(" ")}>`);
+        walk(child, depth + 1);
+        flush(depth + 1);
+      }
+    };
+    walk(document.body, 0);
+    flush(0);
+    return lines;
+  }, omit);
+}
+
+/** Attributes left out of a tree on the elements `selector` matches. */
+export type Omitted = { selector: string; attributes: readonly string[] };
+
+/** The tree once animations have settled and two reads a frame apart agree. */
+export async function stableTree(page: Page, omit: readonly Omitted[] = []) {
+  await settled(page);
+  let previous = await normalizedTree(page, omit);
+  for (let tries = 0; tries < 20; tries++) {
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
+    const next = await normalizedTree(page, omit);
+    if (JSON.stringify(next) === JSON.stringify(previous)) return next;
+    previous = next;
+  }
+  return previous;
+}

@@ -3,7 +3,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { shareLink } from "../../../packages/agent-ui/tests/fixtures/shared/share-dialog.js";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { allowClipboard, readClipboard } from "../clipboard.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Fixture = {
   kindHost: {
@@ -221,7 +221,7 @@ for (const [name, fixture, reducedMotion] of [
 }
 
 test("a trigger someone wrote keeps its icon", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web fills in only empty parts");
+  test.skip(!isWebElements(testInfo), "web fills in only empty parts");
   await load(page, "written");
   await expect(trigger(page).locator("svg")).toHaveCount(1);
   await expect(trigger(page)).toHaveText("");

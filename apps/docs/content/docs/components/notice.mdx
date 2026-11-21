@@ -10,18 +10,12 @@ Use a notice for something worth reading that isn't a message, like a rate limit
 <Example caption="Press Dismiss on Rate limited: focus moves on to Retry, the notice fades out, then it's removed.">
   <NoticeExample />
 
-  <include cwd lang="tsx">./examples/notice/basic.tsx</include>
+  <ExampleCode example="notice/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/notice
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/notice-web
-```
+<Install name="notice" />
 
 ## Composition
 
@@ -75,6 +69,8 @@ A notice added later rises and fades in, and **Dismiss** fades it out. Under `pr
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/notice/base.ts" name="NoticeOptions" />
+
+<FrameworkNames name="notice" />
 
 ### Agent
 

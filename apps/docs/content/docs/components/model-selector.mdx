@@ -11,18 +11,12 @@ Use a model selector in a prompt's toolbar when people can choose which model an
 <Example caption="Press Model, type son55 to find Claude Sonnet 5.5, then press Enter. Choose More models to list every model. Claude Opus 5.5 is disabled, so it can't be chosen.">
   <ModelSelectorExample />
 
-  <include cwd lang="tsx">./examples/model-selector/basic.tsx</include>
+  <ExampleCode example="model-selector/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/model-selector
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/model-selector-web
-```
+<Install name="model-selector" />
 
 ## Composition
 
@@ -91,7 +85,7 @@ Pass `pages="groups"` to list each provider as a row, shown with the first icon 
 <Example caption="Press Model, choose OpenAI to see its models, then press Backspace to go back.">
   <ModelSelectorGroupsExample />
 
-  <include cwd lang="tsx">./examples/model-selector/groups.tsx</include>
+  <ExampleCode example="model-selector/groups" />
 </Example>
 
 ### Searching
@@ -123,6 +117,8 @@ Model Selector is now built on Picker, so the search moved from a field beside t
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/model-selector/model-selector.ts" name="ModelSelectorOptions" />
+
+<FrameworkNames name="model-selector" />
 
 ### Agent
 

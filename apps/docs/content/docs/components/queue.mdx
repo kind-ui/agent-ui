@@ -10,18 +10,12 @@ Use a queue to show the work an agent has lined up and what it has already finis
 <Example caption="Press Tab to reach the queued items. Press Space to pick one up, the arrow keys to move it, and Space to drop it. Press Delete to remove one, or drag an item with the pointer.">
   <QueueExample />
 
-  <include cwd lang="tsx">./examples/queue/basic.tsx</include>
+  <ExampleCode example="queue/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/queue
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/queue-web
-```
+<Install name="queue" />
 
 ## Composition
 
@@ -70,6 +64,8 @@ A new item fades in once as it arrives. A removed item stays in place and fades 
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/queue/queue.ts" name="QueueOptions" />
+
+<FrameworkNames name="queue" />
 
 ### Agent
 
