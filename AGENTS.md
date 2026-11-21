@@ -302,6 +302,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- framework-svelte-4: indicators, notices and files -->
 
+- **Indicators, notices and files (framework layers Task Svelte-4):** Loader, Thinking Indicator, Typing Indicator, Streaming Text, Status, Notice, Guardrail Notice and Uploader. Streaming Text moved here from Svelte-2 (coordinator), since `wave-1/indicators.spec.ts` and the `indicators` page render it. Each folder's `index.ts` exports its `createParts` result as `parts`, which the folder's `.svelte` files import back. A part with default children takes them as `children={children ?? fallback}`, so a host snippet that reads the part's state still replaces them (`StatusLabel`'s `{#snippet children({ label })}`). React's `children` and `actions` props on Notice and Guardrail Notice are snippets of the same names. Don't `Omit` from a part's props: `createParts` gives them a `[attribute: string]: unknown` index signature, so `Omit` keeps only that and drops every option; leave `children` out with a key-remapping mapped type instead. Gap: in `@ui-sdk/svelte` 0.1.0-beta.1, svelte-check types neither a part's callback parameters nor its option values (`<Step status="bogus">` passes), so typed snippet parameters (`{#snippet children({ rows }: UploaderListState)}`) and callbacks (`onCancel={(id: string) => …}`) carry their own annotations.
+
 <!-- framework-svelte-5: step family -->
 
 <!-- framework-svelte-6: developer output -->
