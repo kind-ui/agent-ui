@@ -6,7 +6,7 @@ import {
 } from "@kind-ui/agent-ui/core";
 import { type ComponentProps, Dynamic, type JSX } from "@solidjs/web";
 import { createParts } from "@ui-sdk/solid/primitive";
-import { createMemo, For, omit, untrack } from "solid-js";
+import { createMemo, For, untrack } from "solid-js";
 import { CodeBlock } from "./code-block.js";
 import { MarkdownTable } from "./markdown-table.js";
 

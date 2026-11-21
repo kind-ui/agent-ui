@@ -9,6 +9,11 @@ export const budgets: Partial<Budgets> = {
 
   // framework-solid-2: chat core
 
+  conversationStream: { writes: 1, renders: 0, notified: 0 },
+  conversationFollow: { layoutReads: 12 },
+  markdownStream: { parses: 1, writes: 4, renders: 0, notified: 3 },
+  remount: { nodes: 0, listeners: 0 },
+
   // framework-solid-3: composer controls
 
   // framework-solid-4: indicators, notices and files

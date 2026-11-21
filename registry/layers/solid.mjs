@@ -77,6 +77,7 @@ export default {
     // framework-solid-2: chat core
 
     "wave-1/markdown.spec.ts",
+    "wave-1/budgets.spec.ts",
     "wave-1/conversation.spec.ts",
     "wave-1/message.spec.ts",
     "wave-1/composer.spec.ts",
