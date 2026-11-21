@@ -14,6 +14,9 @@ export default {
 
     // framework-svelte-3: composer controls
 
+    "picker",
+    "settings-menu",
+
     // framework-svelte-4: indicators, notices and files
 
     // framework-svelte-5: step family
@@ -67,6 +70,9 @@ export default {
     // framework-svelte-2: chat core
 
     // framework-svelte-3: composer controls
+
+    "wave-5/picker.spec.ts",
+    "wave-5/settings-menu.spec.ts",
 
     // framework-svelte-4: indicators, notices and files
 
