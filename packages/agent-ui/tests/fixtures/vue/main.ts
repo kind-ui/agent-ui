@@ -1,6 +1,6 @@
 import { createAgent } from "@ui-sdk/vue/agent";
-import { createApp, createSSRApp } from "vue";
-import { casePath, loadCase, noCase } from "./cases.js";
+import { createApp } from "vue";
+import { casePath, hydratedApp, loadCase, noCase } from "./cases.js";
 import "./styles.css";
 
 const params = new URLSearchParams(location.search);
@@ -13,8 +13,6 @@ const fixture = await loadCase(name, variant);
 const root = document.getElementById("root") as HTMLElement;
 
 if (!fixture) root.innerHTML = noCase;
-else
-  (root.hasAttribute("data-ssr") ? createSSRApp : createApp)(fixture.default, { variant, params }).mount(
-    root,
-  );
+else if (root.hasAttribute("data-ssr")) hydratedApp(fixture.default, { variant, params }).mount(root);
+else createApp(fixture.default, { variant, params }).mount(root);
 Object.assign(window, { agent: createAgent({ allow: fixture?.allow }) });
