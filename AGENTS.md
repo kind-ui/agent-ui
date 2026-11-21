@@ -316,6 +316,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- framework-solid-4: indicators, notices and files -->
 
+- **Solid indicators, notices and files (framework layers plan, Task Solid-4):** Loader, the two indicators, Streaming Text, Status, Notice, Guardrail Notice and Uploader port React's files part for part, with no `@ui-sdk/solid` gap and no internal wrapper (Uploader composes the bare File Input and Progress parts, as React's does). A Solid `children` getter creates its nodes on every read, so where React tests `children !== undefined` (Status's default mark and label, Guardrail Notice's description) the Solid file reads `props.children` once inside the root and branches on that value. A default child that reads state is a one-argument function (`(state) => state.label`), since UI SDK calls a function child with state only when it declares a parameter. Rows render through `<For keyed>` inside the part's function child, so a chunk or upload row keeps its element and the function child doesn't run again per row. Guardrail Notice's `refused` case and Uploader's `web-element` case are React-only, as their specs say.
+
 <!-- framework-solid-5: step family -->
 
 <!-- framework-solid-6: developer output -->

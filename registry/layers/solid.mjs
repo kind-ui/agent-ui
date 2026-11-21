@@ -16,6 +16,15 @@ export default {
 
     // framework-solid-4: indicators, notices and files
 
+    "guardrail-notice",
+    "loader",
+    "notice",
+    "status",
+    "streaming-text",
+    "thinking-indicator",
+    "typing-indicator",
+    "uploader",
+
     // framework-solid-5: step family
 
     // framework-solid-6: developer output
@@ -56,6 +65,12 @@ export default {
     // framework-solid-3: composer controls
 
     // framework-solid-4: indicators, notices and files
+
+    "wave-1/indicators.spec.ts",
+    "wave-1/uploader.spec.ts",
+    "wave-2/status.spec.ts",
+    "wave-3/notice.spec.ts",
+    "wave-3/guardrail-notice.spec.ts",
 
     // framework-solid-5: step family
 
