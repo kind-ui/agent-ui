@@ -45,7 +45,7 @@ export function StackTraceTitle(props: StackTraceTitleProps) {
   return (
     <parts.Title {...omit(props, "children")}>
       {props.children ??
-        ((state: { name: string; summary: string }) => (
+        ((state) => (
           <Show when={state.name} fallback={state.summary}>
             <span data-stack-trace-name="">{state.name}</span>: {state.summary}
           </Show>
@@ -59,9 +59,7 @@ export type StackTraceMessageProps = ComponentProps<typeof parts.Message>;
 /** The message's lines after its first, unless you pass children. Rendered only while there are any. */
 export function StackTraceMessage(props: StackTraceMessageProps) {
   return (
-    <parts.Message {...omit(props, "children")}>
-      {props.children ?? ((state: { text: string }) => state.text)}
-    </parts.Message>
+    <parts.Message {...omit(props, "children")}>{props.children ?? ((state) => state.text)}</parts.Message>
   );
 }
 
@@ -75,7 +73,7 @@ export function StackTraceList(props: StackTraceListProps) {
   return (
     <parts.List {...omit(props, "children")}>
       {props.children ??
-        ((state: { rows: StackTraceRow[] }) => (
+        ((state) => (
           <For each={state.rows} keyed={rowKey}>
             {(row) => (
               <Show when={row().type === "frame"} fallback={<StackTraceGroup value={rowValue(row())} />}>
@@ -98,7 +96,7 @@ export function StackTraceFrame(props: StackTraceFrameProps) {
   return (
     <parts.Frame {...omit(props, "children")}>
       {props.children ??
-        ((state: { canOpen: boolean }) => (
+        ((state) => (
           <Show when={state.canOpen} fallback={<DefaultFrameText />}>
             <StackTraceFrameOpen>
               <DefaultFrameText />
@@ -115,7 +113,7 @@ export type StackTraceFrameFunctionProps = ComponentProps<typeof parts.FrameFunc
 export function StackTraceFrameFunction(props: StackTraceFrameFunctionProps) {
   return (
     <parts.FrameFunction {...omit(props, "children")}>
-      {props.children ?? ((state: { fn: string }) => state.fn)}
+      {props.children ?? ((state) => state.fn)}
     </parts.FrameFunction>
   );
 }
@@ -126,7 +124,7 @@ export type StackTraceFrameLocationProps = ComponentProps<typeof parts.FrameLoca
 export function StackTraceFrameLocation(props: StackTraceFrameLocationProps) {
   return (
     <parts.FrameLocation {...omit(props, "children")}>
-      {props.children ?? ((state: { location: string }) => state.location)}
+      {props.children ?? ((state) => state.location)}
     </parts.FrameLocation>
   );
 }
@@ -156,8 +154,7 @@ export type StackTraceLibraryProps = ComponentProps<typeof parts.Library>;
 export function StackTraceLibrary(props: StackTraceLibraryProps) {
   return (
     <parts.Library {...omit(props, "children")}>
-      {props.children ??
-        ((state: { count: number }) => `${state.count} library ${state.count === 1 ? "frame" : "frames"}`)}
+      {props.children ?? ((state) => `${state.count} library ${state.count === 1 ? "frame" : "frames"}`)}
     </parts.Library>
   );
 }
@@ -169,9 +166,7 @@ export function StackTraceLibraryFrames(props: StackTraceLibraryFramesProps) {
   return (
     <parts.LibraryFrames {...omit(props, "children")}>
       {props.children ??
-        ((state: { indexes: number[] }) => (
-          <For each={state.indexes}>{(index) => <StackTraceFrame value={String(index)} />}</For>
-        ))}
+        ((state) => <For each={state.indexes}>{(index) => <StackTraceFrame value={String(index)} />}</For>)}
     </parts.LibraryFrames>
   );
 }

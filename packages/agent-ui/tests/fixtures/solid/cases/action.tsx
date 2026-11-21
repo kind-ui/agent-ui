@@ -30,10 +30,8 @@ function Page(props: { owned?: boolean }) {
         quote={"Rate limits reset every hour.\n\n"}
         status={row().status}
         result={row().result}
-        {...(props.owned && {
-          open: row().open,
-          onOpenChange: (open, details) => host.openings.push([open, details.reason]),
-        })}
+        open={props.owned ? row().open : undefined}
+        onOpenChange={props.owned ? (open, details) => host.openings.push([open, details.reason]) : undefined}
       />
     </div>
   );

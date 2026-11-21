@@ -1,10 +1,4 @@
-import {
-  type TestResultsCountState,
-  type TestResultsFailureState,
-  type TestResultsRow,
-  type TestResultsTreeState,
-  testResultsPrimitive,
-} from "@kind-ui/agent-ui/core";
+import { testResultsPrimitive } from "@kind-ui/agent-ui/core";
 import type { ComponentProps } from "@solidjs/web";
 import { createParts } from "@ui-sdk/solid/primitive";
 import type { TreeItemData } from "@ui-sdk/solid/tree";
@@ -60,11 +54,7 @@ export type TestResultsTitleProps = ComponentProps<typeof parts.Title>;
 
 /** The `label`, else "Tests", unless you pass children. */
 export function TestResultsTitle(props: TestResultsTitleProps) {
-  return (
-    <parts.Title {...omit(props, "children")}>
-      {props.children ?? ((state: { title: string }) => state.title)}
-    </parts.Title>
-  );
+  return <parts.Title {...omit(props, "children")}>{props.children ?? ((state) => state.title)}</parts.Title>;
 }
 
 export type TestResultsMetaProps = ComponentProps<typeof parts.Meta>;
@@ -72,9 +62,7 @@ export type TestResultsMetaProps = ComponentProps<typeof parts.Meta>;
 /** The run's duration, unless you pass children. */
 export function TestResultsMeta(props: TestResultsMetaProps) {
   return (
-    <parts.Meta {...omit(props, "children")}>
-      {props.children ?? ((state: { duration: string }) => state.duration)}
-    </parts.Meta>
+    <parts.Meta {...omit(props, "children")}>{props.children ?? ((state) => state.duration)}</parts.Meta>
   );
 }
 
@@ -102,11 +90,7 @@ export type TestResultsCountProps = ComponentProps<typeof parts.Count>;
  * pressing it again shows every test. "3 passed", unless you pass children.
  */
 export function TestResultsCount(props: TestResultsCountProps) {
-  return (
-    <parts.Count {...omit(props, "children")}>
-      {props.children ?? ((state: TestResultsCountState) => state.text)}
-    </parts.Count>
-  );
+  return <parts.Count {...omit(props, "children")}>{props.children ?? ((state) => state.text)}</parts.Count>;
 }
 
 export type TestResultsTreeProps = ComponentProps<typeof parts.Tree>;
@@ -116,7 +100,7 @@ export function TestResultsTree(props: TestResultsTreeProps) {
   return (
     <parts.Tree {...omit(props, "children")}>
       {props.children ??
-        ((tree: TestResultsTreeState) => (
+        ((tree) => (
           <KindTree
             controller={tree.controller}
             items={tree.items}
@@ -178,7 +162,7 @@ export function TestResultsItem(props: TestResultsItemProps) {
   return (
     <parts.Item {...omit(props, "children")}>
       {props.children ??
-        ((row: TestResultsRow) => (
+        ((row) => (
           <>
             <span data-test-results-name="">{row.name}</span> <TestResultsItemStatus />
           </>
@@ -201,7 +185,7 @@ export function TestResultsFailure(props: TestResultsFailureProps) {
   return (
     <parts.Failure {...omit(props, "children")}>
       {props.children ??
-        ((state: TestResultsFailureState) => (
+        ((state) => (
           <StackTrace
             message={state.message || undefined}
             stack={state.stack}
@@ -217,11 +201,7 @@ export type TestResultsEmptyProps = ComponentProps<typeof parts.Empty>;
 
 /** What shows when the filter lets no test through, like "No failed tests", unless you pass children. */
 export function TestResultsEmpty(props: TestResultsEmptyProps) {
-  return (
-    <parts.Empty {...omit(props, "children")}>
-      {props.children ?? ((state: { text: string }) => state.text)}
-    </parts.Empty>
-  );
+  return <parts.Empty {...omit(props, "children")}>{props.children ?? ((state) => state.text)}</parts.Empty>;
 }
 
 function DefaultParts() {

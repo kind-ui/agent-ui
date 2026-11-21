@@ -1,4 +1,4 @@
-import { type FileTreeRow, type FileTreeTreeState, fileTreePrimitive } from "@kind-ui/agent-ui/core";
+import { fileTreePrimitive } from "@kind-ui/agent-ui/core";
 import type { ComponentProps, JSX } from "@solidjs/web";
 import { createParts } from "@ui-sdk/solid/primitive";
 import type { TreeItemData } from "@ui-sdk/solid/tree";
@@ -35,7 +35,7 @@ export type FileTreeProps = Omit<ComponentProps<typeof parts.Root>, "children"> 
 export function FileTree(props: FileTreeProps) {
   return (
     <parts.Root {...omit(props, "children")}>
-      {(tree: FileTreeTreeState) => (
+      {(tree) => (
         <KindTree
           controller={tree.controller}
           items={tree.items}
@@ -93,7 +93,7 @@ export function FileTreeItem(props: FileTreeItemProps) {
   return (
     <parts.Item {...omit(props, "children")}>
       {props.children ??
-        ((row: FileTreeRow) => (
+        ((row) => (
           <>
             <span data-file-tree-name="">{row.name}</span> <FileTreeCounts /> <FileTreeBadge />
           </>
