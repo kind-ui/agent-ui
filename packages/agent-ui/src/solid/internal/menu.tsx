@@ -17,7 +17,7 @@ import {
   MenuTrigger,
 } from "@ui-sdk/solid/menu";
 import { createMemo, Show } from "solid-js";
-import { withKindClass } from "./kind-class.js";
+import { iconElement, withKindClass } from "./kind-class.js";
 
 const content =
   "z-50 min-w-50 rounded-[var(--kind-popup-radius)] bg-[var(--kind-color-raised)] p-[var(--kind-popup-padding)] text-[length:var(--kind-text-md)]/5 text-[var(--kind-color-fg)] shadow-[var(--kind-shadow-popover)] outline-hidden data-[presentation=sheet]:w-full data-[presentation=sheet]:max-w-none data-[presentation=sheet]:rounded-b-none data-[presentation=sheet]:pb-[max(0.5rem,env(safe-area-inset-bottom))] data-[presentation=sheet]:[&_:is([data-slot=menu-item],[data-slot=menu-checkbox-item],[data-slot=menu-radio-item],[data-slot=menu-trigger])]:py-2.5";
@@ -59,7 +59,7 @@ export const KindMenuSeparator = withKindClass(
 );
 
 export type KindMenuItemContentProps = {
-  /** An image URL, or an element such as an inline `svg`. */
+  /** An image URL, an element such as an inline `svg`, or a function returning one. */
   icon?: unknown;
   label: string;
   description?: string | undefined;
@@ -72,7 +72,7 @@ export function KindMenuItemContent(props: KindMenuItemContentProps) {
     <>
       <Show when={icon() !== undefined}>
         <KindMenuItemIcon>
-          {typeof icon() === "string" ? <img src={icon() as string} alt="" /> : (icon() as JSX.Element)}
+          {typeof icon() === "string" ? <img src={icon() as string} alt="" /> : iconElement(icon())}
         </KindMenuItemIcon>
       </Show>
       <span data-menu-text="">
@@ -83,4 +83,46 @@ export function KindMenuItemContent(props: KindMenuItemContentProps) {
       </span>
     </>
   );
+}
+
+// A part's state reaches a function child as a proxy that reads each key on its own, which a spread can't list. These
+// name the keys, so each prop keeps following its own key.
+const readKeys = <State extends object, Key extends keyof State>(state: State, keys: readonly Key[]) =>
+  Object.defineProperties(
+    {},
+    Object.fromEntries(keys.map((key) => [key, { enumerable: true, get: () => state[key] }])),
+  ) as Pick<State, Key>;
+
+const MENU_KEYS = [
+  "controller",
+  "presentation",
+  "open",
+  "onOpenChange",
+  "onAction",
+  "onCheckedChange",
+  "onValueChange",
+] as const;
+const TRIGGER_KEYS = ["aria-label", "disabled", "data-kind-trigger", "data-kind-icon-button"] as const;
+
+/** What a `menuBase` root hands UI SDK Menu: `<KindMenu {...menuProps(menu)}>`. */
+export const menuProps = <State extends Record<(typeof MENU_KEYS)[number], unknown>>(menu: State) =>
+  readKeys(menu, MENU_KEYS);
+
+/** What a `menuBase` trigger slot hands UI SDK's `MenuTrigger`: `<MenuTrigger {...menuTriggerProps(trigger)}>`. */
+export const menuTriggerProps = <State extends Partial<Record<(typeof TRIGGER_KEYS)[number], unknown>>>(
+  trigger: State,
+) => readKeys(trigger, TRIGGER_KEYS);
+
+/**
+ * A part's children, read once: a function of its state, or elements, else `fallback`. Solid builds element children
+ * each time their getter is read, so a second read would build them twice.
+ */
+export function childrenOr<State>(
+  children: JSX.Element | ((state: State) => JSX.Element) | undefined,
+  state: State,
+  fallback: () => JSX.Element,
+): JSX.Element {
+  return typeof children === "function"
+    ? (children as (state: State) => JSX.Element)(state)
+    : (children ?? fallback());
 }

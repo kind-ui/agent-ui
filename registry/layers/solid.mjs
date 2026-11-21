@@ -27,6 +27,17 @@ export default {
 
     // framework-solid-3: composer controls
 
+    "picker",
+    "settings-menu",
+    "model-selector",
+    "add-menu",
+    "approval-mode",
+    "model-control",
+    "reasoning-effort",
+    "context-bar",
+    "context-meter",
+    "dictation",
+
     // framework-solid-4: indicators, notices and files
 
     "guardrail-notice",
@@ -81,6 +92,10 @@ export default {
     "textarea",
     "toolbar",
     "tooltip",
+
+    // framework-solid-3: composer controls
+
+    "segmented-control",
   ],
   // Spec files the layer's projects run, relative to `tests/browser/`.
   specs: [
@@ -105,6 +120,18 @@ export default {
     "wave-3/checkpoint.spec.ts",
 
     // framework-solid-3: composer controls
+
+    "wave-5/picker.spec.ts",
+    "wave-5/settings-menu.spec.ts",
+    "wave-5/add-menu.spec.ts",
+    "wave-5/approval-mode.spec.ts",
+    "wave-5/model-control.spec.ts",
+    "wave-5/context-bar.spec.ts",
+    "wave-5/dictation.spec.ts",
+    "wave-5/composed-events.spec.ts",
+    "wave-3/reasoning-effort.spec.ts",
+    "wave-3/context-meter.spec.ts",
+    "wave-3/model-selector.spec.ts",
 
     // framework-solid-4: indicators, notices and files
 

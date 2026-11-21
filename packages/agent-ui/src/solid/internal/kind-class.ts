@@ -58,3 +58,13 @@ export function withKindClass<C extends (props: never) => JSX.Element>(component
   };
   return Kind as unknown as C;
 }
+
+/**
+ * An icon that isn't an image URL, ready to insert: a function is called untracked, so it draws a new copy in each
+ * place the icon shows, and an element is cloned, since one DOM node can sit in only one place.
+ */
+export function iconElement(icon: unknown): JSX.Element {
+  if (typeof icon === "function") return untrack(icon as () => JSX.Element);
+  if (typeof Node !== "undefined" && icon instanceof Node) return icon.cloneNode(true) as JSX.Element;
+  return icon as JSX.Element;
+}
