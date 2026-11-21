@@ -51,7 +51,27 @@ export default {
 
     // framework-svelte-5: step family
 
+    "reasoning",
+    "tool",
+    "chain-of-thought",
+    "task",
+    "plan",
+    "subagent",
+    "queue",
+
     // framework-svelte-6: developer output
+
+    "sources",
+    "inline-citation",
+    "document",
+    "generated-image",
+    "file-tree",
+    "terminal",
+    "stack-trace",
+    "test-results",
+    "transcript",
+    "selection",
+    "action",
 
     // framework-svelte-7: Wave 6 shell
 
@@ -101,6 +121,8 @@ export default {
     // framework-svelte-5: step family
 
     // framework-svelte-6: developer output
+
+    "tree",
 
     // framework-svelte-7: Wave 6 shell
 
@@ -155,7 +177,27 @@ export default {
 
     // framework-svelte-5: step family
 
+    "wave-2/reasoning.spec.ts",
+    "wave-2/tool.spec.ts",
+    "wave-2/chain-of-thought.spec.ts",
+    "wave-2/task.spec.ts",
+    "wave-2/plan.spec.ts",
+    "wave-2/subagent.spec.ts",
+    "wave-2/queue.spec.ts",
+
     // framework-svelte-6: developer output
+
+    "wave-4/sources.spec.ts",
+    "wave-4/inline-citation.spec.ts",
+    "wave-4/document.spec.ts",
+    "wave-4/generated-image.spec.ts",
+    "wave-4/file-tree.spec.ts",
+    "wave-4/terminal.spec.ts",
+    "wave-4/stack-trace.spec.ts",
+    "wave-4/test-results.spec.ts",
+    "wave-4/transcript.spec.ts",
+    "wave-4/selection.spec.ts",
+    "wave-4/action.spec.ts",
 
     // framework-svelte-7: Wave 6 shell
 

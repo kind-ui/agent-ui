@@ -6,14 +6,7 @@
   let { children: content, ...props }: ComponentProps<typeof parts.Outcome> = $props();
 </script>
 
-<parts.Outcome {...props}>
-  {#snippet children(state)}
-    {#if content}
-      {@render content(state)}
-    {:else}
-      <parts.OutcomeIcon />
-      <span data-confirmation-label="">{state.label}</span>
-      {#if state.reason}<span data-confirmation-reason="">{state.reason}</span>{/if}
-    {/if}
-  {/snippet}
-</parts.Outcome>
+<parts.Outcome {...props}
+  >{#snippet children(state)}{#if content}{@render content(state)}{:else}<parts.OutcomeIcon
+      /><span data-confirmation-label="">{state.label}</span
+      >{#if state.reason}<span data-confirmation-reason="">{state.reason}</span>{/if}{/if}{/snippet}</parts.Outcome>

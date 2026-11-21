@@ -114,7 +114,8 @@
 </script>
 
 {#if variant === "button"}
-  <KindButton onclick={() => presses++}>Save</KindButton><output>Pressed {presses}</output>
+  <KindButton onclick={() => presses++}>Save</KindButton
+  ><output>Pressed {presses}</output>
 {:else if variant === "collapsible"}
   <KindCollapsible>
     <KindCollapsibleTrigger>Details</KindCollapsibleTrigger>

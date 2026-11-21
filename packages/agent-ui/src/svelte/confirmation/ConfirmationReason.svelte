@@ -10,18 +10,11 @@
   let { children: content, ...props }: ComponentProps<typeof parts.Reason> = $props();
 </script>
 
-<parts.Reason {...props}>
-  {#snippet children(state)}
-    {#if content}
-      {@render content(state)}
-    {:else}
-      <KindTextarea
+<parts.Reason {...props}
+  >{#snippet children(state)}{#if content}{@render content(state)}{:else}<KindTextarea
         controller={state.controller}
         readOnly={state.readOnly}
         aria-label="Reason for denying"
         placeholder="Add a reason (optional)"
         rows={2}
-      />
-    {/if}
-  {/snippet}
-</parts.Reason>
+    />{/if}{/snippet}</parts.Reason>

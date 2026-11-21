@@ -25,7 +25,21 @@ export const budgets: Partial<Budgets> = {
 
   // framework-svelte-5: step family
 
+  // The first chunk also rewrites 10 unchanged `style` attributes on the Code Block's `pre` and scroll area parts:
+  // `@ui-sdk/svelte` hands Svelte each part's current inline style, which Svelte compares with the last style it
+  // wrote, not the element's. Later chunks write 1.
+  toolStream: { writes: 16, renders: 0, notified: 16 },
+
   // framework-svelte-6: developer output
+
+  // Once the last line wraps in a full viewport, the first line in view leaves it, with the comment anchors Svelte
+  // keeps around each line: one node removal each.
+  terminalChunk: { writes: 11, renders: 0, notified: 2, layoutReads: 11 },
+  // The new line comes in and the first line in view leaves, each with its comment anchors.
+  terminalLine: { writes: 22, renders: 0, notified: 4, layoutReads: 18 },
+  transcriptWord: { writes: 2, renders: 0, notified: 3, layoutReads: 4 },
+  transcriptSegment: { writes: 24, renders: 0, notified: 20, layoutReads: 8 },
+  transcriptSearch: { writes: 110, renders: 0, notified: 140, layoutReads: 2 },
 
   // framework-svelte-7: Wave 6 shell
 
