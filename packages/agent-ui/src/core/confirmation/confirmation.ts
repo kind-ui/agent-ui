@@ -387,6 +387,9 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
           );
         };
         expand();
+        // `@ui-sdk/solid` takes the new options before `onOptions` runs, so the box leaves the page as its approval
+        // is recorded and binds again once `reasonClosing` brings it back.
+        collapse();
         const unsubscribe = store.subscribe(() => {
           collapse();
           queueMicrotask(expand);
