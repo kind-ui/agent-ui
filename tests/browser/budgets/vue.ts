@@ -23,8 +23,10 @@ export const budgets: Partial<Budgets> = {
 
   // framework-vue-5: step family
 
-  // Streamed input renders one tool's parts, each default part a wrapper and its part, at 10 tools as at 500.
-  toolStream: { writes: 6, renders: 30, notified: 3 },
+  // Streamed input renders one tool's parts, each default part a wrapper and its part, at 10 tools as at 500. One
+  // of the 31 is the code block's viewport calling its `#render` slot, which Vue's development build reports as an
+  // update of the component that passed it (`KindScrollAreaViewport` hands UI SDK its bind late).
+  toolStream: { writes: 6, renders: 31, notified: 3 },
 
   // framework-vue-6: developer output
 
