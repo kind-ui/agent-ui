@@ -39,6 +39,7 @@ export const Sidebar = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.Root, attrs, {
+        render: slots.render,
         default: ({ state }: { state: SidebarRootState }) => h(KindResizable, state.resizable, slots.default),
       });
   },
@@ -74,11 +75,12 @@ export const SidebarPanel = defineComponent({
 export const SidebarHandle = defineComponent({
   name: "SidebarHandle",
   inheritAttrs: false,
-  setup(_, { attrs }) {
+  setup(_, { attrs, slots }) {
     return () => {
       // `class` styles the separator itself, UI SDK's Resizable handle.
       const { class: className, ...rest } = attrs;
       return h(parts.Handle, rest, {
+        render: slots.render,
         default: ({ state }: { state: SidebarHandleState }) =>
           h(KindResizableHandle, {
             "aria-label": state["aria-label"],

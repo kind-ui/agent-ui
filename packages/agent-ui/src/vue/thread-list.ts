@@ -96,19 +96,22 @@ export const ThreadListHeading = defineComponent({
   name: "ThreadListHeading",
   inheritAttrs: false,
   props: { value: { type: String, required: true } },
-  setup(props, { attrs }) {
-    return () =>
-      h(
+  slots: Object as SlotsType<{ render?: Record<string, unknown> }>,
+  setup(props, { attrs, slots }) {
+    return () => {
+      const cell = () =>
+        h(
+          parts.HeadingCell,
+          { value: props.value },
+          stable(({ state }: { state: { label: string } }) => state.label),
+        );
+      // A host's `#render` slot may change, so the heading renders again with it.
+      return h(
         parts.Heading,
         { ...attrs, value: props.value },
-        stable(() =>
-          h(
-            parts.HeadingCell,
-            { value: props.value },
-            stable(({ state }: { state: { label: string } }) => state.label),
-          ),
-        ),
+        slots.render ? { default: cell, render: slots.render } : stable(cell),
       );
+    };
   },
 });
 
@@ -137,17 +140,19 @@ export const ThreadListRow = defineComponent({
   name: "ThreadListRow",
   inheritAttrs: false,
   props: { value: { type: String, required: true } },
-  slots: Object as SlotsType<{ default?: { state: ThreadListLinkState } }>,
+  slots: Object as SlotsType<{ default?: { state: ThreadListLinkState }; render?: Record<string, unknown> }>,
   setup(props, { attrs, slots }) {
     return () => {
       const value = props.value;
       const link = slots.default;
       // A host's link slot may change, so the parts that lead to it render again with it.
       const toLink = link ? (render: () => VNodeChild) => ({ default: render }) : stable;
+      const row = (render: () => VNodeChild) =>
+        slots.render ? { default: render, render: slots.render } : toLink(render);
       return h(
         parts.Row,
         { ...attrs, value },
-        toLink(() => [
+        row(() => [
           h(
             parts.LinkCell,
             { value },
@@ -209,7 +214,10 @@ const items = (state: ThreadListMenuContentState) =>
 export const ThreadListMenuContent = defineComponent({
   name: "ThreadListMenuContent",
   inheritAttrs: false,
-  slots: Object as SlotsType<{ default?: { state: ThreadListMenuContentState } }>,
+  slots: Object as SlotsType<{
+    default?: { state: ThreadListMenuContentState };
+    render?: Record<string, unknown>;
+  }>,
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.MenuContent, null, {
@@ -226,7 +234,10 @@ export const ThreadListMenuContent = defineComponent({
               "data-agent-hidden": "",
               ...attrs,
             },
-            () => (slots.default ? slots.default({ state: plain }) : items(plain)),
+            {
+              default: () => (slots.default ? slots.default({ state: plain }) : items(plain)),
+              render: slots.render,
+            },
           );
         },
       });
