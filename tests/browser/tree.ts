@@ -23,10 +23,38 @@ export function normalizedTree(page: Page, omit: readonly Omitted[] = []): Promi
         .join(" ");
     const lines: string[] = [];
     const range = document.createRange();
+    const block = (node: Node) => {
+      let el = node.parentElement;
+      while (el && /^(inline|contents)/.test(getComputedStyle(el).display)) el = el.parentElement;
+      return el ?? document.body;
+    };
+    // The next non-whitespace character after `offset` in `node`'s block, as a node and offset.
+    const nextCharacter = (node: Text, offset: number): [Text, number] | undefined => {
+      const walker = document.createTreeWalker(block(node), NodeFilter.SHOW_TEXT);
+      walker.currentNode = node;
+      let current: Text | null = node;
+      let from = offset;
+      while (current) {
+        const index = current.data.slice(from).search(/\S/);
+        if (index >= 0) return [current, from + index];
+        current = walker.nextNode() as Text | null;
+        from = 0;
+      }
+      return undefined;
+    };
     const shows = (node: Text, start: number, end: number) => {
       range.setStart(node, start);
       range.setEnd(node, end);
-      return [...range.getClientRects()].some((rect) => rect.width > 0);
+      const rects = [...range.getClientRects()];
+      if (rects.some((rect) => rect.width > 0)) return true;
+      // A space where a line wraps hangs at the line's end with no width, but still separates the words around it.
+      const space = rects[0];
+      const next = space && nextCharacter(node, end);
+      if (!next) return false;
+      range.setStart(next[0], next[1]);
+      range.setEnd(next[0], next[1] + 1);
+      const after = range.getClientRects()[0];
+      return !!after && after.top >= space.bottom;
     };
     // A text node's text with its leading and trailing whitespace kept as one space only where it renders. Text
     // that doesn't render (hidden, in a closed popup) keeps its whitespace and is trimmed as a run.
