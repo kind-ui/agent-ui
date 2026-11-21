@@ -1,36 +1,22 @@
 import {
   type AttachmentState,
-  type AttachmentsOptions,
   type AttachmentsRootState,
   attachmentsPrimitive,
 } from "@kind-ui/agent-ui/core";
-import { createParts, usePart, usePrimitive } from "@ui-sdk/vue/primitive";
-import { type ComponentObjectPropsOptions, defineComponent, h, type PropType } from "vue";
+import { createParts } from "@ui-sdk/vue/primitive";
+import { defineComponent, h } from "vue";
 
-const parts = createParts(attachmentsPrimitive, { root: "ul", item: "li", remove: "span" });
+// `@ui-sdk/vue`'s `createParts` hands the primitive an emitter for every callback, whether or not anything listens, so
+// `onRemove`, whose presence makes the chips removable, is declared a function prop instead, which `@remove` binds.
+const primitive = Object.defineProperty(
+  Object.assign((options: never) => attachmentsPrimitive(options), attachmentsPrimitive, {
+    options: { ...attachmentsPrimitive.options, onRemove: "action" },
+  }),
+  "name",
+  { value: attachmentsPrimitive.name },
+) as typeof attachmentsPrimitive;
 
-// The generated root always hands the primitive an `onRemove` that emits `remove`, so chips would stay removable
-// without a listener. This root passes `onRemove` only while the host listens, as React's does, and takes every other
-// option from the generated root's props.
-const optionProps = (parts.Root as unknown as { props: ComponentObjectPropsOptions }).props;
-const optionKeys = Object.keys(optionProps);
-
-const Root = defineComponent({
-  name: "AttachmentsRoot",
-  inheritAttrs: false,
-  props: {
-    ...optionProps,
-    onRemove: Function as PropType<NonNullable<AttachmentsOptions["onRemove"]>>,
-  },
-  setup(props, { attrs }) {
-    const handle = usePrimitive(attachmentsPrimitive, () => {
-      const options: Record<string, unknown> = { onRemove: props.onRemove };
-      for (const key of optionKeys) options[key] = (props as Record<string, unknown>)[key];
-      return options as AttachmentsOptions;
-    });
-    return usePart(handle, "root", undefined, () => attrs, "ul");
-  },
-});
+const parts = createParts(primitive, { root: "ul", item: "li", remove: "span" });
 
 /** One chip: an image's preview or a file icon, the name, the size or error, and a remove button. */
 export const Attachment = defineComponent({
@@ -70,6 +56,6 @@ export const Attachments = defineComponent({
   name: "Attachments",
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
-    return () => h(Root, attrs, { ...slots, default: slots.default ?? rows });
+    return () => h(parts.Root, attrs, { ...slots, default: slots.default ?? rows });
   },
 }) as unknown as typeof parts.Root;

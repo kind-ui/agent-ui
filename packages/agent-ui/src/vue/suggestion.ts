@@ -1,11 +1,10 @@
 import {
   type SuggestionItemState,
-  type SuggestionOptions,
   type SuggestionRootState,
   suggestionPrimitive,
 } from "@kind-ui/agent-ui/core";
-import { createParts, usePart, usePrimitive } from "@ui-sdk/vue/primitive";
-import { type Component, type ComponentObjectPropsOptions, defineComponent, h, type PropType } from "vue";
+import { createParts } from "@ui-sdk/vue/primitive";
+import { type Component, defineComponent, h } from "vue";
 import {
   KindCarousel,
   KindCarouselContent,
@@ -15,7 +14,17 @@ import {
   KindCarouselViewport,
 } from "./internal/carousel.js";
 
-const parts = createParts(suggestionPrimitive, { root: "div", item: "button" });
+// `@ui-sdk/vue`'s `createParts` hands the primitive an emitter for every callback, whether or not anything listens, so
+// `onPick`, whose presence makes the chips pickable, is declared a function prop instead, which `@pick` binds.
+const primitive = Object.defineProperty(
+  Object.assign((options: never) => suggestionPrimitive(options), suggestionPrimitive, {
+    options: { ...suggestionPrimitive.options, onPick: "action" },
+  }),
+  "name",
+  { value: suggestionPrimitive.name },
+) as typeof suggestionPrimitive;
+
+const parts = createParts(primitive, { root: "div", item: "button" });
 
 // Lucide "chevron-left" and "chevron-right", see THIRD_PARTY_NOTICES.md.
 const chevron = (d: string) => () =>
@@ -33,29 +42,6 @@ const chevron = (d: string) => () =>
 const chevronLeft = chevron("m15 18-6-6 6-6");
 const chevronRight = chevron("m9 18 6-6-6-6");
 
-// The generated root always hands the primitive an `onPick` that emits `pick`, so the chips would stay pickable
-// without a listener. This root passes `onPick` only while the host listens, as React's does, and takes every other
-// option from the generated root's props.
-const optionProps = (parts.Root as unknown as { props: ComponentObjectPropsOptions }).props;
-const optionKeys = Object.keys(optionProps);
-
-const Root = defineComponent({
-  name: "SuggestionRoot",
-  inheritAttrs: false,
-  props: {
-    ...optionProps,
-    onPick: Function as PropType<NonNullable<SuggestionOptions["onPick"]>>,
-  },
-  setup(props, { attrs }) {
-    const handle = usePrimitive(suggestionPrimitive, () => {
-      const options: Record<string, unknown> = { onPick: props.onPick };
-      for (const key of optionKeys) options[key] = (props as Record<string, unknown>)[key];
-      return options as SuggestionOptions;
-    });
-    return usePart(handle, "root", undefined, () => attrs, "div");
-  },
-});
-
 /**
  * A row of prompts a person can send in one press. It scrolls sideways when the prompts don't fit, with Previous and
  * Next beside it, or wraps onto more lines with `layout="wrap"`. Anything in its default slot replaces the row and its
@@ -66,7 +52,7 @@ export const Suggestion = defineComponent({
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
     return () =>
-      h(Root, attrs, {
+      h(parts.Root, attrs, {
         ...slots,
         default: ({ state }: { state: SuggestionRootState }) =>
           state.layout === "wrap"
