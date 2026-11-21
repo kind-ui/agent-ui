@@ -10,12 +10,8 @@
   let { children: content, ...props }: ComponentProps<typeof parts.Approval> = $props();
 </script>
 
-<parts.Approval {...props}>
-  {#snippet children(state)}
-    {#if content}
-      {@render content(state)}
-    {:else}
-      <Confirmation
+<parts.Approval {...props}
+  >{#snippet children(state)}{#if content}{@render content(state)}{:else}<Confirmation
         approval={state.approval}
         label={state.label}
         reason={state.reason}
@@ -23,7 +19,4 @@
         motion={state.motion}
         onApprove={state.onApprove}
         onDeny={state.onDeny}
-      />
-    {/if}
-  {/snippet}
-</parts.Approval>
+    />{/if}{/snippet}</parts.Approval>

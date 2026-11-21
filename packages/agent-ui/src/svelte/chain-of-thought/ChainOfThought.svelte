@@ -17,19 +17,13 @@
   }: ComponentProps<typeof parts.Root> = $props();
 </script>
 
-<parts.Root {...props} bind:open bind:openSteps>
-  {#snippet children(state)}
-    {#if content}
-      {@render content(state)}
-    {:else}
-      <parts.Trigger>
-        <parts.Icon />
-        <ChainOfThoughtTitle />
-        <ChainOfThoughtMeta />
-      </parts.Trigger>
-      <parts.Content>
-        <ChainOfThoughtList />
-      </parts.Content>
-    {/if}
-  {/snippet}
-</parts.Root>
+<parts.Root {...props} bind:open bind:openSteps
+  >{#snippet children(state)}{#if content}{@render content(state)}{:else}<parts.Trigger
+        ><parts.Icon
+        /><ChainOfThoughtTitle
+        /><ChainOfThoughtMeta
+      /></parts.Trigger
+      ><parts.Content
+        ><ChainOfThoughtList
+      /></parts.Content
+    >{/if}{/snippet}</parts.Root>

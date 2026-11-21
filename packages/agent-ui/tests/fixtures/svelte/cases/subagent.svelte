@@ -44,8 +44,8 @@
   });
 </script>
 
-<div class="flex w-[28rem] flex-col gap-4 p-6">
-  <Subagent
+<div class="flex w-[28rem] flex-col gap-4 p-6"
+  ><Subagent
     id="subagent"
     agentName="Code reviewer"
     {status}
@@ -53,34 +53,28 @@
     result={RESULT}
     motion={variant === "reduced" ? "reduced" : undefined}
     onCancel={() => new Promise<void>((resolve, reject) => cancels.push({ resolve, reject }))}
-  >
-    <StepList aria-label="Code reviewer steps">
-      {#each calls as c (c.toolCallId)}
-        <Tool call={c}>
-          <StepListItem value={c.toolCallId}>
-            {#snippet render({ props }: { props: Record<string, unknown> })}
-              <ToolTrigger {...props}>
-                <ToolIcon />
-                <ToolTitle />
-              </ToolTrigger>
-            {/snippet}
-          </StepListItem>
-          <ToolContent>
-            <ToolInput />
-          </ToolContent>
-        </Tool>
-      {/each}
-    </StepList>
-  </Subagent>
-  <Subagent
+    ><StepList aria-label="Code reviewer steps"
+      >{#each calls as c (c.toolCallId)}<Tool call={c}
+          ><StepListItem value={c.toolCallId}
+            >{#snippet render({ props }: { props: Record<string, unknown> })}<ToolTrigger {...props}
+                ><ToolIcon
+                /><ToolTitle
+              /></ToolTrigger
+            >{/snippet}</StepListItem
+          ><ToolContent
+            ><ToolInput
+          /></ToolContent
+        ></Tool
+      >{/each}</StepList
+  ></Subagent
+  ><Subagent
     id="quick"
     agentName="Docs writer"
     avatarSrc={AVATAR}
     status="running"
     agentConfirm={false}
     onCancel={() => {}}
-  />
-  <Subagent id="readonly" agentName="Test runner" status="running" />
-  <Subagent id="done" agentName="Release notes bot" status="complete" durationSeconds={4} result={RESULT} />
-  <Subagent id="empty" agentName="Linter" status="complete" />
-</div>
+  /><Subagent id="readonly" agentName="Test runner" status="running"
+  /><Subagent id="done" agentName="Release notes bot" status="complete" durationSeconds={4} result={RESULT}
+  /><Subagent id="empty" agentName="Linter" status="complete"
+/></div>

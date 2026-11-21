@@ -9,14 +9,6 @@
   let { children: content, ...props }: ComponentProps<typeof parts.Deny> = $props();
 </script>
 
-<parts.Deny {...props}>
-  {#snippet children(state)}
-    {#if content}
-      {@render content(state)}
-    {:else}
-      <!-- The mark shows only while the button's call is pending (controls.css). -->
-      <span data-kind-pending-mark="" data-status-mark="" data-status="running" aria-hidden="true"></span>
-      {state.label}
-    {/if}
-  {/snippet}
-</parts.Deny>
+<parts.Deny {...props}
+  >{#snippet children(state)}{#if content}{@render content(state)}{:else}<!-- The mark shows only while the button's call is pending (controls.css). --><span data-kind-pending-mark="" data-status-mark="" data-status="running" aria-hidden="true"></span
+      >{state.label}{/if}{/snippet}</parts.Deny>

@@ -8,10 +8,7 @@
   let { children, ...props }: ComponentProps<typeof parts.Item> = $props();
 </script>
 
-{#snippet defaultParts()}
-  <parts.ItemIcon />
-  <PlanItemTitle />
-  <PlanItemDescription />
-{/snippet}
-
-<parts.Item {...props} children={children ?? defaultParts} />
+{#snippet defaultParts()}<parts.ItemIcon
+  /><PlanItemTitle
+  /><PlanItemDescription
+/>{/snippet}<parts.Item {...props} children={children ?? defaultParts} />

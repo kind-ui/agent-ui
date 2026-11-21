@@ -8,14 +8,8 @@
   let { children: content, ...props }: ComponentProps<typeof parts.ItemTrigger> = $props();
 </script>
 
-<parts.ItemTrigger {...props}>
-  {#snippet children(state)}
-    {#if content}
-      {@render content(state)}
-    {:else}
-      <parts.ItemIcon />
-      <ChainOfThoughtItemTitle />
-      <ChainOfThoughtItemMeta />
-    {/if}
-  {/snippet}
-</parts.ItemTrigger>
+<parts.ItemTrigger {...props}
+  >{#snippet children(state)}{#if content}{@render content(state)}{:else}<parts.ItemIcon
+      /><ChainOfThoughtItemTitle
+      /><ChainOfThoughtItemMeta
+    />{/if}{/snippet}</parts.ItemTrigger>

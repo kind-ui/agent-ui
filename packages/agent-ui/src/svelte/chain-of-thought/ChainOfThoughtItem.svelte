@@ -7,8 +7,5 @@
   let { children: content, ...props }: ComponentProps<typeof parts.Item> = $props();
 </script>
 
-<parts.Item {...props}>
-  {#snippet children(state)}
-    {#if content}{@render content(state)}{:else}<ChainOfThoughtItemTrigger />{/if}
-  {/snippet}
-</parts.Item>
+<parts.Item {...props}
+  >{#snippet children(state)}{#if content}{@render content(state)}{:else}<ChainOfThoughtItemTrigger />{/if}{/snippet}</parts.Item>

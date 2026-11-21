@@ -21,16 +21,16 @@
   } = $props();
 </script>
 
-<parts.Root {...props} bind:open>
-  <parts.Trigger>
-    <parts.Icon />
-    <SubagentAvatar />
-    <SubagentTitle />
-    <SubagentMeta />
-  </parts.Trigger>
-  <parts.Content>
-    <parts.Children>{@render steps?.()}</parts.Children>
-  </parts.Content>
-  <SubagentCancel />
-  <SubagentResult />
-</parts.Root>
+<parts.Root {...props} bind:open
+  ><parts.Trigger
+    ><parts.Icon
+    /><SubagentAvatar
+    /><SubagentTitle
+    /><SubagentMeta
+  /></parts.Trigger
+  ><parts.Content
+    ><parts.Children>{@render steps?.()}</parts.Children
+  ></parts.Content
+  ><SubagentCancel
+  /><SubagentResult
+/></parts.Root>

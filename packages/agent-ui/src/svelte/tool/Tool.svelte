@@ -15,22 +15,16 @@
   let { children: content, open = $bindable(), ...props }: ComponentProps<typeof parts.Root> = $props();
 </script>
 
-<parts.Root {...props} bind:open>
-  {#snippet children(state)}
-    {#if content}
-      {@render content(state)}
-    {:else}
-      <parts.Trigger>
-        <parts.Icon />
-        <ToolTitle />
-        <ToolMeta />
-      </parts.Trigger>
-      <parts.Content>
-        <ToolInput />
-        <ToolOutput />
-        <ToolError />
-      </parts.Content>
-      <ToolApproval />
-    {/if}
-  {/snippet}
-</parts.Root>
+<parts.Root {...props} bind:open
+  >{#snippet children(state)}{#if content}{@render content(state)}{:else}<parts.Trigger
+        ><parts.Icon
+        /><ToolTitle
+        /><ToolMeta
+      /></parts.Trigger
+      ><parts.Content
+        ><ToolInput
+        /><ToolOutput
+        /><ToolError
+      /></parts.Content
+      ><ToolApproval
+    />{/if}{/snippet}</parts.Root>

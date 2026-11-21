@@ -10,17 +10,11 @@
   let { children: content, ...props }: ComponentProps<typeof parts.Progress> = $props();
 </script>
 
-<parts.Progress {...props}>
-  {#snippet children(state)}
-    {#if content}
-      {@render content(state)}
-    {:else}
-      <Progress value={state.value}>
-        <ProgressLabel>{state.label}</ProgressLabel>
-        <ProgressTrack>
-          <ProgressIndicator />
-        </ProgressTrack>
-      </Progress>
-    {/if}
-  {/snippet}
-</parts.Progress>
+<parts.Progress {...props}
+  >{#snippet children(state)}{#if content}{@render content(state)}{:else}<Progress value={state.value}
+        ><ProgressLabel>{state.label}</ProgressLabel
+        ><ProgressTrack
+          ><ProgressIndicator
+        /></ProgressTrack
+      ></Progress
+    >{/if}{/snippet}</parts.Progress>

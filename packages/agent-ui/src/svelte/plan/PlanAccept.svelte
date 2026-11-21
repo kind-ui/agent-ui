@@ -9,13 +9,6 @@
   let { children: content, ...props }: ComponentProps<typeof parts.Accept> = $props();
 </script>
 
-<parts.Accept {...props}>
-  {#snippet children(state)}
-    {#if content}
-      {@render content(state)}
-    {:else}
-      <span data-kind-pending-mark="" data-status-mark="" data-status="running" aria-hidden="true"></span>
-      Accept plan
-    {/if}
-  {/snippet}
-</parts.Accept>
+<parts.Accept {...props}
+  >{#snippet children(state)}{#if content}{@render content(state)}{:else}<span data-kind-pending-mark="" data-status-mark="" data-status="running" aria-hidden="true"></span
+      >Accept plan{/if}{/snippet}</parts.Accept>

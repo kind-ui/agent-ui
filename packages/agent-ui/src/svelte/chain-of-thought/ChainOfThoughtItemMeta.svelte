@@ -6,8 +6,5 @@
   let { children: content, ...props }: ComponentProps<typeof parts.ItemMeta> = $props();
 </script>
 
-<parts.ItemMeta {...props}>
-  {#snippet children(state)}
-    {#if content}{@render content(state)}{:else}{state.duration}{/if}
-  {/snippet}
-</parts.ItemMeta>
+<parts.ItemMeta {...props}
+  >{#snippet children(state)}{#if content}{@render content(state)}{:else}{state.duration}{/if}{/snippet}</parts.ItemMeta>

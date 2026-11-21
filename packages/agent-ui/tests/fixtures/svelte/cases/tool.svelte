@@ -75,8 +75,6 @@
   });
 </script>
 
-<div class="flex w-[28rem] flex-col gap-2 p-6">
-  {#each Object.entries(rows) as [id, box] (id)}
-    <Tool {id} {...box.row} />
-  {/each}
-</div>
+<div class="flex w-[28rem] flex-col gap-2 p-6"
+  >{#each Object.entries(rows) as [id, box] (id)}<Tool {id} {...box.row}
+  />{/each}</div>

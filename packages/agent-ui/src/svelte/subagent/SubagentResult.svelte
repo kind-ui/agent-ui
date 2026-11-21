@@ -7,12 +7,6 @@
   let { children: content, ...props }: ComponentProps<typeof parts.Result> = $props();
 </script>
 
-<parts.Result {...props}>
-  {#snippet children(state)}
-    {#if content}
-      {@render content(state)}
-    {:else if state.result}
-      <Markdown source={state.result} />
-    {/if}
-  {/snippet}
-</parts.Result>
+<parts.Result {...props}
+  >{#snippet children(state)}{#if content}{@render content(state)}{:else if state.result}<Markdown source={state.result}
+    />{/if}{/snippet}</parts.Result>

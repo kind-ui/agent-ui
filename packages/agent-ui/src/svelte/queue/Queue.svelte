@@ -12,19 +12,11 @@
   let { children, ...props }: ComponentProps<typeof parts.Root> = $props();
 </script>
 
-{#snippet section(value: "pending" | "complete")}
-  <parts.Section {value}>
-    <QueueSectionTrigger />
-    <parts.SectionContent>
-      <QueueList />
-    </parts.SectionContent>
-  </parts.Section>
-{/snippet}
-
-{#snippet fallback()}
-  {@render section("pending")}
-  {@render section("complete")}
-  <QueueInstructions />
-{/snippet}
-
-<parts.Root {...props} children={children ?? fallback} />
+{#snippet section(value: "pending" | "complete")}<parts.Section {value}
+    ><QueueSectionTrigger
+    /><parts.SectionContent
+      ><QueueList
+    /></parts.SectionContent
+  ></parts.Section
+>{/snippet}{#snippet fallback()}{@render section("pending")}{@render section("complete")}<QueueInstructions
+/>{/snippet}<parts.Root {...props} children={children ?? fallback} />

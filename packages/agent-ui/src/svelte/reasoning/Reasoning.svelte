@@ -11,16 +11,10 @@
   let { children: content, open = $bindable(), ...props }: ComponentProps<typeof parts.Root> = $props();
 </script>
 
-<parts.Root {...props} bind:open>
-  {#snippet children(state)}
-    {#if content}
-      {@render content(state)}
-    {:else}
-      <parts.Trigger>
-        <parts.Icon />
-        <ReasoningTitle />
-      </parts.Trigger>
-      <ReasoningContent />
-    {/if}
-  {/snippet}
-</parts.Root>
+<parts.Root {...props} bind:open
+  >{#snippet children(state)}{#if content}{@render content(state)}{:else}<parts.Trigger
+        ><parts.Icon
+        /><ReasoningTitle
+      /></parts.Trigger
+      ><ReasoningContent
+    />{/if}{/snippet}</parts.Root>

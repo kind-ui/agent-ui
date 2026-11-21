@@ -6,8 +6,5 @@
   let { children: content, ...props }: ComponentProps<typeof parts.Error> = $props();
 </script>
 
-<parts.Error {...props}>
-  {#snippet children(state)}
-    {#if content}{@render content(state)}{:else}Decision not sent. Try again.{/if}
-  {/snippet}
-</parts.Error>
+<parts.Error {...props}
+  >{#snippet children(state)}{#if content}{@render content(state)}{:else}Decision not sent. Try again.{/if}{/snippet}</parts.Error>

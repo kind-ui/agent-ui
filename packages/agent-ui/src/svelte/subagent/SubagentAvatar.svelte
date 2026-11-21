@@ -7,14 +7,8 @@
   let { children: content, ...props }: ComponentProps<typeof parts.Avatar> = $props();
 </script>
 
-<parts.Avatar {...props}>
-  {#snippet children(state)}
-    {#if content}
-      {@render content(state)}
-    {:else}
-      <Avatar>
-        <AvatarImage src={state.src} alt="" />
-      </Avatar>
-    {/if}
-  {/snippet}
-</parts.Avatar>
+<parts.Avatar {...props}
+  >{#snippet children(state)}{#if content}{@render content(state)}{:else}<Avatar
+        ><AvatarImage src={state.src} alt=""
+      /></Avatar
+    >{/if}{/snippet}</parts.Avatar>

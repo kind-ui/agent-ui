@@ -12,19 +12,13 @@
   let { children: content, open = $bindable(), ...props }: ComponentProps<typeof parts.Root> = $props();
 </script>
 
-<parts.Root {...props} bind:open>
-  {#snippet children(state)}
-    {#if content}
-      {@render content(state)}
-    {:else}
-      <parts.Trigger>
-        <parts.Icon />
-        <TaskTitle />
-        <TaskMeta />
-      </parts.Trigger>
-      <parts.Content>
-        <TaskList />
-      </parts.Content>
-    {/if}
-  {/snippet}
-</parts.Root>
+<parts.Root {...props} bind:open
+  >{#snippet children(state)}{#if content}{@render content(state)}{:else}<parts.Trigger
+        ><parts.Icon
+        /><TaskTitle
+        /><TaskMeta
+      /></parts.Trigger
+      ><parts.Content
+        ><TaskList
+      /></parts.Content
+    >{/if}{/snippet}</parts.Root>
