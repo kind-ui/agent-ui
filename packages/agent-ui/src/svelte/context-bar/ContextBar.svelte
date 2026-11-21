@@ -3,7 +3,7 @@
   Delete, Backspace or a chip's remove control removes it. Any `children` replace the list, the button and the popover.
 -->
 <script lang="ts">
-  import type { ComponentProps, Snippet } from "svelte";
+  import type { ComponentProps } from "svelte";
   import ContextBarContent from "./ContextBarContent.svelte";
   import ContextBarList from "./ContextBarList.svelte";
   import ContextBarOverflow from "./ContextBarOverflow.svelte";
@@ -13,10 +13,10 @@
   type RootProps = ComponentProps<typeof parts.Root>;
   type Props = Omit<RootProps, "chips"> & {
     chips?: readonly ContextBarChipData[];
-    children?: Snippet;
+    children?: RootProps["children"];
   };
 
-  let { open = $bindable(), id, render: own, children, ...props }: Props = $props();
+  let { open = $bindable(), id, render: own, children: content, ...props }: Props = $props();
 </script>
 
 <!--
@@ -29,5 +29,7 @@
       <div {...handed.props} {id}>{@render handed.children?.(handed.state)}</div>
     {/if}
   {/snippet}
-  {#if children}{@render children()}{:else}<ContextBarList /><ContextBarOverflow /><ContextBarContent />{/if}
+  {#snippet children(state: Parameters<NonNullable<RootProps["children"]>>[0])}
+    {#if content}{@render content(state)}{:else}<ContextBarList /><ContextBarOverflow /><ContextBarContent />{/if}
+  {/snippet}
 </parts.Root>

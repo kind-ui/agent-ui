@@ -1,13 +1,13 @@
 <!-- The popover of the chips that don't fit, unless you pass children. Focus moves to the first. -->
 <script lang="ts">
   import { CONTEXT_BAR_FIRST_ITEM } from "@kind-ui/agent-ui/core";
-  import type { ComponentProps, Snippet } from "svelte";
+  import type { ComponentProps } from "svelte";
   import ContextBarOverflowList from "./ContextBarOverflowList.svelte";
   import ContextBarTitle from "./ContextBarTitle.svelte";
   import { parts } from "./parts.js";
 
   type ContentProps = ComponentProps<typeof parts.Content>;
-  type Props = ContentProps & { children?: Snippet };
+  type Props = ContentProps;
 
   let { children: content, render: own, ...props }: Props = $props();
 </script>
@@ -21,7 +21,9 @@
       {@render element(handed)}
     {/if}
   {/snippet}
-  {#if content}{@render content()}{:else}<ContextBarTitle /><ContextBarOverflowList />{/if}
+  {#snippet children(state: Parameters<NonNullable<ContentProps["children"]>>[0])}
+    {#if content}{@render content(state)}{:else}<ContextBarTitle /><ContextBarOverflowList />{/if}
+  {/snippet}
 </parts.Content>
 
 {#snippet element(handed: Parameters<NonNullable<ContentProps["render"]>>[0])}

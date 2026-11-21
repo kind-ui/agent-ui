@@ -3,15 +3,15 @@
   keyboard focus and press. Any `children` replace the default parts.
 -->
 <script lang="ts">
-  import type { ComponentProps, Snippet } from "svelte";
+  import type { ComponentProps } from "svelte";
   import ContextMeterContent from "./ContextMeterContent.svelte";
   import ContextMeterTrigger from "./ContextMeterTrigger.svelte";
   import { parts } from "./parts.js";
 
   type RootProps = ComponentProps<typeof parts.Root>;
-  type Props = RootProps & { children?: Snippet };
+  type Props = RootProps;
 
-  let { open = $bindable(), id, render: own, children, ...props }: Props = $props();
+  let { open = $bindable(), id, render: own, children: content, ...props }: Props = $props();
 </script>
 
 <!--
@@ -24,5 +24,7 @@
       <div {...handed.props} {id}>{@render handed.children?.(handed.state)}</div>
     {/if}
   {/snippet}
-  {#if children}{@render children()}{:else}<ContextMeterTrigger /><ContextMeterContent />{/if}
+  {#snippet children(state: Parameters<NonNullable<RootProps["children"]>>[0])}
+    {#if content}{@render content(state)}{:else}<ContextMeterTrigger /><ContextMeterContent />{/if}
+  {/snippet}
 </parts.Root>

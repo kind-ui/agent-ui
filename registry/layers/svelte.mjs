@@ -92,6 +92,7 @@ export default {
     "wave-3/context-meter.spec.ts",
     "wave-5/dictation.spec.ts",
     "wave-5/composed-events.spec.ts",
+    "wave-1/budgets.spec.ts",
 
     // framework-svelte-4: indicators, notices and files
 

@@ -1,14 +1,16 @@
 <!-- Opens the details. Holds the meter unless you pass children. -->
 <script lang="ts">
-  import type { ComponentProps, Snippet } from "svelte";
+  import type { ComponentProps } from "svelte";
   import ContextMeterValue from "./ContextMeterValue.svelte";
   import { parts } from "./parts.js";
 
-  type Props = ComponentProps<typeof parts.Trigger> & { children?: Snippet };
+  type Props = ComponentProps<typeof parts.Trigger>;
 
-  let { children, ...props }: Props = $props();
+  let { children: content, ...props }: Props = $props();
 </script>
 
 <parts.Trigger {...props}>
-  {#if children}{@render children()}{:else}<ContextMeterValue />{/if}
+  {#snippet children(state: Parameters<NonNullable<Props["children"]>>[0])}
+    {#if content}{@render content(state)}{:else}<ContextMeterValue />{/if}
+  {/snippet}
 </parts.Trigger>
