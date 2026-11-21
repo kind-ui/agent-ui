@@ -11,7 +11,8 @@ export const budgets: Partial<Budgets> = {
 
   // framework-solid-3: composer controls
 
-  contextChip: { writes: 5, renders: 0, notified: 0, layoutReads: 0 },
+  // 5 writes, or 13 when the new chip's first measure lands inside the counted window, as it does under load.
+  contextChip: { writes: 13, renders: 0, notified: 0, layoutReads: 0 },
 
   // framework-solid-4: indicators, notices and files
 

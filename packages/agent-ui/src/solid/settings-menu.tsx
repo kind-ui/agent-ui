@@ -11,6 +11,7 @@ import { MenuItemIndicator, MenuTrigger } from "@ui-sdk/solid/menu";
 import { createParts } from "@ui-sdk/solid/primitive";
 import { For, Match, omit, Show, Switch } from "solid-js";
 import {
+  childrenOr,
   KindMenu,
   KindMenuCheckboxItem,
   KindMenuContent,
@@ -33,10 +34,12 @@ const parts = createParts(settingsMenuPrimitive, { root: "div", trigger: "span",
 
 type Entry = NonNullable<SettingsMenuOptions["settings"]>[number];
 type Choice = Extract<Entry, { type: "choice" }>;
-// A function draws a new copy wherever the icon shows, since an element sits in one place only.
 type Icon = string | JSX.Element | (() => JSX.Element);
 
-/** A setting, whose `icon` and options' `icon`s are image URLs or elements such as an inline `svg`. */
+/**
+ * A setting, whose `icon` and options' `icon`s are image URLs, elements such as an inline `svg`, or functions returning
+ * one, which draw a new copy wherever the icon shows.
+ */
 export type SettingsMenuSetting =
   | (Extract<Entry, { type: "toggle" }> & { icon?: Icon })
   | (Omit<Choice, "options"> & { icon?: Icon; options: (Choice["options"][number] & { icon?: Icon })[] });
@@ -51,8 +54,8 @@ type ChoiceRow = Extract<SettingsMenuRow, { type: "choice" }>;
 
 /** A choice's options in one radio group, under their group labels, then its actions. */
 function Choices(props: { row: ChoiceRow }) {
-  const radios = (options: ChoiceRow["groups"][number]["options"]) => (
-    <For each={options} keyed={(option) => option.value}>
+  const radios = (options: () => ChoiceRow["groups"][number]["options"]) => (
+    <For each={options()} keyed={(option) => option.value}>
       {(option) => (
         <KindMenuRadioItem
           value={option().value}
@@ -74,10 +77,10 @@ function Choices(props: { row: ChoiceRow }) {
         <For each={props.row.groups} keyed={false}>
           {(group) => (
             // A labelled group sits inside the one radio group, which UI SDK keys by the setting's `id`.
-            <Show when={group().label !== undefined} fallback={radios(group().options)}>
+            <Show when={group().label !== undefined} fallback={radios(() => group().options)}>
               <KindMenuGroup>
                 <KindMenuGroupLabel>{group().label}</KindMenuGroupLabel>
-                {radios(group().options)}
+                {radios(() => group().options)}
               </KindMenuGroup>
             </Show>
           )}
@@ -211,9 +214,9 @@ export function SettingsMenuContent(props: SettingsMenuContentProps) {
     <parts.Content>
       {(state: SettingsMenuContentState) => (
         <KindMenuContent align="start" sideOffset={6} {...omit(props, "children")}>
-          {typeof props.children === "function"
-            ? props.children(state)
-            : (props.children ?? <SettingsMenuRows rows={state.rows} />)}
+          {childrenOr(props.children, state, () => (
+            <SettingsMenuRows rows={state.rows} />
+          ))}
         </KindMenuContent>
       )}
     </parts.Content>

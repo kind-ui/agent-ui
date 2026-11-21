@@ -9,12 +9,19 @@ import type { ComponentProps, JSX } from "@solidjs/web";
 import { MenuTrigger } from "@ui-sdk/solid/menu";
 import { createParts } from "@ui-sdk/solid/primitive";
 import { createMemo, For, omit, Show } from "solid-js";
-import { KindMenu, KindMenuContent, KindMenuItemIcon, menuProps, menuTriggerProps } from "./internal/menu.js";
+import { iconElement } from "./internal/kind-class.js";
+import {
+  childrenOr,
+  KindMenu,
+  KindMenuContent,
+  KindMenuItemIcon,
+  menuProps,
+  menuTriggerProps,
+} from "./internal/menu.js";
 import { SettingsMenuRows, type SettingsMenuSetting } from "./settings-menu.js";
 
 const parts = createParts(modelControlPrimitive, { root: "div", trigger: "span", content: "div" });
 
-// A function draws a new copy wherever the icon shows, as the trigger and the menu both do.
 type Icon = string | JSX.Element | (() => JSX.Element);
 
 /** A model, whose `icon` is an image URL, an element such as an inline `svg`, or a function returning one. */
@@ -55,7 +62,7 @@ function TriggerContent(props: { state: ModelControlTriggerState }) {
     <>
       <Show when={icon() !== undefined}>
         <KindMenuItemIcon>
-          {typeof icon() === "string" ? <img src={icon() as string} alt="" /> : (icon() as JSX.Element)}
+          {typeof icon() === "string" ? <img src={icon() as string} alt="" /> : iconElement(icon())}
         </KindMenuItemIcon>
       </Show>
       <span data-model-control-model="">{props.state.model.label}</span>
@@ -94,9 +101,9 @@ export function ModelControlTrigger(props: ModelControlTriggerProps) {
       {(state: ModelControlTriggerState) => (
         // Hidden from agents, which use the Model Control's own actions.
         <MenuTrigger {...menuTriggerProps(state)} data-agent-hidden="" {...omit(props, "children")}>
-          {typeof props.children === "function"
-            ? props.children(state)
-            : (props.children ?? <TriggerContent state={state} />)}
+          {childrenOr(props.children, state, () => (
+            <TriggerContent state={state} />
+          ))}
         </MenuTrigger>
       )}
     </parts.Trigger>
@@ -114,9 +121,9 @@ export function ModelControlContent(props: ModelControlContentProps) {
     <parts.Content>
       {(state: SettingsMenuContentState) => (
         <KindMenuContent align="start" sideOffset={6} {...omit(props, "children")}>
-          {typeof props.children === "function"
-            ? props.children(state)
-            : (props.children ?? <SettingsMenuRows rows={state.rows} />)}
+          {childrenOr(props.children, state, () => (
+            <SettingsMenuRows rows={state.rows} />
+          ))}
         </KindMenuContent>
       )}
     </parts.Content>

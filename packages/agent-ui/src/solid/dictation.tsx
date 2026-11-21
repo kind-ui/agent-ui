@@ -5,7 +5,7 @@ import {
 } from "@kind-ui/agent-ui/core";
 import type { ComponentProps } from "@solidjs/web";
 import { createParts } from "@ui-sdk/solid/primitive";
-import { For, omit } from "solid-js";
+import { omit, Repeat } from "solid-js";
 
 const parts = createParts(dictationButtonPrimitive, {
   root: "div",
@@ -35,9 +35,7 @@ export const DictationStatusIcon = parts.StatusIcon;
 
 // Levels are live state written as CSS variables, so only a change of `bars` renders the bars again.
 const bars = (state: DictationWaveformState) => (
-  <For each={Array.from({ length: state.bars })} keyed={false}>
-    {(_, index) => <DictationBar value={String(index)} />}
-  </For>
+  <Repeat count={state.bars}>{(index) => <DictationBar value={String(index)} />}</Repeat>
 );
 
 /** The waveform, one `DictationBar` per level unless you pass children. Shown while listening. */

@@ -24,6 +24,7 @@ import {
   KindCommandSeparator,
   KindCommandStatus,
 } from "./internal/command.js";
+import { iconElement } from "./internal/kind-class.js";
 
 const parts = createParts(pickerPrimitive, {
   root: "div",
@@ -43,13 +44,12 @@ export type PickerChoice = Omit<NonNullable<PickerOptions["items"]>[number], "ic
   items?: PickerChoice[];
 };
 
-/** A footer action, whose `icon` is an image URL or an element. */
+/** A footer action, whose `icon` is an image URL, an element, or a function returning one. */
 export type PickerFooterAction = Omit<NonNullable<PickerOptions["actions"]>[number], "icon"> & {
   icon?: string | JSX.Element | (() => JSX.Element);
 };
 
-const iconOf = (icon: unknown) =>
-  typeof icon === "string" ? <img src={icon} alt="" /> : (icon as JSX.Element | undefined);
+const iconOf = (icon: unknown) => (typeof icon === "string" ? <img src={icon} alt="" /> : iconElement(icon));
 
 export type PickerProps = Omit<ComponentProps<typeof parts.Root>, "children" | "items" | "actions"> & {
   items?: PickerChoice[];

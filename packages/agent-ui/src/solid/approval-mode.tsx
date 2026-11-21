@@ -12,6 +12,7 @@ import { MenuTrigger } from "@ui-sdk/solid/menu";
 import { createParts } from "@ui-sdk/solid/primitive";
 import { For, omit, Show } from "solid-js";
 import {
+  childrenOr,
   KindMenu,
   KindMenuContent,
   KindMenuGroupLabel,
@@ -96,9 +97,9 @@ export function ApprovalModeTrigger(props: ApprovalModeTriggerProps) {
       {(trigger: ApprovalModeTriggerState) => (
         // Hidden from agents, which use the Approval Mode's own actions.
         <MenuTrigger {...menuTriggerProps(trigger)} data-agent-hidden="" {...omit(props, "children")}>
-          {typeof props.children === "function"
-            ? props.children(trigger)
-            : (props.children ?? <TriggerValue mode={trigger.mode} />)}
+          {childrenOr(props.children, trigger, () => (
+            <TriggerValue mode={trigger.mode} />
+          ))}
         </MenuTrigger>
       )}
     </parts.Trigger>
@@ -123,9 +124,9 @@ export function ApprovalModeContent(props: ApprovalModeContentProps) {
             <div data-approval-mode-header="">
               <KindMenuGroupLabel>{state.label}</KindMenuGroupLabel>
             </div>
-            {typeof props.children === "function"
-              ? props.children(state)
-              : (props.children ?? <ApprovalModeRows rows={state.rows} />)}
+            {childrenOr(props.children, state, () => (
+              <ApprovalModeRows rows={state.rows} />
+            ))}
           </KindMenuRadioGroup>
           <Show when={state.learnMore}>
             <KindMenuSeparator data-approval-mode-learn-more="" />
@@ -133,13 +134,18 @@ export function ApprovalModeContent(props: ApprovalModeContentProps) {
               value={APPROVAL_MODE_LEARN_MORE}
               data-approval-mode-learn-more=""
               data-menu-inset=""
-              render={
-                state.learnMoreHref
-                  ? (linkProps: JSX.HTMLAttributes<HTMLAnchorElement>) => (
-                      <a {...linkProps} href={state.learnMoreHref} />
-                    )
-                  : undefined
-              }
+              // UI SDK reads `render` once, so the element follows `learnMoreHref` inside it.
+              render={(itemProps: JSX.HTMLAttributes<HTMLDivElement>) => (
+                <Show when={state.learnMoreHref} fallback={<div {...itemProps} />}>
+                  {(href) => (
+                    <a
+                      {...(itemProps as JSX.AnchorHTMLAttributes<HTMLAnchorElement> &
+                        JSX.HTMLAttributes<HTMLDivElement>)}
+                      href={href()}
+                    />
+                  )}
+                </Show>
+              )}
             >
               Learn more
             </KindMenuItem>

@@ -17,7 +17,7 @@ import {
   MenuTrigger,
 } from "@ui-sdk/solid/menu";
 import { createMemo, Show } from "solid-js";
-import { withKindClass } from "./kind-class.js";
+import { iconElement, withKindClass } from "./kind-class.js";
 
 const content =
   "z-50 min-w-50 rounded-[var(--kind-popup-radius)] bg-[var(--kind-color-raised)] p-[var(--kind-popup-padding)] text-[length:var(--kind-text-md)]/5 text-[var(--kind-color-fg)] shadow-[var(--kind-shadow-popover)] outline-hidden data-[presentation=sheet]:w-full data-[presentation=sheet]:max-w-none data-[presentation=sheet]:rounded-b-none data-[presentation=sheet]:pb-[max(0.5rem,env(safe-area-inset-bottom))] data-[presentation=sheet]:[&_:is([data-slot=menu-item],[data-slot=menu-checkbox-item],[data-slot=menu-radio-item],[data-slot=menu-trigger])]:py-2.5";
@@ -59,7 +59,7 @@ export const KindMenuSeparator = withKindClass(
 );
 
 export type KindMenuItemContentProps = {
-  /** An image URL, or an element such as an inline `svg`. */
+  /** An image URL, an element such as an inline `svg`, or a function returning one. */
   icon?: unknown;
   label: string;
   description?: string | undefined;
@@ -72,7 +72,7 @@ export function KindMenuItemContent(props: KindMenuItemContentProps) {
     <>
       <Show when={icon() !== undefined}>
         <KindMenuItemIcon>
-          {typeof icon() === "string" ? <img src={icon() as string} alt="" /> : (icon() as JSX.Element)}
+          {typeof icon() === "string" ? <img src={icon() as string} alt="" /> : iconElement(icon())}
         </KindMenuItemIcon>
       </Show>
       <span data-menu-text="">
@@ -112,3 +112,17 @@ export const menuProps = <State extends Record<(typeof MENU_KEYS)[number], unkno
 export const menuTriggerProps = <State extends Partial<Record<(typeof TRIGGER_KEYS)[number], unknown>>>(
   trigger: State,
 ) => readKeys(trigger, TRIGGER_KEYS);
+
+/**
+ * A part's children, read once: a function of its state, or elements, else `fallback`. Solid builds element children
+ * each time their getter is read, so a second read would build them twice.
+ */
+export function childrenOr<State>(
+  children: JSX.Element | ((state: State) => JSX.Element) | undefined,
+  state: State,
+  fallback: () => JSX.Element,
+): JSX.Element {
+  return typeof children === "function"
+    ? (children as (state: State) => JSX.Element)(state)
+    : (children ?? fallback());
+}

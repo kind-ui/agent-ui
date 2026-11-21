@@ -12,6 +12,7 @@ import { MenuTrigger } from "@ui-sdk/solid/menu";
 import { createParts } from "@ui-sdk/solid/primitive";
 import { For, omit, Show } from "solid-js";
 import {
+  childrenOr,
   KindMenu,
   KindMenuContent,
   KindMenuGroup,
@@ -143,9 +144,9 @@ export function AddMenuContent(props: AddMenuContentProps) {
     <parts.Content>
       {(state: AddMenuContentState) => (
         <KindMenuContent align="start" sideOffset={6} {...omit(props, "children")}>
-          {typeof props.children === "function"
-            ? props.children(state)
-            : (props.children ?? <AddMenuRows sections={state.sections} />)}
+          {childrenOr(props.children, state, () => (
+            <AddMenuRows sections={state.sections} />
+          ))}
         </KindMenuContent>
       )}
     </parts.Content>

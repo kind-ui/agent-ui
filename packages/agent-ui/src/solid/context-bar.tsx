@@ -7,7 +7,7 @@ import {
 } from "@kind-ui/agent-ui/core";
 import type { ComponentProps, JSX } from "@solidjs/web";
 import { createParts } from "@ui-sdk/solid/primitive";
-import { For, omit, Show } from "solid-js";
+import { For, omit, Show, untrack } from "solid-js";
 
 const parts = createParts(contextBarPrimitive, {
   root: "div",
@@ -52,8 +52,7 @@ export const ContextBarItemRemove = parts.ItemRemove;
 
 const drawIcon = (icon: unknown): JSX.Element => {
   if (typeof icon === "string") return <img src={icon} alt="" />;
-  if (typeof icon === "function") return (icon as () => JSX.Element)();
-  // A node can sit in one place only, and an overflowed chip shows twice.
+  if (typeof icon === "function") return untrack(icon as () => JSX.Element);
   if (typeof Node !== "undefined" && icon instanceof Node) return icon.cloneNode(true) as JSX.Element;
   return icon as JSX.Element;
 };
