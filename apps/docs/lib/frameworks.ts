@@ -21,10 +21,13 @@ const files = [
   { layer: "solid", extension: ".solid.tsx", lang: "tsx" },
 ] as const;
 
-/** Every framework file of `examples/<example>`, read at build time, in tab order. */
-export function exampleFiles(example: string) {
+/**
+ * Every framework file of `examples/<example>`, read at build time, in tab order. A site that mounts these docs builds
+ * from its own root, so it passes this docs app's directory as `docsApp`.
+ */
+export function exampleFiles(example: string, docsApp = process.cwd()) {
   const found = files.flatMap(({ layer, extension, lang }) => {
-    const path = join(process.cwd(), "examples", `${example}${extension}`);
+    const path = join(docsApp, "examples", `${example}${extension}`);
     return existsSync(path)
       ? [{ label: layerLabels[layer], lang, code: readFileSync(path, "utf8").trimEnd() }]
       : [];
