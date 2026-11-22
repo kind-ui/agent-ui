@@ -1,6 +1,6 @@
 # @kind-ui/agent-ui
 
-AI interface components that people and agents can both use, for React and Web Components, built on [UI SDK](https://ui-sdk.dev/docs).
+AI interface components that people and agents can both use, for React, Web Components, Vue, Svelte and Solid, built on [UI SDK](https://ui-sdk.dev/docs).
 
 [![npm version](https://img.shields.io/npm/v/@kind-ui/agent-ui?color=0368FF&label=npm)](https://www.npmjs.com/package/@kind-ui/agent-ui)
 [![CI](https://github.com/kind-ui/agent-ui/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/kind-ui/agent-ui/actions/workflows/ci.yml)
@@ -21,7 +21,7 @@ npm install @kind-ui/agent-ui @ui-sdk/core
 | `@kind-ui/agent-ui/adapters/ai-sdk` | AI SDK `UIMessage` mapping (`ai` is an optional peer) |
 | `@kind-ui/agent-ui/styles.css` | Tailwind v4 source registration and theme tokens |
 
-Styled React and Web Components are distributed through the [registry](#registry), not this package.
+The styled React, Web Components, Vue, Svelte and Solid components are distributed through the [registry](#registry), not this package, which depends on no framework.
 
 [Components](https://kindui.dev/docs/agent-ui/): Step and Step List, Status, Reasoning, Tool, Chain of Thought, Task, Plan, Subagent, Queue, Confirmation, Question, Checkpoint, Model Selector, Reasoning Effort, Suggestion, Context Meter, Feedback, Notice, Guardrail Notice, Conversation, Message, Markdown, Code Block, Markdown Table, Composer, Attachments, Uploader, Loader, Thinking Indicator, Typing Indicator, Streaming Text, Sources, Inline Citation, Document, Generated Image, File Tree, Terminal, Stack Trace, Test Results, Transcript, Selection, Action, Picker, Add Menu, Settings Menu, Approval Mode, Model Control, Context Bar, Dictation, Thread List, Thread Search, Sidebar, Day Separator, Connection Status, Share Dialog and Conversation Search.
 
@@ -37,7 +37,17 @@ Add the `@kind-ui` namespace to your `components.json`:
 }
 ```
 
-Then install a component with `npx shadcn@latest add @kind-ui/<name>`: `<component>` for React (for example `@kind-ui/composer`) and `<component>-web` for Web Components (`@kind-ui/composer-web`). The CLI copies the component into your `ui` directory, installs this package and UI SDK at the pinned versions, imports `styles.css` into your stylesheet, and writes an `AGENTS.md` for coding agents beside the components. Tailwind finds the copied files on its own; if they live outside the app that builds them, add an `@source` for them to your stylesheet.
+Then install a component with `npx shadcn@latest add @kind-ui/<name>`:
+
+| Layer | Item | Needs |
+| --- | --- | --- |
+| React | `<component>` (`@kind-ui/composer`) | React 19, `@ui-sdk/react` |
+| Web Components | `<component>-web` (`@kind-ui/composer-web`) | `@ui-sdk/web` |
+| Vue | `<component>-vue` (`@kind-ui/composer-vue`) | Vue 3.5, `@ui-sdk/vue` |
+| Svelte | `<component>-svelte` (`@kind-ui/composer-svelte`) | Svelte 5.33 with runes, `@ui-sdk/svelte` |
+| Solid | `<component>-solid` (`@kind-ui/composer-solid`) | Solid 2, `@ui-sdk/solid` |
+
+Every layer renders the same primitive from `./core`, with the same parts, options, events and agent actions. In a Vue, Svelte or Solid app, write the `components.json` by hand (the [docs](https://kindui.dev/docs/agent-ui/) have one); the pinned shadcn CLI installs those items too. A Vue app that server-renders outside Nuxt renders its root inside `<Suspense>`, as Nuxt does, so parts bind after hydration. Agents connect through `createAgent` from the layer's UI SDK package (`@ui-sdk/vue/agent`, …). The CLI copies the component into your `ui` directory, installs this package and the layer's UI SDK packages at the pinned versions, imports `styles.css` into your stylesheet, and writes an `AGENTS.md` for coding agents beside the components. Tailwind finds the copied files on its own; if they live outside the app that builds them, add an `@source` for them to your stylesheet.
 
 ## Styles
 

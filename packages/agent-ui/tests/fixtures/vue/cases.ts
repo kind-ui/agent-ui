@@ -1,5 +1,5 @@
 import type { AgentAction } from "@ui-sdk/vue/agent";
-import type { Component } from "vue";
+import { type Component, createSSRApp, h, Suspense } from "vue";
 
 export type CaseModule = {
   default: Component<{ variant: string; params: URLSearchParams }>;
@@ -17,3 +17,8 @@ export async function loadCase(name: string, variant: string) {
 }
 
 export const noCase = "<p data-no-case>No case</p>";
+
+export const hydratedApp = (
+  component: CaseModule["default"],
+  props: { variant: string; params: URLSearchParams },
+) => createSSRApp({ render: () => h(Suspense, null, { default: () => h(component, props) }) });

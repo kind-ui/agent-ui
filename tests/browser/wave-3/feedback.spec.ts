@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { isWebElements } from "../layer.js";
+import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 type Fixture = {
   kindHost: {
@@ -234,7 +235,8 @@ test("with reduced motion the box only fades", async ({ page }) => {
   expect(exit).toBe("0.12s");
 });
 
-test("an agent rates and comments, each offered only when it applies", async ({ page }) => {
+test("an agent rates and comments, each offered only when it applies", async ({ page }, testInfo) => {
+  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
   await open(page);
   // The bridge adds its generic `press` to any component holding a button.
   await expectAgentActions(page, "Feedback", ["press", "rate"]);

@@ -1,0 +1,12 @@
+import { ChainOfThought } from "../components/ui/solid/chain-of-thought.js";
+
+export default function ChainOfThoughtItem() {
+  return (
+    <ChainOfThought
+      label="Researching flights"
+      status="complete"
+      steps={[{ id: "search", status: "complete", title: "Search flights", durationSeconds: 3 }]}
+      defaultOpen
+    />
+  );
+}

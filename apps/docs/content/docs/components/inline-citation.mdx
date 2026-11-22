@@ -36,7 +36,7 @@ InlineCitation
         └── InlineCitationNext
 ```
 
-`InlineCitationTrigger` is the marker, a native button that shows the `label`. `InlineCitationContent` is the card. With one source it holds that source's `InlineCitationItem`; with more, `InlineCitationCarousel` is UI SDK's Carousel with a slide per source and **Previous**, the page ("1 of 3") and **Next** below. `InlineCitationLink` links to the source's `url` and opens it in a new tab. Each source reads as it does in [Sources](./sources): `InlineCitationIcon` shows the source's `favicon`, or a link glyph until the image loads or without one, `InlineCitationSourceTitle` the `title`, up to two lines, `InlineCitationHost` the host name without `www.`, and `InlineCitationSnippet` the `snippet`, up to three. Every part renders a `span`, so a citation is valid inside a `p`. To arrange the parts yourself, pass them as children of `InlineCitation`.
+`InlineCitationTrigger` is the marker, a native button that shows the `label`. `InlineCitationContent` is the card. With one source it holds that source's `InlineCitationItem`; with more, `InlineCitationCarousel` is UI SDK's Carousel with a slide per source and **Previous**, the page ("1 of 3") and **Next** below. `InlineCitationLink` links to the source's `url` and opens it in a new tab. Each source reads as it does in [Sources](./sources.mdx): `InlineCitationIcon` shows the source's `favicon`, or a link glyph until the image loads or without one, `InlineCitationSourceTitle` the `title`, up to two lines, `InlineCitationHost` the host name without `www.`, and `InlineCitationSnippet` the `snippet`, up to three. Every part renders a `span`, so a citation is valid inside a `p`. To arrange the parts yourself, pass them as children of `InlineCitation`.
 
 ## Usage
 
@@ -81,5 +81,5 @@ An agent connected with `createAgent` finds the citation by the marker's name, l
 <auto-type-table path="../../../../../packages/agent-ui/src/core/inline-citation/inline-citation.ts" name="InlineCitationAgentActions" type='Pick<InlineCitationApi, "open" | "close" | "next" | "previous">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-inline-citation>`, set `sources` as a property; the other props are kebab-case attributes, and `onOpenChange` is the `openchange` event. The element fills in its marker and card, with one item or a Carousel as the sources need.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-inline-citation>`, set `sources` as a property; the other props are kebab-case attributes, and `onOpenChange` is the `openchange` event. The element fills in its marker and card, with one item or a Carousel as the sources need.
 </Caption>

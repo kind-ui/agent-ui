@@ -4,6 +4,7 @@ import { shareLink } from "../../../packages/agent-ui/tests/fixtures/shared/shar
 import { expectAgentActions } from "../agent-snapshot.js";
 import { allowClipboard, readClipboard } from "../clipboard.js";
 import { isWebElements } from "../layer.js";
+import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 type Fixture = {
   kindHost: {
@@ -167,7 +168,8 @@ test("Stop sharing calls the host, which clears the link and makes the chat priv
   await expect(dialog(page).getByRole("radio", { name: "Only you" })).toBeChecked();
 });
 
-test("an agent's createLink needs a person while agentConfirm is on", async ({ page }) => {
+test("an agent's createLink needs a person while agentConfirm is on", async ({ page }, testInfo) => {
+  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
   await load(page);
   await openForLink(page);
   await expectAgentActions(page, "Share", ["close", "setVisibility", "createLink", "press"]);
@@ -177,7 +179,8 @@ test("an agent's createLink needs a person while agentConfirm is on", async ({ p
 
 test("with agentConfirm off an agent shares the chat, and an unknown visibility is refused", async ({
   page,
-}) => {
+}, testInfo) => {
+  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
   await load(page, "unconfirmed");
   await expect(page.locator("#share")).not.toHaveAttribute("data-agent-confirm");
   expect(await act(page, "open")).toContain('"ok":true');

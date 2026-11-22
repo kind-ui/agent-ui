@@ -2,6 +2,7 @@
   "title": "Agent UI",
   "pages": [
     "index",
+    "agents",
     "---Components---",
     "...components",
     "---Showcase---",

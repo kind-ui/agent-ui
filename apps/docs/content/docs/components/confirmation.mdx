@@ -84,5 +84,5 @@ An agent connected with `createAgent` finds the confirmation by its label and re
 <auto-type-table path="../../../../../packages/agent-ui/src/core/confirmation/confirmation.ts" name="ConfirmationAgentActions" type='Pick<ConfirmationApi, "approve" | "deny">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-confirmation>`, `approval` and `focusFallback` are properties only, and other props are kebab-case attributes, so `approveLabel` is `approve-label`. Approve and Deny need the `can-approve` and `can-deny` attributes and fire `approve` and `deny` with the decision as `detail.value`: call `event.detail.waitUntil(promise)` to keep the choices disabled. The element fills in its parts when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-confirmation>`, `approval` and `focusFallback` are properties only, and other props are kebab-case attributes, so `approveLabel` is `approve-label`. Approve and Deny need the `can-approve` and `can-deny` attributes and fire `approve` and `deny` with the decision as `detail.value`: call `event.detail.waitUntil(promise)` to keep the choices disabled. The element fills in its parts when it has no children.
 </Caption>

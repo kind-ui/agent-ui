@@ -51,7 +51,7 @@ test("a framework fixture case reaches the specs that load it", () => {
     dependents: new Map([[svelteCase, new Set()]]),
     specs: new Map([[spec("step"), new Set(["step"])]]),
   };
-  assert.deepEqual(affectedSpecs([svelteCase], graph), [spec("step")]);
+  assert.deepEqual(affectedSpecs([svelteCase], graph, { svelte: { specs: [] } }), [spec("step")]);
 });
 
 test("a layer manifest reaches the specs it lists", () => {

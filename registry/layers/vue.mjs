@@ -1,47 +1,180 @@
 // What the Vue layer ships and tests (framework layers plan D10). The registry catalog, the Playwright
 // projects, `scripts/affected-specs.mjs`, the parity test and the docs tabs read it, so a component exists in
-// this layer only once it is listed here. Each track task adds its lines under its own marker, then one blank
-// line, and never edits another task's lines.
-// biome-ignore format: the blank line under each marker keeps two tasks' lines apart, so git merges them cleanly
+// this layer only once it is listed here.
 export default {
   // Registry names of the visible components this layer renders, as in `registry/catalog.mjs`.
   components: [
-    // framework-vue-1: groundwork, internal wrappers and Step
+    "step",
 
-    // framework-vue-2: chat core
+    "markdown",
+    "code-block",
+    "markdown-table",
+    "conversation",
+    "message",
+    "composer",
+    "attachments",
+    "suggestion",
+    "feedback",
+    "confirmation",
+    "question",
+    "checkpoint",
 
-    // framework-vue-3: composer controls
+    "picker",
+    "model-selector",
+    "add-menu",
+    "settings-menu",
+    "approval-mode",
+    "model-control",
+    "reasoning-effort",
+    "context-bar",
+    "context-meter",
+    "dictation",
 
-    // framework-vue-4: indicators, notices and files
+    "guardrail-notice",
+    "loader",
+    "notice",
+    "status",
+    "streaming-text",
+    "thinking-indicator",
+    "typing-indicator",
+    "uploader",
 
-    // framework-vue-5: step family
+    "reasoning",
+    "tool",
+    "chain-of-thought",
+    "task",
+    "plan",
+    "subagent",
+    "queue",
 
-    // framework-vue-6: developer output
+    "sources",
+    "inline-citation",
+    "document",
+    "generated-image",
+    "file-tree",
+    "terminal",
+    "stack-trace",
+    "test-results",
+    "transcript",
+    "selection",
+    "action",
 
-    // framework-vue-7: Wave 6 shell
-
-    // framework-vue-8: conformance
+    "thread-list",
+    "thread-search",
+    "sidebar",
+    "day-separator",
+    "connection-status",
+    "share-dialog",
+    "conversation-search",
   ],
   // Internal wrapper names, without the `internal-` prefix.
   internals: [
-    // framework-vue-1: groundwork, internal wrappers and Step
+    "avatar",
+    "button",
+    "collapsible",
+    "command",
+    "file-input",
+    "menu",
+    "progress",
+    "scroll-area",
+    "slider",
+    "switch",
+    "toggle",
+    "token-input",
+    "trigger-menu",
+
+    "alert-dialog",
+    "carousel",
+    "checkbox",
+    "radio",
+    "textarea",
+    "toolbar",
+    "tooltip",
+
+    "segmented-control",
+
+    "tree",
+
+    "drawer",
+    "resizable",
   ],
   // Spec files the layer's projects run, relative to `tests/browser/`.
   specs: [
-    // framework-vue-1: groundwork, internal wrappers and Step
+    "wave-1/step.spec.ts",
+    "wave-1/internal.spec.ts",
+    "parity.spec.ts",
 
-    // framework-vue-2: chat core
+    "wave-1/markdown.spec.ts",
+    "wave-1/conversation.spec.ts",
+    "wave-1/message.spec.ts",
+    "wave-1/composer.spec.ts",
+    "wave-3/suggestion.spec.ts",
+    "wave-3/feedback.spec.ts",
+    "wave-3/confirmation.spec.ts",
+    "wave-3/question.spec.ts",
+    "wave-3/checkpoint.spec.ts",
+    "wave-1/budgets.spec.ts",
 
-    // framework-vue-3: composer controls
+    "wave-3/reasoning-effort.spec.ts",
+    "wave-3/context-meter.spec.ts",
+    "wave-3/model-selector.spec.ts",
+    "wave-5/picker.spec.ts",
+    "wave-5/add-menu.spec.ts",
+    "wave-5/settings-menu.spec.ts",
+    "wave-5/approval-mode.spec.ts",
+    "wave-5/model-control.spec.ts",
+    "wave-5/context-bar.spec.ts",
+    "wave-5/dictation.spec.ts",
+    "wave-5/composed-events.spec.ts",
 
-    // framework-vue-4: indicators, notices and files
+    "wave-1/indicators.spec.ts",
+    "wave-1/uploader.spec.ts",
+    "wave-2/status.spec.ts",
+    "wave-3/notice.spec.ts",
+    "wave-3/guardrail-notice.spec.ts",
 
-    // framework-vue-5: step family
+    "wave-2/reasoning.spec.ts",
+    "wave-2/tool.spec.ts",
+    "wave-2/chain-of-thought.spec.ts",
+    "wave-2/task.spec.ts",
+    "wave-2/plan.spec.ts",
+    "wave-2/subagent.spec.ts",
+    "wave-2/queue.spec.ts",
 
-    // framework-vue-6: developer output
+    "wave-4/sources.spec.ts",
+    "wave-4/inline-citation.spec.ts",
+    "wave-4/document.spec.ts",
+    "wave-4/generated-image.spec.ts",
+    "wave-4/file-tree.spec.ts",
+    "wave-4/terminal.spec.ts",
+    "wave-4/stack-trace.spec.ts",
+    "wave-4/test-results.spec.ts",
+    "wave-4/transcript.spec.ts",
+    "wave-4/selection.spec.ts",
+    "wave-4/action.spec.ts",
 
-    // framework-vue-7: Wave 6 shell
+    "wave-6/thread-list.spec.ts",
+    "wave-6/thread-search.spec.ts",
+    "wave-6/sidebar.spec.ts",
+    "wave-6/day-separator.spec.ts",
+    "wave-6/connection-status.spec.ts",
+    "wave-6/share-dialog.spec.ts",
+    "wave-6/conversation-search.spec.ts",
 
-    // framework-vue-8: conformance
+    "wave-1/agent.spec.ts",
+    "wave-2/agent.spec.ts",
+    "wave-3/agent.spec.ts",
+    "wave-4/agent.spec.ts",
+    "wave-5/agent.spec.ts",
+    "wave-6/agent.spec.ts",
+    "wave-5/aria-patterns.spec.ts",
+    "wave-6/aria-patterns.spec.ts",
+    "wave-5/composer-compact.spec.ts",
+    "wave-1/controls.spec.ts",
+    "wave-1/motion.spec.ts",
+    "wave-1/theme.spec.ts",
+    "wave-1/status-mark.spec.ts",
+    "wave-1/forced-colors.spec.ts",
+    "hydration.spec.ts",
   ],
 };
