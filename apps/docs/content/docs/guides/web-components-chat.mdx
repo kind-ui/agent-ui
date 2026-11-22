@@ -1,9 +1,9 @@
 ---
 title: AI Chat with Web Components
-description: Build a streaming AI chat without React, from Agent UI's Web Components and a fetch to any server route.
+description: Build a streaming AI chat without a framework, from Agent UI's Web Components and a fetch to any server route.
 ---
 
-To build an AI chat UI without React, use Agent UI's Web Components: `kind-conversation` scrolls the messages and follows the newest one, `kind-message` holds each turn, `kind-markdown` renders the reply as it streams, and `kind-composer` sends the prompt and stops the answer. They're custom elements in light DOM, so they work in plain HTML or in any framework that renders elements. Your script listens to the composer's events, sets properties as the answer streams in, and reads the stream from any server route, here one that uses the AI SDK's `streamText`.
+To build an AI chat UI without a framework, use Agent UI's Web Components: `kind-conversation` scrolls the messages and follows the newest one, `kind-message` holds each turn, `kind-markdown` renders the reply as it streams, and `kind-composer` sends the prompt and stops the answer. They're custom elements in light DOM, so they work in plain HTML or in any app that renders elements. In React, Vue, Svelte or Solid, use that framework's layer instead, which takes the same props. Your script listens to the composer's events, sets properties as the answer streams in, and reads the stream from any server route, here one that uses the AI SDK's `streamText`.
 
 ## Installation
 
@@ -156,4 +156,4 @@ Every prop on a component page works the same way here: each is a kebab-case att
 
 - Render tool calls with `kind-tool` and reasoning with `kind-reasoning`, from the [Tool](../components/tool.mdx) and [Reasoning](../components/reasoning.mdx) pages.
 - Add mentions, commands and attachments from the [Composer](../components/composer.mdx) page.
-- In React, `useChat` keeps this state for you: [AI Chat with the AI SDK in React](./ai-sdk-chat.mdx).
+- In a framework, the AI SDK's chat keeps this state for you: [AI Chat with the AI SDK in React](./ai-sdk-chat.mdx), which also says where the Vue, Svelte and Solid components live.

@@ -5,6 +5,8 @@ description: Show a model's reasoning as it thinks, and an agent's plan and tool
 
 To show what an AI agent is doing in React, render each part of its message with the component that fits: AI SDK reasoning parts as [Reasoning](../components/reasoning.mdx), which streams the model's thoughts and collapses to "Thought" when it's done, tool calls as [Tool](../components/tool.mdx), and the agent's to-do list as a [Plan](../components/plan.mdx), here written by an `update_plan` tool the model calls before it starts and again as each item's status changes. Each one is a collapsible [Step](../components/step.mdx) with a status mark, so the run reads as one list of what happened.
 
+The samples use React. The same components ship for Vue, Svelte and Solid, with the same parts and props spelled the way each framework expects, so the page translates component for component: add `<name>-vue`, `<name>-svelte` or `<name>-solid` in place of each item below, as [Choose a Framework](../index.mdx#choose-a-framework) shows. `fromUIMessages` and `toApprovalResponse` don't depend on a framework, so they map the messages of the AI SDK's `@ai-sdk/vue` and `@ai-sdk/svelte` chats too.
+
 ## Installation
 
 Set up the `@kind-ui` registry as [Get Started](../index.mdx#install-with-the-shadcn-cli) shows, then add the components, the AI SDK and Zod for the tool schemas:

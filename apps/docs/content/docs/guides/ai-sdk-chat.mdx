@@ -5,6 +5,8 @@ description: Build a streaming AI chat in React with the AI SDK's useChat and Ag
 
 To build an AI chat UI in React, keep the chat state in the AI SDK's `useChat` hook, map its messages with `fromUIMessages` from `@kind-ui/agent-ui/adapters/ai-sdk`, and render them with Agent UI's components: a [Conversation](../components/conversation.mdx) that scrolls the messages and follows the newest one, a [Message](../components/message.mdx) for each turn, [Markdown](../components/markdown.mdx) that renders the reply as it streams, and a [Composer](../components/composer.mdx) that sends the prompt and stops the answer. The page below is the whole chat, with one server route.
 
+The samples use React. The same components ship for Vue, Svelte and Solid, with the same parts and props spelled the way each framework expects, so the page translates component for component: add `<name>-vue`, `<name>-svelte` or `<name>-solid` in place of each item below, as [Choose a Framework](../index.mdx#choose-a-framework) shows. `fromUIMessages` and `toApprovalResponse` don't depend on a framework, so they map the messages of the AI SDK's `@ai-sdk/vue` and `@ai-sdk/svelte` chats too.
+
 ## Installation
 
 Set up the `@kind-ui` registry as [Get Started](../index.mdx#install-with-the-shadcn-cli) shows, then add the components and the AI SDK:

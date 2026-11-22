@@ -5,6 +5,8 @@ description: Show each tool call an AI SDK agent makes, and ask a person to appr
 
 To show an AI agent's tool calls and ask for approval in React, render each tool part as a [Tool](../components/tool.mdx), and mark the tools that need a person with `needsApproval: true` on the server. `fromUIMessages` turns every AI SDK tool part into a step with a `call`, which the Tool shows with its input, output and status. When a call waits for approval, the Tool shows a [Confirmation](../components/confirmation.mdx) with **Approve** and **Deny**; pass the decision back with `toApprovalResponse` and `useChat`'s `addToolApprovalResponse`, and the chat continues on its own.
 
+The samples use React. The same components ship for Vue, Svelte and Solid, with the same parts and props spelled the way each framework expects, so the page translates component for component: add `<name>-vue`, `<name>-svelte` or `<name>-solid` in place of each item below, as [Choose a Framework](../index.mdx#choose-a-framework) shows. `fromUIMessages` and `toApprovalResponse` don't depend on a framework, so they map the messages of the AI SDK's `@ai-sdk/vue` and `@ai-sdk/svelte` chats too.
+
 ## Installation
 
 Set up the `@kind-ui` registry as [Get Started](../index.mdx#install-with-the-shadcn-cli) shows, then add the components, the AI SDK and Zod for the tool schemas:
