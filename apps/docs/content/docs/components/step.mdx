@@ -10,18 +10,12 @@ Use a step for each thing the agent does, like reading a file or running a comma
 <Example caption="Press Read the logs, or focus it and press Enter or Space, to show its details.">
   <StepExample />
 
-  <include cwd lang="tsx">./examples/step/basic.tsx</include>
+  <ExampleCode example="step/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/step
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/step-web
-```
+<Install name="step" />
 
 ## Composition
 
@@ -65,6 +59,8 @@ Put steps in a `StepList` so the keyboard moves between them with the arrow keys
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/step/base.ts" name="StepOptions" />
 
+<FrameworkNames name="step" />
+
 ### Agent
 
 An agent connected with `createAgent` reads each step's `open` and `status`. It can run these actions, and press the trigger like a person would:
@@ -72,5 +68,5 @@ An agent connected with `createAgent` reads each step's `open` and `status`. It 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/step/base.ts" name="StepAgentActions" type='Pick<StepApi, "expand" | "collapse">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-step>`, each prop is a kebab-case attribute, so `autoOpen` is `auto-open`, and each callback is a lowercase event, so `onOpenChange` fires `openchange`.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-step>`, each prop is a kebab-case attribute, so `autoOpen` is `auto-open`, and each callback is a lowercase event, so `onOpenChange` fires `openchange`.
 </Caption>

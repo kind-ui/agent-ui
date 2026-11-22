@@ -1,6 +1,7 @@
 import type { PlanItem, QueueItem, SelectionActionItem, TaskItem, ToolCall } from "@kind-ui/agent-ui";
 import type { AttachmentItem, ChainOfThoughtStep, UploadItem } from "@kind-ui/agent-ui/core";
 import { createSessionStorage } from "@ui-sdk/core";
+import { expose } from "./expose.js";
 import { uploadHost } from "./uploader.js";
 
 export const steps = [
@@ -119,7 +120,7 @@ export function agentHost() {
       };
     },
   };
-  Object.assign(window, { kindAgent: host });
+  expose({ kindAgent: host });
   return host;
 }
 

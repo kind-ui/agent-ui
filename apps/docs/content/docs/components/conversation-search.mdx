@@ -10,18 +10,12 @@ Use a conversation search to let readers find something said earlier in a long c
 <Example caption="Type in the search field, or keep billing, then press Enter or Next to move to the next match and Shift+Enter or Previous to go back. Press Escape to clear the search, and again to close the bar.">
   <ConversationSearchExample />
 
-  <include cwd lang="tsx">./examples/conversation-search/basic.tsx</include>
+  <ExampleCode example="conversation-search/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/conversation-search
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/conversation-search-web
-```
+<Install name="conversation-search" />
 
 ## Composition
 
@@ -98,6 +92,8 @@ The search registers no keys of its own by default. Pass `shortcut` to open it w
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/conversation-search/conversation-search.ts" name="ConversationSearchOptions" />
 
+<FrameworkNames name="conversation-search" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the search by its `label` and reads `query` and `open`. It can `search` with any text, which opens the bar and searches as typing does; `next` and `previous` are offered while there are matches, and `close` while the bar is open.
@@ -105,5 +101,5 @@ An agent connected with `createAgent` finds the search by its `label` and reads 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/conversation-search/conversation-search.ts" name="ConversationSearchAgentActions" type='Pick<ConversationSearchApi, "search" | "next" | "previous" | "close">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-conversation-search>`, set `messages` and `conversation` (the controller you also set on the `<kind-conversation>`) as properties; the other props are kebab-case attributes. `onQueryChange` is the `querychange` event, `onOpenChange` is `openchange`, and `onMarksChange` is `markschange`, whose `detail.value` goes to the Conversation's `marks`. On `<kind-conversation>`, add a `kind-conversation-marks` and the element fills it with a `kind-conversation-mark` for each mark.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-conversation-search>`, set `messages` and `conversation` (the controller you also set on the `<kind-conversation>`) as properties; the other props are kebab-case attributes. `onQueryChange` is the `querychange` event, `onOpenChange` is `openchange`, and `onMarksChange` is `markschange`, whose `detail.value` goes to the Conversation's `marks`. On `<kind-conversation>`, add a `kind-conversation-marks` and the element fills it with a `kind-conversation-mark` for each mark.
 </Caption>

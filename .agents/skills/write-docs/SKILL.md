@@ -27,7 +27,7 @@ For every behavior you describe, read the primitive in `packages/agent-ui/src/co
 - **Composition:** a `text` tree of the parts, then a sentence on what each renders.
 - **Usage:** one short subsection per behavior someone needs: the options that change it, what the component does on its own, the keys, and what it announces.
 - **API Reference:** the generated props table, then **Agent**: what `createAgent` sees and the actions it can run.
-- A closing `<Caption>`: "Runs in React and Web Components." and how the props map to attributes and events.
+- A closing `<Caption>`: "Runs in React, Vue, Svelte, Solid and Web Components." and how the props map to attributes and events.
 
 **Explain one thing at a time.**
 

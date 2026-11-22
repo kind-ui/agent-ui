@@ -32,7 +32,7 @@ test("findCollisions flags charts items only", () =>
 
 test("publish job is guarded and uses npm-release", () => {
   assert.match(release.jobs.plan.if, /github\.repository == 'kind-ui\/agent-ui'/);
-  assert.deepEqual(release.jobs.publish.needs, ["plan", "verify"]);
+  assert.deepEqual(release.jobs.publish.needs, ["plan", "validate", "browser", "verify"]);
   assert.equal(release.jobs.publish.environment, "npm-release");
   assert.equal(release.jobs.publish.permissions["id-token"], "write");
   assert.match(
@@ -88,6 +88,27 @@ test("ci all-checks job requires fast, packed, docs, browser", () => {
   const allChecks = ci.jobs["all-checks"];
   assert.equal(allChecks.if, "always()");
   assert.deepEqual([...allChecks.needs].sort(), ["browser", "docs", "fast", "packed"]);
+});
+
+test("release validation runs every stage of npm run check, browser tests in eight shards", () => {
+  const { validate, browser, verify } = release.jobs;
+  const targets = [...runs(validate).matchAll(/run-checks\.mjs (\S+)/g)].map(([, target]) => target);
+  const covered = new Set([
+    ...targets.flatMap(expand),
+    ...(/npm run test:browser/.test(runs(browser)) ? ["test:browser"] : []),
+  ]);
+  assert.deepEqual(
+    expand("check").filter((stage) => !covered.has(stage)),
+    [],
+  );
+  assert.deepEqual(browser.strategy.matrix.shard, [1, 2, 3, 4, 5, 6, 7, 8]);
+  assert.match(runs(browser), /--shard=\$\{\{ matrix\.shard \}\}\/8/);
+  assert.deepEqual(verify.needs, ["plan", "validate", "browser"]);
+});
+
+test("ci runs browser tests in eight shards", () => {
+  assert.deepEqual(ci.jobs.browser.strategy.matrix.shard, [1, 2, 3, 4, 5, 6, 7, 8]);
+  assert.match(runs(ci.jobs.browser), /--shard=\$\{\{ matrix\.shard \}\}\/8/);
 });
 
 test("ci fast job runs the lint stages, and so the UI SDK guard", () => {

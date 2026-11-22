@@ -1,8 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 test.beforeEach(async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "hearComposed hears @ui-sdk/web events");
+  test.skip(!isWebElements(testInfo), "hearComposed hears @ui-sdk/web events");
   await page.goto("/?c=composed-events&case=menu");
   await expect(page.locator("kind-test-menu")).toBeAttached();
 });

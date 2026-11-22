@@ -6,7 +6,7 @@ const trigger =
 
 /**
  * A live example over its source, switched by Preview and Code buttons, with a plain-text `caption` below:
- * `<Example caption="…"><StepExample /><include …>./examples/step/basic.tsx</include></Example>`.
+ * `<Example caption="…"><StepExample /><ExampleCode example="step/basic" /></Example>`.
  */
 export function Example({ caption, children }: { caption?: string; children: ReactNode }) {
   const [preview, code] = Children.toArray(children);
@@ -29,7 +29,7 @@ export function Example({ caption, children }: { caption?: string; children: Rea
         </TabsContent>
         <TabsContent
           value="code"
-          className="[&_.fd-scroll-container]:max-h-72 [&_figure]:my-0 [&_figure]:rounded-none [&_figure]:border-0 [&_figure]:bg-transparent [&_figure]:shadow-none"
+          className="[&_.fd-scroll-container]:max-h-72 [&_[data-example-code]>div]:my-0 [&_[data-example-code]>div]:rounded-none [&_[data-example-code]>div]:border-0 [&_[data-example-code]>div]:bg-transparent [&_figure]:my-0 [&_figure]:rounded-none [&_figure]:border-0 [&_figure]:bg-transparent [&_figure]:shadow-none"
         >
           {code}
         </TabsContent>

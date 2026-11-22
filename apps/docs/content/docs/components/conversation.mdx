@@ -12,18 +12,12 @@ Use a conversation to scroll the messages of a chat. It keeps the newest message
 <Example caption="Scroll up to read earlier messages, then press Jump to latest to return to the end and follow again.">
   <ConversationExample />
 
-  <include cwd lang="tsx">./examples/conversation/basic.tsx</include>
+  <ExampleCode example="conversation/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/conversation
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/conversation-web
-```
+<Install name="conversation" />
 
 ## Composition
 
@@ -69,7 +63,7 @@ Pass `status` to say whether the messages are there yet. While it's `"loading"`,
 <Example caption="Press Loading, Error or Ready to switch the conversation's status. In the error, press Retry: it stays pending, then the conversation loads again.">
   <ConversationStatesExample />
 
-  <include cwd lang="tsx">./examples/conversation/states.tsx</include>
+  <ExampleCode example="conversation/states" />
 </Example>
 
 While `status` is `"error"`, `ConversationError` shows an error mark and the `error` text, "Couldn't load this conversation" by default, and **Retry** when you pass `onRetry`. Return a promise from `onRetry` to keep **Retry** pending until it settles, so a second press doesn't load again. An error the conversation mounts with is a status, and one that appears later is an alert, so screen readers hear it right away. Pass children to `ConversationError` to arrange `ConversationErrorIcon`, `ConversationErrorText` and `ConversationRetry` yourself.
@@ -83,7 +77,7 @@ Set `messageCount` before `status` turns `"ready"`, so the loaded messages appea
 <Example caption="Press a suggestion to pick it. The empty state shows until the conversation has a message.">
   <ConversationEmptyExample />
 
-  <include cwd lang="tsx">./examples/conversation/empty.tsx</include>
+  <ExampleCode example="conversation/empty" />
 </Example>
 
 ### Scrolling From Outside
@@ -140,6 +134,8 @@ Pass `virtualize` to render only the rows in view. Render rows from the content'
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/conversation/conversation.ts" name="ConversationOptions" />
 
+<FrameworkNames name="conversation" />
+
 ### Agent
 
 An agent connected with `createAgent` reads whether the conversation is `following` and its `newCount`. It can run these actions, and press the jump control like a person would while it shows. `retry` is offered while the conversation shows its error with **Retry** and no retry is pending:
@@ -147,5 +143,5 @@ An agent connected with `createAgent` reads whether the conversation is `followi
 <auto-type-table path="../../../../../packages/agent-ui/src/core/conversation/conversation.ts" name="ConversationAgentActions" type='Pick<ConversationApi, "scrollToEnd" | "retry">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-conversation>`, each prop is a kebab-case attribute, so `messageCount` is `message-count`, `rowKey` and `controller` are properties, and each callback is a lowercase event, so `onRowsChange` fires `rowschange`. The `can-retry` attribute offers **Retry**, which fires `retry`; a listener can pass a promise to `event.detail.waitUntil()` to keep it pending. The element fills in an empty `kind-conversation-skeleton`, `kind-conversation-loading`, `kind-conversation-error` and `kind-conversation-error-text`. The element's `api` has the controller's methods: `scrollToEnd`, `prepend`, `isFollowing` and `getRows`.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-conversation>`, each prop is a kebab-case attribute, so `messageCount` is `message-count`, `rowKey` and `controller` are properties, and each callback is a lowercase event, so `onRowsChange` fires `rowschange`. The `can-retry` attribute offers **Retry**, which fires `retry`; a listener can pass a promise to `event.detail.waitUntil()` to keep it pending. The element fills in an empty `kind-conversation-skeleton`, `kind-conversation-loading`, `kind-conversation-error` and `kind-conversation-error-text`. The element's `api` has the controller's methods: `scrollToEnd`, `prepend`, `isFollowing` and `getRows`.
 </Caption>

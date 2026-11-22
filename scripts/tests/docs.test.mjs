@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import catalog from "../../registry/catalog.mjs";
+import { manifests } from "../../registry/layers/index.mjs";
 
 const docs = new URL("../../apps/docs/", import.meta.url);
 const content = new URL("content/docs/", docs);
@@ -16,16 +17,60 @@ for (const name of components) {
     const source = page(name);
     assert.match(source, /^---\ntitle: .+\ndescription: .+\n---\n/);
     assert.match(source, /<Example caption=".+">/);
-    assert.ok(source.includes(`<include cwd lang="tsx">./examples/${name}/basic.tsx</include>`));
-    assert.ok(source.includes("\n## Installation\n"));
-    assert.ok(source.includes(`npx shadcn@latest add @kind-ui/${name}\n`));
-    assert.ok(source.includes(`npx shadcn@latest add @kind-ui/${name}-web\n`));
+    assert.ok(source.includes(`<ExampleCode example="${name}/basic" />`));
+    assert.ok(source.includes(`\n## Installation\n\n<Install name="${name}" />\n`));
     assert.ok(source.includes("\n## Usage\n"));
     assert.ok(source.includes("\n## API Reference\n\n<auto-type-table "));
-    assert.ok(source.includes("\n### Agent\n"));
-    assert.match(source, /\n<Caption>\n {2}Runs in React and Web Components\. .+\n<\/Caption>\n$/);
+    assert.ok(source.includes(`\n<FrameworkNames name="${name}" />\n\n### Agent\n`));
+    assert.match(
+      source,
+      /\n<Caption>\n {2}Runs in React, Vue, Svelte, Solid and Web Components\. .+\n<\/Caption>\n$/,
+    );
   });
 }
+
+const frameworkFiles = { vue: "basic.vue", svelte: "basic.svelte", solid: "basic.solid.tsx" };
+
+for (const name of components) {
+  test(`${name} shows four framework tabs and five install tabs`, () => {
+    assert.ok(existsSync(new URL(`${name}/basic.tsx`, examples)), `${name}/basic.tsx`);
+    for (const [layer, file] of Object.entries(frameworkFiles)) {
+      assert.ok(existsSync(new URL(`${name}/${file}`, examples)), `${name}/${file}`);
+      assert.ok(manifests[layer].components.includes(name), `registry/layers/${layer}.mjs lists ${name}`);
+    }
+  });
+}
+
+test("a layer that ships a component has its example", () => {
+  for (const [layer, file] of Object.entries(frameworkFiles)) {
+    for (const name of manifests[layer].components) {
+      assert.ok(existsSync(new URL(`${name}/${file}`, examples)), `${name}/${file}`);
+    }
+  }
+});
+
+test("the docs index names the five layers and their registry suffixes", () => {
+  const index = readFileSync(new URL("index.mdx", content), "utf8");
+  const [, description] = index.match(/^---\ntitle: .+\ndescription: (.+)\n/) ?? [];
+  for (const layer of ["React", "Web Components", "Vue", "Svelte", "Solid"]) {
+    assert.ok(description?.includes(layer), `the index description doesn't name ${layer}`);
+  }
+  for (const suffix of ["-web", "-vue", "-svelte", "-solid"]) {
+    assert.ok(index.includes(`<name>${suffix}`), `the index doesn't name <name>${suffix}`);
+  }
+});
+
+test("the Agents page creates the bridge from each layer's agent entry", () => {
+  const root = JSON.parse(readFileSync(new URL("meta.json", content), "utf8"));
+  assert.ok(root.pages.includes("agents"), "meta.json doesn't list agents");
+  const source = readFileSync(new URL("agents.mdx", content), "utf8");
+  for (const layer of ["react", "web", "vue", "svelte", "solid"]) {
+    assert.ok(
+      source.includes(`import { createAgent } from "@ui-sdk/${layer}/agent";`),
+      `agents.mdx doesn't import @ui-sdk/${layer}/agent`,
+    );
+  }
+});
 
 test("the sidebar lists every component page", () => {
   const meta = JSON.parse(readFileSync(new URL("components/meta.json", content), "utf8"));
@@ -69,11 +114,7 @@ for (const [group, names] of Object.entries(indexed)) {
 
 test("the Sidebar page leads with the full chat shell", () => {
   const source = page("sidebar");
-  const first = source.indexOf("<include cwd");
-  assert.equal(
-    source.slice(first, source.indexOf("</include>", first)),
-    '<include cwd lang="tsx">./examples/sidebar/shell.tsx',
-  );
+  assert.equal(source.match(/<ExampleCode example="([^"]+)" \/>/)?.[1], "sidebar/shell");
 });
 
 const showcases = {
@@ -96,7 +137,7 @@ test("the sidebar has a Showcase section with one live example per page", () => 
     assert.match(
       source,
       new RegExp(
-        `<Example caption=".+">\\n {2}<${component} />\\n\\n {2}<include cwd lang="tsx">\\./examples/showcase/${name}\\.tsx</include>\\n</Example>`,
+        `<Example caption=".+">\\n {2}<${component} />\\n\\n {2}<ExampleCode example="showcase/${name}" />\\n</Example>`,
       ),
       name,
     );
@@ -117,22 +158,23 @@ test("pages import examples and link pages by relative path", () => {
     assert.doesNotMatch(source, /from ["']@\//, file);
     assert.doesNotMatch(source, /\]\(\/|^\[[^\]]+\]:\s*\/|(?:href|src)=\{?["'`]\//m, file);
     assert.doesNotMatch(source, /kindui\.dev(?!\/r\/)|localhost/, file);
-    for (const [, cwd, path] of source.matchAll(/<include( cwd)?[^>]*>([^<]+)<\/include>/g)) {
-      const from = cwd ? docs : new URL(file, content);
-      assert.ok(new URL(path, from).href.startsWith(examples.href), `${file}: ${path}`);
+    assert.doesNotMatch(source, /<include[^>]*>[^<]*examples\//, file);
+    for (const [, example] of source.matchAll(/<ExampleCode example="([^"]+)" \/>/g)) {
+      const url = new URL(`${example}.tsx`, examples);
+      assert.ok(url.href.startsWith(examples.href) && existsSync(url), `${file}: ${example}`);
     }
   }
 });
 
-test("examples import only React, the package, ui components and other examples", () => {
+test("examples import only the frameworks, the package, ui components and other examples", () => {
   for (const file of readdirSync(examples, { recursive: true })) {
-    if (!/\.tsx?$/.test(file)) continue;
+    if (!/\.(?:tsx?|vue|svelte)$/.test(file)) continue;
     const url = new URL(file, examples);
     const source = readFileSync(url, "utf8");
     for (const [, specifier] of source.matchAll(/(?:\bfrom|\bimport)\s*\(?\s*["']([^"']+)["']/g)) {
       const allowed = specifier.startsWith(".")
         ? new URL(specifier, url).href.startsWith(examples.href)
-        : /^(?:react|@kind-ui\/agent-ui(?:\/(?:core|adapters\/ai-sdk|styles\.css))?|@\/components\/ui\/.+)$/.test(
+        : /^(?:react|vue|svelte|solid-js|@solidjs\/web|@kind-ui\/agent-ui(?:\/(?:core|adapters\/ai-sdk|styles\.css))?|@\/components\/ui\/.+)$/.test(
             specifier,
           );
       assert.ok(allowed, `${file}: ${specifier}`);

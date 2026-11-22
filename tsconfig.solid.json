@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "exactOptionalPropertyTypes": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "jsx": "preserve",
+    "jsxImportSource": "@solidjs/web",
+    "types": ["node", "vite/client"],
+    "paths": { "@/components/ui/solid/*": ["./packages/agent-ui/src/solid/*"] }
+  },
+  "include": [
+    "packages/agent-ui/src/solid",
+    "packages/agent-ui/tests/fixtures/solid",
+    "apps/docs/examples/**/*.solid.tsx"
+  ]
+}

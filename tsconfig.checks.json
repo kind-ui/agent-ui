@@ -15,5 +15,10 @@
     "packages/agent-ui/tests/fixtures",
     "tests/browser",
     "playwright.config.mjs"
+  ],
+  "exclude": [
+    "packages/agent-ui/tests/fixtures/vue",
+    "packages/agent-ui/tests/fixtures/svelte",
+    "packages/agent-ui/tests/fixtures/solid"
   ]
 }

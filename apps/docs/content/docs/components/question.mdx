@@ -10,18 +10,12 @@ Use a question when the agent needs facts only a person has before it goes on, l
 <Example caption="Choose where to deploy, pick any checks and add a note, then press Submit. The form gives way to your answers.">
   <QuestionExample />
 
-  <include cwd lang="tsx">./examples/question/basic.tsx</include>
+  <ExampleCode example="question/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/question
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/question-web
-```
+<Install name="question" />
 
 ## Composition
 
@@ -95,6 +89,8 @@ Questions added after the form appears fade up, the summary fades in, and the ra
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/question/question.ts" name="QuestionOptions" />
 
+<FrameworkNames name="question" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the question by its label and reads its answers. It can `select` an option or `setText` for a question it names by id or prompt, and an unknown question is refused. It can `submit` once every required question has an answer, and `skip` while **Skip** shows. While `agentConfirm` is on, every action waits for a person to confirm, unless the host's `allow` lets it through.
@@ -102,5 +98,5 @@ An agent connected with `createAgent` finds the question by its label and reads 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/question/question.ts" name="QuestionAgentActions" type='Pick<QuestionApi, "select" | "setText" | "submit" | "skip">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-question>`, `questions`, `value`, `defaultValue` and `submitted` are properties, and other props are kebab-case attributes, so `submitLabel` is `submit-label`. Submit and Skip need the `can-submit` and `can-skip` attributes and fire `questionsubmit` and `skip` with the answers as `detail.value`: call `event.detail.waitUntil(promise)` to keep the form locked. The element fills in its form when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-question>`, `questions`, `value`, `defaultValue` and `submitted` are properties, and other props are kebab-case attributes, so `submitLabel` is `submit-label`. Submit and Skip need the `can-submit` and `can-skip` attributes and fire `questionsubmit` and `skip` with the answers as `detail.value`: call `event.detail.waitUntil(promise)` to keep the form locked. The element fills in its form when it has no children.
 </Caption>

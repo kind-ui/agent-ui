@@ -10,18 +10,12 @@ Use a task to follow one piece of work an agent carries out, like a change acros
 <Example caption="Press Tab to reach the steps, then use the arrow keys to move between them. Press the title to hide or show them.">
   <TaskExample />
 
-  <include cwd lang="tsx">./examples/task/basic.tsx</include>
+  <ExampleCode example="task/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/task
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/task-web
-```
+<Install name="task" />
 
 ## Composition
 
@@ -71,6 +65,8 @@ Marks morph between statuses, and the list grows open and shut. Under `prefers-r
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/task/task.ts" name="TaskOptions" />
 
+<FrameworkNames name="task" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the task by its title and reads its `open` and `status`. It can run these actions, and press the trigger like a person would.
@@ -78,5 +74,5 @@ An agent connected with `createAgent` finds the task by its title and reads its 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/task/task.ts" name="TaskAgentActions" type='Pick<TaskApi, "expand" | "collapse">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-task>`, `items` is a property only, other props are kebab-case attributes, so `autoOpen` is `auto-open`, and `onOpenChange` fires `openchange`. The element fills in its parts when it has no children, and keeps a `<kind-task-item>` in its list for each item.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-task>`, `items` is a property only, other props are kebab-case attributes, so `autoOpen` is `auto-open`, and `onOpenChange` fires `openchange`. The element fills in its parts when it has no children, and keeps a `<kind-task-item>` in its list for each item.
 </Caption>

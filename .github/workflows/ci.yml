@@ -69,13 +69,13 @@ jobs:
       - run: node scripts/run-checks.mjs check:docs
 
   browser:
-    name: Browser (${{ matrix.shard }}/4)
+    name: Browser (${{ matrix.shard }}/8)
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -101,7 +101,7 @@ jobs:
           REPEAT: ${{ github.event.schedule == '41 8 * * 0' && '--repeat-each=3' || '' }}
         run: |
           # shellcheck disable=SC2086 # SPECS and REPEAT are lists of arguments.
-          npm run test:browser -- --shard=${{ matrix.shard }}/4 --pass-with-no-tests $REPEAT $SPECS
+          npm run test:browser -- --shard=${{ matrix.shard }}/8 --pass-with-no-tests $REPEAT $SPECS
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:

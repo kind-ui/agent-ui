@@ -11,18 +11,12 @@ Use a share dialog to put a **Share** button beside a chat. Its dialog chooses b
 <Example caption="Press Share, choose Anyone with the link, then press Create link. Press Copy link to copy it, or Stop sharing to make the chat private again. Press Done or Escape to close the dialog.">
   <ShareDialogExample />
 
-  <include cwd lang="tsx">./examples/share-dialog/basic.tsx</include>
+  <ExampleCode example="share-dialog/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/share-dialog
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/share-dialog-web
-```
+<Install name="share-dialog" />
 
 ## Composition
 
@@ -85,12 +79,14 @@ Someone who opens a share link should read the chat, not continue it. Render the
 <Example caption="A shared copy of a chat: the messages have no actions, and Continue this chat sits in the notice above them.">
   <SharedViewExample />
 
-  <include cwd lang="tsx">./examples/share-dialog/shared-view.tsx</include>
+  <ExampleCode example="share-dialog/shared-view" />
 </Example>
 
 ## API Reference
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/share-dialog/share-dialog.ts" name="ShareDialogOptions" />
+
+<FrameworkNames name="share-dialog" />
 
 ### Agent
 
@@ -101,5 +97,5 @@ Making a chat public is a consequential change, so with `agentConfirm`, on by de
 <auto-type-table path="../../../../../packages/agent-ui/src/core/share-dialog/share-dialog.ts" name="ShareDialogAgentActions" type='Pick<ShareDialogApi, "open" | "close" | "setVisibility" | "createLink" | "copyLink" | "revoke">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-share-dialog>`, the props are kebab-case attributes, so `dialogLabel` is `dialog-label`. The `can-create-link` attribute offers Create link, which fires `createlink`, and `can-revoke` offers Stop sharing, which fires `revoke`. `onVisibilityChange` is `sharevisibilitychange`, `onCopy` is `linkcopy` and `onOpenChange` is `openchange`. Set `link` once you've made one. The element fills in its trigger and dialog when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-share-dialog>`, the props are kebab-case attributes, so `dialogLabel` is `dialog-label`. The `can-create-link` attribute offers Create link, which fires `createlink`, and `can-revoke` offers Stop sharing, which fires `revoke`. `onVisibilityChange` is `sharevisibilitychange`, `onCopy` is `linkcopy` and `onOpenChange` is `openchange`. Set `link` once you've made one. The element fills in its trigger and dialog when it has no children.
 </Caption>

@@ -10,18 +10,12 @@ Use a code block for a file, a command or a snippet the agent wrote. Markdown re
 <Example caption="Press the wrap button to wrap long lines, or the copy button to copy the code. Tab reaches both, and Enter or Space presses them.">
   <CodeBlockExample />
 
-  <include cwd lang="tsx">./examples/code-block/basic.tsx</include>
+  <ExampleCode example="code-block/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/code-block
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/code-block-web
-```
+<Install name="code-block" />
 
 ## Usage
 
@@ -60,6 +54,8 @@ Set `streaming` while the code is still arriving, and the view follows its end. 
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/code-block/code-block.ts" name="CodeBlockOptions" />
 
+<FrameworkNames name="code-block" />
+
 ### Agent
 
 An agent connected with `createAgent` reads whether the code block wraps. It can run these actions, and press its buttons like a person would:
@@ -67,5 +63,5 @@ An agent connected with `createAgent` reads whether the code block wraps. It can
 <auto-type-table path="../../../../../packages/agent-ui/src/core/code-block/code-block.ts" name="CodeBlockAgentActions" type='Pick<CodeBlockApi, "copy" | "toggleWrap">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-code-block>`, each prop is a kebab-case attribute, so `lineNumbers` is `line-numbers`, and `onWrapChange` fires `wrapchange`. Set `highlight` as a property.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-code-block>`, each prop is a kebab-case attribute, so `lineNumbers` is `line-numbers`, and `onWrapChange` fires `wrapchange`. Set `highlight` as a property.
 </Caption>

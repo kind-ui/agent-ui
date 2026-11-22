@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { passingSteps } from "../../../packages/agent-ui/tests/fixtures/shared/test-results.js";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Fixture = {
   kindTestResults: { set(id: string, next: Record<string, unknown>): void };
@@ -219,7 +219,7 @@ for (const colorScheme of ["light", "dark"] as const) {
 }
 
 test("kind-test-results keeps its filter and open rows when put back", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   const run = results(page, "results");
   await count(page, "results", /failed$/).click();
@@ -239,7 +239,7 @@ test("kind-test-results keeps its filter and open rows when put back", async ({ 
 test("kind-test-results fills in a filter and tree written later, with whitespace inside", async ({
   page,
 }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await page.goto("/?c=test-results&case=late");
   const run = results(page, "late");
   await expect(part(page, "late", "title")).toHaveText("Tests");

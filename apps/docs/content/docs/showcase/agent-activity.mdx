@@ -10,7 +10,7 @@ This run puts the step components together the way a host app would. The agent t
 <Example caption="The run streams its thinking, waits on the delete_branch approval, then stops on the plan. Press Accept to let the subagent do the work, or Replay to start over. Drag a follow-up to reorder it, or press Delete to remove the focused one.">
   <AgentActivityShowcase />
 
-  <include cwd lang="tsx">./examples/showcase/agent-activity.tsx</include>
+  <ExampleCode example="showcase/agent-activity" />
 </Example>
 
 ## What Happens
@@ -24,5 +24,5 @@ This run puts the step components together the way a host app would. The agent t
 Each component gets its state from the host as plain data, here a timer stepping through a script. In an app, the same data comes from your model's stream, for example through the [AI SDK adapter](../adapters/ai-sdk.mdx).
 
 <Caption>
-  Every component here runs in React and Web Components. The example is React.
+  Every component here runs in React, Vue, Svelte, Solid and Web Components. The example is React.
 </Caption>

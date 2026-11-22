@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { layerOf } from "../layer.js";
+import { isWebElements, layerOf } from "../layer.js";
 
 type Fixture = { kindServerMarkup?: string; kindHydrationErrors?: string[] };
 
@@ -39,7 +39,7 @@ test("without a date the heading is hidden", async ({ page }) => {
 });
 
 test("a label written after the element connects is filled in", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements fill in their parts");
+  test.skip(!isWebElements(testInfo), "web elements fill in their parts");
   await load(page, "2026-11-18T12:00:00Z");
   await separator(page, "written").evaluate((el) => {
     el.innerHTML = "<kind-day-separator-label><time>\n  </time></kind-day-separator-label>";

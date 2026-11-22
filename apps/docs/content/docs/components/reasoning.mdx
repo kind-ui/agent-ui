@@ -10,18 +10,12 @@ Use reasoning for the thoughts a model writes before it answers. It reads "Think
 <Example caption="Press Thought for 4 s, or focus it and press Enter or Space, to read what the model thought.">
   <ReasoningExample />
 
-  <include cwd lang="tsx">./examples/reasoning/basic.tsx</include>
+  <ExampleCode example="reasoning/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/reasoning
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/reasoning-web
-```
+<Install name="reasoning" />
 
 ## Composition
 
@@ -63,6 +57,8 @@ The content grows open and shut. Under `prefers-reduced-motion`, or with `motion
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/reasoning/reasoning.ts" name="ReasoningOptions" />
 
+<FrameworkNames name="reasoning" />
+
 ### Agent
 
 An agent connected with `createAgent` finds a reasoning by its title and reads its `open` and `status`. It can run these actions, and press the trigger like a person would:
@@ -70,5 +66,5 @@ An agent connected with `createAgent` finds a reasoning by its title and reads i
 <auto-type-table path="../../../../../packages/agent-ui/src/core/step/base.ts" name="ReasoningAgentActions" type='Pick<StepApi, "expand" | "collapse">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-reasoning>`, each prop is a kebab-case attribute, so `durationSeconds` is `duration-seconds`, and `onOpenChange` fires `openchange`. The element fills in its parts when it has no children, writes its title into an empty `<kind-reasoning-title>`, and writes `text` into a `<kind-markdown>` in its content.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-reasoning>`, each prop is a kebab-case attribute, so `durationSeconds` is `duration-seconds`, and `onOpenChange` fires `openchange`. The element fills in its parts when it has no children, writes its title into an empty `<kind-reasoning-title>`, and writes `text` into a `<kind-markdown>` in its content.
 </Caption>

@@ -1,0 +1,7 @@
+@layer ui-sdk;
+@import "tailwindcss";
+@import "../../../src/styles/agent-ui.css";
+
+:root {
+  color-scheme: light dark;
+}

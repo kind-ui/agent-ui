@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `bfb9bb7` (Design Wave 1 Batch D)
+Last reviewed: f92b42e5 (framework layers Task Svelte-2)
 
 ## Settled
 
+- **Core is the one contract for five render layers (framework layers plan, 2026-11-20):** the Vue, Svelte and Solid layers call `createParts` on the same primitives. A behavior gap a new layer finds is fixed here, with React's and Web's specs for that component run again; never patched in one render layer. Don't propose framework-specific options, state or actions.
 - **`appendText` returns `true` for a controlled composer before the owner applies the value (Task 17):** it goes through `createChange`, as `setValue` does.
 - **Dictation keeps its run when the host passes a new `source` object (Wave 5 Task 11):** only dropping `source` cancels, since React hosts often write the source inline, a new object each render; the new source is used from the next start.
 - **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio group in Model Control, a Settings Menu (`settingsBase`), listed in the menu itself after the models since Design Wave 1 Batch B (`inline` choice rows). Don't propose a slider, a submenu or a nested popover for effort.
@@ -52,6 +53,8 @@ Last reviewed: `bfb9bb7` (Design Wave 1 Batch D)
 - **Thread Search's Escape closes its dialog** (`@ui-sdk/core/testing`, Wave 6 Task 12): as with "A picker's Escape closes its popover", Command's search is a `combobox` whose list is always shown, here inside a modal dialog, so Escape closes the dialog and focus returns to the trigger, where `checkPattern("combobox")` expects only the list to close and focus to stay. `wave-6/aria-patterns.spec.ts` accepts those two problems; the dialog check passes.
 
 ## Known and open (don't report again, check whether fixed)
+
+- **Step base `onOptions` reads `open` from the store** (`step/base.ts`): under `@ui-sdk/svelte`, which hands options over through `follow`, that is the new controlled `open`, so an owner changing `open` and `status` together might see one more or fewer auto `onOpenChange`. Not reproduced (Task Svelte-2 review); check with the Svelte step family.
 
 - **`menuBase` holds `partState.menu`'s `open` while a `ui-menu` reports its own `openchange`** (Design Wave 0): UI SDK web highlights the first item and leaves focus on the trigger when `open` is written back during that event, as its own controlled example does. Ask upstream; remove `applying` once fixed.
 - **The waveform's default of 128 bars writes 128 `--kind-dictation-level-*` properties per level (Task 17):** not profiled; lower the default or size it to the box if it shows up.

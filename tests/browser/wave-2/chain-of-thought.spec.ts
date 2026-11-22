@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Step = { id: string; status: string; title: string; durationSeconds?: number };
 
@@ -229,7 +229,7 @@ for (const colorScheme of ["light", "dark"] as const) {
 }
 
 test("kind-chain-of-thought adds and removes the items it writes", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   const plain = page.locator("#plain");
   await plain.evaluate((el: HTMLElement & { steps: Step[] }) => {
@@ -256,7 +256,7 @@ test("kind-chain-of-thought adds and removes the items it writes", async ({ page
 });
 
 test("kind-chain-of-thought keeps its open steps when moved", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   await stepTrigger(page, "Plan the search").click();
   await chain(page).evaluate(async (el) => {
@@ -270,7 +270,7 @@ test("kind-chain-of-thought keeps its open steps when moved", async ({ page }, t
 });
 
 test("kind-chain-of-thought gives way to an item written after its step", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   await chain(page).evaluate((el: HTMLElement & { steps: Step[] }) => {
     el.steps = [...el.steps, { id: "late", status: "running", title: "Late" }];
@@ -288,7 +288,7 @@ test("kind-chain-of-thought gives way to an item written after its step", async 
 });
 
 test("kind-chain-of-thought leaves a chain nested in a step's content alone", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   await chain(page).evaluate((el: HTMLElement & { steps: Step[] }) => {
     const sub = document.createElement("kind-chain-of-thought-item");

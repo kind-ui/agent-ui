@@ -10,18 +10,12 @@ Use an approval mode beside a [composer](./composer.mdx) when people decide how 
 <Example caption="Press Approvals, then choose Full access. The menu closes, and the button shows Full access with a warning mark.">
   <ApprovalModeExample />
 
-  <include cwd lang="tsx">./examples/approval-mode/basic.tsx</include>
+  <ExampleCode example="approval-mode/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/approval-mode
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/approval-mode-web
-```
+<Install name="approval-mode" />
 
 ## Composition
 
@@ -81,6 +75,8 @@ The menu opens as a popover below the button. With `presentation="auto"`, the de
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/approval-mode/approval-mode.ts" name="ApprovalModeOptions" />
 
+<FrameworkNames name="approval-mode" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the approval mode by its name, like "Approvals, Ask every time", and reads `open` and `value`. It lists every mode by `value` and label. `setValue` takes a mode's `value` and refuses an unknown one; it's offered only while the menu is enabled and holds a mode, and it changes the mode whether the menu is open or closed. `open` is offered while the menu is closed and enabled, and `close` while it's open.
@@ -90,5 +86,5 @@ Changing the mode widens or narrows what the agent may do without asking, so wit
 <auto-type-table path="../../../../../packages/agent-ui/src/core/approval-mode/approval-mode.ts" name="ApprovalModeAgentActions" type='Pick<ApprovalModeApi, "open" | "close" | "setValue">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-approval-mode>`, set `modes`, `value` and `open` as properties and `learn-more-href` and `agent-confirm` as attributes, and listen for `modechange`, with the mode as `event.detail.value`, and `openchange`. Add the `can-learn-more` attribute to listen for `learnmore` instead of following a link. The element fills in its button and menu when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-approval-mode>`, set `modes`, `value` and `open` as properties and `learn-more-href` and `agent-confirm` as attributes, and listen for `modechange`, with the mode as `event.detail.value`, and `openchange`. Add the `can-learn-more` attribute to listen for `learnmore` instead of following a link. The element fills in its button and menu when it has no children.
 </Caption>

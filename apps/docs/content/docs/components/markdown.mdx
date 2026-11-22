@@ -10,18 +10,12 @@ Use Markdown for the text of an assistant's reply. Pass the text so far as `sour
 <Example caption="Press the copy button above the code or the table to copy it, or the wrap button to wrap long lines.">
   <MarkdownExample />
 
-  <include cwd lang="tsx">./examples/markdown/basic.tsx</include>
+  <ExampleCode example="markdown/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/markdown
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/markdown-web
-```
+<Install name="markdown" />
 
 ## Usage
 
@@ -49,10 +43,12 @@ No highlighter ships with Markdown. Pass a `highlight` function and every code b
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/markdown-view/markdown-view.ts" name="MarkdownOptions" />
 
+<FrameworkNames name="markdown" />
+
 ### Agent
 
 Markdown has no role, so an agent connected with `createAgent` sees it by kind, with no name and no actions of its own. The code blocks and tables inside it show up as their own components, with their actions.
 
 <Caption>
-  Runs in React and Web Components. On `<kind-markdown>`, `source` and `streaming` are attributes, and `highlight` and `engine` are properties you set from script.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-markdown>`, `source` and `streaming` are attributes, and `highlight` and `engine` are properties you set from script.
 </Caption>

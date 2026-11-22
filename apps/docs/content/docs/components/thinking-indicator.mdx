@@ -10,18 +10,12 @@ Use a thinking indicator between sending a message and the first word of the rep
 <Example caption="The dots flow while the agent thinks. With reduced motion on, they hold still.">
   <ThinkingIndicatorExample />
 
-  <include cwd lang="tsx">./examples/thinking-indicator/basic.tsx</include>
+  <ExampleCode example="thinking-indicator/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/thinking-indicator
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/thinking-indicator-web
-```
+<Install name="thinking-indicator" />
 
 ## Usage
 
@@ -37,10 +31,12 @@ The dots flow one after another; the label stays still. Under `prefers-reduced-m
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/indicator.ts" name="IndicatorOptions" />
 
+<FrameworkNames name="thinking-indicator" />
+
 ### Agent
 
 An agent connected with `createAgent` sees the thinking indicator as a status named by its label. It has no actions of its own.
 
 <Caption>
-  Runs in React and Web Components. On `<kind-thinking-indicator>`, `label` and `motion` are attributes of the same name, and the element fills in its label and dots when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-thinking-indicator>`, `label` and `motion` are attributes of the same name, and the element fills in its label and dots when it has no children.
 </Caption>

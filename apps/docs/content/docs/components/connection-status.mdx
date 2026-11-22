@@ -10,18 +10,12 @@ Use a connection status inside a [Conversation](./conversation.mdx) to say that 
 <Example caption="Press Offline to drop the connection and disable the composer, or Reconnecting to count down to the next try. Press Retry in the pill, or Online, to get the connection back.">
   <ConnectionStatusExample />
 
-  <include cwd lang="tsx">./examples/connection-status/basic.tsx</include>
+  <ExampleCode example="connection-status/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/connection-status
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/connection-status-web
-```
+<Install name="connection-status" />
 
 ## Composition
 
@@ -83,6 +77,8 @@ The pill fades in as it drops into place, and fades out where it is. Under `pref
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/connection-status/connection-status.ts" name="ConnectionStatusOptions" />
 
+<FrameworkNames name="connection-status" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the connection status by its state's words, and sees its `phase` and whether a retry is `pending`. `retry()` does what **Retry** does, offered while `onRetry` is set, the pill shows and no retry is pending. It doesn't ask a person first.
@@ -90,5 +86,5 @@ An agent connected with `createAgent` finds the connection status by its state's
 <auto-type-table path="../../../../../packages/agent-ui/src/core/connection-status/connection-status.ts" name="ConnectionStatusAgentActions" type='Pick<ConnectionStatusApi, "retry">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-connection-status>`, props are kebab-case attributes (`state="offline"`, `retry-at`) and `labels` is a property. The element adds its mark, words and Retry. The `can-retry` attribute shows Retry, which fires `connectionretry`: call `event.detail.waitUntil(promise)` to show **Reconnecting** until the promise settles.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-connection-status>`, props are kebab-case attributes (`state="offline"`, `retry-at`) and `labels` is a property. The element adds its mark, words and Retry. The `can-retry` attribute shows Retry, which fires `connectionretry`: call `event.detail.waitUntil(promise)` to show **Reconnecting** until the promise settles.
 </Caption>

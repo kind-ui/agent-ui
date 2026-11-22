@@ -16,10 +16,9 @@ import { controls } from "../../shared/full-composer.js";
 import { levels, models } from "../../shared/model-control.js";
 import { initialValues, settings } from "../../shared/settings-menu.js";
 
-const drafts = draftOptions(new URLSearchParams(location.search));
 const { source } = dictationHost();
 
-function Page() {
+function Page({ drafts }: { drafts: ReturnType<typeof draftOptions> }) {
   const [chips, setChips] = useState(contextChips(4));
   const [mode, setMode] = useState(initialValue);
   const [values, setValues] = useState<SettingsValues>(initialValues);
@@ -47,5 +46,5 @@ function Page() {
 }
 
 export const cases = {
-  all: () => <Page />,
+  all: (params: URLSearchParams) => <Page drafts={draftOptions(params)} />,
 };

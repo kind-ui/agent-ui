@@ -10,18 +10,12 @@ Use a checkpoint where the agent saved its work, like before it edits a file, so
 <Example caption="Press Restore checkpoint, then Restore. The dialog waits for the restore, then the checkpoint reads Restored.">
   <CheckpointExample />
 
-  <include cwd lang="tsx">./examples/checkpoint/basic.tsx</include>
+  <ExampleCode example="checkpoint/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/checkpoint
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/checkpoint-web
-```
+<Install name="checkpoint" />
 
 ## Composition
 
@@ -76,6 +70,8 @@ The dialog rises and fades in, its backdrop and the tooltip fade, and "Restored"
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/checkpoint/checkpoint.ts" name="CheckpointOptions" />
 
+<FrameworkNames name="checkpoint" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the checkpoint by its label and reads whether its dialog is open. Its `restore` opens the dialog, the same as a press, and is offered while **Restore checkpoint** shows and the dialog is closed. It never calls `onRestore`: only the dialog's **Restore** does, and an agent pressing that always needs a person to confirm, unless the host's `allow` lets it through. While `agentConfirm` is on, `restore` and every other action on the checkpoint need a person too.
@@ -83,5 +79,5 @@ An agent connected with `createAgent` finds the checkpoint by its label and read
 <auto-type-table path="../../../../../packages/agent-ui/src/core/checkpoint/checkpoint.ts" name="CheckpointAgentActions" type='Pick<CheckpointApi, "restore">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-checkpoint>`, props are kebab-case attributes, so `confirmTitle` is `confirm-title`, and `open` is a property too. Restore needs the `can-restore` attribute, and the dialog's Restore fires `restore`: call `event.detail.waitUntil(promise)` to keep the dialog open. The element fills in its parts when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-checkpoint>`, props are kebab-case attributes, so `confirmTitle` is `confirm-title`, and `open` is a property too. Restore needs the `can-restore` attribute, and the dialog's Restore fires `restore`: call `event.detail.waitUntil(promise)` to keep the dialog open. The element fills in its parts when it has no children.
 </Caption>

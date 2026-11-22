@@ -10,18 +10,12 @@ Use a thread search to let people jump to any conversation they've had with the 
 <Example caption="Press Search chats, or press Cmd+K or Ctrl+K, type build, then press Enter to open the thread. Choose New chat to start one with what you typed.">
   <ThreadSearchExample />
 
-  <include cwd lang="tsx">./examples/thread-search/basic.tsx</include>
+  <ExampleCode example="thread-search/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/thread-search
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/thread-search-web
-```
+<Install name="thread-search" />
 
 ## Composition
 
@@ -94,6 +88,8 @@ The search opens as a modal dialog over the page. With `presentation="auto"`, th
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/thread-search/thread-search.ts" name="ThreadSearchOptions" />
 
+<FrameworkNames name="thread-search" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the search by its label and reads `open` and `query`. Its `search` types into the field, as a person would. `select` takes a thread's `id` and refuses an unknown one, and is offered only while `onSelect` is set. `newThread` runs **New chat** with the search text and is offered only while `onNew` is set. None of them opens or closes the dialog, and none is offered while the search is `disabled`.
@@ -101,5 +97,5 @@ An agent connected with `createAgent` finds the search by its label and reads `o
 <auto-type-table path="../../../../../packages/agent-ui/src/core/thread-search/thread-search.ts" name="ThreadSearchAgentActions" type='Pick<ThreadSearchApi, "open" | "close" | "search" | "select" | "newThread">' />
 
 <Caption>
-  Runs in React and Web Components. Call `defineThreadSearch()` from the web entry, then on `<kind-thread-search shortcut="mod+k" can-select can-new>` set `threads` and `query` as properties, and listen for `threadselect`, with the thread's `id` as `event.detail.value`, `threadnew`, with the search text, `threadquerychange` and `openchange`. `can-select` and `can-new` offer choosing a thread and **New chat**.
+  Runs in React, Vue, Svelte, Solid and Web Components. Call `defineThreadSearch()` from the web entry, then on `<kind-thread-search shortcut="mod+k" can-select can-new>` set `threads` and `query` as properties, and listen for `threadselect`, with the thread's `id` as `event.detail.value`, `threadnew`, with the search text, `threadquerychange` and `openchange`. `can-select` and `can-new` offer choosing a thread and **New chat**.
 </Caption>

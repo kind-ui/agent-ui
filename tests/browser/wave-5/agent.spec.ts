@@ -13,7 +13,7 @@ import {
   snapshot,
 } from "../agent-conformance.js";
 import { allowClipboard } from "../clipboard.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 const picker = { component: "kind-picker", label: "Work in, kind-ui/agent-ui", id: "picker" };
 const model = { component: "kind-model-selector", label: "Model, GPT-5", id: "model" };
@@ -485,7 +485,7 @@ test("actions that take an id refuse an unknown one", async ({ page }) => {
 });
 
 test("can-* attributes offer their actions", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web attributes only");
+  test.skip(!isWebElements(testInfo), "web attributes only");
   await open(page);
   const cases = [
     { target: picker, attribute: "can-run", action: "run" },

@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `bfb9bb7` (Design Wave 1 Batch D)
+Last reviewed: `e3ab23a` (framework layers Task 1)
 
 ## Settled
 
+- **The Vue, Svelte and Solid layers follow React's structure, not Web's (framework layers plan, 2026-11-20):** the Web layer's `draw` hooks, `can-*` attributes and renamed events are Web Components needs that the component frameworks don't share. `wave-1/light-dom.spec.ts` stays Web-only.
 - **`kind-connection-status` fires `connectionretry`, not `retry`** (Wave 6 Task 7): it sits inside a `kind-conversation`, which fires its own `retry` for its error state, and a capture listener on the conversation hears both (UI SDK events don't bubble, but capture still passes ancestors). A distinct name, as `uploadretry` is, keeps them apart without checking `event.target`.
 - **A Dictation in a shadow root nested inside the Composer doesn't reach it (Task 17):** `insertText` walks `parentElement`, as a button in a shadow root doesn't submit an outer form.
 - **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.

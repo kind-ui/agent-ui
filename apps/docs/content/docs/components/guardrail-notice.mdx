@@ -10,18 +10,12 @@ Use a guardrail notice where a response would have been when a safety or content
 <Example caption="Press Why? to read the policy, and press it again to hide it. Press Dismiss to remove the blocked notice.">
   <GuardrailNoticeExample />
 
-  <include cwd lang="tsx">./examples/guardrail-notice/basic.tsx</include>
+  <ExampleCode example="guardrail-notice/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/guardrail-notice
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/guardrail-notice-web
-```
+<Install name="guardrail-notice" />
 
 ## Composition
 
@@ -68,6 +62,8 @@ At full motion the detail slides open; under `prefers-reduced-motion`, or with `
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/guardrail-notice/guardrail-notice.ts" name="GuardrailNoticeOptions" />
 
+<FrameworkNames name="guardrail-notice" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the notice by its title and reads `open`. `expand()` and `collapse()` show and hide the detail, offered while there is one, and `dismiss()` does what **Dismiss** does, offered while `onDismiss` is set. Like any component with a button, it also has UI SDK's generic `press`.
@@ -75,5 +71,5 @@ An agent connected with `createAgent` finds the notice by its title and reads `o
 <auto-type-table path="../../../../../packages/agent-ui/src/core/guardrail-notice/guardrail-notice.ts" name="GuardrailNoticeAgentActions" type='Pick<GuardrailNoticeApi, "dismiss" | "expand" | "collapse">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-guardrail-notice>`, props are kebab-case attributes, and `open` and `focusFallback` are properties; `onOpenChange` is the `openchange` event. The element fills in its parts, and Dismiss follows any `<kind-guardrail-notice-actions>` you write inside it. The `can-dismiss` attribute shows Dismiss, which fires `dismiss` once the notice has faded.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-guardrail-notice>`, props are kebab-case attributes, and `open` and `focusFallback` are properties; `onOpenChange` is the `openchange` event. The element fills in its parts, and Dismiss follows any `<kind-guardrail-notice-actions>` you write inside it. The `can-dismiss` attribute shows Dismiss, which fires `dismiss` once the notice has faded.
 </Caption>

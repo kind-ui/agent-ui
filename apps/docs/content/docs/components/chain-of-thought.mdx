@@ -10,18 +10,12 @@ Use a chain of thought to group the steps behind one answer, like searching, com
 <Example caption="Press Compare fares, or move to it with the arrow keys and press Enter or Space, to show its details.">
   <ChainOfThoughtExample />
 
-  <include cwd lang="tsx">./examples/chain-of-thought/basic.tsx</include>
+  <ExampleCode example="chain-of-thought/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/chain-of-thought
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/chain-of-thought-web
-```
+<Install name="chain-of-thought" />
 
 ## Composition
 
@@ -86,6 +80,8 @@ Steps grow open and shut. Under `prefers-reduced-motion`, or with `motion="reduc
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/chain-of-thought/chain-of-thought.ts" name="ChainOfThoughtOptions" />
 
+<FrameworkNames name="chain-of-thought" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the chain by its title and reads its `open`, `status` and `openSteps`, and each step's `id` and title. It can run these actions, and press a trigger like a person would. `expandStep` takes a step's `id` or title, refuses one that isn't a step, and a step it opens stays open when it completes.
@@ -93,5 +89,5 @@ An agent connected with `createAgent` finds the chain by its title and reads its
 <auto-type-table path="../../../../../packages/agent-ui/src/core/chain-of-thought/chain-of-thought.ts" name="ChainOfThoughtAgentActions" type='Pick<ChainOfThoughtApi, "expand" | "collapse" | "expandStep">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-chain-of-thought>`, `steps` is a property only, other props are kebab-case attributes, so `openSteps` is `open-steps`, and `onOpenChange` and `onOpenStepsChange` fire `openchange` and `openstepschange`. The element fills in its parts when it has no children, adds a `<kind-chain-of-thought-item>` for each step its list lacks and removes the ones it added, and gives every item without a trigger one with the step's icon, title and duration. Write an item with a `<kind-chain-of-thought-item-content>` to give a step details.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-chain-of-thought>`, `steps` is a property only, other props are kebab-case attributes, so `openSteps` is `open-steps`, and `onOpenChange` and `onOpenStepsChange` fire `openchange` and `openstepschange`. The element fills in its parts when it has no children, adds a `<kind-chain-of-thought-item>` for each step its list lacks and removes the ones it added, and gives every item without a trigger one with the step's icon, title and duration. Write an item with a `<kind-chain-of-thought-item-content>` to give a step details.
 </Caption>

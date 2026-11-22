@@ -13,7 +13,7 @@ import {
   snapshot,
 } from "../agent-conformance.js";
 import { allowClipboard } from "../clipboard.js";
-import { layerOf } from "../layer.js";
+import { isWebElements, layerOf } from "../layer.js";
 
 const threads = { component: "kind-thread-list", label: "Chats", id: "thread-list" };
 const search = { component: "kind-thread-search", label: "Search chats", id: "thread-search" };
@@ -278,11 +278,20 @@ test("only Share Dialog, while agentConfirm, and Thread List's delete dialog ask
   await expect.poll(asking).toEqual([deleteButton]);
 });
 
+// `@ui-sdk/svelte` writes a Segmented Control's hidden radio `checked` as an
+// attribute when a person's press renders the item again, and only the property when its controller sets the value,
+// so the Share Dialog's hidden inputs are compared by the items' `aria-checked` alone there.
+const svelteIgnore: Partial<Record<string, string>> = { [share.id]: '[data-slot="segmented-control-input"]' };
+
 for (const item of conformance) {
   const { target, action: name, args } = item;
   test(`${target.component} "${target.label}".${name}(${args?.join(", ") ?? ""}) leaves the page as a person's input does`, ({
     page,
-  }) => expectSameAsPerson(page, open, item));
+  }, testInfo) =>
+    expectSameAsPerson(page, open, {
+      ...item,
+      ignore: (layerOf(testInfo) === "svelte" && svelteIgnore[target.id]) || item.ignore,
+    }));
 }
 
 test("change callbacks hear source agent, and a cancelled change leaves the state alone", async ({
@@ -365,7 +374,7 @@ test("actions that take an id refuse an unknown one", async ({ page }) => {
 });
 
 test("can-* attributes offer their actions", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web attributes only");
+  test.skip(!isWebElements(testInfo), "web attributes only");
   await open(page);
   await act(page, share.component, share.label, "open");
   await opened(share)(page).toBe(true);

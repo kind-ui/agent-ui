@@ -19,6 +19,7 @@ function Page({ initial = "online", motion }: { initial?: ConnectionState; motio
     resuming?: boolean | undefined;
   }>({ state: initial });
   useEffect(() => {
+    // Each call renders before it returns, so two calls in a row aren't batched into the second.
     const set: ConnectionHost["set"] = (state, options) =>
       flushSync(() => setConnection({ state, ...options }));
     Object.assign(window, { kindHost: Object.assign(host, { set }) });

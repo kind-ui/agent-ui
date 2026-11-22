@@ -36,6 +36,24 @@
 - Changes: a skill header (`name`, `description`) added before the unchanged text.
 - Copyright (c) 2025 Vercel Labs. Licensed under the MIT License.
 
+## sveltejs/ai-tools (Svelte best practices)
+
+- Source: https://github.com/sveltejs/ai-tools, commit `f9d22f2f7f7cd5e4596eef5d108a69ac8f0dd48d`, `tools/skills/svelte-core-bestpractices/`.
+- Used in: `.agents/skills/svelte-core-bestpractices`, installed unchanged with `npx skills add` (`skills-lock.json`). Not shipped in the package.
+- Copyright (c) 2026 Svelte Contributors. Licensed under the MIT License.
+
+## vuejs-ai/skills (Vue best practices)
+
+- Source: https://github.com/vuejs-ai/skills, commit `198f0cd8f7f9c0a3d9b566ccc16de6677519ee78`, `skills/vue-best-practices/`.
+- Used in: `.agents/skills/vue-best-practices`, installed unchanged with `npx skills add` (`skills-lock.json`). Not shipped in the package.
+- Copyright (c) 2025 hyf0, SerKo. Licensed under the MIT License.
+
+## solidjs/solid (Solid 2 migration guide)
+
+- Source: https://github.com/solidjs/solid, commit `8bfca0d963de436b0816a008b158c709d2bc41f4`, `documentation/solid-2.0/MIGRATION.md`.
+- Used in: `.agents/skills/solid-best-practices/SKILL.md`, which summarizes the guide's Solid 2 rules in our own words. Not shipped in the package.
+- Copyright (c) 2016-2025 Ryan Carniato. Licensed under the MIT License.
+
 ## vercel/streamdown
 
 - Source: https://github.com/vercel/streamdown, `packages/streamdown/lib/parse-blocks.tsx`.
@@ -84,6 +102,8 @@
 - `packages/agent-ui/src/styles/conversation-search.css` (Conversation Search): `search`, `chevron-up`, `chevron-down` and `x`, unchanged; all derive from Feather.
 
 - `apps/docs/examples/context-bar/basic.tsx` (Context Bar example's chip icons, not shipped in the package): `file`, `folder`, `square-dashed-text` and `link`, unchanged; `file`, `folder` and `link` derive from Feather.
+
+- Lucide (ISC, as above): `chevron-left` and `chevron-right` inline in `packages/agent-ui/src/solid/suggestion.tsx` and `check` inline in `packages/agent-ui/src/solid/question.tsx`, unchanged, as in the React layer.
 
 ## Lobe Icons
 
@@ -405,6 +425,84 @@ SOFTWARE.
 MIT License
 
 Copyright (c) 2023 LobeHub
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## sveltejs/ai-tools license
+
+MIT License
+
+Copyright (c) 2026 Svelte Contributors (https://github.com/sveltejs/ai-tools/graphs/contributors)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## vuejs-ai/skills license
+
+MIT License
+
+Copyright (c) 2025 hyf0, SerKo <https://github.com/serkodev>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## solidjs/solid license
+
+MIT License
+
+Copyright (c) 2016-2025 Ryan Carniato
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

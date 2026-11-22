@@ -23,16 +23,35 @@ const splitVersion = (specifier) => {
   return at > 0 ? [specifier.slice(0, at), specifier.slice(at + 1)] : [specifier, ""];
 };
 
-/** Where shadcn writes a file in the consumer: React beside its `ui` components, Web Components under `ui/web`. */
+/** Bare imports each layer's files may make beyond their items' `dependencies`. */
+const frameworkPackages = {
+  react: ["react"],
+  vue: ["vue"],
+  svelte: ["svelte"],
+  solid: ["solid-js", "@solidjs/web"],
+};
+
+/** Where shadcn writes a file in the consumer: React beside its `ui` components, other layers under `ui/<layer>`. */
 export function targetOf(file) {
   if (file.startsWith(`${sourceDir}react/`)) return `@ui/${file.slice(`${sourceDir}react/`.length)}`;
-  if (file.startsWith(`${sourceDir}web/`)) return `@ui/web/${file.slice(`${sourceDir}web/`.length)}`;
+  const layer = /^(web|vue|svelte|solid)\//.exec(file.slice(sourceDir.length))?.[1];
+  if (file.startsWith(sourceDir) && layer) return `@ui/${file.slice(sourceDir.length)}`;
   return `@ui/${file.split("/").at(-1)}`;
 }
 
 function resolveImport(from, specifier) {
-  const base = resolve(dirname(from), specifier).replace(/\.js$/, "");
+  const path = resolve(dirname(from), specifier);
+  if (path.endsWith(".svelte")) return path;
+  const base = path.replace(/\.js$/, "");
   return [".ts", ".tsx"].map((extension) => base + extension).find(existsSync);
+}
+
+/** A file's import specifiers; a Svelte component's come from its `<script>` blocks. */
+function importsOf(file, text) {
+  const code = file.endsWith(".svelte")
+    ? [...text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map((match) => match[1]).join("\n")
+    : text;
+  return ts.preProcessFile(code, true, true).importedFiles.map(({ fileName }) => fileName);
 }
 
 /** Errors that make the catalog unbuildable; empty when it is sound. */
@@ -82,15 +101,16 @@ export function validateCatalog(input, pkg) {
     const closure = [...reachable(item)];
     const files = new Set(closure.flatMap((each) => each.files.map((file) => resolve(root, file))));
     const packages = new Set(closure.flatMap((each) => each.dependencies.map((d) => splitVersion(d)[0])));
-    if (item.layer === "react") packages.add("react");
+    for (const name of frameworkPackages[item.layer] ?? []) packages.add(name);
+    if (!item.files.length) errors.push(`${where}: ships no files`);
     for (const file of item.files) {
       const path = resolve(root, file);
       if (!existsSync(path)) {
         errors.push(`${where}: ${file} does not exist`);
         continue;
       }
-      if (!/\.tsx?$/.test(file)) continue;
-      for (const { fileName } of ts.preProcessFile(readFileSync(path, "utf8"), true, true).importedFiles) {
+      if (!/\.(tsx?|svelte)$/.test(file)) continue;
+      for (const fileName of importsOf(file, readFileSync(path, "utf8"))) {
         if (!fileName.startsWith(".")) {
           if (!packages.has(packageName(fileName)))
             errors.push(`${where}: ${file} imports ${fileName}, not a dependency`);
