@@ -10,18 +10,12 @@ Use a queue to show the work an agent has lined up and what it has already finis
 <Example caption="Press Tab to reach the queued items. Press Space to pick one up, the arrow keys to move it, and Space to drop it. Press Delete to remove one, or drag an item with the pointer.">
   <QueueExample />
 
-  <include cwd lang="tsx">./examples/queue/basic.tsx</include>
+  <ExampleCode example="queue/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/queue
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/queue-web
-```
+<Install name="queue" />
 
 ## Composition
 
@@ -71,6 +65,8 @@ A new item fades in once as it arrives. A removed item stays in place and fades 
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/queue/queue.ts" name="QueueOptions" />
 
+<FrameworkNames name="queue" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the queue by its `label` and reads its `items`, and can name an item by its title. It can run `reorder` while `onReorder` is set and two or more items are queued, and `remove` while `onRemove` is set. Both go through your callbacks, with `details.source` set to `agent`.
@@ -92,5 +88,5 @@ const agent = createAgent({
 ```
 
 <Caption>
-  Runs in React and Web Components. On `<kind-queue>`, `items` and `openSections` are properties only, and `label` and `motion` are attributes. Reordering needs the `can-reorder` attribute and fires `reorder`, and removing needs `can-remove` and fires `remove`, each with the item's `id` in `event.detail.value`; `reorder` also has `event.detail.index`. The element fills in its sections and items itself.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-queue>`, `items` and `openSections` are properties only, and `label` and `motion` are attributes. Reordering needs the `can-reorder` attribute and fires `reorder`, and removing needs `can-remove` and fires `remove`, each with the item's `id` in `event.detail.value`; `reorder` also has `event.detail.index`. The element fills in its sections and items itself.
 </Caption>

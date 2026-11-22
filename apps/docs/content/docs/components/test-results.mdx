@@ -10,18 +10,12 @@ Use test results when the agent runs a test suite, so readers see how many tests
 <Example caption="Press “1 failed” to show only the failing tests, and press it again to show every test. Focus a row and use the arrow keys to move between rows, Right Arrow and Left Arrow to open and close one, then press Tab to reach the stack trace inside a failure.">
   <TestResultsExample />
 
-  <include cwd lang="tsx">./examples/test-results/basic.tsx</include>
+  <ExampleCode example="test-results/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/test-results
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/test-results-web
-```
+<Install name="test-results" />
 
 ## Composition
 
@@ -79,6 +73,8 @@ Tab reaches each count, then the tree, which is one Tab stop. In the tree, Up Ar
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/test-results/test-results.ts" name="TestResultsOptions" />
 
+<FrameworkNames name="test-results" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the run by its title and reads `open`, `status`, `filter` and `expanded`. It can `setFilter` to `"all"`, `"fail"`, `"pass"` or `"skip"`, and `expand` or `collapse` a suite or failed test by its value or name; without one, they open and close the run. A suite or test that isn't there is refused.
@@ -86,5 +82,5 @@ An agent connected with `createAgent` finds the run by its title and reads `open
 <auto-type-table path="../../../../../packages/agent-ui/src/core/test-results/test-results.ts" name="TestResultsAgentActions" type='Pick<TestResultsApi, "setFilter" | "expand" | "collapse">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-test-results>`, set `suites` as a property; the other props are kebab-case attributes. `onOpenChange` is the `openchange` event, `onFilterChange` is `filterchange` and `onExpandedChange` is `expandchange`.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-test-results>`, set `suites` as a property; the other props are kebab-case attributes. `onOpenChange` is the `openchange` event, `onFilterChange` is `filterchange` and `onExpandedChange` is `expandchange`.
 </Caption>

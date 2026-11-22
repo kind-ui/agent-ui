@@ -1,0 +1,86 @@
+---
+title: Agents
+description: Let an agent read and use the same components a person sees.
+---
+
+Use UI SDK's agent bridge to give an agent your page's components: their names, their state and the actions they offer. Agent UI ships no bridge of its own. Every component registers with the one UI SDK makes, in every layer.
+
+## Create the Bridge
+
+Create the bridge once, before the page renders, from the `agent` entry of the UI SDK package your components use:
+
+<Tabs groupId="framework" persist items={["React", "Web Components", "Vue", "Svelte", "Solid"]}>
+  <Tab value="React">
+    ```ts
+    import { createAgent } from "@ui-sdk/react/agent";
+
+    const agent = createAgent();
+    ```
+  </Tab>
+  <Tab value="Web Components">
+    ```ts
+    import { createAgent } from "@ui-sdk/web/agent";
+
+    const agent = createAgent();
+    ```
+  </Tab>
+  <Tab value="Vue">
+    ```ts
+    import { createAgent } from "@ui-sdk/vue/agent";
+
+    const agent = createAgent();
+    ```
+  </Tab>
+  <Tab value="Svelte">
+    ```ts
+    import { createAgent } from "@ui-sdk/svelte/agent";
+
+    const agent = createAgent();
+    ```
+  </Tab>
+  <Tab value="Solid">
+    ```ts
+    import { createAgent } from "@ui-sdk/solid/agent";
+
+    const agent = createAgent();
+    ```
+  </Tab>
+</Tabs>
+
+## Read and Act
+
+Once the page has rendered, `agent.snapshot()` lists each component once, by the same name and with the same actions in every layer. A step reads like this:
+
+```json
+{
+  "ref": "c1",
+  "component": "kind-step",
+  "label": "Read the logs",
+  "open": false,
+  "status": "complete",
+  "actions": ["expand", "collapse", "press"]
+}
+```
+
+The agent names a component by its label and runs one of its actions:
+
+```ts
+await agent.act({ steps: [{ ref: "Read the logs", action: "expand" }] });
+```
+
+An action goes through the same path a person's press does, so your callbacks run with `details.source` set to `"agent"`, and a controlled component can refuse the change. The bridge adds `press` to any component with a button, and lists some actions only while they can run: a message offers `regenerate` only once it has settled and you pass `onRegenerate`. Each component page's **Agent** section lists what it reads and offers.
+
+## Ask the Person First
+
+Some actions need a person, like a plan's Accept, a checkpoint's Restore or sending from a composer. Those components render `data-agent-confirm`, most of them only while their `agentConfirm` option is on, and the bridge passes a `confirm` question to your `allow` for each of their actions. Return the person's answer, or decide for any other action:
+
+```ts
+const agent = createAgent({
+  allow: ({ component, action, confirm }) => {
+    if (confirm) return window.confirm(confirm);
+    return true;
+  },
+});
+```
+
+`allow` takes the same arguments in every layer. To give these tools to a browser's own agent, register them through WebMCP, as UI SDK's agent docs describe in `node_modules/@ui-sdk/<layer>/docs/agents.md`.

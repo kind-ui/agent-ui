@@ -10,18 +10,12 @@ Use reasoning effort beside a [Model Selector](./model-selector.mdx) when the mo
 <Example caption="Press High, or focus the levels and press the arrow keys. The mark slides to the level you choose.">
   <ReasoningEffortExample />
 
-  <include cwd lang="tsx">./examples/reasoning-effort/basic.tsx</include>
+  <ExampleCode example="reasoning-effort/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/reasoning-effort
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/reasoning-effort-web
-```
+<Install name="reasoning-effort" />
 
 ## Composition
 
@@ -65,6 +59,8 @@ The mark slides to the chosen level. Under `prefers-reduced-motion`, or with `mo
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/reasoning-effort/reasoning-effort.ts" name="ReasoningEffortOptions" />
 
+<FrameworkNames name="reasoning-effort" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the control by its label and reads the chosen level. Its `setValue` takes a level's `value` or its label, the same as a person choosing it, and refuses a level that isn't listed. It needs no person to confirm.
@@ -72,5 +68,5 @@ An agent connected with `createAgent` finds the control by its label and reads t
 <auto-type-table path="../../../../../packages/agent-ui/src/core/reasoning-effort/reasoning-effort.ts" name="ReasoningEffortAgentActions" type='Pick<ReasoningEffortApi, "setValue">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-reasoning-effort>`, set `levels` and `value` as properties, and listen for `effortchange`, with the level's `value` as `event.detail.value`. The element fills in its levels when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-reasoning-effort>`, set `levels` and `value` as properties, and listen for `effortchange`, with the level's `value` as `event.detail.value`. The element fills in its levels when it has no children.
 </Caption>

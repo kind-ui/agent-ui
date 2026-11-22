@@ -10,18 +10,12 @@ Use a plan when an agent lays out its steps before it starts, and to follow them
 <Example caption="Press Accept plan. Accepted takes the button's place, and the plan and its second step start running.">
   <PlanExample />
 
-  <include cwd lang="tsx">./examples/plan/basic.tsx</include>
+  <ExampleCode example="plan/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/plan
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/plan-web
-```
+<Install name="plan" />
 
 ## Composition
 
@@ -76,6 +70,8 @@ Marks morph between statuses, and the list grows open and shut. Under `prefers-r
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/plan/plan.ts" name="PlanOptions" />
 
+<FrameworkNames name="plan" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the plan by its title and reads its `open` and `status`. It can run these actions, and `accept` only while Accept shows. While `agentConfirm` is on, every one of them waits for a person to confirm, unless the host's `allow` lets it through.
@@ -83,5 +79,5 @@ An agent connected with `createAgent` finds the plan by its title and reads its 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/plan/plan.ts" name="PlanAgentActions" type='Pick<PlanApi, "expand" | "collapse" | "accept">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-plan>`, `items` is a property only, other props are kebab-case attributes, so `agentConfirm` is `agent-confirm`, and `onOpenChange` fires `openchange`. Accept needs the `can-accept` attribute and fires `accept`: call `event.detail.waitUntil(promise)` to keep it pending. The element fills in its parts when it has no children, and keeps a `<kind-plan-item>` in its list for each item.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-plan>`, `items` is a property only, other props are kebab-case attributes, so `agentConfirm` is `agent-confirm`, and `onOpenChange` fires `openchange`. Accept needs the `can-accept` attribute and fires `accept`: call `event.detail.waitUntil(promise)` to keep it pending. The element fills in its parts when it has no children, and keeps a `<kind-plan-item>` in its list for each item.
 </Caption>

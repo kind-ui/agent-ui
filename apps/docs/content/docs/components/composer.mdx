@@ -11,18 +11,12 @@ Use a composer where someone writes a prompt. It holds the text, the mentions an
 <Example caption="Type @ or / to pick a suggestion, then press Enter to send. While it sends, press Stop to end it early.">
   <ComposerExample />
 
-  <include cwd lang="tsx">./examples/composer/basic.tsx</include>
+  <ExampleCode example="composer/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/composer
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/composer-web
-```
+<Install name="composer" />
 
 ## Composition
 
@@ -105,7 +99,7 @@ Put the controls a prompt needs in the composer's actions row: wrap them in one 
 <Example caption="Press the model or the shield to open its menu; the model's menu also holds Web search and Memory. Press the mic to dictate a prompt.">
   <FullComposerExample />
 
-  <include cwd lang="tsx">./examples/composer/full.tsx</include>
+  <ExampleCode example="composer/full" />
 </Example>
 
 The composer is a CSS container named `kind-composer`. Below 28rem, [Model Control](./model-control.mdx) and [Approval Mode](./approval-mode.mdx) show only their icon and keep their names for screen readers, and **Draft restored** shows only **Discard**. On a small touch screen, every menu opens as a sheet. The same composer at 20rem:
@@ -115,7 +109,7 @@ The composer is a CSS container named `kind-composer`. Below 28rem, [Model Contr
     <FullComposerExample />
   </div>
 
-  <include cwd lang="tsx">./examples/composer/full.tsx</include>
+  <ExampleCode example="composer/full" />
 </Example>
 
 The composer measures its own width, not the screen's, so give it one when it sits in a row or a centered flex column: a container's content doesn't size it.
@@ -124,6 +118,8 @@ The composer measures its own width, not the screen's, so give it one when it si
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/composer/composer.ts" name="ComposerOptions" />
 
+<FrameworkNames name="composer" />
+
 ### Agent
 
 An agent connected with `createAgent` reads the composer's `value`, and whether it's pending. It can run these actions, `stop` only while Stop shows, and `discardDraft` only while **Draft restored** shows. While `agentConfirm` is on, every one of them waits for a person to confirm, unless the host's `allow` lets it through:
@@ -131,5 +127,5 @@ An agent connected with `createAgent` reads the composer's `value`, and whether 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/composer/composer.ts" name="ComposerAgentActions" type='Pick<ComposerApi, "setValue" | "insertToken" | "removeAttachment" | "submit" | "stop" | "discardDraft">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-composer>`, each prop is a kebab-case attribute, so `submitOn` is `submit-on` and `draftKey` is `draft-key`, and `value`, `defaultValue`, `mentions`, `commands` and `history` are properties, as is `draftStorage`. Each callback is a lowercase event, so `onValueChange` fires `valuechange`, but `onSubmit` fires `composersubmit`, whose listeners call `event.detail.waitUntil(promise)`, and Stop shows with the `can-stop` attribute and fires `stop`.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-composer>`, each prop is a kebab-case attribute, so `submitOn` is `submit-on` and `draftKey` is `draft-key`, and `value`, `defaultValue`, `mentions`, `commands` and `history` are properties, as is `draftStorage`. Each callback is a lowercase event, so `onValueChange` fires `valuechange`, but `onSubmit` fires `composersubmit`, whose listeners call `event.detail.waitUntil(promise)`, and Stop shows with the `can-stop` attribute and fires `stop`.
 </Caption>

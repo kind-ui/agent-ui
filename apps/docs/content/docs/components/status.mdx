@@ -10,18 +10,12 @@ Use a status badge beside a run, a job or a tool call to show whether it's waiti
 <Example caption="Each badge shows its run's status. When the status changes, the mark morphs into its new shape.">
   <StatusExample />
 
-  <include cwd lang="tsx">./examples/status/basic.tsx</include>
+  <ExampleCode example="status/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/status
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/status-web
-```
+<Install name="status" />
 
 ## Composition
 
@@ -53,10 +47,12 @@ The mark morphs from one status to the next. Under `prefers-reduced-motion`, or 
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/status/status.ts" name="StatusOptions" />
 
+<FrameworkNames name="status" />
+
 ### Agent
 
 An agent connected with `createAgent` sees each badge as a `kind-status` and reads its `status`. It has no actions.
 
 <Caption>
-  Runs in React and Web Components. On `<kind-status>`, `status`, `label` and `motion` are attributes of the same name, and the element fills in its mark and label when it has no children. It writes the label into an empty `<kind-status-label>`, and leaves text you wrote there alone.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-status>`, `status`, `label` and `motion` are attributes of the same name, and the element fills in its mark and label when it has no children. It writes the label into an empty `<kind-status-label>`, and leaves text you wrote there alone.
 </Caption>

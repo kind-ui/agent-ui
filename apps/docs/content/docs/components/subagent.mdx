@@ -10,18 +10,12 @@ Use a subagent when an agent hands part of its work to another agent. It reads l
 <Example caption="Press Code reviewer, or focus it and press Enter or Space, to hide the tools it called. The result stays in view.">
   <SubagentExample />
 
-  <include cwd lang="tsx">./examples/subagent/basic.tsx</include>
+  <ExampleCode example="subagent/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/subagent
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/subagent-web
-```
+<Install name="subagent" />
 
 ## Composition
 
@@ -89,6 +83,8 @@ The mark morphs between statuses, the steps grow open and shut, and the result f
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/subagent/subagent.ts" name="SubagentOptions" />
 
+<FrameworkNames name="subagent" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the subagent by its title and reads its `open` and `status`. It can run these actions, and `cancel` only while Stop shows. While `agentConfirm` is on, every one of them waits for a person to confirm, unless the host's `allow` lets it through.
@@ -96,5 +92,5 @@ An agent connected with `createAgent` finds the subagent by its title and reads 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/subagent/subagent.ts" name="SubagentAgentActions" type='Pick<SubagentApi, "expand" | "collapse" | "cancel">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-subagent>`, props are kebab-case attributes, so `agentName` is `agent-name` and `avatarSrc` is `avatar-src`, and `onOpenChange` fires `openchange`. Stop needs the `can-cancel` attribute and fires `subagentcancel`: call `event.detail.waitUntil(promise)` to keep it pending. Write the steps inside a `<kind-subagent-content>`: the element adds its trigger before it and its Stop button and result after it, unless you wrote a trigger of its own.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-subagent>`, props are kebab-case attributes, so `agentName` is `agent-name` and `avatarSrc` is `avatar-src`, and `onOpenChange` fires `openchange`. Stop needs the `can-cancel` attribute and fires `subagentcancel`: call `event.detail.waitUntil(promise)` to keep it pending. Write the steps inside a `<kind-subagent-content>`: the element adds its trigger before it and its Stop button and result after it, unless you wrote a trigger of its own.
 </Caption>

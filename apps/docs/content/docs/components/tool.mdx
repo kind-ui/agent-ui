@@ -10,18 +10,12 @@ Use a tool for each tool call the model makes. Its header shows the tool's name 
 <Example caption="Press search_docs, or focus it and press Enter or Space, to see what the search returned. Approve or deny delete_branch to see its outcome.">
   <ToolExample />
 
-  <include cwd lang="tsx">./examples/tool/basic.tsx</include>
+  <ExampleCode example="tool/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/tool
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/tool-web
-```
+<Install name="tool" />
 
 ## Composition
 
@@ -90,6 +84,8 @@ The content grows open and shut. Under `prefers-reduced-motion`, or with `motion
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/tool/tool.ts" name="ToolOptions" />
 
+<FrameworkNames name="tool" />
+
 ### Agent
 
 An agent connected with `createAgent` finds a tool by its name and reads its `open` and `status`. It can run these actions, and press the trigger like a person would. `copyInput` and `copyOutput` are listed only while there's a value to copy.
@@ -97,5 +93,5 @@ An agent connected with `createAgent` finds a tool by its name and reads its `op
 <auto-type-table path="../../../../../packages/agent-ui/src/core/tool/tool.ts" name="ToolAgentActions" type='Pick<ToolApi, "expand" | "collapse" | "copyInput" | "copyOutput">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-tool>`, `call`, `error` and `highlight` are properties only, other props are kebab-case attributes, and `onOpenChange` fires `openchange`. Approve and Deny need the `can-approve` and `can-deny` attributes and fire `approve` and `deny` on the tool, as Confirmation's do. The element fills in its parts when it has no children, and an empty `<kind-tool-input>` or `<kind-tool-output>` with its heading, copy button and code block, writes its title and error into those parts while they're empty, and writes the input and output into the `<kind-code-block>` and `<kind-markdown>` inside them.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-tool>`, `call`, `error` and `highlight` are properties only, other props are kebab-case attributes, and `onOpenChange` fires `openchange`. Approve and Deny need the `can-approve` and `can-deny` attributes and fire `approve` and `deny` on the tool, as Confirmation's do. The element fills in its parts when it has no children, and an empty `<kind-tool-input>` or `<kind-tool-output>` with its heading, copy button and code block, writes its title and error into those parts while they're empty, and writes the input and output into the `<kind-code-block>` and `<kind-markdown>` inside them.
 </Caption>

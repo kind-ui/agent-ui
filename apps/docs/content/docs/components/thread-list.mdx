@@ -10,18 +10,12 @@ Use a thread list beside a [conversation](./conversation.mdx) to move between ch
 <Example caption="Press a chat to open it, or press its More button to rename, pin or delete it. Focus a chat and press F2 to rename it in place, or the arrow keys to move between chats.">
   <ThreadListExample />
 
-  <include cwd lang="tsx">./examples/thread-list/basic.tsx</include>
+  <ExampleCode example="thread-list/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/thread-list
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/thread-list-web
-```
+<Install name="thread-list" />
 
 ## Composition
 
@@ -106,6 +100,8 @@ Only the rows in view render, at a fixed height of `--kind-thread-row-height` (3
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/thread-list/thread-list.ts" name="ThreadListOptions" />
 
+<FrameworkNames name="thread-list" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the list by its label and reads `value`, the current chat. It lists the chats by `id` and title, and every action takes a chat's `id`, refusing an unknown one. Each action is offered only while its callback is set, and `rename` also only while no rename is pending. `select` calls `onSelect` and follows the link unless it's cancelled. `delete` opens the same dialog a person sees, whose **Delete** always needs a person to confirm, unless the host's `allow` lets it through; with `confirmDelete` off it calls `onDelete` at once.
@@ -113,5 +109,5 @@ An agent connected with `createAgent` finds the list by its label and reads `val
 <auto-type-table path="../../../../../packages/agent-ui/src/core/thread-list/thread-list.ts" name="ThreadListAgentActions" type='Pick<ThreadListApi, "select" | "newThread" | "rename" | "pin" | "share" | "delete">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-thread-list>`, set `threads` as a property, and props are kebab-case attributes, so `confirmDelete` is `confirm-delete`. Each callback needs its attribute (`can-select`, `can-new`, `can-rename`, `can-pin`, `can-share`, `can-delete`, `can-load-more`) and fires an event: `threadselect`, `threadnew`, `threadrename`, `pinchange`, `threadshare`, `threaddelete` and `loadmore`. In a `threadrename` or `threaddelete` listener, call `event.detail.waitUntil(promise)` to hold the rename or keep the dialog open.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-thread-list>`, set `threads` as a property, and props are kebab-case attributes, so `confirmDelete` is `confirm-delete`. Each callback needs its attribute (`can-select`, `can-new`, `can-rename`, `can-pin`, `can-share`, `can-delete`, `can-load-more`) and fires an event: `threadselect`, `threadnew`, `threadrename`, `pinchange`, `threadshare`, `threaddelete` and `loadmore`. In a `threadrename` or `threaddelete` listener, call `event.detail.waitUntil(promise)` to hold the rename or keep the dialog open.
 </Caption>

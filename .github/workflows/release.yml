@@ -95,7 +95,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/check-registry-namespace.mjs
       - run: npx playwright install --with-deps chromium
-      - run: npm run check
+      # `npm run check` but its browser tests, which the Browser jobs run in shards.
+      - run: node scripts/run-checks.mjs check:fast
+      - run: node scripts/run-checks.mjs check:packed
+      - run: node scripts/run-checks.mjs build:docs
+      - run: node scripts/run-checks.mjs check:docs
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: package
@@ -104,9 +108,35 @@ jobs:
             artifacts/package/manifest.json
           if-no-files-found: error
 
+  browser:
+    name: Browser (${{ matrix.shard }}/8)
+    needs: plan
+    if: needs.plan.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser -- --shard=${{ matrix.shard }}/8
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: playwright-results-${{ matrix.shard }}
+          path: artifacts/test-results
+          if-no-files-found: ignore
+
   verify:
     name: Verify
-    needs: [plan, validate]
+    needs: [plan, validate, browser]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions: {}
@@ -148,7 +178,7 @@ jobs:
 
   publish:
     name: Publish
-    needs: [plan, verify]
+    needs: [plan, validate, browser, verify]
     if: needs.verify.outputs.published == 'false'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -203,7 +233,7 @@ jobs:
 
   github-release:
     name: GitHub release
-    needs: [plan, verify, publish]
+    needs: [plan, validate, browser, verify, publish]
     if: always() && needs.verify.result == 'success' && (needs.publish.result == 'success' || needs.verify.outputs.published == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 30

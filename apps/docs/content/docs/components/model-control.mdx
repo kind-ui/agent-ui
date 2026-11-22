@@ -10,18 +10,12 @@ Use a model control in a [composer](./composer.mdx) when people choose both the 
 <Example caption="Press Claude Opus 5.5 · Medium and choose GPT-6.1 Terra; the menu stays open, Effort checks the level it uses and dims the ones Terra doesn't support. Choose More models to list another model.">
   <ModelControlExample />
 
-  <include cwd lang="tsx">./examples/model-control/basic.tsx</include>
+  <ExampleCode example="model-control/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/model-control
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/model-control-web
-```
+<Install name="model-control" />
 
 ## Composition
 
@@ -83,6 +77,8 @@ The menu opens as a popover below the button. With `presentation="auto"`, the de
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/model-control/model-control.ts" name="ModelControlOptions" />
 
+<FrameworkNames name="model-control" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the model control by its name, like "Model, Claude Opus 5.5, Medium effort", and reads `open`, `values`, `model` and `effort`. It lists every row by `id`, with the models, levels and action ids. `setModel` takes a model's `id`, and `setEffort` a level's `value`; it refuses an unknown level or one the model doesn't support, and it's offered only while the model has levels. `setValue` takes any choice row's `id`, `model` and `effort` included, and one of its values, and `toggle` takes a toggle's `id`. `run` takes an action's `id`, offered while there are actions and `onAction`. They change things whether the menu is open or closed. `open` is offered while the menu is closed and enabled, and `close` while it's open. None needs a person to confirm.
@@ -90,5 +86,5 @@ An agent connected with `createAgent` finds the model control by its name, like 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/model-control/model-control.ts" name="ModelControlAgentActions" type='Pick<ModelControlApi, "open" | "close" | "toggle" | "setValue" | "setModel" | "setEffort" | "run">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-model-control>`, set `models`, `levels`, `actions`, `settings`, `defaultModel` and `defaultValues` as properties; `model`, `effort` and `values` are live properties. Set `default-effort`, `label`, `model-label`, `effort-label` and `presentation` as attributes, and listen for `modelchange`, `effortchange`, `valueschange`, with the setting as `event.detail.id`, and `openchange`. Add the `can-run` attribute to listen for `modelaction`. A model's `icon` is an image URL or an Element. The element fills in its button and menu when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-model-control>`, set `models`, `levels`, `actions`, `settings`, `defaultModel` and `defaultValues` as properties; `model`, `effort` and `values` are live properties. Set `default-effort`, `label`, `model-label`, `effort-label` and `presentation` as attributes, and listen for `modelchange`, `effortchange`, `valueschange`, with the setting as `event.detail.id`, and `openchange`. Add the `can-run` attribute to listen for `modelaction`. A model's `icon` is an image URL or an Element. The element fills in its button and menu when it has no children.
 </Caption>

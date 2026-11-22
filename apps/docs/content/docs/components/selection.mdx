@@ -10,18 +10,12 @@ Use a selection around an assistant reply, so a person can select part of it and
 <Example caption="Select some text in the reply, then press Ask, Quote or Copy in the toolbar above it.">
   <SelectionExample />
 
-  <include cwd lang="tsx">./examples/selection/basic.tsx</include>
+  <ExampleCode example="selection/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/selection
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/selection-web
-```
+<Install name="selection" />
 
 ## Composition
 
@@ -69,6 +63,8 @@ The toolbar rises in and sinks out. Under `prefers-reduced-motion`, or with `mot
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/selection/selection.ts" name="SelectionOptions" />
 
+<FrameworkNames name="selection" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the selection by its `label` and reads whether the toolbar is `open` and the selected `text`. While the toolbar shows, it can `run` an action by its `id` or label, the same as a person pressing it, and refuses one that isn't listed; `run` is offered only while `onAction` is set. It can also `dismiss` the toolbar, which keeps the selection.
@@ -76,5 +72,5 @@ An agent connected with `createAgent` finds the selection by its `label` and rea
 <auto-type-table path="../../../../../packages/agent-ui/src/core/selection/selection.ts" name="SelectionAgentActions" type='Pick<SelectionApi, "run" | "dismiss">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-selection>`, set `actions` as a property, and `label` and `motion` as attributes, and write the reply inside a `<kind-selection-content>`; the element adds its toolbar after it. Running actions needs the `can-run` attribute: `onAction` fires `selectionaction`, with `actionId` and `text` in `event.detail.value`, and `onDismiss` fires `dismiss`.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-selection>`, set `actions` as a property, and `label` and `motion` as attributes, and write the reply inside a `<kind-selection-content>`; the element adds its toolbar after it. Running actions needs the `can-run` attribute: `onAction` fires `selectionaction`, with `actionId` and `text` in `event.detail.value`, and `onDismiss` fires `dismiss`.
 </Caption>

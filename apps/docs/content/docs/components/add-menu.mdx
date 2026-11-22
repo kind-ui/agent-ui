@@ -10,18 +10,12 @@ Use an add menu in a [composer](./composer.mdx) when there are several kinds of 
 <Example caption="Press Add, then choose Add context to mention a file, or open Plugins, GitHub and choose Link issue. Upload file opens the file picker and attaches what you choose.">
   <AddMenuExample />
 
-  <include cwd lang="tsx">./examples/add-menu/basic.tsx</include>
+  <ExampleCode example="add-menu/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/add-menu
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/add-menu-web
-```
+<Install name="add-menu" />
 
 ## Composition
 
@@ -75,6 +69,8 @@ The menu opens as a popover below the button. With `presentation="auto"`, the de
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/add-menu/add-menu.ts" name="AddMenuOptions" />
 
+<FrameworkNames name="add-menu" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the add menu by its label and reads `open`. It lists every item it could run, in submenus too, by `id` and label. `run` takes an item's `id` and refuses an unknown or disabled one, or one that opens a submenu. It's offered only while `onAction` is set and the menu is enabled, and it leaves the menu open or closed as it was. `open` is offered while the menu is closed and enabled, and `close` while it's open. None needs a person to confirm.
@@ -82,5 +78,5 @@ An agent connected with `createAgent` finds the add menu by its label and reads 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/add-menu/add-menu.ts" name="AddMenuAgentActions" type='Pick<AddMenuApi, "open" | "close" | "run">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-add-menu label="Add" can-run>`, set `items` and `open` as properties, and listen for `addaction`, with the item's `id` as `event.detail.value`, and `openchange`. An item's `icon` is an image URL or an Element, which the element copies into its row. The element fills in its button and menu when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-add-menu label="Add" can-run>`, set `items` and `open` as properties, and listen for `addaction`, with the item's `id` as `event.detail.value`, and `openchange`. An item's `icon` is an image URL or an Element, which the element copies into its row. The element fills in its button and menu when it has no children.
 </Caption>

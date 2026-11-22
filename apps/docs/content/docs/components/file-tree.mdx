@@ -10,18 +10,12 @@ Use a file tree beside a diff or a summary of what the agent edited, so readers 
 <Example caption="Press a folder, or focus a row and press the Right and Left arrow keys, to open and close it. Up and Down move between rows, and typing a name moves to it.">
   <FileTreeExample />
 
-  <include cwd lang="tsx">./examples/file-tree/basic.tsx</include>
+  <ExampleCode example="file-tree/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/file-tree
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/file-tree-web
-```
+<Install name="file-tree" />
 
 ## Composition
 
@@ -70,6 +64,8 @@ The tree is one Tab stop. Up and Down move between the rows that show, Home and 
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/file-tree/file-tree.ts" name="FileTreeOptions" />
 
+<FrameworkNames name="file-tree" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the tree by its `label`, "Files" by default, and reads `value` and `expanded`. It can name any folder or file by path. `expand(path)` opens a folder and the folders it's in, and `collapse(path)` closes one; both return `false` for a file. `select(path)` selects a file and calls `onSelect`, and is offered only while `onSelect` is set.
@@ -77,5 +73,5 @@ An agent connected with `createAgent` finds the tree by its `label`, "Files" by 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/file-tree/file-tree.ts" name="FileTreeAgentActions" type='Pick<FileTreeApi, "expand" | "collapse" | "select">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-file-tree>`, set `entries`, `defaultExpanded` and `expanded` as properties; the other props are kebab-case attributes. `onValueChange` is the `pathchange` event and `onExpandedChange` is `expandchange`. Add `can-select` to fire `fileselect` when a file is pressed.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-file-tree>`, set `entries`, `defaultExpanded` and `expanded` as properties; the other props are kebab-case attributes. `onValueChange` is the `pathchange` event and `onExpandedChange` is `expandchange`. Add `can-select` to fire `fileselect` when a file is pressed.
 </Caption>

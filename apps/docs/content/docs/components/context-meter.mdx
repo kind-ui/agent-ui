@@ -10,18 +10,12 @@ Use a context meter beside the composer, so a person can see when a conversation
 <Example caption="Rest the pointer on the meter, or press it, to show its details. Press Escape to close them.">
   <ContextMeterExample />
 
-  <include cwd lang="tsx">./examples/context-meter/basic.tsx</include>
+  <ExampleCode example="context-meter/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/context-meter
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/context-meter-web
-```
+<Install name="context-meter" />
 
 ## Composition
 
@@ -69,6 +63,8 @@ The ring sweeps to a new value, and the details rise and fade in. Under `prefers
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/context-meter/context-meter.ts" name="ContextMeterOptions" />
 
+<FrameworkNames name="context-meter" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the meter by its label and reads whether its details are open. `open` is offered while they're closed and `close` while they're open; both report `details.source` as `"agent"` to `onOpenChange`. Like any component with a button, it also has UI SDK's generic `press`.
@@ -76,5 +72,5 @@ An agent connected with `createAgent` finds the meter by its label and reads whe
 <auto-type-table path="../../../../../packages/agent-ui/src/core/context-meter/context-meter.ts" name="ContextMeterAgentActions" type='Pick<ContextMeterApi, "open" | "close">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-context-meter>`, props are kebab-case attributes, `usage` is a property, and `open` is a property too; `onOpenChange` is the `openchange` event. The element fills in its parts when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-context-meter>`, props are kebab-case attributes, `usage` is a property, and `open` is a property too; `onOpenChange` is the `openchange` event. The element fills in its parts when it has no children.
 </Caption>

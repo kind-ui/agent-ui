@@ -10,18 +10,12 @@ Use dictation inside a [composer](./composer.mdx) to let people speak a prompt i
 <Example caption="Press the mic button beside Send to start. The waveform takes the prompt's place while the words arrive. Press Stop to add them to the prompt, or Cancel to drop them. This example plays back a recording, so it never opens your microphone.">
   <DictationExample />
 
-  <include cwd lang="tsx">./examples/dictation/basic.tsx</include>
+  <ExampleCode example="dictation/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/dictation
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/dictation-web
-```
+<Install name="dictation" />
 
 ## Composition
 
@@ -130,6 +124,8 @@ On its own, Dictation keeps one size in every phase, so nothing beside it moves:
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/dictation-button/dictation-button.ts" name="DictationOptions" />
 
+<FrameworkNames name="dictation" />
+
 ### Agent
 
 An agent connected with `createAgent` finds Dictation by its `label`, "Dictate" by default, and reads its `phase`. `start` is offered with a `source` while idle or after an error, `stop` while listening, and `cancel` while listening or transcribing. Starting opens the microphone, so while `agentConfirm` is on, the default, `start` waits for a person to confirm: an agent never opens the microphone without one. `stop` and `cancel` don't ask.
@@ -137,5 +133,5 @@ An agent connected with `createAgent` finds Dictation by its `label`, "Dictate" 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/dictation-button/dictation-button.ts" name="DictationAgentActions" type='Pick<DictationApi, "start" | "stop" | "cancel">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-dictation>`, set `source` as a property and `label`, `bars`, `agent-confirm` and `motion` as attributes, and listen for `dictationtext`, with the text as `event.detail.value`. Inside a `<kind-composer>`, the text goes into the draft. The element fills in its parts when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-dictation>`, set `source` as a property and `label`, `bars`, `agent-confirm` and `motion` as attributes, and listen for `dictationtext`, with the text as `event.detail.value`. Inside a `<kind-composer>`, the text goes into the draft. The element fills in its parts when it has no children.
 </Caption>

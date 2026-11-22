@@ -11,9 +11,13 @@ const config = {
   trailingSlash: true,
   reactStrictMode: true,
   // The registry's render files import `./name.js` for `name.tsx`, which Turbopack doesn't map, so the docs build
-  // with webpack (`--webpack`).
-  webpack: (webpackConfig) => {
+  // with webpack (`--webpack`). Vue, Svelte and Solid examples are only read as text by `<ExampleCode>`, so
+  // webpack never compiles them.
+  webpack: (webpackConfig, { webpack }) => {
     webpackConfig.resolve.extensionAlias = { ".js": [".ts", ".tsx", ".js"] };
+    webpackConfig.plugins.push(
+      new webpack.IgnorePlugin({ resourceRegExp: /\.(?:vue|svelte)$|\.solid(?:\.tsx)?$/ }),
+    );
     return webpackConfig;
   },
 };

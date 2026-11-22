@@ -5,6 +5,7 @@ export const chats = ["Release checklist", "Flaky login test", "Pricing page cop
 // A cookie, as the docs recommend, so a server could render the saved width.
 export const cookieStorage: NonNullable<SidebarOptions["storage"]> = {
   getItem: (key) => {
+    if (typeof document === "undefined") return null;
     const value = document.cookie.match(new RegExp(`(?:^|; )${key}=([^;]*)`))?.[1];
     return value === undefined ? null : decodeURIComponent(value);
   },

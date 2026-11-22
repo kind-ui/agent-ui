@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Item = { id: string; status: string; title: string; files?: string[] };
 
@@ -86,19 +86,23 @@ test("an item's completion is announced once, and the task's with it", async ({ 
     .toEqual(["Write the migration complete", "Run the tests complete. Migrating the users table complete"]);
 });
 
+// Appends an item and reads which rows animate in the frame it arrives, before a slow round trip could outlast its
+// entrance.
+const appendAndRead = (page: Page, added: { id: string; status: string; title: string }) =>
+  page.evaluate(async (added) => {
+    (window as unknown as Fixture).kindItems.append(added);
+    for (let frame = 0; frame < 30; frame++) {
+      const items = [...document.querySelectorAll<HTMLElement>('#task [data-slot="kind-task-item"]')];
+      if (items.some((el) => el.textContent?.includes(added.title)))
+        return items.map((el) => el.getAnimations().length > 0);
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    }
+    return [];
+  }, added);
+
 test("only an item that arrives after the first frame plays its entrance", async ({ page }) => {
   await open(page);
-  await page.evaluate(() =>
-    (window as unknown as Fixture).kindItems.append({
-      id: "docs",
-      status: "pending",
-      title: "Update the docs",
-    }),
-  );
-  await expect(item(page, "Update the docs")).toBeVisible();
-  const animated = await task(page)
-    .getByRole("listitem")
-    .evaluateAll((items) => items.map((el) => el.getAnimations().length > 0));
+  const animated = await appendAndRead(page, { id: "docs", status: "pending", title: "Update the docs" });
   expect(animated).toEqual([false, false, false, true]);
 });
 
@@ -106,21 +110,7 @@ test("an item removed and added again under the same id plays its entrance", asy
   await open(page);
   await page.evaluate(() => (window as unknown as Fixture).kindItems.remove("tests"));
   await expect(task(page).getByRole("listitem")).toHaveCount(2);
-  // Reads the rows in the frame the item comes back, before a slow round trip could outlast its entrance.
-  const animated = await page.evaluate(async () => {
-    (window as unknown as Fixture).kindItems.append({
-      id: "tests",
-      status: "pending",
-      title: "Run the tests",
-    });
-    for (let frame = 0; frame < 30; frame++) {
-      const items = [...document.querySelectorAll<HTMLElement>('#task [data-slot="kind-task-item"]')];
-      if (items.some((el) => el.textContent?.includes("Run the tests")))
-        return items.map((el) => el.getAnimations().length > 0);
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-    }
-    return [];
-  });
+  const animated = await appendAndRead(page, { id: "tests", status: "pending", title: "Run the tests" });
   expect(animated).toEqual([false, false, true]);
 });
 
@@ -182,7 +172,7 @@ for (const colorScheme of ["light", "dark"] as const) {
 }
 
 test("kind-task given its items after it connects announces nothing", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   await page.evaluate(() => {
     const late = document.createElement("kind-task");
@@ -198,7 +188,7 @@ test("kind-task given its items after it connects announces nothing", async ({ p
 });
 
 test("kind-task keeps the items someone wrote, and fills a list written late", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   const written = page.locator("#written");
   await page.evaluate(() => {

@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { allowClipboard, readClipboard } from "../clipboard.js";
-import { layerOf } from "../layer.js";
+import { isWebElements, layerOf } from "../layer.js";
 
 type Host = { kindHost: { downloads: [string | undefined, string][]; next(): void } };
 
@@ -166,7 +166,7 @@ test("an owner that keeps the preview collapsed, a pending and failed download, 
 test("a web document keeps a Download and content the page wrote, and focus through a downloads change", async ({
   page,
 }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "written parts and properties are Web Components markup");
+  test.skip(!isWebElements(testInfo), "written parts and properties are Web Components markup");
   await page.goto("/?c=document&case=written");
   const written = region(page, "notes.txt");
   await expect(written.getByRole("button", { name: /Download|Save/ })).toHaveCount(1);

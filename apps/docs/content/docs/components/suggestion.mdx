@@ -10,18 +10,12 @@ Use suggestions under an answer or an empty composer, to offer the next things a
 <Example caption="Press a suggestion to send it. Press Next to bring the later ones into view, or swipe the row.">
   <SuggestionExample />
 
-  <include cwd lang="tsx">./examples/suggestion/basic.tsx</include>
+  <ExampleCode example="suggestion/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/suggestion
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/suggestion-web
-```
+<Install name="suggestion" />
 
 ## Composition
 
@@ -67,6 +61,8 @@ A suggestion added after the row first shows fades up once; one you update or th
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/suggestion/suggestion.ts" name="SuggestionOptions" />
 
+<FrameworkNames name="suggestion" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the row by its label and reads every suggestion, wherever the row has scrolled. Its `pick` takes a suggestion's `id` or its label, the same as a person pressing it, and refuses one that isn't listed. It's offered only while `onPick` is set.
@@ -88,5 +84,5 @@ const agent = createAgent({
 ```
 
 <Caption>
-  Runs in React and Web Components. On `<kind-suggestion>`, set `suggestions` as a property, and `label` and `motion` as attributes. Picking needs the `can-pick` attribute and fires `pick`, with the suggestion's `id` as `event.detail.value`. The element fills in its row when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-suggestion>`, set `suggestions` as a property, and `label` and `motion` as attributes. Picking needs the `can-pick` attribute and fires `pick`, with the suggestion's `id` as `event.detail.value`. The element fills in its row when it has no children.
 </Caption>

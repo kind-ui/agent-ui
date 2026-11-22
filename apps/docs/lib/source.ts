@@ -8,7 +8,8 @@ const docs = defineDocs({
   docs: {
     schema: pageSchema,
     postprocess: {
-      includeProcessedMarkdown: true,
+      // Plain Markdown, so `<ExampleCode>` and `<Install>` show the code `source.config.ts` puts in their place.
+      includeProcessedMarkdown: { output: "string" },
     },
   },
   meta: {

@@ -10,18 +10,12 @@ Use feedback in a message's actions, so a person can tell you which answers help
 <Example caption="Press the thumbs up, then Add a comment. Write a few words and press Send: the box closes and a thank-you takes the button's place.">
   <FeedbackExample />
 
-  <include cwd lang="tsx">./examples/feedback/basic.tsx</include>
+  <ExampleCode example="feedback/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/feedback
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/feedback-web
-```
+<Install name="feedback" />
 
 ## Composition
 
@@ -86,6 +80,8 @@ The box rises and fades in, and **Add a comment** and the thanks fade in when th
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/feedback/feedback.ts" name="FeedbackOptions" />
 
+<FrameworkNames name="feedback" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the feedback by its label and reads its `rating`. `rate("up")`, `rate("down")` or `rate(null)` changes it as a press does, reporting `details.source` as `"agent"` to `onRatingChange`. `submitComment(text)` fills the box and sends it through `onComment`, offered while **Add a comment** shows and no comment is being sent. Neither asks a person first; require one through `createAgent`'s `allow` if your `onComment` posts somewhere public. Like any component with a button, it also has UI SDK's generic `press`.
@@ -93,5 +89,5 @@ An agent connected with `createAgent` finds the feedback by its label and reads 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/feedback/feedback.ts" name="FeedbackAgentActions" type='Pick<FeedbackApi, "rate" | "submitComment">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-feedback>`, props are kebab-case attributes, `rating` and `defaultRating` are properties only, and `open` is a property too; `onRatingChange` is the `ratingchange` event and `onOpenChange` the `openchange` event. The `can-comment` attribute offers a comment, and Send fires `comment` with the text as `detail.value`: call `event.detail.waitUntil(promise)` to hold the box open. The element fills in its parts when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-feedback>`, props are kebab-case attributes, `rating` and `defaultRating` are properties only, and `open` is a property too; `onRatingChange` is the `ratingchange` event and `onOpenChange` the `openchange` event. The `can-comment` attribute offers a comment, and Send fires `comment` with the text as `detail.value`: call `event.detail.waitUntil(promise)` to hold the box open. The element fills in its parts when it has no children.
 </Caption>

@@ -1,7 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
+import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 type Log = { selected: string[]; values: string[]; expanded: string[][] };
 type Fixture = {
@@ -136,7 +137,10 @@ test("closing a folder animates its height at full motion and only fades under r
   expect(await closing()).not.toContain("height");
 });
 
-test("agents expand, collapse and select by path, and an unknown path changes nothing", async ({ page }) => {
+test("agents expand, collapse and select by path, and an unknown path changes nothing", async ({
+  page,
+}, testInfo) => {
+  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
   await open(page);
   await expectAgentActions(page, "Files", ["expand", "collapse", "select"]);
   expect(JSON.parse(String(await act(page, "expand", "nope")))).toMatchObject({ ok: false });
@@ -150,7 +154,8 @@ test("agents expand, collapse and select by path, and an unknown path changes no
   expect((await log(page)).selected).toEqual(["README.md imperative agent"]);
 });
 
-test("without onSelect agents can't select", async ({ page }) => {
+test("without onSelect agents can't select", async ({ page }, testInfo) => {
+  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
   await open(page, "static");
   await expectAgentActions(page, "Files", ["expand", "collapse"]);
 });
@@ -180,7 +185,7 @@ test("an owner that refuses keeps the folders and selection, and no file opens",
 });
 
 test("a web tree put back in the page keeps its state and keeps reporting", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "moving an element is a web case");
+  test.skip(!isWebElements(testInfo), "moving an element is a web case");
   await open(page, "moved");
   await row(page, /^docs/).click();
   await page.evaluate(async () => {

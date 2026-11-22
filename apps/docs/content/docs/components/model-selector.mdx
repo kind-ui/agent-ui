@@ -11,18 +11,12 @@ Use a model selector in a prompt's toolbar when people can choose which model an
 <Example caption="Press Model, type son55 to find Claude Sonnet 5.5, then press Enter. Choose More models to list every model. Claude Opus 5.5 is disabled, so it can't be chosen.">
   <ModelSelectorExample />
 
-  <include cwd lang="tsx">./examples/model-selector/basic.tsx</include>
+  <ExampleCode example="model-selector/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/model-selector
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/model-selector-web
-```
+<Install name="model-selector" />
 
 ## Composition
 
@@ -91,7 +85,7 @@ Pass `pages="groups"` to list each provider as a row, shown with the first icon 
 <Example caption="Press Model, choose OpenAI to see its models, then press Backspace to go back.">
   <ModelSelectorGroupsExample />
 
-  <include cwd lang="tsx">./examples/model-selector/groups.tsx</include>
+  <ExampleCode example="model-selector/groups" />
 </Example>
 
 ### Searching
@@ -124,6 +118,8 @@ Model Selector is now built on Picker, so the search moved from a field beside t
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/model-selector/model-selector.ts" name="ModelSelectorOptions" />
 
+<FrameworkNames name="model-selector" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the model selector by its label and reads `open` and the chosen model's `id`. Its `setValue` takes a model's `id` or its name on any page, the same as a person choosing it, and refuses a model that isn't listed or is disabled. `run` takes an action's `id` and is offered only while `onAction` is set. Neither closes the list, and neither is offered while the model selector is `disabled`. It needs no person to confirm.
@@ -131,5 +127,5 @@ An agent connected with `createAgent` finds the model selector by its label and 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/model-selector/model-selector.ts" name="ModelSelectorAgentActions" type='Pick<ModelSelectorApi, "open" | "close" | "setValue" | "run">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-model-selector can-run>`, set `models`, `actions` and `value` as properties, and listen for `modelchange`, with the model's `id` as `event.detail.value`, `modelaction`, with the action's `id`, and `openchange`. A model's `icon` is an image URL or an Element, which the element copies into its row and the button. The element fills in its button and list when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-model-selector can-run>`, set `models`, `actions` and `value` as properties, and listen for `modelchange`, with the model's `id` as `event.detail.value`, `modelaction`, with the action's `id`, and `openchange`. A model's `icon` is an image URL or an Element, which the element copies into its row and the button. The element fills in its button and list when it has no children.
 </Caption>

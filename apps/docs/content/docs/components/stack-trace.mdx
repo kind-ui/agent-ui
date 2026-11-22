@@ -10,18 +10,12 @@ Use a stack trace when a tool call or a test fails with an error, so readers see
 <Example caption="Press 2 library frames to show the frames from libraries and Node.js. Focus a frame and use the arrow keys to move between frames, then press Enter to open one.">
   <StackTraceExample />
 
-  <include cwd lang="tsx">./examples/stack-trace/basic.tsx</include>
+  <ExampleCode example="stack-trace/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/stack-trace
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/stack-trace-web
-```
+<Install name="stack-trace" />
 
 ## Composition
 
@@ -83,6 +77,8 @@ Tab reaches the header, each "N library frames" row and **Copy stack trace**. Wh
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/stack-trace/stack-trace.ts" name="StackTraceOptions" />
 
+<FrameworkNames name="stack-trace" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the trace by its title and reads `open`, `status` and `showLibraryFrames`. It can `expand` and `collapse` the trace, `copy` it while there's something to copy, which calls `onCopy` too, and, while there are library frames, `toggleLibraryFrames`. While you pass `onOpenFrame`, it can `openFrame` by index or by a frame's function and location, and a frame that isn't there is refused.
@@ -90,5 +86,5 @@ An agent connected with `createAgent` finds the trace by its title and reads `op
 <auto-type-table path="../../../../../packages/agent-ui/src/core/stack-trace/stack-trace.ts" name="StackTraceAgentActions" type='Pick<StackTraceApi, "expand" | "collapse" | "copy" | "toggleLibraryFrames" | "openFrame">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-stack-trace>`, set `frames` as a property; the other props are kebab-case attributes, and the `can-open-frame` attribute offers `onOpenFrame`, which is the `openframe` event. `onOpenChange` is `openchange`, `onShowLibraryFramesChange` is `showlibraryframeschange` and `onCopy` is `stackcopy`.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-stack-trace>`, set `frames` as a property; the other props are kebab-case attributes, and the `can-open-frame` attribute offers `onOpenFrame`, which is the `openframe` event. `onOpenChange` is `openchange`, `onShowLibraryFramesChange` is `showlibraryframeschange` and `onCopy` is `stackcopy`.
 </Caption>

@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { allowClipboard, readClipboard } from "../clipboard.js";
-import { layerOf } from "../layer.js";
+import { isWebElements, layerOf } from "../layer.js";
 
 type Fixture = {
   kindMessage: { calls: string[]; source: string; append(chunk: string): void; finish(): void };
@@ -254,7 +254,7 @@ test.describe("with regenerate options", () => {
   });
 
   test("content replaces the rows", async ({ page }, testInfo) => {
-    test.skip(layerOf(testInfo) === "web", "web writes its rows into the content");
+    test.skip(isWebElements(testInfo), "web writes its rows into the content");
     await open(page, "custom-rows");
     await regenerate(page).click();
     await row(page, "ADD DETAILS").click();
@@ -262,7 +262,7 @@ test.describe("with regenerate options", () => {
   });
 
   test("menu markup without options regenerates as a plain button", async ({ page }, testInfo) => {
-    test.skip(layerOf(testInfo) !== "web", "web markup keeps its menu; React renders a button");
+    test.skip(!isWebElements(testInfo), "web markup keeps its menu; React renders a button");
     await open(page, "no-options");
     await regenerate(page).click();
     await expect(page.getByRole("menu")).toBeHidden();
@@ -340,7 +340,7 @@ test.describe("author and time", () => {
   });
 
   test("clearing the author empties the avatar it filled", async ({ page }, testInfo) => {
-    test.skip(layerOf(testInfo) !== "web", "web fills its avatar part itself");
+    test.skip(!isWebElements(testInfo), "web fills its avatar part itself");
     await open(page, "author");
     const avatar = message(page, "today").locator('[data-slot="kind-message-avatar"]');
     await expect(avatar).toHaveText("AL");

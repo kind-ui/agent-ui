@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements, layerOf } from "../layer.js";
 import { addBack, travel, watchExit } from "../leaving.js";
 
 type Draft = { text: string; attachments: { name: string; error?: string }[] };
@@ -145,6 +145,16 @@ test("@ and / open the Trigger Menu; choosing inserts a token, Escape closes it"
   await expect(page.getByRole("option", { name: /summarize/ })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("listbox")).toBeHidden();
+});
+
+// A Trigger Menu that connects before its editor attaches writes these only once the editor changes, so every layer
+// checks them after the first keystroke.
+test("the first keystroke gives the editor its Trigger Menu attributes", async ({ page }) => {
+  const editor = await open(page);
+  await editor.click();
+  await page.keyboard.type("a");
+  await expect(editor).toHaveAttribute("aria-autocomplete", "list");
+  await expect(editor).toHaveAttribute("aria-haspopup", "listbox");
 });
 
 test("ArrowUp in an empty editor brings back the last prompt", async ({ page }) => {
@@ -433,7 +443,7 @@ test("an edit the owner cancels puts the editor back to the draft", async ({ pag
 });
 
 test("kind-composer wires content added after it connects", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   await page.evaluate(() => {
     const form = document.querySelector("kind-composer form") as HTMLFormElement;

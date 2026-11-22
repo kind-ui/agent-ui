@@ -103,6 +103,8 @@
 
 - `apps/docs/examples/context-bar/basic.tsx` (Context Bar example's chip icons, not shipped in the package): `file`, `folder`, `square-dashed-text` and `link`, unchanged; `file`, `folder` and `link` derive from Feather.
 
+- Lucide (ISC, as above): `chevron-left` and `chevron-right` inline in `packages/agent-ui/src/solid/suggestion.tsx` and `check` inline in `packages/agent-ui/src/solid/question.tsx`, unchanged, as in the React layer.
+
 ## Lobe Icons
 
 - Source: https://github.com/lobehub/lobe-icons, npm `@lobehub/icons-static-svg@1.103.0`, the `anthropic`, `openai`, `microsoft-color` and `xai` icons.

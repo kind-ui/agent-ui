@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { allowClipboard, readClipboard } from "../clipboard.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 
 type Fixture = {
   kindTerminal: {
@@ -284,7 +284,7 @@ for (const colorScheme of ["light", "dark"] as const) {
 }
 
 test("kind-terminal put back in the page draws its lines and keeps open", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   const failed = terminal(page, "failed");
   await failed.evaluate(async (el) => {
@@ -300,7 +300,7 @@ test("kind-terminal put back in the page draws its lines and keeps open", async 
 });
 
 test("kind-terminal exposes live open state and its api", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web elements only");
+  test.skip(!isWebElements(testInfo), "web elements only");
   await open(page);
   const install = terminal(page, "install");
   expect(await install.evaluate((el: HTMLElementTagNameMap["kind-terminal"]) => el.open)).toBe(false);

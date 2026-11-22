@@ -2,7 +2,7 @@ import { type AgentAction, createAgent } from "@ui-sdk/web/agent";
 import "./styles.css";
 
 type CaseModule = {
-  cases: Record<string, (root: HTMLElement) => void>;
+  cases: Record<string, (root: HTMLElement, params: URLSearchParams) => void>;
   allow?: (step: AgentAction) => boolean;
 };
 
@@ -17,5 +17,5 @@ const render = fixture?.cases[params.get("case") ?? ""];
 const root = document.getElementById("root");
 if (!render || !root) throw new Error(`no fixture for ${location.search}`);
 
-render(root);
+render(root, params);
 Object.assign(window, { agent: createAgent({ allow: fixture?.allow }) });

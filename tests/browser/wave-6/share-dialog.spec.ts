@@ -3,7 +3,8 @@ import { expect, type Page, test } from "@playwright/test";
 import { shareLink } from "../../../packages/agent-ui/tests/fixtures/shared/share-dialog.js";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { allowClipboard, readClipboard } from "../clipboard.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
+import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 type Fixture = {
   kindHost: {
@@ -167,7 +168,8 @@ test("Stop sharing calls the host, which clears the link and makes the chat priv
   await expect(dialog(page).getByRole("radio", { name: "Only you" })).toBeChecked();
 });
 
-test("an agent's createLink needs a person while agentConfirm is on", async ({ page }) => {
+test("an agent's createLink needs a person while agentConfirm is on", async ({ page }, testInfo) => {
+  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
   await load(page);
   await openForLink(page);
   await expectAgentActions(page, "Share", ["close", "setVisibility", "createLink", "press"]);
@@ -177,7 +179,8 @@ test("an agent's createLink needs a person while agentConfirm is on", async ({ p
 
 test("with agentConfirm off an agent shares the chat, and an unknown visibility is refused", async ({
   page,
-}) => {
+}, testInfo) => {
+  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
   await load(page, "unconfirmed");
   await expect(page.locator("#share")).not.toHaveAttribute("data-agent-confirm");
   expect(await act(page, "open")).toContain('"ok":true');
@@ -221,7 +224,7 @@ for (const [name, fixture, reducedMotion] of [
 }
 
 test("a trigger someone wrote keeps its icon", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web fills in only empty parts");
+  test.skip(!isWebElements(testInfo), "web fills in only empty parts");
   await load(page, "written");
   await expect(trigger(page).locator("svg")).toHaveCount(1);
   await expect(trigger(page)).toHaveText("");
@@ -235,6 +238,16 @@ test.describe("on a touch screen", () => {
     await trigger(page).tap();
     await expect(dialog(page)).toBeVisible();
     await expect(dialog(page)).toHaveAttribute("data-presentation", "sheet");
+  });
+
+  test("the sheet fits the screen, with Copy link in full", async ({ page }) => {
+    await load(page, "linked");
+    await trigger(page).tap();
+    await expect(linkBox(page)).toHaveValue(shareLink);
+    await settled(page);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+    const copy = await button(page, "Copy link").boundingBox();
+    expect(copy && copy.x >= 0 && copy.x + copy.width <= 390).toBe(true);
   });
 });
 

@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { layerOf } from "../layer.js";
+import { isWebElements } from "../layer.js";
 import { watchAnimations } from "../leaving.js";
 
 type ConnectionState = "online" | "connecting" | "reconnecting" | "offline";
@@ -23,6 +23,13 @@ const set = (page: Page, state: ConnectionState, options?: { retryAt?: string; r
     state,
     options,
   ] as const);
+// The installed clock runs while the page loads, which can take seconds under load, so it pauses ahead of the
+// page's own time rather than at a fixed one, and countdowns are set from there.
+const pauseClock = async (page: Page) => {
+  const paused = (await page.evaluate(() => Date.now())) + 5000;
+  await page.clock.pauseAt(paused);
+  return (seconds: number) => new Date(paused + seconds * 1000).toISOString();
+};
 const settled = (page: Page) =>
   page.waitForFunction(() =>
     // The conversation's edge fades run on a scroll timeline, which never ends.
@@ -69,8 +76,8 @@ test("reconnecting counts down to the next try each second, without a live regio
 }) => {
   await page.clock.install({ time: new Date("2026-11-18T12:00:00Z") });
   await open(page, "online");
-  await page.clock.pauseAt(new Date("2026-11-18T12:00:10Z"));
-  await set(page, "reconnecting", { retryAt: "2026-11-18T12:00:13Z" });
+  const after = await pauseClock(page);
+  await set(page, "reconnecting", { retryAt: after(3) });
   await expect(pill(page)).toHaveText(/Retrying in 3 s/);
   for (const text of ["Retrying in 2 s", "Retrying in 1 s", "Reconnecting"]) {
     await page.clock.runFor(1000);
@@ -87,8 +94,8 @@ test("reconnecting counts down to the next try each second, without a live regio
 test("the pill keeps its width as the countdown loses a digit", async ({ page }) => {
   await page.clock.install({ time: new Date("2026-11-18T12:00:00Z") });
   await open(page, "online");
-  await page.clock.pauseAt(new Date("2026-11-18T12:00:10Z"));
-  await set(page, "reconnecting", { retryAt: "2026-11-18T12:00:20Z" });
+  const after = await pauseClock(page);
+  await set(page, "reconnecting", { retryAt: after(10) });
   await expect(pill(page)).toHaveText(/Retrying in 10 s/);
   const width = () => pill(page).evaluate((el) => el.getBoundingClientRect().width);
   const before = await width();
@@ -99,11 +106,11 @@ test("the pill keeps its width as the countdown loses a digit", async ({ page })
 });
 
 test("words a host wrote get no room for lost digits", async ({ page }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web hosts write the words");
+  test.skip(!isWebElements(testInfo), "web hosts write the words");
   await page.clock.install({ time: new Date("2026-11-18T12:00:00Z") });
   await open(page, "written");
-  await page.clock.pauseAt(new Date("2026-11-18T12:00:10Z"));
-  await set(page, "reconnecting", { retryAt: "2026-11-18T12:00:20Z" });
+  const after = await pauseClock(page);
+  await set(page, "reconnecting", { retryAt: after(10) });
   const width = () => pill(page).evaluate((el) => el.getBoundingClientRect().width);
   await expect(pill(page)).toHaveAttribute("data-state", "reconnecting");
   const before = await width();
@@ -233,7 +240,7 @@ test("at full motion the pill drops in and fades out; reduced motion only fades"
 test("web keeps the words written into its parts and adds only the parts it lacks", async ({
   page,
 }, testInfo) => {
-  test.skip(layerOf(testInfo) !== "web", "web markup");
+  test.skip(!isWebElements(testInfo), "web markup");
   await open(page, "written");
   await expect(pill(page)).toHaveText("Sin conexiónReintentar");
   await expect(pill(page).locator("> *")).toHaveCount(3);

@@ -10,18 +10,12 @@ Use a terminal when the agent runs a shell command, so readers can follow its ou
 <Example caption="Press npm test, or focus it and press Enter or Space, to hide and show the output. Focus the output and use the arrow keys to scroll it.">
   <TerminalExample />
 
-  <include cwd lang="tsx">./examples/terminal/basic.tsx</include>
+  <ExampleCode example="terminal/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/terminal
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/terminal-web
-```
+<Install name="terminal" />
 
 ## Composition
 
@@ -77,6 +71,8 @@ Tab reaches the header, **Copy output** and the output, which scrolls with the a
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/terminal/terminal.ts" name="TerminalOptions" />
 
+<FrameworkNames name="terminal" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the run by its title, the command unless you pass `label`, and reads `open`, `status` and `following`. It can `expand` and `collapse` the run and, once there's output, `copy` it, which calls `onCopy` too.
@@ -84,5 +80,5 @@ An agent connected with `createAgent` finds the run by its title, the command un
 <auto-type-table path="../../../../../packages/agent-ui/src/core/terminal/terminal.ts" name="TerminalAgentActions" type='Pick<TerminalApi, "expand" | "collapse" | "copy">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-terminal>`, set `output` as a property; the other props are kebab-case attributes. `onOpenChange` is the `openchange` event and `onCopy` is `terminalcopy`.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-terminal>`, set `output` as a property; the other props are kebab-case attributes. `onOpenChange` is the `openchange` event and `onCopy` is `terminalcopy`.
 </Caption>

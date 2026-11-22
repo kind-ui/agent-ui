@@ -10,18 +10,12 @@ Use a day separator before the first message of each day, so a long conversation
 <Example caption="Each day starts with a heading. Recent days read Today, Yesterday or their weekday, and older ones read their date.">
   <DaySeparatorExample />
 
-  <include cwd lang="tsx">./examples/day-separator/basic.tsx</include>
+  <ExampleCode example="day-separator/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/day-separator
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/day-separator-web
-```
+<Install name="day-separator" />
 
 ## Composition
 
@@ -68,10 +62,12 @@ Pass the same `timeZone` to `dayKey` and the separator, so the day you split on 
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/day-separator/day-separator.ts" name="DaySeparatorOptions" />
 
+<FrameworkNames name="day-separator" />
+
 ### Agent
 
 A day separator is content, so it offers an agent connected with `createAgent` no actions.
 
 <Caption>
-  Runs in React and Web Components. Call `defineDaySeparator()`, then write `<kind-day-separator date="2026-11-18" time-zone="America/Los_Angeles">`: each prop is a kebab-case attribute, so `timeZone` is `time-zone`. The element fills in its label when it has no children, and leaves text you wrote into a `<kind-day-separator-label>` alone.
+  Runs in React, Vue, Svelte, Solid and Web Components. Call `defineDaySeparator()`, then write `<kind-day-separator date="2026-11-18" time-zone="America/Los_Angeles">`: each prop is a kebab-case attribute, so `timeZone` is `time-zone`. The element fills in its label when it has no children, and leaves text you wrote into a `<kind-day-separator-label>` alone.
 </Caption>

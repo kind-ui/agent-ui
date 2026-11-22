@@ -1,6 +1,6 @@
 ---
 title: Get Started
-description: Add AI chat components that people and agents can both use, in React or Web Components.
+description: Add AI chat components that people and agents can both use, in React, Web Components, Vue, Svelte or Solid.
 ---
 
 Agent UI has the pieces of an AI interface:
@@ -12,21 +12,37 @@ Agent UI has the pieces of an AI interface:
 - **Composer controls:** a [picker](./components/picker.mdx), an [add menu](./components/add-menu.mdx), a [settings menu](./components/settings-menu.mdx), [approval modes](./components/approval-mode.mdx), a [model and effort control](./components/model-control.mdx), a [context bar](./components/context-bar.mdx), [dictation](./components/dictation.mdx) and saved drafts.
 - **Thread and shell:** what sits around a chat: a [thread list](./components/thread-list.mdx), [thread search](./components/thread-search.mdx), a [sidebar](./components/sidebar.mdx), [day separators](./components/day-separator.mdx), a [connection status](./components/connection-status.mdx), a [share dialog](./components/share-dialog.mdx) and [conversation search](./components/conversation-search.mdx), plus each message's author and time and a conversation's loading, error and empty states.
 
-Each one is built on [UI SDK](https://ui-sdk.dev/docs), so focus, keys and screen reader announcements work the way UI SDK's own components do, and an agent connected with `createAgent` can read and use the same component a person sees. To see them work together in one run, open the [Agent Activity](./showcase/agent-activity.mdx), [Human Input](./showcase/human-input.mdx) and [Developer Output](./showcase/developer-output.mdx) showcases. For the composer with every control, see the [Composer](./components/composer.mdx#controls-and-narrow-screens) page, and for a whole chat app, with its sidebar, thread list, search and conversation, see the [Sidebar](./components/sidebar.mdx) page.
+Each one is built on [UI SDK](https://ui-sdk.dev/docs), so focus, keys and screen reader announcements work the way UI SDK's own components do, and an [agent connected with `createAgent`](./agents.mdx) can read and use the same component a person sees. To see them work together in one run, open the [Agent Activity](./showcase/agent-activity.mdx), [Human Input](./showcase/human-input.mdx) and [Developer Output](./showcase/developer-output.mdx) showcases. For the composer with every control, see the [Composer](./components/composer.mdx#controls-and-narrow-screens) page, and for a whole chat app, with its sidebar, thread list, search and conversation, see the [Sidebar](./components/sidebar.mdx) page.
 
-You copy the styled components into your project with the shadcn CLI, and they import their behavior from the `@kind-ui/agent-ui` package.
+You copy the styled components into your project with the shadcn CLI, and they import their behavior from the `@kind-ui/agent-ui` package. Each component comes in five layers that render the same parts, options and accessibility from that one behavior: React, Web Components, Vue, Svelte and Solid.
 
 ## Quick Start
 
 Copy this prompt into your agent:
 
 ```text title="Prompt"
-Set up Agent UI in this project. It needs Tailwind CSS v4, and React 19 for the React components.
+Set up Agent UI in this project. It needs Tailwind CSS v4, and one of React 19, Vue 3.5, Svelte 5.33 or Solid 2, or none for Web Components.
 
-1. Install @kind-ui/agent-ui and @ui-sdk/core with the project's package manager, plus @ui-sdk/react for React or @ui-sdk/web for Web Components.
-2. Add a note to AGENTS.md, creating it if needed: before using Agent UI components, read node_modules/@kind-ui/agent-ui/README.md and the AGENTS.md beside the components, follow the ui-sdk skill if it's installed (node_modules/@ui-sdk/core/skills/ui-sdk/SKILL.md), and read node_modules/@ui-sdk/react/docs/llms.txt (node_modules/@ui-sdk/web/docs/llms.txt for Web Components).
-3. Add "registries": { "@kind-ui": "https://kindui.dev/r/{name}.json" } to components.json (run npx shadcn@latest init first if it has none), then add the components you need with npx shadcn@latest add @kind-ui/<name>, using the <name>-web items for Web Components.
+1. Install @kind-ui/agent-ui and @ui-sdk/core with the project's package manager, plus the project's layer: @ui-sdk/react, @ui-sdk/web, @ui-sdk/vue, @ui-sdk/svelte or @ui-sdk/solid.
+2. Add a note to AGENTS.md, creating it if needed: before using Agent UI components, read node_modules/@kind-ui/agent-ui/README.md and the AGENTS.md beside the components, follow the ui-sdk skill if it's installed (node_modules/@ui-sdk/core/skills/ui-sdk/SKILL.md), and read the layer's index, node_modules/@ui-sdk/<layer>/docs/llms.txt.
+3. Add "registries": { "@kind-ui": "https://kindui.dev/r/{name}.json" } to components.json (run npx shadcn@latest init first in a React app that has none; in a Vue, Svelte or Solid app, write the components.json from the Agent UI docs), then add the components you need with npx shadcn@latest add @kind-ui/<name>: <name> for React, <name>-web for Web Components, <name>-vue for Vue, <name>-svelte for Svelte and <name>-solid for Solid.
 ```
+
+## Choose a Framework
+
+Every layer renders the same primitive from `@kind-ui/agent-ui/core` through UI SDK's package for that framework, so the parts, options, keys, announcements and agent actions match. Pick the one your app uses:
+
+| Layer | Needs | Registry item |
+| --- | --- | --- |
+| React | React 19, `@ui-sdk/react` | `<name>` |
+| Web Components | any page, `@ui-sdk/web` | `<name>-web` |
+| Vue | Vue 3.5 or later, `@ui-sdk/vue` | `<name>-vue` |
+| Svelte | Svelte 5.33 or later with runes, `@ui-sdk/svelte` | `<name>-svelte` |
+| Solid | Solid 2 (`solid-js` and `@solidjs/web`), `@ui-sdk/solid` | `<name>-solid` |
+
+Solid 1 isn't supported, since `@ui-sdk/solid` needs Solid 2. Components take the same props in every layer, with controlled props and callbacks spelled as each framework expects: `v-model:open` in Vue, `bind:open` in Svelte, and `open` with `onOpenChange` in Solid and React. Each component page's API reference has a table of them.
+
+The live examples on these pages are React. The code under each one has a tab for every framework, and the tab you pick is kept across pages.
 
 ## Install with the shadcn CLI
 
@@ -40,21 +56,58 @@ Add the `@kind-ui` registry to your `components.json`:
 }
 ```
 
-Then add components by name. Each component page lists its React and Web Components items:
+In a React app, `npx shadcn@latest init` writes the rest of the file. A Vue, Svelte or Solid app built with Vite needs the same file, written by hand, since `init` sets up React. The CLI copies the `.vue`, `.svelte` and `.tsx` files as they are and installs their dependencies:
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/composer
+```json title="components.json"
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": { "config": "", "css": "src/index.css", "baseColor": "neutral", "cssVariables": true, "prefix": "" },
+  "aliases": {
+    "components": "@/components",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "utils": "@/lib/utils",
+    "hooks": "@/hooks"
+  },
+  "registries": {
+    "@kind-ui": "https://kindui.dev/r/{name}.json"
+  }
+}
 ```
 
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/composer-web
+Point `@/*` at `src/*` in your `tsconfig.json`, where the CLI looks the aliases up. A Solid app also compiles the copied JSX with Solid's runtime:
+
+```json title="tsconfig.json"
+{
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "@solidjs/web",
+    "paths": { "@/*": ["./src/*"] }
+  }
+}
 ```
+
+A Vue app that server-renders outside Nuxt renders its root inside `<Suspense>`, on the server and in the browser, as Nuxt pages already do. `@ui-sdk/vue` waits to bind parts until hydration ends only below a pending `<Suspense>`, so without one an Avatar whose image loaded early, or a measured Terminal, doesn't match its server markup:
+
+```ts title="entry.ts"
+import { createSSRApp, h, Suspense } from "vue";
+import App from "./App.vue";
+
+export const createApp = () => createSSRApp({ render: () => h(Suspense, null, { default: () => h(App) }) });
+```
+
+Then add components by name. Each component page lists its item for every layer:
+
+<Install name="composer" />
 
 Every component depends on the `agent-ui-setup` item, so the first `add` also:
 
-- installs `@kind-ui/agent-ui` and `@ui-sdk/core` at their pinned versions,
+- installs `@kind-ui/agent-ui` and `@ui-sdk/core` at their pinned versions (each item adds its layer's UI SDK package, pinned the same),
 - adds `@import "@kind-ui/agent-ui/styles.css";` to the stylesheet in `components.json`,
-- writes an `AGENTS.md` beside the components that points coding agents at the package docs and the ui-sdk skill.
+- writes an `AGENTS.md` beside the components that points coding agents at the package docs, the ui-sdk skill and each layer's docs.
 
 Tailwind finds the copied components on its own. If they live outside the app that builds them, add an `@source` for them to that stylesheet:
 
@@ -66,7 +119,7 @@ Tailwind finds the copied components on its own. If they live outside the app th
 
 ## Install with npm
 
-The package has the primitives, types and styles the copied components import:
+The package has the primitives, types and styles the copied components import. It's the same for every layer and depends on no framework:
 
 ```bash
 npm install @kind-ui/agent-ui @ui-sdk/core

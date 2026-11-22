@@ -1,0 +1,31 @@
+import { messagePrimitive } from "@kind-ui/agent-ui/core";
+import { createParts } from "@ui-sdk/svelte/primitive";
+
+export const parts = createParts(messagePrimitive, {
+  root: "div",
+  avatar: "div",
+  content: "div",
+  editor: "textarea",
+  "edit-actions": "div",
+  "edit-cancel": "button",
+  "edit-save": "button",
+  toolbar: "div",
+  copy: "span",
+  regenerate: "span",
+  "regenerate-trigger": "span",
+  "regenerate-content": "span",
+  edit: "span",
+  branch: "div",
+  "branch-previous": "button",
+  "branch-label": "span",
+  "branch-next": "button",
+  header: "div",
+  author: "span",
+  time: "time",
+  duration: "span",
+  outcome: "div",
+  "outcome-icon": "span",
+  "outcome-text": "span",
+  retry: "button",
+  continue: "button",
+});

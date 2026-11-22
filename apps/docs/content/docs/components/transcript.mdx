@@ -10,18 +10,12 @@ Use a transcript when the agent works with a call, a meeting or a voice note, so
 <Example caption="Press Play to follow the recording, or press a segment to jump to it. Type billing in the search field to show only the segments that mention it.">
   <TranscriptExample />
 
-  <include cwd lang="tsx">./examples/transcript/basic.tsx</include>
+  <ExampleCode example="transcript/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/transcript
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/transcript-web
-```
+<Install name="transcript" />
 
 ## Composition
 
@@ -76,6 +70,8 @@ The search field, the scrolling view and the times are a Tab stop each. Among th
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/transcript/transcript.ts" name="TranscriptOptions" />
 
+<FrameworkNames name="transcript" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the transcript by its `label` and reads `query`. It can `search` with any text, which filters the segments as typing does, and while `onSeek` is set it can `seek` to a segment by its id; the segments are listed by speaker and time, and an id that isn't there is refused.
@@ -83,5 +79,5 @@ An agent connected with `createAgent` finds the transcript by its `label` and re
 <auto-type-table path="../../../../../packages/agent-ui/src/core/transcript/transcript.ts" name="TranscriptAgentActions" type='Pick<TranscriptApi, "search" | "seek">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-transcript>`, set `segments` as a property; the other props are kebab-case attributes. Add `can-seek` for the times to seek: `onSeek` is the `seek` event, and `onQueryChange` is `querychange`.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-transcript>`, set `segments` as a property; the other props are kebab-case attributes. Add `can-seek` for the times to seek: `onSeek` is the `seek` event, and `onQueryChange` is `querychange`.
 </Caption>

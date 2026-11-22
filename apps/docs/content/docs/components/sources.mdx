@@ -10,18 +10,12 @@ Use sources under a response that searched the web or read documents, so readers
 <Example caption="Press Used 3 sources, or focus it and press Enter or Space, to show the links. Press it again to hide them.">
   <SourcesExample />
 
-  <include cwd lang="tsx">./examples/sources/basic.tsx</include>
+  <ExampleCode example="sources/basic" />
 </Example>
 
 ## Installation
 
-```bash tab="React"
-npx shadcn@latest add @kind-ui/sources
-```
-
-```bash tab="Web Components"
-npx shadcn@latest add @kind-ui/sources-web
-```
+<Install name="sources" />
 
 ## Composition
 
@@ -67,6 +61,8 @@ The list starts closed. Pass `defaultOpen` to start with it shown, or `open` wit
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/sources/sources.ts" name="SourcesOptions" />
 
+<FrameworkNames name="sources" />
+
 ### Agent
 
 An agent connected with `createAgent` finds the sources by the trigger's text and reads `open`. `expand()` is offered while the list is hidden and `collapse()` while it shows. Like any component with a button, it also has UI SDK's generic `press`.
@@ -74,5 +70,5 @@ An agent connected with `createAgent` finds the sources by the trigger's text an
 <auto-type-table path="../../../../../packages/agent-ui/src/core/sources/sources.ts" name="SourcesAgentActions" type='Pick<SourcesApi, "expand" | "collapse">' />
 
 <Caption>
-  Runs in React and Web Components. On `<kind-sources>`, set `sources` as a property; the other props are kebab-case attributes, and `onOpenChange` is the `openchange` event. The element fills in its trigger, list and items, and keeps any `<kind-sources-item value="…">` you write inside its `<kind-sources-list>`.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-sources>`, set `sources` as a property; the other props are kebab-case attributes, and `onOpenChange` is the `openchange` event. The element fills in its trigger, list and items, and keeps any `<kind-sources-item value="…">` you write inside its `<kind-sources-list>`.
 </Caption>

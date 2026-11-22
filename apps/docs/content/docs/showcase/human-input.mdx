@@ -10,7 +10,7 @@ This run puts the human input components together the way a host app would. The 
 <Example caption="The run stops on the question until you answer it, then on the deploy until you approve it. The first Approve fails on purpose, so press it again. Rate the reply, pick a suggestion, or press Replay to start over.">
   <HumanInputShowcase />
 
-  <include cwd lang="tsx">./examples/showcase/human-input.tsx</include>
+  <ExampleCode example="showcase/human-input" />
 </Example>
 
 ## What Happens
@@ -25,5 +25,5 @@ This run puts the human input components together the way a host app would. The 
 Each component gets its state from the host as plain data, here a timer stepping through a script, and calls the host back when a person decides. In an app, the same data comes from your model's stream, for example through the [AI SDK adapter](../adapters/ai-sdk.mdx).
 
 <Caption>
-  Every component here runs in React and Web Components. The example is React.
+  Every component here runs in React, Vue, Svelte, Solid and Web Components. The example is React.
 </Caption>
