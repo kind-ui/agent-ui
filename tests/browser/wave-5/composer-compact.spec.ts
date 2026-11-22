@@ -38,6 +38,8 @@ const overflow = (page: Page) =>
     };
   });
 
+// Menus open on a mouse's press, so under load a slow click's release can land outside the sheet that just opened
+// under it and close it again. A tap is what a person does here.
 test.use({ hasTouch: true, isMobile: true });
 
 for (const width of [390, 320])
@@ -79,7 +81,7 @@ for (const width of [390, 320])
         settings,
         page.getByRole("button", { name: /^\d+ more/ }),
       ]) {
-        await trigger.click();
+        await trigger.tap();
         const sheet = page.locator('[data-presentation="sheet"]:visible').first();
         await expect(sheet).toBeVisible();
         await settled(page);
@@ -95,8 +97,8 @@ for (const width of [390, 320])
 test("a risky mode keeps its shield and warning mark whole at 320px", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 844 });
   await load(page);
-  await triggers(page).approval.click();
-  await page.getByRole("menuitemradio", { name: /^Full access/ }).click();
+  await triggers(page).approval.tap();
+  await page.getByRole("menuitemradio", { name: /^Full access/ }).tap();
   const risky = page.getByRole("button", { name: /^Approvals?, Full access/ });
   await expect(risky).toBeVisible();
   expect(
@@ -153,7 +155,7 @@ for (const scheme of ["light", "dark"] as const)
     await load(page);
     await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     expect((await new AxeBuilder({ page }).include("#root").analyze()).violations).toEqual([]);
-    await triggers(page).settings.click();
+    await triggers(page).settings.tap();
     await settled(page);
     expect((await new AxeBuilder({ page }).include("#root").analyze()).violations).toEqual([]);
   });
