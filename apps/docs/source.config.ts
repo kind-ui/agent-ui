@@ -49,8 +49,9 @@ const attribute = (node: Nodes, name: string) => {
 const names = (cells: string[][]) => cells.map((cell) => cell.map((name) => `\`${name}\``).join(", "));
 
 // What `<ExampleCode>`, `<Install>` and `<FrameworkNames>` show, as Markdown, keyed by component and its one prop.
-const markdownOf: Record<string, [string, (value: string) => string]> = {
-  ExampleCode: ["example", (example) => exampleFiles(example).map(fenced).join("\n\n")],
+// `file.cwd` is this docs app, also when a site mounts it as a Fumadocs MDX workspace and builds from its own root.
+const markdownOf: Record<string, [string, (value: string, file: VFile) => string]> = {
+  ExampleCode: ["example", (example, file) => exampleFiles(example, file.cwd).map(fenced).join("\n\n")],
   Install: [
     "name",
     (name) =>
@@ -74,7 +75,7 @@ const remarkFrameworkMarkdown = () => (tree: Root, file: VFile) => {
   const visit = (node: Nodes) => {
     const entry = node.type === "mdxJsxFlowElement" && node.name ? markdownOf[node.name] : undefined;
     const value = entry && attribute(node, entry[0]);
-    if (entry && value) replaceSource(file, node, entry[1](value), "markdown");
+    if (entry && value) replaceSource(file, node, entry[1](value, file), "markdown");
     if ("children" in node) for (const child of node.children) visit(child);
   };
   visit(tree);
