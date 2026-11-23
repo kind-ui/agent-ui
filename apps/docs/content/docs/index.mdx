@@ -14,6 +14,8 @@ Agent UI has the pieces of an AI interface:
 
 Each one is built on [UI SDK](https://ui-sdk.dev/docs), so focus, keys and screen reader announcements work the way UI SDK's own components do, and an [agent connected with `createAgent`](./agents.mdx) can read and use the same component a person sees. To see them work together in one run, open the [Agent Activity](./showcase/agent-activity.mdx), [Human Input](./showcase/human-input.mdx) and [Developer Output](./showcase/developer-output.mdx) showcases. For the composer with every control, see the [Composer](./components/composer.mdx#controls-and-narrow-screens) page, and for a whole chat app, with its sidebar, thread list, search and conversation, see the [Sidebar](./components/sidebar.mdx) page.
 
+To build a whole chat, follow a guide: [an AI chat with the AI SDK in React](./guides/ai-sdk-chat.mdx), [tool calls and approvals](./guides/tool-approvals.mdx), [reasoning and agent steps](./guides/reasoning-and-steps.mdx), or [an AI chat with Web Components](./guides/web-components-chat.mdx).
+
 You copy the styled components into your project with the shadcn CLI, and they import their behavior from the `@kind-ui/agent-ui` package. Each component comes in five layers that render the same parts, options and accessibility from that one behavior: React, Web Components, Vue, Svelte and Solid.
 
 ## Quick Start

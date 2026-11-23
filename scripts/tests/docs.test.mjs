@@ -155,7 +155,8 @@ test("pages import examples and link pages by relative path", () => {
   for (const file of readdirSync(content, { recursive: true })) {
     if (!file.endsWith(".mdx")) continue;
     const source = readFileSync(new URL(file, content), "utf8");
-    assert.doesNotMatch(source, /from ["']@\//, file);
+    // A code sample may import as a consumer does; the page's own imports may not.
+    assert.doesNotMatch(source.replace(/^```[^\n]*\n[\s\S]*?^```$/gm, ""), /from ["']@\//, file);
     assert.doesNotMatch(source, /\]\(\/|^\[[^\]]+\]:\s*\/|(?:href|src)=\{?["'`]\//m, file);
     assert.doesNotMatch(source, /kindui\.dev(?!\/r\/)|localhost/, file);
     assert.doesNotMatch(source, /<include[^>]*>[^<]*examples\//, file);
@@ -179,5 +180,18 @@ test("examples import only the frameworks, the package, ui components and other 
           );
       assert.ok(allowed, `${file}: ${specifier}`);
     }
+  }
+});
+
+test("the sidebar has a Guides section listing every guide", () => {
+  const root = JSON.parse(readFileSync(new URL("meta.json", content), "utf8"));
+  const at = root.pages.indexOf("---Guides---");
+  assert.deepEqual(root.pages.slice(at, at + 2), ["---Guides---", "...guides"]);
+  const meta = JSON.parse(readFileSync(new URL("guides/meta.json", content), "utf8"));
+  const files = readdirSync(new URL("guides/", content)).filter((file) => file.endsWith(".mdx"));
+  assert.deepEqual([...meta.pages].sort(), files.map((file) => file.replace(/\.mdx$/, "")).sort());
+  for (const name of meta.pages) {
+    const source = readFileSync(new URL(`guides/${name}.mdx`, content), "utf8");
+    assert.match(source, /^---\ntitle: .+\ndescription: .+\n---\n\nTo .+/, name);
   }
 });

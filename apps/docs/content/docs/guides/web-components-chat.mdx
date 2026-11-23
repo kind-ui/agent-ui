@@ -1,0 +1,159 @@
+---
+title: AI Chat with Web Components
+description: Build a streaming AI chat without a framework, from Agent UI's Web Components and a fetch to any server route.
+---
+
+To build an AI chat UI without a framework, use Agent UI's Web Components: `kind-conversation` scrolls the messages and follows the newest one, `kind-message` holds each turn, `kind-markdown` renders the reply as it streams, and `kind-composer` sends the prompt and stops the answer. They're custom elements in light DOM, so they work in plain HTML or in any app that renders elements. In React, Vue, Svelte or Solid, use that framework's layer instead, which takes the same props. Your script listens to the composer's events, sets properties as the answer streams in, and reads the stream from any server route, here one that uses the AI SDK's `streamText`.
+
+## Installation
+
+Set up the `@kind-ui` registry and the stylesheet as [Get Started](../index.mdx#install-with-the-shadcn-cli) shows, then add the Web Components items, and the AI SDK on the server:
+
+```bash
+npx shadcn@latest add @kind-ui/conversation-web @kind-ui/message-web @kind-ui/markdown-web @kind-ui/composer-web
+npm install ai
+```
+
+## The Page
+
+The conversation starts empty, and the composer wraps a form whose content is UI SDK's File Input drop zone, with UI SDK's Token Input as the prompt. `can-stop` shows Stop while an answer streams.
+
+```html title="index.html"
+<main class="mx-auto flex h-dvh max-w-2xl flex-col gap-4 p-4">
+  <kind-conversation aria-label="Chat" message-count="0" class="min-h-0 flex-1">
+    <kind-conversation-viewport>
+      <kind-conversation-content></kind-conversation-content>
+    </kind-conversation-viewport>
+    <kind-conversation-jump><button hidden></button></kind-conversation-jump>
+  </kind-conversation>
+  <kind-composer can-stop>
+    <form aria-label="Message">
+      <ui-file-input>
+        <ui-file-input-dropzone>
+          <kind-composer-input>
+            <ui-token-input>
+              <ui-token-input-editor aria-label="Prompt" placeholder="Ask anything"></ui-token-input-editor>
+            </ui-token-input>
+          </kind-composer-input>
+          <kind-composer-submit><button></button></kind-composer-submit>
+          <kind-composer-stop><button></button></kind-composer-stop>
+        </ui-file-input-dropzone>
+      </ui-file-input>
+    </form>
+  </kind-composer>
+</main>
+```
+
+## The Script
+
+```ts title="main.ts"
+import { defineComposer } from "@/components/ui/web/composer";
+import { defineConversation } from "@/components/ui/web/conversation";
+import { defineMarkdown } from "@/components/ui/web/markdown";
+import { defineMessage } from "@/components/ui/web/message";
+
+defineConversation();
+defineMessage();
+defineMarkdown();
+defineComposer();
+
+type ChatMessage = { role: "user" | "assistant"; content: string };
+
+const history: ChatMessage[] = [];
+const conversation = document.querySelector("kind-conversation")!;
+const rows = conversation.querySelector("kind-conversation-content")!;
+const composer = document.querySelector("kind-composer")!;
+let controller: AbortController | undefined;
+
+function addMessage(role: ChatMessage["role"], text: string) {
+  const index = history.length;
+  history.push({ role, content: text });
+
+  const row = document.createElement("kind-conversation-row");
+  row.setAttribute("value", `message-${index}`);
+  row.setAttribute("index", String(index));
+  row.innerHTML = `
+    <kind-message message-role="${role}" aria-label="${role === "user" ? "Your message" : "Assistant message"}">
+      <kind-message-content><kind-markdown></kind-markdown></kind-message-content>
+      <kind-message-outcome></kind-message-outcome>
+    </kind-message>`;
+  rows.append(row);
+  conversation.messageCount = history.length;
+
+  const message = row.querySelector("kind-message")!;
+  const markdown = row.querySelector("kind-markdown")!;
+  markdown.source = text;
+  return { message, markdown };
+}
+
+async function send(text: string) {
+  addMessage("user", text);
+  const messages = [...history];
+  const reply = history.length;
+  const { message, markdown } = addMessage("assistant", "");
+  controller = new AbortController();
+  message.status = "streaming";
+  markdown.streaming = true;
+
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages }),
+      signal: controller.signal,
+    });
+    if (!response.ok || !response.body) throw new Error(`The chat answered ${response.status}`);
+    const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+    for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+      history[reply]!.content += chunk.value;
+      markdown.source = history[reply]!.content;
+    }
+    message.status = "complete";
+  } catch {
+    message.status = controller.signal.aborted ? "aborted" : "error";
+  } finally {
+    markdown.streaming = false;
+  }
+}
+
+composer.addEventListener("composersubmit", (event) => event.detail.waitUntil(send(event.detail.value.text)));
+composer.addEventListener("stop", () => controller?.abort());
+```
+
+## The Server Route
+
+The route answers with plain text as the model writes it. It's a standard `Request` handler, so it runs in any server that takes one; a model id like `"openai/gpt-5"` goes through the AI Gateway, and any AI SDK provider's model works instead.
+
+```ts title="api/chat.ts"
+import { streamText } from "ai";
+
+type ChatMessage = { role: "user" | "assistant"; content: string };
+
+export async function POST(request: Request) {
+  const { messages }: { messages: ChatMessage[] } = await request.json();
+  const result = streamText({
+    model: "openai/gpt-5",
+    messages: messages.map(({ role, content }) =>
+      role === "assistant" ? { role: "assistant" as const, content } : { role: "user" as const, content },
+    ),
+    abortSignal: request.signal,
+  });
+  return result.toTextStreamResponse();
+}
+```
+
+## How It Works
+
+- **Defining the elements:** each `define…` function registers its element and the parts it uses, once, so call them before the elements need to work.
+- **Rows:** each message is a `kind-conversation-row` with a stable `value` and its `index`, and `messageCount` on the conversation says how many there are. While the reader is at the end, new rows and growing text stay in view; once they scroll up, **Jump to latest** brings them back.
+- **Streaming:** each chunk appends to the reply, which goes to the `kind-markdown`'s `source` property while `streaming` is `true`, so unfinished Markdown renders cleanly and only the blocks that changed are parsed again. The message's `status` is `streaming`, then `complete`.
+- **Sending:** the composer fires `composersubmit` with the draft as `event.detail.value`. Passing `send`'s promise to `event.detail.waitUntil` keeps the composer pending until the answer ends, then clears the prompt.
+- **Stopping and failing:** Stop fires `stop`, which aborts the request. The message's status becomes `aborted`, and the empty `kind-message-outcome` fills in with "Stopped". A failed request sets the status to `error`, which shows "Something went wrong".
+
+Every prop on a component page works the same way here: each is a kebab-case attribute or a property, and each callback is a lowercase event.
+
+## Next Steps
+
+- Render tool calls with `kind-tool` and reasoning with `kind-reasoning`, from the [Tool](../components/tool.mdx) and [Reasoning](../components/reasoning.mdx) pages.
+- Add mentions, commands and attachments from the [Composer](../components/composer.mdx) page.
+- In a framework, the AI SDK's chat keeps this state for you: [AI Chat with the AI SDK in React](./ai-sdk-chat.mdx), which also says where the Vue, Svelte and Solid components live.
