@@ -1,5 +1,13 @@
 # @kind-ui/agent-ui
 
+## 0.7.1
+
+### Patch Changes
+
+- 03352ff: Read each docs example's framework files from the docs app, not the working directory, so sites that mount these docs find them.
+- bcb1656: Describe the package for npm search: a clearer description, keywords, and the docs site as its homepage. Internal registry items now have a title, a description and the `internal` category, so `shadcn search` no longer lists them blank.
+- af82509: Text fields never show a focus ring, even when a page's own stylesheet sets a global `:focus-visible` outline: the composer's editor, the search fields, Thread List's rename field, Share Dialog's link and the reason boxes now keep only their caret. In forced colors they show where focus is, as Tailwind's `outline-hidden` does.
+
 ## 0.7.0
 
 ### Minor Changes
