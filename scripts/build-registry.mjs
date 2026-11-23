@@ -81,6 +81,7 @@ export function validateCatalog(input, pkg) {
   const usage = checkUiSdkUsage(packageDir, {});
   for (const item of input.items) {
     const where = `item "${item.name}"`;
+    if (!item.description) errors.push(`${where}: has no description`);
     if (Boolean(item.hidden) !== item.name.startsWith("internal-")) {
       errors.push(`${where}: only internal-<name> items are hidden, and they all are`);
     }

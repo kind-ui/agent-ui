@@ -364,6 +364,12 @@ const setup = {
 Coding agents: read the AGENTS.md beside the components before changing them.`,
 };
 
+const internalInfo = (name, suffix) => ({
+  title: `Internal ${name.replace(/(^|-)(\w)/g, (_, dash, letter) => (dash && " ") + letter.toUpperCase())}${suffix}`,
+  description: "Internal primitive used by Agent UI components; add a component instead.",
+  categories: ["internal"],
+});
+
 const items = [setup];
 for (const [layer, { suffix }] of Object.entries(layers)) {
   for (const [name, { title, description, uses }] of Object.entries(components)) {
@@ -384,6 +390,7 @@ for (const [layer, { suffix }] of Object.entries(layers)) {
       type: "registry:ui",
       layer,
       hidden: true,
+      ...internalInfo(name, layer === "web" ? " (Web Components)" : ""),
       files:
         layer === "react"
           ? [source(layer, `internal/${name}`), "packages/agent-ui/src/react/internal/kind-class.ts"]
@@ -437,6 +444,7 @@ export function layerItems(layerManifests, list) {
         type: "registry:ui",
         layer,
         hidden: true,
+        ...internalInfo(name, ` (${framework})`),
         files: [...files(`internal/${name}`), `${dir}internal/kind-class.ts`],
         registryDependencies: [],
         dependencies: uiSdk(layer),
