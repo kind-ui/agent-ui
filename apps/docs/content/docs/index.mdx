@@ -145,3 +145,13 @@ The colors are `--kind-color-*` tokens. Each is a `light-dark()` pair, so dark m
   --kind-radius: 0.5rem;
 }
 ```
+
+### Focus rings
+
+A control shows a 2px ring, `--kind-focus-ring`, only when the keyboard focused it. A click or a tap shows none, and a text field never shows one: the composer's editor, the search fields and the reason boxes show their caret. A global focus rule in your own stylesheet, such as `:focus-visible { outline: … }`, still rings the buttons, but not these text fields. If your rule leaves out text fields, leave out editable elements too, since the composer's editor isn't an `input`:
+
+```css
+:focus-visible:not(input, textarea, [contenteditable]) {
+  outline: 2px solid currentColor;
+}
+```
