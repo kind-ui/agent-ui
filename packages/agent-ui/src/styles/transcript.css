@@ -48,9 +48,6 @@
         background-color: currentColor;
         mask: var(--kind-transcript-search-icon) center / contain no-repeat;
       }
-      & input:focus {
-        outline: none;
-      }
     }
 
     & input {
@@ -64,7 +61,6 @@
       font: inherit;
       font-size: var(--kind-text-md);
       letter-spacing: var(--kind-text-md-tracking);
-      outline: none;
 
       &::placeholder {
         color: var(--kind-color-muted);

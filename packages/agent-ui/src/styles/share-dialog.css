@@ -137,7 +137,6 @@
       line-height: var(--kind-text-md-leading);
       letter-spacing: var(--kind-text-md-tracking);
       text-overflow: ellipsis;
-      outline: none;
     }
   }
 

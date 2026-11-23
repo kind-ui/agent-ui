@@ -220,7 +220,6 @@
     box-shadow: 0 0 0 1px var(--kind-color-hairline);
     color: inherit;
     font: inherit;
-    outline: none;
   }
 
   /* Over the time, so showing More moves nothing: on hover, focus and the row whose menu is open. The cell fades

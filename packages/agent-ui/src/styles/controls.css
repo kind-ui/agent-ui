@@ -413,3 +413,28 @@
     }
   }
 }
+
+/* Text fields show focus with their caret, never a ring, whatever focused them (docs/design-principles.md). This
+   sits outside every layer: an unlayered rule beats a layered one whatever its specificity, so a host's global
+   `:focus-visible` rule would otherwise ring our fields. The outline is transparent rather than none, so forced
+   colors still show where focus is, as Tailwind's `outline-hidden` does. A field is ours when it's a part
+   (`data-slot`), so a host's own fields keep the host's styles. At (0,2,0) it beats a global rule such as
+   `:focus-visible:not(input, textarea)`, while a host's own class on a field, declared later, still wins. */
+[data-slot]:where(
+  input:not(
+    [type="checkbox"],
+    [type="radio"],
+    [type="range"],
+    [type="color"],
+    [type="file"],
+    [type="button"],
+    [type="submit"],
+    [type="reset"],
+    [type="image"]
+  ),
+  textarea,
+  [contenteditable]:not([contenteditable="false"])
+):focus {
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+}

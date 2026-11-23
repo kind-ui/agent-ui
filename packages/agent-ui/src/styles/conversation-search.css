@@ -96,7 +96,6 @@
       font-size: var(--kind-text-md);
       line-height: var(--kind-text-md-leading);
       letter-spacing: var(--kind-text-md-tracking);
-      outline: none;
 
       &::placeholder {
         color: var(--kind-color-muted);

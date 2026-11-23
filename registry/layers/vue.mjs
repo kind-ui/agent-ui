@@ -102,6 +102,7 @@ export default {
   specs: [
     "wave-1/step.spec.ts",
     "wave-1/internal.spec.ts",
+    "wave-1/focus-ring.spec.ts",
     "parity.spec.ts",
 
     "wave-1/markdown.spec.ts",
