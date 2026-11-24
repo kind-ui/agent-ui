@@ -152,3 +152,22 @@ test("the skill, docs and README agree on layers and how to add the skill", () =
     assert.ok(read(file).includes(skillCommand), `${file} shows ${skillCommand}`);
   }
 });
+
+test("the skill counts every component", () => {
+  const text = readFileSync(join(skill, "SKILL.md"), "utf8");
+  assert.ok(text.includes(`${Object.keys(components).length} components`));
+});
+
+test("every component tag in the skill's code is a React export", () => {
+  const exported = new Set(
+    readdirSync(join(root, "packages/agent-ui/src/react"))
+      .filter((file) => file.endsWith(".tsx"))
+      .flatMap((file) => [...exportedNames(`packages/agent-ui/src/react/${file}`)]),
+  );
+  const own = new Set(["Chat", "Shell", "SearchIcon", "Suspense"]);
+  for (const [, code] of skillText.matchAll(/```tsx\n([\s\S]*?)```/g)) {
+    for (const [, tag] of code.matchAll(/(?<!\w)<([A-Z]\w*)[\s/>]/g)) {
+      if (!own.has(tag)) assert.ok(exported.has(tag), `<${tag}> isn't exported by a React component`);
+    }
+  }
+});

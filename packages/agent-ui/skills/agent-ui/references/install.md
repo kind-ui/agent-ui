@@ -12,7 +12,7 @@ Every component comes in five layers that render the same parts, options, keys a
 | Svelte | Svelte 5.33 or later with runes, `@ui-sdk/svelte` | `<name>-svelte` | `@ui-sdk/svelte/agent` |
 | Solid | Solid 2 (`solid-js` and `@solidjs/web`), `@ui-sdk/solid` | `<name>-solid` | `@ui-sdk/solid/agent` |
 
-Every layer needs Tailwind CSS v4. Solid 1 isn't supported. React 18 isn't supported. The CLI installs each layer's UI SDK package at the pinned version; don't upgrade `@ui-sdk/*` or `@kind-ui/agent-ui` separately, since they're pinned together.
+Every layer needs Tailwind CSS v4. Solid 1 isn't supported. React 18 isn't supported. The registry items name exact versions of `@kind-ui/agent-ui` and the `@ui-sdk/*` packages, which are released together, but the CLI writes them to `package.json` as caret ranges. Remove the `^` from those entries so a later install can't upgrade one without the others, and upgrade them together by adding the components again.
 
 ## Set up components.json
 
@@ -26,7 +26,7 @@ Add the registry to `components.json`:
 }
 ```
 
-In a React app without a `components.json`, run `npx shadcn@latest init` first. A Vue, Svelte or Solid app built with Vite needs the whole file written by hand, since `init` sets up React:
+In a React app without a `components.json`, run `npx shadcn@latest init -d` first (`-d` takes the defaults instead of prompting). It also adds a `button` component and a class-based `.dark` theme; see [design.md](design.md#theme-with-tokens) for dark mode. A Vue, Svelte or Solid app built with Vite needs the whole file written by hand, since `init` sets up React:
 
 ```json
 {
@@ -86,7 +86,23 @@ Tailwind finds the copied files itself. If they live outside the app that builds
 
 ## Framework notes
 
-- **Next.js App Router:** every React component file starts with `"use client"`, so a server component can render one. A page with state or handlers needs `"use client"` itself.
+- **Next.js:** the copied files import each other as `./name.js` (for `name.tsx`), as TypeScript's NodeNext resolution writes them. Vite resolves that on its own; Next.js doesn't, and Turbopack, its default bundler, can't be configured to. Build with webpack and map the extension:
+
+  ```ts
+  // next.config.ts
+  import type { NextConfig } from "next";
+
+  const config: NextConfig = {
+    webpack: (webpackConfig) => {
+      webpackConfig.resolve.extensionAlias = { ".js": [".ts", ".tsx", ".js"] };
+      return webpackConfig;
+    },
+  };
+
+  export default config;
+  ```
+
+  Then run `next dev --webpack` and `next build --webpack` in the `package.json` scripts. A scaffold that wires Tailwind only into Turbopack needs `@tailwindcss/postcss` and a `postcss.config.mjs` (`export default { plugins: { "@tailwindcss/postcss": {} } };`). Every React component file starts with `"use client"`, so a server component can render one; a page with state or handlers needs `"use client"` itself.
 - **Vue with server rendering outside Nuxt:** render the root inside `<Suspense>`, on the server and in the browser, as Nuxt pages already do. Without it, parts bind during hydration and an Avatar whose image loaded early, or a measured Terminal, won't match its server markup:
 
   ```ts

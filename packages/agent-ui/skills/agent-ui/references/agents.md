@@ -17,21 +17,21 @@ export const agent = createAgent({
 });
 ```
 
-In React, create it at module level or in a `useState` initializer, not on every render.
+In React, create it at module level (it's safe to import during server rendering) or in a `useState` initializer, not on every render. To reach it from tests or the console, assign it in an effect: `useEffect(() => { window.agent = agent; }, [])`.
 
 ## Read and act
 
 ```ts
 const snapshot = agent.snapshot();
-// [{ ref: "c1", component: "kind-tool", label: "delete_branch", status: "awaiting-input", actions: ["expand", "collapse", "press"] },
-//  { ref: "c2", component: "kind-confirmation", label: "Run delete_branch?", actions: ["approve", "deny", "press"] }, …]
+// [{ ref: "c11", component: "kind-confirmation", label: "Run delete_branch?", approvalState: "requested", actions: ["approve", "deny"] },
+//  { ref: "c12", component: "kind-tool", label: "delete_branch", status: "awaiting-input", actions: ["expand", "collapse", "copyInput", "press"] }, …]
 
 await agent.act({ steps: [{ ref: "Read the logs", action: "expand" }] });
 ```
 
-- Each component is listed once, by its accessible name, with its state and the actions it offers right now. An agent names a component by `ref` or by label.
+- Each component is listed once, by its accessible name, with its state and the actions it offers right now. An agent names a component by `ref` or by label. The list also holds content without a role (each Markdown, unnamed) and UI SDK parts a component composes (the composer's `token-input` and `file-input`, a code block's `scroll-area`).
 - Some actions are listed only while they can run: a Message offers `regenerate` only once it settled and you passed `onRegenerate`.
-- The bridge adds `press` to any component with a button.
+- The bridge adds a generic `press` to some components for buttons no action covers (a Tool's header); a component whose buttons all have actions, like Confirmation, lists only those.
 - Each component page's **Agent** section lists what it reads and offers. The UI SDK docs for the bridge, WebMCP and `allow` are `node_modules/@ui-sdk/<layer>/docs/agents.md`.
 
 ## Agents take the same path as people

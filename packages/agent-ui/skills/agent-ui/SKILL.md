@@ -11,8 +11,8 @@ Agent UI is the parts of an AI interface: a conversation, messages, streaming Ma
 
 - `node_modules/@kind-ui/agent-ui/README.md`: the entries, the AI SDK adapter's mapping and the theme tokens, for the installed version.
 - The component files the registry copied, usually `components/ui/<name>.tsx` (Vue `ui/vue/`, Svelte `ui/svelte/<name>/`, Solid `ui/solid/`, Web Components `ui/web/`), and the `AGENTS.md` beside them. Their exports are the parts you compose.
-- `node_modules/@kind-ui/agent-ui/dist/core/<name>/<name>.d.ts` for a component's options (`<Name>Options`), with what each one does and its default. Dictation's folder is `dictation-button/`.
-- The docs: `https://kindui.dev/docs/agent-ui/llms.txt` indexes every page as Markdown, and each component's page is `https://kindui.dev/llms.mdx/docs/agent-ui/components/<name>.md`. Read only the pages you need.
+- `node_modules/@kind-ui/agent-ui/dist/core/<name>/<name>.d.ts` for a component's options (`<Name>Options`), with what each one does and its default. Dictation's folder is `dictation-button/`, Markdown's `markdown-view/`.
+- The docs: `https://kindui.dev/docs/agent-ui/llms.txt` lists every page with the URL of its Markdown (a component's is `https://kindui.dev/llms.mdx/docs/agent-ui/components/<name>.md`). Read only the pages you need; each has a **Composition** tree of its parts and an **Agent** section.
 - If the ui-sdk skill is installed (`node_modules/@ui-sdk/core/skills/ui-sdk/SKILL.md`), follow it for anything you build that Agent UI doesn't ship.
 
 ## Pick what you need
@@ -41,5 +41,5 @@ A chat usually needs 1 to 4. Do 5 and 6 whenever the app lets an agent act on th
 
 1. Typecheck the app (`npx tsc --noEmit -p <app config>`, `vue-tsc` or `svelte-check`).
 2. Open it in a browser: send a message, stop one, approve and deny a tool call with the keyboard, and check light and dark.
-3. If the app uses `createAgent`, read `agent.snapshot()` and check each component is listed once, by name.
+3. If the app uses `createAgent`, read `agent.snapshot()` and check each component a person acts on is listed once, by a name a person would use. Content with no role (Markdown) and UI SDK parts inside a component (a scroll area, the composer's text and file inputs) are listed too, some unnamed; that's expected.
 4. Report what you ran, what you couldn't check, and anything these references got wrong.

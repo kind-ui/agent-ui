@@ -81,9 +81,10 @@ export function Chat({ messages, onSend, onStop, onRetry }: ChatProps) {
 - `messageCount` and each row's `value` and `index` let the Conversation follow new rows while the reader is at the end, and offer **Jump to latest** once they scroll up.
 - `streaming` on Markdown repairs half-written fences, tables and links while the part streams.
 - `onSubmit` returns a promise: the composer stays pending until it settles, and Stop takes Send's place while you pass `onStop`. Enter sends; Shift+Enter starts a new line. A resolved submit clears the draft; a rejected one keeps it.
-- `MessageOutcome` shows a stopped or failed reply's words, with **Retry** while you pass `onRetry`.
-- For copy, regenerate and edit buttons, add `MessageToolbar` (Message page). For author, avatar and time, pass `author` and `createdAt` and add `MessageHeader`.
-- Other states: `status="loading"` or `"error"` on Conversation shows its skeleton or error with **Retry** (`onRetry`) in the rows' place.
+- `MessageOutcome` shows a stopped or failed reply's words: **Retry** for a failed one while you pass `onRetry`, **Continue** for a stopped one while you pass `onContinue`.
+- Give replies names a person would tell apart when there are many, like `aria-label={`Reply ${index + 1}`}`; agents name components by these.
+- `MessageToolbar` and `MessageHeader` are empty until you fill them: `MessageCopy`, `MessageRegenerate` and `MessageEdit` inside the toolbar (Message page), and `MessageAvatar` beside `MessageHeader` holding `MessageAuthor` and `MessageTime`, with `author` and `createdAt` on the Message.
+- Loading and error: place `<ConversationSkeleton />`, `<ConversationLoading />` and `<ConversationError />` in `ConversationContent` and pass `status` (`"ready"`, `"loading"`, `"error"`) and `onRetry` to Conversation. Render rows only while `status === "ready"`.
 
 ## Tool calls and approvals
 
@@ -133,6 +134,13 @@ export function renderPart(part: Part, decide: Decide) {
 Controls placed inside the Composer take its layout: a Context Bar on top, the editor, then a row of controls, Dictation and Send. Put the controls in one wrapper on the `attach` grid area:
 
 ```tsx
+import { AddMenu } from "@/components/ui/add-menu";
+import { ApprovalMode } from "@/components/ui/approval-mode";
+import { Composer, ComposerInput, ComposerSubmit } from "@/components/ui/composer";
+import { ContextBar } from "@/components/ui/context-bar";
+import { Dictation } from "@/components/ui/dictation";
+import { ModelControl } from "@/components/ui/model-control";
+
 <Composer aria-label="Message" onSubmit={send}>
   <ContextBar chips={chips} onRemove={(id) => setChips(chips.filter((chip) => chip.id !== id))} />
   <ComposerInput aria-label="Prompt" placeholder="Ask anything" />

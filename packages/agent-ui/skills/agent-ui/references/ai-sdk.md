@@ -120,7 +120,7 @@ const tools = {
 export async function POST(request: Request) {
   const { messages }: { messages: UIMessage[] } = await request.json();
   const result = streamText({
-    model: "openai/gpt-5",
+    model: "openai/gpt-5", // through the AI Gateway (AI_GATEWAY_API_KEY), or any AI SDK provider's model
     messages: await convertToModelMessages(messages, { tools }),
     tools,
     stopWhen: stepCountIs(5),
@@ -128,6 +128,10 @@ export async function POST(request: Request) {
   return result.toUIMessageStreamResponse();
 }
 ```
+
+To try the approval flow without a key, pass a mock model from `ai/test` (`MockLanguageModelV4` for `ai` 7; read its `.d.ts` for the stream parts it takes) that streams a `tool-call` to `delete_branch`. Swap in a real model before you ship.
+
+After an approval, the model's follow-up streams into the same assistant message, after the Tool.
 
 ## Parts
 
@@ -161,6 +165,8 @@ An unknown state becomes a `data` part, never a guessed status. Mapped approvals
 ## Reasoning, plans and other parts
 
 ```tsx
+import { Reasoning } from "@/components/ui/reasoning";
+
 if (part.type === "reasoning") {
   return <Reasoning key={part.id} status={part.state === "streaming" ? "running" : "complete"} text={part.text} />;
 }

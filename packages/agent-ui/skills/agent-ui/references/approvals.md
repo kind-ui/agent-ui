@@ -15,7 +15,7 @@ When the agent wants to do something a person should decide, the person decides.
 A Tool whose `call.approval.state` is `"requested"` shows **Approve** and **Deny** as soon as you pass `onApprove` and `onDeny` (see [compose.md](compose.md#tool-calls-and-approvals) and [ai-sdk.md](ai-sdk.md)):
 
 - `approvalReason` opens a reason box on the first Deny; `onDeny` gets `{ reason }`.
-- A callback may return a promise. The buttons lock while it's pending, and after it resolves they stay locked until the host reports the request (`state: "responded"`, a new `approvalId` or a new `generation`). A rejection unlocks them and shows "Decision not sent. Try again."
+- A callback may return a promise. The buttons lock while it's pending, and after it resolves they stay locked until the host reports the request (`state: "responded"`, a new `approvalId` or a new `generation`). A rejection unlocks them; to show "Decision not sent. Try again.", set the approval's `state` to `"submit-failed"`.
 - Once the approval is `"responded"`, the buttons give way to the outcome ("Approved", "Denied"), at the same height, so the conversation keeps what was decided.
 
 ## Confirmation
@@ -23,6 +23,10 @@ A Tool whose `call.approval.state` is `"requested"` shows **Approve** and **Deny
 For an action that isn't a tool call (sending an email, deleting a file), render a Confirmation with an `Approval`:
 
 ```tsx
+import type { Approval } from "@kind-ui/agent-ui";
+import { useState } from "react";
+import { Confirmation } from "@/components/ui/confirmation";
+
 const [approval, setApproval] = useState<Approval>({ approvalId: "delete", generation: 1, state: "requested" });
 const record = (approved: boolean, reason?: string) =>
   setApproval({ ...approval, state: "responded", decision: { approved, ...(reason && { reason }) } });
@@ -52,4 +56,4 @@ Approval Mode only records the person's choice. Enforce it where the tools run: 
 
 ## For agents
 
-A Confirmation, a Tool's approval and the components in the table render `data-agent-confirm`, so an agent's `approve`, `deny`, `accept`, `restore`, `cancel` or `setValue` waits for the person through `createAgent`'s `allow`. See [agents.md](agents.md#ask-the-person-first).
+A Confirmation, a Tool's approval and the components in the table render `data-agent-confirm`, so an agent's `approve`, `deny`, `accept`, `submit`, `skip`, `restore`, `cancel` or `setValue` waits for the person through `createAgent`'s `allow`. See [agents.md](agents.md#ask-the-person-first).
