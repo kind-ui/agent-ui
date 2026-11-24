@@ -1,5 +1,12 @@
 # @kind-ui/agent-ui
 
+## 0.7.2
+
+### Patch Changes
+
+- 2ec67c5: Ship an `agent-ui` skill for coding agents that build with Agent UI. Install it with `npx skills add kind-ui/agent-ui --skill agent-ui`, or read it from the package at `node_modules/@kind-ui/agent-ui/skills/agent-ui/SKILL.md`. It covers choosing from all 56 components, installing them in each framework layer, composing a chat, tool approvals and the sidebar shell, mapping AI SDK messages, exposing actions to agents, asking the person before risky actions, and theming. The registry's setup `AGENTS.md`, the README and Get Started now point at it.
+- 56a1e10: Registry items now import their sibling files without an extension (`./markdown` rather than `./markdown.js`), so a default Next.js app built with Turbopack can build components such as `composer`, `tool` and `markdown` once installed. The npm package is unchanged.
+
 ## 0.7.1
 
 ### Patch Changes
