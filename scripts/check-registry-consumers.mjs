@@ -40,7 +40,11 @@ const workspace = {
 // which don't resolve `./name.js` to `name.tsx`, from the App Router pages in `registry/consumers/turbopack/`.
 const vite = ["vite", "tailwindcss", "@tailwindcss/vite"];
 const consumers = {
-  react: { entry: "react.tsx", turbopack: true, devDependencies: [...vite, "react", "react-dom", "next"] },
+  react: {
+    entry: "react.tsx",
+    turbopack: true,
+    devDependencies: [...vite, "react", "react-dom", "next", "typescript", "@types/react", "@types/node"],
+  },
   web: { entry: "web.ts", devDependencies: vite },
   vue: {
     entry: "vue",
