@@ -9,6 +9,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
+import { blocks as catalogBlocks } from "../registry/catalog.mjs";
 import { manifests } from "../registry/layers/index.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -97,10 +98,31 @@ function loadGraph() {
   return { dependents, specs };
 }
 
+// A starter block's spec is reached by its own sources and by every component its `uses` names, since the
+// fixture imports the block through an alias the import graph doesn't follow.
+const blockSpec = (name) => `tests/browser/blocks/${name}.spec.ts`;
+const blockSource = /^apps\/docs\/examples\/blocks\/([^/]+)\//;
+const renderFile = /^packages\/agent-ui\/src\/react\/(?:(internal)\/)?([^/]+)\.tsx?$/;
+
 /** The specs `changed` can reach, sorted, or "all" when a file's reach is unknown. */
-export function affectedSpecs(changed, { dependents, specs } = loadGraph(), layerManifests = manifests) {
+export function affectedSpecs(
+  changed,
+  { dependents, specs } = loadGraph(),
+  layerManifests = manifests,
+  blocks = catalogBlocks,
+) {
   const affected = new Set();
+  const usedBy = (name) =>
+    Object.entries(blocks)
+      .filter(([, { uses }]) => uses.includes(name))
+      .map(([block]) => blockSpec(block));
   for (const file of changed) {
+    const folder = file.match(blockSource)?.[1];
+    if (folder) {
+      for (const [name, block] of Object.entries(blocks))
+        if (block.folder === folder) affected.add(blockSpec(name));
+      continue;
+    }
     const layer = file.match(/^registry\/layers\/(\w+)\.mjs$/)?.[1];
     if (layer) {
       if (!layerManifests[layer]) return "all";
@@ -121,6 +143,10 @@ export function affectedSpecs(changed, { dependents, specs } = loadGraph(), laye
     const hits = [...specs]
       .filter(([spec, used]) => reached.has(spec) || [...used].some((name) => cases.has(name)))
       .map(([spec]) => spec);
+    for (const each of reached) {
+      const [, internal, name] = each.match(renderFile) ?? [];
+      if (name) hits.push(...usedBy(internal ? `internal-${name}` : name));
+    }
     for (const each of reached) {
       const match = each.match(layerFile);
       if (!match || (each.includes("/tests/fixtures/") && !each.includes("/cases/"))) continue;

@@ -12,7 +12,14 @@ export default defineConfig(({ mode }) => ({
   plugins: [tailwindcss(), identityPlugin("react")],
   // A file written during a run would otherwise reload open pages and destroy the context a test evaluates in.
   server: { hmr: false },
-  resolve: { alias: { "@kind-ui/agent-ui/core": here("../../../src/core/index.ts") } },
+  // Starter blocks import their components and their own files as an installed app does (starter blocks spec D4).
+  resolve: {
+    alias: [
+      { find: "@kind-ui/agent-ui/core", replacement: here("../../../src/core/index.ts") },
+      { find: /^@\/components\/ui\//, replacement: here("../../../src/react/") },
+      { find: /^@\/components\/blocks\//, replacement: here("../../../../../apps/docs/examples/blocks/") },
+    ],
+  },
   optimizeDeps: {
     include: [
       "react",

@@ -1,0 +1,40 @@
+---
+title: Starter Blocks
+description: Install a complete, working agent screen into a Next.js app with one command, then make it yours.
+---
+
+Use a starter block to start from a whole agent screen instead of single components. A block is a page, its client composition, a sample data layer that runs with no API key, and an AI SDK route that runs with one. The shadcn CLI copies all four into your app, along with every component the block uses:
+
+```bash
+npx shadcn@latest add @kind-ui/<block>
+```
+
+Once installed, the block is your code. Change the layout, rename the route or drop a component; nothing in `@kind-ui/agent-ui` depends on it.
+
+## What a Block Is
+
+A block only puts existing components together. It adds no component, no design token and no stylesheet of its own: its layout uses Tailwind's layout utilities (`grid`, `flex`, `gap-*`, `h-dvh`), and everything you see comes from the components and their tokens. So a block looks and behaves like the component pages say, and a fix to a component reaches the block when you add that component again.
+
+Each block installs four files, named by its short name (`coding-agent` for `@kind-ui/coding-agent-starter`):
+
+| File | Installs to | What it does |
+| --- | --- | --- |
+| `page.tsx` | `app/<name>/page.tsx` | The route that renders the block at full height. |
+| `<name>.tsx` | `components/blocks/<name>/<name>.tsx` | The client composition: the AI SDK's `useChat` and the components. |
+| `mock.ts` | `components/blocks/<name>/mock.ts` | A mock chat transport and the sample data it streams. |
+| `route.ts` | `app/api/<name>/route.ts` | The AI SDK route for a real model. |
+
+The route lives at `/api/<name>`, not `/api/chat`, so a block never overwrites a chat route your app already has.
+
+## Mock Data and a Real Model
+
+Both data paths give `useChat` the same messages, so the page has one way from messages to components.
+
+- **Mock (default):** the page creates its transport with `createMockTransport()`, which streams a short scripted run, reasoning, tool calls and an approval included, with no network and no key. Approving or denying a tool continues the script, as a server would.
+- **Real:** replace that one line with `new DefaultChatTransport({ api: "/api/<name>" })` and set `AI_GATEWAY_API_KEY`, or swap the route's model string for any provider's model. The route's tools return sample output, and each marks where your real work goes: a block never runs a command for you.
+
+Threads, share links and the connection state are in-memory sample data, marked where your database plugs in. Blocks ship no persistence and no auth.
+
+## React Only
+
+Blocks are React (Next.js App Router) apps. The components themselves also ship for Vue, Svelte, Solid and Web Components, part for part, so a block's page translates to them the way the [AI SDK chat guide](../guides/ai-sdk-chat.mdx) does.

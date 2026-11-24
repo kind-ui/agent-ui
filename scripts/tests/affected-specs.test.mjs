@@ -68,3 +68,38 @@ test("a layer fixture case reaches the root specs its manifest lists", () => {
   const listed = { vue: { specs: ["parity.spec.ts"] }, svelte: { specs: ["hydration.spec.ts"] } };
   assert.deepEqual(affectedSpecs([vueCase], graph, listed), ["tests/browser/parity.spec.ts"]);
 });
+
+const starter = { "coding-agent-starter": { folder: "coding-agent", uses: ["terminal", "internal-menu"] } };
+const codingSpec = "tests/browser/blocks/coding-agent-starter.spec.ts";
+
+test("a block's own sources reach its spec", () =>
+  assert.deepEqual(
+    affectedSpecs(["apps/docs/examples/blocks/coding-agent/mock.ts"], undefined, undefined, starter),
+    [codingSpec],
+  ));
+
+test("a component a block uses reaches the block's spec", () => {
+  assert.ok(
+    affectedSpecs(["packages/agent-ui/src/react/terminal.tsx"], undefined, undefined, starter).includes(
+      codingSpec,
+    ),
+  );
+  assert.ok(
+    affectedSpecs(
+      ["packages/agent-ui/src/core/terminal/terminal.ts"],
+      undefined,
+      undefined,
+      starter,
+    ).includes(codingSpec),
+  );
+  assert.ok(
+    affectedSpecs(["packages/agent-ui/src/react/internal/menu.tsx"], undefined, undefined, starter).includes(
+      codingSpec,
+    ),
+  );
+  assert.ok(
+    !affectedSpecs(["packages/agent-ui/src/react/step.tsx"], undefined, undefined, starter).includes(
+      codingSpec,
+    ),
+  );
+});
