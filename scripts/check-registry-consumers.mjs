@@ -15,13 +15,14 @@ import {
   writeFileSync,
 } from "node:fs";
 import { createServer } from "node:http";
+import { createServer as createNetServer } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, extname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "@playwright/test";
 import catalog from "../registry/catalog.mjs";
 import { selectedLayers } from "../registry/layers/index.mjs";
-import { NAMESPACE, SHADCN, targetOf, validateCatalog } from "./build-registry.mjs";
+import { fileOf, NAMESPACE, SHADCN, splitVersion, targetOf, validateCatalog } from "./build-registry.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const registryDir = join(root, "artifacts/registry/r");
@@ -58,6 +59,7 @@ const consumers = {
     devDependencies: [...vite, "solid-js", "@solidjs/web", "@solidjs/vite-plugin"],
   },
 };
+const blockNames = catalog.items.filter((item) => item.meta?.block).map((item) => item.name);
 const visibleItems = (layer) =>
   catalog.items.filter((item) => item.layer === layer && !item.hidden).map((item) => item.name);
 
@@ -79,6 +81,8 @@ export function checkRegistryIntegrity(dir) {
         errors.push(`${name}: ${dependency} is not served`);
     }
     for (const file of item.files) if (!file.content) errors.push(`${name}: ${file.path} has no content`);
+    if (item.meta?.block && !existsSync(join(dir, "v0", `${name}.json`)))
+      errors.push(`v0/${name}.json was not built`);
   }
   return errors;
 }
@@ -200,6 +204,154 @@ async function install(layer, dir) {
   return items;
 }
 
+async function search(dir, label, names) {
+  const searchFile = join(dir, "search.json");
+  const searchOutput = openSync(searchFile, "w");
+  await run(
+    "npx",
+    ["--yes", SHADCN, "search", NAMESPACE, "--limit", String(catalog.items.length), "--json"],
+    dir,
+    searchOutput,
+  );
+  closeSync(searchOutput);
+  const listed = JSON.parse(readFileSync(searchFile, "utf8")).items.map((item) => item.name);
+  return names
+    .filter((name) => !listed.includes(name))
+    .map((name) => `${label}: shadcn search does not list ${name}`);
+}
+
+// The Next consumer (starter blocks spec D7): an App Router app that already has a home page and a chat route.
+const nextFiles = ["app/page.tsx", "app/api/chat/route.ts"];
+// Where a block's targets land in the consumer, by its `components.json` aliases.
+const nextPath = (target) =>
+  target.startsWith("@ui/")
+    ? `components/ui/${target.slice("@ui/".length)}`
+    : target.replace(/^@components\//, "components/");
+
+async function installNext(dir) {
+  const docs = JSON.parse(readFileSync(join(root, "apps/docs/package.json"), "utf8"));
+  const pins = { ...workspace, ...docs.dependencies, ...docs.devDependencies };
+  cpSync(join(root, "registry/consumers/next"), dir, { recursive: true });
+  const manifest = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
+  for (const field of ["dependencies", "devDependencies"]) {
+    for (const name of Object.keys(manifest[field])) {
+      if (!pins[name]) throw new Error(`registry/consumers/next: no workspace pin for ${name}`);
+      manifest[field][name] = pins[name];
+    }
+  }
+  writeFileSync(join(dir, "package.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+  const components = JSON.parse(readFileSync(join(dir, "components.json"), "utf8"));
+  components.registries = { [NAMESPACE]: `${origin}/r/{name}.json` };
+  writeFileSync(join(dir, "components.json"), `${JSON.stringify(components, null, 2)}\n`);
+  writeFileSync(join(dir, ".npmrc"), `${NAMESPACE}:registry=${origin}/npm/\n`);
+  const before = Object.fromEntries(nextFiles.map((file) => [file, readFileSync(join(dir, file), "utf8")]));
+  await run("npm", ["install", "--no-audit", "--no-fund"], dir);
+  await run(
+    "npx",
+    ["--yes", SHADCN, "add", ...blockNames.map((name) => `${NAMESPACE}/${name}`), "--yes"],
+    dir,
+  );
+  return before;
+}
+
+function checkNextInstall(dir, before) {
+  const errors = [];
+  for (const [file, content] of Object.entries(before)) {
+    if (readFileSync(join(dir, file), "utf8") !== content)
+      errors.push(`next: shadcn add changed the app's ${file}`);
+  }
+  const version = (name) => {
+    const manifest = join(dir, "node_modules", name, "package.json");
+    return existsSync(manifest) ? JSON.parse(readFileSync(manifest, "utf8")).version : "missing";
+  };
+  const blocks = catalog.items.filter((item) => item.meta?.block);
+  const pins = new Map(blocks.flatMap((item) => item.dependencies.map(splitVersion)));
+  for (const [name, pin] of pins) {
+    if (version(name) !== pin) errors.push(`next: installed ${name}@${version(name)}, pinned ${pin}`);
+  }
+  if (!readFileSync(join(dir, "app/globals.css"), "utf8").includes(`@import "${pkg.name}/styles.css"`)) {
+    errors.push(`next: app/globals.css does not import ${pkg.name}/styles.css`);
+  }
+  const byName = new Map(catalog.items.map((item) => [`${NAMESPACE}/${item.name}`, item]));
+  const copied = new Set(blocks);
+  for (const item of copied)
+    for (const dependency of item.registryDependencies) copied.add(byName.get(dependency));
+  for (const { path, target } of [...copied].flatMap((item) => item.files.map(fileOf))) {
+    const file = join(dir, nextPath(target));
+    if (!existsSync(file)) errors.push(`next: ${path} was not copied to ${nextPath(target)}`);
+    else if (readFileSync(file, "utf8") !== readFileSync(join(root, path), "utf8")) {
+      errors.push(`next: ${path} changed on install`);
+    }
+  }
+  return errors;
+}
+
+const freePort = () =>
+  new Promise((resolve, reject) => {
+    const server = createNetServer();
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const { port } = server.address();
+      server.close(() => resolve(port));
+    });
+  });
+
+/** Builds the Next consumer, starts it and runs each block's flow (`tests/browser/blocks/<block>.flow.ts`) on its page. */
+async function runNext(browser, dir) {
+  await run("npx", ["next", "build"], dir);
+  const port = await freePort();
+  const app = `http://127.0.0.1:${port}`;
+  console.log(`$ next start on ${app}`);
+  // Run Next's own binary, not `npx`, so killing the process stops the server.
+  const next = join(dir, "node_modules/next/dist/bin/next");
+  const server = spawn(process.execPath, [next, "start", "-p", String(port), "-H", "127.0.0.1"], {
+    cwd: dir,
+    stdio: ["ignore", "inherit", "inherit"],
+  });
+  const problems = [];
+  try {
+    for (let tries = 0; ; tries++) {
+      try {
+        if ((await fetch(app)).ok) break;
+      } catch {}
+      if (tries > 120 || server.exitCode !== null) throw new Error("next start did not answer");
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    const flowed = [];
+    for (const item of catalog.items.filter((each) => each.meta?.block)) {
+      const folder = item.files
+        .map(fileOf)
+        .find((file) => file.type === "registry:page")
+        .target.split("/")[1];
+      const page = await browser.newPage();
+      page.on("pageerror", (error) => problems.push(`next: ${item.name}: ${error.message}`));
+      page.on(
+        "console",
+        (message) => message.type() === "error" && problems.push(`next: ${item.name}: ${message.text()}`),
+      );
+      await page.goto(`${app}/${folder}`);
+      const tokens = await page.evaluate(
+        () => getComputedStyle(document.documentElement).getPropertyValue("--kind-color-fg").trim() !== "",
+      );
+      if (!tokens)
+        problems.push(`next: ${item.name}: the theme tokens from ${pkg.name}/styles.css are missing`);
+      const flow = pathToFileURL(join(root, `tests/browser/blocks/${item.name}.flow.ts`)).href;
+      try {
+        await (await import(flow)).run(page);
+        flowed.push(item.name);
+      } catch (error) {
+        problems.push(
+          `next: ${item.name}: its flow failed: ${error.message.split("\n").slice(0, 6).join(" | ")}`,
+        );
+      }
+      await page.close();
+    }
+    return { flowed, problems };
+  } finally {
+    server.kill();
+  }
+}
+
 function checkInstall(layer, dir, items) {
   const errors = [];
   const version = (name) => {
@@ -300,18 +452,7 @@ async function check() {
       mkdirSync(join(dir, "src"));
       const items = await install(layer, dir);
       errors.push(...checkInstall(layer, dir, items));
-      const searchFile = join(dir, "search.json");
-      const searchOutput = openSync(searchFile, "w");
-      await run(
-        "npx",
-        ["--yes", SHADCN, "search", NAMESPACE, "--limit", String(catalog.items.length), "--json"],
-        dir,
-        searchOutput,
-      );
-      closeSync(searchOutput);
-      const listed = JSON.parse(readFileSync(searchFile, "utf8")).items.map((item) => item.name);
-      for (const name of items)
-        if (!listed.includes(name)) errors.push(`${layer}: shadcn search does not list ${name}`);
+      errors.push(...(await search(dir, layer, items)));
       await run("npx", ["vite", "build"], dir);
       server.sites[layer] = join(dir, "dist");
       const { rendered, problems } = await render(browser, layer, items);
@@ -328,12 +469,31 @@ async function check() {
         rendered: Object.keys(rendered).filter((name) => rendered[name]),
       };
     }
+    // Blocks install into a Next app (React only, starter blocks spec D2).
+    if (blockNames.length && selectedLayers().includes("react")) {
+      const dir = mkdtempSync(join(tmpdir(), "agent-ui-registry-next-"));
+      dirs.push(dir);
+      const before = await installNext(dir);
+      errors.push(...checkNextInstall(dir, before));
+      errors.push(...(await search(dir, "next", blockNames)));
+      const { flowed, problems } = await runNext(browser, dir);
+      errors.push(...problems);
+      evidence.consumers.next = {
+        installed: Object.fromEntries(
+          [pkg.name, "next", "ai", "@ai-sdk/react"].map((name) => [
+            name,
+            JSON.parse(readFileSync(join(dir, "node_modules", name, "package.json"), "utf8")).version,
+          ]),
+        ),
+        blocks: flowed,
+      };
+    }
     // Only a run over every layer writes the evidence, so a filtered run never replaces it with less.
     const complete = !process.env.KIND_LAYERS?.trim();
     if (complete) writeFileSync(evidenceFile, `${JSON.stringify(evidence, null, 2)}\n`);
     if (errors.length) throw new Error(errors.join("\n  "));
-    const counts = Object.entries(evidence.consumers).map(
-      ([layer, { rendered }]) => `${rendered.length} ${layer}`,
+    const counts = Object.entries(evidence.consumers).map(([layer, { rendered, blocks }]) =>
+      blocks ? `${blocks.length} block` : `${rendered.length} ${layer}`,
     );
     const where = complete ? `; evidence in ${evidenceFile.slice(root.length + 1)}` : "";
     console.log(`rendered ${counts.join(" and ")} items${where}`);

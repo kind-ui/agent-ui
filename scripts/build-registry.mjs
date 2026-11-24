@@ -18,7 +18,7 @@ const coreDir = join(packageDir, "src/core") + sep;
 const sourceDir = "packages/agent-ui/src/";
 
 const packageName = (specifier) => specifier.match(/^(@[^/]+\/)?[^/@]+/)?.[0] ?? specifier;
-const splitVersion = (specifier) => {
+export const splitVersion = (specifier) => {
   const at = specifier.lastIndexOf("@");
   return at > 0 ? [specifier.slice(0, at), specifier.slice(at + 1)] : [specifier, ""];
 };
@@ -38,6 +38,18 @@ export function targetOf(file) {
   if (file.startsWith(sourceDir) && layer) return `@ui/${file.slice(sourceDir.length)}`;
   return `@ui/${file.split("/").at(-1)}`;
 }
+
+/** A catalog file: a component's is its repository path, a block's carries its own type and target. */
+export const fileOf = (file) => (typeof file === "string" ? { path: file, target: targetOf(file) } : file);
+
+// A block imports the items it installs through the consumer's aliases: `@/components/ui/<name>` lands at
+// `@ui/<name>`, `@/components/blocks/<folder>/<file>` at `@components/blocks/<folder>/<file>`.
+const aliasTarget = (specifier) =>
+  specifier.startsWith("@/components/ui/")
+    ? `@ui/${specifier.slice("@/components/ui/".length)}`
+    : specifier.startsWith("@/components/")
+      ? `@components/${specifier.slice("@/components/".length)}`
+      : undefined;
 
 function resolveImport(from, specifier) {
   const path = resolve(dirname(from), specifier);
@@ -100,11 +112,18 @@ export function validateCatalog(input, pkg) {
     }
 
     const closure = [...reachable(item)];
-    const files = new Set(closure.flatMap((each) => each.files.map((file) => resolve(root, file))));
+    const files = new Set(
+      closure.flatMap((each) => each.files.map((file) => resolve(root, fileOf(file).path))),
+    );
     const packages = new Set(closure.flatMap((each) => each.dependencies.map((d) => splitVersion(d)[0])));
-    for (const name of frameworkPackages[item.layer] ?? []) packages.add(name);
+    const targets = new Set(
+      closure.flatMap((each) =>
+        each.files.map((file) => fileOf(file).target.replace(/\.(tsx?|svelte)$/, "")),
+      ),
+    );
+    for (const name of frameworkPackages[item.layer ?? item.meta?.layer] ?? []) packages.add(name);
     if (!item.files.length) errors.push(`${where}: ships no files`);
-    for (const file of item.files) {
+    for (const { path: file } of item.files.map(fileOf)) {
       const path = resolve(root, file);
       if (!existsSync(path)) {
         errors.push(`${where}: ${file} does not exist`);
@@ -112,6 +131,12 @@ export function validateCatalog(input, pkg) {
       }
       if (!/\.(tsx?|svelte)$/.test(file)) continue;
       for (const fileName of importsOf(file, readFileSync(path, "utf8"))) {
+        const alias = aliasTarget(fileName);
+        if (alias) {
+          if (!targets.has(alias))
+            errors.push(`${where}: ${file} imports ${fileName}, which no item it depends on ships`);
+          continue;
+        }
         if (!fileName.startsWith(".")) {
           if (!packages.has(packageName(fileName)))
             errors.push(`${where}: ${file} imports ${fileName}, not a dependency`);
@@ -138,12 +163,58 @@ export function toRegistry(input) {
     homepage: "https://kindui.dev/agent-ui/",
     items: input.items.map(({ layer, hidden, files, ...item }) => ({
       ...item,
-      files: files.map((path) => ({
-        path,
-        type: path.endsWith(".md") ? "registry:file" : item.type,
-        target: targetOf(path),
-      })),
+      files: files.map((file) =>
+        typeof file === "string"
+          ? { path: file, type: file.endsWith(".md") ? "registry:file" : item.type, target: targetOf(file) }
+          : file,
+      ),
       ...(layer || hidden ? { meta: { layer, ...(hidden && { hidden }) } } : {}),
+    })),
+  };
+}
+
+/** The one line that brings the styles into a v0 payload, which can't carry `css` (spec D6). */
+export const V0_STYLES = 'import "@kind-ui/agent-ui/styles.css";\n';
+
+/**
+ * The flattened item v0 opens for a block (spec D6): every file of the block and of its registry dependencies,
+ * transitively, with the targets the CLI writes; no registry dependencies, `css`, `cssVars` or `envVars`; the
+ * dependencies of every inlined item; and the styles imported at the top of the page.
+ */
+export function v0Payload(item, itemsByName, read = (path) => readFileSync(join(root, path), "utf8")) {
+  const closure = new Set([item]);
+  for (const each of closure) {
+    for (const dependency of each.registryDependencies) {
+      const next = itemsByName.get(dependency.slice(NAMESPACE.length + 1));
+      if (!next) throw new Error(`${item.name}: ${dependency} is not an item`);
+      closure.add(next);
+    }
+  }
+  const dependencies = new Map();
+  for (const each of closure) {
+    for (const dependency of each.dependencies) dependencies.set(splitVersion(dependency)[0], dependency);
+  }
+  // Every React internal ships `kind-class.ts`, so a file lands once by its target.
+  const byTarget = new Map(
+    toRegistry({ items: [...closure] })
+      .items.flatMap((each) => each.files)
+      .map((file) => [file.target, file]),
+  );
+  const files = [...byTarget.values()];
+  const page = files.find(
+    (file) => file.type === "registry:page" && /^app\/(?!api\/).*page\.tsx$/.test(file.target),
+  );
+  return {
+    $schema: "https://ui.shadcn.com/schema/registry-item.json",
+    name: item.name,
+    type: item.type,
+    title: item.title,
+    description: item.description,
+    registryDependencies: [],
+    dependencies: [...dependencies.values()],
+    files: files.map((file) => ({
+      ...file,
+      content: (file === page ? V0_STYLES : "") + read(file.path),
     })),
   };
 }
@@ -173,12 +244,52 @@ function build() {
     const built = JSON.parse(readFileSync(join(outDir, "r", `${item.name}.json`), "utf8"));
     if (built.files.length !== item.files.length) throw new Error(`${item.name}: the build dropped a file`);
     built.files.forEach((file, index) => {
-      if (file.content !== readFileSync(join(root, item.files[index]), "utf8")) {
-        throw new Error(`${item.name}: ${item.files[index]} differs from its source after the build`);
+      const { path } = fileOf(item.files[index]);
+      if (file.content !== readFileSync(join(root, path), "utf8")) {
+        throw new Error(`${item.name}: ${path} differs from its source after the build`);
       }
     });
   }
-  console.log(`built ${catalog.items.length} items into ${relative(root, join(outDir, "r"))}`);
+  const blocks = buildV0();
+  console.log(
+    `built ${catalog.items.length} items into ${relative(root, join(outDir, "r"))}` +
+      (blocks ? `, and ${blocks} v0 payloads into r/v0` : ""),
+  );
+}
+
+/**
+ * Writes `r/v0/<block>.json` for each block, then has the pinned CLI validate them: their inlined files are staged
+ * under `artifacts/registry/v0/` and listed in a registry of their own.
+ */
+function buildV0() {
+  const byName = new Map(catalog.items.map((item) => [item.name, item]));
+  const payloads = catalog.items.filter((item) => item.meta?.block).map((item) => v0Payload(item, byName));
+  if (!payloads.length) return 0;
+  const stage = join(outDir, "v0");
+  mkdirSync(join(outDir, "r/v0"), { recursive: true });
+  for (const payload of payloads) {
+    writeFileSync(join(outDir, "r/v0", `${payload.name}.json`), `${JSON.stringify(payload, null, 2)}\n`);
+    for (const file of payload.files) {
+      mkdirSync(dirname(join(stage, file.path)), { recursive: true });
+      writeFileSync(join(stage, file.path), file.content);
+    }
+  }
+  const registry = {
+    $schema: "https://ui.shadcn.com/schema/registry.json",
+    name: "kind-ui-v0",
+    homepage: "https://kindui.dev/agent-ui/",
+    items: payloads.map(({ $schema, files, ...payload }) => ({
+      ...payload,
+      files: files.map(({ content, path, ...file }) => ({
+        ...file,
+        path: relative(root, join(stage, path)),
+      })),
+    })),
+  };
+  const registryFile = join(stage, "registry.json");
+  writeFileSync(registryFile, `${JSON.stringify(registry, null, 2)}\n`);
+  run([SHADCN, "registry", "validate", relative(root, registryFile)]);
+  return payloads.length;
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {

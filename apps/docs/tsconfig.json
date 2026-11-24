@@ -18,6 +18,7 @@
     "paths": {
       "@/components/ui/web/*": ["../../packages/agent-ui/src/web/*"],
       "@/components/ui/*": ["../../packages/agent-ui/src/react/*"],
+      "@/components/blocks/*": ["./examples/blocks/*"],
       "@/*": ["./*"]
     },
     "plugins": [{ "name": "next" }]

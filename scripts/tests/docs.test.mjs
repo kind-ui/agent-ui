@@ -167,6 +167,9 @@ test("pages import examples and link pages by relative path", () => {
   }
 });
 
+// A starter block is app code, so it also imports the AI SDK, zod and its own files (starter blocks spec D4).
+const blockImports = /^(?:ai|@ai-sdk\/react|zod|@\/components\/blocks\/.+)$/;
+
 test("examples import only the frameworks, the package, ui components and other examples", () => {
   for (const file of readdirSync(examples, { recursive: true })) {
     if (!/\.(?:tsx?|vue|svelte)$/.test(file)) continue;
@@ -177,7 +180,8 @@ test("examples import only the frameworks, the package, ui components and other 
         ? new URL(specifier, url).href.startsWith(examples.href)
         : /^(?:react|vue|svelte|solid-js|@solidjs\/web|@kind-ui\/agent-ui(?:\/(?:core|adapters\/ai-sdk|styles\.css))?|@\/components\/ui\/.+)$/.test(
             specifier,
-          );
+          ) ||
+          (file.startsWith("blocks/") && blockImports.test(specifier));
       assert.ok(allowed, `${file}: ${specifier}`);
     }
   }
@@ -194,4 +198,26 @@ test("the sidebar has a Guides section listing every guide", () => {
     const source = readFileSync(new URL(`guides/${name}.mdx`, content), "utf8");
     assert.match(source, /^---\ntitle: .+\ndescription: .+\n---\n\nTo .+/, name);
   }
+});
+
+test("the sidebar has a Blocks section before Showcase", () => {
+  const root = JSON.parse(readFileSync(new URL("meta.json", content), "utf8"));
+  const at = root.pages.indexOf("---Blocks---");
+  assert.deepEqual(root.pages.slice(at, at + 2), ["---Blocks---", "...blocks"]);
+  assert.ok(at < root.pages.indexOf("---Showcase---"));
+  const meta = JSON.parse(readFileSync(new URL("blocks/meta.json", content), "utf8"));
+  assert.equal(meta.pages[0], "index");
+  for (const name of meta.pages)
+    assert.match(
+      readFileSync(new URL(`blocks/${name}.mdx`, content), "utf8"),
+      /^---\ntitle: .+\ndescription: .+\n---\n/,
+    );
+});
+
+test("the block toolbar builds no external URL but the v0 link to the registry", () => {
+  const source = readFileSync(new URL("components/block-toolbar.tsx", docs), "utf8");
+  const urls = [...new Set([...source.matchAll(/https?:\/\/[^\s"'`$]+/g)].map(([url]) => url))];
+  assert.deepEqual(urls.sort(), ["https://kindui.dev", "https://v0.dev/chat/api/open?url="]);
+  assert.match(source, /\$\{registryOrigin\}\/r\/v0\/\$\{name\}\.json/);
+  assert.ok(source.includes('process.env.NEXT_PUBLIC_REGISTRY_ORIGIN ?? "https://kindui.dev"'));
 });

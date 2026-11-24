@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import catalog, { layerItems } from "../../registry/catalog.mjs";
-import { toRegistry, validateCatalog } from "../build-registry.mjs";
+import catalog, { blockItems, fixtureBlocks, layerItems } from "../../registry/catalog.mjs";
+import { toRegistry, V0_STYLES, v0Payload, validateCatalog } from "../build-registry.mjs";
 import { checkRegistryIntegrity } from "../check-registry-consumers.mjs";
 import { liveCatalog } from "../check-registry-namespace.mjs";
 
@@ -76,7 +76,7 @@ test("component names have no product prefix", () => {
 
 test("every component ships in both layers", () => {
   const names = catalog.items.map((each) => each.name);
-  const react = catalog.items.filter((each) => each.layer === "react" && !each.hidden);
+  const react = catalog.items.filter((each) => each.layer === "react" && !each.hidden && !each.meta?.block);
   const renderFiles = readdirSync(new URL("../../packages/agent-ui/src/react/", import.meta.url))
     .filter((file) => file.endsWith(".tsx"))
     .map((file) => file.slice(0, -".tsx".length));
@@ -187,4 +187,80 @@ test("a manifest naming an unknown component or internal throws, and a missing S
   );
   const [step] = layerItems({ svelte: { components: ["step"], internals: [] } }, none);
   assert.match(errorsWith({ items: [...catalog.items, step] }), /"step-svelte": ships no files/);
+});
+
+const [helloItem] = blockItems(fixtureBlocks, { exampleRoot: "scripts/tests/fixtures/blocks" });
+const itemsByName = new Map([...catalog.items, helloItem].map((each) => [each.name, each]));
+
+test("a block is a registry:block over React items", () => {
+  assert.equal(helloItem.type, "registry:block");
+  assert.deepEqual(helloItem.registryDependencies, ["@kind-ui/agent-ui-setup", "@kind-ui/step"]);
+  assert.deepEqual(
+    helloItem.files.map((file) => [file.type, file.target]),
+    [
+      ["registry:page", "app/hello/page.tsx"],
+      ["registry:component", "@components/blocks/hello/hello.tsx"],
+      ["registry:lib", "@components/blocks/hello/mock.ts"],
+      ["registry:page", "app/api/hello/route.ts"],
+    ],
+  );
+  for (const pin of ["ai@7.0.173", "@ai-sdk/react@4.0.177", "zod@4.6.7"])
+    assert.ok(helloItem.dependencies.includes(pin), pin);
+  assert.deepEqual(helloItem.meta, { layer: "react", block: true });
+  assert.deepEqual(toRegistry({ items: [helloItem] }).items[0].files, helloItem.files);
+});
+
+test("a block's imports must be shipped by the items it depends on", () => {
+  assert.deepEqual(validateCatalog({ ...catalog, items: [...catalog.items, helloItem] }, pkg), []);
+  const withoutStep = { ...helloItem, registryDependencies: ["@kind-ui/agent-ui-setup"] };
+  assert.match(
+    errorsWith({ items: [...catalog.items, withoutStep] }),
+    /hello\.tsx imports @\/components\/ui\/step, which no item it depends on ships/,
+  );
+});
+
+test("the v0 payload is flat, namespace-free and css-free", () => {
+  const v0 = v0Payload(helloItem, itemsByName);
+  assert.deepEqual(v0.registryDependencies, []);
+  assert.equal(v0.css, undefined);
+  assert.equal(v0.cssVars, undefined);
+  assert.equal(v0.envVars, undefined);
+  assert.ok(!JSON.stringify(v0).includes('"@kind-ui/agent-ui-setup"'));
+  const page = v0.files.find((file) => file.target === "app/hello/page.tsx");
+  assert.ok(page.content.startsWith(V0_STYLES));
+  assert.equal(
+    v0.files.find((file) => file.target === "app/api/hello/route.ts").content.startsWith(V0_STYLES),
+    false,
+  );
+  for (const file of v0.files.filter((each) => each !== page))
+    assert.equal(file.content, readFileSync(new URL(`../../${file.path}`, import.meta.url), "utf8"));
+});
+
+test("the v0 payload covers the block's transitive files exactly, with their dependencies", () => {
+  const v0 = v0Payload(helloItem, itemsByName);
+  assert.deepEqual(v0.files.map((file) => file.target).sort(), [
+    "@components/blocks/hello/hello.tsx",
+    "@components/blocks/hello/mock.ts",
+    "@ui/AGENTS.md",
+    "@ui/step.tsx",
+    "app/api/hello/route.ts",
+    "app/hello/page.tsx",
+  ]);
+  const names = v0.dependencies.map((each) => each.slice(0, each.lastIndexOf("@")));
+  assert.deepEqual(names.sort(), [
+    "@ai-sdk/react",
+    "@kind-ui/agent-ui",
+    "@ui-sdk/core",
+    "@ui-sdk/react",
+    "ai",
+    "zod",
+  ]);
+  const tool = blockItems(
+    { x: { title: "X", description: "d", folder: "hello", uses: ["tool"] } },
+    { exampleRoot: "scripts/tests/fixtures/blocks" },
+  )[0];
+  const targets = v0Payload(tool, itemsByName).files.map((file) => file.target);
+  for (const target of ["@ui/confirmation.tsx", "@ui/internal/textarea.tsx", "@ui/internal/kind-class.ts"])
+    assert.ok(targets.includes(target), target);
+  assert.equal(new Set(targets).size, targets.length);
 });

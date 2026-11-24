@@ -465,4 +465,50 @@ const listFiles = (dir) => {
 };
 items.push(...layerItems(manifests, listFiles));
 
+/**
+ * Starter blocks (starter blocks plan, spec D5): one complete agent screen each, composed from React items. Sources
+ * live in `apps/docs/examples/blocks/<folder>/`. Each task adds its block right below its own marker, as with the
+ * Wave 6 markers in AGENTS.md.
+ */
+export const blocks = {
+  // blocks-task-2: Coding agent starter
+  // blocks-task-3: General agent starter
+};
+
+/** The packages a block's page, mock transport and route import, pinned exactly (spec D5). */
+export const blockPackages = ["ai@7.0.173", "@ai-sdk/react@4.0.177", "zod@4.6.7"];
+
+/** The test-only block `check:registry-consumers` installs into its Next consumer with `KIND_BLOCKS_FIXTURE=1`. */
+export const fixtureBlocks = {
+  hello: { title: "Hello", description: "A test-only block: one Step.", folder: "hello", uses: ["step"] },
+};
+
+/** The CLI items of `blocks` (spec D4, D5). Files carry their own type and target, unlike a component's. */
+export function blockItems(input, { exampleRoot = "apps/docs/examples/blocks" } = {}) {
+  return Object.entries(input).map(([name, { title, description, folder, uses }]) => {
+    const file = (each, type, target) => ({ path: `${exampleRoot}/${folder}/${each}`, type, target });
+    return {
+      name,
+      type: "registry:block",
+      title,
+      description,
+      files: [
+        file("page.tsx", "registry:page", `app/${folder}/page.tsx`),
+        file(`${folder}.tsx`, "registry:component", `@components/blocks/${folder}/${folder}.tsx`),
+        file("mock.ts", "registry:lib", `@components/blocks/${folder}/mock.ts`),
+        file("route.ts", "registry:page", `app/api/${folder}/route.ts`),
+      ],
+      registryDependencies: [setup.name, ...uses].map((use) => `@kind-ui/${use}`),
+      dependencies: [`@kind-ui/agent-ui@${packageVersion}`, ...uiSdk("react"), ...blockPackages],
+      categories: ["block"],
+      meta: { layer: "react", block: true },
+    };
+  });
+}
+
+items.push(...blockItems(blocks));
+if (process.env.KIND_BLOCKS_FIXTURE === "1") {
+  items.push(...blockItems(fixtureBlocks, { exampleRoot: "scripts/tests/fixtures/blocks" }));
+}
+
 export default { packageVersion, uiSdkVersion, items };

@@ -125,6 +125,17 @@ export default defineConfig({
           use: { baseURL: origin(2) },
         }))
       : []),
+    // Starter blocks are React only (starter blocks spec D2, D7): each spec runs wide, and again at 390 px with touch.
+    ...(layers.includes("react")
+      ? [
+          { name: "blocks-react", testMatch: "blocks/**/*.spec.ts", use: { baseURL: originOf("react") } },
+          {
+            name: "blocks-react-touch",
+            testMatch: "blocks/**/*.spec.ts",
+            use: { baseURL: originOf("react"), viewport: { width: 390, height: 844 }, hasTouch: true },
+          },
+        ]
+      : []),
     ...crossBrowser,
   ],
   webServer,
