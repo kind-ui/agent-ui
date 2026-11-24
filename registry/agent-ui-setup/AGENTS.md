@@ -2,9 +2,10 @@
 
 The `@kind-ui` components in this directory are built on [UI SDK](https://ui-sdk.dev/docs). Before you change or compose them, read:
 
-1. `node_modules/@kind-ui/agent-ui/README.md`: the package's entries, theme tokens and styles.
-2. The ui-sdk skill: `node_modules/@ui-sdk/core/skills/ui-sdk/SKILL.md`.
-3. The index of the layer these components use, then the page of every UI SDK component you use:
+1. The agent-ui skill: `node_modules/@kind-ui/agent-ui/skills/agent-ui/SKILL.md`. It covers choosing, installing and composing these components, the AI SDK adapter, agent actions, approvals and theming. To add it to your agent's skills, run `npx skills add kind-ui/agent-ui --skill agent-ui`.
+2. `node_modules/@kind-ui/agent-ui/README.md`: the package's entries, theme tokens and styles.
+3. The ui-sdk skill: `node_modules/@ui-sdk/core/skills/ui-sdk/SKILL.md`.
+4. The index of the layer these components use, then the page of every UI SDK component you use:
    - React: `node_modules/@ui-sdk/react/docs/llms.txt`
    - Web Components (`web/`): `node_modules/@ui-sdk/web/docs/llms.txt`
    - Vue (`vue/`): `node_modules/@ui-sdk/vue/docs/llms.txt`

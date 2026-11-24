@@ -47,7 +47,17 @@ Then install a component with `npx shadcn@latest add @kind-ui/<name>`:
 | Svelte | `<component>-svelte` (`@kind-ui/composer-svelte`) | Svelte 5.33 with runes, `@ui-sdk/svelte` |
 | Solid | `<component>-solid` (`@kind-ui/composer-solid`) | Solid 2, `@ui-sdk/solid` |
 
-Every layer renders the same primitive from `./core`, with the same parts, options, events and agent actions. In a Vue, Svelte or Solid app, write the `components.json` by hand (the [docs](https://kindui.dev/docs/agent-ui/) have one); the pinned shadcn CLI installs those items too. A Vue app that server-renders outside Nuxt renders its root inside `<Suspense>`, as Nuxt does, so parts bind after hydration. Agents connect through `createAgent` from the layer's UI SDK package (`@ui-sdk/vue/agent`, …). The CLI copies the component into your `ui` directory, installs this package and the layer's UI SDK packages at the pinned versions, imports `styles.css` into your stylesheet, and writes an `AGENTS.md` for coding agents beside the components. Tailwind finds the copied files on its own; if they live outside the app that builds them, add an `@source` for them to your stylesheet.
+Every layer renders the same primitive from `./core`, with the same parts, options, events and agent actions. In a Vue, Svelte or Solid app, write the `components.json` by hand (the [docs](https://kindui.dev/docs/agent-ui/) have one); the pinned shadcn CLI installs those items too. A Vue app that server-renders outside Nuxt renders its root inside `<Suspense>`, as Nuxt does, so parts bind after hydration. Agents connect through `createAgent` from the layer's UI SDK package (`@ui-sdk/vue/agent`, …). The CLI copies the component into your `ui` directory, installs this package and the layer's UI SDK packages at the pinned versions, imports `styles.css` into your stylesheet, and writes an `AGENTS.md` for coding agents beside the components, which points them at the [agent skill](#agent-skill). Tailwind finds the copied files on its own; if they live outside the app that builds them, add an `@source` for them to your stylesheet.
+
+## Agent skill
+
+The package ships an agent skill for coding agents that build with Agent UI: which component fits a job, installing and composing them, the AI SDK adapter, agent actions, approvals and theming. Add it to your agent's skills with the [skills CLI](https://skills.sh):
+
+```bash
+npx skills add kind-ui/agent-ui --skill agent-ui
+```
+
+Or point your agent at the installed copy, `node_modules/@kind-ui/agent-ui/skills/agent-ui/SKILL.md`.
 
 ## Styles
 

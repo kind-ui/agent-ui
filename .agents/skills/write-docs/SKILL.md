@@ -1,6 +1,8 @@
 ---
 name: write-docs
 description: Writes or reviews the agent-ui docs in apps/docs/content/docs (Get Started, component pages, the AI SDK page) in the site's voice. Use for new pages, prose edits, example captions and docs reviews. Pair it with the fumadocs skill, which covers the site's mechanics.
+metadata:
+  internal: true
 ---
 
 # Write agent-ui Docs
