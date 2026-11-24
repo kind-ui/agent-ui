@@ -1,5 +1,13 @@
 # @kind-ui/agent-ui-docs
 
+## 0.0.12
+
+### Patch Changes
+
+- Updated dependencies [2ec67c5]
+- Updated dependencies [56a1e10]
+  - @kind-ui/agent-ui@0.7.2
+
 ## 0.0.11
 
 ### Patch Changes

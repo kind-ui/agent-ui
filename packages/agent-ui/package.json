@@ -1,6 +1,6 @@
 {
   "name": "@kind-ui/agent-ui",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Agent UI: React, Vue, Svelte, Solid and Web Components for AI chat and agent interfaces, with messages, tool calls, reasoning, plans and approvals. Built on UI SDK, works with the AI SDK and shadcn.",
   "keywords": [
     "agent-ui",
