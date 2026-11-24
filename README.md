@@ -56,6 +56,14 @@ The first `add` also installs `@kind-ui/agent-ui` and `@ui-sdk/core` at their pi
 
 To set it up with a coding agent instead, copy the prompt from [Get Started](https://kindui.dev/docs/agent-ui/#quick-start).
 
+Give your coding agent the Agent UI skill, so it knows which component fits a job and how to compose them, connect the AI SDK, expose actions to agents and ask the person first:
+
+```bash
+npx skills add kind-ui/agent-ui --skill agent-ui
+```
+
+It also ships in the npm package, at `node_modules/@kind-ui/agent-ui/skills/agent-ui/SKILL.md`.
+
 ## Usage
 
 ### React
@@ -253,7 +261,7 @@ Set any `--kind-*` token in your own `@theme` or `:root`. Colors are `light-dark
 
 | Path | Contents |
 | --- | --- |
-| [`packages/agent-ui`](packages/agent-ui) | The `@kind-ui/agent-ui` package and the React and Web Components render files |
+| [`packages/agent-ui`](packages/agent-ui) | The `@kind-ui/agent-ui` package, its render files and the published `agent-ui` skill |
 | [`registry`](registry) | The shadcn registry catalog served at `kindui.dev/r` |
 | [`apps/docs`](apps/docs) | The docs site, with every component's page and live example |
 | [`tests`](tests) | Browser specs for both layers, fixtures and consumer type tests |

@@ -1,6 +1,8 @@
 ---
 name: solid-best-practices
 description: Solid 2 rules for writing and reviewing Solid components and render files (solid-js and @solidjs/web 2.x). Use whenever you write, change or review a .tsx file under src/solid, a Solid fixture or a Solid docs example. Solid 1 habits (createResource, Suspense, splitProps, onMount, solid-js/web) are wrong here.
+metadata:
+  internal: true
 ---
 
 # Solid 2

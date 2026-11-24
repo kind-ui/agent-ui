@@ -39,6 +39,7 @@
   "files": [
     "dist",
     "!dist/**/*.map",
+    "skills",
     "README.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md"

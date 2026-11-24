@@ -1,6 +1,8 @@
 ---
 name: expert-review
 description: Reviews an agent-ui change with its layer experts (core, react, web, styles, markdown), only the ones the diff reaches. Use before every push, or when asked for an expert review. Pass a base ref, expert names, or nothing.
+metadata:
+  internal: true
 ---
 
 # Expert review

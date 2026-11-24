@@ -1,6 +1,8 @@
 ---
 name: fumadocs
 description: Edits the agent-ui docs site in apps/docs (Fumadocs on Next.js, static export), including adding or updating a component page, its live example and its generated API tables, wiring Fumadocs features with its CLIs, and upgrading Fumadocs. Use whenever you touch apps/docs or a component's public options. For the words, use the write-docs skill.
+metadata:
+  internal: true
 ---
 
 # Fumadocs

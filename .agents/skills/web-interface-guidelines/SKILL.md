@@ -1,6 +1,8 @@
 ---
 name: web-interface-guidelines
 description: A checklist of web interface details (keyboard and focus, targets and input, forms, layout stability, animation, content and accessibility, performance, dark mode). Use as the checklist pass when building or reviewing a component, after expert-review's layer checks.
+metadata:
+  internal: true
 ---
 
 Concise rules for building accessible, fast, delightful UIs. Use MUST/SHOULD/NEVER to guide decisions.

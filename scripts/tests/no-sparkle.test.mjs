@@ -8,7 +8,7 @@ const repoRoot = new URL("../../", import.meta.url);
 const sparkle = /sparkl|auto_awesome|[\u2726\u2727\u2728\u2747\u2748\u{1F31F}\u{1F4AB}]/iu;
 // Prose that states the rule, and this test.
 const skipped =
-  /^(AGENTS\.md|docs\/superpowers\/|docs\/design-principles\.md$|\.agents\/|scripts\/tests\/no-sparkle\.test\.mjs$)/;
+  /^(AGENTS\.md|docs\/superpowers\/|docs\/design-principles\.md$|\.agents\/|packages\/agent-ui\/skills\/agent-ui\/(SKILL|references\/design)\.md$|scripts\/tests\/no-sparkle\.test\.mjs$)/;
 const binary = /\.(png|jpe?g|gif|webp|ico|woff2?|ttf|otf)$/i;
 
 test("no file draws a sparkle icon", () => {

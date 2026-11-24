@@ -3,6 +3,8 @@ name: impeccable
 description: "Design review and refinement vocabulary for a component's rendered result: audit (accessibility, performance, theming, responsive, anti-patterns), critique (UX review with heuristic scoring), polish (final pass before shipping) and distill (strip to essence). Use on a component's light and dark screenshots before expert-review, or when asked to audit, critique, polish or simplify a UI."
 version: 4.10.0
 license: Apache 2.0
+metadata:
+  internal: true
 ---
 
 This skill gives you the tools and permission to make design that earns the name out-of-distribution craft. Work as an award-winning design director would: production-grade code, a clear POV, a deep grasp of what the client and its users need, and exceptional craft.

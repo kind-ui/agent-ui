@@ -1,6 +1,8 @@
 ---
 name: write-code
 description: Writes and edits @kind-ui/agent-ui code (core primitives, React and Web Components render files, styles, motion, the markdown engine, the AI SDK adapter, tests and scripts) by starting from the file that already does the same job, then checks it with the repo's checks and a cold read. Use whenever you write or change code in this repo, before you call the change done.
+metadata:
+  internal: true
 ---
 
 # Write agent-ui code

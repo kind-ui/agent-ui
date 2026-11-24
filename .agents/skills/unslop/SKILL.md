@@ -1,6 +1,8 @@
 ---
 name: unslop
 description: Removes generated-looking code from an agent-ui diff or files, like comments that restate the code, filler JSDoc, defensive checks for impossible cases, one-caller helpers and vague names, without changing behavior. Use as the last step of any change before expert-review, or when asked to clean up, trim comments or remove slop.
+metadata:
+  internal: true
 ---
 
 # Unslop
