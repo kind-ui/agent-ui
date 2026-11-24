@@ -1,11 +1,19 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import catalog, { layerItems } from "../../registry/catalog.mjs";
-import { toRegistry, validateCatalog } from "../build-registry.mjs";
+import { registryContent, toRegistry, validateCatalog } from "../build-registry.mjs";
 import { checkRegistryIntegrity } from "../check-registry-consumers.mjs";
 import { liveCatalog } from "../check-registry-namespace.mjs";
 
@@ -132,6 +140,29 @@ test("an import outside the item's dependencies, a range and a missing file fail
   assert.match(errors, /imports lodash, not a dependency/);
   assert.match(errors, /@ui-sdk\/web@\^0\.1\.0 is not an exact version/);
   assert.match(errors, /missing\.tsx does not exist/);
+});
+
+test("shipped files name TS sources without an extension, and keep .svelte and real .js imports", () => {
+  const files = new Set(catalog.items.flatMap((each) => each.files));
+  for (const file of files) {
+    const text = registryContent(file);
+    for (const [, specifier] of text.matchAll(/["'](\.\.?\/[^"'\n]*\.js)["']/g)) {
+      const base = fileURLToPath(new URL(`../../${file}/../${specifier.slice(0, -3)}`, import.meta.url));
+      assert.ok(![".ts", ".tsx"].some((ext) => existsSync(base + ext)), `${file} imports ${specifier}`);
+    }
+  }
+  assert.match(registryContent("packages/agent-ui/src/react/tool.tsx"), /from "\.\/markdown"/);
+  const svelte = registryContent("packages/agent-ui/src/svelte/tool/index.ts");
+  assert.match(svelte, /from "\.\/parts";/);
+  assert.match(svelte, /from "\.\/Tool\.svelte";/);
+  const file = join(dir, "kept.ts");
+  writeFileSync(join(dir, "real.js"), "");
+  writeFileSync(join(dir, "source.tsx"), "");
+  writeFileSync(file, 'import "./real.js";\nimport "./style.css";\nexport { x } from "./source.js";\n');
+  assert.equal(
+    registryContent(file),
+    'import "./real.js";\nimport "./style.css";\nexport { x } from "./source";\n',
+  );
 });
 
 test("the setup note is a plain file beside the components", () =>

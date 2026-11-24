@@ -54,6 +54,26 @@ function importsOf(file, text) {
   return ts.preProcessFile(code, true, true).importedFiles.map(({ fileName }) => fileName);
 }
 
+/**
+ * A file as the registry ships it: relative `.js` specifiers that name a `.ts` or `.tsx` source lose their
+ * extension (`./markdown.js` becomes `./markdown`), since Turbopack, and webpack without `extensionAlias`, never
+ * map `./name.js` to `name.tsx`. `.svelte`, asset and real `.js` imports stay as written; `src/` keeps NodeNext's.
+ */
+export function registryContent(file) {
+  const path = resolve(root, file);
+  const text = readFileSync(path, "utf8");
+  if (!/\.(tsx?|svelte)$/.test(file)) return text;
+  const sources = new Set(
+    importsOf(file, text).filter(
+      (specifier) =>
+        /^\.\.?\/.*\.js$/.test(specifier) && /\.tsx?$/.test(resolveImport(path, specifier) ?? ""),
+    ),
+  );
+  return text.replace(/(["'])(\.\.?\/[^"'\n]*)\.js\1/g, (literal, quote, base) =>
+    sources.has(`${base}.js`) ? `${quote}${base}${quote}` : literal,
+  );
+}
+
 /** Errors that make the catalog unbuildable; empty when it is sound. */
 export function validateCatalog(input, pkg) {
   const errors = [];
@@ -170,13 +190,16 @@ function build() {
   run([SHADCN, "build", registryPath, "--output", relative(root, join(outDir, "r"))]);
 
   for (const item of catalog.items) {
-    const built = JSON.parse(readFileSync(join(outDir, "r", `${item.name}.json`), "utf8"));
+    const builtFile = join(outDir, "r", `${item.name}.json`);
+    const built = JSON.parse(readFileSync(builtFile, "utf8"));
     if (built.files.length !== item.files.length) throw new Error(`${item.name}: the build dropped a file`);
     built.files.forEach((file, index) => {
       if (file.content !== readFileSync(join(root, item.files[index]), "utf8")) {
         throw new Error(`${item.name}: ${item.files[index]} differs from its source after the build`);
       }
+      file.content = registryContent(item.files[index]);
     });
+    writeFileSync(builtFile, `${JSON.stringify(built, null, 2)}\n`);
   }
   console.log(`built ${catalog.items.length} items into ${relative(root, join(outDir, "r"))}`);
 }

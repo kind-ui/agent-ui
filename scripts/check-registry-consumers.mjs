@@ -21,7 +21,7 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
 import catalog from "../registry/catalog.mjs";
 import { selectedLayers } from "../registry/layers/index.mjs";
-import { NAMESPACE, SHADCN, targetOf, validateCatalog } from "./build-registry.mjs";
+import { NAMESPACE, registryContent, SHADCN, targetOf, validateCatalog } from "./build-registry.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const registryDir = join(root, "artifacts/registry/r");
@@ -30,13 +30,21 @@ const evidenceFile = join(root, "artifacts/registry/consumer-evidence.json");
 // Set once the server listens on a free port.
 let origin = "";
 const pkg = JSON.parse(readFileSync(join(root, "packages/agent-ui/package.json"), "utf8"));
-const workspace = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).devDependencies;
+const workspace = {
+  ...JSON.parse(readFileSync(join(root, "package.json"), "utf8")).devDependencies,
+  next: JSON.parse(readFileSync(join(root, "apps/docs/package.json"), "utf8")).dependencies.next,
+};
 
 // `entry` is a file, or a folder of `main.<ext>` and `items/`, under `registry/consumers/`; `plugin` imports the
-// framework's Vite plugin as `framework`.
+// framework's Vite plugin as `framework`. React's is also built by `next build` with Next's default Turbopack settings,
+// which don't resolve `./name.js` to `name.tsx`, from the App Router pages in `registry/consumers/turbopack/`.
 const vite = ["vite", "tailwindcss", "@tailwindcss/vite"];
 const consumers = {
-  react: { entry: "react.tsx", devDependencies: [...vite, "react", "react-dom"] },
+  react: {
+    entry: "react.tsx",
+    turbopack: true,
+    devDependencies: [...vite, "react", "react-dom", "next", "typescript", "@types/react", "@types/node"],
+  },
   web: { entry: "web.ts", devDependencies: vite },
   vue: {
     entry: "vue",
@@ -228,8 +236,8 @@ function checkInstall(layer, dir, items) {
   for (const file of [...copied].flatMap((item) => item.files)) {
     const target = join(dir, "src/components/ui", targetOf(file).slice("@ui/".length));
     if (!existsSync(target)) errors.push(`${layer}: ${file} was not copied`);
-    else if (readFileSync(target, "utf8") !== readFileSync(join(root, file), "utf8")) {
-      errors.push(`${layer}: ${file} changed on install`);
+    else if (readFileSync(target, "utf8") !== registryContent(file)) {
+      errors.push(`${layer}: ${file} differs from what the registry ships`);
     }
   }
   return errors;
@@ -313,6 +321,10 @@ async function check() {
       for (const name of items)
         if (!listed.includes(name)) errors.push(`${layer}: shadcn search does not list ${name}`);
       await run("npx", ["vite", "build"], dir);
+      if (consumers[layer].turbopack) {
+        cpSync(join(root, "registry/consumers/turbopack"), dir, { recursive: true });
+        await run("npx", ["next", "build"], dir);
+      }
       server.sites[layer] = join(dir, "dist");
       const { rendered, problems } = await render(browser, layer, items);
       errors.push(...problems.map((problem) => `${layer}: ${problem}`));
