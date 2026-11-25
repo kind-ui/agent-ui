@@ -103,6 +103,7 @@ export {
 export {
   type ConfirmationApi,
   type ConfirmationCallback,
+  type ConfirmationChoice,
   type ConfirmationDecision,
   type ConfirmationOptions,
   type ConfirmationPrimitive,
@@ -560,6 +561,7 @@ export {
 } from "./task/index.js";
 export {
   type TerminalApi,
+  type TerminalApprovalState,
   type TerminalCopyReason,
   type TerminalOptions,
   type TerminalPrimitive,

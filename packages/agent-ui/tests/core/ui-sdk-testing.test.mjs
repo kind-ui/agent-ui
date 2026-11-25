@@ -61,7 +61,14 @@ const cases = {
   codeBlock: { options: { code: "let a = 1", language: "js" } },
   composer: { options: { value: { text: "Hi", tokens: [], attachments: [] }, onSubmit: noop } },
   confirmation: {
-    options: { approval: call.approval, label: "Run search?", onApprove: noop, onDeny: noop, reason: true },
+    options: {
+      approval: call.approval,
+      label: "Run search?",
+      onApprove: noop,
+      onDeny: noop,
+      onAlwaysAllow: noop,
+      reason: true,
+    },
   },
   contextBar: {
     options: {
@@ -176,7 +183,14 @@ const cases = {
     keys: { item: ["a"] },
   },
   terminal: {
-    options: { ...step, command: "npm test", output: "\u001b[32mok\u001b[0m\nnext" },
+    options: {
+      ...step,
+      command: "npm test",
+      output: "\u001b[32mok\u001b[0m\nnext",
+      approval: call.approval,
+      onApprove: noop,
+      onDeny: noop,
+    },
     keys: { line: ["0", "1"] },
   },
   testResults: {
