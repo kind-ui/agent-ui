@@ -154,3 +154,42 @@ for (const colorScheme of ["light", "dark"] as const) {
     expect(violations).toEqual([]);
   });
 }
+
+test.describe("in a short window", () => {
+  test.use({ viewport: { width: 800, height: 280 } });
+
+  test("the menu stays inside the window and scrolls, and the arrow keys reach its last row", async ({
+    page,
+  }) => {
+    await load(page);
+    await trigger(page).focus();
+    await page.keyboard.press("Enter");
+    const content = page.locator('#control [data-slot="menu-content"]').first();
+    await expect(option(page, /Claude Opus 5\.5/)).toBeFocused();
+    await settled(page);
+    const box = await content.evaluate((el) => {
+      const { top, bottom } = el.getBoundingClientRect();
+      return { top, bottom, scrolls: el.scrollHeight > el.clientHeight };
+    });
+    expect(box.top).toBeGreaterThanOrEqual(0);
+    expect(box.bottom).toBeLessThanOrEqual(280);
+    expect(box.scrolls).toBe(true);
+
+    const rows = content.locator('[role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"]');
+    const last = rows.last();
+    const count = await rows.count();
+    for (let i = 0; i < count && !(await last.evaluate((el) => el === document.activeElement)); i++) {
+      await page.keyboard.press("ArrowDown");
+    }
+    await expect(last).toBeFocused();
+    const end = await last.evaluate((el) => {
+      const menu = el.closest('[data-slot="menu-content"]') as HTMLElement;
+      return {
+        scrollTop: menu.scrollTop,
+        inside: el.getBoundingClientRect().bottom <= menu.getBoundingClientRect().bottom + 1,
+      };
+    });
+    expect(end.scrollTop).toBeGreaterThan(0);
+    expect(end.inside).toBe(true);
+  });
+});
