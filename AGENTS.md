@@ -378,6 +378,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- wave-7-task-7: Step Group -->
 
+- **Step Group (Wave 7 Task 7):** `stepGroupPrimitive` spreads `stepBase` as Subagent does, with Subagent's `cancel` slot ("Stop all", `createPendingAction`, focus recovery to the trigger), offered while the aggregated status is `running` or `awaiting-input`. Its status defaults to `aggregateStatus` over `items`, so the base's auto open folds a finished group and an error keeps it open. The plan's `labels` option is `groupLabels`: UI SDK's agent bridge names a component through `el.labels` as a form control's, and a web root holding a record there threw on every snapshot. `stepGroupTitle` joins the groups' words with `Intl.ListFormat` in `locale` (else English, so server markup agrees) and capitalizes the first letter, so hosts write each label as read mid-sentence. The children are the host's own steps: a host joins their triggers to a StepList with `StepListItem` for one Tab stop and arrow keys, as inside Subagent; the group doesn't wrap them in one itself. No `data-agent-confirm` (spec §3.3). Web takes steps inside `kind-step-group-content` and adds its trigger and Stop all around it, as `kind-subagent` does; `items` and `groupLabels` are properties, event `stepgroupcancel` with `can-cancel`.
+
 <!-- wave-7-task-8: Handoff -->
 
 <!-- wave-7-task-10: Trace -->

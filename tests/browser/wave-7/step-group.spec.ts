@@ -12,10 +12,10 @@ const approvals = (page: Page) => page.evaluate(() => (window as unknown as Fixt
 const cancels = (page: Page) =>
   page.evaluate(() => (window as unknown as Fixture).kindStepGroup.cancels.length);
 const setStatus = (page: Page, id: string, status: string) =>
-  page.evaluate(
-    ([i, s]) => (window as unknown as Fixture).kindStepGroup.setStatus(i, s as never),
-    [id, status] as const,
-  );
+  page.evaluate(([i, s]) => (window as unknown as Fixture).kindStepGroup.setStatus(i, s as never), [
+    id,
+    status,
+  ] as const);
 
 const open = async (page: Page, name = "all") => {
   await page.goto(`/?c=step-group&case=${name}`);
