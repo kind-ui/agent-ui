@@ -25,7 +25,8 @@ const element = (document: Document, tag: string, attributes: Record<string, str
 
 const headerRow = (document: Document) => {
   const row = element(document, "ui-waterfall-header-row", { "aria-rowindex": "1" });
-  const timeline = element(document, "ui-waterfall-column-header", { "aria-label": "Timeline" });
+  const timeline = element(document, "ui-waterfall-column-header");
+  timeline.append(element(document, "span", { class: "sr-only" }, "Timeline"));
   const axis = element(document, "kind-trace-axis");
   // Hidden from agents, which hides UI SDK's Waterfall from them while the rows stay the Trace's.
   axis.append(element(document, "ui-waterfall-axis", { "max-ticks": "5", "data-agent-hidden": "" }));
@@ -165,8 +166,11 @@ export function defineTrace(): void {
           const { waterfall: props, height } = api.viewportState(state);
           drawRows(shown, state, api);
           // UI SDK builds a new instance, with a new controller, when the element returns to the page.
-          for (const key of ["controller", "items", "range", "locale", "getBarLabel"] as const)
-            if (shown[key] !== props[key]) shown[key] = props[key];
+          // The Waterfall draws bare rows of its own for `items` while it has none of ours.
+          const keys = ["controller", "items", "range", "locale", "getBarLabel"] as const;
+          for (const key of keys)
+            if (shown[key] !== props[key] && (key !== "items" || state.rows.length || !props.items.length))
+              shown[key] = props[key];
           const attributes = { "aria-label": props["aria-label"], "aria-rowcount": String(props["aria-rowcount"]) };
           for (const [name, value] of Object.entries(attributes))
             if (shown.getAttribute(name) !== value) shown.setAttribute(name, value);

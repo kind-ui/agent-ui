@@ -68,7 +68,8 @@ export function TraceViewport(props: TraceViewportProps) {
           <KindWaterfallHeaderRow aria-rowindex={1}>
             <KindWaterfallColumnHeader>Name</KindWaterfallColumnHeader>
             <KindWaterfallColumnHeader>Duration</KindWaterfallColumnHeader>
-            <KindWaterfallColumnHeader aria-label="Timeline">
+            <KindWaterfallColumnHeader>
+              <span className="sr-only">Timeline</span>
               <parts.Axis>
                 <KindWaterfallAxis data-agent-hidden="" maxTicks={5} />
               </parts.Axis>

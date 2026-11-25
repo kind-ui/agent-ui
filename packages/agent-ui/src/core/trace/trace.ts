@@ -435,24 +435,21 @@ export const tracePrimitive: TracePrimitive = definePrimitive<TraceOptions, Trac
       virtual.subscribe(showRows);
 
       const model = memo((spans: TraceSpan[], now: number | string | undefined) => traceModel(spans, now));
+      // One write for the spans and the rows that show, so a part never reads the Waterfall's spans beside rows from
+      // before them.
+      // Reads the options it's handed: the store takes synced options only after `onOptions` listeners run.
       const remodel = (options = context.options()) => {
-        const { spans, clock } = store.get();
-        const next = model(spans, options.now ?? clock ?? undefined);
         const state = store.get();
-        if (next.items !== state.items)
-          store.set({
-            items: next.items,
-            entries: next.entries,
-            running: next.running,
-            wallClock: next.wallClock,
-          });
-        const shown = shownRows(store.get().items, store.get().expanded);
-        if (shown === state.shown) return;
-        store.set({ shown });
-        if (viewport) virtual.refresh();
-        else {
+        const next = model(options.spans ?? noSpans, options.now ?? state.clock ?? undefined);
+        const shown = shownRows(next.items, options.expanded ?? state.expanded);
+        if (next.items === state.items && shown === state.shown) return;
+        const { items, entries, running, wallClock } = next;
+        if (viewport) {
+          store.set({ items, entries, running, wallClock, shown });
+          virtual.refresh();
+        } else {
           const rows = placed(firstRows(shown, state.rowHeight), shown, state.rowHeight, rowCache);
-          store.set({ rows, size: shown.length * state.rowHeight });
+          store.set({ items, entries, running, wallClock, shown, rows, size: shown.length * state.rowHeight });
         }
       };
       context.onOptions((next) => remodel(next));
