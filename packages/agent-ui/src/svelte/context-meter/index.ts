@@ -1,4 +1,6 @@
 export { default as ContextMeter } from "./ContextMeter.svelte";
+export { default as ContextMeterBreakdown } from "./ContextMeterBreakdown.svelte";
+export { default as ContextMeterBreakdownRows } from "./ContextMeterBreakdownRows.svelte";
 export { default as ContextMeterContent } from "./ContextMeterContent.svelte";
 export { default as ContextMeterDescription } from "./ContextMeterDescription.svelte";
 export { default as ContextMeterRows } from "./ContextMeterRows.svelte";

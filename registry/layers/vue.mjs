@@ -95,6 +95,8 @@ export default {
 
     // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
+    "usage-meter",
+
     // wave-7-task-16: Quota Notice
 
     // wave-7-task-17: Activity Graph
@@ -277,6 +279,8 @@ export default {
     // wave-7-task-14: Agent Card
 
     // wave-7-task-15: Usage Meter and Context Meter's breakdown
+
+    "wave-7/usage-meter.spec.ts",
 
     // wave-7-task-16: Quota Notice
 

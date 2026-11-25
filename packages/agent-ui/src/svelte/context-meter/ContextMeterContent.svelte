@@ -1,6 +1,8 @@
-<!-- The details: the title, the value and each count, unless you pass children. Leaves focus on the trigger. -->
+<!-- The details: the title, the value, the breakdown and each count, unless you pass children. Leaves focus on the trigger. -->
 <script lang="ts">
   import type { ComponentProps } from "svelte";
+  import ContextMeterBreakdown from "./ContextMeterBreakdown.svelte";
+  import ContextMeterBreakdownRows from "./ContextMeterBreakdownRows.svelte";
   import ContextMeterDescription from "./ContextMeterDescription.svelte";
   import ContextMeterRows from "./ContextMeterRows.svelte";
   import ContextMeterTitle from "./ContextMeterTitle.svelte";
@@ -13,6 +15,6 @@
 
 <parts.Content initialFocus="none" {...props}>
   {#snippet children(state: Parameters<NonNullable<Props["children"]>>[0])}
-    {#if content}{@render content(state)}{:else}<ContextMeterTitle /><ContextMeterDescription /><ContextMeterRows />{/if}
+    {#if content}{@render content(state)}{:else}<ContextMeterTitle /><ContextMeterDescription /><ContextMeterBreakdown /><ContextMeterBreakdownRows /><ContextMeterRows />{/if}
   {/snippet}
 </parts.Content>

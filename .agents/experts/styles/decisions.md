@@ -39,6 +39,7 @@ Last reviewed: `bfb9bb7` (Design Wave 1 Batch D)
 - **Day Separator's `::first-letter` capitalizes a host's `DaySeparatorLabel` children too** (Wave 6 Task 6): by design, since a heading starts with a capital; a locale whose date shouldn't start with one passes `relative={false}` or its own text.
 - **Thread Search capitalizes its `meta` with `::first-letter`** (Wave 6 Task 3): every `meta` it writes is a date group's words ("today"); a host can't set `meta`.
 - **A Context Bar chip's remove target stays under 44px on a coarse pointer (Design Wave 1 Batch B):** it grows to about 32×28px, since the bar is one 28px row that clips and a larger target would reach the next chip; the gap widens instead. The rule for 44px names shared controls, which a chip's remove isn't.
+- **Shared meter styles (Wave 7 Task 15):** `meter.css` draws every `meterBase` meter (ring, popover, breakdown) keyed on `data-meter-part`; `context-meter.css` and `usage-meter.css` only map their `data-level`s onto `--kind-meter-color`, so the root's default sits in `:where()`. Slice colors are `--kind-usage-slice-1` to `-5`, each `var(--kind-chart-<n>, <status token>)`, chosen by `data-slice`; segments are split by a surface hairline so they don't rely on color, and forced colors draw them in `CanvasText`.
 
 ## Known and open (don't report again, check whether fixed)
 

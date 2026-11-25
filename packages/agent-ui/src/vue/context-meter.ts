@@ -1,4 +1,9 @@
-import { type ContextMeterValueState, type ContextRow, contextMeterPrimitive } from "@kind-ui/agent-ui/core";
+import {
+  type ContextMeterValueState,
+  type ContextRow,
+  contextMeterPrimitive,
+  type MeterSlice,
+} from "@kind-ui/agent-ui/core";
 import { Meter, MeterTrack, MeterValue } from "@ui-sdk/vue/meter";
 import { createParts } from "@ui-sdk/vue/primitive";
 import { defineComponent, h } from "vue";
@@ -10,6 +15,8 @@ const parts = createParts(contextMeterPrimitive, {
   content: "div",
   title: "h2",
   description: "p",
+  breakdown: "div",
+  "breakdown-rows": "dl",
   rows: "dl",
 });
 
@@ -76,6 +83,42 @@ export const ContextMeterDescription = defineComponent({
   },
 });
 
+/** A stacked bar of the `breakdown`, a segment per slice, unless you pass a slot. Rendered only with a breakdown. */
+export const ContextMeterBreakdown = defineComponent({
+  name: "ContextMeterBreakdown",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () =>
+      h(parts.Breakdown, attrs, {
+        ...slots,
+        default:
+          slots.default ??
+          (({ state }: { state: { slices: MeterSlice[] } }) =>
+            state.slices.map(({ id, width, color }) =>
+              h("span", { key: id, "data-slice": color, style: { width } }),
+            )),
+      });
+  },
+});
+
+/** Each slice of the `breakdown` with its tokens and percent, unless you pass a slot. */
+export const ContextMeterBreakdownRows = defineComponent({
+  name: "ContextMeterBreakdownRows",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () =>
+      h(parts.BreakdownRows, attrs, {
+        ...slots,
+        default:
+          slots.default ??
+          (({ state }: { state: { slices: MeterSlice[] } }) =>
+            state.slices.map(({ id, label, value, percent, color }) =>
+              h("div", { key: id, "data-slice": color }, [h("dt", label), h("dd", value), h("dd", percent)]),
+            )),
+      });
+  },
+});
+
 /** Each count and the cost supplied, unless you pass a slot. Rendered only when there's one. */
 export const ContextMeterRows = defineComponent({
   name: "ContextMeterRows",
@@ -92,9 +135,15 @@ export const ContextMeterRows = defineComponent({
   },
 });
 
-const defaultDetails = () => [h(ContextMeterTitle), h(ContextMeterDescription), h(ContextMeterRows)];
+const defaultDetails = () => [
+  h(ContextMeterTitle),
+  h(ContextMeterDescription),
+  h(ContextMeterBreakdown),
+  h(ContextMeterBreakdownRows),
+  h(ContextMeterRows),
+];
 
-/** The details: the title, the value and each count, unless you pass a slot. Leaves focus on the trigger. */
+/** The details: the title, the value, the breakdown and each count, unless you pass a slot. Leaves focus on the trigger. */
 export const ContextMeterContent = defineComponent({
   name: "ContextMeterContent",
   inheritAttrs: false,

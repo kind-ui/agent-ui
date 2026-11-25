@@ -114,6 +114,8 @@ import { defineConversationSearch } from "./components/ui/web/conversation-searc
 
 // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
+import { defineUsageMeter } from "./components/ui/web/usage-meter.js";
+
 // wave-7-task-16: Quota Notice
 
 // wave-7-task-17: Activity Graph
@@ -239,6 +241,8 @@ for (const define of [
   // wave-7-task-14: Agent Card
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
+
+  defineUsageMeter,
 
   // wave-7-task-16: Quota Notice
 
@@ -393,6 +397,8 @@ const items = {
   // wave-7-task-14: Agent Card
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
+
+  "usage-meter": `<kind-usage-meter used="3.2" limit="5" period="This month"></kind-usage-meter>`,
 
   // wave-7-task-16: Quota Notice
 

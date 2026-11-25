@@ -127,6 +127,8 @@ import { ConversationSearch } from "./components/ui/conversation-search.js";
 
 // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
+import { UsageMeter } from "./components/ui/usage-meter.js";
+
 // wave-7-task-16: Quota Notice
 
 // wave-7-task-17: Activity Graph
@@ -462,6 +464,8 @@ const items = {
   // wave-7-task-14: Agent Card
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
+
+  "usage-meter": <UsageMeter used={3.2} limit={5} period="This month" />,
 
   // wave-7-task-16: Quota Notice
 

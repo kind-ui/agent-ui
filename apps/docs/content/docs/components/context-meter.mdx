@@ -4,6 +4,7 @@ description: Show how much of the model's context window a conversation uses, wi
 ---
 
 import ContextMeterExample from "../../../examples/context-meter/basic";
+import ContextMeterBreakdownExample from "../../../examples/context-meter/breakdown";
 
 Use a context meter beside the composer, so a person can see when a conversation is about to run out of room. It's a small ring and a percentage, and its details list the tokens by kind and what the conversation has cost.
 
@@ -26,10 +27,12 @@ ContextMeter
 └── ContextMeterContent
     ├── ContextMeterTitle
     ├── ContextMeterDescription
+    ├── ContextMeterBreakdown
+    ├── ContextMeterBreakdownRows
     └── ContextMeterRows
 ```
 
-`ContextMeter` renders these parts when you pass no children: a group named by its `label`. `ContextMeterTrigger` is a button that opens the details, and `ContextMeterValue` holds UI SDK's Meter, drawn as a ring with the percentage beside it. `ContextMeterContent` is the popover with the details: `ContextMeterTitle` names it, `ContextMeterDescription` reads the tokens used, and `ContextMeterRows` lists each count and the cost.
+`ContextMeter` renders these parts when you pass no children: a group named by its `label`. `ContextMeterTrigger` is a button that opens the details, and `ContextMeterValue` holds UI SDK's Meter, drawn as a ring with the percentage beside it. `ContextMeterContent` is the popover with the details: `ContextMeterTitle` names it, `ContextMeterDescription` reads the tokens used, `ContextMeterBreakdown` and `ContextMeterBreakdownRows` show what fills the window, and `ContextMeterRows` lists each count and the cost.
 
 ## Usage
 
@@ -48,6 +51,16 @@ Pass `usage` with any of `input`, `output`, `reasoning` and `cached`, and `cost`
 ```tsx
 <ContextMeter used={57_600} total={128_000} usage={{ input: 40_000, cached: 20_000 }} cost={0.42} currency="EUR" />
 ```
+
+### Breakdown
+
+Pass `breakdown`, a list of `{ id, label, value }` in tokens, to show what fills the window: the system prompt, tools, messages, files. The details draw a stacked bar with a segment per slice, whose segments add up to the share used, and a row per slice with its tokens and its share of the window. The bar is decoration; the rows say the same in words. Slices take five colors in turn, `--kind-usage-slice-1` to `-5`, which read your `--kind-chart-1` to `-5` when you define them and the accent and status colors otherwise.
+
+<Example caption="The breakdown sits under the tokens used, above the counts.">
+  <ContextMeterBreakdownExample />
+
+  <ExampleCode example="context-meter/breakdown" />
+</Example>
 
 ### Opening
 
@@ -72,5 +85,5 @@ An agent connected with `createAgent` finds the meter by its label and reads whe
 <auto-type-table path="../../../../../packages/agent-ui/src/core/context-meter/context-meter.ts" name="ContextMeterAgentActions" type='Pick<ContextMeterApi, "open" | "close">' />
 
 <Caption>
-  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-context-meter>`, props are kebab-case attributes, `usage` is a property, and `open` is a property too; `onOpenChange` is the `openchange` event. The element fills in its parts when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-context-meter>`, props are kebab-case attributes, `usage` and `breakdown` are properties, and `open` is a property too; `onOpenChange` is the `openchange` event. The element fills in its parts when it has no children.
 </Caption>
