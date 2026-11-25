@@ -3,6 +3,8 @@ title: Agents
 description: Let an agent read and use the same components a person sees.
 ---
 
+import WebMCPDemo from "../../examples/agents/webmcp";
+
 Use UI SDK's agent bridge to give an agent your page's components: their names, their state and the actions they offer. Agent UI ships no bridge of its own. Every component registers with the one UI SDK makes, in every layer.
 
 ## Create the Bridge
@@ -175,4 +177,16 @@ import { registerTools } from "@ui-sdk/react/agent";
 const unregister = registerTools(agent, { allow: (step) => !step.confirm });
 ```
 
-Here every step runs except those marked for a person. Call `unregister()` to remove the tools. UI SDK's agent docs, in `node_modules/@ui-sdk/<layer>/docs/agents.md`, cover each tool's input and result.
+Here every step runs except those marked for a person. Call `unregister()` to remove the tools. UI SDK's agent docs, in `node_modules/@ui-sdk/<layer>/docs/agents.md`, cover each tool's input and result. To call the same tools from the AI SDK, with `createMCPClient` and its WebMCP transport, see [Agents Through WebMCP](./guides/webmcp.mdx).
+
+## Try It
+
+This page registers its tools through WebMCP, and a scripted model calls them through the AI SDK's MCP client, so it runs without an API key. The panel shows each call as it runs.
+
+<Example caption="Press Send to run the instruction in the composer. The model reads the page with snapshot, then switches the model and effort in one act call. Approving the tool needs you, so press Allow. Edit the instruction to try others, like set approvals to allow edits, and press Reset to start over.">
+  <WebMCPDemo />
+
+  <ExampleCode example="agents/webmcp" />
+</Example>
+
+The model's turn is a script that matches the instruction's words against the page's models, effort levels and approval modes, but its calls are real: `registerTools` puts the bridge's tools on the page's model context, and `createMCPClient` with `Experimental_WebMCPTransport` lists and calls them. The composer has `agentConfirm` off, since the person sends from it themselves, so the agent changes its controls without asking, while the tool's approval still waits for the person.

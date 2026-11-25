@@ -167,7 +167,7 @@ test("pages import examples and link pages by relative path", () => {
   }
 });
 
-test("examples import only the frameworks, the package, ui components and other examples", () => {
+test("examples import only the frameworks, the package, the agent bridge, the WebMCP client, ui components and other examples", () => {
   for (const file of readdirSync(examples, { recursive: true })) {
     if (!/\.(?:tsx?|vue|svelte)$/.test(file)) continue;
     const url = new URL(file, examples);
@@ -175,7 +175,7 @@ test("examples import only the frameworks, the package, ui components and other 
     for (const [, specifier] of source.matchAll(/(?:\bfrom|\bimport)\s*\(?\s*["']([^"']+)["']/g)) {
       const allowed = specifier.startsWith(".")
         ? new URL(specifier, url).href.startsWith(examples.href)
-        : /^(?:react|vue|svelte|solid-js|@solidjs\/web|@kind-ui\/agent-ui(?:\/(?:core|adapters\/ai-sdk|styles\.css))?|@\/components\/ui\/.+)$/.test(
+        : /^(?:react|vue|svelte|solid-js|@solidjs\/web|@kind-ui\/agent-ui(?:\/(?:core|adapters\/ai-sdk|styles\.css))?|@ui-sdk\/react\/agent|@ai-sdk\/mcp|@\/components\/ui\/.+)$/.test(
             specifier,
           );
       assert.ok(allowed, `${file}: ${specifier}`);
