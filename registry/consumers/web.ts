@@ -110,6 +110,8 @@ import { defineConversationSearch } from "./components/ui/web/conversation-searc
 
 // wave-7-task-13: Schedule Card
 
+import { defineScheduleCard } from "./components/ui/web/schedule-card.js";
+
 // wave-7-task-14: Agent Card
 
 // wave-7-task-15: Usage Meter and Context Meter's breakdown
@@ -235,6 +237,8 @@ for (const define of [
   // wave-7-task-12: Job Progress
 
   // wave-7-task-13: Schedule Card
+
+  defineScheduleCard,
 
   // wave-7-task-14: Agent Card
 
@@ -389,6 +393,8 @@ const items = {
   // wave-7-task-12: Job Progress
 
   // wave-7-task-13: Schedule Card
+
+  "schedule-card": `<kind-schedule-card can-run-now></kind-schedule-card>`,
 
   // wave-7-task-14: Agent Card
 

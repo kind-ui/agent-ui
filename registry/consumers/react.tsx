@@ -123,6 +123,8 @@ import { ConversationSearch } from "./components/ui/conversation-search.js";
 
 // wave-7-task-13: Schedule Card
 
+import { ScheduleCard } from "./components/ui/schedule-card.js";
+
 // wave-7-task-14: Agent Card
 
 // wave-7-task-15: Usage Meter and Context Meter's breakdown
@@ -458,6 +460,13 @@ const items = {
   // wave-7-task-12: Job Progress
 
   // wave-7-task-13: Schedule Card
+
+  "schedule-card": (
+    <ScheduleCard
+      schedule={{ id: "triage", label: "Daily triage", description: "Weekdays at 9:00", enabled: true }}
+      onRunNow={() => {}}
+    />
+  ),
 
   // wave-7-task-14: Agent Card
 

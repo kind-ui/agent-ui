@@ -1,4 +1,4 @@
-import type { Schedule } from "../../../src/types/index.js";
+import type { Schedule } from "@kind-ui/agent-ui";
 
 /** The clock the specs install: a Wednesday afternoon, UTC. */
 export const scheduleNow = "2026-11-25T13:00:00Z";

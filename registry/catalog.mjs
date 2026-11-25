@@ -477,6 +477,15 @@ export const components = {
 
   // wave-7-task-13: Schedule Card
 
+  "schedule-card": {
+    group: "ops",
+    when: "a recurring agent run needs its schedule, next and last run, an on/off switch and Run now in one place.",
+    title: "Schedule Card",
+    description:
+      "A recurring run: its schedule in words, when it runs next and how it last ran, an Enabled switch, Run now and Edit.",
+    uses: ["internal-switch"],
+  },
+
   // wave-7-task-14: Agent Card
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
