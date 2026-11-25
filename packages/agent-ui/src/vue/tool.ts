@@ -17,7 +17,9 @@ const parts = createParts(toolPrimitive, {
   "input-copy": "button",
   output: "div",
   "output-copy": "button",
+  retry: "p",
   error: "p",
+  "retry-button": "button",
 });
 
 // A part whose default slot falls back to `fallback`, as React's default `children` do.
@@ -119,16 +121,27 @@ export const ToolMeta = withDefault<{ duration: string }>(
   ({ state }) => state.duration,
 );
 
-/** The `error` message while the status is `error`, unless you fill the slot. */
-export const ToolError = withDefault<{ message: string }>(
-  parts.Error,
-  "ToolError",
-  ({ state }) => state.message,
-);
+/**
+ * While the call retries: "Retrying, attempt 2 of 5, in 4 sec" and the reason, after a running mark, unless you
+ * fill the slot.
+ */
+export const ToolRetry = withDefault<{ text: string }>(parts.Retry, "ToolRetry", ({ state }) => [
+  h("span", { "data-status-mark": "", "data-status": "running", "aria-hidden": "true" }),
+  state.text,
+]);
+
+/** Runs the call again through `onRetry`. Rendered while it's set and the status is `error`. */
+export const ToolRetryButton = withDefault(parts.RetryButton, "ToolRetryButton", () => "Retry");
+
+/** The `error` message while the status is `error`, then Retry, unless you fill the slot. */
+export const ToolError = withDefault<{ message: string }>(parts.Error, "ToolError", ({ state }) => [
+  h("span", { "data-tool-error-message": "" }, state.message),
+  h(ToolRetryButton),
+]);
 
 const defaultParts = () => [
   h(ToolTrigger, null, () => [h(ToolIcon), h(ToolTitle), h(ToolMeta)]),
-  h(ToolContent, null, () => [h(ToolInput), h(ToolOutput), h(ToolError)]),
+  h(ToolContent, null, () => [h(ToolInput), h(ToolOutput), h(ToolRetry), h(ToolError)]),
   h(ToolApproval),
 ];
 

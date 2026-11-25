@@ -18,7 +18,9 @@ const parts = createParts(toolPrimitive, {
   "input-copy": "button",
   output: "div",
   "output-copy": "button",
+  retry: "p",
   error: "p",
+  "retry-button": "button",
 });
 
 export type ToolProps = ComponentProps<typeof parts.Root>;
@@ -157,13 +159,46 @@ export function ToolMeta(props: ToolMetaProps) {
   );
 }
 
+export type ToolRetryProps = ComponentProps<typeof parts.Retry>;
+
+/**
+ * While the call retries: "Retrying, attempt 2 of 5, in 4 sec" and the reason, after a running mark, unless you
+ * pass children.
+ */
+export function ToolRetry(props: ToolRetryProps) {
+  return (
+    <parts.Retry {...omit(props, "children")}>
+      {props.children ??
+        ((state: { text: string }) => (
+          <>
+            <span data-status-mark="" data-status="running" aria-hidden="true" />
+            {state.text}
+          </>
+        ))}
+    </parts.Retry>
+  );
+}
+
+export type ToolRetryButtonProps = ComponentProps<typeof parts.RetryButton>;
+
+/** Runs the call again through `onRetry`. Rendered while it's set and the status is `error`. */
+export function ToolRetryButton(props: ToolRetryButtonProps) {
+  return <parts.RetryButton {...omit(props, "children")}>{props.children ?? "Retry"}</parts.RetryButton>;
+}
+
 export type ToolErrorProps = ComponentProps<typeof parts.Error>;
 
-/** The `error` message while the status is `error`, unless you pass children. */
+/** The `error` message while the status is `error`, then Retry, unless you pass children. */
 export function ToolError(props: ToolErrorProps) {
   return (
     <parts.Error {...omit(props, "children")}>
-      {props.children ?? ((state: { message: string }) => state.message)}
+      {props.children ??
+        ((state: { message: string }) => (
+          <>
+            <span data-tool-error-message="">{state.message}</span>
+            <ToolRetryButton />
+          </>
+        ))}
     </parts.Error>
   );
 }
@@ -179,6 +214,7 @@ function DefaultParts() {
       <ToolContent>
         <ToolInput />
         <ToolOutput />
+        <ToolRetry />
         <ToolError />
       </ToolContent>
       <ToolApproval />

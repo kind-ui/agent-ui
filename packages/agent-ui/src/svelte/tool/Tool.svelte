@@ -10,6 +10,7 @@
   import ToolInput from "./ToolInput.svelte";
   import ToolMeta from "./ToolMeta.svelte";
   import ToolOutput from "./ToolOutput.svelte";
+  import ToolRetry from "./ToolRetry.svelte";
   import ToolTitle from "./ToolTitle.svelte";
 
   let { children: content, open = $bindable(), ...props }: ComponentProps<typeof parts.Root> = $props();
@@ -24,6 +25,7 @@
       ><parts.Content
         ><ToolInput
         /><ToolOutput
+        /><ToolRetry
         /><ToolError
       /></parts.Content
       ><ToolApproval

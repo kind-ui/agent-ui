@@ -1,9 +1,11 @@
 <script lang="ts">
 import { confirmationHost } from "../../shared/confirmation.js";
+import { retryHost, retryRows } from "../../shared/tool-retry.js";
 
-export const variants = ["all", "many-10", "many-500"] as const;
+export const variants = ["all", "retry", "many-10", "many-500"] as const;
 
 const { host, approve, deny } = confirmationHost();
+const { retries, retry } = retryHost();
 </script>
 
 <script setup lang="ts">
@@ -15,7 +17,10 @@ import { expose } from "../../shared/expose.js";
 
 const props = defineProps<{ variant: string; params: URLSearchParams }>();
 
-type Row = Pick<ToolOptions, "status" | "error" | "motion" | "label" | "onApprove" | "onDeny"> & {
+type Row = Pick<
+  ToolOptions,
+  "status" | "error" | "motion" | "label" | "onApprove" | "onDeny" | "onRetry" | "retry" | "defaultOpen"
+> & {
   call: ToolCall;
 };
 
@@ -46,8 +51,18 @@ const all: Record<string, Row> = {
 const many = (size: number) =>
   Object.fromEntries(Array.from({ length: size }, (_, i) => [`tool-${i}`, { call: call(`tool_${i}`) }]));
 
+const retrying: Record<string, Row> = {
+  failed: { ...retryRows.failed, onRetry: retry("failed") },
+  other: { ...retryRows.other, onRetry: retry("other") },
+  retrying: retryRows.retrying,
+};
+
 const rows = shallowRef<Record<string, Row>>(
-  props.variant === "all" ? all : many(Number(props.variant.slice("many-".length))),
+  props.variant === "all"
+    ? all
+    : props.variant === "retry"
+      ? retrying
+      : many(Number(props.variant.slice("many-".length))),
 );
 
 const update = (id: string, next: (row: Row) => Row) => {
@@ -57,6 +72,7 @@ const update = (id: string, next: (row: Row) => Row) => {
 onMounted(() =>
   expose({
     kindHost: host,
+    kindRetries: retries,
     kindTool: {
       set: (id: string, next: Partial<Row>) => update(id, (row) => ({ ...row, ...next })),
       setCall: (id: string, next: Partial<ToolCall>) =>

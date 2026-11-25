@@ -4,6 +4,7 @@ description: Show a tool call from its streamed input to its output or error.
 ---
 
 import ToolExample from "../../../examples/tool/basic";
+import ToolRetryExample from "../../../examples/tool/retry";
 
 Use a tool for each tool call the model makes. Its header shows the tool's name and status, and its content holds the input, then the output or the error.
 
@@ -30,11 +31,13 @@ Tool
 │   │   └── ToolInputCopy
 │   ├── ToolOutput
 │   │   └── ToolOutputCopy
+│   ├── ToolRetry
 │   └── ToolError
+│       └── ToolRetryButton
 └── ToolApproval
 ```
 
-`Tool` renders these parts when you pass no children; any children you pass replace them. The trigger is a native button that shows or hides the content. `ToolTitle` shows the tool's name and `ToolMeta` how long the call took, like "2 s", once you pass `durationSeconds`; `ToolInput` and `ToolOutput` the values as a [Code Block](./code-block.mdx) or [Markdown](./markdown.mdx), and `ToolError` the error. `ToolApproval` renders a [Confirmation](./confirmation.mdx) while the call has an approval, after the content, so it shows while the tool is closed. Each takes its own children instead.
+`Tool` renders these parts when you pass no children; any children you pass replace them. The trigger is a native button that shows or hides the content. `ToolTitle` shows the tool's name and `ToolMeta` how long the call took, like "2 s", once you pass `durationSeconds`; `ToolInput` and `ToolOutput` the values as a [Code Block](./code-block.mdx) or [Markdown](./markdown.mdx), `ToolRetry` a retry in progress, and `ToolError` the error with `ToolRetryButton`. `ToolApproval` renders a [Confirmation](./confirmation.mdx) while the call has an approval, after the content, so it shows while the tool is closed. Each takes its own children instead.
 
 ## Usage
 
@@ -72,6 +75,45 @@ The tool's status stays `awaiting-input` until the decision is recorded, even wh
 
 When the status is `error`, the content shows `error.message`, or "The tool failed." without one.
 
+### Retry a Failed Call
+
+<Example caption="Press Retry to run fetch_url again. It counts down to its next try, then completes.">
+  <ToolRetryExample />
+
+  <ExampleCode example="tool/retry" />
+</Example>
+
+Pass `onRetry` to show **Retry** after the error. It's called with the call and `{ reason, source }`; return a promise, and Retry stays locked until the call's status changes, so a second press can't run the call twice. A rejection makes it available again. Each tool locks on its own. When Retry goes away with focus, focus moves to the tool's trigger.
+
+```tsx
+<Tool call={step.call} error={step.error} onRetry={(call) => rerunTool(call)} />
+```
+
+### Retrying
+
+While the host retries a call, pass the call's `retry`, or `retry` on the tool: its `attempt`, and optionally `maxAttempts`, `retryAt` and `reason`. The status stays what it is, and the content shows a line under the output, like "Retrying, attempt 2 of 5, in 4 sec. Rate limited", that counts down to `retryAt` each second. Screen readers hear "Retrying, attempt 2" once when an attempt starts, never the countdown. Server markup leaves the countdown out until the page hydrates.
+
+```tsx
+<Tool call={{ ...step.call, retry: { attempt: 2, maxAttempts: 5, retryAt, reason: "Rate limited" } }} />
+```
+
+### A Fallback for Any Tool
+
+Tool shows any input and output as JSON, so it's the fallback for tools that don't have a view of their own. Keep a map of the ones that do, and render a Tool for the rest:
+
+```tsx
+const renderers: Record<string, (props: { call: ToolCall }) => ReactNode> = {
+  get_weather: WeatherCard,
+};
+
+function ToolPart({ call }: { call: ToolCall }) {
+  const Renderer = renderers[call.name] ?? Tool;
+  return <Renderer call={call} />;
+}
+```
+
+When one tool fails and the model runs another instead, that's two calls, so it's two Tools.
+
 ### Opening and Closing
 
 A tool opens while it runs or waits for approval, closes into its header when it completes, and stays open when it fails. Once someone opens or closes it, it stays as they left it. Screen readers hear the tool's name and its outcome, like "search_docs complete", when it needs input, completes, fails or is cancelled, and "search_docs denied" when its approval is denied. The confirmation announces the decision itself, like "Approved", and "Decision not sent" when it fails.
@@ -88,10 +130,10 @@ The content grows open and shut. Under `prefers-reduced-motion`, or with `motion
 
 ### Agent
 
-An agent connected with `createAgent` finds a tool by its name and reads its `open` and `status`. It can run these actions, and press the trigger like a person would. `copyInput` and `copyOutput` are listed only while there's a value to copy.
+An agent connected with `createAgent` finds a tool by its name and reads its `open` and `status`. It can run these actions, and press the trigger like a person would. `copyInput` and `copyOutput` are listed only while there's a value to copy, and `retry` only while Retry is offered.
 
-<auto-type-table path="../../../../../packages/agent-ui/src/core/tool/tool.ts" name="ToolAgentActions" type='Pick<ToolApi, "expand" | "collapse" | "copyInput" | "copyOutput">' />
+<auto-type-table path="../../../../../packages/agent-ui/src/core/tool/tool.ts" name="ToolAgentActions" type='Pick<ToolApi, "expand" | "collapse" | "copyInput" | "copyOutput" | "retry">' />
 
 <Caption>
-  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-tool>`, `call`, `error` and `highlight` are properties only, other props are kebab-case attributes, and `onOpenChange` fires `openchange`. Approve and Deny need the `can-approve` and `can-deny` attributes and fire `approve` and `deny` on the tool, as Confirmation's do. The element fills in its parts when it has no children, and an empty `<kind-tool-input>` or `<kind-tool-output>` with its heading, copy button and code block, writes its title and error into those parts while they're empty, and writes the input and output into the `<kind-code-block>` and `<kind-markdown>` inside them.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-tool>`, `call`, `error`, `highlight` and `retry` are properties only, other props are kebab-case attributes, and `onOpenChange` fires `openchange`. Approve and Deny need the `can-approve` and `can-deny` attributes and fire `approve` and `deny` on the tool, as Confirmation's do. The element fills in its parts when it has no children, and an empty `<kind-tool-input>` or `<kind-tool-output>` with its heading, copy button and code block, writes its title and error into those parts while they're empty (an empty `<kind-tool-error>` also gets Retry while `can-retry` is set), and writes the input and output into the `<kind-code-block>` and `<kind-markdown>` inside them.
 </Caption>

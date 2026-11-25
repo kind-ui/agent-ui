@@ -374,6 +374,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- wave-7-task-5: Tool retry and retrying -->
 
+- **Tool retry (Wave 7 Task 5):** `toolPrimitive` spreads `retryPart` (countdown key `retrySeconds`, bound by the root slot's `bind` beside the Step base's `holdTransitions`), with `retry` defaulting to `call.retry`. The `retry` part sits in the content between the output and the error, so a running call shows it (running opens a tool) and its words tick without moving the output above; the layers draw the running status mark and then the words as one text node. `retry-button` sits inside the error part after a `[data-tool-error-message]` span, the error's new default children; web fills an empty `kind-tool-error` with the span and adds the button only once `can-retry` is set, so a page without Retry keeps the error's text as it was. `onRetry(call, details)` is an `"action"` on `createPendingAction` keyed by `toolCallId`; a resolved call stays locked (`retryPending` set again after `"done"`) until the call's status or id changes, which releases it, as spec §4.1 asks. Retry's focus recovery goes to the trigger. Web: `can-retry`, event `toolretry` (Message's `retry` bubbles from inside a message), `retry` a property. A failed tool that mounts in `error` is closed, as before, so its Retry shows once it's opened; one that fails while running stays open.
+
 <!-- wave-7-task-6: Diff -->
 
 <!-- wave-7-task-7: Step Group -->
