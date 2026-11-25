@@ -204,10 +204,10 @@ const conformance: Conformance[] = [
 
 test.beforeEach(({ context, browserName }) => allowClipboard(context, browserName));
 
-// Composed UI SDK components a Wave 6 component holds, none of which may be an entry of its own, except the Input
-// Group around Conversation Search's field (core decisions.md, "An unnamed `input` entry").
+// Composed UI SDK components a Wave 6 component holds, none of which may be an entry of its own. Since UI SDK
+// 0.1.0-beta.6 the Input inside Conversation Search's Input Group is no entry either.
 const composed = ["resizable", "drawer", "command", "menu", "segmented-control", "input"];
-const field = ["input"];
+const field: string[] = [];
 const listed = async (page: Page) =>
   (await snapshot(page))
     .filter((item) =>
@@ -329,11 +329,12 @@ test("action callbacks hear source agent", async ({ page }) => {
   await act(page, threads.component, threads.label, "pin", ["t5"]);
   await act(page, threads.component, threads.label, "share", ["t5"]);
   await act(page, search.component, search.label, "newThread");
-  await act(page, share.component, share.label, "open");
-  await act(page, share.component, share.label, "createLink");
   await act(page, failed.component, failed.label, "retry");
   await act(page, earlier.component, earlier.label, "retry");
   await act(page, connection.component, connection.label, "retry");
+  // Last: an open modal makes the page behind it inert, which the agent leaves alone.
+  await act(page, share.component, share.label, "open");
+  await act(page, share.component, share.label, "createLink");
   await expect
     .poll(async () => (await host(page)).sources)
     .toEqual(
@@ -343,10 +344,10 @@ test("action callbacks hear source agent", async ({ page }) => {
         "thread-pin",
         "thread-share",
         "thread-search-new",
-        "share-create",
         "message-retry",
         "conversation-retry",
         "connection-retry",
+        "share-create",
       ].map((name) => `${name}:agent`),
     );
 });
@@ -356,7 +357,6 @@ const refused = (result: Steps) => !result.ok || result.steps?.[0]?.result === f
 
 test("actions that take an id refuse an unknown one", async ({ page }) => {
   await open(page);
-  await act(page, share.component, share.label, "open");
   const results = [
     await act(page, threads.component, threads.label, "select", ["nope"]),
     await act(page, threads.component, threads.label, "rename", ["nope", "Title"]),
@@ -364,8 +364,10 @@ test("actions that take an id refuse an unknown one", async ({ page }) => {
     await act(page, threads.component, threads.label, "share", ["nope"]),
     await act(page, threads.component, threads.label, "delete", ["nope"]),
     await act(page, search.component, search.label, "select", ["nope"]),
-    await act(page, share.component, share.label, "setVisibility", ["nope"]),
   ];
+  // Last: the open dialog makes the page behind it inert.
+  await act(page, share.component, share.label, "open");
+  results.push(await act(page, share.component, share.label, "setVisibility", ["nope"]));
   expect(results.map(refused)).toEqual(results.map(() => true));
   const { calls, changes } = await host(page);
   expect(calls).toEqual([]);
@@ -376,8 +378,6 @@ test("actions that take an id refuse an unknown one", async ({ page }) => {
 test("can-* attributes offer their actions", async ({ page }, testInfo) => {
   test.skip(!isWebElements(testInfo), "web attributes only");
   await open(page);
-  await act(page, share.component, share.label, "open");
-  await opened(share)(page).toBe(true);
   const cases = [
     ...(["select", "newThread", "rename", "pin", "share", "delete"] as const).map((action) => ({
       target: threads,
@@ -386,7 +386,6 @@ test("can-* attributes offer their actions", async ({ page }, testInfo) => {
     })),
     { target: search, attribute: "can-select", action: "select" },
     { target: search, attribute: "can-new", action: "newThread" },
-    { target: share, attribute: "can-create-link", action: "createLink" },
     { target: failed, attribute: "can-retry", action: "retry" },
     { target: earlier, attribute: "can-retry", action: "retry" },
     { target: connection, attribute: "can-retry", action: "retry" },
@@ -400,6 +399,10 @@ test("can-* attributes offer their actions", async ({ page }, testInfo) => {
     await expect.poll(actions, `#${target.id} with ${attribute}`).toContain(name);
   };
   for (const item of cases) await check(item);
+  // Last: the open dialog makes the page behind it inert.
+  await act(page, share.component, share.label, "open");
+  await opened(share)(page).toBe(true);
+  await check({ target: share, attribute: "can-create-link", action: "createLink" });
   await act(page, share.component, share.label, "createLink");
   await check({ target: share, attribute: "can-revoke", action: "revoke" });
 });
