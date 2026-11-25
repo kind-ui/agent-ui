@@ -711,13 +711,18 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
           }
         });
     };
+    let opens = 0;
     const requestDelete = (id: string, source: ChangeSource) => {
       if (store.get().deletePending) return;
       if (!store.get().confirmDelete) return runDelete(id, source);
       store.set({ deleting: id, deleteFailed: false, deleteOpen: true });
-      // `open` resolves on the dialog's next close, and is undefined before a dialog attaches the controller.
+      // `open` resolves on the dialog's next close (undefined before a dialog attaches the controller). Only the
+      // latest open clears the mark.
+      const open = ++opens;
       const closed = dialog.open() as ReturnType<typeof dialog.open> | undefined;
-      void Promise.resolve(closed).then(() => store.set({ deleteOpen: false }));
+      void Promise.resolve(closed).then(() => {
+        if (open === opens) store.set({ deleteOpen: false });
+      });
     };
 
     const pin = (id: string, pinned: boolean | undefined, event?: Event) => {

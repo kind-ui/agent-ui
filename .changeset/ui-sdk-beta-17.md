@@ -12,6 +12,6 @@ UI SDK's agent tools are much faster: an agent sends a whole task in one `act` c
 
 Agent snapshots are also leaner and safer:
 
-- Attachments and Uploader list their files to agents by name. Before, any step that named a component by its label failed on a page that rendered either one.
+- Attachments and Uploader let an agent name a file by its name or id, and refuse any other. Before, any step that named a component by its label failed on a page that rendered either one.
 - Sidebar no longer copies the whole panel's text into its snapshot entry. Its panel part's `data-slot` is now `kind-sidebar-heading`.
 - Checkpoint's dialog **Restore** and Thread List's dialog **Delete** carry `data-agent-confirm` only while their dialog is open. In Web Components, a closed mark would otherwise ask the person before every step on the component.

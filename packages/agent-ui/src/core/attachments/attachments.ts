@@ -315,7 +315,9 @@ export const attachmentsPrimitive: AttachmentsPrimitive = definePrimitive({
   }),
   agent: {
     actions: ["remove"],
-    // Items by name, so an agent can name a file, and the bridge never reads the host's items as its own.
+    // `act` resolves a file's name or id against these, and refuses any other (`closed`). Without them the bridge
+    // read the host's items as `{ value, label }` and threw on every step that named a component by its label.
+    closed: true,
     items: (api: AttachmentsApi) => api.getItems().map(({ id, name }) => ({ value: id, label: name })),
   },
 });

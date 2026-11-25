@@ -26,6 +26,8 @@ Last reviewed: `6c371d1a` (Task Vue-8)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **No spec covers a scroll area hydrated under the pointer** (the case the removed `KindScrollAreaViewport` workaround fixed, UI SDK 0.1.0-beta.17). Checked by hand: hold the client script back with `page.route`, hover the server markup, then load. A Vue test of that would catch a regression on a later upgrade.
+
 - **`internal.spec.ts`'s composition test ("a Kind part rendered as a toolbar button gets one class list") skips every layer but React:** the spec is shared, so Vue's run waits for a shared change; `parity.spec.ts` on `?c=internal&case=toolbar-menu` compares the trigger's sorted class list with React's and passes.
 - **A template `ref` on a part inside a `#render` slot stays `null` (Task Vue-1):** the slot's `props` carry the part's own `ref`, and `v-bind="props"` replaces the caller's, for bare UI SDK parts as for Kind ones. UI SDK's; report upstream.
 - **Slot `state` is a proxy with no keys (Task Vue-2):** it answers reads, but a spread, `v-bind` and `in` see nothing (still so in `0.1.0-beta.17`: its `Proxy` has only a `get` trap). UI SDK's; report upstream.
