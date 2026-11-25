@@ -10,7 +10,7 @@ import type { AttributeProperties, UiChangeEvent, UiElement, UiPartElement } fro
 
 const SVG = "http://www.w3.org/2000/svg";
 const DEFAULT_PARTS = `<kind-flow-graph-pane><kind-flow-graph-world><kind-flow-graph-edges><svg></svg></kind-flow-graph-edges><kind-flow-graph-nodes></kind-flow-graph-nodes></kind-flow-graph-world></kind-flow-graph-pane><kind-flow-graph-controls><kind-flow-graph-zoom-in><button></button></kind-flow-graph-zoom-in><kind-flow-graph-zoom-out><button></button></kind-flow-graph-zoom-out><kind-flow-graph-fit><button></button></kind-flow-graph-fit></kind-flow-graph-controls>`;
-const NODE_PARTS = `<button><kind-flow-graph-node-status></kind-flow-graph-node-status><kind-flow-graph-node-label></kind-flow-graph-node-label><kind-flow-graph-node-detail></kind-flow-graph-node-detail><kind-flow-graph-node-description></kind-flow-graph-node-description></button>`;
+const NODE_PARTS = `<button><kind-flow-graph-node-status></kind-flow-graph-node-status><kind-flow-graph-node-label></kind-flow-graph-node-label> <kind-flow-graph-node-detail></kind-flow-graph-node-detail><kind-flow-graph-node-description></kind-flow-graph-node-description></button>`;
 
 // Parts this element wrote into, and nodes it added. A part someone wrote into keeps it, and a node someone wrote
 // stays, as React's children do. Kept across instances, because UI SDK rebuilds one when the element returns to

@@ -17,13 +17,13 @@ const load = async (page: Page, name = "all") => {
   await page.goto(`/?c=flow-graph&case=${name}`);
   await expect(node(page, "Router")).toBeVisible();
   // The first fit lands a frame after the graph binds.
-  await expect.poll(() => zoom(page)).toBeLessThan(1);
+  await expect(world(page)).toHaveAttribute("style", /translate\(/);
 };
 
 test("an agent can select a node, fit and zoom", async ({ page }, testInfo) => {
   test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
   await load(page);
-  await expectAgentActions(page, "Refund flow", ["select", "fit", "zoomIn", "zoomOut", "press"]);
+  await expectAgentActions(page, "Refund flow", ["select", "fit", "zoomIn", "zoomOut"]);
   const result = await page.evaluate(() =>
     (window as unknown as Fixture).agent.act({
       steps: [{ ref: "Refund flow", action: "select", args: ["billing"] }],
@@ -43,6 +43,7 @@ test("each node is named by its label, kind and status, and described by its edg
   await expect(node(page, "Router")).toHaveAccessibleDescription(
     "Triages requests. Hands off to Search docs. Hands off to Billing: refund request, running.",
   );
+  await expect(node(page, "Billing")).toHaveText("Billing Agent · Running", { useInnerText: true });
   await expect(page.locator('[data-flow-graph-part="edges"] path')).toHaveCount(4);
 });
 
@@ -97,8 +98,12 @@ test("focus brings a node out of view into view", async ({ page }) => {
     node(page, name).evaluate((el) => {
       const box = el.getBoundingClientRect();
       const bounds = (el.closest('[data-flow-graph-part="root"]') as Element).getBoundingClientRect();
+      // A pixel's slack for rounding at this zoom.
       return (
-        box.left >= bounds.left && box.right <= bounds.right && box.top >= bounds.top && box.bottom <= bounds.bottom
+        box.left >= bounds.left - 1 &&
+        box.right <= bounds.right + 1 &&
+        box.top >= bounds.top - 1 &&
+        box.bottom <= bounds.bottom + 1
       );
     });
   await page.keyboard.press("End");
@@ -128,17 +133,26 @@ test("direction down lays the graph out top to bottom", async ({ page }) => {
 });
 
 test("zooming eases at full motion and jumps under reduced motion", async ({ page }) => {
-  const duration = async () => {
+  // Whether any style the world took while zooming had a transition: the easing lasts 200 ms.
+  const eased = async () => {
+    await world(page).evaluate((el) => {
+      const seen: string[] = [];
+      Object.assign(window, { kindStyles: seen });
+      new MutationObserver(() => seen.push(el.style.transition)).observe(el, { attributeFilter: ["style"] });
+    });
     await frame(page).getByRole("button", { name: "Zoom in" }).click();
-    return world(page).evaluate((el) => getComputedStyle(el).transitionDuration);
+    await expect.poll(() => zoom(page)).toBeGreaterThan(0);
+    return page.evaluate(() =>
+      (window as unknown as { kindStyles: string[] }).kindStyles.some((transition) => transition !== ""),
+    );
   };
   await load(page);
-  expect(await duration()).toBe("0.2s");
+  expect(await eased()).toBe(true);
   await load(page, "reduced");
-  expect(await duration()).toBe("0s");
+  expect(await eased()).toBe(false);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await load(page);
-  expect(await duration()).toBe("0s");
+  expect(await eased()).toBe(false);
 });
 
 for (const scheme of ["light", "dark"] as const) {

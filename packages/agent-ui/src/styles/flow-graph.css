@@ -32,17 +32,6 @@
     display: block;
   }
 
-  /* Fit, zoom buttons and focus ease to their place; a drag, a wheel or a pinch follows the pointer at once. */
-  [data-flow-graph-part="world"]:where([data-easing][data-motion="auto"]) {
-    transition: transform var(--kind-duration-base) var(--kind-ease-out);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    [data-flow-graph-part="world"]:where([data-easing][data-motion="auto"]) {
-      transition: none;
-    }
-  }
-
   [data-flow-graph-part="edges"] {
     position: absolute;
     inset: 0;

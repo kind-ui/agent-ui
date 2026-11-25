@@ -67,7 +67,7 @@ export function FlowGraphNodes({
 
 export type FlowGraphNodeProps = ComponentProps<typeof parts.Node>;
 
-/** The node whose `id` is `value`. Without children, it shows its status mark, label and detail. */
+/** The node whose `id` is `value`. Without children, it shows its status mark, label, kind and status. */
 export function FlowGraphNode({ children, ...props }: FlowGraphNodeProps) {
   return <parts.Node {...props}>{children !== undefined ? children : DEFAULT_NODE_PARTS}</parts.Node>;
 }
@@ -83,7 +83,7 @@ export function FlowGraphNodeLabel({ children = ({ label }) => label, ...props }
 
 export type FlowGraphNodeDetailProps = ComponentProps<typeof parts.NodeDetail>;
 
-/** The node's `description`, else its kind, unless you pass children. */
+/** The node's kind and status, like "Agent · Running", unless you pass children. */
 export function FlowGraphNodeDetail({
   children = ({ detail }) => detail,
   ...props
@@ -116,8 +116,7 @@ export const FlowGraphFit = parts.Fit;
 const DEFAULT_NODE_PARTS = (
   <>
     <FlowGraphNodeStatus />
-    <FlowGraphNodeLabel />
-    <FlowGraphNodeDetail />
+    <FlowGraphNodeLabel /> <FlowGraphNodeDetail />
     <FlowGraphNodeDescription />
   </>
 );

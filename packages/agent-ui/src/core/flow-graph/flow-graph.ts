@@ -62,7 +62,7 @@ export type FlowNodeEntry = {
   statusText: string;
   /** "<label>, <kind>, <status>". */
   name: string;
-  /** The line under the label: the node's `description`, else its kind. */
+  /** The line under the label: the kind and status, like "Agent · Running". */
   detail: string;
   /** The node's `description` and its edges in words, like "Hands off to Billing." */
   description: string;
@@ -193,7 +193,7 @@ const entryOf = (node: FlowNode, edgeText: string): FlowNodeEntry => {
     status,
     statusText,
     name: [node.label, kind, statusText].filter(Boolean).join(", "),
-    detail: node.description || kind,
+    detail: [kind, statusText].filter(Boolean).join(" · "),
     description: [node.description ? `${node.description}.` : "", edgeText].filter(Boolean).join(" "),
   };
 };
@@ -457,9 +457,11 @@ export const flowGraphPrimitive: FlowGraphPrimitive = definePrimitive<
           "pointer-events": "auto",
         }),
       }),
+      // Fit, the zoom buttons and keys, and focus ease to their place; a drag, a wheel or a pinch follows at once.
       live: live((state, { api }) => ({
-        style: api.viewport.style(state),
-        "data-easing": state.easing ? "" : undefined,
+        style: state.easing
+          ? `${api.viewport.style(state)};transition:transform var(--kind-duration-base) var(--kind-ease-out)`
+          : api.viewport.style(state),
       })),
     }),
     edges: slot<BaseSlotProps, { paths: FlowEdgeEntry[] }>({
@@ -530,15 +532,6 @@ export const flowGraphPrimitive: FlowGraphPrimitive = definePrimitive<
         keydown: (event, { el, api }) => {
           if (el) api.roving.keydown(event as KeyboardEvent, el);
         },
-        focus: (event, { api, key, store }) => {
-          const box = store.get().layout.nodes[key];
-          if (!box) return;
-          api.viewport.reveal(
-            { left: box.left, top: box.top, right: box.left + box.width, bottom: box.top + box.height },
-            { padding: 16 },
-            { reason: "focus-in", event },
-          );
-        },
       },
       bind: (el, part) => {
         const unbindFocus = part.api.roving.bind(el, part);
@@ -568,7 +561,6 @@ export const flowGraphPrimitive: FlowGraphPrimitive = definePrimitive<
     "node-detail": slot<NodePartProps & BaseSlotProps, { detail: string }>({
       props: fromNode,
       selects: own,
-      present: (state, { key }) => entryAt(state, key).detail !== "",
       state: (state, { key }) => ({ detail: entryAt(state, key).detail }),
       attrs: () => ({ "data-flow-graph-part": "node-detail" }),
     }),
