@@ -294,6 +294,24 @@ const cases = {
 
   // wave-7-task-10: Trace
 
+  trace: {
+    options: {
+      spans: [
+        {
+          id: "run",
+          name: "Run",
+          kind: "agent",
+          start: 0,
+          end: 900,
+          children: [{ id: "call", name: "search", kind: "tool", start: 120, end: 460 }],
+        },
+      ],
+      defaultExpanded: ["run"],
+      defaultValue: "call",
+    },
+    keys: { name: ["run", "call"], status: ["run", "call"], duration: ["run", "call"], bar: ["run", "call"] },
+  },
+
   // wave-7-task-11: Run Timeline
 
   // wave-7-task-12: Job Progress
