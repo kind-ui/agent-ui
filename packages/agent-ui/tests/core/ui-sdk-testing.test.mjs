@@ -109,12 +109,15 @@ const cases = {
   markdownView: { options: { source: "# Title\n\nSome **text**.\n\n| a | b |\n| - | - |\n| 1 | 2 |\n" } },
   message: {
     options: {
-      messageRole: "assistant",
+      messageRole: "user",
       status: "complete",
       text: "Hi",
       branchIndex: 0,
       branchCount: 2,
       onRegenerate: noop,
+      delivery: "queued",
+      onWithdraw: noop,
+      retry: { attempt: 2, maxAttempts: 5, retryAt: "2026-11-17T09:00:04Z", reason: "Rate limited" },
     },
   },
   modelControl: { options: { label: "Model", models, model: "m1", levels, settings } },

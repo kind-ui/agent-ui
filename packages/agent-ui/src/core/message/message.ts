@@ -14,11 +14,12 @@ import {
 } from "@ui-sdk/core";
 import type { MenuData } from "@ui-sdk/core/menu";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
-import type { MessageAuthor, MessageStatus, RegenerateOption, Role } from "../../types/index.js";
+import type { MessageAuthor, MessageStatus, RegenerateOption, RetryState, Role } from "../../types/index.js";
 import { actionSource } from "../action-source.js";
 import { avatarInitials } from "../avatar.js";
 import { createCopy } from "../clipboard.js";
 import { hearComposed } from "../composed-events.js";
+import type { Countdown } from "../countdown.js";
 import { memo } from "../memo.js";
 import {
   type MenuBaseApi,
@@ -30,6 +31,7 @@ import {
 } from "../menu-base.js";
 import { enter, type MotionMode } from "../motion/index.js";
 import { createPendingAction } from "../pending.js";
+import { retryPart } from "../retry.js";
 import { nearestTabStop } from "../tab-stop.js";
 import { durationLabel, timeLabel, todayKey } from "../time.js";
 import { everyMinute } from "../today.js";
@@ -57,6 +59,16 @@ export type MessageOutcome = "stopped" | "failed";
 /** What Retry and Continue pass their callbacks. */
 export type MessageOutcomeDetails = {
   reason: "retry-press" | "continue-press" | "imperative";
+  /** Who pressed it, like `"mouse"`, `"keyboard"` or `"agent"`. */
+  source: ChangeSource;
+};
+
+/** How a user message sent while a turn ran was delivered: steered into that turn, or queued for the next. */
+export type MessageDelivery = "steered" | "queued";
+
+/** What Withdraw passes `onWithdraw`. */
+export type MessageWithdrawDetails = {
+  reason: "withdraw-press" | "imperative";
   /** Who pressed it, like `"mouse"`, `"keyboard"` or `"agent"`. */
   source: ChangeSource;
 };
@@ -154,6 +166,21 @@ export type MessageOptions = {
    */
   onContinue?: (details: MessageOutcomeDetails) => unknown;
   /**
+   * How a user message sent while a turn ran was delivered. Its header says "Steered" or "Queued", which also
+   * describes the message.
+   */
+  delivery?: MessageDelivery;
+  /**
+   * Called to take back a queued message before it's sent. Shows Withdraw while set and `delivery` is `"queued"`.
+   * Withdraw stays unavailable until `delivery` changes; a rejected promise makes it available again.
+   */
+  onWithdraw?: (details: MessageWithdrawDetails) => unknown;
+  /**
+   * The turn is retrying: "Retrying, attempt 2 of 5, in 4 sec" shows after the content, counting down to `retryAt`.
+   * The status stays `submitted` or `streaming`. Each new attempt is announced once.
+   */
+  retry?: RetryState;
+  /**
    * `"auto"` follows `prefers-reduced-motion`.
    * @default "auto"
    */
@@ -197,6 +224,16 @@ export type MessageState = MenuBaseState & {
   canContinue: boolean;
   /** Whether a promise `onRetry` or `onContinue` returned is still pending. */
   outcomePending: boolean;
+  /** The `delivery` option, on a user message. */
+  delivery: MessageDelivery | undefined;
+  /** Whether `onWithdraw` is set. Withdraw shows while this is true and `delivery` is `"queued"`. */
+  canWithdraw: boolean;
+  /** Whether a withdraw is pending, or done and waiting for `delivery` to change. */
+  withdrawPending: boolean;
+  /** The `retry` option. */
+  retry: RetryState | undefined;
+  /** Whole seconds until `retry.retryAt`, once the root binds; `null` while nothing counts. Live. */
+  retrySeconds: number | null;
   /** `"message"` while the text is being edited, else `null`. */
   editing: string | null;
   copied: boolean;
@@ -219,6 +256,12 @@ export type MessageApi = {
   readonly retry: ((event?: Event) => void) | undefined;
   /** Calls `onContinue`. Offered while it's set, the message stopped and nothing is pending. */
   readonly continue: ((event?: Event) => void) | undefined;
+  /** Calls `onWithdraw`. Offered while it's set, the message is queued and nothing is pending. */
+  readonly withdraw: ((event?: Event) => void) | undefined;
+  /** Counts down to `retry.retryAt`. Bound by the root. */
+  retryCountdown: Countdown;
+  /** Moves focus to the composer, else past the message, when Withdraw leaves while focused. */
+  withdrawRecovery: ReturnType<typeof createFocusRecovery>;
   /**
    * Plays the toolbar's or the outcome's entrance when the message settles while mounted, not when it mounts
    * settled.
@@ -304,7 +347,10 @@ export type MessagePrimitive = ReturnType<
       | "outcome"
       | "outcome-icon"
       | "retry"
-      | "continue",
+      | "continue"
+      | "delivery"
+      | "delivery-icon"
+      | "withdraw",
       MessageSlot
     > & {
       avatar: MessageSlot<MessageAvatarState>;
@@ -312,6 +358,8 @@ export type MessagePrimitive = ReturnType<
       time: MessageSlot<MessageTimeState>;
       duration: MessageSlot<{ label: string }>;
       "outcome-text": MessageSlot<{ text: string }>;
+      "delivery-text": MessageSlot<{ text: string }>;
+      retrying: MessageSlot<{ text: string }>;
       "branch-label": MessageSlot<{ label: string }>;
       regenerate: MessageSlot<MessageRegenerateState>;
       "regenerate-content": MessageSlot<MessageRegenerateContentState>;
@@ -334,7 +382,15 @@ export const messageOutcomeText = (state: Pick<MessageState, "outcome" | "errorT
   state.outcome === "stopped" ? "Stopped" : state.outcome === "failed" ? state.errorText : "";
 const NO_AVATAR: MessageAvatarState = { name: "", initials: "", src: undefined };
 
+const DELIVERY_TEXT: Record<MessageDelivery, string> = { steered: "Steered", queued: "Queued" };
+
+const retrying = retryPart<MessageOptions, "retrySeconds">({
+  retry: (options) => options.retry,
+  countdownKey: "retrySeconds",
+});
+
 const hasHeader = (state: MessageState) =>
+  state.delivery !== undefined ||
   (state.author !== undefined && !state.continued) ||
   (state.createdAt !== undefined && timeLabel(state.createdAt) !== "") ||
   durationLabel(state.durationSeconds) !== "";
@@ -434,6 +490,12 @@ const presentation = (options: MessageOptions) => {
     canRegenerate: options.onRegenerate !== undefined,
     regenerateOptions: options.regenerateOptions ?? NO_OPTIONS,
     canEdit: role === "user" && options.onEdit !== undefined,
+    // A web `delivery` attribute can hold any string.
+    delivery:
+      role === "user" && (options.delivery === "steered" || options.delivery === "queued")
+        ? options.delivery
+        : undefined,
+    canWithdraw: options.onWithdraw !== undefined,
     motion: options.motion ?? "auto",
   };
 };
@@ -462,18 +524,24 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     error: "string",
     onRetry: "action",
     onContinue: "action",
+    delivery: "string",
+    onWithdraw: "action",
+    retry: "value",
     motion: "string",
   },
   state: (options: MessageOptions): MessageState => ({
     ...menu.state(options),
     ...presentation(options),
+    ...retrying.state(options),
     now: options.now || undefined,
     outcomePending: false,
+    withdrawPending: false,
     editing: null,
     copied: false,
   }),
-  sync: (options) => ({ ...menu.sync(options), ...presentation(options) }),
-  controlled: ["branchIndex", "branchCount", "status", "outcome"],
+  sync: (options) => ({ ...menu.sync(options), ...presentation(options), ...retrying.sync(options) }),
+  live: retrying.live,
+  controlled: ["branchIndex", "branchCount", "status", "outcome", "delivery"],
   api: (context): MessageApi => {
     const { store } = context;
     const regenerateMenu = menu.api(context);
@@ -493,6 +561,24 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     const today = (options: MessageOptions) =>
       options.now || (clock ? todayKey(options.timeZone || undefined) : undefined);
     const pendingOutcome = createPendingAction(context, { state: "outcomePending" });
+    const pendingWithdraw = createPendingAction(context, { state: "withdrawPending" });
+    const retryCountdown = retrying.onOptions(context);
+    let delivery = store.get().delivery;
+    context.onOptions(() => {
+      if (store.get().delivery === delivery) return;
+      delivery = store.get().delivery;
+      // A new delivery answers a withdraw.
+      pendingWithdraw.release();
+    });
+    const withdraw = (event?: Event) => {
+      const { onWithdraw } = context.options();
+      if (!onWithdraw) return;
+      const reason = event ? "withdraw-press" : "imperative";
+      void pendingWithdraw
+        .run(() => onWithdraw({ reason, source: actionSource(event, reason) }))
+        // A withdraw that went through stays locked until the host changes `delivery`.
+        ?.then((result) => result === "done" && store.set({ withdrawPending: true }));
+    };
     let status = store.get().status;
     context.onOptions((options) => {
       const next = options.status ?? "complete";
@@ -594,6 +680,21 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
           ? (event?: Event) => runOutcome("onContinue", "continue-press", event)
           : undefined;
       },
+      get withdraw() {
+        const { canWithdraw, delivery, withdrawPending } = store.get();
+        return canWithdraw && delivery === "queued" && !withdrawPending ? withdraw : undefined;
+      },
+      retryCountdown,
+      withdrawRecovery: createFocusRecovery({
+        fallback: () => {
+          const root = context.element("root");
+          if (!root?.isConnected) return undefined;
+          const composer = root.ownerDocument.querySelector<HTMLElement>(
+            '[data-slot="kind-composer"] [data-slot="token-input-editor"]',
+          );
+          return composer ?? nearestTabStop(root);
+        },
+      }),
       readClock: () => {
         clock = true;
         const read = () => {
@@ -646,13 +747,15 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
   slots: (slot) => ({
     root: slot({
       role: "article",
-      attrs: (state) => ({
+      attrs: (state, part) => ({
         "data-role": state.role,
         "data-status": state.status,
         "data-editing": state.editing === null ? undefined : "",
         "data-continued": state.continued ? "" : undefined,
         "aria-busy": state.outcomePending ? "true" : undefined,
+        "aria-describedby": state.delivery ? `${part.id}-delivery` : undefined,
       }),
+      bind: (_el, { api }) => api.retryCountdown.bind(),
     }),
     avatar: slot<BaseSlotProps, MessageAvatarState>({
       state: (state, { api }) => api.avatarState(state),
@@ -677,6 +780,39 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       state: (state, { api }) => api.timeState(state),
       attrs: (state) => ({ dateTime: state.createdAt }),
       bind: (_el, { api }) => api.readClock(),
+    }),
+    // "Steered" or "Queued", with Withdraw while queued.
+    delivery: slot({
+      present: (state) => state.delivery !== undefined,
+      attrs: (state) => ({ "data-delivery": state.delivery }),
+    }),
+    "delivery-icon": slot({
+      // Queued waits like a pending step; Steered is a turn arrow `message.css` draws.
+      attrs: (state) => ({
+        "aria-hidden": "true",
+        "data-delivery": state.delivery,
+        "data-status-mark": state.delivery === "queued" ? "" : undefined,
+        "data-status": state.delivery === "queued" ? "pending" : undefined,
+        "data-motion": state.motion,
+      }),
+    }),
+    "delivery-text": slot<BaseSlotProps, { text: string }>({
+      state: (state) => ({ text: state.delivery ? DELIVERY_TEXT[state.delivery] : "" }),
+      attrs: (_state, part) => ({ id: `${part.id}-delivery` }),
+    }),
+    withdraw: slot({
+      role: "button",
+      focus: "native",
+      present: (state) => state.canWithdraw && state.delivery === "queued",
+      press: ({ api }, event) => api.withdraw?.(event),
+      attrs: (state) => ({
+        type: "button",
+        "aria-disabled": state.withdrawPending ? "true" : undefined,
+        "data-pending": state.withdrawPending ? "" : undefined,
+        "data-kind-button": "",
+        "data-kind-size": "sm",
+      }),
+      bind: (el, part) => part.api.withdrawRecovery.bind(el, part),
     }),
     duration: slot<BaseSlotProps, { label: string }>({
       present: (state) => durationLabel(state.durationSeconds) !== "",
@@ -743,6 +879,11 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     }),
     "outcome-text": slot<BaseSlotProps, { text: string }>({
       state: (state) => ({ text: messageOutcomeText(state) }),
+    }),
+    // Where the outcome goes, so the text above stays put; an outcome takes its place.
+    retrying: slot<BaseSlotProps, { text: string }>({
+      ...retrying.slot<MessageState, MessageApi>((state) => state.locale),
+      present: (state) => state.retry !== undefined && state.outcome === null,
     }),
     retry: slot({
       role: "button",
@@ -854,7 +995,7 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     }),
   }),
   agent: {
-    actions: ["copy", "regenerate", "edit", "setBranch", "retry", "continue"],
+    actions: ["copy", "regenerate", "edit", "setBranch", "retry", "continue", "withdraw"],
     items: (api) =>
       menuItems(api.regenerateMenu.getItems()).filter((item) => item.value !== MESSAGE_TRY_AGAIN),
     closed: true,
