@@ -1,0 +1,76 @@
+---
+title: Quota Notice
+description: Warn that a usage limit is near or reached, show how much is left and when it resets.
+---
+
+import QuotaNoticeExample from "../../../examples/quota-notice/basic";
+
+Use a quota notice in the page when a plan's limit on requests, tokens or runs is close or used up. It's a [notice](./notice.mdx) whose title, bar and variant follow `used` and `limit`, with when the quota resets and an **Upgrade** button.
+
+<Example caption="Press Send 100 requests to use more of the quota. At 80% the notice already warns, and at the limit it turns to an error. Press Dismiss to remove it.">
+  <QuotaNoticeExample />
+
+  <ExampleCode example="quota-notice/basic" />
+</Example>
+
+## Installation
+
+<Install name="quota-notice" />
+
+## Composition
+
+```text
+QuotaNotice
+├── QuotaNoticeIcon
+├── QuotaNoticeTitle
+├── QuotaNoticeMeter
+├── QuotaNoticeReset
+├── QuotaNoticeDescription
+├── QuotaNoticeActions
+│   └── QuotaNoticeUpgrade
+└── QuotaNoticeDismiss
+```
+
+`QuotaNotice` renders these parts. `QuotaNoticeTitle` shows the `label`, else "You've used 80% of this month's requests". `QuotaNoticeMeter` is UI SDK's Meter, a bar with the amounts beside it ("800 of 1,000 requests"). `QuotaNoticeReset` says when the quota resets, rendered only with a `resetAt`. `QuotaNoticeDescription` holds any `children`, and `QuotaNoticeActions` holds **Upgrade**, then your `actions`. The icon and Dismiss work as in Notice. To arrange the parts yourself, render them inside `QuotaNoticeRoot`.
+
+## Usage
+
+### Used and Limit
+
+Pass `used` and `limit` in the same unit, and `unit` to name it (default "requests"). Pass `period`, like "this month", for the title to read "this month's requests"; without it, it reads "your requests". At the limit the title reads "You've used all of…".
+
+```tsx
+<QuotaNotice used={800} limit={1000} period="this month" />
+```
+
+### Variant
+
+The variant follows the quota: `"info"` below `warnAt` (default 0.8), `"warning"` from it, and `"error"` at the limit. Pass `variant` to choose it yourself. The bar takes the variant's color, and the mark is named by it, so the level doesn't depend on color alone.
+
+### Reset Time
+
+Pass `resetAt`, an ISO date-time, to show "Resets in 3 days". Under a day it counts down in hours, minutes and seconds. The countdown follows the clock once the notice is in the page; server markup shows the date instead ("Resets on December 1, 2026"), so it hydrates without a mismatch. Pass `now` to count from a fixed moment rather than the clock, as the example does.
+
+### Upgrade and Dismiss
+
+Pass `onUpgrade` to show **Upgrade**, and `upgradeLabel` to change its words. It gets `{ reason, source }`, which says whether a person pressed it (`"mouse"`, `"keyboard"`) or an agent asked (`"agent"`). **Dismiss** and `focusFallback` work as in [Notice](./notice.mdx).
+
+### Announcements
+
+The notice announces its title when the variant changes, so a screen reader hears "You've used 80% of this month's requests" once when it starts to warn and once more at the limit. A new `used` within a variant changes the title and the bar without a word, and the reset countdown is never announced. A notice added after the page loads announces its title once, as Notice does.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/quota-notice/quota-notice.ts" name="QuotaNoticeOptions" />
+
+<FrameworkNames name="quota-notice" />
+
+### Agent
+
+An agent connected with `createAgent` finds the notice by its title. `upgrade()` does what **Upgrade** does, offered while `onUpgrade` is set, and `dismiss()` does what **Dismiss** does, offered while `onDismiss` is set. The bar isn't an entry of its own. Like any component with a button, it also has UI SDK's generic `press`.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/quota-notice/quota-notice.ts" name="QuotaNoticeAgentActions" type='Pick<QuotaNoticeApi, "upgrade" | "dismiss">' />
+
+<Caption>
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-quota-notice>`, props are kebab-case attributes (`reset-at`, `warn-at`, `upgrade-label`), and `focusFallback` is a property. The element fills in its parts and puts Upgrade first in any `<kind-quota-notice-actions>` you write inside it. The `can-upgrade` attribute shows Upgrade, which fires `upgrade`; `can-dismiss` shows Dismiss, which fires `dismiss` once the notice has faded.
+</Caption>

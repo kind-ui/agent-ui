@@ -394,6 +394,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- wave-7-task-16: Quota Notice -->
 
+- **Quota Notice (Wave 7 Task 16):** `quotaNoticePrimitive` spreads `noticeBase` unchanged: the base reads the variant from the options, so the primitive hands it options whose prototype is the host's with the quota's `variant` (`error` at the limit, `warning` from `warnAt`, else `info`), as `withHover` does for Context Meter, and so announces on a variant change and never on `used` alone; the title is the base's `label` config. The bar is the bare UI SDK Meter (`MeterTrack` > `MeterIndicator`, then `MeterValue`) with `data-agent-hidden`, handed `format` and `getValueLabel` functions so the visible amounts ("800 of 1,000 requests") and the value text ("…, 80%") come from Meter. The reset countdown is `createCountdown` bound in the root's `bind` (live `seconds`, only the `reset` part reads it); a `now` option replaces the clock, and without either the server shows "Resets on <date>". `onUpgrade(details)` is a `"callback"` called with `{ reason, source }` through `actionSource`, as Connection Status's `onRetry`, and the root's `bind` calls `sourceOf()` so the first keyboard press reads as one, as Dictation's does. The web element puts Upgrade first in the host's `kind-quota-notice-actions` (or one it adds) and keeps its element while not offered, so `quota-notice.css` hides an actions part without `data-can-upgrade` that holds only it.
+
 <!-- wave-7-task-17: Activity Graph -->
 
 <!-- wave-7-task-18: Thread List inbox -->

@@ -246,6 +246,8 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
 
   // wave-7-task-16: Quota Notice
 
+  { url: "/?c=quota-notice&case=all", slots: ["kind-quota-notice-icon"] },
+
   // wave-7-task-17: Activity Graph
 
   // wave-7-task-18: Thread List inbox

@@ -100,7 +100,9 @@ test("Upgrade and Dismiss work from the keyboard", async ({ page }) => {
 });
 
 test("the reset countdown follows the clock and is never announced", async ({ page }) => {
+  // Paused, so the page's load time doesn't count down.
   await page.clock.install({ time: new Date("2026-12-01T00:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-12-01T00:00:00.100Z"));
   await open(page, "clock");
   const quota = notice(page, HALF);
   await expect(quota).toContainText("Resets in 5 sec");

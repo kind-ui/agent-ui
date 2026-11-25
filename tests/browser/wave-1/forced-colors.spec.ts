@@ -82,6 +82,8 @@ const pages = [
 
   // wave-7-task-16: Quota Notice
 
+  "quota-notice&case=all",
+
   // wave-7-task-17: Activity Graph
 
   // wave-7-task-18: Thread List inbox

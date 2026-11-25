@@ -11,12 +11,14 @@
 
     & [data-slot="meter"] {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 10px;
+      gap: 4px 10px;
     }
 
+    /* The amounts drop under the bar where it would be shorter than 8rem beside them. */
     & [data-slot="meter-track"] {
-      flex: 1;
+      flex: 1 1 8rem;
       height: 6px;
       overflow: hidden;
       border-radius: var(--kind-radius-full);

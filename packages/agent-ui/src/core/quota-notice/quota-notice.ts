@@ -323,7 +323,7 @@ export const quotaNoticePrimitive: QuotaNoticePrimitive = definePrimitive<
         attrs: () => ({
           type: "button",
           "data-notice-part": "upgrade",
-          "data-kind-button": "",
+          "data-kind-button": "secondary",
           "data-kind-size": "sm",
         }),
       }),
