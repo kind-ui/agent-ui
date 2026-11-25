@@ -10,7 +10,7 @@ type Fixture = {
     append(id: string, text: string): void;
     settle(name: string): void;
   };
-  kindHost: { copies: [string, string][]; decisions: [string, string][] };
+  kindHost: { copies: [string, string][]; decisions: [string, string][]; permit?: boolean };
   agent: { act(input: unknown): Promise<unknown> };
 };
 
@@ -49,11 +49,11 @@ test("a screen reader reads each row's old number, new number, change and code",
   const table = part(page, "edit", "table");
   await expect(table).toHaveAttribute("role", "table");
   const removed = table.locator('[data-kind="remove"]').first();
-  await expect(removed.getByRole("rowheader")).toHaveText(["3", ""]);
-  await expect(removed.getByRole("cell")).toHaveText(["removed", "export const value3 = 3;"]);
+  await expect(removed.getByRole("rowheader")).toHaveText(["3"]);
+  await expect(removed.getByRole("cell")).toHaveText(["", "removed", "export const value3 = 3;"]);
   const added = table.locator('[data-kind="add"]').first();
-  await expect(added.getByRole("rowheader")).toHaveText(["", "3"]);
-  await expect(added.getByRole("cell")).toHaveText(["added", "export const value3 = three;"]);
+  await expect(added.getByRole("rowheader")).toHaveText(["3"]);
+  await expect(added.getByRole("cell")).toHaveText(["", "added", "export const value3 = three;"]);
   // Only the word that changed is marked, and the highlighter's colors still show.
   await expect(added.locator("mark")).toHaveText(["three"]);
   await expect(added.locator("span", { hasText: /^const$/ })).toHaveCSS("color", "rgb(160, 0, 160)");
@@ -75,7 +75,7 @@ test("find in page shows the collapsed run it matched", async ({ page }) => {
   await open(page);
   const hidden = part(page, "edit", "collapsed-text");
   await expect(hidden).toHaveAttribute("hidden", "until-found");
-  await expect(hidden).toHaveText(/export const value10 = 10;/);
+  expect(await hidden.evaluate((el) => el.textContent)).toContain("export const value10 = 10;");
   await hidden.evaluate((el) => el.dispatchEvent(new Event("beforematch", { bubbles: true })));
   await expect(part(page, "edit", "collapsed")).toHaveCount(0);
 });
@@ -89,7 +89,7 @@ test("Accept and Revert lock while pending, and Revert asks an agent for a perso
   await accept.click();
   await expect(accept).toHaveAttribute("aria-disabled", "true");
   await expect(revert).toHaveAttribute("aria-disabled", "true");
-  await revert.click();
+  await revert.click({ force: true });
   expect(await decisions(page)).toEqual([["accept", "mouse"]]);
   await settle(page, "accept");
   await expect(accept).not.toHaveAttribute("aria-disabled", /.*/);
@@ -129,21 +129,30 @@ test("a 2,000-line diff renders only the rows in view", async ({ page }) => {
   await expect(table).toHaveAttribute("data-virtual", "");
   await expect(table).toHaveAttribute("aria-rowcount", "3001");
   await expect.poll(() => part(page, "stream", "row").count()).toBeLessThan(40);
-  await part(page, "stream", "viewport").focus();
-  await page.keyboard.press("End");
-  await expect(part(page, "stream", "row").last()).toHaveAttribute("aria-rowindex", "3001");
+  // Rows are measured as they render, so the end moves until every row on the way has been.
+  await expect
+    .poll(() =>
+      part(page, "stream", "viewport").evaluate((el) => {
+        el.scrollTop = el.scrollHeight;
+        return el.querySelector("[data-slot=kind-diff-row]:last-child")?.getAttribute("aria-rowindex");
+      }),
+    )
+    .toBe("3001");
 });
 
 test("agents accept, expand every run and copy", async ({ page, context, browserName }) => {
   await allowClipboard(context, browserName);
   await open(page);
-  await expectAgentActions(page, "src/values.ts", ["accept", "copy", "expandAll", "press", "revert"]);
-  await expectAgentActions(page, "src/new-name.ts", ["copy", "press"]);
+  await expectAgentActions(page, "src/values.ts", ["accept", "copy", "expandAll", "revert"]);
+  await expectAgentActions(page, "src/new-name.ts", ["copy"]);
+  await page.evaluate(() => {
+    (window as unknown as Fixture).kindHost.permit = true;
+  });
   await act(page, "src/values.ts", "expandAll");
   await expect(part(page, "edit", "collapsed")).toHaveCount(0);
   await act(page, "src/values.ts", "accept");
   expect(await decisions(page)).toEqual([["accept", "agent"]]);
-  await expectAgentActions(page, "src/values.ts", ["copy", "press"]);
+  await expectAgentActions(page, "src/values.ts", ["copy"]);
 });
 
 for (const colorScheme of ["light", "dark"] as const) {

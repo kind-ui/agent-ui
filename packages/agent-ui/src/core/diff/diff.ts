@@ -559,13 +559,17 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
     "old-number": slot<CellProps, { text: string }>({
       props: { value: { kind: "string", from: "row" } },
       selects: rowSelects<CellProps>(byValue),
-      role: "rowheader",
+      // A row header only where there's a number, since an empty header names nothing.
+      role: (state, { props }) => (rowAt(state, props.value)?.oldLine === undefined ? "cell" : "rowheader"),
+      roles: ["rowheader", "cell"],
       state: (state, { props }) => ({ text: String(rowAt(state, props.value)?.oldLine ?? "") }),
     }),
     "new-number": slot<CellProps, { text: string }>({
       props: { value: { kind: "string", from: "row" } },
       selects: rowSelects<CellProps>(byValue),
-      role: "rowheader",
+      // A row header only where there's a number, since an empty header names nothing.
+      role: (state, { props }) => (rowAt(state, props.value)?.newLine === undefined ? "cell" : "rowheader"),
+      roles: ["rowheader", "cell"],
       state: (state, { props }) => ({ text: String(rowAt(state, props.value)?.newLine ?? "") }),
     }),
     // Shows a `+` or `−` (diff.css), and reads as the change in words.

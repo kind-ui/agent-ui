@@ -1,4 +1,5 @@
 import type { DiffOptions, Token } from "@kind-ui/agent-ui/core";
+import type { AgentAction } from "@ui-sdk/react/agent";
 import { useEffect, useState } from "react";
 import { Diff } from "../../../../src/react/diff.js";
 import { after, before, longPatch, renamePatch } from "../../shared/diff.js";
@@ -11,7 +12,7 @@ const waiting: Record<string, () => void> = {};
 const highlight = async (code: string): Promise<Token[]> =>
   code
     .split(/(const)/)
-    .map((content) => (content === "const" ? { content, color: "rgb(160, 0, 160)" } : { content }));
+    .map((content) => (content === "const" ? { content, color: "light-dark(rgb(160, 0, 160), rgb(230, 150, 230))" } : { content }));
 
 function Diffs({ rows: first }: { rows: Row[] }) {
   const [rows, setRows] = useState(first);
@@ -56,6 +57,9 @@ const all: Row[] = [
   { id: "edit", file: { path: "src/values.ts", language: "ts" }, before, after, highlight, host: true },
   { id: "rename", patch: renamePatch, keepClipboard: true },
 ];
+
+// Revert marks the diff, so an agent's step there needs a person, which a test grants through `kindHost.permit`.
+export const allow = (step: AgentAction) => !step.confirm || (window as { kindHost?: { permit?: boolean } }).kindHost?.permit === true;
 
 export const cases = {
   all: () => <Diffs rows={all} />,

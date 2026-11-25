@@ -1,4 +1,5 @@
 import type { DiffOptions, Token } from "@kind-ui/agent-ui/core";
+import type { AgentAction } from "@ui-sdk/web/agent";
 import { defineDiff } from "../../../../src/web/diff.js";
 import { after, before, longPatch, renamePatch } from "../../shared/diff.js";
 
@@ -7,7 +8,7 @@ type Row = DiffOptions & { id: string; keepClipboard?: boolean; host?: boolean }
 const highlight = async (code: string): Promise<Token[]> =>
   code
     .split(/(const)/)
-    .map((content) => (content === "const" ? { content, color: "rgb(160, 0, 160)" } : { content }));
+    .map((content) => (content === "const" ? { content, color: "light-dark(rgb(160, 0, 160), rgb(230, 150, 230))" } : { content }));
 
 const diffs = (rows: Row[]) => (root: HTMLElement) => {
   defineDiff();
@@ -55,6 +56,9 @@ const diffs = (rows: Row[]) => (root: HTMLElement) => {
     },
   });
 };
+
+// Revert marks the diff, so an agent's step there needs a person, which a test grants through `kindHost.permit`.
+export const allow = (step: AgentAction) => !step.confirm || (window as { kindHost?: { permit?: boolean } }).kindHost?.permit === true;
 
 export const cases = {
   all: diffs([
