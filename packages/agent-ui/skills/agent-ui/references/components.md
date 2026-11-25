@@ -78,7 +78,7 @@ All 57 components, grouped by the job they do. The item is the React name: add `
 | `typing-indicator` | Typing Indicator | The agent is about to reply and you show it typing. |
 | `streaming-text` | Streaming Text | You stream plain text, not Markdown, and want chunks to fade in. |
 | `connection-status` | Connection Status | The connection dropped and the chat counts down to a retry. |
-| `quota-notice` | Quota Notice | A usage limit is near or reached and you show how much is left, when it resets and how to upgrade. Not yet in Vue, Svelte, Solid. |
+| `quota-notice` | Quota Notice | A usage limit is near or reached and you show how much is left, when it resets and how to upgrade. |
 
 ## Thread and shell
 
