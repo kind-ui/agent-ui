@@ -1,5 +1,6 @@
 import type { AgentAction } from "@ui-sdk/react/agent";
-import type { ComposerSteerMode, QueueItem } from "@kind-ui/agent-ui/core";
+import type { QueueItem } from "@kind-ui/agent-ui";
+import type { ComposerSteerMode } from "@kind-ui/agent-ui/core";
 import { useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 import {

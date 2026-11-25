@@ -1,4 +1,5 @@
-import type { ComposerDraft, ComposerSteerDetails, QueueItem, QueueSendDetails } from "@kind-ui/agent-ui/core";
+import type { QueueItem } from "@kind-ui/agent-ui";
+import type { ComposerDraft, ComposerSteerDetails, QueueSendDetails } from "@kind-ui/agent-ui/core";
 import { expose } from "./expose.js";
 
 type Steer = { text: string; mode: string; source: string; resolve: () => void; reject: () => void };
