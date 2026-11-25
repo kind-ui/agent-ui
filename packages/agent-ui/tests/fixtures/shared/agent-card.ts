@@ -1,6 +1,4 @@
-import type { AgentCardOptions } from "@kind-ui/agent-ui/core";
-
-type AgentInfo = NonNullable<AgentCardOptions["agent"]>;
+import type { AgentInfo } from "@kind-ui/agent-ui";
 
 export const planner: AgentInfo = {
   id: "planner",

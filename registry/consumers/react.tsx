@@ -463,7 +463,9 @@ const items = {
 
   // wave-7-task-14: Agent Card
 
-  "agent-card": <AgentCard agent={{ id: "planner", name: "Planner", capabilities: ["Planning"] }} status="running" />,
+  "agent-card": (
+    <AgentCard agent={{ id: "planner", name: "Planner", capabilities: ["Planning"] }} status="running" />
+  ),
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
