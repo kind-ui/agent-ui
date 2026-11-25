@@ -21,8 +21,11 @@ FX_MOCK_URL=http://localhost:6002/v1 npm run dev
 
 ## Deploy on Vercel
 
+Live at https://fx-gui.vercel.app (Vercel project `fx-gui`).
+
+
 1. Import the repository and set **Root Directory** to `examples/fx-gui` (framework: Next.js, detected).
 2. No environment variables. Don't add `AI_GATEWAY_API_KEY`: the app never uses a server key.
 3. `vercel.json` serves `fx-core.wasm` as `application/wasm`.
 
-From the CLI: `cd examples/fx-gui && npx vercel link` (pick a project name, such as `fx-gui`), then `npx vercel deploy` for a preview.
+From the CLI: `cd examples/fx-gui && npx vercel link --project fx-gui`, then `npx vercel deploy --prod`.
