@@ -488,6 +488,15 @@ export const components = {
   // wave-7-task-18: Thread List inbox
 
   // wave-7-task-19: Flow Graph
+
+  "flow-graph": {
+    group: "ops",
+    when: "you show which agents, tools and people a run handed work between, as a graph to pan and zoom.",
+    title: "Flow Graph",
+    description:
+      "A read-only graph of agents, tools and people and the handoffs between them, which pans and zooms.",
+    uses: [],
+  },
 };
 
 const internals = [

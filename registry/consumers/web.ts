@@ -122,6 +122,8 @@ import { defineConversationSearch } from "./components/ui/web/conversation-searc
 
 // wave-7-task-19: Flow Graph
 
+import { defineFlowGraph } from "./components/ui/web/flow-graph.js";
+
 import "./index.css";
 
 for (const define of [
@@ -247,6 +249,8 @@ for (const define of [
   // wave-7-task-18: Thread List inbox
 
   // wave-7-task-19: Flow Graph
+
+  defineFlowGraph,
 ]) {
   define();
 }
@@ -401,6 +405,8 @@ const items = {
   // wave-7-task-18: Thread List inbox
 
   // wave-7-task-19: Flow Graph
+
+  "flow-graph": `<kind-flow-graph label="Handoffs"></kind-flow-graph>`,
 };
 
 const main = document.createElement("main");
@@ -447,6 +453,13 @@ Object.assign(main.querySelector("kind-chain-of-thought") as HTMLElement, {
 });
 Object.assign(main.querySelector("kind-task") as HTMLElement, {
   items: [{ id: "schema", status: "complete", title: "Read the schema", files: ["db/schema.sql"] }],
+});
+Object.assign(main.querySelector("kind-flow-graph") as HTMLElement, {
+  nodes: [
+    { id: "router", label: "Router", kind: "agent", status: "complete" },
+    { id: "billing", label: "Billing", kind: "agent", status: "running" },
+  ],
+  edges: [{ id: "e", from: "router", to: "billing" }],
 });
 Object.assign(main.querySelector("kind-sources") as HTMLElement, {
   sources: [{ id: "docs", title: "Rate limits", url: "https://docs.github.com/en/rest" }],

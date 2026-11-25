@@ -135,6 +135,8 @@ import { ConversationSearch } from "./components/ui/conversation-search.js";
 
 // wave-7-task-19: Flow Graph
 
+import { FlowGraph } from "./components/ui/flow-graph.js";
+
 import "./index.css";
 
 const items = {
@@ -470,6 +472,17 @@ const items = {
   // wave-7-task-18: Thread List inbox
 
   // wave-7-task-19: Flow Graph
+
+  "flow-graph": (
+    <FlowGraph
+      label="Handoffs"
+      nodes={[
+        { id: "router", label: "Router", kind: "agent", status: "complete" },
+        { id: "billing", label: "Billing", kind: "agent", status: "running" },
+      ]}
+      edges={[{ id: "e", from: "router", to: "billing" }]}
+    />
+  ),
 };
 
 createRoot(document.getElementById("root") as HTMLElement).render(
