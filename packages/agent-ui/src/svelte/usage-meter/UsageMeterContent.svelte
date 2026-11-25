@@ -1,12 +1,12 @@
 <!-- The details: the title, the amounts, the period and the breakdown, unless you pass children. Leaves focus on the trigger. -->
 <script lang="ts">
   import type { ComponentProps } from "svelte";
+  import { parts } from "./parts.js";
   import UsageMeterBreakdown from "./UsageMeterBreakdown.svelte";
   import UsageMeterBreakdownRows from "./UsageMeterBreakdownRows.svelte";
   import UsageMeterDescription from "./UsageMeterDescription.svelte";
   import UsageMeterPeriod from "./UsageMeterPeriod.svelte";
   import UsageMeterTitle from "./UsageMeterTitle.svelte";
-  import { parts } from "./parts.js";
 
   type Props = ComponentProps<typeof parts.Content>;
 

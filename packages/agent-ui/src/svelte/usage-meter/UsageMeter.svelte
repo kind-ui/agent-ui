@@ -4,9 +4,9 @@
 -->
 <script lang="ts">
   import type { ComponentProps } from "svelte";
+  import { parts } from "./parts.js";
   import UsageMeterContent from "./UsageMeterContent.svelte";
   import UsageMeterTrigger from "./UsageMeterTrigger.svelte";
-  import { parts } from "./parts.js";
 
   type RootProps = ComponentProps<typeof parts.Root>;
   type Props = RootProps;

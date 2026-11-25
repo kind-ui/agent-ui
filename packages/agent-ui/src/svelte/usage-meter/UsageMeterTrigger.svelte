@@ -1,8 +1,8 @@
 <!-- Opens the details. Holds the meter unless you pass children. -->
 <script lang="ts">
   import type { ComponentProps } from "svelte";
-  import UsageMeterValue from "./UsageMeterValue.svelte";
   import { parts } from "./parts.js";
+  import UsageMeterValue from "./UsageMeterValue.svelte";
 
   type Props = ComponentProps<typeof parts.Trigger>;
 

@@ -1,4 +1,4 @@
-import type { UsageSlice } from "../../../src/types/index.js";
+import type { UsageSlice } from "@kind-ui/agent-ui";
 
 export const agents: UsageSlice[] = [
   { id: "planner", label: "Planner", value: 2.1 },
