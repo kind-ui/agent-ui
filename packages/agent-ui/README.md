@@ -6,7 +6,7 @@ AI chat and agent interface components for React, Vue, Svelte, Solid and Web Com
 [![CI](https://github.com/kind-ui/agent-ui/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/kind-ui/agent-ui/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/@kind-ui/agent-ui)](https://github.com/kind-ui/agent-ui/blob/main/LICENSE)
 
-[Docs](https://kindui.dev/docs/agent-ui/) · [Components](https://kindui.dev/docs/agent-ui/components/step/) · [GitHub](https://github.com/kind-ui/agent-ui) · [Changelog](https://github.com/kind-ui/agent-ui/blob/main/packages/agent-ui/CHANGELOG.md)
+[Docs](https://kindui.dev/docs/agent-ui/) · [Agents](https://kindui.dev/docs/agent-ui/agents/) · [GitHub](https://github.com/kind-ui/agent-ui) · [Changelog](https://github.com/kind-ui/agent-ui/blob/main/packages/agent-ui/CHANGELOG.md)
 
 <img alt="A finished agent run: a reasoning step, two tool calls with one approved, a completed plan, a subagent's result and a queue of follow-up prompts." src="https://raw.githubusercontent.com/kind-ui/agent-ui/main/docs/assets/readme-hero-light.png" width="576">
 
@@ -23,7 +23,7 @@ npm install @kind-ui/agent-ui @ui-sdk/core
 
 The styled React, Web Components, Vue, Svelte and Solid components are distributed through the [registry](#registry), not this package, which depends on no framework.
 
-[Components](https://kindui.dev/docs/agent-ui/): Step and Step List, Status, Reasoning, Tool, Chain of Thought, Task, Plan, Subagent, Queue, Confirmation, Question, Checkpoint, Model Selector, Reasoning Effort, Suggestion, Context Meter, Feedback, Notice, Guardrail Notice, Conversation, Message, Markdown, Code Block, Markdown Table, Composer, Attachments, Uploader, Loader, Thinking Indicator, Typing Indicator, Streaming Text, Sources, Inline Citation, Document, Generated Image, File Tree, Terminal, Stack Trace, Test Results, Transcript, Selection, Action, Picker, Add Menu, Settings Menu, Approval Mode, Model Control, Context Bar, Dictation, Thread List, Thread Search, Sidebar, Day Separator, Connection Status, Share Dialog and Conversation Search.
+56 [components](https://kindui.dev/docs/agent-ui/), each with a docs page: Step and Step List, Status, Reasoning, Tool, Chain of Thought, Task, Plan, Subagent, Queue, Confirmation, Question, Checkpoint, Model Selector, Reasoning Effort, Suggestion, Context Meter, Feedback, Notice, Guardrail Notice, Conversation, Message, Markdown, Code Block, Markdown Table, Composer, Attachments, Uploader, Loader, Thinking Indicator, Typing Indicator, Streaming Text, Sources, Inline Citation, Document, Generated Image, File Tree, Terminal, Stack Trace, Test Results, Transcript, Selection, Action, Picker, Add Menu, Settings Menu, Approval Mode, Model Control, Context Bar, Dictation, Thread List, Thread Search, Sidebar, Day Separator, Connection Status, Share Dialog and Conversation Search.
 
 ## Registry
 
@@ -47,7 +47,7 @@ Then install a component with `npx shadcn@latest add @kind-ui/<name>`:
 | Svelte | `<component>-svelte` (`@kind-ui/composer-svelte`) | Svelte 5.33 with runes, `@ui-sdk/svelte` |
 | Solid | `<component>-solid` (`@kind-ui/composer-solid`) | Solid 2, `@ui-sdk/solid` |
 
-Every layer renders the same primitive from `./core`, with the same parts, options, events and agent actions. In a Vue, Svelte or Solid app, write the `components.json` by hand (the [docs](https://kindui.dev/docs/agent-ui/) have one); the pinned shadcn CLI installs those items too. A Vue app that server-renders outside Nuxt renders its root inside `<Suspense>`, as Nuxt does, so parts bind after hydration. Agents connect through `createAgent` from the layer's UI SDK package (`@ui-sdk/vue/agent`, …). The CLI copies the component into your `ui` directory, installs this package and the layer's UI SDK packages at the pinned versions, imports `styles.css` into your stylesheet, and writes an `AGENTS.md` for coding agents beside the components, which points them at the [agent skill](#agent-skill). Tailwind finds the copied files on its own; if they live outside the app that builds them, add an `@source` for them to your stylesheet.
+Every layer renders the same primitive from `./core`, with the same parts, options, events and agent actions. In a Vue, Svelte or Solid app, write the `components.json` by hand (the [docs](https://kindui.dev/docs/agent-ui/) have one); the pinned shadcn CLI installs those items too. A Vue app that server-renders outside Nuxt renders its root inside `<Suspense>`, as Nuxt does, so parts bind after hydration. Agents connect through `createAgent` from the layer's UI SDK package (`@ui-sdk/vue/agent`, …). The CLI copies the component into your `ui` directory, installs this package and the layer's UI SDK packages at the pinned versions, imports `styles.css` into your stylesheet, and writes an `AGENTS.md` for coding agents beside the components, which points them at the [agent skill](#agent-skill). Tailwind finds the copied files on its own; if they live outside the app that builds them, add an `@source` for them to your stylesheet. The React items build in a default Next.js 16 app, Turbopack included, with no extra config.
 
 ## Agent skill
 
