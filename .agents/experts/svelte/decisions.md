@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: 3ae1e327 (framework layers Task Svelte-8)
+Last reviewed: `cb3f3e12` (UI SDK 0.1.0-beta.17 upgrade)
 
 ## Settled
 
