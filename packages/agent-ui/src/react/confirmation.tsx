@@ -11,6 +11,7 @@ const parts = createParts(confirmationPrimitive, {
   reason: "div",
   choices: "div",
   approve: "button",
+  always: "button",
   deny: "button",
   cancel: "button",
   error: "span",
@@ -22,7 +23,7 @@ export type ConfirmationProps = ComponentProps<typeof parts.Root>;
 
 /**
  * Asks a person to approve or deny a request, then shows what was decided. Only the choices the host supplies
- * (`onApprove`, `onDeny`) render. Any `children` replace the default parts.
+ * (`onApprove`, `onAlwaysAllow`, `onDeny`) render. Any `children` replace the default parts.
  */
 export function Confirmation({ children, ...props }: ConfirmationProps) {
   return <parts.Root {...props}>{children !== undefined ? children : DEFAULT_PARTS}</parts.Root>;
@@ -64,6 +65,16 @@ export type ConfirmationApproveProps = ComponentProps<typeof parts.Approve>;
 /** Calls `onApprove`. Reads the `approveLabel` unless you pass children. Rendered only while `onApprove` is set. */
 export function ConfirmationApprove({ children = withPendingMark, ...props }: ConfirmationApproveProps) {
   return <parts.Approve {...props}>{children}</parts.Approve>;
+}
+
+export type ConfirmationAlwaysProps = ComponentProps<typeof parts.Always>;
+
+/**
+ * Calls `onAlwaysAllow`, which approves and tells the host to remember. Reads the `alwaysLabel` unless you pass
+ * children. Rendered only while `onAlwaysAllow` is set.
+ */
+export function ConfirmationAlways({ children = withPendingMark, ...props }: ConfirmationAlwaysProps) {
+  return <parts.Always {...props}>{children}</parts.Always>;
 }
 
 export type ConfirmationDenyProps = ComponentProps<typeof parts.Deny>;
@@ -124,6 +135,7 @@ const DEFAULT_PARTS = (
     <ConfirmationReason />
     <ConfirmationChoices>
       <ConfirmationApprove />
+      <ConfirmationAlways />
       <ConfirmationDeny />
       <ConfirmationCancel />
       <ConfirmationError />

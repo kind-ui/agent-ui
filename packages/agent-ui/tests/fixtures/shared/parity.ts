@@ -249,6 +249,7 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
     { c: "terminal", case: "all", interaction: press('[data-slot="kind-terminal-trigger"]') },
     { c: "terminal", case: "owned" },
     { c: "terminal", case: "stream-10" },
+    { c: "terminal", case: "approval", interaction: press('#run [data-slot="kind-confirmation-deny"]') },
   ],
   "test-results": [
     { c: "test-results", case: "all", interaction: press('[data-slot="kind-test-results-count"]') },

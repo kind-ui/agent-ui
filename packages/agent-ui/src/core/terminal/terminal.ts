@@ -151,7 +151,8 @@ const base = stepBase<TerminalState, TerminalApi, TerminalOptions>({
   },
   announcement: (status, title, state) => {
     if (status === "error" && state.exitCode) return `${title} failed, exit code ${state.exitCode}`;
-    if (status === "cancelled" && state.approval?.decision?.approved === false) return `${title} denied`;
+    // The Confirmation announces the denial as it arrives, in the same update.
+    if (status === "cancelled" && state.approval?.decision?.approved === false) return undefined;
     return stepAnnouncement(status, title);
   },
 });
