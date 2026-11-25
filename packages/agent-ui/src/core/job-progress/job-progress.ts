@@ -281,12 +281,19 @@ export const jobProgressPrimitive: JobProgressPrimitive = definePrimitive<
       // Outside the content, so it shows while closed.
       progress: slot<BaseSlotProps, { value: number | null }>({
         state: (state) => ({ value: state.percent }),
-        attrs: (state) => ({ "data-step-part": "progress", "data-motion": state.motion }),
+        attrs: (state) => ({
+          "data-job-progress-part": "progress",
+          "data-status": state.status,
+          "data-motion": state.motion,
+        }),
       }),
       // The Progress's label: the stage, else the title, which only assistive technology then reads.
       stage: slot<BaseSlotProps, { text: string }>({
         state: (state) => ({ text: state.stage || state.title }),
-        attrs: (state) => ({ "data-step-part": "stage", "data-fallback": state.stage ? undefined : "" }),
+        attrs: (state) => ({
+          "data-job-progress-part": "stage",
+          "data-fallback": state.stage ? undefined : "",
+        }),
       }),
       cancel: action("cancel", cancellable),
       retry: action("retry", retryable),

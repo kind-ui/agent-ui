@@ -108,6 +108,8 @@ import { defineConversationSearch } from "./components/ui/web/conversation-searc
 
 // wave-7-task-12: Job Progress
 
+import { defineJobProgress } from "./components/ui/web/job-progress.js";
+
 // wave-7-task-13: Schedule Card
 
 // wave-7-task-14: Agent Card
@@ -233,6 +235,8 @@ for (const define of [
   // wave-7-task-11: Run Timeline
 
   // wave-7-task-12: Job Progress
+
+  defineJobProgress,
 
   // wave-7-task-13: Schedule Card
 
@@ -387,6 +391,10 @@ const items = {
   // wave-7-task-11: Run Timeline
 
   // wave-7-task-12: Job Progress
+
+  "job-progress": `<kind-job-progress label="Build docs" status="running" value="0.42" stage="Installing dependencies">
+      <kind-job-progress-content><pre>added 491 packages</pre></kind-job-progress-content>
+    </kind-job-progress>`,
 
   // wave-7-task-13: Schedule Card
 
