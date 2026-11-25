@@ -129,6 +129,8 @@ import { ConversationSearch } from "./components/ui/conversation-search.js";
 
 // wave-7-task-16: Quota Notice
 
+import { QuotaNotice } from "./components/ui/quota-notice.js";
+
 // wave-7-task-17: Activity Graph
 
 // wave-7-task-18: Thread List inbox
@@ -464,6 +466,8 @@ const items = {
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
   // wave-7-task-16: Quota Notice
+
+  "quota-notice": <QuotaNotice used={800} limit={1000} period="this month" />,
 
   // wave-7-task-17: Activity Graph
 

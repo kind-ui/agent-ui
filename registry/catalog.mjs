@@ -483,6 +483,14 @@ export const components = {
 
   // wave-7-task-16: Quota Notice
 
+  "quota-notice": {
+    group: "indicators",
+    when: "a usage limit is near or reached and you show how much is left, when it resets and how to upgrade.",
+    title: "Quota Notice",
+    description: "A notice that a quota is nearly or fully used, with a bar, when it resets, and Upgrade.",
+    uses: [],
+  },
+
   // wave-7-task-17: Activity Graph
 
   // wave-7-task-18: Thread List inbox

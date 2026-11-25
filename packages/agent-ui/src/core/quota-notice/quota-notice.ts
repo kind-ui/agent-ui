@@ -4,6 +4,7 @@ import {
   type PrimitiveContext,
   pageLocale,
   type SlotDefinition,
+  sourceOf,
   toLocale,
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
@@ -264,6 +265,8 @@ export const quotaNoticePrimitive: QuotaNoticePrimitive = definePrimitive<
         return notice.dismiss;
       },
       bindRoot: (el, part) => {
+        // Starts UI SDK's input tracking, so the first keyboard press on Upgrade reads as one, as Dictation does.
+        sourceOf();
         store.set({ pageLocale: pageLocale(el) ?? null });
         const unbindNotice = notice.bindRoot(el, part);
         const unbindCountdown = countdown.bind();
@@ -304,7 +307,13 @@ export const quotaNoticePrimitive: QuotaNoticePrimitive = definePrimitive<
         attrs: () => ({ "data-notice-part": "reset" }),
       }),
       description,
-      actions,
+      actions: slot({
+        ...actions,
+        attrs: (state, part) => ({
+          ...actions.attrs?.(state, part),
+          "data-can-upgrade": state.canUpgrade ? "" : undefined,
+        }),
+      }),
       upgrade: slot<BaseSlotProps, { label: string }>({
         role: "button",
         focus: "native",

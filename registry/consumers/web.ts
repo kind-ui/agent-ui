@@ -116,6 +116,8 @@ import { defineConversationSearch } from "./components/ui/web/conversation-searc
 
 // wave-7-task-16: Quota Notice
 
+import { defineQuotaNotice } from "./components/ui/web/quota-notice.js";
+
 // wave-7-task-17: Activity Graph
 
 // wave-7-task-18: Thread List inbox
@@ -241,6 +243,8 @@ for (const define of [
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
   // wave-7-task-16: Quota Notice
+
+  defineQuotaNotice,
 
   // wave-7-task-17: Activity Graph
 
@@ -395,6 +399,8 @@ const items = {
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
   // wave-7-task-16: Quota Notice
+
+  "quota-notice": `<kind-quota-notice used="800" limit="1000" period="this month"></kind-quota-notice>`,
 
   // wave-7-task-17: Activity Graph
 
