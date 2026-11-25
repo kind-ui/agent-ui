@@ -1,0 +1,126 @@
+name: UI SDK update
+
+# Runs Copilot CLI with .github/ui-sdk-update.md on Renovate's UI SDK pull requests, then pushes its changes to
+# that pull request's branch and comments, both as kindui-bot[bot]. It never merges and never pushes to main.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+
+concurrency:
+  group: ui-sdk-update-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  adapt:
+    name: Adapt
+    if: >-
+      github.repository == 'kind-ui/agent-ui'
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && github.event.pull_request.user.login == 'kindui-bot[bot]'
+      && startsWith(github.event.pull_request.head.ref, 'renovate/')
+      && github.event.pull_request.head.ref != 'main'
+      && contains(github.event.pull_request.labels.*.name, 'ui-sdk-update')
+      && (github.event.action != 'labeled' || github.event.label.name == 'ui-sdk-update')
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      copilot-requests: write
+    env:
+      HEAD_REF: ${{ github.event.pull_request.head.ref }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+      - id: guard
+        name: Skip the agent's own pushes
+        run: |
+          echo "UI_SDK_SUMMARY=$RUNNER_TEMP/ui-sdk-update-summary.md" >> "$GITHUB_ENV"
+          if git log -1 --format=%B | grep -q '^UI-SDK-Update-Agent:'; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.guard.outputs.skip != 'true'
+        id: versions
+        name: Read the versions
+        run: |
+          base=$(git merge-base HEAD origin/main)
+          read_version() { node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).dependencies['@ui-sdk/core']"; }
+          echo "from=$(git show "$base:packages/agent-ui/package.json" | read_version)" >> "$GITHUB_OUTPUT"
+          echo "to=$(read_version < packages/agent-ui/package.json)" >> "$GITHUB_OUTPUT"
+      - if: steps.guard.outputs.skip != 'true'
+        uses: ./.github/actions/setup
+      - if: steps.guard.outputs.skip != 'true'
+        run: npx playwright install --with-deps chromium
+      - if: steps.guard.outputs.skip != 'true'
+        name: Run the agent
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          UI_SDK_FROM: ${{ steps.versions.outputs.from }}
+          UI_SDK_TO: ${{ steps.versions.outputs.to }}
+        run: |
+          npm install --global @github/copilot@1.0.115
+          copilot --no-ask-user --no-auto-update --autopilot \
+            --allow-all-tools \
+            --deny-tool 'shell(git push)' --deny-tool 'shell(gh)' \
+            --allow-url github.com --allow-url raw.githubusercontent.com --allow-url registry.npmjs.org --allow-url ui-sdk.dev \
+            -p "Follow .github/ui-sdk-update.md for this pull request, which moves @ui-sdk/* from $UI_SDK_FROM to $UI_SDK_TO. Write the summary to $UI_SDK_SUMMARY."
+      - if: steps.guard.outputs.skip != 'true'
+        id: app-token
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        with:
+          app-id: ${{ secrets.KINDUI_BOT_APP_ID }}
+          private-key: ${{ secrets.KINDUI_BOT_PRIVATE_KEY }}
+          repositories: agent-ui
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
+      - if: steps.guard.outputs.skip != 'true'
+        name: Push to the pull request
+        env:
+          TOKEN: ${{ steps.app-token.outputs.token }}
+          UI_SDK_TO: ${{ steps.versions.outputs.to }}
+        run: |
+          case "$HEAD_REF" in main|changeset-release/*) echo "Refusing to push to $HEAD_REF" >&2; exit 1 ;; esac
+          git add --all
+          if git diff --cached --quiet; then
+            echo "Nothing to push."
+            exit 0
+          fi
+          if git diff --cached --name-only | grep -q '^\.github/workflows/'; then
+            echo "The agent changed .github/workflows/, which the bot doesn't push."
+            exit 1
+          fi
+          git -c user.name='kindui-bot[bot]' \
+            -c user.email='360918227+kindui-bot[bot]@users.noreply.github.com' \
+            commit --quiet -m "Adapt to UI SDK $UI_SDK_TO" -m "UI-SDK-Update-Agent: $RUN_URL"
+          git push "https://x-access-token:$TOKEN@github.com/${{ github.repository }}.git" "HEAD:refs/heads/$HEAD_REF"
+      - if: always() && steps.guard.outputs.skip != 'true' && steps.app-token.outputs.token
+        name: Comment
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          UI_SDK_TO: ${{ steps.versions.outputs.to }}
+          OUTCOME: ${{ job.status }}
+        run: |
+          marker='<!-- ui-sdk-update-agent -->'
+          {
+            echo "$marker"
+            echo "## UI SDK $UI_SDK_TO"
+            echo
+            if [ -s "$UI_SDK_SUMMARY" ]; then cat "$UI_SDK_SUMMARY"; else echo "The agent wrote no summary."; fi
+            echo
+            if [ "$OUTCOME" != success ]; then echo "**This run failed.** "; fi
+            echo "[Run log]($RUN_URL)"
+          } > "$RUNNER_TEMP/comment.md"
+          id=$(gh api "repos/${{ github.repository }}/issues/$PR_NUMBER/comments" --paginate \
+            --jq ".[] | select(.user.login == \"kindui-bot[bot]\" and (.body | startswith(\"$marker\"))) | .id" | tail -1)
+          if [ -n "$id" ]; then
+            gh api --method PATCH "repos/${{ github.repository }}/issues/comments/$id" -F body=@"$RUNNER_TEMP/comment.md" > /dev/null
+          else
+            gh pr comment "$PR_NUMBER" -R "${{ github.repository }}" --body-file "$RUNNER_TEMP/comment.md"
+          fi

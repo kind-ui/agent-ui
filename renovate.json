@@ -1,0 +1,35 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "UI SDK updates only, run as kindui-bot[bot] by .github/workflows/renovate.yml. .github/ui-sdk-update.md says what happens on the PR.",
+  "extends": [":semanticCommitsDisabled"],
+  "baseBranchPatterns": ["main"],
+  "enabledManagers": ["npm"],
+  "dependencyDashboard": { "enabled": false },
+  "lockFileMaintenance": { "enabled": false },
+  "vulnerabilityAlerts": { "enabled": false },
+  "automerge": false,
+  "platformAutomerge": false,
+  "rebaseWhen": "conflicted",
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 1,
+  "packageRules": [
+    {
+      "description": "Every other dependency stays as it is.",
+      "matchPackageNames": ["*"],
+      "enabled": false
+    },
+    {
+      "description": "Every @ui-sdk/* package moves together, one PR per release, kept on exact pins.",
+      "matchPackageNames": ["@ui-sdk/**"],
+      "enabled": true,
+      "ignoreUnstable": false,
+      "respectLatest": false,
+      "rangeStrategy": "pin",
+      "groupName": "UI SDK",
+      "groupSlug": "ui-sdk",
+      "commitMessageTopic": "UI SDK",
+      "labels": ["ui-sdk-update"],
+      "automerge": false
+    }
+  ]
+}
