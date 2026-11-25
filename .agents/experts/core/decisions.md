@@ -51,6 +51,8 @@ Last reviewed: `cb3f3e12` (UI SDK 0.1.0-beta.17 upgrade)
 - **"New chat" filters like any row** (Thread Search, Wave 6 Task 3): Command exposes no way to keep a composed item through a search (its listbox `pinned` isn't a `CommandItem` prop), so New chat shows only while the search matches it, as Picker's footer actions do.
 - **Thread Search's `agent.items` isn't `closed`** (Wave 6 Task 3): the bridge would check `search`'s free text against the threads; `select` refuses an unknown id itself, as Transcript's `seek` does.
 - **Thread Search's Escape closes its dialog** (`@ui-sdk/core/testing`, Wave 6 Task 12): as with "A picker's Escape closes its popover", Command's search is a `combobox` whose list is always shown, here inside a modal dialog, so Escape closes the dialog and focus returns to the trigger, where `checkPattern("combobox")` expects only the list to close and focus to stay. `wave-6/aria-patterns.spec.ts` accepts those two problems; the dialog check passes.
+- **Job Progress' Retry shows only for `error`** (Wave 7 Task 12): a cancelled job is one the person stopped, so it offers nothing to retry; a host that wants it sets `status="error"`. Cancel and Retry share one lock, released on any status change, as Tool's retry is.
+- **Job Progress' elapsed clock isn't `createCountdown`** (Wave 7 Task 12): the countdown counts to an instant and stops at zero; the elapsed time counts up from `startedAt`, so the primitive keeps its own one-second timer, started by the root's `bind` and fixed by `now`.
 
 ## Known and open (don't report again, check whether fixed)
 

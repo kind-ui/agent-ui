@@ -1,0 +1,82 @@
+---
+title: Job Progress
+description: Show a long job's progress, its stage and time left, with Cancel and Retry and its log underneath.
+---
+
+import JobProgressExample from "../../../examples/job-progress/basic";
+
+Use a job progress when an agent runs something that takes minutes, like a build, an install or a deploy. It reads like every step: its status mark, its title and the time it has taken and has left, then a progress bar of how far it got and which stage it's in, with its log underneath.
+
+<Example caption="Press Build docs, or focus it and press Enter or Space, to show its log. The bar stays in view while it's closed.">
+  <JobProgressExample />
+
+  <ExampleCode example="job-progress/basic" />
+</Example>
+
+## Installation
+
+<Install name="job-progress" />
+
+## Composition
+
+```text
+JobProgress
+├── JobProgressTrigger
+│   ├── JobProgressIcon
+│   ├── JobProgressTitle
+│   └── JobProgressMeta
+├── JobProgressProgress
+│   └── JobProgressStage
+├── JobProgressContent
+│   └── JobProgressChildren
+├── JobProgressCancel
+└── JobProgressRetry
+```
+
+`JobProgress` renders these parts, and puts its children, the job's log, in `JobProgressChildren`. The trigger is a native button that shows or hides the log. `JobProgressIcon` is the status mark, `JobProgressTitle` shows the `label`, else "Job", and `JobProgressMeta` the time, like "2 min elapsed, about 1 min left". `JobProgressProgress` is a UI SDK Progress outside the content, so it shows while the job is closed, and `JobProgressStage` is its label. `JobProgressCancel` renders only while the job can be cancelled, and `JobProgressRetry` only once it failed. To arrange the parts yourself, render them inside `JobProgressRoot`.
+
+## Usage
+
+### Progress
+
+Pass `value`, from 0 to 1, as the job gets further. Without it, the bar is indeterminate: screen readers hear no percent, and the bar sweeps only while the status is `running`. A complete job's bar is full.
+
+### Stage
+
+Pass `stage` with `stageIndex` (from 0) and `stageCount`, and the bar is labelled "3 of 7: Installing dependencies". Pass either alone for just the words or just the count. Without a stage, the bar is named by the title, which screen readers read and the page doesn't repeat.
+
+### Time
+
+Pass `startedAt` and the meta counts the time since, once a second while the job runs; pass `etaSeconds` and it adds about how long is left. The elapsed time is read in the browser, so server markup leaves it out; pass `now` to fix it, as tests do. Once the job finishes, the meta shows `durationSeconds`.
+
+### Cancelling and Retrying
+
+Pass `onCancel` to show **Cancel** while the status is `pending`, `running` or `awaiting-input`, and `onRetry` to show **Retry** once it's `error`. Both share one lock: return a promise to keep the button pending until it settles, a second press does nothing meanwhile, and a rejection makes it available again. Set the new `status` when the job stops or starts again, and the button goes away. If it had focus, focus moves to the trigger.
+
+### Log
+
+Pass the job's log as children, often a [Terminal](./terminal.mdx). It opens and closes like a [Step](./step.mdx): open while the job runs, closed once it completes, until someone opens or closes it. Pass `open` with `onOpenChange` to control it.
+
+### Streaming
+
+The bar, the stage and the meta change in place, so nothing above or below moves. Screen readers hear the job's title and its outcome when it needs input, completes, fails or is cancelled, never its progress.
+
+### Motion
+
+The bar's fill grows to each new value. Under `prefers-reduced-motion`, or with `motion="reduced"` or `"none"`, it jumps there instead, and an indeterminate bar stays still.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/job-progress/job-progress.ts" name="JobProgressOptions" />
+
+<FrameworkNames name="job-progress" />
+
+### Agent
+
+An agent connected with `createAgent` finds the job by its title and reads its `open` and `status`. It can run these actions, `cancel` only while Cancel shows and `retry` only while Retry shows. None of them waits for a person; use the host's `allow` if you want one to.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/job-progress/job-progress.ts" name="JobProgressAgentActions" type='Pick<JobProgressApi, "expand" | "collapse" | "cancel" | "retry">' />
+
+<Caption>
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-job-progress>`, props are kebab-case attributes, so `stageIndex` is `stage-index` and `etaSeconds` is `eta-seconds`, and `onOpenChange` fires `openchange`. Cancel and Retry need the `can-cancel` and `can-retry` attributes and fire `jobcancel` and `jobretry`: call `event.detail.waitUntil(promise)` to keep them pending. Write the log inside a `<kind-job-progress-content>`: the element adds its trigger and bar before it and its buttons after it, unless you wrote a trigger of its own.
+</Caption>
