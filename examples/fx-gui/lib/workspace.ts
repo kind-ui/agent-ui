@@ -2,25 +2,6 @@ import type { FileTreeEntry } from "@kind-ui/agent-ui";
 import { diffLines } from "diff";
 import { Bash } from "just-bash/browser";
 
-export const SEED: Record<string, string> = {
-  "/workspace/package.json": `{
-  "name": "greeter",
-  "version": "0.1.0",
-  "type": "module",
-  "scripts": { "test": "node test.js" }
-}
-`,
-  "/workspace/README.md": "# greeter\n\nA tiny module that greets people.\n",
-  "/workspace/src/greet.js": `export function greet(name) {
-  return "Hello, " + name;
-}
-`,
-  "/workspace/test.js": `import { greet } from "./src/greet.js";
-
-console.log(greet("fx"));
-`,
-};
-
 export const ROOT = "/workspace";
 
 export type ToolDecision = { approved: boolean; reason?: string };
@@ -28,23 +9,33 @@ export type AskApproval = (id: string, name: string, input: unknown) => Promise<
 
 type Change = FileTreeEntry["change"];
 
-/** An in-browser workspace: just-bash over an in-memory file system, with what the agent changed. */
+/**
+ * An in-browser workspace: just-bash over an in-memory file system, which starts empty. Its network access stays
+ * off (just-bash's default), so commands the agent runs can't reach anything outside the tab.
+ */
 export function createWorkspace() {
-  const bash = new Bash({ files: SEED, cwd: ROOT });
-  const original = new Map(Object.entries(SEED));
+  const bash = new Bash({ files: { [`${ROOT}/.fx-gui`]: "" }, cwd: ROOT });
+  // What each file held when the person attached it, so the tree marks what fx changed since.
+  const original = new Map<string, string>();
   const listeners = new Set<() => void>();
   const notify = () => {
     for (const listener of listeners) listener();
   };
 
   const rel = (path: string) => path.replace(`${ROOT}/`, "");
-  const abs = (path: string) => (path.startsWith("/") ? path : `${ROOT}/${path.replace(/^\.\//, "")}`);
+  // Every path resolves inside /workspace; ".." segments are refused.
+  const abs = (path: string) => {
+    const full = path.startsWith("/") ? path : `${ROOT}/${path.replace(/^\.\//, "")}`;
+    if (!full.startsWith(`${ROOT}/`) || full.split("/").includes(".."))
+      throw new Error(`${path} is outside /workspace`);
+    return full;
+  };
 
   async function files() {
     const paths = (bash.fs as unknown as { getAllPaths(): string[] }).getAllPaths();
     const result: string[] = [];
     for (const path of paths) {
-      if (!path.startsWith(`${ROOT}/`)) continue;
+      if (!path.startsWith(`${ROOT}/`) || path === `${ROOT}/.fx-gui`) continue;
       const stat = await bash.fs.stat(path).catch(() => null);
       if (stat?.isFile) result.push(path);
     }
@@ -86,6 +77,13 @@ export function createWorkspace() {
     return result;
   }
 
+  /** Adds a file the person attached; it counts as the file's starting point. */
+  async function attach(path: string, content: string) {
+    await write(path, content);
+    original.set(abs(path), content);
+    notify();
+  }
+
   async function write(path: string, content: string) {
     const target = abs(path);
     const dir = target.slice(0, target.lastIndexOf("/"));
@@ -99,6 +97,7 @@ export function createWorkspace() {
     read,
     run,
     write,
+    attach,
     subscribe(listener: () => void) {
       listeners.add(listener);
       return () => {

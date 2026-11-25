@@ -19,7 +19,7 @@ export interface Runtime {
   close(): Promise<void>;
 }
 
-export const INSTRUCTIONS = `You are fx, a coding agent working in a small project at /workspace inside the user's browser.
+export const INSTRUCTIONS = `You are fx, a coding agent working in a project at /workspace inside the user's browser.
 Use list_files and read_file to look around, write_file to change files, and bash to run shell commands.
 The shell is simulated: coreutils, grep, sed, awk and jq work; node, npm and the network don't.
 Keep replies short and use Markdown.`;
@@ -54,39 +54,71 @@ function channel<T>() {
   };
 }
 
-type LiveOptions = {
-  apiKey: string;
-  tools: WorkspaceTool[];
-  /** A local OpenAI-compatible server (development only), used instead of AI Gateway. */
-  mockUrl?: string;
+/** How the page reaches a model: a pasted AI Gateway key (straight from the browser), or a signed-in account. */
+export type Connection =
+  | { kind: "key"; apiKey: string }
+  | { kind: "account"; provider: "vercel" | "chatgpt" | "grok" }
+  | { kind: "mock"; url: string };
+
+/**
+ * Sends a model request through this site's /api/model, which adds the signed-in user's credentials on the server.
+ * The credentials libfx holds here are a placeholder the server replaces.
+ */
+export const proxyFetch = async (url: string, init: RequestInit) => {
+  const headers: Record<string, string> = {};
+  new Headers(init.headers).forEach((value, name) => {
+    headers[name] = value;
+  });
+  return fetch("/api/model", {
+    method: init.method ?? "GET",
+    headers: { "x-fx-gui": "1", "x-fx-target": url, "x-fx-headers": JSON.stringify(headers) },
+    body: init.body,
+    signal: init.signal,
+    ...(init.body instanceof ReadableStream ? { duplex: "half" } : {}),
+  } as RequestInit);
 };
 
-/** libfx in the browser through WebAssembly, with one durable-in-memory session. */
-export async function createLiveRuntime({ apiKey, tools, mockUrl }: LiveOptions): Promise<Runtime> {
+const PLACEHOLDER = { accessToken: "kept-on-the-server", accountId: "kept-on-the-server" };
+
+function agentOptions(connection: Connection) {
+  switch (connection.kind) {
+    case "key":
+      return { apiKey: connection.apiKey };
+    case "mock":
+      return {
+        provider: { name: "mock", baseUrl: connection.url, modelDefaults: { supportsToolUse: true } },
+        credentials: () => ({ apiKey: "mock" }),
+      };
+    case "account":
+      return connection.provider === "vercel"
+        ? { apiKey: PLACEHOLDER.accessToken, fetch: proxyFetch }
+        : {
+            provider: connection.provider === "chatgpt" ? ("codex" as const) : ("grok" as const),
+            credentials: () => PLACEHOLDER,
+            fetch: proxyFetch,
+          };
+  }
+}
+
+/** libfx in the browser through WebAssembly, with one session kept in page memory. */
+export async function createRuntime(connection: Connection, tools: WorkspaceTool[]): Promise<Runtime> {
   const { createFxAgent } = await import("libfx/browser");
   let current: ReturnType<typeof channel<AppTurnEvent>> | undefined;
-  const provider = mockUrl
-    ? {
-        provider: { name: "mock", baseUrl: mockUrl, modelDefaults: { supportsToolUse: true } },
-        credentials: () => ({ apiKey: "mock" }),
-        model: "mock-model",
-      }
-    : { apiKey };
   const agent = createFxAgent({
-    ...provider,
+    ...(agentOptions(connection) as object),
     instructions: INSTRUCTIONS,
     tools,
-    onEvent(event) {
+    onEvent(event: { type: string; nextAttempt?: number; error?: string }) {
       if (event.type === "transport.retry") {
-        current?.push({ type: "retry", attempt: event.nextAttempt, error: event.error });
+        current?.push({ type: "retry", attempt: event.nextAttempt ?? 0, error: event.error ?? "" });
       }
     },
-  });
+  } as Parameters<typeof createFxAgent>[0]);
   let sessionId: string | undefined;
 
   return {
     prompt(text, model) {
-      const session = agent.session(sessionId, { model: mockUrl ? "mock-model" : model });
+      const session = agent.session(sessionId, { model: connection.kind === "mock" ? "mock-model" : model });
       const events = channel<AppTurnEvent>();
       current = events;
       const turn = session.prompt(text);
@@ -114,198 +146,29 @@ export async function createLiveRuntime({ apiKey, tools, mockUrl }: LiveOptions)
   };
 }
 
-// ---------------------------------------------------------------------------
-// Replay: a scripted turn that needs no key. Its tool calls run the same tools, against the same workspace and
-// approvals, as a live turn.
+type ModelEntry = { id: string; name?: string; display_name?: string; slug?: string };
 
-type Step =
-  | { kind: "reasoning"; text: string }
-  | { kind: "text"; text: string }
-  | { kind: "tool"; name: string; input: Record<string, unknown> };
-
-const FIRST: Step[] = [
-  {
-    kind: "reasoning",
-    text: "The user wants a `farewell` function next to `greet`. I should read the project before I change it, then add the function, cover it in `test.js`, and check the result with the shell.",
-  },
-  { kind: "text", text: "I'll look at the project first." },
-  { kind: "tool", name: "list_files", input: {} },
-  { kind: "tool", name: "read_file", input: { path: "src/greet.js" } },
-  {
-    kind: "text",
-    text: "`greet` lives in `src/greet.js`. I'll add `farewell` beside it, with the same shape.",
-  },
-  {
-    kind: "tool",
-    name: "write_file",
-    input: {
-      path: "src/greet.js",
-      content: `export function greet(name) {
-  return "Hello, " + name;
-}
-
-export function farewell(name) {
-  return "Goodbye, " + name;
-}
-`,
-    },
-  },
-  {
-    kind: "tool",
-    name: "write_file",
-    input: {
-      path: "test.js",
-      content: `import { farewell, greet } from "./src/greet.js";
-
-console.log(greet("fx"));
-console.log(farewell("fx"));
-`,
-    },
-  },
-  {
-    kind: "tool",
-    name: "bash",
-    input: { command: "grep -n 'export function' src/greet.js && wc -l src/greet.js test.js" },
-  },
-  {
-    kind: "text",
-    text: `Done. \`src/greet.js\` now exports both functions:
-
-\`\`\`js
-export function farewell(name) {
-  return "Goodbye, " + name;
-}
-\`\`\`
-
-- **src/greet.js**: added \`farewell\`.
-- **test.js**: prints both greetings.
-
-The shell here can't run \`node\`, so I checked the exports with \`grep\` instead.`,
-  },
-];
-
-const LATER: Step[] = [
-  {
-    kind: "reasoning",
-    text: "This is a replay, so I can't answer new questions. I'll say so and point to key mode.",
-  },
-  {
-    kind: "text",
-    text: "This is **replay mode**: a scripted run with no model behind it. Enter an AI Gateway key above to talk to fx for real. The workspace and its files stay as they are.",
-  },
-];
-
-const wait = (ms: number, signal: AbortSignal) =>
-  new Promise<void>((resolve) => {
-    const timer = setTimeout(resolve, ms);
-    signal.addEventListener("abort", () => {
-      clearTimeout(timer);
-      resolve();
-    });
-  });
-
-function chunks(text: string) {
-  return text.match(/\S+\s*|\s+/g) ?? [];
-}
-
-export function createReplayRuntime(tools: WorkspaceTool[]): Runtime {
-  let turns = 0;
-  let calls = 0;
-  let steers = 0;
-
-  return {
-    prompt() {
-      const script = turns++ === 0 ? FIRST : LATER;
-      const controller = new AbortController();
-      const { signal } = controller;
-      const events = channel<AppTurnEvent>();
-      const pending: { id: string; text: string }[] = [];
-      let stopReason = "end_turn";
-
-      const takeSteers = async () => {
-        while (pending.length) {
-          const steer = pending.shift() as { id: string; text: string };
-          events.push({ type: "user_message", id: steer.id, text: steer.text });
-          await wait(300, signal);
-          for (const piece of chunks(`Noted: "${steer.text}". I'll take that into account as I go on.`)) {
-            if (signal.aborted) return;
-            events.push({ type: "text_delta", delta: piece });
-            await wait(30, signal);
-          }
-        }
-      };
-
-      const result = (async (): Promise<TurnEnd> => {
-        try {
-          await wait(500, signal);
-          for (const step of script) {
-            if (signal.aborted) break;
-            await takeSteers();
-            if (step.kind === "tool") {
-              const id = `replay-call-${++calls}`;
-              events.push({ type: "tool_start", id, name: step.name, input: step.input as never });
-              await wait(250, signal);
-              const tool = tools.find((candidate) => candidate.name === step.name);
-              let content: string;
-              let isError = false;
-              try {
-                if (!tool) throw new Error(`Unknown tool ${step.name}`);
-                const value = await (tool.execute as (input: unknown, context: unknown) => Promise<unknown>)(
-                  step.input,
-                  {
-                    executionId: id,
-                    signal,
-                    sessionId: "replay",
-                  },
-                );
-                if (
-                  value &&
-                  typeof value === "object" &&
-                  "type" in value &&
-                  value.type === "libfx.tool-result"
-                ) {
-                  const typed = value as unknown as { text: string; isError?: boolean };
-                  content = typed.text;
-                  isError = Boolean(typed.isError);
-                } else content = typeof value === "string" ? value : JSON.stringify(value);
-              } catch (error) {
-                content = error instanceof Error ? error.message : String(error);
-                isError = true;
-              }
-              if (signal.aborted) break;
-              events.push({ type: "tool_end", id, name: step.name, content, isError });
-              await wait(300, signal);
-              continue;
-            }
-            const type = step.kind === "text" ? "text_delta" : "reasoning_delta";
-            for (const piece of chunks(step.text)) {
-              // Text steering cuts the reply short, as libfx does.
-              if (signal.aborted || (type === "text_delta" && pending.length)) break;
-              events.push({ type, delta: piece });
-              await wait(type === "text_delta" ? 35 : 20, signal);
-            }
-            if (type === "text_delta") events.push({ type: "text_delta", delta: "\n\n" });
-            await wait(200, signal);
-          }
-          await takeSteers();
-          if (signal.aborted) stopReason = "cancelled";
-          return { stopReason };
-        } finally {
-          events.close();
-        }
-      })();
-
-      return {
-        events,
-        result,
-        async steer(text) {
-          const id = `replay-steer-${++steers}`;
-          pending.push({ id, text });
-          return { id };
-        },
-        cancel: () => controller.abort(),
-      };
-    },
-    close: async () => {},
-  };
+/** The models a connection offers. Ids only where the provider gives no names. */
+export async function listConnectionModels(connection: Connection): Promise<{ id: string; name: string }[]> {
+  const named = (id: string, name?: string) => ({ id, name: name ?? id.split("/").pop() ?? id });
+  if (connection.kind === "mock") return [named("mock-model")];
+  if (connection.kind === "key" || connection.provider === "vercel") {
+    const { listModels } = await import("libfx/browser");
+    const ids = await listModels(
+      connection.kind === "key"
+        ? { apiKey: connection.apiKey }
+        : { apiKey: PLACEHOLDER.accessToken, fetch: proxyFetch },
+    );
+    return ids.map((id) => named(id));
+  }
+  const url =
+    connection.provider === "chatgpt"
+      ? "https://chatgpt.com/backend-api/codex/models?client_version=1.0.0"
+      : "https://cli-chat-proxy.grok.com/v1/models";
+  const response = await proxyFetch(url, { method: "GET", headers: { accept: "application/json" } });
+  if (!response.ok) throw new Error(`Models request failed (${response.status})`);
+  const body = (await response.json()) as { data?: ModelEntry[]; models?: ModelEntry[] };
+  return (body.data ?? body.models ?? [])
+    .map((entry) => named(entry.slug ?? entry.id, entry.display_name ?? entry.name))
+    .filter((entry) => entry.id);
 }

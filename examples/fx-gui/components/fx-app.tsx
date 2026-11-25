@@ -4,7 +4,15 @@ import type { Approval, EffortLevel, FileTreeEntry, MessageStatus, ModelOption }
 import type { ComposerDraft } from "@kind-ui/agent-ui/core";
 import { type KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
 import { CodeBlock } from "@/components/ui/code-block";
-import { Composer, ComposerInput, ComposerStop, ComposerSubmit } from "@/components/ui/composer";
+import {
+  Composer,
+  ComposerAttach,
+  ComposerAttachments,
+  ComposerInput,
+  ComposerStop,
+  ComposerSubmit,
+  ComposerTriggerMenu,
+} from "@/components/ui/composer";
 import { Confirmation } from "@/components/ui/confirmation";
 import {
   Conversation,
@@ -27,12 +35,14 @@ import { ThinkingIndicator } from "@/components/ui/thinking-indicator";
 import { Tool } from "@/components/ui/tool";
 import {
   type AppTurnEvent,
-  createLiveRuntime,
-  createReplayRuntime,
+  type Connection,
+  createRuntime,
+  listConnectionModels,
   type RunningTurn,
   type Runtime,
 } from "@/lib/runtime";
 import { createWorkspace, type ToolDecision, type Workspace, workspaceTools } from "@/lib/workspace";
+import { providerName, SignIn } from "./sign-in";
 
 // ---------------------------------------------------------------------------
 // Conversation model, built from libfx turn events
@@ -68,17 +78,32 @@ type ChatMessage = {
   error?: string;
 };
 
-type Mode = "replay" | "live";
-
 const EMPTY_DRAFT: ComposerDraft = { text: "", tokens: [], attachments: [] };
-const FIRST_PROMPT = "Add a farewell function next to greet, and cover it in test.js.";
 
-const MODELS: ModelOption[] = [
-  { id: "spacexai/grok-4.7", name: "Grok 4.7", group: "xAI", description: "fx's default model" },
-  { id: "anthropic/claude-haiku-5.5", name: "Claude Haiku 5.5", group: "Anthropic" },
-  { id: "anthropic/claude-opus-5.5", name: "Claude Opus 5.5", group: "Anthropic" },
-  { id: "openai/gpt-4.1-nano", name: "GPT-4.1 nano", group: "OpenAI", efforts: ["default"] },
-];
+// Starting models per connection, from fx's docs; each is replaced by the provider's own list once it loads.
+const DEFAULT_MODELS: Record<string, ModelOption[]> = {
+  gateway: [
+    { id: "spacexai/grok-4.7", name: "grok-4.7", group: "spacexai" },
+    { id: "anthropic/claude-opus-5.5", name: "claude-opus-5.5", group: "anthropic" },
+    { id: "anthropic/claude-haiku-5.5", name: "claude-haiku-5.5", group: "anthropic" },
+  ],
+  chatgpt: [{ id: "gpt-6.1-sol", name: "gpt-6.1-sol" }],
+  grok: [{ id: "grok-4.5", name: "grok-4.5" }],
+  mock: [{ id: "mock-model", name: "mock-model" }],
+};
+const modelsFor = (connection: Connection | null) =>
+  DEFAULT_MODELS[
+    !connection ||
+    connection.kind === "key" ||
+    (connection.kind === "account" && connection.provider === "vercel")
+      ? "gateway"
+      : connection.kind === "mock"
+        ? "mock"
+        : connection.provider
+  ];
+
+// The composer's codec text writes a mention as [@label](kind:value); the model gets the path.
+const plainText = (text: string) => text.replace(/\[@[^\]]*\]\([a-z]+:([^)]+)\)/g, "$1");
 const LEVELS: EffortLevel[] = [
   { value: "default", label: "Default" },
   { value: "low", label: "Low" },
@@ -87,7 +112,7 @@ const LEVELS: EffortLevel[] = [
 ];
 
 const readable = (error: string) =>
-  error === "HostStreamFailed" ? "Couldn't reach AI Gateway. Check your key and connection." : error;
+  error === "HostStreamFailed" ? "Couldn't reach the model. Check your connection, or sign in again." : error;
 
 let ids = 0;
 const nextId = (prefix: string) => `${prefix}-${++ids}`;
@@ -119,21 +144,22 @@ function parseJson(value: string | undefined) {
 // ---------------------------------------------------------------------------
 
 export function FxApp({ mockUrl }: { mockUrl?: string }) {
-  const [mode, setMode] = useState<Mode>("replay");
-  const [apiKey, setApiKey] = useState("");
+  const [connection, setConnection] = useState<Connection | null>(null);
+  const [checked, setChecked] = useState(false);
+  const [vercelAvailable, setVercelAvailable] = useState(false);
   const [jspi, setJspi] = useState<boolean | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [approvals, setApprovals] = useState<Record<string, Approval>>({});
-  const [draft, setDraft] = useState<ComposerDraft>({ ...EMPTY_DRAFT, text: FIRST_PROMPT });
+  const [draft, setDraft] = useState<ComposerDraft>(EMPTY_DRAFT);
   const [running, setRunning] = useState(false);
   const [queuedSteers, setQueuedSteers] = useState<string[]>([]);
   const [retry, setRetry] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
-  const [models, setModels] = useState<ModelOption[]>(MODELS);
-  const [model, setModel] = useState(MODELS[0].id);
+  const [models, setModels] = useState<ModelOption[]>(DEFAULT_MODELS.gateway);
+  const [model, setModel] = useState(DEFAULT_MODELS.gateway[0].id);
   const [effort, setEffort] = useState("default");
   const [entries, setEntries] = useState<FileTreeEntry[]>([]);
-  const [selected, setSelected] = useState<string | null>("src/greet.js");
+  const [selected, setSelected] = useState<string | null>(null);
   const [file, setFile] = useState("");
   const [dark, setDark] = useState(false);
   const [session, setSession] = useState(0);
@@ -146,7 +172,20 @@ export function FxApp({ mockUrl }: { mockUrl?: string }) {
   // libfx/browser and just-bash load only in the browser.
   useEffect(() => {
     void import("libfx/browser").then(({ supportsJspi }) => setJspi(supportsJspi()));
-  }, []);
+    if (mockUrl) {
+      setConnection({ kind: "mock", url: mockUrl });
+      setChecked(true);
+      return;
+    }
+    fetch("/api/auth/session")
+      .then((response) => response.json())
+      .then((body: { provider: "vercel" | "chatgpt" | "grok" | null; vercelAvailable: boolean }) => {
+        setVercelAvailable(body.vercelAvailable);
+        if (body.provider) setConnection({ kind: "account", provider: body.provider });
+      })
+      .catch(() => {})
+      .finally(() => setChecked(true));
+  }, [mockUrl]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: a new session starts a new workspace
   useEffect(() => {
@@ -191,39 +230,40 @@ export function FxApp({ mockUrl }: { mockUrl?: string }) {
   }, []);
 
   async function getRuntime(): Promise<Runtime> {
+    if (!connection) throw new Error("Connect a model first.");
     const ws = workspace.current ?? createWorkspace();
     workspace.current = ws;
-    const key = mode === "replay" ? "replay" : `live:${apiKey}`;
-    if (runtime.current?.key === key) return runtime.current.runtime;
-    await runtime.current?.runtime.close();
-    const tools = workspaceTools(ws, ask);
-    const next =
-      mode === "replay" ? createReplayRuntime(tools) : await createLiveRuntime({ apiKey, tools, mockUrl });
-    runtime.current = { key, runtime: next };
+    if (runtime.current) return runtime.current.runtime;
+    const next = await createRuntime(connection, workspaceTools(ws, ask));
+    runtime.current = { key: "current", runtime: next };
     return next;
   }
 
-  // Live mode lists the models AI Gateway offers for this key.
+  // The connection's own model list replaces the starting one.
   useEffect(() => {
-    if (mode !== "live" || !apiKey || mockUrl) return;
+    const fallback = modelsFor(connection);
+    setModels(fallback);
+    setModel(fallback[0].id);
+    if (!connection) return;
     let current = true;
-    const timer = setTimeout(async () => {
-      try {
-        const { listModels } = await import("libfx/browser");
-        const list = await listModels({ apiKey });
+    listConnectionModels(connection)
+      .then((list) => {
         if (!current || !list.length) return;
-        setModels(
-          list.slice(0, 60).map((id) => ({ id, name: id.split("/")[1] ?? id, group: id.split("/")[0] })),
-        );
-      } catch {
-        // Keep the built-in list; the first turn reports a bad key.
-      }
-    }, 600);
+        const options = list.slice(0, 80).map(({ id, name }) => ({
+          id,
+          name,
+          ...(id.includes("/") ? { group: id.split("/")[0] } : {}),
+        }));
+        setModels(options);
+        setModel((chosen) => (options.some((option) => option.id === chosen) ? chosen : options[0].id));
+      })
+      .catch(() => {});
     return () => {
       current = false;
-      clearTimeout(timer);
+      void runtime.current?.runtime.close();
+      runtime.current = null;
     };
-  }, [mode, apiKey, mockUrl]);
+  }, [connection]);
 
   const update = (id: string, change: (message: ChatMessage) => ChatMessage) =>
     setMessages((all) => all.map((message) => (message.id === id ? change(message) : message)));
@@ -308,7 +348,17 @@ export function FxApp({ mockUrl }: { mockUrl?: string }) {
   }
 
   async function send(draftToSend: ComposerDraft) {
-    const text = draftToSend.text.trim();
+    let text = plainText(draftToSend.text).trim();
+    // Attached files go into the workspace, and the prompt says where.
+    const files = draftToSend.attachments.filter((attachment) => !attachment.error);
+    if (files.length && workspace.current) {
+      const ws = workspace.current;
+      await Promise.all(
+        files.map(async (attachment) => ws.attach(attachment.name, await attachment.file.text())),
+      );
+      const list = files.map((attachment) => attachment.name).join(", ");
+      text = `${text}\n\n(Added to /workspace: ${list})`.trim();
+    }
     if (!text) return;
     setFailure(null);
     setDraft(EMPTY_DRAFT);
@@ -373,7 +423,7 @@ export function FxApp({ mockUrl }: { mockUrl?: string }) {
     if (!running || event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
     event.preventDefault();
     event.stopPropagation();
-    const text = draft.text.trim();
+    const text = plainText(draft.text).trim();
     if (!text || !turn.current) return;
     setDraft(EMPTY_DRAFT);
     setQueuedSteers((queued) => [...queued, text]);
@@ -384,65 +434,42 @@ export function FxApp({ mockUrl }: { mockUrl?: string }) {
     stop();
     setMessages([]);
     setApprovals({});
-    setDraft({ ...EMPTY_DRAFT, text: FIRST_PROMPT });
+    setDraft(EMPTY_DRAFT);
     setSession((n) => n + 1);
-    setSelected("src/greet.js");
+    setSelected(null);
   }
 
-  const unsupported = mode === "live" && jspi === false;
-  const needsKey = mode === "live" && !apiKey && !mockUrl;
+  async function signOut() {
+    reset();
+    if (connection?.kind === "account")
+      await fetch("/api/auth/signout", { method: "POST", headers: { "x-fx-gui": "1" } });
+    setConnection(null);
+  }
+
+  const mentions = entries.map((entry) => ({
+    value: entry.path,
+    label: entry.path.split("/").pop() ?? entry.path,
+    description: entry.path,
+  }));
+
+  if (!checked) return null;
+  if (!connection) return <SignIn vercelAvailable={vercelAvailable} jspi={jspi} onConnect={setConnection} />;
 
   const header = (
     <header className="flex flex-wrap items-center gap-3 border-b border-[var(--kind-color-hairline)] px-4 py-2.5">
-      <div className="flex items-baseline gap-2">
-        <span className="font-semibold text-[length:var(--kind-text-md)]">fx</span>
-        <span className="text-[length:var(--kind-text-sm)] text-[var(--kind-color-muted)]">
-          in your browser
-        </span>
-      </div>
-      <fieldset className="flex items-center gap-1" aria-label="Mode">
-        <button
-          type="button"
-          data-kind-button={mode === "replay" ? "soft" : ""}
-          data-kind-size="sm"
-          aria-pressed={mode === "replay"}
-          onClick={() => setMode("replay")}
-          disabled={running}
-        >
-          Replay
-        </button>
-        <button
-          type="button"
-          data-kind-button={mode === "live" ? "soft" : ""}
-          data-kind-size="sm"
-          aria-pressed={mode === "live"}
-          onClick={() => setMode("live")}
-          disabled={running}
-        >
-          AI Gateway key
-        </button>
-      </fieldset>
-      {mode === "live" && !mockUrl ? (
-        <label className="flex min-w-0 items-center gap-2 text-[length:var(--kind-text-sm)]">
-          <span className="sr-only">AI Gateway API key</span>
-          <input
-            type="password"
-            autoComplete="off"
-            spellCheck={false}
-            placeholder="AI Gateway API key"
-            value={apiKey}
-            onChange={(event) => setApiKey(event.target.value.trim())}
-            disabled={running}
-            className="h-8 w-64 min-w-0 rounded-[calc(var(--kind-radius)/1.5)] border border-[var(--kind-color-border)] bg-[var(--kind-color-surface)] px-2.5 outline-hidden placeholder:text-[var(--kind-color-muted)]"
-          />
-        </label>
-      ) : null}
+      <h1 className="font-semibold text-[length:var(--kind-text-md)]">fx-gui</h1>
+      <span className="text-[length:var(--kind-text-sm)] text-[var(--kind-color-muted)]">
+        {providerName(connection)}
+      </span>
       <div className="ms-auto flex items-center gap-1">
-        <button type="button" data-kind-button="" data-kind-size="sm" onClick={reset}>
+        <button type="button" data-kind-button="" data-kind-size="sm" onClick={reset} disabled={running}>
           New session
         </button>
         <button type="button" data-kind-button="" data-kind-size="sm" onClick={() => setDark(!dark)}>
           {dark ? "Light" : "Dark"}
+        </button>
+        <button type="button" data-kind-button="" data-kind-size="sm" onClick={signOut}>
+          {connection.kind === "account" ? "Sign out" : "Disconnect"}
         </button>
       </div>
     </header>
@@ -463,8 +490,12 @@ export function FxApp({ mockUrl }: { mockUrl?: string }) {
         onValueChange={(value) =>
           value && entries.some((entry) => entry.path === value) && setSelected(value)
         }
-        defaultExpanded={["src"]}
       />
+      {entries.length === 0 ? (
+        <p className="px-1 text-[length:var(--kind-text-sm)] text-[var(--kind-color-muted)]">
+          Empty. Files fx writes, and files you attach, show up here.
+        </p>
+      ) : null}
       {selected ? (
         <div className="min-h-0 overflow-auto">
           <CodeBlock
@@ -484,12 +515,6 @@ export function FxApp({ mockUrl }: { mockUrl?: string }) {
       {header}
       <div className="grid min-h-0 lg:grid-cols-[minmax(0,1fr)_360px] max-lg:grid-rows-[minmax(0,1fr)_auto] max-lg:overflow-auto">
         <main className="mx-auto flex min-h-0 w-full max-w-3xl flex-col gap-3 p-4">
-          {unsupported ? (
-            <Notice variant="error" label="This browser can't run fx">
-              fx runs here through WebAssembly with JavaScript Promise Integration (JSPI). Use Chrome or Edge,
-              or Safari 27 or later. Replay mode works in any browser.
-            </Notice>
-          ) : null}
           {failure ? (
             <Notice variant="error" label="The turn failed" onDismiss={() => setFailure(null)}>
               {failure}
@@ -513,13 +538,10 @@ export function FxApp({ mockUrl }: { mockUrl?: string }) {
                   </ConversationRow>
                 ))}
                 <ConversationEmpty>
-                  <ConversationEmptyTitle>
-                    {mode === "replay" ? "Replay a run of fx" : "Ask fx to change the workspace"}
-                  </ConversationEmptyTitle>
+                  <ConversationEmptyTitle>What should fx build?</ConversationEmptyTitle>
                   <ConversationEmptyDescription>
-                    {mode === "replay"
-                      ? "A scripted turn, no key needed. Its tool calls run for real against the in-browser workspace, and writes wait for your approval."
-                      : "libfx runs in this tab through WebAssembly. Your key stays in the browser and goes straight to AI Gateway."}
+                    fx works in /workspace, in this tab. Attach files to start from your own. Writes and shell
+                    commands wait for your approval.
                   </ConversationEmptyDescription>
                 </ConversationEmpty>
               </ConversationContent>
@@ -540,20 +562,22 @@ export function FxApp({ mockUrl }: { mockUrl?: string }) {
             onValueChange={setDraft}
             onSubmit={send}
             onStop={stop}
-            disabled={unsupported || needsKey}
+            mentions={mentions}
+            maxSize={1024 * 1024}
+            disabled={jspi === false}
           >
+            <ComposerAttachments />
             <ComposerInput
               aria-label="Prompt"
               placeholder={
-                needsKey
-                  ? "Enter an AI Gateway key above"
-                  : running
-                    ? "Steer the running turn, then press Enter"
-                    : "Ask fx to change the workspace"
+                running ? "Steer the running turn, then press Enter" : "Ask fx. Type @ to mention a file"
               }
               onKeyDownCapture={steerOnEnter}
-            />
+            >
+              <ComposerTriggerMenu />
+            </ComposerInput>
             <div className="flex min-w-0 flex-wrap items-center gap-1.5" style={{ gridArea: "attach" }}>
+              <ComposerAttach />
               <ModelControl
                 models={models}
                 model={model}
@@ -561,7 +585,7 @@ export function FxApp({ mockUrl }: { mockUrl?: string }) {
                 levels={LEVELS}
                 effort={effort}
                 onEffortChange={setEffort}
-                disabled={running || mode === "replay"}
+                disabled={running || connection.kind === "mock"}
               />
             </div>
             <ComposerSubmit />

@@ -1,6 +1,6 @@
 # fx GUI: libfx → Agent UI mapping
 
-A throwaway spike. It maps every libfx 0.0.18 event and capability the app touches, and the ones it doesn't yet, to the Agent UI 0.8.0 component that shows it.
+It maps every libfx 0.0.18 event and capability the app touches, and the ones it doesn't yet, to the Agent UI 0.8.0 component that shows it.
 
 - **Fits:** the component takes the data as libfx gives it, or with a field renamed.
 - **Needs glue:** it works, but the app keeps state or timing libfx doesn't give it.
@@ -80,9 +80,10 @@ Candidates for a wave, most useful first:
 4. **A diff view.** File Tree counts changed lines, but nothing shows the change itself. Code Block shows whole files.
 5. **Retries inside a turn.** Message has no "retrying" state with an attempt and a reason. Connection Status is page-wide.
 
-## What the spike checked
+## What was checked
 
-- Replay mode end to end in Chromium, light and dark: three approvals with the keyboard, real just-bash writes and a real command, File Tree and Code Block updating. No console errors.
-- Replay mode in Firefox. The unsupported notice with JSPI removed (Firefox 159 and Safari 27 have it now).
+- The unsupported notice with JSPI removed (Firefox 159 and Safari 27 have JSPI now).
+- ChatGPT and Grok: libfx's `provider: 'codex'` and `'grok'` run in the browser with a placeholder credential, and `/api/model` adds the real one. With a fake sealed token, each request reached `chatgpt.com` or `cli-chat-proxy.grok.com` and came back 401. The turn failed cleanly, and the token never appeared in the page. Device-code start and polling were checked against both real providers.
 - Live mode through libfx's WebAssembly build against a local OpenAI-compatible mock (`npm run mock`): a real tool call, approval, a steer that cut the streaming reply short, and Stop. `fx-core.wasm` was served as `application/wasm`.
-- Live mode with an invalid AI Gateway key: the request goes from the tab straight to `ai-gateway.vercel.sh`, and the turn fails with a readable message. No real key was available, so a real model run wasn't checked.
+- An invalid AI Gateway key: the request goes from the tab straight to `ai-gateway.vercel.sh`, and the turn fails with a readable message.
+- Not checked: a completed sign-in or a real model run, because no account or key was available.
