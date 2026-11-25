@@ -785,6 +785,16 @@ export {
 
 // wave-7-task-12: Job Progress
 
+export {
+  type JobProgressApi,
+  type JobProgressOptions,
+  type JobProgressPrimitive,
+  type JobProgressState,
+  jobProgressMeta,
+  jobProgressPrimitive,
+  jobStage,
+} from "./job-progress/index.js";
+
 // wave-7-task-13: Schedule Card
 
 // wave-7-task-14: Agent Card
