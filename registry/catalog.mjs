@@ -467,6 +467,14 @@ export const components = {
 
   // wave-7-task-7: Step Group
 
+  "step-group": {
+    group: "steps",
+    when: "a turn runs several tools or subagents that should fold into one summary row.",
+    title: "Step Group",
+    description: "One summary row over the host's own steps, with their status and Stop all.",
+    uses: [],
+  },
+
   // wave-7-task-8: Handoff
 
   // wave-7-task-10: Trace

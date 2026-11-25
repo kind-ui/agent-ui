@@ -288,6 +288,10 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
 
   // wave-7-task-7: Step Group
 
+  "step-group": [
+    { c: "step-group", case: "all", interaction: press('#tools [data-slot="kind-step-group-trigger"]') },
+  ],
+
   // wave-7-task-8: Handoff
 
   // wave-7-task-10: Trace

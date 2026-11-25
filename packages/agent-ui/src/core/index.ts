@@ -777,6 +777,17 @@ export {
 
 // wave-7-task-7: Step Group
 
+export {
+  type StepGroupApi,
+  type StepGroupItem,
+  type StepGroupOptions,
+  type StepGroupPrimitive,
+  type StepGroupState,
+  stepGroupMeta,
+  stepGroupPrimitive,
+  stepGroupTitle,
+} from "./step-group/index.js";
+
 // wave-7-task-8: Handoff
 
 // wave-7-task-10: Trace

@@ -1,0 +1,32 @@
+/* Step Group (Wave 7 spec §4): a Step whose title sums up the host's own steps, which sit under it, then Stop all
+   while they run. Stop all's look is the Step-based cancel's, in subagent.css. */
+@layer components {
+  /* The steps' own triggers pad their marks by 6px, so the content sits 6px short of the title for those marks to
+     line up with it. */
+  [data-slot="kind-step-group-content"] {
+    padding-inline-start: calc(
+      var(--kind-step-indent) -
+      var(--kind-step-guide) -
+      var(--kind-step-guide-width) -
+      6px
+    );
+
+    /* Steps a web host writes straight into the content sit as close as React's children part. */
+    & > * {
+      padding-block: 0;
+    }
+    & > :first-child {
+      padding-block-start: 4px;
+    }
+    & > :last-child {
+      padding-block-end: 4px;
+    }
+  }
+
+  [data-slot="kind-step-group-children"] {
+    display: block;
+    margin-inline-start: 0;
+    padding-inline-start: 0;
+    border-inline-start: 0;
+  }
+}

@@ -113,6 +113,8 @@ import { ConversationSearch } from "./components/ui/conversation-search.js";
 
 // wave-7-task-7: Step Group
 
+import { StepGroup } from "./components/ui/step-group.js";
+
 // wave-7-task-8: Handoff
 
 // wave-7-task-10: Trace
@@ -448,6 +450,12 @@ const items = {
   // wave-7-task-6: Diff
 
   // wave-7-task-7: Step Group
+
+  "step-group": (
+    <StepGroup label="Read 2 files" status="complete" defaultOpen>
+      <p>Read two files.</p>
+    </StepGroup>
+  ),
 
   // wave-7-task-8: Handoff
 
