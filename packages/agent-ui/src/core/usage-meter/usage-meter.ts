@@ -77,6 +77,8 @@ export type UsageMeterState = MeterBaseState & {
 export type UsageMeterApi = MeterBaseApi<UsageMeterState> & {
   /** Counts down to `resetAt`. The root binds it. */
   countdown: Countdown;
+  /** The period and the countdown to the reset, like "This month · Resets in 3 hr". Called by the period slot. */
+  periodText: (state: UsageMeterState) => string;
 };
 
 type Slot<
@@ -162,6 +164,7 @@ export const usageMeterPrimitive: UsageMeterPrimitive = definePrimitive<
     // Added to the base's api rather than spread, which would read its `open` and `close` getters once.
     Object.assign(base.api(context), {
       countdown: createCountdown(context, { key: "resetSeconds", at: () => context.store.get().resetAt }),
+      periodText: (state: UsageMeterState) => periodText(state, base.localeOf(state)),
     }),
   slots: (slot) => {
     const slots = base.slots(slot);
@@ -177,7 +180,7 @@ export const usageMeterPrimitive: UsageMeterPrimitive = definePrimitive<
       // Reads the live `resetSeconds`, so a tick renders this part alone.
       period: slot<BaseSlotProps, { text: string }>({
         present: (state) => !!(state.period || state.resetAt),
-        state: (state) => ({ text: periodText(state, base.localeOf(state)) }),
+        state: (state, { api }) => ({ text: api.periodText(state) }),
         attrs: () => ({ "data-meter-part": "period" }),
       }),
     };

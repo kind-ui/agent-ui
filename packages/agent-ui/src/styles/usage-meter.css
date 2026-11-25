@@ -1,0 +1,20 @@
+/* Usage Meter (Wave 7 spec §5): usage against a limit. `meter.css` draws it; this maps its levels. */
+@layer components {
+  :where([data-slot="kind-usage-meter"])[data-level="warning"] {
+    --kind-meter-color: var(--kind-color-warning);
+  }
+  :where([data-slot="kind-usage-meter"])[data-level="error"] {
+    --kind-meter-color: var(--kind-color-danger);
+  }
+
+  [data-slot="kind-usage-meter-period"] {
+    display: block;
+    margin: 2px 0 0;
+    color: var(--kind-color-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  [data-slot="kind-usage-meter-period"][hidden] {
+    display: none;
+  }
+}

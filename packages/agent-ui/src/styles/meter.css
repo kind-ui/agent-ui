@@ -1,0 +1,236 @@
+/* Meters (Context Meter, Usage Meter): a ring and a percentage, with details in a popover and a breakdown in them.
+   Every part `meterBase` draws writes `data-meter-part`; each component maps its levels onto `--kind-meter-color`. */
+/* UI SDK Meter writes where its value sits as `--meter-value` for a ring to follow. Registered so the ring can sweep. */
+@property --meter-value {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 0%;
+}
+
+@layer components {
+  /* Without specificity, so a component's level rules set `--kind-meter-color` over this default. */
+  :where([data-meter-part="root"]) {
+    --kind-meter-color: var(--kind-color-fg);
+    --kind-meter-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M8 4.5v4.25'/%3E%3Cpath d='M8 11.5h.01'/%3E%3C/svg%3E");
+    /* The breakdown's colors: the host's chart colors where it has them, else the status colors. */
+    --kind-usage-slice-1: var(--kind-chart-1, var(--kind-color-accent));
+    --kind-usage-slice-2: var(--kind-chart-2, var(--kind-color-success));
+    --kind-usage-slice-3: var(--kind-chart-3, var(--kind-color-warning));
+    --kind-usage-slice-4: var(--kind-chart-4, var(--kind-color-danger));
+    --kind-usage-slice-5: var(--kind-chart-5, var(--kind-color-muted));
+
+    display: inline-flex;
+    font-size: var(--kind-text-xs);
+    line-height: 1rem;
+    color: var(--kind-color-muted);
+  }
+
+  [data-meter-part="value"] {
+    display: contents;
+  }
+
+  :where([data-meter-part="root"]) [data-slot="meter"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: --meter-value var(--kind-duration-panel) var(--kind-ease-enter);
+  }
+
+  /* The ring is the track's `::before`, the level's glyph its `::after`, so the glyph sits inside the ring without
+     taking room of its own. */
+  :where([data-meter-part="root"]) [data-slot="meter-track"] {
+    position: relative;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+    }
+    &::before {
+      /* A track as visible as the arc's start, so a part-full ring reads as a gauge and not a spinner. */
+      background: conic-gradient(
+        var(--kind-meter-color) var(--meter-value),
+        color-mix(in oklab, var(--kind-color-muted) 35%, transparent) 0
+      );
+      mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+    }
+  }
+
+  :where([data-meter-part="root"]:is([data-level="high"], [data-level="warning"]))
+    [data-slot="meter-track"]::after {
+    background-color: var(--kind-meter-color);
+    mask: var(--kind-meter-glyph) center / 12px no-repeat;
+  }
+
+  /* Full fills the ring's middle, so it reads apart from a warning without color. */
+  :where([data-meter-part="root"]:is([data-level="full"], [data-level="error"]))
+    [data-slot="meter-track"]::after {
+    inset: 4px;
+    background-color: var(--kind-meter-color);
+  }
+
+  /* Forced colors replace a background, which is all a mask draws, and drop the ring's gradient. */
+  @media (forced-colors: active) {
+    :where([data-meter-part="root"]) [data-slot="meter-track"]::before {
+      forced-color-adjust: none;
+      background: conic-gradient(ButtonText var(--meter-value), GrayText 0);
+    }
+    :where([data-meter-part="root"]:not([data-level="normal"])) [data-slot="meter-track"]::after {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+    :where([data-meter-part="breakdown"]) > *,
+    :where([data-meter-part="breakdown-rows"]) dt::before {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+    }
+  }
+
+  /* As wide as "100 %", the widest a locale writes it, so a new value never moves what's beside the meter. */
+  :where([data-meter-part="root"]) [data-slot="meter-value"] {
+    min-width: calc(4ch + 1em);
+    font-variant-numeric: tabular-nums;
+  }
+
+  [data-meter-part="content"] {
+    z-index: 50;
+    width: 15rem;
+    max-width: calc(100vw - 16px);
+    padding: 12px;
+    font-size: var(--kind-text-xs);
+    line-height: 1rem;
+    outline: none;
+    transform-origin: var(--transform-origin);
+  }
+
+  [data-meter-part="title"] {
+    display: block;
+    margin: 0;
+    font-size: var(--kind-text-sm);
+    font-weight: 600;
+    line-height: 1.25rem;
+  }
+
+  [data-meter-part="description"] {
+    display: block;
+    margin: 0;
+    color: var(--kind-color-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The breakdown: a stacked bar whose segments add up to the share used, then a row per slice. */
+  [data-meter-part="breakdown"] {
+    display: flex;
+    height: 6px;
+    margin: 0.75rem 0 0;
+    overflow: hidden;
+    border-radius: var(--kind-radius-full);
+    background: var(--kind-color-hover);
+
+    & > * {
+      flex: none;
+      background: var(--kind-meter-slice);
+    }
+    /* A hairline between segments, so neighbors read apart without relying on color. */
+    & > * + * {
+      box-shadow: inset 1px 0 var(--kind-color-surface);
+    }
+  }
+
+  [data-meter-part="breakdown-rows"] {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    column-gap: 12px;
+    row-gap: 4px;
+    margin: 0.5rem 0 0;
+
+    & > div {
+      display: contents;
+    }
+    & dt {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      color: var(--kind-color-muted);
+
+      &::before {
+        content: "";
+        flex: none;
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        background: var(--kind-meter-slice);
+      }
+    }
+    & dd {
+      margin: 0;
+      text-align: end;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  :where([data-meter-part="breakdown"], [data-meter-part="breakdown-rows"]) [data-slice="1"] {
+    --kind-meter-slice: var(--kind-usage-slice-1);
+  }
+  :where([data-meter-part="breakdown"], [data-meter-part="breakdown-rows"]) [data-slice="2"] {
+    --kind-meter-slice: var(--kind-usage-slice-2);
+  }
+  :where([data-meter-part="breakdown"], [data-meter-part="breakdown-rows"]) [data-slice="3"] {
+    --kind-meter-slice: var(--kind-usage-slice-3);
+  }
+  :where([data-meter-part="breakdown"], [data-meter-part="breakdown-rows"]) [data-slice="4"] {
+    --kind-meter-slice: var(--kind-usage-slice-4);
+  }
+  :where([data-meter-part="breakdown"], [data-meter-part="breakdown-rows"]) [data-slice="5"] {
+    --kind-meter-slice: var(--kind-usage-slice-5);
+  }
+
+  /* Motion: the ring sweeps to a new value and the details scale in, as every shared popup does. Reduced motion
+     only fades, in 120 ms; `none` doesn't animate. */
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-meter-part="root"][data-motion="auto"]) [data-slot="meter"] {
+      transition: none;
+    }
+    :where([data-meter-part="root"][data-motion="auto"]) [data-meter-part="content"] {
+      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
+
+      &:is([data-starting-style], [data-ending-style]) {
+        translate: none;
+        scale: none;
+        transition-duration: var(--kind-duration-reduced);
+      }
+    }
+  }
+
+  :where([data-meter-part="root"][data-motion="reduced"]) [data-slot="meter"] {
+    transition: none;
+  }
+  :where([data-meter-part="root"][data-motion="reduced"]) [data-meter-part="content"] {
+    transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      translate: none;
+      scale: none;
+      transition-duration: var(--kind-duration-reduced);
+    }
+  }
+
+  :where([data-meter-part="root"][data-motion="none"])
+    :is([data-meter-part="trigger"], [data-slot="meter"], [data-meter-part="content"]) {
+    transition: none;
+  }
+
+  :where(
+    [data-meter-part="content"],
+    [data-meter-part="breakdown"],
+    [data-meter-part="breakdown-rows"]
+  )[hidden] {
+    display: none;
+  }
+}

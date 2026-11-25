@@ -1,11 +1,18 @@
 import type { MotionMode } from "@kind-ui/agent-ui/core";
 import { defineContextMeter } from "../../../../src/web/context-meter.js";
 import { context, contextHost, levels } from "../../shared/context-meter.js";
+import { contextBreakdown as breakdown } from "../../shared/usage-meter.js";
 
 const { host, record } = contextHost();
 
 const page =
-  (used: number = context.used, motion?: MotionMode, locale?: string, markup?: string) =>
+  (
+    used: number = context.used,
+    motion?: MotionMode,
+    locale?: string,
+    markup?: string,
+    slices?: typeof breakdown,
+  ) =>
   (root: HTMLElement) => {
     defineContextMeter();
     const wrapper = document.createElement("div");
@@ -22,6 +29,7 @@ const page =
     if (motion) meter.motion = motion;
     if (locale) meter.locale = locale;
     if (markup) meter.innerHTML = markup;
+    if (slices) meter.breakdown = slices;
     meter.addEventListener("openchange", (event) => record(event.detail.value, event.detail));
     const beside = Object.assign(document.createElement("span"), { id: "beside", textContent: "Beside" });
     row.append(meter, beside);
@@ -43,6 +51,7 @@ export const cases = {
   full: page(levels.full),
   reduced: page(context.used, "reduced"),
   german: page(context.used, undefined, "de-DE"),
+  breakdown: page(context.used, undefined, undefined, undefined, breakdown),
   written: page(
     context.used,
     undefined,

@@ -102,6 +102,11 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
     { c: "context-meter", case: "all", interaction: press('[data-slot="kind-context-meter-trigger"]') },
     { c: "context-meter", case: "high" },
     { c: "context-meter", case: "german" },
+    {
+      c: "context-meter",
+      case: "breakdown",
+      interaction: press('[data-slot="kind-context-meter-trigger"]'),
+    },
   ],
   conversation: [
     { c: "conversation", case: "chat" },
@@ -301,6 +306,13 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
   // wave-7-task-14: Agent Card
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
+
+  "usage-meter": [
+    { c: "usage-meter", case: "all", interaction: press('[data-slot="kind-usage-meter-trigger"]') },
+    { c: "usage-meter", case: "warning" },
+    { c: "usage-meter", case: "error" },
+    { c: "usage-meter", case: "requests", interaction: press('[data-slot="kind-usage-meter-trigger"]') },
+  ],
 
   // wave-7-task-16: Quota Notice
 
