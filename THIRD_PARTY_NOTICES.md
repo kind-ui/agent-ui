@@ -129,6 +129,8 @@
 
 <!-- wave-7-task-13: Schedule Card -->
 
+- `packages/agent-ui/src/styles/schedule-card.css` (Schedule Card): `calendar-clock`, `play` and `pencil`, unchanged; `play` derives from Feather.
+
 <!-- wave-7-task-14: Agent Card -->
 
 <!-- wave-7-task-15: Usage Meter and Context Meter's breakdown -->

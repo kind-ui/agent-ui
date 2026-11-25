@@ -321,9 +321,11 @@ export const scheduleCardPrimitive: ScheduleCardPrimitive = definePrimitive<
     };
 
     const onCheckedChange: ScheduleCardEnabledState["onCheckedChange"] = (checked, details) => {
-      // The switch shows the store's `enabled`, which only the owner's next schedule changes.
+      // The switch shows the store's `enabled`, which only the owner's next schedule changes. Reported once the
+      // switch's own change has ended, since it drops a write of the same value made while it runs.
       details.cancel();
-      setEnabled(checked, details);
+      const { event, source } = details;
+      queueMicrotask(() => setEnabled(checked, { event, ...(source && { source }) }));
     };
 
     const enabledState = memo(
