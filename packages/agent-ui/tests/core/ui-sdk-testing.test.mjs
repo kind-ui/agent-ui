@@ -311,6 +311,18 @@ const cases = {
   // wave-7-task-18: Thread List inbox
 
   // wave-7-task-19: Flow Graph
+
+  flowGraph: {
+    options: {
+      nodes: [
+        { id: "a", label: "Router", kind: "agent", status: "complete" },
+        { id: "b", label: "Billing", kind: "agent", status: "running" },
+      ],
+      edges: [{ id: "e", from: "a", to: "b" }],
+      defaultValue: "a",
+    },
+    keys: { node: ["a", "b"] },
+  },
 };
 
 const fromOf = (props) =>
