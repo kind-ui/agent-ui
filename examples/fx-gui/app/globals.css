@@ -1,0 +1,26 @@
+@import "tailwindcss";
+@import "@kind-ui/agent-ui/styles.css";
+/* Lightning CSS lowers the tokens' light-dark(), which then resolve only under color-scheme rules it compiled. */
+html {
+  color-scheme: light dark;
+}
+html[data-theme="light"] {
+  color-scheme: light;
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--kind-color-canvas);
+  color: var(--kind-color-fg);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Keyboard focus only, as the components do. */
+:where(header, aside) :where(button, input):focus-visible {
+  outline: 2px solid var(--kind-color-focus);
+  outline-offset: 2px;
+}
