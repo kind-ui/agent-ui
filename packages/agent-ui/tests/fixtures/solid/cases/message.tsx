@@ -1,5 +1,5 @@
 import type { MessageStatus } from "@kind-ui/agent-ui";
-import type { MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
+import type { MessageOptions, MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
 import type { JSX } from "@solidjs/web";
 import { createSignal, For, flush, onSettled } from "solid-js";
 import {
@@ -22,6 +22,7 @@ import {
   MessageBranchPrevious,
   MessageContent,
   MessageCopy,
+  MessageDelivery,
   MessageDuration,
   MessageEdit,
   MessageEditor,
@@ -29,6 +30,7 @@ import {
   MessageOutcome,
   MessageRegenerate,
   MessageRegenerateContent,
+  MessageRetrying,
   MessageTime,
   MessageToolbar,
 } from "../../../../src/solid/message.js";
@@ -37,11 +39,16 @@ import { answer } from "../../shared/markdown.js";
 import {
   author,
   authored,
+  delivered,
   outcomeError,
   outcomeText,
   regenerateOptions,
+  retrying,
   timing,
 } from "../../shared/message.js";
+
+type RetryState = NonNullable<MessageOptions["retry"]>;
+type Delivery = MessageOptions["delivery"];
 
 const replies = [
   "Retry with exponential backoff, and cap the number of attempts.",
@@ -323,6 +330,78 @@ function Outcomes() {
   );
 }
 
+function Delivery() {
+  const [deliveries, setDeliveries] = createSignal<Record<string, Delivery>>({
+    steered: "steered",
+    queued: "queued",
+  });
+  const [retry, setRetry] = createSignal<RetryState | undefined>(retrying);
+  const [status, setStatus] = createSignal<MessageStatus>("streaming");
+  const deferred: Deferred[] = [];
+  onSettled(() =>
+    expose({
+      kindDelivery: {
+        calls,
+        deliver: (id: string, value: Delivery | null) => {
+          setDeliveries((current) => ({ ...current, [id]: value ?? undefined }));
+          flush();
+        },
+        retry: (value: RetryState | null) => {
+          setRetry(() => value ?? undefined);
+          flush();
+        },
+        status: (value: MessageStatus) => {
+          setStatus(value);
+          flush();
+        },
+        settle: (ok: boolean) => deferred.shift()?.[ok ? "resolve" : "reject"](),
+      },
+    }),
+  );
+  const withdraw = (details: { reason: string; source: string }) => {
+    calls.push(`withdraw:${details.reason}:${details.source}`);
+    return new Promise<void>((resolve, reject) => deferred.push({ resolve, reject }));
+  };
+  const rows = [
+    { id: "steered", label: "Steered message", props: {} },
+    { id: "queued", label: "Queued message", props: { onWithdraw: withdraw } },
+  ] as const;
+  return (
+    <div class="m-4 flex w-[36rem] flex-col gap-6">
+      <For each={rows}>
+        {(row) => (
+          <Message
+            id={row.id}
+            aria-label={row.label}
+            messageRole="user"
+            text={delivered[row.id]}
+            delivery={deliveries()[row.id]}
+            {...row.props}
+          >
+            <MessageHeader>
+              <MessageDelivery />
+            </MessageHeader>
+            <MessageContent>{delivered[row.id]}</MessageContent>
+          </Message>
+        )}
+      </For>
+      <Message
+        id="answer"
+        aria-label="Retrying answer"
+        status={status()}
+        text={delivered.answer}
+        retry={retry()}
+        onRetry={() => calls.push("retry")}
+      >
+        <MessageContent>{delivered.answer}</MessageContent>
+        <MessageRetrying />
+        <MessageOutcome />
+      </Message>
+      <input aria-label="Reply" class="w-full" />
+    </div>
+  );
+}
+
 export const cases = {
   all: () => (
     <div class="m-4 flex w-[36rem] flex-col gap-6">
@@ -349,6 +428,7 @@ export const cases = {
   author: () => <Authored />,
   "author-clock": () => <Authored clock />,
   outcomes: () => <Outcomes />,
+  delivery: () => <Delivery />,
   "custom-rows": () => (
     <div class="m-4 w-[36rem]">
       <WithOptions custom />

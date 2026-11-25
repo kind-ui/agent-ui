@@ -68,11 +68,18 @@ const message = createParts(primitive, {
   "outcome-text": "span",
   retry: "button",
   continue: "button",
+  delivery: "span",
+  "delivery-icon": "span",
+  "delivery-text": "span",
+  withdraw: "button",
+  retrying: "div",
+  "retrying-icon": "span",
 });
 
 /**
  * Name it with `aria-label`, like "Assistant message". A `regenerateOptions` row's `icon` is an image URL or a node
- * such as an inline `svg`. Regenerate and Edit are offered while `@regenerate` and `@edit` are bound.
+ * such as an inline `svg`. Regenerate, Edit and Withdraw are offered while `@regenerate`, `@edit` and `@withdraw` are
+ * bound.
  */
 export const Message = message.Root;
 
@@ -129,6 +136,59 @@ export const MessageDuration = defineComponent({
       h(message.Duration, attrs, {
         ...slots,
         default: ({ state }: { state: { label: string } }) => state.label,
+      });
+  },
+});
+
+export const MessageDeliveryIcon = message.DeliveryIcon;
+
+/** "Steered" or "Queued". */
+export const MessageDeliveryText = defineComponent({
+  name: "MessageDeliveryText",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () =>
+      h(message.DeliveryText, attrs, {
+        ...slots,
+        default: ({ state }: { state: { text: string } }) => state.text,
+      });
+  },
+});
+
+/** Shown while `@withdraw` is bound and the message is queued. */
+export const MessageWithdraw = defineComponent({
+  name: "MessageWithdraw",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () => h(message.Withdraw, attrs, { ...slots, default: slots.default ?? (() => "Withdraw") });
+  },
+});
+
+const delivery = () => [h(MessageDeliveryIcon), h(MessageDeliveryText), h(MessageWithdraw)];
+
+/** Put it in the header. With `delivery`, its mark and words, then Withdraw while queued, unless you pass children. */
+export const MessageDelivery = defineComponent({
+  name: "MessageDelivery",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () => h(message.Delivery, attrs, { ...slots, default: slots.default ?? delivery });
+  },
+});
+
+export const MessageRetryingIcon = message.RetryingIcon;
+
+/**
+ * Put it after the content, where the outcome goes. While `retry` is set: a running mark and "Retrying, attempt 2 of
+ * 5, in 4 sec".
+ */
+export const MessageRetrying = defineComponent({
+  name: "MessageRetrying",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () =>
+      h(message.Retrying, attrs, {
+        ...slots,
+        default: ({ state }: { state: { text: string } }) => [h(MessageRetryingIcon), state.text],
       });
   },
 });

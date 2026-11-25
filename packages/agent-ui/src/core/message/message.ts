@@ -789,13 +789,13 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       present: (state) => state.delivery !== undefined,
       attrs: (state) => ({ "data-delivery": state.delivery }),
     }),
+    // Queued waits like a pending step. Steered has no mark: `message.css` draws a turn arrow before the delivery.
     "delivery-icon": slot({
-      // Queued waits like a pending step; Steered is a turn arrow `message.css` draws.
+      present: (state) => state.delivery === "queued",
       attrs: (state) => ({
         "aria-hidden": "true",
-        "data-delivery": state.delivery,
-        "data-status-mark": state.delivery === "queued" ? "" : undefined,
-        "data-status": state.delivery === "queued" ? "pending" : undefined,
+        "data-status-mark": "",
+        "data-status": "pending",
         "data-motion": state.motion,
       }),
     }),

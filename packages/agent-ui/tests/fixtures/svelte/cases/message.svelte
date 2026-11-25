@@ -10,6 +10,7 @@
     "author",
     "author-clock",
     "outcomes",
+    "delivery",
     "custom-rows",
   ];
 
@@ -19,7 +20,7 @@
 
 <script lang="ts">
   import type { MessageStatus } from "@kind-ui/agent-ui";
-  import type { MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
+  import type { MessageOptions, MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
   import { flushSync, type Snippet } from "svelte";
   import {
     Conversation,
@@ -41,6 +42,7 @@
     MessageBranchPrevious,
     MessageContent,
     MessageCopy,
+    MessageDelivery,
     MessageDuration,
     MessageEdit,
     MessageEditor,
@@ -48,6 +50,7 @@
     MessageOutcome,
     MessageRegenerate,
     MessageRegenerateContent,
+    MessageRetrying,
     MessageTime,
     MessageToolbar,
   } from "../../../../src/svelte/message/index.js";
@@ -55,12 +58,15 @@
   import {
     author,
     authored,
+    delivered,
     outcomeError,
     outcomeText,
     regenerateOptions,
+    retrying,
     timing,
   } from "../../shared/message.js";
 
+  type RetryState = NonNullable<MessageOptions["retry"]>;
   type Deferred = { resolve(): void; reject(): void };
 
   let { variant }: { variant: string; params: URLSearchParams } = $props();
@@ -82,6 +88,9 @@
     earlier: "error",
   });
   const deferred: Deferred[] = [];
+  let deliveries: Record<string, MessageOptions["delivery"]> = $state.raw({ steered: "steered", queued: "queued" });
+  let retry: RetryState | undefined = $state.raw(retrying);
+  let answerStatus: MessageStatus = $state("streaming");
 
   let refusing = $derived(variant === "refusing");
   let clock = $derived(variant === "author-clock");
@@ -97,6 +106,14 @@
     kindOutcome: {
       calls,
       status: (id: string, value: MessageStatus) => flushSync(() => (statuses = { ...statuses, [id]: value })),
+      settle: (ok: boolean) => deferred.shift()?.[ok ? "resolve" : "reject"](),
+    },
+    kindDelivery: {
+      calls,
+      deliver: (id: string, value: MessageOptions["delivery"] | null) =>
+        flushSync(() => (deliveries = { ...deliveries, [id]: value ?? undefined })),
+      retry: (value: RetryState | null) => flushSync(() => (retry = value ?? undefined)),
+      status: (value: MessageStatus) => flushSync(() => (answerStatus = value)),
       settle: (ok: boolean) => deferred.shift()?.[ok ? "resolve" : "reject"](),
     },
   });
@@ -283,6 +300,36 @@
         ><MessageContent>{text}</MessageContent>
       </Message>
     {/each}
+  </div>
+{:else if variant === "delivery"}
+  <div class="m-4 flex w-[36rem] flex-col gap-6">
+    {#each ["steered", "queued"] as const as id (id)}
+      <Message
+        {id}
+        aria-label={id === "steered" ? "Steered message" : "Queued message"}
+        messageRole="user"
+        text={delivered[id]}
+        delivery={deliveries[id]}
+        {...id === "queued" ? { onWithdraw: wait("withdraw") } : {}}
+      >
+        <MessageHeader>
+          <MessageDelivery />
+        </MessageHeader
+        ><MessageContent>{delivered[id]}</MessageContent>
+      </Message>
+    {/each}<Message
+      id="answer"
+      aria-label="Retrying answer"
+      status={answerStatus}
+      text={delivered.answer}
+      {retry}
+      onRetry={() => calls.push("retry")}
+    >
+      <MessageContent>{delivered.answer}</MessageContent
+      ><MessageRetrying
+      /><MessageOutcome />
+    </Message><input aria-label="Reply" class="w-full"
+    />
   </div>
 {:else}
   <div class="m-4 flex w-[36rem] flex-col gap-6">

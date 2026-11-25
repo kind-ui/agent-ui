@@ -370,6 +370,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- wave-7-task-3: Message delivery mark and retrying -->
 
+- **Message delivery and retrying (Wave 7 Task 3):** Message already has a `retry` slot (the outcome's Retry button), so `retryPart`'s slot is Message's `retrying` (React `MessageRetrying`, web `kind-message-retrying`), with a `retrying-icon` part for the running mark, so the mark gets `data-motion` as `outcome-icon` does; the countdown key is `retrySeconds`, bound by the root. The delivery is `delivery` (holding `delivery-icon`, `delivery-text` and `withdraw`), which hosts place in the header as they place the author and time; the root's `aria-describedby` names `delivery-text` alone, so Withdraw's label isn't in the description. A withdraw that resolves keeps `withdrawPending` until `delivery` changes, through the same `createPendingAction` (set again after `"done"`), and Withdraw's focus recovery goes to the page's composer editor, else `nearestTabStop`. `retryPart.onOptions` announces any attempt that differs from the one the instance was created with, and a web host sets `retry` as a property, so a `kind-message` given `retry` after it connects announces its first attempt; set it before the element joins the page (the fixture builds the page detached). An empty web `kind-message-header` now also gets a `kind-message-delivery`, and an empty `kind-message-delivery` or `kind-message-retrying` fills itself in; the retrying words are one text node, so a tick writes one node in every layer.
+
 <!-- wave-7-task-4: Terminal approval and Confirmation's Always allow -->
 
 <!-- wave-7-task-5: Tool retry and retrying -->
