@@ -226,6 +226,8 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
 
   // wave-7-task-5: Tool retry and retrying
 
+  { url: "/?c=tool&case=retry", slots: ["kind-tool-retry"] },
+
   // wave-7-task-6: Diff
 
   // wave-7-task-7: Step Group

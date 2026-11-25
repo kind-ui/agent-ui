@@ -4,6 +4,7 @@ export {
   type ToolApprovalState,
   type ToolOptions,
   type ToolPrimitive,
+  type ToolRetryDetails,
   type ToolState,
   toolPrimitive,
 } from "./tool.js";

@@ -194,7 +194,14 @@ const cases = {
     keys: { item: ["s", "s/t"], failure: ["s/t"], count: ["pass", "fail", "skip"] },
   },
   thinkingIndicator: { options: { label: "Thinking" } },
-  tool: { options: { call, onApprove: noop, onDeny: noop } },
+  tool: {
+    options: {
+      call: { ...call, retry: { attempt: 2, maxAttempts: 5, retryAt: "2026-11-25T12:00:04Z" } },
+      onApprove: noop,
+      onDeny: noop,
+      onRetry: noop,
+    },
+  },
   transcript: {
     options: {
       segments: [{ id: "a", speaker: "Ana", start: 0, end: 1, text: "Hello there", words }],
