@@ -300,6 +300,21 @@ const cases = {
 
   // wave-7-task-13: Schedule Card
 
+  scheduleCard: {
+    options: {
+      schedule: {
+        id: "triage",
+        label: "Daily triage",
+        description: "Weekdays at 9:00",
+        enabled: true,
+        nextRunAt: "2026-11-26T09:00:00Z",
+        lastRun: { at: "2026-11-25T09:00:00Z", status: "complete", href: "/runs/41" },
+      },
+      onRunNow: noop,
+      onEdit: noop,
+    },
+  },
+
   // wave-7-task-14: Agent Card
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
