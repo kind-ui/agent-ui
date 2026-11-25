@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import type { StepGroupHost } from "../../../packages/agent-ui/tests/fixtures/shared/step-group.js";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { isWebElements } from "../layer.js";
 
 type Fixture = { kindStepGroup: StepGroupHost };
 
@@ -86,6 +87,46 @@ test("offers expand, collapse and cancel to an agent", async ({ page }) => {
   await open(page);
   await expectAgentActions(page, "3 agents", ["cancel", "collapse", "expand", "press"]);
   await expectAgentActions(page, "Read 2 files and ran 1 command", ["collapse", "expand", "press"]);
+});
+
+for (const [name, setup] of [
+  ["motion reduced", (page: Page) => open(page, "reduced")],
+  [
+    "prefers-reduced-motion",
+    async (page: Page) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await open(page);
+    },
+  ],
+] as const) {
+  test(`with ${name}, the steps only fade for 120 ms`, async ({ page }) => {
+    await setup(page);
+    const transition = await part(page, "tools", "content").evaluate((el) => {
+      const style = getComputedStyle(el);
+      return { property: style.transitionProperty, duration: style.transitionDuration };
+    });
+    expect(transition.property).not.toContain("height");
+    expect(transition.duration).toContain("0.12s");
+  });
+}
+
+test("fills a title or meta part written after it connects", async ({ page }, testInfo) => {
+  test.skip(!isWebElements(testInfo), "web elements fill their own parts");
+  await open(page);
+  const meta = await page.evaluate(async () => {
+    const group = document.createElement("kind-step-group");
+    group.items = [{ id: "a", status: "running" }];
+    group.innerHTML =
+      "<kind-step-group-trigger><button><kind-step-group-title> </kind-step-group-title></button></kind-step-group-trigger>";
+    document.querySelector("#root")?.append(group);
+    group.querySelector("button")?.append(document.createElement("kind-step-group-meta"));
+    await new Promise(requestAnimationFrame);
+    return [
+      group.querySelector("kind-step-group-title")?.textContent,
+      group.querySelector("kind-step-group-meta")?.textContent,
+    ];
+  });
+  expect(meta).toEqual(["1 step", "1 running"]);
 });
 
 for (const colorScheme of ["light", "dark"] as const) {

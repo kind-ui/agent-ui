@@ -17,7 +17,8 @@ const CANCEL = `<kind-step-group-cancel><button><span data-kind-pending-mark="" 
 const owned = new WeakSet<Element>();
 
 const fill = (part: Element | null, text: string) => {
-  if (!part || !(owned.has(part) || !part.firstChild)) return;
+  // Pretty-printed markup leaves whitespace in a part nobody wrote into.
+  if (!part || !(owned.has(part) || (!part.firstElementChild && !part.textContent?.trim()))) return;
   owned.add(part);
   if (part.textContent !== text) part.textContent = text;
 };
@@ -62,7 +63,21 @@ export function defineStepGroup(): void {
           fill(own("kind-step-group-meta"), stepGroupMeta(running, durationSeconds));
         };
         draw();
-        return instance.subscribe(draw);
+        const unsubscribe = instance.subscribe(draw);
+        const arrivals = new MutationObserver((records) => {
+          // The group's steps aren't its parts.
+          const arrived = records.some(
+            (record) =>
+              !(record.target instanceof Element && record.target.closest("kind-step-group-content")) &&
+              [...record.addedNodes].some((node) => node instanceof Element),
+          );
+          if (arrived) draw();
+        });
+        arrivals.observe(el, { childList: true, subtree: true });
+        return () => {
+          unsubscribe();
+          arrivals.disconnect();
+        };
       },
     },
     trigger: { tag: "kind-step-group-trigger", target: wrappedButton, display: "contents" },

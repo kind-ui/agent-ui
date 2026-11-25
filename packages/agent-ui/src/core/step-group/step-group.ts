@@ -15,7 +15,10 @@ export type StepGroupItem = {
 };
 
 export type StepGroupOptions = StepOptions & {
-  /** The steps inside, in order. Their statuses give the group's status unless `status` is passed. */
+  /**
+   * The steps inside, in order. Their statuses give the group's status unless `status` is passed. Without any, the
+   * title reads "0 steps" and the status is `pending`.
+   */
   items?: StepGroupItem[];
   /**
    * Turns each group's count into words, as read mid-sentence: `{ read: (n) => \`read ${n} files\` }`. The title
@@ -27,8 +30,8 @@ export type StepGroupOptions = StepOptions & {
   /** Language for joining the labels. Defaults to English. */
   locale?: string;
   /**
-   * Called to stop every step. Shows "Stop all" while set and the group is running. Return a promise to keep it
-   * pending until it settles: a rejection makes it available again.
+   * Called to stop every step. Shows "Stop all" while set and the group hasn't finished. Return a promise to keep
+   * it pending until it settles: a rejection makes it available again.
    */
   onCancel?: () => unknown;
 };
@@ -36,7 +39,7 @@ export type StepGroupOptions = StepOptions & {
 export type StepGroupState = StepState & {
   /** The `label`, else the summary of `groupLabels`, else "N steps". */
   title: string;
-  /** How many items are `running`. */
+  /** How many items are `running`, and while the group runs, those still `pending` after another started. */
   running: number;
   /** Whether `onCancel` is set. */
   canCancel: boolean;
@@ -45,7 +48,7 @@ export type StepGroupState = StepState & {
 };
 
 export type StepGroupApi = StepApi & {
-  /** Calls `onCancel`. Offered only while it's set, the group is running, and no cancel is pending. */
+  /** Calls `onCancel`. Offered only while it's set, the group hasn't finished, and no cancel is pending. */
   readonly cancel: (() => void) | undefined;
   /** Moves focus to the trigger when Stop all leaves while focused. Called by the cancel slot. */
   cancelRecovery: ReturnType<typeof createFocusRecovery>;
@@ -95,27 +98,36 @@ export const stepGroupTitle = (
   return text.charAt(0).toLocaleUpperCase(tag) + text.slice(1);
 };
 
+const statusOf = (options: StepGroupOptions) =>
+  aggregateStatus((options.items ?? []).map((item) => item.status));
+
 /** The meta's words: "2 running" while steps run, else the duration ("12 s"), else nothing. */
 export const stepGroupMeta = (running: number, durationSeconds?: number): string =>
   running > 0 ? `${running} running` : stepDuration(durationSeconds);
 
 const base = stepBase<StepGroupState, StepGroupApi, StepGroupOptions>({
   kind: "step-group",
-  status: (options) => aggregateStatus((options.items ?? []).map((item) => item.status)),
-  announcement: (status, _title, state) => stepAnnouncement(status, state.title),
+  status: statusOf,
+  // Matches Stop all, as Subagent's matches Stop.
+  announcement: (status, _title, state) =>
+    status === "cancelled" ? `${state.title} stopped` : stepAnnouncement(status, state.title),
 });
 
 const presentation = (options: StepGroupOptions) => {
   const items = options.items ?? [];
+  // A step waiting its turn in a running group is part of the run, so the meta never reads "0 running" there.
+  const counted: StepStatus[] =
+    (options.status ?? statusOf(options)) === "running" ? ["running", "pending"] : ["running"];
   return {
     title: options.label ?? stepGroupTitle(items, options.groupLabels, options.locale),
-    running: items.filter((item) => item.status === "running").length,
+    running: items.filter((item) => counted.includes(item.status)).length,
     canCancel: options.onCancel !== undefined,
   };
 };
 
-const cancellable = (state: StepGroupState) =>
-  state.canCancel && (state.status === "running" || state.status === "awaiting-input");
+const ACTIVE = new Set<StepStatus>(["pending", "running", "awaiting-input"]);
+
+const cancellable = (state: StepGroupState) => state.canCancel && ACTIVE.has(state.status);
 
 export const stepGroupPrimitive: StepGroupPrimitive = definePrimitive<
   StepGroupOptions,

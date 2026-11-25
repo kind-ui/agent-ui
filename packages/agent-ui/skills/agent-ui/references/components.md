@@ -51,7 +51,7 @@ All 57 components, grouped by the job they do. The item is the React name: add `
 | `confirmation` | Confirmation | An action that isn't a tool call needs a person to approve or deny it. |
 | `question` | Question | The agent asks a person to choose an option or write an answer before it goes on. |
 | `checkpoint` | Checkpoint | A person can restore the conversation to an earlier point, after a dialog asks first. |
-| `step-group` | Step Group | A turn runs several tools or subagents that should fold into one summary row. Not yet in Vue, Svelte. |
+| `step-group` | Step Group | A turn runs several tools or subagents that should fold into one summary row. |
 
 ## Developer output
 

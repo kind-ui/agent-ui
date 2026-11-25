@@ -31,7 +31,7 @@ StepGroup
 └── StepGroupCancel
 ```
 
-`StepGroup` renders these parts, and puts its children, your steps, in `StepGroupChildren`. The trigger is a native button that shows or hides them. `StepGroupIcon` is the group's status mark. `StepGroupTitle` shows the `label`, else the summary of `groupLabels`, and `StepGroupMeta` shows "2 running" while steps run, else the `durationSeconds`. `StepGroupCancel` renders only while the group can be stopped. To arrange the parts yourself, render them inside `StepGroupRoot`.
+`StepGroup` renders these parts, and puts its children, your steps, in `StepGroupChildren`. The trigger is a native button that shows or hides them. `StepGroupIcon` is the group's status mark. `StepGroupTitle` shows the `label`, else the summary of `groupLabels`, and `StepGroupMeta` shows "2 running" while steps run (a step waiting its turn counts too), else the `durationSeconds`. `StepGroupCancel` renders only while the group can be stopped. To arrange the parts yourself, render them inside `StepGroupRoot`.
 
 ## Usage
 
@@ -75,11 +75,11 @@ Subagents running side by side are the same shape: give each item the group `age
 
 ### Stopping
 
-Pass `onCancel` to show **Stop all** while the group runs or waits for input. Return a promise to keep the button pending until it settles: a second press does nothing meanwhile, and a rejection makes it available again. Once your steps stop, update their statuses, and the button goes away. If it had focus, focus moves to the trigger.
+Pass `onCancel` to show **Stop all** until the group finishes. Return a promise to keep the button pending until it settles: a second press does nothing meanwhile, and a rejection makes it available again. Once your steps stop, update their statuses, and the button goes away. If it had focus, focus moves to the trigger.
 
 ### Streaming
 
-New steps grow the content below the ones before, so the header and earlier steps never move. A status change morphs only the mark and the words beside it. Screen readers hear the summary and its outcome when the group needs input, completes, fails or is cancelled, and each step still announces its own.
+New steps grow the content below the ones before, so the header and earlier steps never move. A status change morphs only the mark and the words beside it. Screen readers hear the summary and its outcome ("stopped" for a cancelled group, as on Stop all) when the group needs input, completes, fails or is cancelled, and each step still announces its own.
 
 ### Motion
 

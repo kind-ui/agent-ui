@@ -31,7 +31,7 @@ export function StepGroup({ children, ...props }: StepGroupProps) {
       <StepGroupContent>
         <StepGroupChildren>{children}</StepGroupChildren>
       </StepGroupContent>
-      <StepGroupCancel />
+      {DEFAULT_END}
     </parts.Root>
   );
 }
@@ -45,7 +45,7 @@ export const StepGroupChildren = parts.Children;
 
 export type StepGroupTitleProps = ComponentProps<typeof parts.Title>;
 
-/** The `label`, else the summary of `labels`, unless you pass children. */
+/** The `label`, else the summary of `groupLabels`, unless you pass children. */
 export function StepGroupTitle({ children = ({ title }) => title, ...props }: StepGroupTitleProps) {
   return <parts.Title {...props}>{children}</parts.Title>;
 }
@@ -72,6 +72,8 @@ const DEFAULT_TRIGGER = (
     <StepGroupMeta />
   </StepGroupTrigger>
 );
+
+const DEFAULT_END = <StepGroupCancel />;
 
 const DEFAULT_CANCEL = (
   <>

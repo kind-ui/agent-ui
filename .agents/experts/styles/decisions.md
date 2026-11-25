@@ -75,6 +75,8 @@ Last reviewed: `bfb9bb7` (Design Wave 1 Batch D)
 - **Under `(hover: none)` Copy always covers the end of the table's last header and Terminal's first lines** (Design Wave 1 Batch D): nothing in the fixtures overlaps, but a long last header or first output line would sit under it.
 - **Inline-size containment on Test Results' root, Document's header and Sources' content** (Design Wave 1 Batch D): in a shrink-to-fit parent these parts no longer give the card its width, as with the composer.
 - **A Stack Trace location ends in an ellipsis** (Design Wave 1 Batch D): deep in a narrow Test Results row the `:line:col` can be cut, and the `title` with the full path doesn't reach touch or keyboard.
+- **`step-group.css` repeats `subagent.css`'s nested-steps inset (Wave 7 Task 7):** the content inset (6px short for the steps' own trigger padding), the edge padding and the children reset are copied with Step Group's slot names, since Task 7 doesn't own `subagent.css`. Fold both into one `:is()` rule (in `step.css`, "steps nested in a step's content") once Wave 7 lands.
+
 
 ## Resolved
 
