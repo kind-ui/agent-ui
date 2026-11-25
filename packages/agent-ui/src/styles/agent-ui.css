@@ -124,6 +124,8 @@
 
 /* wave-7-task-19: Flow Graph */
 
+@import "./flow-graph.css";
+
 /* Theme tokens (spec §3). `default` lets a consumer's own `@theme` or `:root` values win. Colors follow
    `color-scheme` through `light-dark()`: set `color-scheme: light dark` to follow the system, or `dark` on a
    dark theme's root. */

@@ -309,4 +309,13 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
   // wave-7-task-18: Thread List inbox
 
   // wave-7-task-19: Flow Graph
+
+  "flow-graph": [
+    {
+      c: "flow-graph",
+      case: "all",
+      interaction: press('[data-flow-graph-part="node"][aria-pressed="false"]'),
+    },
+    { c: "flow-graph", case: "down" },
+  ],
 };
