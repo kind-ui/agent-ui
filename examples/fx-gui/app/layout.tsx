@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "fx in your browser",
-  description: "The fx coding agent running in the browser through libfx and WebAssembly, with Agent UI.",
+  title: "fx-gui",
+  description: "A GUI for the fx coding agent, running in your browser through libfx and WebAssembly."
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
