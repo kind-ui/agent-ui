@@ -3,6 +3,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { allowClipboard, readClipboard } from "../clipboard.js";
 import { isWebElements } from "../layer.js";
+import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 type Fixture = {
   kindDiff: {
@@ -140,7 +141,8 @@ test("a 2,000-line diff renders only the rows in view", async ({ page }) => {
     .toBe("3001");
 });
 
-test("agents accept, expand every run and copy", async ({ page, context, browserName }) => {
+test("agents accept, expand every run and copy", async ({ page, context, browserName }, testInfo) => {
+  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
   await allowClipboard(context, browserName);
   await open(page);
   await expectAgentActions(page, "src/values.ts", ["accept", "copy", "expandAll", "revert"]);

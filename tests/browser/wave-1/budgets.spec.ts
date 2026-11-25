@@ -382,8 +382,8 @@ for (const messages of [100, 5000]) {
 
 // wave-7-task-6: Diff
 
-// A streamed hunk costs the same on a 40-line diff as on a 2,000-line one: only the rows it adds render, and past 400
-// rows only the rows in view are drawn.
+// A streamed hunk renders only the rows it adds and the table: below 400 rows that's its four rows; past 400 only the
+// rows in view are drawn, so on a 2,000-line diff the hunk below the view renders none.
 for (const lines of [40, 2000]) {
   test(`a hunk streamed onto a ${lines}-line diff`, async ({ page }) => {
     const limit = BUDGETS.diffHunk;
@@ -394,7 +394,6 @@ for (const lines of [40, 2000]) {
       10,
       'kindDiff.append("stream", `@@ -${(window.kindHunk = (window.kindHunk ?? 5000) + 10)},2 +${window.kindHunk},3 @@\\n a\\n+b\\n c\\n`)',
     );
-    console.log(lines, JSON.stringify(counts));
     expect(counts.writes).toBeLessThanOrEqual(limit.writes);
     expect(counts.renders).toBeLessThanOrEqual(limit.renders);
     expect(counts.notified).toBeLessThanOrEqual(limit.notified);

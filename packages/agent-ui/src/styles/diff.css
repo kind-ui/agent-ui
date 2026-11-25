@@ -105,12 +105,10 @@
 
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
-    :is(
-        [data-slot="kind-diff-copy"]::after,
-        [data-slot="kind-diff-accept"]::before,
-        [data-slot="kind-diff-revert"]::before,
-        [data-slot="kind-diff-collapsed"]::before
-      ) {
+    [data-slot="kind-diff-copy"]::after,
+    [data-slot="kind-diff-accept"]::before,
+    [data-slot="kind-diff-revert"]::before,
+    [data-slot="kind-diff-collapsed"]::before {
       forced-color-adjust: none;
       background-color: ButtonText;
     }

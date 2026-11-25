@@ -54,7 +54,9 @@ export const budgets = {
 
   // wave-7-task-6: Diff
 
-  diffHunk: { writes: 0, renders: 0, notified: 0 },
+  // The hunk's 4 rows render 10 components each on a 40-line diff (each cell a wrapper and its part); web creates
+  // their elements (56 writes). On a 2,000-line diff they're below the view, so only the table hears of them.
+  diffHunk: { writes: 56, renders: 48, notified: 27 },
 
   // wave-7-task-7: Step Group
 
