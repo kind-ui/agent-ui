@@ -350,7 +350,8 @@ export type MessagePrimitive = ReturnType<
       | "continue"
       | "delivery"
       | "delivery-icon"
-      | "withdraw",
+      | "withdraw"
+      | "retrying-icon",
       MessageSlot
     > & {
       avatar: MessageSlot<MessageAvatarState>;
@@ -382,7 +383,9 @@ export const messageOutcomeText = (state: Pick<MessageState, "outcome" | "errorT
   state.outcome === "stopped" ? "Stopped" : state.outcome === "failed" ? state.errorText : "";
 const NO_AVATAR: MessageAvatarState = { name: "", initials: "", src: undefined };
 
-const DELIVERY_TEXT: Record<MessageDelivery, string> = { steered: "Steered", queued: "Queued" };
+/** The delivery's words: "Steered" or "Queued". Empty without one. */
+export const messageDeliveryText = (delivery: MessageDelivery | undefined): string =>
+  delivery === "steered" ? "Steered" : delivery === "queued" ? "Queued" : "";
 
 const retrying = retryPart<MessageOptions, "retrySeconds">({
   retry: (options) => options.retry,
@@ -797,7 +800,7 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       }),
     }),
     "delivery-text": slot<BaseSlotProps, { text: string }>({
-      state: (state) => ({ text: state.delivery ? DELIVERY_TEXT[state.delivery] : "" }),
+      state: (state) => ({ text: messageDeliveryText(state.delivery) }),
       attrs: (_state, part) => ({ id: `${part.id}-delivery` }),
     }),
     withdraw: slot({
@@ -884,6 +887,14 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     retrying: slot<BaseSlotProps, { text: string }>({
       ...retrying.slot<MessageState, MessageApi>((state) => state.locale),
       present: (state) => state.retry !== undefined && state.outcome === null,
+    }),
+    "retrying-icon": slot({
+      attrs: (state) => ({
+        "aria-hidden": "true",
+        "data-status-mark": "",
+        "data-status": "running",
+        "data-motion": state.motion,
+      }),
     }),
     retry: slot({
       role: "button",

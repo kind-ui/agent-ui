@@ -16,6 +16,7 @@ export {
   type MessageState,
   type MessageTimeState,
   type MessageWithdrawDetails,
+  messageDeliveryText,
   messageOutcomeText,
   messagePrimitive,
 } from "./message.js";

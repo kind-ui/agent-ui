@@ -222,6 +222,8 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
 
   // wave-7-task-3: Message delivery mark and retrying
 
+  { url: "/?c=message&case=delivery", slots: ["kind-message-delivery-icon", "kind-message-retrying-icon"] },
+
   // wave-7-task-4: Terminal approval and Confirmation's Always allow
 
   // wave-7-task-5: Tool retry and retrying

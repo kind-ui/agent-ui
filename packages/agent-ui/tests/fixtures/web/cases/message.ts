@@ -7,9 +7,11 @@ import { answer } from "../../shared/markdown.js";
 import {
   author,
   authored,
+  delivered,
   outcomeError,
   outcomeText,
   regenerateOptions,
+  retrying,
   timing,
 } from "../../shared/message.js";
 
@@ -171,6 +173,51 @@ function outcomesCase(root: HTMLElement) {
   });
 }
 
+function deliveryCase(root: HTMLElement) {
+  define();
+  const user = (id: "steered" | "queued", label: string, attrs = "") => `
+    <kind-message id="${id}" aria-label="${label}" message-role="user" text="${delivered[id]}" delivery="${id}" ${attrs}>
+      <kind-message-header><kind-message-delivery></kind-message-delivery></kind-message-header>
+      <kind-message-content>${delivered[id]}</kind-message-content>
+    </kind-message>`;
+  // Built before it joins the page, so `retry` is set as the message starts, as React's first render is.
+  const page = document.createElement("div");
+  page.className = "m-4 flex w-[36rem] flex-col gap-6";
+  page.innerHTML = `
+    ${user("steered", "Steered message")}${user("queued", "Queued message", "can-withdraw")}
+    <kind-message id="answer" aria-label="Retrying answer" status="streaming" text="${delivered.answer}" can-retry>
+      <kind-message-content>${delivered.answer}</kind-message-content>
+      <kind-message-retrying></kind-message-retrying>
+      <kind-message-outcome></kind-message-outcome>
+    </kind-message>
+    <input aria-label="Reply" class="w-full">`;
+  const answer = page.querySelector("#answer") as HTMLElementTagNameMap["kind-message"];
+  answer.retry = retrying;
+  root.replaceChildren(page);
+  answer.addEventListener("retry", () => calls.push("retry"));
+  const deferred: { resolve(): void; reject(): void }[] = [];
+  root.querySelector("#queued")?.addEventListener("withdraw", (event) => {
+    const { reason, source, waitUntil } = (event as KindMessageEvents["withdraw"]).detail;
+    calls.push(`withdraw:${reason}:${source}`);
+    waitUntil(new Promise<void>((resolve, reject) => deferred.push({ resolve, reject })));
+  });
+  Object.assign(window, {
+    kindDelivery: {
+      calls,
+      deliver: (id: string, value: string | null) => {
+        const el = root.querySelector(`#${id}`);
+        if (value) el?.setAttribute("delivery", value);
+        else el?.removeAttribute("delivery");
+      },
+      retry: (value: typeof retrying | null) => {
+        answer.retry = value ?? undefined;
+      },
+      status: (value: string) => answer.setAttribute("status", value),
+      settle: (ok: boolean) => deferred.shift()?.[ok ? "resolve" : "reject"](),
+    },
+  });
+}
+
 export const cases = {
   all: (root: HTMLElement) => {
     define();
@@ -227,6 +274,7 @@ export const cases = {
   author: authorCase(false),
   "author-clock": authorCase(true),
   outcomes: outcomesCase,
+  delivery: deliveryCase,
   options: optionsCase(false),
   refusing: optionsCase(true),
   "no-options": optionsCase(false, true),
