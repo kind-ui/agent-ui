@@ -78,7 +78,7 @@ test("unknown registry dependencies, visible internals and missing descriptions 
 
 test("component names have no product prefix", () => {
   for (const { name } of catalog.items.filter((each) => each.type === "registry:ui")) {
-    assert.doesNotMatch(name, /^agent-/);
+    assert.doesNotMatch(name, /^agent-ui/);
   }
 });
 

@@ -113,7 +113,7 @@
     align-items: center;
     gap: 6px;
     white-space: nowrap;
-    --kind-status-mark-size: 12px;
+    --kind-status-mark-size: 14px;
   }
 
   [data-agent-card-part="action"] {

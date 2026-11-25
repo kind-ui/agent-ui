@@ -78,6 +78,8 @@ const pages = [
 
   // wave-7-task-14: Agent Card
 
+  "agent-card&case=all",
+
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
   // wave-7-task-16: Quota Notice

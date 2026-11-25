@@ -1,0 +1,68 @@
+---
+title: Agent Card
+description: Show who an agent is and what it can do, with one button to open or start it.
+---
+
+import AgentCardExample from "../../../examples/agent-card/basic";
+
+Use an agent card where people pick or check on one of several agents: a list of agents, a team page, the agent a run belongs to. It's a self-contained article, named by the agent's name.
+
+<Example caption="Each card shows the agent's avatar, name, model, status and what it can do, with one action.">
+  <AgentCardExample />
+
+  <ExampleCode example="agent-card/basic" />
+</Example>
+
+## Installation
+
+<Install name="agent-card" />
+
+## Composition
+
+```text
+AgentCard
+├── AgentCardAvatar
+├── AgentCardName
+├── AgentCardStatus
+├── AgentCardModel
+├── AgentCardAction
+├── AgentCardDescription
+└── AgentCardCapabilities
+    └── AgentCardCapability
+```
+
+`AgentCard` renders every part. Each part shows what `agent` holds unless you pass children, and leaves itself out when there's nothing to show: no model, no description, no capabilities, no `status`, or no `onAction`. To arrange the parts yourself, use `AgentCardRoot`.
+
+## Usage
+
+### Agent
+
+Pass `agent`: its `id` and `name`, and any of `avatarUrl`, `model`, `description` and `capabilities`. The avatar shows the image, or the name's initials until it loads or without one; it's hidden from screen readers, since the name beside it says who the agent is. Capabilities read as a list of badges.
+
+The name is a heading, level 3 unless you pass `level` (1 to 6). Pass `href` to make it a link to the agent; only `http`, `https` and `mailto` URLs link.
+
+### Status
+
+Pass `status` to show what the agent is doing, as a status mark and words: "Waiting", "Working", "Needs input", "Done", "Failed" or "Stopped". Without one the card shows no status.
+
+### Action
+
+Pass `onAction` to show one button, "Open" unless you pass `actionLabel` ("Start", "Chat"). It's called with the agent's `id` and `{ reason, source }`. Its accessible name adds the agent's name ("Open Planner"), so cards side by side don't all read "Open".
+
+The card has no popup of its own. To show it when someone hovers an agent's name, put it in a hover card of your own.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/agent-card/agent-card.ts" name="AgentCardOptions" />
+
+<FrameworkNames name="agent-card" />
+
+### Agent
+
+An agent connected with `createAgent` finds the card by the agent's name. `run()` does what the action button does, offered while `onAction` is set. It doesn't ask a person first.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/agent-card/agent-card.ts" name="AgentCardAgentActions" type='Pick<AgentCardApi, "run">' />
+
+<Caption>
+  Runs in React, Vue, Svelte, Solid and Web Components. Call `defineAgentCard()`, then write `<kind-agent-card status="running">` and set `agent` as a property; other props are kebab-case attributes (`action-label`). The element adds its parts when it has none. The `can-run` attribute shows the action, which fires `agentaction` with the agent's `id` as `detail.value`.
+</Caption>

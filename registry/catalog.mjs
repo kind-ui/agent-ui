@@ -479,6 +479,14 @@ export const components = {
 
   // wave-7-task-14: Agent Card
 
+  "agent-card": {
+    group: "ops",
+    when: "the app has several agents and shows who one is, what it can do, and a way to open or start it.",
+    title: "Agent Card",
+    description: "An agent's avatar, name, model, status and capabilities, with one action.",
+    uses: [],
+  },
+
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
   // wave-7-task-16: Quota Notice

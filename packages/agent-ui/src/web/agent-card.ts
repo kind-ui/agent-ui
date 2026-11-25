@@ -84,14 +84,8 @@ export function defineAgentCard(): void {
 
           const status = own("status");
           if (claim(status) && state.status) {
-            if (!status.firstChild) {
-              status.innerHTML = '<span data-status-mark="" aria-hidden="true"></span>';
-              status.append("");
-            }
-            const mark = status.firstElementChild as Element;
-            if (mark.getAttribute("data-status") !== state.status)
-              mark.setAttribute("data-status", state.status);
-            const words = mark.nextSibling;
+            if (!status.firstChild) status.append(document.createElement("kind-agent-card-status-icon"), "");
+            const words = status.lastChild;
             const label = agentCardStatus(state.status);
             if (words && words.textContent !== label) words.textContent = label;
           }
@@ -125,6 +119,7 @@ export function defineAgentCard(): void {
     capabilities: "kind-agent-card-capabilities",
     capability: "kind-agent-card-capability",
     status: "kind-agent-card-status",
+    "status-icon": "kind-agent-card-status-icon",
     action: { tag: "kind-agent-card-action", target: wrappedButton, display: "contents" },
   });
 }
@@ -150,6 +145,7 @@ declare global {
     "kind-agent-card-capabilities": HTMLElement;
     "kind-agent-card-capability": HTMLElement;
     "kind-agent-card-status": HTMLElement;
+    "kind-agent-card-status-icon": HTMLElement;
     "kind-agent-card-action": HTMLElement;
   }
 }

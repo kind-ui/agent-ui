@@ -125,6 +125,8 @@ import { ConversationSearch } from "./components/ui/conversation-search.js";
 
 // wave-7-task-14: Agent Card
 
+import { AgentCard } from "./components/ui/agent-card.js";
+
 // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
 // wave-7-task-16: Quota Notice
@@ -460,6 +462,8 @@ const items = {
   // wave-7-task-13: Schedule Card
 
   // wave-7-task-14: Agent Card
+
+  "agent-card": <AgentCard agent={{ id: "planner", name: "Planner", capabilities: ["Planning"] }} status="running" />,
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
 

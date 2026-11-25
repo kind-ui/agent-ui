@@ -112,6 +112,8 @@ import { defineConversationSearch } from "./components/ui/web/conversation-searc
 
 // wave-7-task-14: Agent Card
 
+import { defineAgentCard } from "./components/ui/web/agent-card.js";
+
 // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
 // wave-7-task-16: Quota Notice
@@ -237,6 +239,8 @@ for (const define of [
   // wave-7-task-13: Schedule Card
 
   // wave-7-task-14: Agent Card
+
+  defineAgentCard,
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
@@ -391,6 +395,8 @@ const items = {
   // wave-7-task-13: Schedule Card
 
   // wave-7-task-14: Agent Card
+
+  "agent-card": `<kind-agent-card status="running"></kind-agent-card>`,
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
 

@@ -14,6 +14,7 @@ const parts = createParts(agentCardPrimitive, {
   capabilities: "ul",
   capability: "li",
   status: "span",
+  "status-icon": "span",
   action: "button",
 });
 
@@ -40,6 +41,7 @@ export function AgentCard(props: AgentCardProps) {
 /** The bare root, for arranging the parts yourself. */
 export const AgentCardRoot = parts.Root;
 export const AgentCardCapability = parts.Capability;
+export const AgentCardStatusIcon = parts.StatusIcon;
 
 export type AgentCardAvatarProps = ComponentProps<typeof parts.Avatar>;
 
@@ -102,9 +104,9 @@ export type AgentCardStatusProps = ComponentProps<typeof parts.Status>;
 
 /** The status mark and its words, like "Working", unless you pass children. Rendered only with a `status`. */
 export function AgentCardStatus({
-  children = ({ status, label }) => (
+  children = ({ label }) => (
     <>
-      <span data-status-mark="" data-status={status} aria-hidden="true" />
+      <AgentCardStatusIcon />
       {label}
     </>
   ),

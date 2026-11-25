@@ -9,6 +9,7 @@
     "task",
     "plan",
     "subagent",
+    "agent-card",
     "queue",
     "confirmation",
     "question",

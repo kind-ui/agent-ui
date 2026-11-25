@@ -64,8 +64,8 @@ export type AgentCardApi = {
 export type AgentCardAvatarState = { name: string; initials: string; src: string | undefined };
 /** What the name slot hands render functions: the name, and the safe `href` it links to. */
 export type AgentCardNameState = { name: string; href: string | undefined };
-/** What the status slot hands render functions: the status and its words. */
-export type AgentCardStatusState = { status: StepStatus; label: string };
+/** What the status slot hands render functions: the status in words. */
+export type AgentCardStatusState = { label: string };
 
 type CapabilityProps = { value: string };
 
@@ -83,6 +83,7 @@ type AgentCardSlots = {
   capabilities: Slot<{ capabilities: readonly string[] }>;
   capability: Slot<Record<never, never>, CapabilityProps & BaseSlotProps>;
   status: Slot<AgentCardStatusState>;
+  "status-icon": Slot;
   action: Slot<{ label: string }>;
 };
 
@@ -203,11 +204,17 @@ export const agentCardPrimitive: AgentCardPrimitive = definePrimitive<
     }),
     status: slot<BaseSlotProps, AgentCardStatusState>({
       present: (state) => state.status !== undefined,
-      state: (state) => {
-        const status = state.status ?? "pending";
-        return { status, label: agentCardStatus(status) };
-      },
+      state: (state) => ({ label: agentCardStatus(state.status ?? "pending") }),
       attrs: (state) => ({ "data-status": state.status, "data-agent-card-part": "status" }),
+    }),
+    // The words beside it say the status.
+    "status-icon": slot({
+      attrs: (state) => ({
+        "aria-hidden": "true",
+        "data-status-mark": "",
+        "data-status": state.status,
+        "data-agent-card-part": "status-icon",
+      }),
     }),
     action: slot<BaseSlotProps, { label: string }>({
       role: "button",

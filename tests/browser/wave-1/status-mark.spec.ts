@@ -90,6 +90,8 @@ const consumers: Record<string, string> = {
 
   // wave-7-task-14: Agent Card
 
+  "agent-card/agent-card.ts": "kind-agent-card-status-icon",
+
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
   // wave-7-task-16: Quota Notice
@@ -241,6 +243,8 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
   // wave-7-task-13: Schedule Card
 
   // wave-7-task-14: Agent Card
+
+  { url: "/?c=agent-card&case=all", slots: ["kind-agent-card-status-icon"] },
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
