@@ -33,6 +33,7 @@ import { Reasoning } from "@/components/ui/reasoning";
 import { Terminal } from "@/components/ui/terminal";
 import { ThinkingIndicator } from "@/components/ui/thinking-indicator";
 import { Tool } from "@/components/ui/tool";
+import { clearSession, loadSession, savedKey, saveKey, saveSession } from "@/lib/persist";
 import {
   type AppTurnEvent,
   type Connection,
@@ -83,9 +84,9 @@ const EMPTY_DRAFT: ComposerDraft = { text: "", tokens: [], attachments: [] };
 // Starting models per connection, from fx's docs; each is replaced by the provider's own list once it loads.
 const DEFAULT_MODELS: Record<string, ModelOption[]> = {
   gateway: [
+    { id: "anthropic/claude-haiku-5.5", name: "claude-haiku-5.5", group: "anthropic" },
     { id: "spacexai/grok-4.7", name: "grok-4.7", group: "spacexai" },
     { id: "anthropic/claude-opus-5.5", name: "claude-opus-5.5", group: "anthropic" },
-    { id: "anthropic/claude-haiku-5.5", name: "claude-haiku-5.5", group: "anthropic" },
   ],
   chatgpt: [{ id: "gpt-6.1-sol", name: "gpt-6.1-sol" }],
   grok: [{ id: "grok-4.5", name: "grok-4.5" }],
@@ -115,7 +116,17 @@ const readable = (error: string) =>
   error === "HostStreamFailed" ? "Couldn't reach the model. Check your connection, or sign in again." : error;
 
 let ids = 0;
-const nextId = (prefix: string) => `${prefix}-${++ids}`;
+// Unique across reloads, since restored messages keep their ids.
+const run = Date.now().toString(36);
+const nextId = (prefix: string) => `${prefix}-${run}-${++ids}`;
+
+// Cheap models that call tools well; the first one the connection offers is the default.
+const PREFERRED = [
+  "anthropic/claude-haiku-5.5",
+  "openai/gpt-4o-mini",
+  "google/gemini-3-flash",
+  "deepseek/deepseek-v4-flash",
+];
 
 function language(path: string) {
   const ext = path.split(".").pop() ?? "";
@@ -177,25 +188,78 @@ export function FxApp({ mockUrl }: { mockUrl?: string }) {
       setChecked(true);
       return;
     }
+    // A signed-in account (sealed cookie) wins over a key saved in this browser.
     fetch("/api/auth/session")
       .then((response) => response.json())
       .then((body: { provider: "vercel" | "chatgpt" | "grok" | null; vercelAvailable: boolean }) => {
         setVercelAvailable(body.vercelAvailable);
+        const key = savedKey();
         if (body.provider) setConnection({ kind: "account", provider: body.provider });
+        else if (key) setConnection({ kind: "key", apiKey: key });
       })
       .catch(() => {})
       .finally(() => setChecked(true));
   }, [mockUrl]);
 
+  // The first load restores the saved thread and workspace; "New session" starts empty.
+  const [restored, setRestored] = useState(false);
   // biome-ignore lint/correctness/useExhaustiveDependencies: a new session starts a new workspace
   useEffect(() => {
-    const ws = createWorkspace();
-    workspace.current = ws;
-    runtime.current = null;
-    const refresh = () => void ws.entries().then(setEntries);
-    refresh();
-    return ws.subscribe(refresh);
+    let cancelled = false;
+    let unsubscribe = () => {};
+    void (async () => {
+      const saved = session === 0 ? await loadSession<ChatMessage, Approval>() : undefined;
+      if (cancelled) return;
+      const ws = createWorkspace(saved?.workspace);
+      workspace.current = ws;
+      runtime.current = null;
+      if (saved) {
+        // A turn a reload cut off can't continue: its reply shows as stopped and its waiting calls as undecided.
+        setMessages(
+          saved.messages.map((message) =>
+            message.status === "streaming" || message.status === "submitted"
+              ? {
+                  ...message,
+                  status: "aborted",
+                  items: message.items.map((item) => ({ ...item, done: true })),
+                }
+              : message,
+          ),
+        );
+        setApprovals(
+          Object.fromEntries(
+            Object.entries(saved.approvals).map(([id, approval]) => [
+              id,
+              approval.state === "requested" || approval.state === "submitting"
+                ? { ...approval, state: "auto" }
+                : approval,
+            ]),
+          ),
+        );
+        if (saved.model) setModel(saved.model);
+        if (saved.effort) setEffort(saved.effort);
+      }
+      const refresh = () => void ws.entries().then(setEntries);
+      refresh();
+      unsubscribe = ws.subscribe(refresh);
+      setRestored(true);
+    })();
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, [session]);
+
+  // Save the thread and workspace as they change.
+  useEffect(() => {
+    if (!restored) return;
+    const timer = setTimeout(async () => {
+      const ws = workspace.current;
+      if (!ws) return;
+      await saveSession({ messages, approvals, workspace: await ws.snapshot(), model, effort });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [restored, messages, approvals, entries, model, effort]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: read the file again whenever the workspace changes
   useEffect(() => {
@@ -243,7 +307,7 @@ export function FxApp({ mockUrl }: { mockUrl?: string }) {
   useEffect(() => {
     const fallback = modelsFor(connection);
     setModels(fallback);
-    setModel(fallback[0].id);
+    setModel((chosen) => (fallback.some((option) => option.id === chosen) ? chosen : fallback[0].id));
     if (!connection) return;
     let current = true;
     listConnectionModels(connection)
@@ -255,7 +319,11 @@ export function FxApp({ mockUrl }: { mockUrl?: string }) {
           ...(id.includes("/") ? { group: id.split("/")[0] } : {}),
         }));
         setModels(options);
-        setModel((chosen) => (options.some((option) => option.id === chosen) ? chosen : options[0].id));
+        setModel((chosen) =>
+          options.some((option) => option.id === chosen)
+            ? chosen
+            : (PREFERRED.find((id) => options.some((option) => option.id === id)) ?? options[0].id),
+        );
       })
       .catch(() => {});
     return () => {
@@ -437,13 +505,20 @@ export function FxApp({ mockUrl }: { mockUrl?: string }) {
     setDraft(EMPTY_DRAFT);
     setSession((n) => n + 1);
     setSelected(null);
+    void clearSession();
   }
 
   async function signOut() {
     reset();
     if (connection?.kind === "account")
       await fetch("/api/auth/signout", { method: "POST", headers: { "x-fx-gui": "1" } });
+    saveKey(null);
     setConnection(null);
+  }
+
+  function connect(next: Connection) {
+    if (next.kind === "key") saveKey(next.apiKey);
+    setConnection(next);
   }
 
   const mentions = entries.map((entry) => ({
@@ -453,7 +528,7 @@ export function FxApp({ mockUrl }: { mockUrl?: string }) {
   }));
 
   if (!checked) return null;
-  if (!connection) return <SignIn vercelAvailable={vercelAvailable} jspi={jspi} onConnect={setConnection} />;
+  if (!connection) return <SignIn vercelAvailable={vercelAvailable} jspi={jspi} onConnect={connect} />;
 
   const header = (
     <header className="flex flex-wrap items-center gap-3 border-b border-[var(--kind-color-hairline)] px-4 py-2.5">

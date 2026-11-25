@@ -197,6 +197,9 @@ export function SignIn({
                 Use key
               </button>
             </div>
+            <p className="text-[length:var(--kind-text-xs)] text-[var(--kind-color-muted)]">
+              Saved in this browser only. Disconnect removes it.
+            </p>
           </form>
         </div>
       )}
@@ -204,8 +207,9 @@ export function SignIn({
       <p className="text-[length:var(--kind-text-xs)] text-[var(--kind-color-muted)]">
         Turns run on your own plan and bill you: Vercel's terms and your AI Gateway balance, your ChatGPT plan
         and OpenAI's terms, or your Grok plan and xAI's terms. Sign-in tokens stay in an encrypted cookie on
-        this site and never reach this page's scripts. A pasted key stays in this tab only. Your workspace
-        lives in this tab and is gone when you close it.
+        this site and never reach this page's scripts. A pasted key is saved in this browser and passes
+        through this site only on its way to AI Gateway; the server never stores it. Your thread and workspace
+        are saved in this browser until you start a new session.
       </p>
     </main>
   );

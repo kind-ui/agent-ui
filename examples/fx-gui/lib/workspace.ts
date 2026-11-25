@@ -13,10 +13,12 @@ type Change = FileTreeEntry["change"];
  * An in-browser workspace: just-bash over an in-memory file system, which starts empty. Its network access stays
  * off (just-bash's default), so commands the agent runs can't reach anything outside the tab.
  */
-export function createWorkspace() {
-  const bash = new Bash({ files: { [`${ROOT}/.fx-gui`]: "" }, cwd: ROOT });
+export type WorkspaceSnapshot = { files: Record<string, string>; original: Record<string, string> };
+
+export function createWorkspace(saved?: WorkspaceSnapshot) {
+  const bash = new Bash({ files: { [`${ROOT}/.fx-gui`]: "", ...saved?.files }, cwd: ROOT });
   // What each file held when the person attached it, so the tree marks what fx changed since.
-  const original = new Map<string, string>();
+  const original = new Map<string, string>(Object.entries(saved?.original ?? {}));
   const listeners = new Set<() => void>();
   const notify = () => {
     for (const listener of listeners) listener();
@@ -31,7 +33,7 @@ export function createWorkspace() {
     return full;
   };
 
-  async function files() {
+  async function files_() {
     const paths = (bash.fs as unknown as { getAllPaths(): string[] }).getAllPaths();
     const result: string[] = [];
     for (const path of paths) {
@@ -54,7 +56,7 @@ export function createWorkspace() {
 
   async function entries(): Promise<FileTreeEntry[]> {
     const list: FileTreeEntry[] = [];
-    for (const path of await files()) {
+    for (const path of await files_()) {
       const text = await bash.fs.readFile(path);
       const before = original.get(path);
       let change: Change;
@@ -92,7 +94,15 @@ export function createWorkspace() {
     notify();
   }
 
+  /** Every file and its starting point, to save the workspace across a reload. */
+  async function snapshot(): Promise<WorkspaceSnapshot> {
+    const files: Record<string, string> = {};
+    for (const path of await files_()) files[path] = await bash.fs.readFile(path);
+    return { files, original: Object.fromEntries(original) };
+  }
+
   return {
+    snapshot,
     entries,
     read,
     run,

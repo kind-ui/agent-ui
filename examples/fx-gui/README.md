@@ -10,7 +10,9 @@ Every turn runs on the user's own plan or key. Nothing runs on this deployment's
 
 - **Sign in with ChatGPT** or **Sign in with Grok**: device-code sign-in through `libfx/chatgpt` and `libfx/grok`. Tokens are kept in an AES-256-GCM sealed, httpOnly, Secure, SameSite=Lax cookie, never in page scripts. The page's libfx sends model requests to `/api/model`, which adds the credentials server-side and forwards them only to the exact endpoints libfx uses for that provider. It refreshes tokens server-side and masks secrets in error bodies.
 - **Continue with Vercel** (shown once configured): Sign in with Vercel makes an AI Gateway key on the user's own team, billed to them. The key expires in 7 days and is deleted on sign-out.
-- **Your own AI Gateway key**: stays in the tab and goes straight to AI Gateway.
+- **Your own AI Gateway key**: saved in this browser's localStorage. Each model request carries it through `/api/model`, which uses it for that request only and never stores or logs it. AI Gateway's error responses have no CORS headers, so a direct browser request would hide why a turn failed.
+
+The thread and workspace files are saved in IndexedDB, so a reload keeps them; New session clears them. A turn a reload cut off shows as Stopped.
 
 Needs WebAssembly JSPI (current Chrome, Edge, Firefox and Safari).
 
@@ -20,7 +22,7 @@ Needs WebAssembly JSPI (current Chrome, Edge, Firefox and Safari).
 - State-changing routes require the same Origin and an `x-fx-gui` header.
 - Sign-in and model routes are rate-limited per instance, and bodies are capped at 8 MiB.
 - Tokens are never logged or returned to the page.
-- The page sends a strict CSP (connect only to this site and AI Gateway), `frame-ancestors 'none'`, `nosniff`, `no-referrer` and HSTS.
+- The page sends a strict CSP (connect only to this site), `frame-ancestors 'none'`, `nosniff`, `no-referrer` and HSTS.
 - Workspace paths can't leave `/workspace`.
 
 ## Develop

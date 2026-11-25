@@ -51,6 +51,7 @@ const DROP = new Set([
   "chatgpt-account-id",
   "x-grok-user-id",
   "x-userid",
+  "x-fx-key",
 ]);
 
 async function boundedBody(request: Request) {
@@ -98,7 +99,21 @@ async function forward(request: Request) {
   const limit = limited(request, "model", 240);
   if (limit) return limit;
 
-  const auth = await readAuth();
+  // A pasted AI Gateway key rides on each request and is used only for it: never stored or logged. It goes through
+  // here because AI Gateway's error responses carry no CORS headers, so a browser would hide why a turn failed.
+  const pasted = request.headers.get("x-fx-key");
+  if (pasted !== null && !/^[\w.-]{8,512}$/.test(pasted))
+    return json({ error: "That doesn't look like an AI Gateway key." }, 400);
+  const auth: Auth | null = pasted
+    ? {
+        provider: "vercel",
+        apiKey: pasted,
+        keyId: "",
+        teamId: "",
+        accessToken: "",
+        expiresAt: Number.POSITIVE_INFINITY,
+      }
+    : await readAuth();
   if (!auth) return json({ error: "Sign in first." }, 401);
   if (auth.provider === "vercel" && Date.now() > auth.expiresAt)
     return json({ error: "Your session expired. Sign in again." }, 401);

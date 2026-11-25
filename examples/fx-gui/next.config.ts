@@ -7,12 +7,12 @@ const nextConfig: NextConfig = {
   turbopack: { root: import.meta.dirname },
   poweredByHeader: false,
   async headers() {
-    // The page talks only to this site and, with a pasted key, to AI Gateway. libfx compiles WebAssembly.
+    // The page talks only to this site; model requests go through /api/model. libfx compiles WebAssembly.
     const csp = [
       "default-src 'self'",
       `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${dev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",
-      `connect-src 'self' https://ai-gateway.vercel.sh${dev ? " http://localhost:* ws://localhost:*" : ""}`,
+      `connect-src 'self'${dev ? " http://localhost:* ws://localhost:*" : ""}`,
       "img-src 'self' data: blob:",
       "font-src 'self'",
       "worker-src 'self' blob:",

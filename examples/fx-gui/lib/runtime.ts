@@ -64,14 +64,23 @@ export type Connection =
  * Sends a model request through this site's /api/model, which adds the signed-in user's credentials on the server.
  * The credentials libfx holds here are a placeholder the server replaces.
  */
-export const proxyFetch = async (url: string, init: RequestInit) => {
+export const proxyFetch = (url: string, init: RequestInit) => sendThroughSite(url, init);
+
+const keyFetch = (apiKey: string) => (url: string, init: RequestInit) => sendThroughSite(url, init, apiKey);
+
+const sendThroughSite = async (url: string, init: RequestInit, apiKey?: string) => {
   const headers: Record<string, string> = {};
   new Headers(init.headers).forEach((value, name) => {
     headers[name] = value;
   });
   return fetch("/api/model", {
     method: init.method ?? "GET",
-    headers: { "x-fx-gui": "1", "x-fx-target": url, "x-fx-headers": JSON.stringify(headers) },
+    headers: {
+      "x-fx-gui": "1",
+      "x-fx-target": url,
+      "x-fx-headers": JSON.stringify(headers),
+      ...(apiKey ? { "x-fx-key": apiKey } : {}),
+    },
     body: init.body,
     signal: init.signal,
     ...(init.body instanceof ReadableStream ? { duplex: "half" } : {}),
@@ -83,7 +92,7 @@ const PLACEHOLDER = { accessToken: "kept-on-the-server", accountId: "kept-on-the
 function agentOptions(connection: Connection) {
   switch (connection.kind) {
     case "key":
-      return { apiKey: connection.apiKey };
+      return { apiKey: PLACEHOLDER.accessToken, fetch: keyFetch(connection.apiKey) };
     case "mock":
       return {
         provider: { name: "mock", baseUrl: connection.url, modelDefaults: { supportsToolUse: true } },

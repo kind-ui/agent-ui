@@ -24,3 +24,10 @@ body {
   outline: 2px solid var(--kind-color-focus);
   outline-offset: 2px;
 }
+
+/* Long menus (the model list) scroll inside the popup instead of running off the window. */
+[data-slot="menu-content"] {
+  max-height: var(--available-height);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
