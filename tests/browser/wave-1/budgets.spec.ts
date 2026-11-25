@@ -404,6 +404,22 @@ for (const messages of [100, 5000]) {
 
 // wave-7-task-18: Thread List inbox
 
+// Updating one running thread's progress reaches only its row, at 10 threads as at 1,000.
+for (const threads of ["ten", "thousand"])
+  test(`threadProgress among ${threads} threads`, async ({ page }) => {
+    const limit = BUDGETS.threadProgress;
+    await page.goto(`/?c=thread-list&case=${threads}`);
+    await expect(page.getByRole("link", { name: "Thread 1", exact: true })).toBeVisible();
+    const step = (progress: string) => `kindThreadList.setThreads((threads) =>
+      threads.map((thread) => (thread.id === "m2" ? { ...thread, status: "running", progress: ${progress} } : thread)))`;
+    await page.evaluate(step("0"));
+    const counts = await most(page, 4, step("((window.kindProgress = ((window.kindProgress ?? 0) + 0.1) % 1))"));
+    expect(counts.writes).toBeLessThanOrEqual(limit.writes);
+    expect(counts.renders).toBeLessThanOrEqual(limit.renders);
+    expect(counts.notified).toBeLessThanOrEqual(limit.notified);
+    expect(counts.layoutReads).toBeLessThanOrEqual(limit.layoutReads);
+  });
+
 // wave-7-task-19: Flow Graph
 
 test("mounting and unmounting a conversation leaves no nodes or listeners behind", async ({

@@ -1,14 +1,14 @@
 import type { Thread } from "@kind-ui/agent-ui";
 import type { AgentAction } from "@ui-sdk/web/agent";
 import { defineThreadList } from "../../../../src/web/thread-list.js";
-import { threads as fixed, manyThreads, NOW, threadListHost } from "../../shared/thread-list.js";
+import { threads as fixed, inboxThreads, manyThreads, NOW, threadListHost } from "../../shared/thread-list.js";
 
-const { host, select, newThread, rename, pin, share, remove, loadMore } = threadListHost();
+const { host, select, newThread, rename, pin, share, readChange, archive, remove, loadMore } = threadListHost();
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 
 const threadList =
-  ({ initial, confirmDelete }: { initial: Thread[]; confirmDelete?: boolean }) =>
+  ({ initial, confirmDelete, inbox }: { initial: Thread[]; confirmDelete?: boolean; inbox?: boolean }) =>
   (root: HTMLElement) => {
     defineThreadList();
     const container = document.createElement("div");
@@ -21,6 +21,10 @@ const threadList =
     list.timeZone = "UTC";
     if (confirmDelete !== undefined) list.confirmDelete = confirmDelete;
     list.hasMore = initial.length > 100;
+    if (inbox) {
+      list.groupBy = "status";
+      Object.assign(list, { canArchive: true, canMarkRead: true });
+    }
     Object.assign(list, {
       canSelect: true,
       canNew: true,
@@ -51,6 +55,14 @@ const threadList =
       const { value, waitUntil, ...details } = event.detail;
       waitUntil(remove(value, details));
     });
+    list.addEventListener("readchange", (event) => {
+      const { value, ...details } = event.detail;
+      readChange(value, details);
+    });
+    list.addEventListener("threadarchive", (event) => {
+      const { value, waitUntil, ...details } = event.detail;
+      waitUntil(archive(value, details));
+    });
     list.addEventListener("loadmore", (event) => loadMore(event.detail));
     container.append(list);
     root.append(container);
@@ -76,4 +88,5 @@ export const cases = {
   "no-confirm": threadList({ initial: fixed, confirmDelete: false }),
   ten: threadList({ initial: manyThreads(10) }),
   thousand: threadList({ initial: manyThreads(1000) }),
+  inbox: threadList({ initial: inboxThreads, inbox: true }),
 };

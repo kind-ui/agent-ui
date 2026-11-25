@@ -1,9 +1,11 @@
 import {
   type ThreadListApi,
+  type ThreadListDescriptionState,
   type ThreadListEntry,
   type ThreadListLoadReason,
   type ThreadListMenuContentState,
   type ThreadListOptions,
+  type ThreadListProgressState,
   type ThreadListReason,
   type ThreadListState,
   type ThreadListTimeState,
@@ -21,6 +23,7 @@ import type {
 } from "@ui-sdk/web/events";
 import { defineInternalAlertDialog } from "./internal/alert-dialog.js";
 import { defineInternalMenu, menuElement as element, placeMenuChild as place } from "./internal/menu.js";
+import "@ui-sdk/web/progress";
 
 const DEFAULT_PARTS = `<kind-thread-list-new><button><span data-thread-list-icon="new" aria-hidden="true"></span>New chat</button></kind-thread-list-new><kind-thread-list-viewport><kind-thread-list-grid><div></div></kind-thread-list-grid><kind-thread-list-end></kind-thread-list-end></kind-thread-list-viewport><kind-thread-list-menu><kind-internal-menu><ui-menu><kind-thread-list-menu-content><ui-menu-content align="end" side-offset="4" data-agent-hidden></ui-menu-content></kind-thread-list-menu-content></ui-menu></kind-internal-menu></kind-thread-list-menu><kind-thread-list-dialog><kind-internal-alert-dialog><ui-alert-dialog><ui-alert-dialog-backdrop hidden></ui-alert-dialog-backdrop><ui-alert-dialog-content hidden><ui-alert-dialog-title></ui-alert-dialog-title><ui-alert-dialog-description></ui-alert-dialog-description><div data-thread-list-answers><kind-thread-list-dialog-error>Couldn't delete. Try again.</kind-thread-list-dialog-error><kind-thread-list-dialog-cancel><button>Cancel</button></kind-thread-list-dialog-cancel><kind-thread-list-dialog-delete><button>Delete</button></kind-thread-list-dialog-delete></div></ui-alert-dialog-content></ui-alert-dialog></kind-internal-alert-dialog></kind-thread-list-dialog>`;
 
@@ -86,12 +89,53 @@ const drawTime = (row: Element, time: ThreadListTimeState) => {
   if (target.textContent !== time.label) target.textContent = time.label;
 };
 
+// Each row's description and progress elements and the states they were last drawn from.
+const rowDescriptions = new WeakMap<Element, Element>();
+const drawnDescriptions = new WeakMap<Element, ThreadListDescriptionState>();
+const rowProgress = new WeakMap<Element, Element>();
+const progressBars = new WeakMap<Element, Element & { value?: number }>();
+
+/** The summary, then the progress in words, each only when it has some. */
+const drawDescription = (row: Element, description: ThreadListDescriptionState) => {
+  const target = rowDescriptions.get(row);
+  if (!target || drawnDescriptions.get(target) === description) return;
+  drawnDescriptions.set(target, description);
+  const { summary, progress } = description;
+  const document = target.ownerDocument;
+  target.replaceChildren(
+    ...(summary ? [element(document, "span", { "data-thread-list-summary": "" }, summary)] : []),
+    ...(progress ? [element(document, "span", { "data-thread-list-progress-text": "" }, progress)] : []),
+  );
+};
+
+// A row gets its bar once it first has progress: UI SDK reads every bar in the page as the list changes.
+const drawProgress = (row: Element, progress: ThreadListProgressState, shown: boolean) => {
+  const part = rowProgress.get(row);
+  if (!part) return;
+  let bar = progressBars.get(part);
+  if (!bar && shown) {
+    const document = part.ownerDocument;
+    // Named only for UI SDK's check: the bar is hidden, and the description has its words.
+    bar = element(document, "ui-progress", { "aria-label": "Progress" });
+    const track = element(document, "ui-progress-track");
+    track.append(element(document, "ui-progress-indicator"));
+    bar.append(track);
+    part.append(bar);
+    progressBars.set(part, bar);
+  }
+  write(bar ?? null, "value", progress.value);
+};
+
 const newRow = (document: Document, id: string) => {
+  const description = element(document, "kind-thread-list-description", { value: id });
+  const progress = element(document, "kind-thread-list-progress", { value: id });
   const anchor = element(document, "a");
   anchor.append(
     element(document, "span", { "data-thread-list-title": "" }),
     element(document, "kind-thread-list-status", { value: id }),
     element(document, "kind-thread-list-unread", { value: id }),
+    description,
+    progress,
   );
   const link = element(document, "kind-thread-list-link", { value: id });
   link.append(anchor);
@@ -110,6 +154,8 @@ const newRow = (document: Document, id: string) => {
   const row = element(document, "kind-thread-list-row", { value: id });
   row.append(cell, moreCell);
   rowTimes.set(row, time);
+  rowDescriptions.set(row, description);
+  rowProgress.set(row, progress);
   return row;
 };
 
@@ -153,7 +199,12 @@ const drawRows = (grid: Element, state: ThreadListState, api: ThreadListApi) => 
       rows.set(item.key, row);
     }
     drawEntry(row, entry);
-    if (entry.type === "thread") drawTime(row, api.timeState(state, item.key));
+    if (entry.type === "thread") {
+      drawTime(row, api.timeState(state, item.key));
+      const description = api.descriptionState(state, item.key);
+      drawDescription(row, description);
+      drawProgress(row, api.progressState(state, item.key), description.progress !== "");
+    }
     place(grid, row, previous ? previous.nextElementSibling : grid.firstElementChild);
     previous = row;
   }
@@ -216,8 +267,9 @@ type DialogElement = Element & { controller?: unknown; dismissible?: boolean };
  * `threads` (and `groupLabels`) as properties. Callbacks are events, each offered by its attribute: `can-select`
  * (`threadselect`, cancel it to route without following the link), `can-new` (`threadnew`), `can-rename`
  * (`threadrename`, with the title as `detail.title`), `can-pin` (`pinchange`), `can-share` (`threadshare`),
- * `can-delete` (`threaddelete`) and `can-load-more` (`loadmore`). Call `event.detail.waitUntil(promise)` on
- * `threadrename` and `threaddelete` to lock renaming, or keep the dialog open, until it settles.
+ * `can-mark-read` (`readchange`), `can-archive` (`threadarchive`), `can-delete` (`threaddelete`) and `can-load-more`
+ * (`loadmore`). Call `event.detail.waitUntil(promise)` on `threadrename`, `threadarchive` and `threaddelete` to lock
+ * renaming or archiving, or keep the dialog open, until it settles.
  */
 export function defineThreadList(): void {
   if (customElements.get("kind-thread-list")) return;
@@ -234,19 +286,32 @@ export function defineThreadList(): void {
         canRename: "boolean",
         canPin: "boolean",
         canShare: "boolean",
+        canMarkRead: "boolean",
+        canArchive: "boolean",
         canDelete: "boolean",
         canLoadMore: "boolean",
       },
       // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
       options: (el) => {
-        const { canSelect, canNew, canRename, canPin, canShare, canDelete, canLoadMore } =
-          el as KindThreadListElement;
+        const {
+          canSelect,
+          canNew,
+          canRename,
+          canPin,
+          canShare,
+          canMarkRead,
+          canArchive,
+          canDelete,
+          canLoadMore,
+        } = el as KindThreadListElement;
         return {
           ...(!canSelect && { onSelect: undefined }),
           ...(!canNew && { onNew: undefined }),
           ...(!canRename && { onRename: undefined }),
           ...(!canPin && { onPinChange: undefined }),
           ...(!canShare && { onShare: undefined }),
+          ...(!canMarkRead && { onReadChange: undefined }),
+          ...(!canArchive && { onArchive: undefined }),
           ...(!canDelete && { onDelete: undefined }),
           ...(!canLoadMore && { onLoadMore: undefined }),
         };
@@ -258,6 +323,8 @@ export function defineThreadList(): void {
         onRename: "threadrename",
         onPinChange: "pinchange",
         onShare: "threadshare",
+        onReadChange: "readchange",
+        onArchive: "threadarchive",
         onDelete: "threaddelete",
         onLoadMore: "loadmore",
       },
@@ -314,6 +381,8 @@ export function defineThreadList(): void {
     link: { tag: "kind-thread-list-link", target: wrappedChild("a"), display: "contents" },
     status: "kind-thread-list-status",
     unread: "kind-thread-list-unread",
+    description: "kind-thread-list-description",
+    progress: "kind-thread-list-progress",
     time: "kind-thread-list-time",
     editor: { tag: "kind-thread-list-editor", target: wrappedChild("input"), display: "contents" },
     "more-cell": "kind-thread-list-more-cell",
@@ -337,6 +406,8 @@ export type KindThreadListEvents = {
   >;
   pinchange: UiDetailedChangeEvent<string, ChangeDetails<ThreadListReason> & { pinned: boolean }>;
   threadshare: UiChangeEvent<string, ThreadListReason>;
+  readchange: UiDetailedChangeEvent<string, ChangeDetails<ThreadListReason> & { read: boolean }>;
+  threadarchive: CustomEvent<{ value: string } & ActionDetails & Pick<UiActionDetail, "waitUntil">>;
   threaddelete: CustomEvent<{ value: string } & ActionDetails & Pick<UiActionDetail, "waitUntil">>;
   loadmore: CustomEvent<{ reason: ThreadListLoadReason }>;
   openchange: UiChangeEvent<boolean, MenuOpenChangeReason | AlertDialogOpenChangeReason>;
@@ -357,6 +428,10 @@ export interface KindThreadListElement
   canPin: boolean;
   /** Offers Share, which fires `threadshare`. */
   canShare: boolean;
+  /** Offers Mark as read and Mark as unread, which fire `readchange`. */
+  canMarkRead: boolean;
+  /** Offers Archive, which fires `threadarchive`. */
+  canArchive: boolean;
   /** Offers Delete, which fires `threaddelete`. */
   canDelete: boolean;
   /** Whether nearing the end and Retry fire `loadmore`. */
@@ -376,6 +451,8 @@ declare global {
     "kind-thread-list-link": HTMLElement;
     "kind-thread-list-status": HTMLElement;
     "kind-thread-list-unread": HTMLElement;
+    "kind-thread-list-description": HTMLElement;
+    "kind-thread-list-progress": HTMLElement;
     "kind-thread-list-time": HTMLElement;
     "kind-thread-list-editor": HTMLElement;
     "kind-thread-list-more-cell": HTMLElement;
