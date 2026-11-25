@@ -377,6 +377,10 @@ Composite scripts go through `scripts/run-checks.mjs`, and every stage is requir
 
 `npm run audit` fails on any high or critical advisory. `audit-ci.jsonc` allows exactly one: GHSA-fc5q-39xc-vjpf, a picomatch ReDoS through repeated extglobs with no patched release (it covers `picomatch <= 4.0.7`, the latest). It reaches only dev tooling (`@changesets/*`, `@manypkg/get-packages`, `fdir`, `tinyglobby`, Vite and the docs site's Fumadocs packages); the published package's runtime dependencies don't include picomatch, and their audit has no allowlist, so a shipped vulnerability always fails. `npm audit fix --force` would downgrade `fumadocs-mdx` to 13, so don't run it. Once picomatch ships a fix, update the lockfile and delete the entry; it expires on 2027-02-17 regardless, which fails the audit until someone reviews it again. Add an entry only by advisory ID, with `notes` and an `expiry`.
 
+## UI SDK updates
+
+The `kind-ui` GitHub App (`kind-ui[bot]`, secrets `KINDUI_BOT_APP_ID` and `KINDUI_BOT_PRIVATE_KEY`) does all update work. `.github/workflows/renovate.yml` runs self-hosted Renovate every 6 hours (or by hand, with an optional dry run); `renovate.json` limits it to one `ui-sdk-update` pull request per UI SDK release, every `@ui-sdk/*` package on exact pins, and never automerges. The repo has no other update bot. `.github/workflows/ui-sdk-update.yml` then runs Copilot CLI (`copilot-requests: write`) with [`.github/ui-sdk-update.md`](.github/ui-sdk-update.md) on that pull request, pushes what it changed to the pull request's branch as `kind-ui[bot]` and comments a summary. The agent itself can't push or call `gh`. Renovate rebases only on a conflict, and a newer release rebuilds the branch, so the agent adapts again from the new version. Nothing merges on its own.
+
 ## Layer import rules (spec §2)
 
 | Layer | Path | May import | Must not import |

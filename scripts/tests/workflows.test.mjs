@@ -115,3 +115,31 @@ test("ci fast job runs the lint stages, and so the UI SDK guard", () => {
   assert.match(runs(ci.jobs.fast), /npm run check:fast/);
   assert.ok(expand("check:fast").includes("lint:guard"));
 });
+
+test("renovate updates only @ui-sdk/*, never automerging", () => {
+  const config = JSON.parse(read("renovate.json"));
+  const [rest, uiSdk] = config.packageRules;
+  assert.deepEqual([rest.matchPackageNames, rest.enabled], [["*"], false]);
+  assert.deepEqual(uiSdk.matchPackageNames, ["@ui-sdk/**"]);
+  assert.deepEqual(uiSdk.labels, ["ui-sdk-update"]);
+  assert.equal(uiSdk.rangeStrategy, "pin");
+  assert.ok(!JSON.stringify(config).includes('"automerge":true'));
+});
+
+test("the UI SDK update agent pushes only to its pull request's branch", () => {
+  const { adapt } = workflows["ui-sdk-update.yml"].jobs;
+  assert.match(adapt.if, /startsWith\(github\.event\.pull_request\.head\.ref, 'renovate\/'\)/);
+  assert.deepEqual(adapt.permissions, { contents: "read", "copilot-requests": "write" });
+  const push = adapt.steps.find((step) => step.name === "Push to the pull request");
+  for (const ref of ["main", "changeset-release/main"]) {
+    assert.throws(
+      () =>
+        execFileSync("bash", ["-e", "-c", push.run], {
+          env: { ...process.env, HEAD_REF: ref },
+          stdio: "pipe",
+        }),
+      new RegExp(`Refusing to push to ${ref}`),
+    );
+  }
+  assert.match(runs(adapt), /--deny-tool 'shell\(git push\)'/);
+});
