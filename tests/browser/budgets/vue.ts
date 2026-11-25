@@ -6,22 +6,24 @@ import type { Budgets } from "./react.js";
 export const budgets: Partial<Budgets> = {
   // A streamed token updates only the last row's components, as many at 10 rows as at 500.
   conversationStream: { writes: 1, renders: 11, notified: 0 },
-  conversationFollow: { layoutReads: 12 },
+  // UI SDK's stick to bottom runs its pass on both the content's MutationObserver and its ResizeObserver
+  // (`0.1.0-beta.17`), as on React.
+  conversationFollow: { layoutReads: 18 },
   markdownStream: { parses: 1, writes: 2, renders: 5, notified: 0 },
   remount: { nodes: 0, listeners: 0 },
 
   contextChip: { writes: 5, renders: 9, notified: 0, layoutReads: 0 },
 
-  // Streamed input renders one tool's parts, each default part a wrapper and its part, at 10 tools as at 500. One
-  // of the 31 is the code block's viewport calling its `#render` slot, which Vue's development build reports as an
-  // update of the component that passed it (`KindScrollAreaViewport` hands UI SDK its bind late).
-  toolStream: { writes: 6, renders: 31, notified: 3 },
+  // Streamed input renders one tool's parts, each default part a wrapper and its part, at 10 tools as at 500.
+  toolStream: { writes: 6, renders: 30, notified: 3 },
 
   // A chunk updates the last line's two components; a chunk that wraps it shifts the window at 1,000 lines, which
-  // renders the output part twice, never the other lines.
-  terminalChunk: { writes: 4, renders: 10, notified: 0, layoutReads: 11 },
-  // A new line renders the output part and the line that was last, and mounts the new one, at 10 lines as at 1,000.
-  terminalLine: { writes: 4, renders: 11, notified: 0, layoutReads: 18 },
+  // renders the output part twice, never the other lines, and runs the stick to bottom's pass on a mutation and a
+  // resize, and the scroll after.
+  terminalChunk: { writes: 4, renders: 10, notified: 0, layoutReads: 28 },
+  // A new line renders the output part and the line that was last, and mounts the new one, at 10 lines as at 1,000;
+  // the virtualizer adds a row and drops one, and the stick to bottom runs its pass on each mutation and each resize.
+  terminalLine: { writes: 4, renders: 11, notified: 0, layoutReads: 29 },
   // Playback writes the word's mark straight to the element, so no segment or word renders.
   transcriptWord: { writes: 2, renders: 4, notified: 2, layoutReads: 4 },
   // Following the next segment renders the list and mounts the segments it scrolls into view.
@@ -34,6 +36,7 @@ export const budgets: Partial<Budgets> = {
   threadSelect: { writes: 4, renders: 12, notified: 0, layoutReads: 0 },
   threadPin: { writes: 46, renders: 52, notified: 0, layoutReads: 2 },
   threadAppend: { writes: 24, renders: 50, notified: 0, layoutReads: 2 },
-  // A search renders the rows whose marks changed; at 5,000 messages the mark track is already full.
-  conversationSearchType: { writes: 51, renders: 24, notified: 0, layoutReads: 4 },
+  // A search renders the rows whose marks changed; at 5,000 messages the mark track is already full. Scrolling to the
+  // current match releases the stick to bottom, which finds the row in view to keep still (10 reads).
+  conversationSearchType: { writes: 51, renders: 24, notified: 0, layoutReads: 14 },
 };
