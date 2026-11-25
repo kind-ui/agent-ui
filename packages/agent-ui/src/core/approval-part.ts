@@ -36,12 +36,22 @@ export type ApprovalState = {
   approvalReason: boolean;
 };
 
-type HostState = ApprovalState & { title: string; motion: MotionMode };
+type HostState = ApprovalState & { motion: MotionMode };
 
 type HostContext = {
-  options(): ApprovalPartOptions;
-  element(slot: "trigger"): HTMLElement | undefined;
+  options: () => ApprovalPartOptions;
+  element: (slot: "trigger") => HTMLElement | undefined;
 };
+
+export type ApprovalPartConfig<State extends HostState> = {
+  /** The Confirmation's question. Defaults to Tool's: "Run <title>?", else "Run this tool?". */
+  question?: (state: State) => string;
+  /** Where focus goes when the choices leave with nothing to take it. Defaults to the trigger part. */
+  fallback?: () => HTMLElement | undefined;
+};
+
+const runTitle = (state: HostState & { title?: string }) =>
+  state.title ? `Run ${state.title}?` : "Run this tool?";
 
 /**
  * A step's approval (spec §3.2): its options, its state, the props its Confirmation takes and the `approval` slot
@@ -57,32 +67,41 @@ export const approvalPart = {
     canDeny: options.onDeny !== undefined,
     approvalReason: options.approvalReason ?? false,
   }),
-  /** Hands the approval part its Confirmation's props, the same object while they hold. Focus falls back to the trigger. */
-  approvalState: (context: HostContext): ((state: HostState) => ApprovalPartState) => {
+  /** Hands the approval part its Confirmation's props, the same object while they hold. */
+  approvalState: <State extends HostState>(
+    context: HostContext,
+    { question = runTitle, fallback = () => context.element("trigger") }: ApprovalPartConfig<State> = {},
+  ): ((state: State) => ApprovalPartState) => {
     const approve: ConfirmationCallback = (decision, details) =>
       context.options().onApprove?.(decision, details);
     const deny: ConfirmationCallback = (decision, details) => context.options().onDeny?.(decision, details);
-    const focusTrigger = () => context.element("trigger");
     const build = memo(
       (
         approval: Approval | undefined,
-        title: string,
+        label: string,
         canApprove: boolean,
         canDeny: boolean,
         reason: boolean,
         motion: MotionMode,
       ): ApprovalPartState => ({
         ...(approval && { approval }),
-        label: title ? `Run ${title}?` : "Run this tool?",
+        label,
         reason,
-        focusFallback: focusTrigger,
+        focusFallback: fallback,
         motion,
         ...(canApprove && { onApprove: approve }),
         ...(canDeny && { onDeny: deny }),
       }),
     );
     return (state) =>
-      build(state.approval, state.title, state.canApprove, state.canDeny, state.approvalReason, state.motion);
+      build(
+        state.approval,
+        question(state),
+        state.canApprove,
+        state.canDeny,
+        state.approvalReason,
+        state.motion,
+      );
   },
   /** The `approval` slot: present while the approval waits on a decision or has an outcome to show. */
   slot: <

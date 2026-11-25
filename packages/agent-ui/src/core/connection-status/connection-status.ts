@@ -246,7 +246,9 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
       at: () => (store.get().phase === "reconnecting" ? store.get().retryAt : undefined),
       idle: 0,
       // The digits the count has lost since it started, which the default words keep room for.
-      with: (seconds, from) => ({ spareDigits: seconds > 0 ? digits(from) - digits(seconds) : 0 }),
+      with: (seconds, from) => ({
+        spareDigits: seconds > 0 ? Math.max(0, digits(from) - digits(seconds)) : 0,
+      }),
     });
 
     const retry = (event?: Event) => {

@@ -4,9 +4,9 @@ import type { RetryState } from "../types/index.js";
 import { type Countdown, countdownText, createCountdown } from "./countdown.js";
 
 /** The words of a retry: "Retrying, attempt 2 of 5, in 4 sec. Rate limited". */
-export function retryText(retry: RetryState, seconds: number | null): string {
+export function retryText(retry: RetryState, seconds: number | null, locale?: string): string {
   const of = retry.maxAttempts ? ` of ${retry.maxAttempts}` : "";
-  const when = countdownText(seconds);
+  const when = countdownText(seconds, locale);
   return `Retrying, attempt ${retry.attempt}${of}${when ? `, ${when}` : ""}${retry.reason ? `. ${retry.reason}` : ""}`;
 }
 
@@ -61,15 +61,17 @@ export const retryPart = <Options, Key extends string>({
       at: () => context.store.get().retry?.retryAt,
     });
   },
-  /** The `retry` slot: present while retrying, with its words in `text`. The layers draw a running status mark before them. */
-  slot: <State extends HostState<Key>, Api>(): SlotDefinition<
-    State,
-    Api,
-    BaseSlotProps,
-    { text: string }
-  > => ({
+  /**
+   * The `retry` slot: present while retrying, with its words in `text`, the countdown's units in `locale` (like the
+   * component's own). The layers draw a running status mark before them.
+   */
+  slot: <State extends HostState<Key>, Api>(
+    locale?: (state: State) => string | undefined,
+  ): SlotDefinition<State, Api, BaseSlotProps, { text: string }> => ({
     present: (state) => state.retry !== undefined,
-    state: (state) => ({ text: state.retry ? retryText(state.retry, state[countdownKey]) : "" }),
+    state: (state) => ({
+      text: state.retry ? retryText(state.retry, state[countdownKey], locale?.(state)) : "",
+    }),
     attrs: () => ({ "data-retry-part": "retry" }),
   }),
 });

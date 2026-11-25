@@ -1,4 +1,4 @@
-import type { PrimitiveContext } from "@ui-sdk/core";
+import { type PrimitiveContext, toLocale } from "@ui-sdk/core";
 import { durationLabel } from "./time.js";
 
 type CountdownContext<State> = Pick<PrimitiveContext<unknown, object, string>, "onDestroy"> & {
@@ -34,7 +34,9 @@ export function createCountdown<Key extends string, State extends Record<Key, nu
 ): Countdown {
   const { store } = context;
   let timer: ReturnType<typeof setTimeout> | undefined;
-  let counting: string | undefined;
+  // What the timer counts to; `UNSET` until the root binds, so the first follow always writes.
+  const UNSET = Symbol();
+  let counting: string | undefined | typeof UNSET = UNSET;
   const write = (seconds: number | null, from: number) =>
     store.set({ [key]: seconds, ...extra?.(seconds ?? 0, from) } as Partial<State>);
 
@@ -60,8 +62,7 @@ export function createCountdown<Key extends string, State extends Record<Key, nu
   context.onDestroy(() => clearTimeout(timer));
   return {
     bind() {
-      // Nothing counts yet, so `idle`, which the state starts with, is written only once something has counted.
-      counting = undefined;
+      counting = UNSET;
       follow();
       const unsubscribe = store.subscribe(follow);
       return () => {
@@ -72,6 +73,19 @@ export function createCountdown<Key extends string, State extends Record<Key, nu
   };
 }
 
-/** A countdown's words, like "in 4 sec" or "in 1 min 12 sec", in `locale`'s short units. Empty at zero or below. */
-export const countdownText = (seconds: number | null, locale?: string): string =>
-  seconds !== null && seconds > 0 ? `in ${durationLabel(seconds, locale)}` : "";
+const DAY = 86400;
+
+/**
+ * A countdown's words, like "in 4 sec" or "in 1 min 12 sec", in `locale`'s short units, or whole days from a day on
+ * ("in 3 days"). Empty at zero or below.
+ */
+export function countdownText(seconds: number | null, locale?: string): string {
+  if (seconds === null || !(seconds > 0)) return "";
+  if (seconds < DAY) return `in ${durationLabel(seconds, locale)}`;
+  const days = new Intl.NumberFormat(toLocale(locale ?? "en") ?? "en", {
+    style: "unit",
+    unit: "day",
+    unitDisplay: "long",
+  });
+  return `in ${days.format(Math.round(seconds / DAY))}`;
+}

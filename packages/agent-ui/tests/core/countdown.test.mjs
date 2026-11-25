@@ -16,3 +16,7 @@ test("retryText reads the attempt, the countdown and the reason", () => {
   );
   assert.equal(retryText({ attempt: 1 }, null), "Retrying, attempt 1");
 });
+
+test("countdownText reads whole days from a day on", () => {
+  assert.equal(countdownText(3 * 86400, "en"), "in 3 days");
+});
