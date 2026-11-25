@@ -1,7 +1,7 @@
 name: UI SDK update
 
 # Runs Copilot CLI with .github/ui-sdk-update.md on Renovate's UI SDK pull requests, then pushes its changes to
-# that pull request's branch and comments, both as kind-ui[bot]. It never merges and never pushes to main.
+# that pull request's branch and comments, both as kindui-bot[bot]. It never merges and never pushes to main.
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled]
@@ -18,7 +18,7 @@ jobs:
     if: >-
       github.repository == 'kind-ui/agent-ui'
       && github.event.pull_request.head.repo.full_name == github.repository
-      && github.event.pull_request.user.login == 'kind-ui[bot]'
+      && github.event.pull_request.user.login == 'kindui-bot[bot]'
       && startsWith(github.event.pull_request.head.ref, 'renovate/')
       && github.event.pull_request.head.ref != 'main'
       && contains(github.event.pull_request.labels.*.name, 'ui-sdk-update')
@@ -96,8 +96,8 @@ jobs:
             echo "The agent changed .github/workflows/, which the bot doesn't push."
             exit 1
           fi
-          git -c user.name='kind-ui[bot]' \
-            -c user.email='360918227+kind-ui[bot]@users.noreply.github.com' \
+          git -c user.name='kindui-bot[bot]' \
+            -c user.email='360918227+kindui-bot[bot]@users.noreply.github.com' \
             commit --quiet -m "Adapt to UI SDK $UI_SDK_TO" -m "UI-SDK-Update-Agent: $RUN_URL"
           git push "https://x-access-token:$TOKEN@github.com/${{ github.repository }}.git" "HEAD:refs/heads/$HEAD_REF"
       - if: always() && steps.guard.outputs.skip != 'true' && steps.app-token.outputs.token
@@ -118,7 +118,7 @@ jobs:
             echo "[Run log]($RUN_URL)"
           } > "$RUNNER_TEMP/comment.md"
           id=$(gh api "repos/${{ github.repository }}/issues/$PR_NUMBER/comments" --paginate \
-            --jq ".[] | select(.user.login == \"kind-ui[bot]\" and (.body | startswith(\"$marker\"))) | .id" | tail -1)
+            --jq ".[] | select(.user.login == \"kindui-bot[bot]\" and (.body | startswith(\"$marker\"))) | .id" | tail -1)
           if [ -n "$id" ]; then
             gh api --method PATCH "repos/${{ github.repository }}/issues/comments/$id" -F body=@"$RUNNER_TEMP/comment.md" > /dev/null
           else

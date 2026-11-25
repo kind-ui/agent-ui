@@ -1,6 +1,6 @@
 # UI SDK update agent
 
-These are the instructions the UI SDK update agent follows on every `ui-sdk-update` pull request. Renovate opens that pull request as `kind-ui[bot]` (`renovate.json`, `.github/workflows/renovate.yml`), and `.github/workflows/ui-sdk-update.yml` runs Copilot CLI with this file each time the pull request opens or Renovate pushes to it. Edit this file to change what the agent does.
+These are the instructions the UI SDK update agent follows on every `ui-sdk-update` pull request. Renovate opens that pull request as `kindui-bot[bot]` (`renovate.json`, `.github/workflows/renovate.yml`), and `.github/workflows/ui-sdk-update.yml` runs Copilot CLI with this file each time the pull request opens or Renovate pushes to it. Edit this file to change what the agent does.
 
 ## What you get
 
@@ -9,7 +9,7 @@ These are the instructions the UI SDK update agent follows on every `ui-sdk-upda
 - `UI_SDK_SUMMARY`: the path to write your summary to.
 - Dependencies installed (`npm ci`) and Playwright's Chromium.
 
-You can't push, comment or call `gh`. The workflow commits everything you leave in the working tree to this pull request's branch as `kind-ui[bot]` and posts your summary as its comment. So leave the tree holding only changes you mean to ship.
+You can't push, comment or call `gh`. The workflow commits everything you leave in the working tree to this pull request's branch as `kindui-bot[bot]` and posts your summary as its comment. So leave the tree holding only changes you mean to ship.
 
 ## Rules
 

@@ -1,6 +1,6 @@
 name: Renovate
 
-# Self-hosted Renovate, run as the kind-ui GitHub App. renovate.json limits it to @ui-sdk/* updates.
+# Self-hosted Renovate, run as the kindui-bot GitHub App. renovate.json limits it to @ui-sdk/* updates.
 on:
   schedule:
     - cron: "23 */6 * * *"
@@ -47,6 +47,6 @@ jobs:
           RENOVATE_ONBOARDING: "false"
           RENOVATE_REQUIRE_CONFIG: required
           RENOVATE_PLATFORM_COMMIT: enabled
-          RENOVATE_GIT_AUTHOR: kind-ui[bot] <360918227+kind-ui[bot]@users.noreply.github.com>
+          RENOVATE_GIT_AUTHOR: kindui-bot[bot] <360918227+kindui-bot[bot]@users.noreply.github.com>
           RENOVATE_DRY_RUN: ${{ inputs.dry-run != 'none' && inputs.dry-run || '' }}
           LOG_LEVEL: ${{ inputs.log-level || 'info' }}

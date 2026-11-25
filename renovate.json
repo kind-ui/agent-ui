@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "UI SDK updates only, run as kind-ui[bot] by .github/workflows/renovate.yml. .github/ui-sdk-update.md says what happens on the PR.",
+  "description": "UI SDK updates only, run as kindui-bot[bot] by .github/workflows/renovate.yml. .github/ui-sdk-update.md says what happens on the PR.",
   "extends": [":semanticCommitsDisabled"],
   "baseBranchPatterns": ["main"],
   "enabledManagers": ["npm"],
