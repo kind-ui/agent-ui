@@ -1,4 +1,5 @@
 export {
+  type DiffActionDetails,
   type DiffApi,
   type DiffCopyReason,
   type DiffOptions,

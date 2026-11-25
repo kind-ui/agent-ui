@@ -23,6 +23,9 @@ import { type DiffPiece, type DiffRow, type DiffRows, diffPieces, diffRows, toke
 /** What copied the diff: the copy button, or a call to the api or an agent. */
 export type DiffCopyReason = "copy-press" | "imperative";
 
+/** What accepted or reverted the change: its button, or a call to the api or an agent. */
+export type DiffActionDetails = ActionDetails & { reason: "accept-press" | "revert-press" | "imperative" };
+
 export type DiffOptions = {
   /** The file the diff changes. A patch's own headers fill in what it leaves out. */
   file?: DiffFile;
@@ -43,9 +46,9 @@ export type DiffOptions = {
    */
   streaming?: boolean;
   /** Offers Accept. Return a promise to keep Accept and Revert locked until it settles. */
-  onAccept?: (details: ActionDetails) => unknown;
+  onAccept?: (details: DiffActionDetails) => unknown;
   /** Offers Revert. Return a promise to keep Accept and Revert locked until it settles. */
-  onRevert?: (details: ActionDetails) => unknown;
+  onRevert?: (details: DiffActionDetails) => unknown;
   /** Called before the patch is copied. Cancel it to copy something else yourself. */
   onCopy?: (patch: string, details: ChangeDetails<DiffCopyReason>) => void;
   /**
@@ -64,6 +67,8 @@ export type DiffState = {
   path: string;
   oldPath: string | undefined;
   status: NonNullable<DiffFile["status"]>;
+  /** "Added", "Deleted" or "Renamed"; empty for a modified file. */
+  statusText: string;
   added: number;
   removed: number;
   /** The diff's rows, from `patch` or `before` and `after`. */
@@ -138,7 +143,6 @@ type DiffSlots = {
     CellProps & BaseSlotProps,
     { kind: DiffRow["kind"]; text: string; pieces: readonly DiffPiece[] }
   >;
-  word: DiffSlot;
   collapsed: DiffSlot<CellProps & BaseSlotProps, { text: string }>;
   "collapsed-text": DiffSlot<CellProps & BaseSlotProps, { text: string }>;
 };
@@ -193,11 +197,13 @@ function sides(rows: readonly DiffRow[]) {
 
 const presentation = (options: DiffOptions, diff: DiffRows) => {
   const path = options.file?.path ?? diff.file.path ?? "";
+  const status = options.file?.status ?? diff.file.status ?? "modified";
   return {
     label: options.label ?? path,
     path,
     oldPath: options.file?.oldPath ?? diff.file.oldPath,
-    status: options.file?.status ?? diff.file.status ?? "modified",
+    status,
+    statusText: STATUS_TEXT[status],
     added: diff.added,
     removed: diff.removed,
   };
@@ -378,12 +384,14 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
     });
     highlight();
 
-    const decide = (handler: "onAccept" | "onRevert", reason: string) => (event?: Event) => {
-      const call = context.options()[handler];
-      if (!call) return;
-      const details = { source: actionSource(event, reason) };
-      void pending.run(() => call(details));
-    };
+    const decide =
+      (handler: "onAccept" | "onRevert", press: "accept-press" | "revert-press") => (event?: Event) => {
+        const call = context.options()[handler];
+        if (!call) return;
+        const reason: DiffActionDetails["reason"] = event ? press : "imperative";
+        const details = { reason, source: actionSource(event, reason) };
+        void pending.run(() => call(details));
+      };
     const accept = decide("onAccept", "accept-press");
     const revert = decide("onRevert", "revert-press");
 
@@ -441,6 +449,7 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
       role: "figure",
       attrs: (state) => ({
         "aria-label": state.label || undefined,
+        "data-kind-code": "",
         "data-status": state.status,
         "data-streaming": state.streaming ? "" : undefined,
         "aria-busy": state.pending ? "true" : undefined,
@@ -457,8 +466,8 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
     }),
     status: slot<BaseSlotProps, { text: string }>({
       selects: outsideRows,
-      present: (state) => STATUS_TEXT[state.status] !== "",
-      state: (state) => ({ text: STATUS_TEXT[state.status] }),
+      present: (state) => state.statusText !== "",
+      state: (state) => ({ text: state.statusText }),
       attrs: (state) => ({ "data-kind-badge": "", "data-status": state.status }),
     }),
     stats: slot<BaseSlotProps, { text: string }>({
@@ -580,7 +589,6 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
         return { kind: row.kind, text: row.text, pieces: diffPieces(row.text, tokens, row.words) };
       },
     }),
-    word: slot({}),
     collapsed: slot<CellProps, { text: string }>({
       props: { value: { kind: "string", from: "row" } },
       selects: rowSelects<CellProps>(byValue),

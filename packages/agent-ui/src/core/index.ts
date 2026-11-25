@@ -776,6 +776,7 @@ export {
 // wave-7-task-6: Diff
 
 export {
+  type DiffActionDetails,
   type DiffApi,
   type DiffCopyReason,
   type DiffHunk,
