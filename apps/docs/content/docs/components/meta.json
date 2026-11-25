@@ -26,6 +26,7 @@
     "generated-image",
     "file-tree",
     "terminal",
+    "diff",
     "stack-trace",
     "test-results",
     "transcript",

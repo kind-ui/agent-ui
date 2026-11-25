@@ -79,6 +79,8 @@ export default {
 
     // wave-7-task-6: Diff
 
+    "diff",
+
     // wave-7-task-7: Step Group
 
     // wave-7-task-8: Handoff
@@ -261,6 +263,8 @@ export default {
     // wave-7-task-5: Tool retry and retrying
 
     // wave-7-task-6: Diff
+
+    "wave-7/diff.spec.ts",
 
     // wave-7-task-7: Step Group
 

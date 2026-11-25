@@ -241,11 +241,23 @@ const rowSelects = <Props extends object>(values: (part: { props: Props }) => st
         for (const row of after) if (starts.get(row.index) !== row.start) notify(String(row.index));
       },
     },
+    // A row reads only its own entry and where it sits, so the header's state never reaches it.
     diff: [],
     expanded: [],
     size: [],
-    copied: [],
+    label: [],
+    path: [],
+    oldPath: [],
+    status: [],
+    statusText: [],
+    added: [],
+    removed: [],
+    streaming: [],
+    canAccept: [],
+    canRevert: [],
     pending: [],
+    agentConfirm: [],
+    copied: [],
   });
 
 // The parts around the table read none of its rows, so a streamed hunk reaches only the rows it changed.

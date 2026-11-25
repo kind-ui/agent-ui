@@ -54,6 +54,8 @@ export const budgets = {
 
   // wave-7-task-6: Diff
 
+  diffHunk: { writes: 0, renders: 0, notified: 0 },
+
   // wave-7-task-7: Step Group
 
   // wave-7-task-8: Handoff

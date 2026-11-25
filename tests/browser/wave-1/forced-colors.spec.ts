@@ -64,6 +64,8 @@ const pages = [
 
   // wave-7-task-6: Diff
 
+  "diff&case=all",
+
   // wave-7-task-7: Step Group
 
   // wave-7-task-8: Handoff

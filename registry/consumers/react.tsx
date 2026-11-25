@@ -111,6 +111,8 @@ import { ConversationSearch } from "./components/ui/conversation-search.js";
 
 // wave-7-task-6: Diff
 
+import { Diff } from "./components/ui/diff.js";
+
 // wave-7-task-7: Step Group
 
 // wave-7-task-8: Handoff
@@ -446,6 +448,8 @@ const items = {
   // wave-7-task-5: Tool retry and retrying
 
   // wave-7-task-6: Diff
+
+  diff: <Diff file={{ path: "src/a.ts" }} before={"const a = 1;\n"} after={"const b = 1;\n"} />,
 
   // wave-7-task-7: Step Group
 
