@@ -94,4 +94,4 @@ All 57 components, grouped by the job they do. The item is the React name: add `
 
 | Item | Component | Use it when |
 | --- | --- | --- |
-| `usage-meter` | Usage Meter | You show usage against a limit, like spend, requests or tokens this month, with what makes it up. Not yet in Vue, Svelte, Solid. |
+| `usage-meter` | Usage Meter | You show usage against a limit, like spend, requests or tokens this month, with what makes it up. |
