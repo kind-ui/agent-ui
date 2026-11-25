@@ -90,7 +90,19 @@ const { sendMessage, stop, addToolOutput } = useChat({
 >
 ```
 
-To give the tools to a browser's own agent, register them through WebMCP: `const unregister = registerTools(agent, { allow: (step) => !step.confirm })`. It does nothing in a browser without WebMCP, and its `allow` runs after the bridge's.
+## WebMCP
+
+To give the tools to a browser's own agent, or to an AI SDK client, register them through WebMCP:
+
+```ts
+import { registerTools } from "@ui-sdk/react/agent";
+
+const unregister = registerTools(agent, { allow: (step) => !step.confirm });
+```
+
+- Its `allow` runs after the bridge's. `!step.confirm` leaves `data-agent-confirm` steps for the person; to ask instead, return their answer (`!step.confirm || window.confirm(step.confirm)`). Never return `true` for them unconditionally.
+- With `@ai-sdk/mcp`, `createMCPClient({ transport: new Experimental_WebMCPTransport({ modelContext: document.modelContext }) })` lists the tools (`client.listTools()`), calls them (`client.callTool({ name, arguments })`, result in `structuredContent`) and hands them to `streamText` (`await client.tools()`). In `useChat`, run each call through `client.callTool` in `onToolCall`. List again after the browser fires `toolchange`.
+- In a browser without `document.modelContext`, `registerTools` does nothing and there's nothing to connect the client to: check for it, and call `agent.snapshot`/`act`/`query` directly, with a bridge `allow` that asks the person.
 
 ## Agents take the same path as people
 

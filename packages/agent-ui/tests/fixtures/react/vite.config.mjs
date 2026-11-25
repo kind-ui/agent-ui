@@ -12,7 +12,14 @@ export default defineConfig(({ mode }) => ({
   plugins: [tailwindcss(), identityPlugin("react")],
   // A file written during a run would otherwise reload open pages and destroy the context a test evaluates in.
   server: { hmr: false },
-  resolve: { alias: { "@kind-ui/agent-ui/core": here("../../../src/core/index.ts") } },
+  // Docs examples render here too, importing the render files as `@/components/ui/*`, as a shadcn consumer does.
+  resolve: {
+    alias: {
+      "@kind-ui/agent-ui/core": here("../../../src/core/index.ts"),
+      "@docs/examples": here("../../../../../apps/docs/examples"),
+      "@/components/ui": here("../../../src/react"),
+    },
+  },
   optimizeDeps: {
     include: [
       "react",

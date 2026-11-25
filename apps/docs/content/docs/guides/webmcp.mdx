@@ -1,0 +1,122 @@
+---
+title: Agents Through WebMCP
+description: Give your page's components to an agent through WebMCP, and call them from the AI SDK without writing a tool.
+---
+
+To let an agent use your page through WebMCP, register UI SDK's agent tools with the browser, then connect the AI SDK's MCP client to `document.modelContext`. Every Agent UI component already registers with UI SDK's agent bridge, so the three tools (`snapshot`, `act` and `query`) reach every component on the page. You write no tools of your own, and the agent reads names and state rather than screenshots.
+
+Try it on the [Agents](../agents.mdx#try-it) page, which runs the calls below against a composer and a tool approval.
+
+## Installation
+
+The bridge ships with the UI SDK package your components use. The client comes from the AI SDK:
+
+```bash
+npm install @ai-sdk/mcp
+```
+
+## The Page Side
+
+Create the bridge once, then pass it to `registerTools`. It adds `snapshot`, `act` and `query` to `document.modelContext`, and its `allow` decides each step the browser's agent asks for:
+
+```ts title="agent.ts"
+import { createAgent, registerTools } from "@ui-sdk/react/agent";
+
+export const agent = createAgent();
+
+export const unregister = registerTools(agent, {
+  allow: (step) => !step.confirm,
+});
+```
+
+A step on a component that renders `data-agent-confirm`, like a Tool's **Approve**, an Approval Mode or a Composer's send, arrives with `step.confirm`, the words that say what it does. This `allow` refuses those, so the person makes that change themselves, and every other step runs. To ask the person instead, return their answer:
+
+```ts
+registerTools(agent, {
+  allow: (step) => !step.confirm || window.confirm(`${step.confirm}?`),
+});
+```
+
+`allow` gets a second argument with a `signal`, which aborts when the step is cancelled, so you can close your prompt. A refused step fails with a message, and the steps before it stay done. Call `unregister()` to remove the tools.
+
+The tools carry hints for whoever calls them: `snapshot` is read-only, `act` is consequential since a step can press any button, and all three return page content, which can hold what people typed.
+
+## The AI SDK Side
+
+`createMCPClient` from `@ai-sdk/mcp` talks to the browser's tools through `Experimental_WebMCPTransport`, with no MCP server in between:
+
+```ts
+import { createMCPClient, Experimental_WebMCPTransport as WebMCPTransport } from "@ai-sdk/mcp";
+
+const client = await createMCPClient({
+  transport: new WebMCPTransport({ modelContext: document.modelContext }),
+});
+
+const { tools } = await client.listTools();
+// tools: act, query, snapshot
+
+const page = await client.callTool({ name: "snapshot", arguments: {} });
+await client.callTool({
+  name: "act",
+  arguments: { steps: [{ ref: "Model, Claude Sonnet 5.5, Medium effort", action: "setModel", args: ["Opus"] }] },
+});
+```
+
+A tool's result is JSON in `structuredContent`, the same object the bridge returns. A step that fails comes back with `ok: false` and a message naming what's on the page. The transport reads the tool list once, so list again after the browser fires `toolchange`. Call `client.close()` when you're done.
+
+### With streamText
+
+Where you call `streamText` in the browser, `client.tools()` turns the page's tools into AI SDK tools that run through WebMCP:
+
+```ts
+import { streamText } from "ai";
+
+const result = streamText({
+  model,
+  tools: await client.tools(),
+  prompt: "Switch to Opus with high effort",
+});
+```
+
+### With useChat
+
+When the model runs on your server, declare the tools there without `execute`, as [Connect a Model](../agents.mdx#connect-a-model) shows, and run each call through the client in `onToolCall`:
+
+```tsx
+import { useChat } from "@ai-sdk/react";
+import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
+
+const { sendMessage, addToolOutput } = useChat({
+  sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+  async onToolCall({ toolCall }) {
+    const result = await client.callTool({
+      name: toolCall.toolName,
+      arguments: toolCall.input as Record<string, unknown>,
+    });
+    addToolOutput({ tool: toolCall.toolName, toolCallId: toolCall.toolCallId, output: result.structuredContent });
+  },
+});
+```
+
+The calls go through `registerTools`' `allow`, so a step marked for a person waits for them or is refused, as you decided above.
+
+## Without WebMCP
+
+In a browser without `document.modelContext`, `registerTools` does nothing and returns a cleanup that does nothing, so you can call it everywhere. The client has nothing to connect to, so check before you create it, and call the bridge directly instead:
+
+```ts
+const output =
+  "modelContext" in document
+    ? (await client.callTool({ name: "snapshot", arguments: {} })).structuredContent
+    : agent.snapshot();
+```
+
+`agent.act` runs your bridge's own `allow` (`createAgent({ allow })`), not the one you passed to `registerTools`, so give the bridge one that asks the person, as [Ask the Person First](../agents.mdx#ask-the-person-first) shows.
+
+The demo on the Agents page installs a small model context of its own in a browser without one, so its calls run everywhere. It takes registrations and lists and runs them, the two halves of WebMCP in one object.
+
+## Next Steps
+
+- See what each component reads and offers in its page's **Agent** section.
+- Show the agent's tool calls and ask before one runs: [Tool Calls and Approvals](./tool-approvals.mdx).
+- Read each tool's input and result in UI SDK's agent docs, `node_modules/@ui-sdk/<layer>/docs/agents.md`.
