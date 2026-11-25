@@ -188,11 +188,11 @@ export const components = {
   },
   terminal: {
     group: "output",
-    when: "you show a command's output in ANSI colors as it streams, with its exit code.",
+    when: "you show a command's output in ANSI colors as it streams, with its exit code, or ask before it runs.",
     title: "Terminal",
     description:
-      "A command and its output in ANSI colors, following the end as it streams, with its exit code and duration.",
-    uses: [],
+      "A command and its output in ANSI colors, following the end as it streams, with its exit code, duration and approval.",
+    uses: ["confirmation"],
   },
   "stack-trace": {
     group: "output",

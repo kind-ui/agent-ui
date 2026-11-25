@@ -59,7 +59,7 @@ All 56 components, grouped by the job they do. The item is the React name: add `
 | `document` | Document | The agent hands back a document with copy, download and a preview. |
 | `generated-image` | Generated Image | The agent makes an image, from progress to a full-size view. |
 | `file-tree` | File Tree | You show the files a change touched, with lines added and removed. |
-| `terminal` | Terminal | You show a command's output in ANSI colors as it streams, with its exit code. |
+| `terminal` | Terminal | You show a command's output in ANSI colors as it streams, with its exit code, or ask before it runs. |
 | `stack-trace` | Stack Trace | You show an error's frames, with library frames folded and frames that open files. |
 | `test-results` | Test Results | You show a test run's counts over a tree of suites and failures. |
 | `transcript` | Transcript | You show timed, speaker-labelled speech with search and seeking. |

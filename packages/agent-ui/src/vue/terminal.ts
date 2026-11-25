@@ -1,6 +1,7 @@
-import { type AnsiSpan, terminalPrimitive } from "@kind-ui/agent-ui/core";
+import { type AnsiSpan, type TerminalApprovalState, terminalPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/vue/primitive";
 import { defineComponent, h } from "vue";
+import { Confirmation } from "./confirmation.js";
 
 const parts = createParts(terminalPrimitive, {
   root: "div",
@@ -9,6 +10,7 @@ const parts = createParts(terminalPrimitive, {
   title: "span",
   exit: "span",
   meta: "span",
+  approval: "div",
   content: "div",
   command: "div",
   copy: "button",
@@ -57,6 +59,27 @@ export const TerminalMeta = withDefault(
   parts.Meta,
   "TerminalMeta",
   (state: { duration: string }) => state.duration,
+);
+
+/**
+ * A Confirmation asking "Run <command>?" while there's an approval: the choices whose callbacks are set while the
+ * request is open, then what was decided. Fill the default slot to render it yourself.
+ */
+// Slot state is a proxy with no keys of its own, so the Confirmation's props are read one by one.
+export const TerminalApproval = withDefault(
+  parts.Approval,
+  "TerminalApproval",
+  (state: TerminalApprovalState) =>
+    h(Confirmation, {
+      approval: state.approval,
+      label: state.label,
+      onApprove: state.onApprove,
+      onDeny: state.onDeny,
+      onAlwaysAllow: state.onAlwaysAllow,
+      reason: state.reason,
+      focusFallback: state.focusFallback,
+      motion: state.motion,
+    }),
 );
 
 /**
@@ -124,6 +147,7 @@ const defaultParts = () => [
     null,
     stable(() => [h(TerminalIcon), h(TerminalTitle), h(TerminalExit), h(TerminalMeta)]),
   ),
+  h(TerminalApproval),
   h(
     TerminalContent,
     null,
@@ -142,8 +166,8 @@ const defaultParts = () => [
 ];
 
 /**
- * A command and its output as a step: the command, its exit code and duration, then the output with its ANSI colors,
- * following its end while it streams. A default slot replaces the default parts.
+ * A command and its output as a step: the command, its exit code and duration, its approval while it has one, then
+ * the output with its ANSI colors, following its end while it streams. A default slot replaces the default parts.
  */
 export const Terminal = defineComponent({
   name: "Terminal",

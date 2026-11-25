@@ -4,6 +4,7 @@ description: Show a command the agent ran and its output, in color, as it stream
 ---
 
 import TerminalExample from "../../../examples/terminal/basic";
+import TerminalApprovalExample from "../../../examples/terminal/approval";
 
 Use a terminal when the agent runs a shell command, so readers can follow its output while it runs and check its exit code once it's done. It's a step: a header with the command, its exit code and how long it took, over a screen with the output.
 
@@ -26,6 +27,8 @@ Terminal
 │   ├── TerminalTitle
 │   ├── TerminalExit
 │   └── TerminalMeta
+├── TerminalApproval
+│   └── Confirmation
 └── TerminalContent
     └── div[data-terminal-screen]
         ├── div[data-terminal-header]
@@ -37,7 +40,7 @@ Terminal
         └── TerminalJump
 ```
 
-`TerminalTrigger` opens and closes the run, with its status mark in `TerminalIcon`, the command in `TerminalTitle`, "exit N" in `TerminalExit` and the duration in `TerminalMeta`. `TerminalContent` holds the screen, a `div` with `data-terminal-screen` and `data-kind-code` that the stylesheet draws as a code surface and places **Jump to latest** in. In it, `TerminalCommand` shows the command after a `$` prompt, only when a `label` takes its place as the title, `TerminalCopy` copies the output from the screen's corner, and `TerminalViewport` scrolls `TerminalOutput`, which renders a `TerminalLine` for each line in view. `TerminalJump` shows while you've scrolled away from the end.
+`TerminalTrigger` opens and closes the run, with its status mark in `TerminalIcon`, the command in `TerminalTitle`, "exit N" in `TerminalExit` and the duration in `TerminalMeta`. `TerminalContent` holds the screen, a `div` with `data-terminal-screen` and `data-kind-code` that the stylesheet draws as a code surface and places **Jump to latest** in. In it, `TerminalCommand` shows the command after a `$` prompt, only when a `label` takes its place as the title, `TerminalCopy` copies the output from the screen's corner, and `TerminalViewport` scrolls `TerminalOutput`, which renders a `TerminalLine` for each line in view. `TerminalJump` shows while you've scrolled away from the end. `TerminalApproval` sits between the header and the screen while the command has an `approval`, with a [Confirmation](./confirmation.mdx) in it.
 
 ## Usage
 
@@ -54,6 +57,18 @@ Without `status`, a run is `running` until you pass `exitCode`, then `complete` 
 ```tsx
 <Terminal command="npm run build" output={output} exitCode={done ? code : undefined} />
 ```
+
+### Approve a Command
+
+Pass `approval` to ask before the command runs. A Confirmation asks "Run npm test?" under the header, with **Approve** for `onApprove`, **Always allow** for `onAlwaysAllow` and **Deny** for `onDeny`, and the run's status is `awaiting-input`. Each is called with the approval's `approvalId` and `generation`; Always allow adds `always: true`, so you can add the command to your allow list, which stays yours. `approvalReason` adds a box for the reason Deny sends.
+
+<Example caption="Press Approve or Always allow to run the command, or Deny to add a reason, then Deny again to send it.">
+  <TerminalApprovalExample />
+
+  <ExampleCode example="terminal/approval" />
+</Example>
+
+The screen stays out of the way until the command prints something, and the outcome stays where the choices were, so the output shows after it and nothing above moves. A denied command keeps its header and shows "Denied" with the reason; its status is `cancelled`. The confirmation announces the decision.
 
 ### Following the End
 
@@ -75,10 +90,10 @@ Tab reaches the header, **Copy output** and the output, which scrolls with the a
 
 ### Agent
 
-An agent connected with `createAgent` finds the run by its title, the command unless you pass `label`, and reads `open`, `status` and `following`. It can `expand` and `collapse` the run and, once there's output, `copy` it, which calls `onCopy` too.
+An agent connected with `createAgent` finds the run by its title, the command unless you pass `label`, and reads `open`, `status` and `following`. It can `expand` and `collapse` the run and, once there's output, `copy` it, which calls `onCopy` too. Its approval is a Confirmation of its own, named "Run npm test?", whose decisions always wait for a person to confirm.
 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/terminal/terminal.ts" name="TerminalAgentActions" type='Pick<TerminalApi, "expand" | "collapse" | "copy">' />
 
 <Caption>
-  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-terminal>`, set `output` as a property; the other props are kebab-case attributes. `onOpenChange` is the `openchange` event and `onCopy` is `terminalcopy`.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-terminal>`, set `output` as a property; the other props are kebab-case attributes. `onOpenChange` is the `openchange` event and `onCopy` is `terminalcopy`. Set `approval` as a property; the `can-approve`, `can-always-allow` and `can-deny` attributes offer the choices, which fire `approve`, `alwaysallow` and `deny`.
 </Caption>

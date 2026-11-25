@@ -1,8 +1,10 @@
 import type { TerminalOptions } from "@kind-ui/agent-ui/core";
 import { createSignal, For, onSettled } from "solid-js";
 import { Terminal } from "../../../../src/solid/terminal.js";
+import { Tool } from "../../../../src/solid/tool.js";
+import { confirmationHost } from "../../shared/confirmation.js";
 import { expose } from "../../shared/expose.js";
-import { installRun, manyLines, testRun } from "../../shared/terminal.js";
+import { approvalCall, approvalRuns, installRun, manyLines, testRun } from "../../shared/terminal.js";
 
 type Row = TerminalOptions & { id: string; keepClipboard?: boolean };
 
@@ -65,6 +67,49 @@ const owned: Row[] = [
   { id: "empty", command: "npm run build", output: "" },
 ];
 
+function Approvals() {
+  const { host, approve, deny, always } = confirmationHost();
+  const [rows, setRows] = createSignal<Record<string, Partial<TerminalOptions>>>(
+    Object.fromEntries(
+      Object.keys(approvalRuns).map((id) => [
+        id,
+        { approval: { approvalId: id, generation: 1, state: "requested" }, output: "" },
+      ]),
+    ),
+  );
+  onSettled(() => {
+    expose({
+      kindHost: host,
+      kindTerminal: {
+        set: (id: string, next: Partial<TerminalOptions>) => {
+          setRows((all) => ({ ...all, [id]: { ...all[id], ...next } }));
+        },
+      },
+    });
+  });
+  return (
+    <div class="flex w-[34rem] flex-col gap-3 p-6">
+      <p id="above">Above the terminals</p>
+      <For each={Object.entries(approvalRuns)} keyed={(entry) => entry[0]}>
+        {(entry) => (
+          <Terminal
+            id={entry()[0]}
+            command={entry()[1].command}
+            approval={rows()[entry()[0]]?.approval}
+            output={rows()[entry()[0]]?.output}
+            exitCode={rows()[entry()[0]]?.exitCode}
+            approvalReason={entry()[1].reason}
+            onApprove={approve}
+            onDeny={deny}
+            onAlwaysAllow={entry()[1].always ? always : undefined}
+          />
+        )}
+      </For>
+      <Tool id="tool" call={approvalCall} onApprove={approve} onDeny={deny} onAlwaysAllow={always} />
+    </div>
+  );
+}
+
 export const cases = {
   all: () => <Terminals rows={all} />,
   owned: () => <Terminals rows={owned} />,
@@ -72,4 +117,5 @@ export const cases = {
   "stream-1000": () => (
     <Terminals rows={[{ id: "stream", command: "npm run build", output: manyLines(1000) }]} />
   ),
+  approval: () => <Approvals />,
 };

@@ -64,6 +64,7 @@ export function ToolApproval(props: ToolApprovalProps) {
             label={state.label}
             onApprove={state.onApprove}
             onDeny={state.onDeny}
+            onAlwaysAllow={state.onAlwaysAllow}
             reason={state.reason}
             focusFallback={state.focusFallback}
             motion={state.motion}

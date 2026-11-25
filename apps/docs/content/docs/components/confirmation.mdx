@@ -25,6 +25,7 @@ Confirmation
 ├── ConfirmationReason
 ├── ConfirmationChoices
 │   ├── ConfirmationApprove
+│   ├── ConfirmationAlways
 │   ├── ConfirmationDeny
 │   ├── ConfirmationCancel
 │   └── ConfirmationError
@@ -32,7 +33,7 @@ Confirmation
     └── ConfirmationOutcomeIcon
 ```
 
-`Confirmation` renders these parts when you pass no children. It's a group named by its `label`, which `ConfirmationTitle` shows above the choices and keeps above the outcome; inside a [Tool](./tool.mdx) the title is hidden, since the tool already names the request. `ConfirmationReason` is a text box for the reason Deny sends, `ConfirmationApprove` and `ConfirmationDeny` are native buttons, `ConfirmationCancel` closes the reason box, and `ConfirmationError` says "Decision not sent. Try again." beside them. `ConfirmationOutcome` takes the choices' place once they're gone, with a status mark and where the request stands.
+`Confirmation` renders these parts when you pass no children. It's a group named by its `label`, which `ConfirmationTitle` shows above the choices and keeps above the outcome; inside a [Tool](./tool.mdx) or a [Terminal](./terminal.mdx) the title is hidden, since the step already names the request. `ConfirmationReason` is a text box for the reason Deny sends, `ConfirmationApprove`, `ConfirmationAlways` and `ConfirmationDeny` are native buttons, `ConfirmationCancel` closes the reason box, and `ConfirmationError` says "Decision not sent. Try again." beside them. `ConfirmationOutcome` takes the choices' place once they're gone, with a status mark and where the request stands.
 
 ## Usage
 
@@ -51,15 +52,32 @@ Pass the host's request as `approval`: an `approvalId`, a `generation` and a `st
 
 An `auto` request shows its outcome, like "Approved automatically", and no choices.
 
+### Always Allow
+
+Pass `onAlwaysAllow` to offer **Always allow** between Approve and Deny, for a request a person may want to stop being asked about. It approves, and its decision carries `always: true`, so you can remember the choice; the allow list is yours to keep. Rename it with `alwaysLabel`, like "Always allow in this chat".
+
+```tsx
+<Confirmation
+  label="Run npm test?"
+  approval={approval}
+  onApprove={(decision) => respond({ ...decision, approved: true })}
+  onAlwaysAllow={(decision) => {
+    allowList.add("npm test");
+    respond({ ...decision, approved: true });
+  }}
+  onDeny={(decision) => respond({ ...decision, approved: false })}
+/>
+```
+
 ### Sending a Decision
 
-A press disables both choices at once, so a second press, even on the other choice, calls nothing. The pressed choice shows a running mark beside its label while its call is pending. Return a promise to keep them disabled until it settles; they stay disabled after that until the host reports on the request, whether it's `submitting`, `submit-failed` or `responded`. A rejection, or `submit-failed`, makes them available again, and `submit-failed` shows "Decision not sent. Try again." beside them.
+A press disables every choice at once, so a second press, even on another choice, calls nothing. The pressed choice shows a running mark beside its label while its call is pending. Return a promise to keep them disabled until it settles; they stay disabled after that until the host reports on the request, whether it's `submitting`, `submit-failed` or `responded`. A rejection, or `submit-failed`, makes them available again, and `submit-failed` shows "Decision not sent. Try again." beside them.
 
 When the host replaces the request with a new `generation`, the choices are available again, and a late result for the old one changes nothing.
 
 ### Reasons
 
-Pass `reason` to ask why before a denial. Approve stays one press. The first press on Deny opens a box above the choices and moves focus into it, without calling `onDeny`; while it's open, **Deny** sends its text as `decision.reason`, trimmed, and leaves it out when it's empty, and **Cancel** closes the box and returns focus to Deny. Approve is hidden while the box is open. It keeps its text through a new `generation` of the same request, and empties for a new `approvalId`. Once the decision is recorded, the box collapses and the outcome shows the reason after "Denied".
+Pass `reason` to ask why before a denial. Approve stays one press. The first press on Deny opens a box above the choices and moves focus into it, without calling `onDeny`; while it's open, **Deny** sends its text as `decision.reason`, trimmed, and leaves it out when it's empty, and **Cancel** closes the box and returns focus to Deny. Approve and Always allow are hidden while the box is open. It keeps its text through a new `generation` of the same request, and empties for a new `approvalId`. Once the decision is recorded, the box collapses and the outcome shows the reason after "Denied".
 
 ### Outcome
 
@@ -79,10 +97,10 @@ The choices and the outcome fade in when they swap, and the reason box expands a
 
 ### Agent
 
-An agent connected with `createAgent` finds the confirmation by its label and reads its `approvalState`. It can approve or deny while those choices show, and `deny` takes a reason, which it sends at once without opening the reason box. Every decision waits for a person to confirm, unless the host's `allow` lets it through; this can't be turned off.
+An agent connected with `createAgent` finds the confirmation by its label and reads its `approvalState`. It can approve, always allow or deny while those choices show, and `deny` takes a reason, which it sends at once without opening the reason box. Every decision waits for a person to confirm, unless the host's `allow` lets it through; this can't be turned off.
 
-<auto-type-table path="../../../../../packages/agent-ui/src/core/confirmation/confirmation.ts" name="ConfirmationAgentActions" type='Pick<ConfirmationApi, "approve" | "deny">' />
+<auto-type-table path="../../../../../packages/agent-ui/src/core/confirmation/confirmation.ts" name="ConfirmationAgentActions" type='Pick<ConfirmationApi, "approve" | "alwaysAllow" | "deny">' />
 
 <Caption>
-  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-confirmation>`, `approval` and `focusFallback` are properties only, and other props are kebab-case attributes, so `approveLabel` is `approve-label`. Approve and Deny need the `can-approve` and `can-deny` attributes and fire `approve` and `deny` with the decision as `detail.value`: call `event.detail.waitUntil(promise)` to keep the choices disabled. The element fills in its parts when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-confirmation>`, `approval` and `focusFallback` are properties only, and other props are kebab-case attributes, so `approveLabel` is `approve-label`. Approve, Always allow and Deny need the `can-approve`, `can-always-allow` and `can-deny` attributes and fire `approve`, `alwaysallow` and `deny` with the decision as `detail.value`: call `event.detail.waitUntil(promise)` to keep the choices disabled. The element fills in its parts when it has no children.
 </Caption>

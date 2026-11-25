@@ -7,6 +7,7 @@ export const parts = createParts(confirmationPrimitive, {
   reason: "div",
   choices: "div",
   approve: "button",
+  always: "button",
   deny: "button",
   cancel: "button",
   error: "span",

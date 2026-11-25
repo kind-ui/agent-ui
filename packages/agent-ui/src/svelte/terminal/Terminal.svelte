@@ -1,10 +1,11 @@
 <!--
-  A command and its output as a step: the command, its exit code and duration, then the output with its ANSI colors,
-  following its end while it streams. Any `children` replace the default parts.
+  A command and its output as a step: the command, its exit code and duration, its approval while it has one, then
+  the output with its ANSI colors, following its end while it streams. Any `children` replace the default parts.
 -->
 <script lang="ts">
   import type { ComponentProps } from "svelte";
   import { parts } from "./parts.js";
+  import TerminalApproval from "./TerminalApproval.svelte";
   import TerminalCommand from "./TerminalCommand.svelte";
   import TerminalExit from "./TerminalExit.svelte";
   import TerminalJump from "./TerminalJump.svelte";
@@ -17,7 +18,8 @@
 
 {#snippet fallback()}<parts.Trigger
     ><parts.Icon /><TerminalTitle /><TerminalExit /><TerminalMeta /></parts.Trigger
-  ><parts.Content
+  ><TerminalApproval
+  /><parts.Content
     ><div data-terminal-screen="" data-kind-code=""
       ><div data-terminal-header=""><TerminalCommand /><parts.Copy /></div
       ><parts.Viewport><TerminalOutput /></parts.Viewport><TerminalJump /></div
