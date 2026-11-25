@@ -256,6 +256,8 @@ export default {
 
     // wave-7-task-3: Message delivery mark and retrying
 
+    "wave-7/message-delivery.spec.ts",
+
     // wave-7-task-4: Terminal approval and Confirmation's Always allow
 
     // wave-7-task-5: Tool retry and retrying
