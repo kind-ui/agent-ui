@@ -1,0 +1,15 @@
+@layer ui-sdk;
+@import "tailwindcss";
+@import "../../../packages/agent-ui/src/styles/agent-ui.css";
+@source "./";
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--kind-color-surface);
+  color: var(--kind-color-fg);
+}
