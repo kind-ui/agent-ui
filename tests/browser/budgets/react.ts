@@ -60,6 +60,11 @@ export const budgets = {
 
   // wave-7-task-10: Trace
 
+  // Rows are 28px in a 600px viewport, so the same rows are in view at 50 spans as at 5,000. Selecting re-renders the
+  // two rows' Waterfall parts and the details; expanding a job adds its four steps and moves every row in view below.
+  traceSelect: { writes: 21, renders: 106, notified: 30, layoutReads: 0 },
+  traceExpand: { writes: 238, renders: 373, notified: 87, layoutReads: 2 },
+
   // wave-7-task-11: Run Timeline
 
   // wave-7-task-12: Job Progress

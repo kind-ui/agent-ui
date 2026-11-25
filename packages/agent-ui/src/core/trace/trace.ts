@@ -390,11 +390,8 @@ export const tracePrimitive: TracePrimitive = definePrimitive<TraceOptions, Trac
         rowHeight: ROW_HEIGHT,
       };
     },
-    sync: (next) => ({
-      ...presentation(next),
-      ...(next.value === undefined ? {} : { value: next.value }),
-      ...(next.expanded === undefined ? {} : { expanded: next.expanded }),
-    }),
+    // `value` and `expanded` reach state in `onOptions`, since a synced key that changes renders every React part.
+    sync: presentation,
     controlled: ["value", "expanded"],
     api: (context) => {
       const { store } = context;
@@ -452,7 +449,13 @@ export const tracePrimitive: TracePrimitive = definePrimitive<TraceOptions, Trac
           store.set({ items, entries, running, wallClock, shown, rows, size: shown.length * state.rowHeight });
         }
       };
-      context.onOptions((next) => remodel(next));
+      context.onOptions((next) => {
+        const state = store.get();
+        const value = next.value === undefined ? state.value : next.value;
+        const expanded = next.expanded ?? state.expanded;
+        if (value !== state.value || expanded !== state.expanded) store.set({ value, expanded });
+        remodel(next);
+      });
       store.subscribe(() => {
         const { items, expanded, shown } = store.get();
         if (shownRows(items, expanded) !== shown) remodel();

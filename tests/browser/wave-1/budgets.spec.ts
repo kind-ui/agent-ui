@@ -388,6 +388,26 @@ for (const messages of [100, 5000]) {
 
 // wave-7-task-10: Trace
 
+// Selecting a span and expanding one render the rows they change and the rows in view, at 50 spans as at 5,000: rows
+// are 28px in a 600px viewport, so the same rows are in view at both sizes.
+const TRACE_ACTIONS = {
+  traceSelect: `kindTrace.select((window.kindSelected = window.kindSelected === "job-2" ? "job-1/step-2" : "job-2"))`,
+  traceExpand: `kindTrace.toggle("job-1")`,
+} as const;
+for (const spans of [50, 5000])
+  for (const [name, action] of Object.entries(TRACE_ACTIONS) as [keyof typeof TRACE_ACTIONS, string][])
+    test(`${name} among ${spans} spans`, async ({ page }) => {
+      const limit = BUDGETS[name];
+      await page.setViewportSize({ width: 400, height: 600 });
+      await page.goto(`/?c=trace&case=many-${spans}`);
+      await expect(page.getByRole("rowheader", { name: /^job 1 / })).toBeVisible();
+      const counts = await most(page, 4, action);
+      expect(counts.writes).toBeLessThanOrEqual(limit.writes);
+      expect(counts.renders).toBeLessThanOrEqual(limit.renders);
+      expect(counts.notified).toBeLessThanOrEqual(limit.notified);
+      expect(counts.layoutReads).toBeLessThanOrEqual(limit.layoutReads);
+    });
+
 // wave-7-task-11: Run Timeline
 
 // wave-7-task-12: Job Progress
