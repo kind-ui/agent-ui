@@ -8,14 +8,14 @@ import { KindResizable, KindResizableHandle, KindResizablePanel } from "./intern
 
 const parts = createParts(sidebarPrimitive, {
   root: "div",
-  title: "aside",
+  heading: "aside",
   handle: "div",
   inset: "div",
   trigger: "button",
 });
 
 export type SidebarProps = Omit<ComponentProps<typeof parts.Root>, "children"> & { children?: ReactNode };
-export type SidebarPanelProps = ComponentProps<typeof parts.Title>;
+export type SidebarPanelProps = ComponentProps<typeof parts.Heading>;
 export type SidebarHandleProps = Omit<ComponentProps<typeof parts.Handle>, "children" | "className"> & {
   /** Classes for the separator itself, UI SDK's Resizable handle. */
   className?: string;
@@ -40,7 +40,7 @@ export function Sidebar({ children, ...props }: SidebarProps) {
 /** The panel, an `aside` named by the sidebar's `label`: a Resizable panel beside the page, else a drawer. */
 export function SidebarPanel({ render, ...props }: SidebarPanelProps) {
   return (
-    <parts.Title
+    <parts.Heading
       {...props}
       render={(panel, state) => {
         const element = renderElement("aside", panel, render, state);

@@ -389,7 +389,9 @@ export const checkpointPrimitive: CheckpointPrimitive = definePrimitive<
         "data-pending": state.pending ? "" : undefined,
         // Whatever `agentConfirm` says, an agent pressing it needs a person. Only while open: a web part that stays in
         // the page closed would otherwise mark every step on the checkpoint.
-        "data-agent-confirm": state.open ? "Restores the checkpoint, discarding the changes after it" : undefined,
+        "data-agent-confirm": state.open
+          ? "Restores the checkpoint, discarding the changes after it"
+          : undefined,
       }),
     }),
   }),

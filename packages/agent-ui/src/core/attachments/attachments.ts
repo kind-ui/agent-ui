@@ -81,6 +81,8 @@ export type AttachmentState = {
 };
 
 export type AttachmentsApi = {
+  /** The host's items, for the agent's item list. */
+  getItems: () => readonly AttachmentItem[];
   /** Removes an item by its `id`, through `onRemove`. Offered only while `onRemove` is set. */
   readonly remove: ((id: string, event?: Event) => void) | undefined;
   roving: ReturnType<typeof createRovingFocus<AttachmentsState, ItemProps>>;
@@ -208,6 +210,7 @@ export const attachmentsPrimitive: AttachmentsPrimitive = definePrimitive({
       );
 
     return {
+      getItems: () => store.get().items,
       get remove() {
         return store.get().canRemove ? remove : undefined;
       },
@@ -310,5 +313,9 @@ export const attachmentsPrimitive: AttachmentsPrimitive = definePrimitive({
       attrs: () => ({ "aria-hidden": "true" }),
     }),
   }),
-  agent: { actions: ["remove"] },
+  agent: {
+    actions: ["remove"],
+    // Items by name, so an agent can name a file, and the bridge never reads the host's items as its own.
+    items: (api: AttachmentsApi) => api.getItems().map(({ id, name }) => ({ value: id, label: name })),
+  },
 });

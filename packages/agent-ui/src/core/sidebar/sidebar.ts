@@ -244,10 +244,11 @@ type Slot<Extra> = SlotDefinition<SidebarState, SidebarApi, BaseSlotProps, Extra
 
 type SidebarSlots = {
   root: Slot<SidebarRootState>;
-  // `title`, not `panel`: UI SDK's agent bridge names a component by its `title` part when no keyless `group` or
+  // `heading`, not `panel`: UI SDK's agent bridge names a component by its `heading` part when no keyless `group` or
   // root part has a name, and the root holds the whole page, so the panel's name ("Chats") names the sidebar. Not
-  // `group`, which every web part's auto key hides from the bridge.
-  title: Slot<SidebarPanelState>;
+  // `group`, which every web part's auto key hides from the bridge, nor `title`, whose whole text (every thread in
+  // the panel) the bridge copies into the snapshot entry.
+  heading: Slot<SidebarPanelState>;
   handle: Slot<SidebarHandleState>;
   inset: Slot<SidebarInsetState>;
   trigger: Slot<SidebarTriggerState>;
@@ -368,7 +369,7 @@ export const sidebarPrimitive: SidebarPrimitive = definePrimitive<
       if (!store.get().animating) store.set({ animating: true });
       later(() => {
         const { open, overlay } = store.get();
-        const panel = context.element("title");
+        const panel = context.element("heading");
         if (!overlay && attached() && open !== panelOpen()) {
           const from = panel?.offsetWidth ?? 0;
           if (open) controller.expand(panelId);
@@ -584,7 +585,7 @@ export const sidebarPrimitive: SidebarPrimitive = definePrimitive<
       }),
       bind: (el, { api }) => api.bindRoot(el),
     }),
-    title: slot<BaseSlotProps, SidebarPanelState>({
+    heading: slot<BaseSlotProps, SidebarPanelState>({
       // React renders an `aside`; a web `kind-sidebar-panel` needs the role written.
       role: "complementary",
       state: (state, { api }) => api.panelState(state),

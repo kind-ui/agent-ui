@@ -19,20 +19,78 @@ export const agent = createAgent({
 
 In React, create it at module level (it's safe to import during server rendering) or in a `useState` initializer, not on every render. To reach it from tests or the console, assign it in an effect: `useEffect(() => { window.agent = agent; }, [])`.
 
-## Read and act
+## Read and act: snapshot, act, query
+
+An agent uses three tools. Always go through them; don't drive the page with clicks, typing or an accessibility-tree browser tool, which takes several times the calls and tokens.
 
 ```ts
 const snapshot = agent.snapshot();
 // [{ ref: "c11", component: "kind-confirmation", label: "Run delete_branch?", approvalState: "requested", actions: ["approve", "deny"] },
 //  { ref: "c12", component: "kind-tool", label: "delete_branch", status: "awaiting-input", actions: ["expand", "collapse", "copyInput", "press"] }, …]
 
-await agent.act({ steps: [{ ref: "Read the logs", action: "expand" }] });
+await agent.act({
+  steps: [
+    { ref: "Approvals", action: "setValue", args: ["Allow edits"] },
+    { ref: "Settings", action: "toggle", args: ["Web search"] },
+    { ref: "c118", action: "setValue", args: ["Summarize the failing tests"] },
+    { ref: "c118", action: "submit" },
+  ],
+});
+
+await agent.query({ within: "Files", text: "README" }); // a long list's items, without listing the page
 ```
 
-- Each component is listed once, by its accessible name, with its state and the actions it offers right now. An agent names a component by `ref` or by label. The list also holds content without a role (each Markdown, unnamed) and UI SDK parts a component composes (the composer's `token-input` and `file-input`, a code block's `scroll-area`).
-- Some actions are listed only while they can run: a Message offers `regenerate` only once it settled and you passed `onRegenerate`.
+- **One `snapshot`, then one `act` for the whole task.** A step is exactly `{ ref, action, args }`; values go in `args`. A wrong shape fails before any step runs. A `setValue` that didn't take fails the step, so a step that sends or saves goes last in the same call. A failed step stops the call; its message names what's on the page and how many steps to send again.
+- Each component is listed once, by its accessible name, with its state and the actions it offers right now. Name a component by `ref` or label; use the `ref` when two share a label. The list also holds content without a role (each Markdown, unnamed) and UI SDK parts a component composes (the composer's `token-input` and `file-input`, a code block's `scroll-area`).
+- A list with more than 10 items shows `more` instead of `items`; `query({ within })` reads them, 50 at a time with `from`.
+- Some actions are listed only while they can run: a Message offers `regenerate` only once it settled and you passed `onRegenerate`. While a modal dialog is open the page behind it is inert, so finish the dialog first.
 - The bridge adds a generic `press` to some components for buttons no action covers (a Tool's header); a component whose buttons all have actions, like Confirmation, lists only those.
 - Each component page's **Agent** section lists what it reads and offers. The UI SDK docs for the bridge, WebMCP and `allow` are `node_modules/@ui-sdk/<layer>/docs/agents.md`.
+
+## Connect a model
+
+`agentTools` (also `agent.tools`) holds the three tools' names, descriptions and input schemas. With the AI SDK, declare them on the server without `execute`, and run each call on the bridge in the browser. Pass `act` a `signal` and abort it from the chat's stop button (the Composer's `onStop`), so a step waiting on the person ends with the answer:
+
+```ts
+// app/api/chat/route.ts
+import { agentTools } from "@ui-sdk/react/agent";
+import { jsonSchema, tool } from "ai";
+
+const tools = Object.fromEntries(
+  agentTools.map(({ name, description, inputSchema }) => [name, tool({ description, inputSchema: jsonSchema(inputSchema) })]),
+);
+// streamText({ model, messages, tools })
+```
+
+```tsx
+// chat.tsx
+const turn = useRef(new AbortController());
+const { sendMessage, stop, addToolOutput } = useChat({
+  sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+  async onToolCall({ toolCall }) {
+    const tool = toolCall.toolName as "snapshot" | "act" | "query";
+    const output =
+      tool === "act"
+        ? await agent.act(toolCall.input as never, { signal: turn.current.signal })
+        : await agent[tool](toolCall.input as never);
+    addToolOutput({ tool, toolCallId: toolCall.toolCallId, output });
+  },
+});
+
+<Composer
+  aria-label="Message"
+  onSubmit={(draft) => {
+    turn.current = new AbortController();
+    return sendMessage({ text: draft.text });
+  }}
+  onStop={() => {
+    turn.current.abort();
+    stop();
+  }}
+>
+```
+
+To give the tools to a browser's own agent, register them through WebMCP: `const unregister = registerTools(agent, { allow: (step) => !step.confirm })`. It does nothing in a browser without WebMCP, and its `allow` runs after the bridge's.
 
 ## Agents take the same path as people
 

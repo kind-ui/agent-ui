@@ -161,7 +161,7 @@ export function defineSidebar(): void {
         };
       },
     },
-    title: { tag: "kind-sidebar-panel", display: "block" },
+    heading: { tag: "kind-sidebar-panel", display: "block" },
     handle: { tag: "kind-sidebar-handle", display: "contents" },
     inset: { tag: "kind-sidebar-inset", display: "block" },
     trigger: { tag: "kind-sidebar-trigger", target: wrappedButton, display: "contents" },
