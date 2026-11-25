@@ -90,10 +90,9 @@
     cursor: pointer;
     transition: box-shadow var(--kind-duration-fast) var(--kind-ease-out);
 
+    /* The translucent hover fill over the node's own surface. */
     &:hover {
-      box-shadow:
-        var(--kind-shadow-control),
-        0 0 0 1px var(--kind-color-ring);
+      background-image: linear-gradient(var(--kind-color-hover), var(--kind-color-hover));
     }
 
     &:focus-visible {
