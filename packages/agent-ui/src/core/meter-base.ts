@@ -15,6 +15,7 @@ import {
 } from "@ui-sdk/core";
 import type { PopoverOpenChangeReason } from "@ui-sdk/core/popover";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
+import type { UsageSlice } from "../types/index.js";
 import { hoverPopupPreset, withHover } from "./hover-popup.js";
 import { memo } from "./memo.js";
 import type { MotionMode } from "./motion/index.js";
@@ -40,6 +41,11 @@ export type MeterBaseOptions = {
   /** Called when the details open or close, with what caused it. */
   onOpenChange?: (open: boolean, details: ChangeDetails<MeterOpenChangeReason>) => void;
   /**
+   * What makes up the amount used, like system, tools and messages. The details show it as a stacked bar and a row
+   * per slice, with its amount and its share of the most there can be.
+   */
+  breakdown?: UsageSlice[];
+  /**
    * How the ring fills and the details open: at full motion the ring sweeps and the details rise in; reduced motion
    * only fades. `"auto"` follows `prefers-reduced-motion`.
    * @default "auto"
@@ -58,6 +64,24 @@ export type MeterBaseState = PopupState & {
   pageLocale: string | null;
   /** The `motion` option. */
   motion: MotionMode;
+  /** The `breakdown` option. */
+  breakdown: UsageSlice[] | undefined;
+};
+
+/** One slice of the breakdown, as the bar and its row show it. */
+export type MeterSlice = {
+  /** The slice's `id`. */
+  id: string;
+  /** The slice's `label`. */
+  label: string;
+  /** Its amount, formatted, like "12,000". */
+  value: string;
+  /** Its share of the most there can be, formatted, like "9%". */
+  percent: string;
+  /** Its segment's width in the bar, like "9.375%": the bar's segments add up to the share used. */
+  width: string;
+  /** Which of the five slice colors it takes, from 1, written as `data-slice`. */
+  color: number;
 };
 
 /** The props the value part hands UI SDK's Meter. */
@@ -87,6 +111,8 @@ export type MeterBaseApi<State extends MeterBaseState> = Omit<Popup, "open" | "c
   countText: (state: State) => string;
   /** Hands the Meter its props. Called by the value slot. */
   valueState: (state: State) => MeterValueState;
+  /** The breakdown's slices. Called by the breakdown slots. */
+  slices: (state: State) => MeterSlice[];
 };
 
 export type MeterBaseConfig<State extends MeterBaseState> = {
@@ -98,9 +124,15 @@ export type MeterBaseConfig<State extends MeterBaseState> = {
   valueText: (state: State, locale: string) => string;
   /** The details' description, in `locale`. */
   countText: (state: State, locale: string) => string;
-  /** The state keys `valueText` and `countText` read, so their words are reused while those keys hold. */
+  /** A slice's amount, in `locale`, like "12,000" or "$1.20". */
+  sliceText: (value: number, state: State, locale: string) => string;
+  /** The state keys `valueText`, `countText` and `sliceText` read, so their words are reused while those keys hold. */
   keys: readonly (keyof State)[];
 };
+
+const SLICE_COLORS = 5;
+
+const finite = (value: number) => (Number.isFinite(value) ? Math.max(value, 0) : 0);
 
 /**
  * A meter whose trigger is a ring around its percentage and whose details open in a popover on press, hover or
@@ -119,6 +151,7 @@ export const meterBase = <
     label: options.label ?? config.label,
     locale: toLocale(options.locale),
     motion: options.motion ?? "auto",
+    breakdown: options.breakdown,
   });
   // Server markup is English, as UI SDK Meter's is, so it never disagrees with the client's.
   const localeOf = (state: State) => state.locale ?? state.pageLocale ?? "en-US";
@@ -130,6 +163,7 @@ export const meterBase = <
       defaultOpen: "boolean",
       onOpenChange: "callback",
       motion: "string",
+      breakdown: "value",
     } as const,
     state: (options: Options) => ({ ...popupState(options), ...presentation(options), pageLocale: null }),
     // Typed on `State`, so a component's own `sync` can spread it.
@@ -168,6 +202,28 @@ export const meterBase = <
           getValueLabel: () => valueText,
         }),
       );
+      let current: State;
+      const slices = memo(
+        (breakdown: UsageSlice[] | undefined, max: number, locale: string, ..._keys: unknown[]) => {
+          if (!breakdown?.length) return [];
+          const percent = new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0 });
+          let filled = 0;
+          return breakdown.map(({ id, label, value }, index): MeterSlice => {
+            const share = max > 0 ? finite(value) / max : 0;
+            // Clamped to what's left of the bar, so slices past the limit don't overflow it.
+            const width = Math.min(share, Math.max(1 - filled, 0));
+            filled += width;
+            return {
+              id,
+              label,
+              value: config.sliceText(value, current, locale),
+              percent: percent.format(share),
+              width: `${+(width * 100).toFixed(4)}%`,
+              color: (index % SLICE_COLORS) + 1,
+            };
+          });
+        },
+      );
       return {
         ...popup,
         get open() {
@@ -182,16 +238,28 @@ export const meterBase = <
           const { value, max } = config.amount(state);
           return valueState(value, max, localeOf(state), state.label, valueText(state));
         },
+        slices: (state) => {
+          current = state;
+          return slices(
+            state.breakdown,
+            config.amount(state).max,
+            localeOf(state),
+            ...config.keys.map((key) => state[key]),
+          );
+        },
       };
     },
     slots: (slot: SlotFactory<State, Api>) => {
       const trigger = popupTrigger(slot);
       const content = popupContent(slot);
+      const title = popupTitle(slot);
+      const description = popupDescription(slot);
       return {
         root: slot({
           role: "group",
           attrs: (state) => ({
             "aria-label": state.label,
+            "data-meter-part": "root",
             "data-level": state.level,
             "data-motion": state.motion,
           }),
@@ -206,21 +274,43 @@ export const meterBase = <
             ...trigger.attrs?.(state, part),
             type: "button",
             "aria-label": part.api.valueText(state),
+            "data-meter-part": "trigger",
             "data-kind-trigger": "",
             "data-kind-size": "sm",
           }),
         }),
         value: slot<BaseSlotProps, MeterValueState>({
           state: (state, { api }) => api.valueState(state),
+          attrs: () => ({ "data-meter-part": "value" }),
         }),
         content: slot({
           ...content,
-          attrs: (state, part) => ({ ...content.attrs?.(state, part), "data-kind-popup": "" }),
+          attrs: (state, part) => ({
+            ...content.attrs?.(state, part),
+            "data-meter-part": "content",
+            "data-kind-popup": "",
+          }),
         }),
-        title: slot({ ...popupTitle(slot), state: (state) => ({ label: state.label }) }),
+        title: slot({
+          ...title,
+          state: (state) => ({ label: state.label }),
+          attrs: (state, part) => ({ ...title.attrs?.(state, part), "data-meter-part": "title" }),
+        }),
         description: slot({
-          ...popupDescription(slot),
+          ...description,
           state: (state, { api }) => ({ countText: api.countText(state) }),
+          attrs: (state, part) => ({ ...description.attrs?.(state, part), "data-meter-part": "description" }),
+        }),
+        // The rows below read the same slices in words, so the bar is decoration.
+        breakdown: slot<BaseSlotProps, { slices: MeterSlice[] }>({
+          present: (state, { api }) => api.slices(state).length > 0,
+          state: (state, { api }) => ({ slices: api.slices(state) }),
+          attrs: () => ({ "aria-hidden": "true", "data-meter-part": "breakdown" }),
+        }),
+        "breakdown-rows": slot<BaseSlotProps, { slices: MeterSlice[] }>({
+          present: (state, { api }) => api.slices(state).length > 0,
+          state: (state, { api }) => ({ slices: api.slices(state) }),
+          attrs: () => ({ "data-meter-part": "breakdown-rows" }),
         }),
       };
     },
