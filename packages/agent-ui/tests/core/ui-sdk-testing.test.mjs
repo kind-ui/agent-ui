@@ -306,6 +306,16 @@ const cases = {
 
   // wave-7-task-16: Quota Notice
 
+  quotaNotice: {
+    options: {
+      used: 800,
+      limit: 1000,
+      period: "this month",
+      resetAt: "2026-12-01T00:00:00Z",
+      onUpgrade: () => {},
+    },
+  },
+
   // wave-7-task-17: Activity Graph
 
   // wave-7-task-18: Thread List inbox

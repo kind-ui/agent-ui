@@ -793,6 +793,16 @@ export {
 
 // wave-7-task-16: Quota Notice
 
+export {
+  type QuotaNoticeApi,
+  type QuotaNoticeMeterState,
+  type QuotaNoticeOptions,
+  type QuotaNoticePrimitive,
+  type QuotaNoticeState,
+  type QuotaNoticeUpgradeDetails,
+  quotaNoticePrimitive,
+} from "./quota-notice/index.js";
+
 // wave-7-task-17: Activity Graph
 
 // wave-7-task-18: Thread List inbox
