@@ -38,15 +38,6 @@ type Kit = {
   [primitive: string]: unknown;
 };
 
-// React's Radio group and Segmented Control keep a hidden native radio per item for forms, `aria-hidden`, which
-// `checkPattern` counts as radios: see "checkPattern counts React's hidden form radios" in
-// `.agents/experts/react/decisions.md`.
-const hiddenRadios = [
-  /has 2 checked radios/,
-  /next radio, input, but focus went/,
-  /previous radio,( wrapping around,)? input,/,
-];
-
 // A non-modal popover closes when Tab leaves it, so Escape after that has nothing to close: see "Non-modal popovers
 // and checkPattern's dialog check".
 const nonModal = [/focus should return here when Escape closes/];
@@ -167,7 +158,6 @@ const checks: Check[] = [
     pattern: "radio-group",
     target: (page) => page.getByRole("radiogroup").first(),
     rtl: true,
-    known: hiddenRadios,
   },
   {
     name: "question checkboxes",
@@ -181,7 +171,6 @@ const checks: Check[] = [
     pattern: "radio-group",
     target: (page) => page.getByRole("radiogroup", { name: "Reasoning effort" }),
     rtl: true,
-    known: hiddenRadios,
   },
   {
     name: "test-results tree",

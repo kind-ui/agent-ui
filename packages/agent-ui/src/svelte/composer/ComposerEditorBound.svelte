@@ -1,4 +1,4 @@
-<!-- Calls `onbound` once the rows rendered before it have bound, and `onunbound` as it leaves. -->
+<!-- Calls `onbound` once the editor rendered before it has bound, and `onunbound` as it leaves. -->
 <script lang="ts">
   import { tick } from "svelte";
 

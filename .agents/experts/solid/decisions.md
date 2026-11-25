@@ -12,14 +12,16 @@ Last reviewed: `281b2126` (Task Solid-8)
 - **`tsconfig.solid.json` resolves modules as a bundler** (Task Solid-1): docs examples import `@/components/ui/solid/<name>` without an extension, as React's do, which NodeNext refuses; Solid's JSX is compiled by the consumer's bundler anyway.
 - **Default children are `props.children ?? <Default />`** (Task Solid-2): one lazy read, built only when used; a part that reads `props.children` more than once reads it through a `createMemo`, since each read builds an element child again.
 - **`MessageRegenerate` takes its button as a function child** (Task Solid-2): Solid can't clone an element child into `MenuTrigger`'s `render`, as React does; an element child still regenerates, without the menu.
-- **`ComposerTriggerMenu` creates its menu once the editor has attached** (Task Solid-8): an `@ui-sdk/solid` gap left the editor's `aria-autocomplete` and `aria-haspopup` unwritten at rest (Task Solid-2); a menu created once the editor has attached writes them, as React's does. AGENTS.md "UI SDK API notes".
-- **Picker content binds after its rows** (Task Solid-8): `afterChildren` in `picker.tsx` hands UI SDK the content `ref` from a last child's `onSettled` → `onFlush`, so a sheet measures the rows Command already shows; binding first resized the opening sheet into an `@ui-sdk/core` bug. Not a timer: `onFlush` runs once the rows' binds have applied.
+- **`ComposerTriggerMenu` creates its menu once the editor has attached** (Task Solid-8): an `@ui-sdk/solid` gap left the editor's `aria-autocomplete` and `aria-haspopup` unwritten at rest (Task Solid-2); a menu created once the editor has attached writes them, as React's does. AGENTS.md "UI SDK API notes". Still open in `0.1.0-beta.17`: without it, `parity.spec.ts` on `?c=composer&case=full` misses both attributes.
+- **Picker content binds as UI SDK hands it over** (`0.1.0-beta.17`): Task Solid-8 bound it after its rows (`afterChildren`), since a sheet that resized while opening threw from `@ui-sdk/core`; core fixed that in `0.1.0-beta.6`, and `picker.spec.ts`, Model Selector's and Thread Search's specs pass without it.
 - **Step family default parts are built per instance, not shared** (Task Solid-5): React's module-level `DEFAULT_PARTS` exists to skip re-rendering wrappers per chunk, which Solid never does; item lists are `<For>` keyed by id.
 - **Virtualized rows are keyed `<For>` lists over the primitive's row objects** (Task Solid-6): Terminal by `row.index`, Transcript by `row.key`, Test Results by item value, so a chunk, a word or a test updates one row; React's `memo`'d rows are unneeded.
-- **Transcript's played word writes `data-current` twice** (Task Solid-6): an `@ui-sdk/solid` gap (`directNames` ignored), recorded in AGENTS.md "UI SDK API notes" and in `budgets/solid.ts`.
+- **Transcript's played word writes `data-current` twice** (Task Solid-6): an `@ui-sdk/solid` gap (`directNames` ignored), recorded in AGENTS.md "UI SDK API notes" and in `budgets/solid.ts`. Still open in `0.1.0-beta.17` (4 writes against React's 2).
 - **Solid hydration is reliable with the Playwright warm-up** (Task Solid-8): Step's hydration test took 4.7 to 5.2 s across 5 repeats at 8 workers, and the whole hydration spec passes at 4 and 8 workers.
 - Everything in AGENTS.md "UI SDK API notes".
 
 ## Known and open (don't report again, check whether fixed)
 
+- **`CommandPage` warns `STRICT_READ_UNTRACKED` while server rendering** (`@ui-sdk/solid` `command.jsx:198`, its `PageContext` value reads `props.value`): still logged in `0.1.0-beta.17`, harmless. `MenuContent`'s `SERVER_WRITE` is gone.
+- **Part state is a keyless proxy** (`slotState` in `use-primitive.jsx` has no `ownKeys`): still so in `0.1.0-beta.17`, so `menuProps` and `menuTriggerProps` stay.
 - **`internal.spec.ts`'s composition test skips every layer but React**: it passes on Solid (checked by hand in Task Solid-1); turning it on is a shared spec change for its own PR.

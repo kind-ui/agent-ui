@@ -9,7 +9,7 @@ import {
 } from "@kind-ui/agent-ui/core";
 import type { ComponentProps, JSX } from "@solidjs/web";
 import { createParts } from "@ui-sdk/solid/primitive";
-import { For, merge, omit, onFlush, onSettled, Show } from "solid-js";
+import { For, omit, Show } from "solid-js";
 import {
   KindCommand,
   KindCommandEmpty,
@@ -25,34 +25,6 @@ import {
   KindCommandStatus,
 } from "./internal/command.js";
 import { iconElement } from "./internal/kind-class.js";
-
-const callRef = (ref: unknown, el: HTMLElement): void => {
-  if (Array.isArray(ref)) for (const each of ref) callRef(each, el);
-  else if (typeof ref === "function") ref(el);
-};
-
-function Settled(props: { run: () => void }) {
-  onSettled(props.run);
-  return null;
-}
-
-// The content binds after its rows, as React's effects run children first: a sheet measures the content as it binds,
-// and Command shows a group only once its rows have bound and that update has flushed. Bound first, the sheet measured
-// an empty list and resized during its opening motion, which `@ui-sdk/core` mishandles (AGENTS.md, Solid conformance).
-const afterChildren = (content: Record<string, unknown>) => {
-  let el: HTMLElement | undefined;
-  return merge(content, {
-    ref: (node: HTMLElement) => {
-      el = node;
-    },
-    get children() {
-      return [
-        content.children,
-        <Settled run={() => onFlush(() => el?.isConnected && callRef(content.ref, el))} />,
-      ];
-    },
-  });
-};
 
 const parts = createParts(pickerPrimitive, {
   root: "div",
@@ -139,8 +111,7 @@ export function pickerParts(
     const render = (content: Record<string, unknown>, state: { presentation?: string }) => {
       const element = () => {
         const own = props.render as Render | undefined;
-        const bound = afterChildren(content);
-        return own ? own(bound, state) : <div {...bound} />;
+        return own ? own(content, state) : <div {...content} />;
       };
       // A sheet sits in a full-screen viewport, which renders only while the content presents as one.
       return (
