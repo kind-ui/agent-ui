@@ -192,6 +192,23 @@
     }
   }
 
+  /* Send now shows with Remove, on hover or keyboard focus, and stays while its item is being sent. */
+  [data-slot="kind-queue-item-send"] {
+    margin-block: calc(0.5lh - var(--kind-control-height-sm) / 2);
+    visibility: hidden;
+  }
+
+  [data-slot="kind-queue-item"]:is(:hover, :focus-visible, [data-sending])
+    > [data-slot="kind-queue-item-send"] {
+    visibility: visible;
+  }
+
+  @media (hover: none) {
+    [data-slot="kind-queue-item-send"] {
+      visibility: visible;
+    }
+  }
+
   [data-slot="kind-queue-instructions"] {
     position: absolute;
     width: 1px;

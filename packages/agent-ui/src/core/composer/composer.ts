@@ -6,10 +6,17 @@ import {
   createFocusRecovery,
   createInputHistory,
   definePrimitive,
+  matchesShortcut,
   type SlotDefinition,
   type ValueStorage,
 } from "@ui-sdk/core";
 import type { FileInputOptions, FileInputValueChangeReason } from "@ui-sdk/core/file-input";
+import {
+  createMenuController,
+  type MenuActionDetails,
+  type MenuController,
+  type MenuOpenChangeReason,
+} from "@ui-sdk/core/menu";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import {
   createTokenInputController,
@@ -20,10 +27,13 @@ import {
   toText,
 } from "@ui-sdk/core/token-input";
 import type { TriggerDefinition } from "@ui-sdk/core/trigger-menu";
+import { actionSource } from "../action-source.js";
 import type { AttachmentsOptions } from "../attachments/index.js";
+import { type ComposedHandler, hearComposed } from "../composed-events.js";
 import { type FileIntake, forwardFileInputEvents } from "../file-input-events.js";
 import { memo } from "../memo.js";
 import { cancel, enter, exit, type MotionMode } from "../motion/index.js";
+import { createPendingAction } from "../pending.js";
 import { bindTextTarget } from "../text-target.js";
 import {
   type ComposerAttachment,
@@ -53,6 +63,12 @@ export type ComposerValueChangeReason =
   | "discard-press"
   | "dictation";
 
+/** `"steer"` sends into the running turn; `"queue"` sends once it ends. */
+export type ComposerSteerMode = "steer" | "queue";
+
+/** `onSteer`'s details: how the draft goes, and who sent it. */
+export type ComposerSteerDetails = { mode: ComposerSteerMode; source: ChangeSource };
+
 export type ComposerOptions = {
   /** The draft. Passing it controls it: change it in `onValueChange`. Don't pass it with `defaultValue`. */
   value?: ComposerDraft;
@@ -65,8 +81,29 @@ export type ComposerOptions = {
    * draft unless it changed meanwhile, and rejecting keeps it. Otherwise the draft clears right away.
    */
   onSubmit?: (draft: ComposerDraft) => unknown;
-  /** Called when Stop is pressed. While it's set, Stop takes Send's place during a pending submission. */
+  /**
+   * Called when Stop is pressed. While it's set, Stop takes Send's place during a pending submission and while
+   * `running`.
+   */
   onStop?: () => void;
+  /**
+   * Whether a turn is running. With `onSteer`, Send stays beside Stop and sends into the turn; without it, Stop
+   * takes Send's place while `onStop` is set.
+   * @default false
+   */
+  running?: boolean;
+  /**
+   * Called with the draft when someone sends it while `running`, with `details.mode`: `"steer"` into the turn or
+   * `"queue"` for the next. Return a promise to lock sending until it settles: resolving clears what was sent, keeping
+   * anything typed since, and rejecting keeps the draft.
+   */
+  onSteer?: (draft: ComposerDraft, details: ComposerSteerDetails) => unknown;
+  /**
+   * What Send does while `running`, and so what Enter does. The other mode is in Send's menu and on Mod+Enter
+   * (Alt+Enter with `submitOn: "mod-enter"`).
+   * @default "steer"
+   */
+  steerMode?: ComposerSteerMode;
   /**
    * Which keys send. With `"enter"`, Shift+Enter starts a new line; with `"mod-enter"`, Enter does.
    * @default "enter"
@@ -119,8 +156,18 @@ export type ComposerState = {
   attachmentsClosing: boolean;
   /** Whether the draft came back from `draftStorage` and hasn't been edited since; "Draft restored" shows. */
   restored: boolean;
-  /** Whether `onStop` is set, so Stop takes Send's place while pending. */
+  /** Whether `onStop` is set, so Stop takes Send's place while pending or running. */
   canStop: boolean;
+  /** The `running` option. */
+  running: boolean;
+  /** Whether `running` and `onSteer` are both set, so Send steers beside Stop. */
+  canSteer: boolean;
+  /** The `steerMode` option. */
+  steerMode: ComposerSteerMode;
+  /** Whether a steer is in flight; sending is locked until it settles. */
+  steerPending: boolean;
+  /** Whether Send's menu of modes is open. */
+  steerMenuOpen: boolean;
   /** The options of the same name, with their defaults. */
   disabled: boolean;
   submitOn: "enter" | "mod-enter";
@@ -151,8 +198,23 @@ export type ComposerApi = {
   removeAttachment: (id: string, event?: Event) => boolean;
   /** Sends the draft, unless there's nothing to send, it's pending or disabled, or `onSubmit` isn't set. */
   submit: (event?: Event) => void;
-  /** Calls `onStop`. Offered only while a submission is pending and `onStop` is set. */
+  /** Calls `onStop`. Offered only while a submission is pending or a turn is running, and `onStop` is set. */
   readonly stop: ((event?: Event) => void) | undefined;
+  /**
+   * Sends the draft into the running turn through `onSteer`, or for the next turn with `mode: "queue"`. Offered only
+   * while `running` and `onSteer` are set, nothing is in flight, and there's something to send.
+   */
+  readonly steer: ((mode?: ComposerSteerMode, event?: Event) => void) | undefined;
+  /** Sends the draft for the next turn, as `steer("queue")` does. Offered when `steer` is. */
+  readonly queue: ((event?: Event) => void) | undefined;
+  /** Sends the draft as Enter does: in `steerMode` while Send steers, else through `onSubmit`. */
+  sendDraft: (event?: Event) => void;
+  /** Sends in the mode other than `steerMode` on Mod+Enter (Alt+Enter with `submitOn: "mod-enter"`). Returns whether it took the key. */
+  steerKeydown: (event: KeyboardEvent) => boolean;
+  /** Drives Send's menu of modes. */
+  steerMenu: MenuController;
+  /** Send's menu's events on Web Components, heard by the steer-menu slot through `hearComposed`. */
+  steerMenuEvents: Record<string, ComposedHandler>;
   /** Empties a restored draft and removes it from `draftStorage`. Offered only while "Draft restored" shows. */
   readonly discardDraft: ((event?: Event) => void) | undefined;
   /** Restores the saved draft and keeps saving it while the root is in the page. Returns a cleanup. */
@@ -181,8 +243,33 @@ export type ComposerApi = {
     input: (state: ComposerState) => ComposerInputState;
     triggerMenu: (state: ComposerState) => ComposerTriggerMenuState;
     attachments: (state: ComposerState) => ComposerAttachmentsState;
+    steer: (state: ComposerState) => ComposerSteerState;
+    steerMenu: (state: ComposerState) => ComposerSteerMenuState;
+    steerMenuTrigger: (state: ComposerState) => ComposerSteerMenuTriggerState;
   };
 };
+
+/** What the steer slot hands render functions: Send's words while it steers. */
+export type ComposerSteerState = { label: "Steer" | "Queue" };
+
+/** A row of Send's menu: a mode, its words, and the keys that send in it. */
+export type ComposerSteerItem = {
+  value: ComposerSteerMode;
+  label: string;
+  shortcut: string;
+  disabled: boolean;
+};
+
+/** What the steer-menu slot hands UI SDK Menu, and its rows. On Web Components, write the Menu's keys onto the `ui-menu`. */
+export type ComposerSteerMenuState = {
+  controller: MenuController;
+  onOpenChange: (open: boolean, details: ChangeDetails<MenuOpenChangeReason>) => void;
+  onAction: (value: string, details: MenuActionDetails) => void;
+  items: ComposerSteerItem[];
+};
+
+/** What the steer-menu-trigger slot hands UI SDK's `MenuTrigger`. */
+export type ComposerSteerMenuTriggerState = { "aria-label": string; disabled: boolean };
 
 export type ComposerRootState = {
   /** Props for the File Input around the form's content. */
@@ -227,6 +314,9 @@ export type ComposerPrimitive = ReturnType<
       "trigger-menu": ComposerSlot<ComposerTriggerMenuState>;
       attachments: ComposerSlot<ComposerAttachmentsState>;
       submit: ComposerSlot;
+      steer: ComposerSlot<ComposerSteerState>;
+      "steer-menu": ComposerSlot<ComposerSteerMenuState>;
+      "steer-menu-trigger": ComposerSlot<ComposerSteerMenuTriggerState>;
       stop: ComposerSlot;
       restored: ComposerSlot;
       discard: ComposerSlot;
@@ -251,6 +341,9 @@ const lengthOf = (segments: TokenInputValue) =>
 
 const presentation = (options: ComposerOptions) => ({
   canStop: options.onStop !== undefined,
+  running: options.running ?? false,
+  canSteer: (options.running ?? false) && options.onSteer !== undefined,
+  steerMode: options.steerMode === "queue" ? ("queue" as const) : ("steer" as const),
   disabled: options.disabled ?? false,
   submitOn: options.submitOn ?? "enter",
   agentConfirm: options.agentConfirm ?? true,
@@ -269,6 +362,9 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
     onValueChange: "callback",
     onSubmit: "action",
     onStop: "callback",
+    running: "boolean",
+    onSteer: "action",
+    steerMode: "string",
     submitOn: "string",
     mentions: "value",
     commands: "value",
@@ -291,6 +387,8 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       pending: false,
       attachmentsClosing: false,
       restored: false,
+      steerPending: false,
+      steerMenuOpen: false,
     };
   },
   sync: (options: ComposerOptions) => ({
@@ -377,7 +475,11 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
 
     // Send and Stop take each other's place; focus follows to whichever is shown, else the editor.
     const recovery = createFocusRecovery({
-      fallback: () => context.element("stop") ?? context.element("submit") ?? tokenInput.editor.element,
+      fallback: () =>
+        context.element("stop") ??
+        context.element("steer") ??
+        context.element("submit") ??
+        tokenInput.editor.element,
     });
 
     const intake: FileIntake = {
@@ -545,31 +647,153 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
     };
     const discardRecovery = createFocusRecovery({ fallback: focusEditor });
 
+    const submit = () => {
+      const { onSubmit } = context.options();
+      const { value, pending, disabled } = store.get();
+      if (disabled || pending || !onSubmit || !isSubmittable(value)) return;
+      history.reset();
+      const submission = onSubmit(value);
+      if (!isThenable(submission)) return settle(value, "resolved");
+      store.set({ pending: true });
+      announce("Sending", { priority: "polite" });
+      submission.then(
+        () => settle(value, "resolved"),
+        () => settle(value, "rejected"),
+      );
+    };
+
+    // A resolved steer clears what it sent: the text it started with, and its attachments.
+    const afterSteer = (current: ComposerDraft, sent: ComposerDraft): ComposerDraft => {
+      const text = current.text.startsWith(sent.text)
+        ? current.text.slice(sent.text.length).trimStart()
+        : current.text;
+      const sentIds = new Set(sent.attachments.map((item) => item.id));
+      const attachments = current.attachments.filter((item) => !sentIds.has(item.id));
+      if (text === current.text && attachments.length === current.attachments.length) return current;
+      return { text, tokens: tokensOf(fromText(text)), attachments };
+    };
+    const steering = createPendingAction(context, { state: "steerPending" });
+    const canSend = () => {
+      const { canSteer, disabled, pending, steerPending, value } = store.get();
+      return canSteer && !disabled && !pending && !steerPending && isSubmittable(value);
+    };
+    const runSteer = (mode: ComposerSteerMode, event: Event | undefined, reason: string) => {
+      const { onSteer } = context.options();
+      if (!onSteer || !canSend()) return;
+      const sent = store.get().value;
+      const source = actionSource(event, reason);
+      history.reset();
+      void steering
+        .run(() => onSteer(sent, { mode, source }))
+        ?.then((outcome) => {
+          if (outcome === "stale") return;
+          if (outcome === "failed") return announce("Message not sent", { priority: "polite" });
+          announce(mode === "steer" ? "Steer sent" : "Queued", { priority: "polite" });
+          const current = store.get().value;
+          const next = afterSteer(current, sent);
+          if (next !== current) change("value", next, { reason: "submit" });
+        });
+    };
+    const other = (mode: ComposerSteerMode): ComposerSteerMode => (mode === "steer" ? "queue" : "steer");
+    const shortcuts = (submitOn: ComposerState["submitOn"]) =>
+      submitOn === "mod-enter" ? (["mod+enter", "alt+enter"] as const) : (["enter", "mod+enter"] as const);
+
+    const steerMenu = createMenuController();
+    const onSteerMenuOpenChange = (open: boolean) => store.set({ steerMenuOpen: open });
+    const onSteerAction = (value: string, { event }: MenuActionDetails) => {
+      if (value === "steer" || value === "queue") runSteer(value, event, "item-press");
+    };
+    const steerMenuState = memo(
+      (
+        mode: ComposerSteerMode,
+        submitOn: ComposerState["submitOn"],
+        sendable: boolean,
+      ): ComposerSteerMenuState => {
+        const [primary, secondary] = shortcuts(submitOn);
+        const shortcut = (value: ComposerSteerMode) => (value === mode ? primary : secondary);
+        return {
+          controller: steerMenu,
+          onOpenChange: onSteerMenuOpenChange,
+          onAction: onSteerAction,
+          items: [
+            { value: "steer", label: "Steer now", shortcut: shortcut("steer"), disabled: !sendable },
+            {
+              value: "queue",
+              label: "Queue for next turn",
+              shortcut: shortcut("queue"),
+              disabled: !sendable,
+            },
+          ],
+        };
+      },
+    );
+    const steerState = memo(
+      (mode: ComposerSteerMode): ComposerSteerState => ({
+        label: mode === "steer" ? "Steer" : "Queue",
+      }),
+    );
+    const steerMenuTriggerState = memo(
+      (disabled: boolean): ComposerSteerMenuTriggerState => ({ "aria-label": "More send options", disabled }),
+    );
+    const steerMenuEvents: Record<string, ComposedHandler> = {
+      openchange: (detail, event) => {
+        if ((event.target as Element).localName === "ui-menu")
+          onSteerMenuOpenChange((detail as { value: boolean }).value);
+      },
+      action: (detail, event) => {
+        if ((event.target as Element).localName !== "ui-menu") return;
+        const { value, event: cause } = detail as { value: string; event?: Event };
+        onSteerAction(value, cause ? { event: cause } : {});
+      },
+    };
+    // Send comes back from Stop, and the menu closes, once the turn stops running.
+    let { running: wasRunning } = store.get();
+    context.onOptions(() => {
+      const { running, canStop, canSteer, steerMenuOpen } = store.get();
+      if (wasRunning && !running && canStop) returningFromStop = true;
+      wasRunning = running;
+      if (!canSteer && steerMenuOpen) steerMenu.close();
+    });
+
     return {
       getValue: () => store.get().value,
       setValue,
       appendText,
       insertToken: ({ kind, value, label }) => tokenInput.insert({ type: kind, value, label }) === true,
       removeAttachment,
-      submit: () => {
-        const { onSubmit } = context.options();
-        const { value, pending, disabled } = store.get();
-        if (disabled || pending || !onSubmit || !isSubmittable(value)) return;
-        history.reset();
-        const submission = onSubmit(value);
-        if (!isThenable(submission)) return settle(value, "resolved");
-        store.set({ pending: true });
-        announce("Sending", { priority: "polite" });
-        submission.then(
-          () => settle(value, "resolved"),
-          () => settle(value, "rejected"),
-        );
-      },
+      submit,
       get stop() {
-        const { pending } = store.get();
+        const { pending, running } = store.get();
         const { onStop } = context.options();
-        return pending && onStop ? () => onStop() : undefined;
+        return (pending || running) && onStop ? () => onStop() : undefined;
       },
+      get steer() {
+        return canSend()
+          ? (mode: ComposerSteerMode = "steer", event?: Event) =>
+              runSteer(mode === "queue" ? "queue" : "steer", event, event ? "steer-press" : "imperative")
+          : undefined;
+      },
+      get queue() {
+        return canSend()
+          ? (event?: Event) => runSteer("queue", event, event ? "steer-press" : "imperative")
+          : undefined;
+      },
+      sendDraft: (event) => {
+        const { canSteer, steerMode } = store.get();
+        if (!canSteer) return submit();
+        runSteer(steerMode, event, event?.type === "submit" ? "steer-key" : "steer-press");
+      },
+      steerKeydown: (event) => {
+        const { canSteer, submitOn, steerMode } = store.get();
+        if (!canSteer || event.defaultPrevented || !matchesShortcut(event, shortcuts(submitOn)[1]))
+          return false;
+        // Never a new line while a turn runs, even when there's nothing to send.
+        event.preventDefault();
+        runSteer(other(steerMode), event, "steer-key");
+        return true;
+      },
+      steerMenu,
+      steerMenuEvents,
       get discardDraft() {
         const { restored, disabled } = store.get();
         if (!restored || disabled) return undefined;
@@ -627,6 +851,14 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
         input: (state) => input(state.submitOn, state.disabled),
         triggerMenu: (state) => triggerMenu(state.mentions, state.commands),
         attachments: (state) => attachments(state.value.attachments, state.motion, state.disabled),
+        steer: (state) => steerState(state.steerMode),
+        steerMenu: (state) =>
+          steerMenuState(
+            state.steerMode,
+            state.submitOn,
+            !state.disabled && !state.pending && !state.steerPending && isSubmittable(state.value),
+          ),
+        steerMenuTrigger: (state) => steerMenuTriggerState(state.disabled),
       },
     };
   },
@@ -645,7 +877,7 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       on: {
         submit: (event, { api }) => {
           event.preventDefault();
-          api.submit(event);
+          api.sendDraft(event);
         },
       },
       bind: (el, { api }) => {
@@ -660,12 +892,15 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       },
     }),
     // Wraps the Token Input and hears its keys bubble for ArrowUp history, as the skill's "wrap ours" seam does.
+    // Enter submits through the Token Input and the form; Mod+Enter (Alt+Enter under "mod-enter") steers in the other mode.
     input: slot<BaseSlotProps, ComposerInputState>({
+      keys: ["Enter", "ArrowUp", "ArrowDown"],
       attrs: (state) => ({ "data-pending": state.pending ? "" : undefined }),
       state: (state, { api }) => api.partState.input(state),
       on: {
         keydown: (event, { api }) => {
-          if (!event.defaultPrevented) api.history.keydown(event as KeyboardEvent);
+          const press = event as KeyboardEvent;
+          if (!api.steerKeydown(press) && !press.defaultPrevented) api.history.keydown(press);
         },
       },
       bind: (_el, { api }) => {
@@ -695,7 +930,7 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
     submit: slot({
       role: "button",
       focus: "native",
-      present: (state) => !(state.pending && state.canStop),
+      present: (state) => !((state.pending || state.running) && state.canStop) && !state.canSteer,
       press: ({ api }, event) => api.submit(event),
       attrs: (state) => ({
         type: "button",
@@ -711,10 +946,45 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
         return part.api.recovery.bind(el, part);
       },
     }),
+    // Send while a turn runs: words, since it steers or queues, beside Stop.
+    steer: slot<BaseSlotProps, ComposerSteerState>({
+      role: "button",
+      focus: "native",
+      present: (state) => state.canSteer,
+      press: ({ api }, event) => api.sendDraft(event),
+      state: (state, { api }) => api.partState.steer(state),
+      attrs: (state) => ({
+        type: "button",
+        "aria-disabled":
+          state.pending || state.steerPending || state.disabled || !isSubmittable(state.value)
+            ? "true"
+            : undefined,
+        "aria-busy": state.steerPending ? "true" : undefined,
+        "data-pending": state.steerPending ? "" : undefined,
+        "data-steer-mode": state.steerMode,
+        "data-kind-button": "primary",
+        "data-kind-size": "lg",
+        "data-motion": state.motion,
+      }),
+      on: { mousedown: (event) => event.preventDefault() },
+      bind: (el, part) => part.api.recovery.bind(el, part),
+    }),
+    // Wraps UI SDK Menu, which offers both modes; on Web Components it hears the menu's events.
+    "steer-menu": slot<BaseSlotProps, ComposerSteerMenuState>({
+      present: (state) => state.canSteer,
+      state: (state, { api }) => api.partState.steerMenu(state),
+      attrs: (state) => ({ "data-open": state.steerMenuOpen ? "" : undefined, "data-motion": state.motion }),
+      bind: (el, { api }) => hearComposed(el, api.steerMenuEvents),
+    }),
+    // Wraps UI SDK's `MenuTrigger`, which the agent bridge doesn't see: `steer` and `queue` are its actions.
+    "steer-menu-trigger": slot<BaseSlotProps, ComposerSteerMenuTriggerState>({
+      present: (state) => state.canSteer,
+      state: (state, { api }) => api.partState.steerMenuTrigger(state),
+    }),
     stop: slot({
       role: "button",
       focus: "native",
-      present: (state) => state.pending && state.canStop,
+      present: (state) => (state.pending || state.running) && state.canStop,
       press: ({ api }, event) => api.stop?.(event),
       attrs: (state) => ({ type: "button", "aria-label": "Stop", "data-motion": state.motion }),
       on: { mousedown: (event) => event.preventDefault() },
@@ -738,5 +1008,16 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       bind: (el, part) => part.api.discardRecovery.bind(el, part),
     }),
   }),
-  agent: { actions: ["setValue", "insertToken", "removeAttachment", "submit", "stop", "discardDraft"] },
+  agent: {
+    actions: [
+      "setValue",
+      "insertToken",
+      "removeAttachment",
+      "submit",
+      "steer",
+      "queue",
+      "stop",
+      "discardDraft",
+    ],
+  },
 });
