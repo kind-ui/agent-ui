@@ -97,7 +97,7 @@ export type TraceRow = {
   /** Whether its span has children, so its row has an arrow. */
   branch: boolean;
   /** Its row's attributes: the span's `value` and its `aria-rowindex` among every row, the header first. */
-  props: { value: string; "aria-rowindex": string };
+  props: { value: string; "aria-rowindex": number };
 };
 
 /** What the viewport hands UI SDK Waterfall: pass every key to it. */
@@ -840,7 +840,7 @@ function placed(
     const branch = !!shown[index]?.item.children;
     const kept = cache.get(key);
     if (kept && kept.index === index && kept.top === top && kept.branch === branch) return kept;
-    const row = { key, index, top, branch, props: { value: key, "aria-rowindex": String(index + 2) } };
+    const row = { key, index, top, branch, props: { value: key, "aria-rowindex": index + 2 } };
     cache.set(key, row);
     return row;
   });
