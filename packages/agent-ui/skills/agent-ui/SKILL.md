@@ -21,7 +21,7 @@ Agent UI is the parts of an AI interface: a conversation, messages, streaming Ma
 2. **Install them:** [references/install.md](references/install.md): the framework layer, `components.json`, `npx shadcn@latest add @kind-ui/<name>` and version floors.
 3. **Compose the interface:** [references/compose.md](references/compose.md): a chat with a composer, tool calls with approval, the composer's controls and the sidebar shell.
 4. **Connect the AI SDK:** [references/ai-sdk.md](references/ai-sdk.md): `fromUIMessages`, parts, tool states and streaming.
-5. **Expose it to agents:** [references/agents.md](references/agents.md): `createAgent`, actions and `data-agent-confirm`.
+5. **Expose it to agents:** [references/agents.md](references/agents.md): `createAgent`, the `snapshot`, `act` and `query` tools (with `agentTools` for a model and `registerTools` for WebMCP), passing `signal` from the chat's Stop, and `data-agent-confirm`.
 6. **Ask before risky actions:** [references/approvals.md](references/approvals.md): Tool approval, Confirmation, Plan, Approval Mode.
 7. **Style it:** [references/design.md](references/design.md): tokens, shared controls, focus rings and what not to add.
 

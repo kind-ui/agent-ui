@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `6c371d1a` (Task Vue-8)
+Last reviewed: `cb3f3e12` (UI SDK 0.1.0-beta.17 upgrade)
 
 ## Settled
 
@@ -21,12 +21,15 @@ Last reviewed: `6c371d1a` (Task Vue-8)
 - **`withDefault` stays copied per render file (Task Vue-8):** a registry item ships its own file plus the items its catalog `uses` names, and `uses` is shared with React and Web in `registry/catalog.mjs`, so a shared Vue helper would need a hidden internal that every one of those components `uses` in every layer, or a Vue-only `uses` the catalog doesn't have. Each copy is a few lines typed to its own parts.
 - **Server-rendered Vue pages hydrate inside `<Suspense>` (Task Vue-8):** `@ui-sdk/vue` runs a part's `bind` as the part hydrates, unless a `<Suspense>` above it is pending, so a `bind` that changes state (an Avatar or Generated Image `<img>` that loaded before hydration, Terminal's and Transcript's measured viewport) changes parts that haven't hydrated yet and Vue reports a mismatch. The fixtures' `hydratedApp` (`tests/fixtures/vue/cases.ts`) renders the `?ssr` case inside `<Suspense>` on the server and the client, as Nuxt pages do; `hydration.spec.ts` passes on every Vue case.
 - **Conformance (Task Vue-8):** every wave's `agent.spec.ts`, both `aria-patterns.spec.ts` (no `known` entries), `wave-5/composer-compact.spec.ts`, `wave-1/{controls,motion,theme,status-mark,forced-colors}.spec.ts`, `budgets.spec.ts` with every React case, `hydration.spec.ts` and `parity.spec.ts` over every case run on Vue, and `check:registry-consumers` installs and renders every visible `-vue` item.
+- **No bind-order workarounds since `@ui-sdk/*` `0.1.0-beta.17`:** `KindScrollAreaViewport` is a plain `withKindClass` wrapper again (Scroll Area's viewport now first measures in its ResizeObserver, after the root's `:hover` microtask, so a scroll area hydrated under the pointer shows its scrollbars), and Picker's content binds with its part again (Command shows its groups at once, so an opening sheet doesn't resize, and `@ui-sdk/core` no longer throws if one does). The composer input's `connectInput` retry in core is still needed: without it 11 of Vue's 30 composer tests fail.
 - **The agent fixtures bind handlers as `:onX` (Task Vue-8):** their handlers are built by host factories (`host.decide("thread-new")`, `change("thread-select")`), and `@x="factory()"` compiles to a handler that calls the factory on each event instead of binding its result. Cases with plain handler names bind `@x`.
 
 ## Known and open (don't report again, check whether fixed)
 
+- **No spec covers a scroll area hydrated under the pointer** (the case the removed `KindScrollAreaViewport` workaround fixed, UI SDK 0.1.0-beta.17). Checked by hand: hold the client script back with `page.route`, hover the server markup, then load. A Vue test of that would catch a regression on a later upgrade.
+
 - **`internal.spec.ts`'s composition test ("a Kind part rendered as a toolbar button gets one class list") skips every layer but React:** the spec is shared, so Vue's run waits for a shared change; `parity.spec.ts` on `?c=internal&case=toolbar-menu` compares the trigger's sorted class list with React's and passes.
 - **A template `ref` on a part inside a `#render` slot stays `null` (Task Vue-1):** the slot's `props` carry the part's own `ref`, and `v-bind="props"` replaces the caller's, for bare UI SDK parts as for Kind ones. UI SDK's; report upstream.
-- **Slot `state` is a proxy with no keys (Task Vue-2):** it answers reads, but a spread, `v-bind` and `in` see nothing. UI SDK's; report upstream.
-- **The generated root reports every callback as set (Task Vue-2):** `createParts`' root passes an emitter for every `kind: "callback"` option whether the host listens or not. UI SDK's; report upstream, then drop the derived primitives.
-- **`@ui-sdk/vue` binds parts during hydration (Task Vue-8):** its server-rendering docs don't say a hydrated app needs a pending `<Suspense>` above the parts for `bind` to wait. UI SDK's; report upstream (wait for hydration, or document it). Consumers outside Nuxt need the `<Suspense>`.
+- **Slot `state` is a proxy with no keys (Task Vue-2):** it answers reads, but a spread, `v-bind` and `in` see nothing (still so in `0.1.0-beta.17`: its `Proxy` has only a `get` trap). UI SDK's; report upstream.
+- **The generated root reports every callback as set (Task Vue-2):** `createParts`' root passes an emitter for every `kind: "callback"` option whether the host listens or not (still so in `0.1.0-beta.17`). UI SDK's; report upstream, then drop the derived primitives.
+- **`@ui-sdk/vue` binds parts during hydration (Task Vue-8):** its server-rendering docs don't say a hydrated app needs a pending `<Suspense>` above the parts for `bind` to wait. UI SDK's; report upstream (wait for hydration, or document it). Consumers outside Nuxt need the `<Suspense>`. Still so in `0.1.0-beta.17`: without it, 7 `hydration.spec.ts` cases mismatch (Sources, Generated Image, Terminal, Transcript, the internal Avatar).

@@ -49,7 +49,7 @@ Create the bridge once, before the page renders, from the `agent` entry of the U
 
 ## Read and Act
 
-Once the page has rendered, `agent.snapshot()` lists each component once, by the same name and with the same actions in every layer. A step reads like this:
+An agent works the page with three tools: `snapshot`, `act` and `query`. Once the page has rendered, `agent.snapshot()` lists each component once, by the same name and with the same actions in every layer. A step reads like this:
 
 ```json
 {
@@ -62,13 +62,93 @@ Once the page has rendered, `agent.snapshot()` lists each component once, by the
 }
 ```
 
-The agent names a component by its label and runs one of its actions:
+The agent names each component by its ref or its label, and sends a whole task in one `act` call. The steps run in order, and a step that fails stops the call and says which steps to send again:
 
 ```ts
-await agent.act({ steps: [{ ref: "Read the logs", action: "expand" }] });
+await agent.act({
+  steps: [
+    { ref: "Approvals", action: "setValue", args: ["Allow edits"] },
+    { ref: "Settings", action: "toggle", args: ["Web search"] },
+    { ref: "c118", action: "setValue", args: ["Summarize the failing tests"] },
+    { ref: "c118", action: "submit" },
+  ],
+});
 ```
 
-An action goes through the same path a person's press does, so your callbacks run with `details.source` set to `"agent"`, and a controlled component can refuse the change. The bridge adds `press` to any component with a button, and lists some actions only while they can run: a message offers `regenerate` only once it has settled and you pass `onRegenerate`. Each component page's **Agent** section lists what it reads and offers.
+Here `c118` is the composer's ref from the snapshot, since its prompt field shares its label. A `setValue` step fails when its value didn't take, so a step that sends or saves can go last in the same call. When the snapshot leaves a long list out, `agent.query({ within: "Files" })` reads its items without listing the page.
+
+An action goes through the same path a person's press does, so your callbacks run with `details.source` set to `"agent"`, and a controlled component can refuse the change. The bridge adds `press` to any component with a button, and lists some actions only while they can run: a message offers `regenerate` only once it has settled and you pass `onRegenerate`. While a modal dialog is open, the page behind it is inert, so the agent finishes the dialog first. Each component page's **Agent** section lists what it reads and offers.
+
+## Connect a Model
+
+`agentTools` holds the three tools' names, descriptions and input schemas, and the bridge carries the same list as `agent.tools`. Declare them on the server without `execute`, so the AI SDK streams each call to the browser:
+
+```ts title="app/api/chat/route.ts"
+import { convertToModelMessages, jsonSchema, streamText, tool } from "ai";
+import { agentTools } from "@ui-sdk/react/agent";
+
+const tools = Object.fromEntries(
+  agentTools.map(({ name, description, inputSchema }) => [
+    name,
+    tool({ description, inputSchema: jsonSchema(inputSchema) }),
+  ]),
+);
+
+export async function POST(request: Request) {
+  const { messages } = await request.json();
+  const result = streamText({
+    model: "anthropic/claude-sonnet-5.5",
+    messages: await convertToModelMessages(messages),
+    tools,
+  });
+  return result.toUIMessageStreamResponse();
+}
+```
+
+In the browser, run each call on the bridge and add its result. Pass `act` a `signal` and abort it from the composer's Stop, so a step waiting on the person ends when they stop the answer:
+
+```tsx
+import { useChat } from "@ai-sdk/react";
+import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
+import { useRef } from "react";
+import { Composer, ComposerInput, ComposerStop, ComposerSubmit } from "@/components/ui/composer";
+import { agent } from "./agent";
+
+export function Chat() {
+  const turn = useRef(new AbortController());
+  const { sendMessage, stop, addToolOutput } = useChat({
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+    async onToolCall({ toolCall }) {
+      const tool = toolCall.toolName as "snapshot" | "act" | "query";
+      const output =
+        tool === "act"
+          ? await agent.act(toolCall.input as never, { signal: turn.current.signal })
+          : await agent[tool](toolCall.input as never);
+      addToolOutput({ tool, toolCallId: toolCall.toolCallId, output });
+    },
+  });
+
+  return (
+    <Composer
+      aria-label="Message"
+      onSubmit={(draft) => {
+        turn.current = new AbortController();
+        return sendMessage({ text: draft.text });
+      }}
+      onStop={() => {
+        turn.current.abort();
+        stop();
+      }}
+    >
+      <ComposerInput aria-label="Prompt" />
+      <ComposerSubmit />
+      <ComposerStop />
+    </Composer>
+  );
+}
+```
+
+The results are plain objects, so they go back to the model as JSON. A failed step comes back with `ok: false` and a message that names what is on the page, so the model can correct it in the next call.
 
 ## Ask the Person First
 
@@ -83,4 +163,16 @@ const agent = createAgent({
 });
 ```
 
-`allow` takes the same arguments in every layer. To give these tools to a browser's own agent, register them through WebMCP, as UI SDK's agent docs describe in `node_modules/@ui-sdk/<layer>/docs/agents.md`.
+`allow` takes the same arguments in every layer, and a second argument with a `signal` that aborts when the step is cancelled, so you can close your prompt.
+
+## Give the Tools to the Browser's Agent
+
+`registerTools` gives `snapshot`, `act` and `query` to a browser's own agent through WebMCP, and does nothing in a browser without it. It takes an `allow` of its own, which runs after the bridge's for every step that agent asks for:
+
+```ts
+import { registerTools } from "@ui-sdk/react/agent";
+
+const unregister = registerTools(agent, { allow: (step) => !step.confirm });
+```
+
+Here every step runs except those marked for a person. Call `unregister()` to remove the tools. UI SDK's agent docs, in `node_modules/@ui-sdk/<layer>/docs/agents.md`, cover each tool's input and result.

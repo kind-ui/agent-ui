@@ -7,14 +7,14 @@ import { KindResizable, KindResizableHandle, KindResizablePanel } from "./intern
 
 const parts = createParts(sidebarPrimitive, {
   root: "div",
-  title: "aside",
+  heading: "aside",
   handle: "div",
   inset: "div",
   trigger: "button",
 });
 
 export type SidebarProps = Omit<ComponentProps<typeof parts.Root>, "children"> & { children?: JSX.Element };
-export type SidebarPanelProps = ComponentProps<typeof parts.Title>;
+export type SidebarPanelProps = ComponentProps<typeof parts.Heading>;
 export type SidebarHandleProps = Omit<ComponentProps<typeof parts.Handle>, "children" | "class"> & {
   /** Classes for the separator itself, UI SDK's Resizable handle. */
   class?: string;
@@ -59,7 +59,7 @@ export function SidebarPanel(props: SidebarPanelProps) {
       </KindResizablePanel>
     );
   };
-  return <parts.Title {...omit(props, "render")} render={render as SidebarPanelProps["render"]} />;
+  return <parts.Heading {...omit(props, "render")} render={render as SidebarPanelProps["render"]} />;
 }
 
 /** The resize handle between the panel and the inset, named "Resize <label>". Absent while the panel is a drawer. */

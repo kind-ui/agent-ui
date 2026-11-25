@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: f92b42e5 (framework layers Task Svelte-2)
+Last reviewed: `cb3f3e12` (UI SDK 0.1.0-beta.17 upgrade)
 
 ## Settled
 
@@ -74,7 +74,7 @@ Last reviewed: f92b42e5 (framework layers Task Svelte-2)
 - **Terminal relies on the virtualizer laying out again when its count changes** (Wave 4 Task 12): a new line sets `rows` and `size` from it instead of calling `refresh()`, which UI SDK's docs ask for after a count change but which reads the viewport twice more per line. `budgets.spec.ts` and `terminal.spec.ts` pin it; ask upstream for a count-only update.
 - **Queue's remove lock isn't in state** (Wave 4 Task 12): a second `remove` of an item already asked returns `false`, and neither the remove control nor the snapshot shows the pending removal. A host declining without `cancel()` passes a new object for the item to allow another try (on `onRemove`).
 - **Stack Trace's library panels still find their toggle with an `[aria-controls]` query over `getRootNode()`**, where Step and Guardrail Notice now use `context.element`; the toggle is keyed per group.
-- **An unnamed `input` entry with `clear` is in the agent snapshot beside Transcript and Conversation Search** (found again by the Wave 6 agent conformance, Task 12, on every load in both layers). UI SDK's Input Group is a part of the Input, and `data-agent-hidden` on the Input and Clear doesn't cover it; the bridge hides a component when any of its parts is inside the mark, so marking the group would hide the search count inside it too, and with it Transcript or Conversation Search. Fixing it means moving the count out of the group (a layout change) or a UI SDK option to keep a group out of the snapshot. `tests/browser/wave-6/agent.spec.ts` expects the one `input` entry.
+- **Transcript's and Conversation Search's Input Group isn't an entry of its own** (fixed in UI SDK 0.1.0-beta.6: an Input inside an Input Group is one component). `tests/browser/wave-6/agent.spec.ts` expects no `input` entry.
 - **What Firefox and WebKit do with Tab from a selection in Selection's content isn't recorded** (Wave 4 Task 11): Chromium reaches the first toolbar button and keeps the selection; the nightly cross-browser run covers the spec.
 - **Focus drops to the page when every Stack Trace frame button leaves at once** (Wave 4 Task 8), as when the host removes `onOpenFrame` or passes a trace with no frames while a frame has focus: `createListFocus`'s recovery finds no item left and has no `focusFallback`. Removing one of several frames recovers to a neighbor.
 - **File Tree hears `onSelect` from bubbled clicks and keyups, not the Tree's `onAction`** (Wave 4 Task 6): web's `action` doesn't bubble, so `read` calls `onSelect` only when the event's row is the selection, the owner took it, and no modifier is held. Needs a spec §2 row or a bubbling UI SDK event.

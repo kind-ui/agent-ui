@@ -156,6 +156,8 @@ export type ThreadListState = MenuBaseState & {
   deletePending: boolean;
   /** Whether the last delete failed, until Delete is pressed again or the dialog opens again. */
   deleteFailed: boolean;
+  /** Whether the delete dialog is open. */
+  deleteOpen: boolean;
   canSelect: boolean;
   canNew: boolean;
   canRename: boolean;
@@ -434,6 +436,7 @@ const ownRow = (column?: number) =>
     deleting: [],
     deletePending: [],
     deleteFailed: [],
+    deleteOpen: [],
   });
 
 const threadIn = (entry: ThreadListEntry | undefined) =>
@@ -463,6 +466,7 @@ const ownTime = selects<ThreadListState, ThreadListApi, RowProps>({
   deleting: [],
   deletePending: [],
   deleteFailed: [],
+  deleteOpen: [],
 });
 
 const outsideRows = selects<ThreadListState, ThreadListApi, BaseSlotProps>({
@@ -542,6 +546,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       deleting: null,
       deletePending: false,
       deleteFailed: false,
+      deleteOpen: false,
     };
   },
   sync: (options) => ({ ...base.sync(options), ...presentation(options) }),
@@ -706,11 +711,18 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
           }
         });
     };
+    let opens = 0;
     const requestDelete = (id: string, source: ChangeSource) => {
       if (store.get().deletePending) return;
       if (!store.get().confirmDelete) return runDelete(id, source);
-      store.set({ deleting: id, deleteFailed: false });
-      void dialog.open();
+      store.set({ deleting: id, deleteFailed: false, deleteOpen: true });
+      // `open` resolves on the dialog's next close (undefined before a dialog attaches the controller). Only the
+      // latest open clears the mark.
+      const open = ++opens;
+      const closed = dialog.open() as ReturnType<typeof dialog.open> | undefined;
+      void Promise.resolve(closed).then(() => {
+        if (open === opens) store.set({ deleteOpen: false });
+      });
     };
 
     const pin = (id: string, pinned: boolean | undefined, event?: Event) => {
@@ -1011,6 +1023,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         value: [],
         menuOpenFor: [],
         renaming: [],
+        deleteOpen: [],
       }),
       state: (state) => ({ visible: state.visible, rows: state.rows }),
       attrs: (state) => ({
@@ -1217,8 +1230,9 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         "aria-disabled": state.deletePending ? "true" : undefined,
         "data-pending": state.deletePending ? "" : undefined,
         "data-kind-button": "danger",
-        // D4: an agent's `delete` opens the dialog, whose Delete needs a person whatever else is allowed.
-        "data-agent-confirm": "Deletes the chat",
+        // D4: an agent's `delete` opens the dialog, whose Delete needs a person whatever else is allowed. Only while
+        // open: a web part that stays in the page closed would otherwise mark every step on the list.
+        "data-agent-confirm": state.deleteOpen ? "Deletes the chat" : undefined,
       }),
     }),
     end: slot<BaseSlotProps, { status: ThreadListState["loadStatus"] }>({

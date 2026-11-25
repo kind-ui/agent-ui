@@ -12,7 +12,7 @@ import { KindResizable, KindResizableHandle, KindResizablePanel } from "./intern
 
 const parts = createParts(sidebarPrimitive, {
   root: "div",
-  title: "aside",
+  heading: "aside",
   handle: "div",
   inset: "div",
   trigger: "button",
@@ -51,7 +51,7 @@ export const SidebarPanel = defineComponent({
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
     return () =>
-      h(parts.Title, attrs, {
+      h(parts.Heading, attrs, {
         ...slots,
         render: (scope: RenderScope<SidebarPanelState>) => {
           const { state } = scope;
@@ -69,7 +69,7 @@ export const SidebarPanel = defineComponent({
         },
       });
   },
-}) as unknown as typeof parts.Title;
+}) as unknown as typeof parts.Heading;
 
 /** The resize handle between the panel and the inset, named "Resize <label>". Absent while the panel is a drawer. */
 export const SidebarHandle = defineComponent({

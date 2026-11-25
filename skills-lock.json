@@ -18,7 +18,7 @@
     "ui-sdk": {
       "source": "./node_modules/@ui-sdk/core/skills",
       "sourceType": "local",
-      "computedHash": "fd6d1a85ce608430e8b77b005e6263eaa7cda9e92c5c5ef0c669132906103bd2"
+      "computedHash": "1af8b09475fd1c8784489c4c1099eb167e28297c344e1102fb017ca07ce74d00"
     },
     "vue-best-practices": {
       "source": "vuejs-ai/skills",

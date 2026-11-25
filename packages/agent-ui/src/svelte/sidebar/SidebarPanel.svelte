@@ -5,7 +5,7 @@
   import { KindResizablePanel } from "../internal/resizable/index.js";
   import { parts } from "./parts.js";
 
-  type PanelProps = ComponentProps<typeof parts.Title>;
+  type PanelProps = ComponentProps<typeof parts.Heading>;
   type Handed = Parameters<NonNullable<PanelProps["render"]>>[0];
 
   let { render: own, ...props }: PanelProps = $props();
@@ -13,7 +13,7 @@
   const keep = () => {};
 </script>
 
-<parts.Title {...props}>
+<parts.Heading {...props}>
   {#snippet render(handed: Handed)}
     {@const { resizablePanel, drawer, drawerContent } = handed.state}
     <KindResizablePanel {...resizablePanel}>
@@ -32,7 +32,7 @@
       {/if}
     </KindResizablePanel>
   {/snippet}
-</parts.Title>
+</parts.Heading>
 
 {#snippet element(handed: Handed)}
   {#if own}{@render own(handed)}{:else}<aside {...handed.props}>{@render handed.children?.(handed.state)}</aside>{/if}

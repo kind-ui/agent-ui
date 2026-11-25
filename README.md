@@ -175,7 +175,7 @@ agent.snapshot(); // [{ ref: "c1", component: "kind-model-selector", label: "Mod
 await agent.act({ steps: [{ ref: "Model", action: "setValue", args: ["claude-sonnet-5.5"] }] });
 ```
 
-Each action reaches your callbacks with `details.source` set to `"agent"`. Actions that decide something, like approving a tool call or accepting a plan, wait for a person to confirm unless your `allow` lets them through. Each component page's **Agent** section lists its actions. See UI SDK's [agent docs](https://ui-sdk.dev/docs) for `query`, permissions and WebMCP tools.
+An agent sends a whole task in one `act` call. Give a model the `snapshot`, `act` and `query` tools from `agentTools`, or a browser's agent through WebMCP with `registerTools(agent, { allow })`, and pass `act` a `signal` that the chat's Stop aborts. Each action reaches your callbacks with `details.source` set to `"agent"`. Actions that decide something, like approving a tool call or accepting a plan, wait for a person to confirm unless your `allow` lets them through. Each component page's **Agent** section lists its actions, and the [Agents](https://kindui.dev/docs/agent-ui/agents/) page wires it all up.
 
 ### AI SDK
 

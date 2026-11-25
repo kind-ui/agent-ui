@@ -5,8 +5,8 @@
 <script lang="ts">
   import { MenuTrigger } from "@ui-sdk/svelte/menu";
   import type { ComponentProps, Snippet } from "svelte";
-  import { KindMenu } from "../internal/menu/index.js";
   import MessageRegenerateContent from "./MessageRegenerateContent.svelte";
+  import MessageRegenerateMenu from "./MessageRegenerateMenu.svelte";
   import { parts } from "./parts.js";
 
   type Props = ComponentProps<typeof parts.Regenerate> & {
@@ -25,14 +25,14 @@
 <parts.Regenerate {...props}>
   {#snippet children({ menu })}
     {#if menu && button}
-      <KindMenu {...menu}>
+      <MessageRegenerateMenu {menu}>
         <parts.RegenerateTrigger>
           <MenuTrigger>
             {#snippet render({ props: trigger }: { props: Record<string, unknown> })}{@render button(trigger)}{/snippet}
           </MenuTrigger>
         </parts.RegenerateTrigger
         >{#if menuContent}{@render menuContent()}{:else}<MessageRegenerateContent />{/if}
-      </KindMenu>
+      </MessageRegenerateMenu>
     {:else}
       {@render button?.({})}
     {/if}

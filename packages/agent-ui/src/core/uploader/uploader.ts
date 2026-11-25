@@ -92,6 +92,8 @@ type UploadAction = "cancel" | "retry";
 type ItemProps = { value: string };
 
 export type UploaderApi = {
+  /** The host's items, for the agent's item list. */
+  getItems: () => readonly UploadItem[];
   /** Cancels a queued or uploading item by its `id`, through `onCancel`. Offered while one can be cancelled. */
   readonly cancel: ((id: string, event?: Event) => void) | undefined;
   /** Retries a failed item by its `id`, through `onRetry`. Offered while one has failed. */
@@ -291,6 +293,7 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
     });
 
     return {
+      getItems: () => store.get().items,
       get cancel() {
         const { canCancel, items } = store.get();
         return canCancel && items.some(isActive) ? cancel : undefined;
@@ -412,5 +415,11 @@ export const uploaderPrimitive: UploaderPrimitive = definePrimitive({
       bind: (el, part) => part.api.bindAction(el, part),
     }),
   }),
-  agent: { actions: ["cancel", "retry"] },
+  agent: {
+    actions: ["cancel", "retry"],
+    // `act` resolves a file's name or id against these, and refuses any other (`closed`). Without them the bridge
+    // read the host's items as `{ value, label }` and threw on every step that named a component by its label.
+    closed: true,
+    items: (api: UploaderApi) => api.getItems().map(({ id, name }) => ({ value: id, label: name })),
+  },
 });

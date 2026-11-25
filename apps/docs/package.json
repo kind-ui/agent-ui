@@ -10,9 +10,9 @@
   },
   "dependencies": {
     "@kind-ui/agent-ui": "0.7.2",
-    "@ui-sdk/core": "0.1.0-beta.1",
-    "@ui-sdk/react": "0.1.0-beta.1",
-    "@ui-sdk/web": "0.1.0-beta.1",
+    "@ui-sdk/core": "0.1.0-beta.17",
+    "@ui-sdk/react": "0.1.0-beta.17",
+    "@ui-sdk/web": "0.1.0-beta.17",
     "fumadocs-core": "16.19.3",
     "fumadocs-mdx": "15.6.2",
     "fumadocs-typescript": "5.6.1",

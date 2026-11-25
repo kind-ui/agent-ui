@@ -2,13 +2,16 @@
 // React's component renders and `notified` the parts UI SDK re-reads on web, so one table holds React's and Web's.
 export const budgets = {
   conversationStream: { writes: 1, renders: 9, notified: 0 },
-  conversationFollow: { layoutReads: 12 },
+  // UI SDK's stick to bottom runs its pass (7 reads) on both the content's MutationObserver and its ResizeObserver,
+  // which keeps rows in view still when rows above them change (`0.1.0-beta.17`).
+  conversationFollow: { layoutReads: 18 },
   markdownStream: { parses: 1, writes: 4, renders: 6, notified: 3 },
   toolStream: { writes: 14, renders: 26, notified: 17 },
-  terminalChunk: { writes: 6, renders: 7, notified: 4, layoutReads: 17 },
-  // A new line in a full viewport reads layout 16 times (17 under StrictMode, which binds the new line twice). The
-  // line that first fills the 10-line case's viewport both grows and scrolls it, which the virtualizer reads twice more.
-  terminalLine: { writes: 8, renders: 9, notified: 5, layoutReads: 19 },
+  // A chunk that wraps the last line runs the stick to bottom's pass on a mutation and a resize, and the scroll after.
+  terminalChunk: { writes: 6, renders: 6, notified: 4, layoutReads: 28 },
+  // A new line in a full viewport reads layout 36 times (37 under StrictMode, which binds the new line twice): the
+  // virtualizer adds a row and drops one, and UI SDK's stick to bottom runs its pass on each mutation and each resize.
+  terminalLine: { writes: 8, renders: 8, notified: 5, layoutReads: 37 },
   // The fixture's segments fit on one line and their header has a set height, so how many are in view doesn't depend
   // on the platform's fonts.
   transcriptWord: { writes: 3, renders: 3, notified: 3, layoutReads: 4 },
@@ -36,7 +39,8 @@ export const budgets = {
   // 480px track holds at most 120 marks, placed by index rather than measured. What a character costs beyond the rows
   // in view is the marks it moves: at 100 messages, about 40 marks come and go (3 writes each on web, which also
   // re-reads every mark); at 5,000 every 4px step holds a match whatever the search, so no mark moves.
-  conversationSearchType: { writes: 151, renders: 88, notified: 128, layoutReads: 4 },
+  // Scrolling to the current match releases the stick to bottom, which finds the row in view to keep still (10 reads).
+  conversationSearchType: { writes: 151, renders: 86, notified: 128, layoutReads: 14 },
 };
 
 export type Budgets = typeof budgets;

@@ -4,7 +4,9 @@ import type { Budgets } from "./react.js";
 // are 0; `notified` is counted on every layer. `budgets.spec.ts` skips a case with no entry here.
 export const budgets: Partial<Budgets> = {
   conversationStream: { writes: 1, renders: 0, notified: 0 },
-  conversationFollow: { layoutReads: 12 },
+  // UI SDK's stick to bottom runs its pass on both the content's MutationObserver and its ResizeObserver
+  // (`0.1.0-beta.17`), as on React.
+  conversationFollow: { layoutReads: 18 },
   markdownStream: { parses: 1, writes: 4, renders: 0, notified: 3 },
   remount: { nodes: 0, listeners: 0 },
 
@@ -13,8 +15,11 @@ export const budgets: Partial<Budgets> = {
 
   toolStream: { writes: 6, renders: 0, notified: 3 },
 
-  terminalChunk: { writes: 4, renders: 0, notified: 0, layoutReads: 15 },
-  terminalLine: { writes: 4, renders: 0, notified: 0, layoutReads: 18 },
+  // A chunk that wraps the last line runs the stick to bottom's pass on a mutation and a resize, and the scroll after
+  // (8 and 20 reads, 28 when both land in one window, as React's budget allows).
+  terminalChunk: { writes: 4, renders: 0, notified: 0, layoutReads: 28 },
+  // The virtualizer adds a row and drops one, and the stick to bottom runs its pass on each mutation and each resize.
+  terminalLine: { writes: 4, renders: 0, notified: 0, layoutReads: 29 },
   transcriptWord: { writes: 4, renders: 0, notified: 2, layoutReads: 4 },
   transcriptSegment: { writes: 9, renders: 0, notified: 4, layoutReads: 8 },
   transcriptSearch: { writes: 66, renders: 0, notified: 0, layoutReads: 2 },
@@ -27,5 +32,6 @@ export const budgets: Partial<Budgets> = {
 
   // At 100 messages the writes are the marks a character moves; at 5,000 every step holds a match, so only the count
   // changes: the rows in view keep their nodes, since the highlights are painted, not rendered.
-  conversationSearchType: { writes: 115, renders: 0, notified: 0, layoutReads: 4 },
+  // Scrolling to the current match releases the stick to bottom, which finds the row in view to keep still (10 reads).
+  conversationSearchType: { writes: 115, renders: 0, notified: 0, layoutReads: 14 },
 };

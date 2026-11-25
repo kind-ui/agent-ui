@@ -3,7 +3,7 @@ import { createParts } from "@ui-sdk/svelte/primitive";
 
 export const parts = createParts(sidebarPrimitive, {
   root: "div",
-  title: "aside",
+  heading: "aside",
   handle: "div",
   inset: "div",
   trigger: "button",

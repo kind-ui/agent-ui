@@ -30,14 +30,6 @@ type Kit = {
   [primitive: string]: unknown;
 };
 
-// React's Segmented Control keeps a hidden native radio per item for forms, `aria-hidden`, which `checkPattern`
-// counts as radios: see "checkPattern counts React's hidden form radios" in `.agents/experts/react/decisions.md`.
-const hiddenRadios = [
-  /has 2 checked radios/,
-  /next radio, input, but focus went/,
-  /previous radio,( wrapping around,)? input,/,
-];
-
 const narrow = { width: 390, height: 844 };
 const button = (name: string | RegExp) => (page: Page) => page.getByRole("button", { name }).first();
 const share = (page: Page) => page.locator("#share").getByRole("button", { name: "Share", exact: true });
@@ -100,7 +92,6 @@ const checks: Check[] = [
     target: (page) => page.getByRole("radiogroup").first(),
     open: press(share),
     rtl: true,
-    known: hiddenRadios,
   },
 ];
 
