@@ -1,0 +1,89 @@
+---
+title: Schedule Card
+description: Show a recurring agent run with its schedule, when it runs next and how it last ran, and let people turn it off or run it now.
+---
+
+import ScheduleCardExample from "../../../examples/schedule-card/basic";
+
+Use a schedule card for a run that starts on its own, like a daily triage or a weekly digest. It shows the schedule in your words, counts down to the next run once it's within the hour, links to the last run, and offers an **Enabled** switch, **Run now** and **Edit**.
+
+<Example caption="Turn Enabled off to pause the schedule, or press Run now to start a run, which then shows as the last run.">
+  <ScheduleCardExample />
+
+  <ExampleCode example="schedule-card/basic" />
+</Example>
+
+## Installation
+
+<Install name="schedule-card" />
+
+## Composition
+
+```text
+ScheduleCard
+├── ScheduleCardIcon
+├── ScheduleCardTitle
+├── ScheduleCardDescription
+├── ScheduleCardNext
+├── ScheduleCardLast
+│   ├── ScheduleCardLastMark
+│   └── ScheduleCardLastLink
+├── ScheduleCardEnabled
+├── ScheduleCardRunNow
+└── ScheduleCardEdit
+```
+
+`ScheduleCard` renders these parts in a group named by the schedule's `label`. `ScheduleCardEnabled` is a label holding **Enabled** and a UI SDK Switch. `ScheduleCardLast` shows only with a `lastRun`, `ScheduleCardRunNow` only with `onRunNow` and `ScheduleCardEdit` only with `onEdit`. To arrange the parts yourself, render them inside `ScheduleCardRoot`.
+
+## Usage
+
+### Schedule
+
+Pass `schedule`: its `id`, `label`, `description`, whether it's `enabled`, and optionally `nextRunAt` and `lastRun` (`at`, `status` and an `href`). The card never reads cron or any other schedule format. Write `description` in words yourself, or turn a cron expression into words with a library such as `cronstrue`.
+
+```tsx
+<ScheduleCard
+  schedule={{
+    id: "triage",
+    label: "Daily triage",
+    description: "Weekdays at 9:00",
+    enabled: true,
+    nextRunAt: "2026-11-26T09:00:00Z",
+    lastRun: { at: "2026-11-25T09:00:00Z", status: "complete", href: "/runs/41" },
+  }}
+/>
+```
+
+### Next and last run
+
+The next run reads **Next run 9:00 AM**, with the date when it isn't today. Within the hour it counts down, **Next run in 12 min 4 sec**, and it's never announced. While the schedule is off it reads **Paused**, and without `nextRunAt` **Not scheduled**. The last run shows its status mark and words, **Last run failed Nov 24, 9:00 AM**, linked to its `href` when that's a safe link.
+
+Server markup shows full dates. In the browser the words change to today's once the card loads, read in `timeZone` (default UTC) and `locale` (default the page's language). Pass `now` to fix today, as tests do.
+
+### Enabled
+
+The switch shows `schedule.enabled`. Turning it calls `onEnabledChange(enabled, details)`; pass a schedule with the new value to take the change. A change you don't take leaves the switch as it was, so a save that fails just doesn't pass the new value.
+
+```tsx
+<ScheduleCard schedule={schedule} onEnabledChange={(enabled) => save({ ...schedule, enabled })} />
+```
+
+### Run now and Edit
+
+Pass `onRunNow` to show **Run now**. Return a promise to show **Starting** until it settles; a rejection announces **Run didn't start**. Pass `onEdit` to show a pencil button named **Edit schedule**, which calls it with the schedule's `id`.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/schedule-card/schedule-card.ts" name="ScheduleCardOptions" />
+
+<FrameworkNames name="schedule-card" />
+
+### Agent
+
+An agent connected with `createAgent` finds the card by its `label` and sees whether it's `enabled`. `setEnabled(on)` turns it on or off as the switch does, `runNow()` does what **Run now** does while `onRunNow` is set and no run is pending, and `edit()` calls `onEdit`. Since a schedule runs on its own, every action asks a person first while `agentConfirm` is on, the default.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/schedule-card/schedule-card.ts" name="ScheduleCardAgentActions" type='Pick<ScheduleCardApi, "setEnabled" | "runNow" | "edit">' />
+
+<Caption>
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-schedule-card>`, `schedule` is a property and the other props are kebab-case attributes (`time-zone`). Turning the switch fires `enabledchange`. The `can-run-now` attribute shows Run now, which fires `runnow`: call `event.detail.waitUntil(promise)` to keep it pending. The `can-edit` attribute shows Edit, which fires `scheduleedit` with the id in `event.detail.value`.
+</Caption>
