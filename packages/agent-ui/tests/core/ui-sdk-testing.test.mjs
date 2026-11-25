@@ -288,6 +288,24 @@ const cases = {
 
   // wave-7-task-6: Diff
 
+  // jsdiff reads `Date.now()` for a timeout that's off, so the paired lines it diffs into words render the same
+  // anywhere but trip the clock check: this patch only adds lines.
+  diff: {
+    options: {
+      file: { path: "src/a.ts" },
+      patch: "--- a/src/a.ts\n+++ b/src/a.ts\n@@ -1,1 +1,2 @@\n one\n+two\n",
+      onAccept: noop,
+      onRevert: noop,
+    },
+    keys: {
+      row: ["0", "1", "2"],
+      "old-number": ["0", "1", "2"],
+      "new-number": ["0", "1", "2"],
+      sign: ["0", "1", "2"],
+      code: ["0", "1", "2"],
+    },
+  },
+
   // wave-7-task-7: Step Group
 
   // wave-7-task-8: Handoff

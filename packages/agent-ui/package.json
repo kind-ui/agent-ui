@@ -68,6 +68,7 @@
   "dependencies": {
     "@ui-sdk/core": "0.1.0-beta.17",
     "ansi-sequence-parser": "1.1.3",
+    "diff": "9.0.0",
     "marked": "18.2.0",
     "mdast-util-definitions": "6.0.0",
     "mdast-util-from-markdown": "2.1.0",
