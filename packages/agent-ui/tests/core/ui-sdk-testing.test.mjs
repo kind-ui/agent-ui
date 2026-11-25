@@ -302,6 +302,16 @@ const cases = {
 
   // wave-7-task-14: Agent Card
 
+  agentCard: {
+    options: {
+      agent: { id: "a1", name: "Planner", model: "GPT-5", description: "Plans", capabilities: ["Search"] },
+      status: "running",
+      href: "https://example.com/planner",
+      onAction: noop,
+    },
+    keys: { capability: ["Search"] },
+  },
+
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
   // wave-7-task-16: Quota Notice

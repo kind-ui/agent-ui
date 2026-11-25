@@ -789,6 +789,19 @@ export {
 
 // wave-7-task-14: Agent Card
 
+export {
+  type AgentCardActionReason,
+  type AgentCardApi,
+  type AgentCardAvatarState,
+  type AgentCardNameState,
+  type AgentCardOptions,
+  type AgentCardPrimitive,
+  type AgentCardState,
+  type AgentCardStatusState,
+  agentCardPrimitive,
+  agentCardStatus,
+} from "./agent-card/index.js";
+
 // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
 // wave-7-task-16: Quota Notice
