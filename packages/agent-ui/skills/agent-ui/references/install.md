@@ -86,23 +86,7 @@ Tailwind finds the copied files itself. If they live outside the app that builds
 
 ## Framework notes
 
-- **Next.js:** the copied files import each other as `./name.js` (for `name.tsx`), as TypeScript's NodeNext resolution writes them. Vite resolves that on its own; Next.js doesn't, and Turbopack, its default bundler, can't be configured to. Build with webpack and map the extension:
-
-  ```ts
-  // next.config.ts
-  import type { NextConfig } from "next";
-
-  const config: NextConfig = {
-    webpack: (webpackConfig) => {
-      webpackConfig.resolve.extensionAlias = { ".js": [".ts", ".tsx", ".js"] };
-      return webpackConfig;
-    },
-  };
-
-  export default config;
-  ```
-
-  Then run `next dev --webpack` and `next build --webpack` in the `package.json` scripts. A scaffold that wires Tailwind only into Turbopack needs `@tailwindcss/postcss` and a `postcss.config.mjs` (`export default { plugins: { "@tailwindcss/postcss": {} } };`). Every React component file starts with `"use client"`, so a server component can render one; a page with state or handlers needs `"use client"` itself.
+- **Next.js:** components build with Next's defaults, Turbopack included. Every React component file starts with `"use client"`, so a server component can render one; a page with state or handlers needs `"use client"` itself. Items added before 0.7.2 import their siblings as `./name.js`, which Next can't resolve: add them again, or build with `--webpack` and set `resolve.extensionAlias` to `{ ".js": [".ts", ".tsx", ".js"] }`.
 - **Vue with server rendering outside Nuxt:** render the root inside `<Suspense>`, on the server and in the browser, as Nuxt pages already do. Without it, parts bind during hydration and an Avatar whose image loaded early, or a measured Terminal, won't match its server markup:
 
   ```ts
