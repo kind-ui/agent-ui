@@ -125,9 +125,11 @@ const NEW = "new";
 const noThreads: Thread[] = [];
 
 const STATUS: Record<ThreadSearchIcon["status"], string> = {
+  queued: "Queued",
   running: "Running",
   "awaiting-input": "Needs input",
   error: "Failed",
+  complete: "Done",
 };
 
 type Grouping = {

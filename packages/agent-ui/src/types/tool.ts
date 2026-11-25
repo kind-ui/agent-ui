@@ -1,3 +1,5 @@
+import type { RetryState } from "./records.js";
+
 export interface ToolCall {
   toolCallId: string;
   name: string;
@@ -7,6 +9,8 @@ export interface ToolCall {
   output?: { state: "available" | "preliminary"; value: unknown };
   outcome?: "error" | "denied" | "cancelled";
   approval?: Approval;
+  /** The call is retrying, while its status stays `running`. */
+  retry?: RetryState;
 }
 
 export interface Approval {

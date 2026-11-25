@@ -84,6 +84,10 @@ Wave 6 Tasks 2 to 11 branch from Task 1 and land in any order (plan D21), so the
 
 Find yours with `git grep -n "wave-6-task-<n>:"`. Keep your marker line and the blank line under it, add your lines after that blank line, and end them with one blank line, so two tasks' lines never touch and git merges them cleanly. Biome's `organizeImports` sorts exports only between comments that a blank line separates, so exports under a marker stay there, sorted among themselves. Never edit or move another task's marker. JSON files (`size-budget.json`, `apps/docs/content/docs/components/meta.json`) can't hold markers: a task that lands after another rebases and keeps both, as it does for entries appended to a section of `.agents/experts/*/decisions.md`. Tasks 2 to 11 leave each `decisions.md`'s `Last reviewed:` line alone, since all of them would change it, and name the reviewed commit in their PR; Task 12 moves it. Remove the markers once Tasks 2 to 11 have landed.
 
+## Wave 7 shared-file markers
+
+Wave 7 (plan `docs/superpowers/plans/2026-11-25-agent-ui-wave-7.md`, D4) uses the Wave 6 scheme: Tasks 2 to 8 and 10 to 19 each have one `wave-7-task-<n>: <name>` marker after the Wave 6 lines in `packages/agent-ui/src/core/index.ts`, `registry/catalog.mjs`, the `components`, `internals` and `specs` of `registry/layers/{vue,svelte,solid}.mjs`, `packages/agent-ui/tests/fixtures/shared/parity.ts`, `packages/agent-ui/tests/core/ui-sdk-testing.test.mjs`, `tests/browser/budgets/{react,vue,svelte,solid}.ts`, `tests/browser/wave-1/{budgets,forced-colors,status-mark}.spec.ts`, `packages/agent-ui/src/styles/agent-ui.css`, `registry/consumers/{react.tsx,web.ts}` (the Vue, Svelte and Solid consumers glob their `items/`), `THIRD_PARTY_NOTICES.md` and this file's "UI SDK API notes". Find yours with `git grep -n "wave-7-task-<n>:"`, and keep the blank-line rules above. JSON files and the lockfile are rebased by whichever task lands second. Task 21 removes the markers.
+
 ## Framework layers: shared interfaces
 
 The Vue, Svelte and Solid tracks (framework layers plan, Tasks *Layer*-1 to *Layer*-8) run in parallel on what Task 1 froze below. A track changes none of it inside its own PR: a core fix or a change to a shared file (`tests/fixtures/shared/`, a spec, `agent-conformance.ts`, `tree.ts`, the harness files below) is a small PR of its own against the plan's base branch, which every track merges before it continues (plan D10).
@@ -351,6 +355,50 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
   - **Svelte additions:**
     - The Svelte Token Input editor holds Svelte's placeholder comments until it binds, so `ComposerInput` binds the composer's input part only once `ComposerEditorBound` reports the editor bound.
     - `MessageRegenerateMenu` keeps the menu's props in its own state, since a torn-down menu re-read Message's part state and froze its later updates.
+
+- **Wave 7 groundwork (Wave 7 Task 1):** the neutral types of the Wave 7 spec §3.1 and five shared core modules, frozen for Tasks 2 to 19.
+  - `countdown.ts`: `createCountdown(context, { key, at, idle?, with? })` returns a `Countdown` whose `bind()` a root slot's `bind` calls, so the `live` key holds `idle` (`null`, Connection Status `0`) on the server and until then; it re-reads `at()` on every store change, wakes on each whole second and stops at zero. `with` adds state to each write, which keeps Connection Status' `spareDigits` in the same write as `seconds`. `countdownText` is `"in " + durationLabel`, empty at zero.
+  - `retry.ts`: `retryPart({ retry, countdownKey })` gives `state`, `sync`, `live`, `onOptions(context)` (announces "Retrying, attempt N" once per attempt it sees start, not one it mounted with, and returns the countdown to `retryAt` for the root to bind) and `slot()` (`retry`, `data-retry-part`, state `{ text }`; the layers draw the running status mark, `aria-hidden`).
+  - `approval-part.ts`: `approvalPart.options`, `.presentation(approval, options)`, `.approvalState(context)` and `.slot()`, Tool's verbatim; `ToolApprovalState` is now `ApprovalPartState`.
+  - `meter-base.ts`: `meterBase({ label, amount, valueText, countText, keys })` holds Context Meter's popup, ring trigger, Meter props, locale and slots; `keys` are the state keys the words read, so they're rebuilt only when those change. A component adds to the base api with `Object.assign`, not a spread, which would read its `open` and `close` getters once.
+  - `aggregate.ts`: `aggregateStatus`; all `pending` (or none) reads `pending`.
+  - `Thread.status` gains `queued` and `complete`, which Thread List and Thread Search name "Queued" and "Done" until Task 18. The skill's `ops` group ("Agent ops") is in `scripts/build-skill.mjs`, which skips a group with no components yet. In `@ui-sdk/core` 0.1.0-beta.17, `createWaterfallController` and `visibleWaterfallRows` come from `@ui-sdk/core/waterfall` and `createTimelineController` from `@ui-sdk/core/timeline`.
+
+<!-- Wave 7 markers ("Wave 7 shared-file markers"): each task adds its bullet right below its own line. -->
+
+<!-- wave-7-task-2: Composer steering and Queue's Send now -->
+
+<!-- wave-7-task-3: Message delivery mark and retrying -->
+
+<!-- wave-7-task-4: Terminal approval and Confirmation's Always allow -->
+
+<!-- wave-7-task-5: Tool retry and retrying -->
+
+<!-- wave-7-task-6: Diff -->
+
+<!-- wave-7-task-7: Step Group -->
+
+<!-- wave-7-task-8: Handoff -->
+
+<!-- wave-7-task-10: Trace -->
+
+<!-- wave-7-task-11: Run Timeline -->
+
+<!-- wave-7-task-12: Job Progress -->
+
+<!-- wave-7-task-13: Schedule Card -->
+
+<!-- wave-7-task-14: Agent Card -->
+
+<!-- wave-7-task-15: Usage Meter and Context Meter's breakdown -->
+
+<!-- wave-7-task-16: Quota Notice -->
+
+<!-- wave-7-task-17: Activity Graph -->
+
+<!-- wave-7-task-18: Thread List inbox -->
+
+<!-- wave-7-task-19: Flow Graph -->
 
 ## Root scripts
 

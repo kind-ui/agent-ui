@@ -105,6 +105,42 @@
 
 - Lucide (ISC, as above): `chevron-left` and `chevron-right` inline in `packages/agent-ui/src/solid/suggestion.tsx` and `check` inline in `packages/agent-ui/src/solid/question.tsx`, unchanged, as in the React layer.
 
+- Wave 7 icon paths, one line per component naming its stylesheet, its icons, any change and which icons derive from Feather (each task adds its line below its own marker, as `AGENTS.md` "Wave 7 shared-file markers" says):
+
+<!-- wave-7-task-2: Composer steering and Queue's Send now -->
+
+<!-- wave-7-task-3: Message delivery mark and retrying -->
+
+<!-- wave-7-task-4: Terminal approval and Confirmation's Always allow -->
+
+<!-- wave-7-task-5: Tool retry and retrying -->
+
+<!-- wave-7-task-6: Diff -->
+
+<!-- wave-7-task-7: Step Group -->
+
+<!-- wave-7-task-8: Handoff -->
+
+<!-- wave-7-task-10: Trace -->
+
+<!-- wave-7-task-11: Run Timeline -->
+
+<!-- wave-7-task-12: Job Progress -->
+
+<!-- wave-7-task-13: Schedule Card -->
+
+<!-- wave-7-task-14: Agent Card -->
+
+<!-- wave-7-task-15: Usage Meter and Context Meter's breakdown -->
+
+<!-- wave-7-task-16: Quota Notice -->
+
+<!-- wave-7-task-17: Activity Graph -->
+
+<!-- wave-7-task-18: Thread List inbox -->
+
+<!-- wave-7-task-19: Flow Graph -->
+
 ## Lobe Icons
 
 - Source: https://github.com/lobehub/lobe-icons, npm `@lobehub/icons-static-svg@1.103.0`, the `anthropic`, `openai`, `microsoft-color` and `xai` icons.

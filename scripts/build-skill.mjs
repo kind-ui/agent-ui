@@ -15,6 +15,7 @@ export const groups = {
   output: "Developer output",
   indicators: "Indicators and notices",
   shell: "Thread and shell",
+  ops: "Agent ops",
 };
 
 const layerNames = { vue: "Vue", svelte: "Svelte", solid: "Solid" };
@@ -34,6 +35,8 @@ export function componentCatalog() {
     `All ${Object.keys(components).length} components, grouped by the job they do. The item is the React name: add \`-web\`, \`-vue\`, \`-svelte\` or \`-solid\` for another layer (\`npx shadcn@latest add @kind-ui/tool-vue\`). Each component's page is \`https://kindui.dev/llms.mdx/docs/agent-ui/components/<item>.md\`.`,
   ];
   for (const [group, title] of Object.entries(groups)) {
+    // A group is listed once it has a component.
+    if (!Object.values(components).some(({ group: of }) => of === group)) continue;
     lines.push("", `## ${title}`, "", "| Item | Component | Use it when |", "| --- | --- | --- |");
     for (const [name, { title: component, group: of, when }] of Object.entries(components)) {
       if (of !== group) continue;

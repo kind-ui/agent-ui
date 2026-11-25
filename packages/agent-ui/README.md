@@ -113,6 +113,7 @@ Tested against `ai@7.0.173`. The spec §4.3 tool states were observed in `ai@7.0
 - **`output-error` input:** `input` is preserved. When it is absent, the deprecated `rawInput` is used.
 - **Approval generation:** the SDK has none, so mapped approvals are `generation: 0`. Hosts that replace requests own the generation.
 - **Not mapped:** opaque approval fields (`descriptor`, `signature`, `requestReason`, `inputSchemaInput`), tool `title` and `toolMetadata`, text `citations`, and `providerMetadata`. The neutral `Approval` has no field for opaque metadata. None of these fields grant authority.
+- **Wave 7 fields:** AI SDK 7 reports no retries, deliveries or spans, so the adapter sets no `retry`, `delivery`, `Thread` progress or Trace data. Hosts that know them set them.
 
 ## License
 

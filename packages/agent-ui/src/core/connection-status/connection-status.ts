@@ -11,6 +11,7 @@ import {
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { actionSource } from "../action-source.js";
+import { type Countdown, createCountdown } from "../countdown.js";
 import type { MotionMode } from "../motion/index.js";
 import { createPendingAction } from "../pending.js";
 import { nearestTabStop } from "../tab-stop.js";
@@ -101,6 +102,8 @@ export type ConnectionStatusApi = {
   readonly retry: ((event?: Event) => void) | undefined;
   /** Internal: moves focus on when Retry leaves while focused. Called by the retry slot. */
   recovery: FocusRecovery;
+  /** Internal: counts down to `retryAt` while reconnecting. Bound by the root slot. */
+  countdown: Countdown;
 };
 
 type Slot<Public extends object = Record<never, never>> = SlotDefinition<
@@ -237,6 +240,15 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
       }
     });
 
+    const digits = (seconds: number) => (seconds > 0 ? String(seconds).length : 0);
+    const countdown = createCountdown(context, {
+      key: "seconds",
+      at: () => (store.get().phase === "reconnecting" ? store.get().retryAt : undefined),
+      idle: 0,
+      // The digits the count has lost since it started, which the default words keep room for.
+      with: (seconds, from) => ({ spareDigits: seconds > 0 ? digits(from) - digits(seconds) : 0 }),
+    });
+
     const retry = (event?: Event) => {
       const { onRetry } = context.options();
       if (!onRetry) return;
@@ -250,6 +262,7 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
         const { canRetry, pending, phase } = store.get();
         return canRetry && !pending && isDown(phase) ? retry : undefined;
       },
+      countdown,
       recovery: createFocusRecovery({
         fallback: (lostFocus) => (lostFocus.el.isConnected ? nearestTabStop(lostFocus.el) : undefined),
       }),
@@ -267,37 +280,15 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
         "data-motion": state.motion,
       }),
       // Comes and goes through CSS on UI SDK's `data-starting-style` and `data-ending-style`, and counts down.
-      bind: (el, { store }) => {
+      bind: (el, { store, api }) => {
         prepareAnnouncements(el.ownerDocument);
         const frame = requestAnimationFrame(() => store.set({ started: true }));
         let showing = store.get().phase !== "online";
         let stop = () => {};
-        let counting: string | undefined;
-        let timer: ReturnType<typeof setTimeout> | undefined;
-        let digits = 0;
-
-        const count = (at: number) => {
-          const left = at - Date.now();
-          const seconds = Math.max(0, Math.ceil(left / 1000));
-          const shown = seconds > 0 ? String(seconds).length : 0;
-          digits = Math.max(digits, shown);
-          store.set({ seconds, spareDigits: shown ? digits - shown : 0 });
-          // Wakes on the next whole second, so the number changes when it should.
-          if (left > 0) timer = setTimeout(count, left % 1000 || 1000, at);
-        };
+        const unbindCountdown = api.countdown.bind();
 
         const follow = () => {
-          const { phase, retryAt } = store.get();
-          const target = phase === "reconnecting" ? retryAt : undefined;
-          if (target !== counting) {
-            counting = target;
-            clearTimeout(timer);
-            digits = 0;
-            const at = target ? Date.parse(target) : Number.NaN;
-            if (Number.isNaN(at)) store.set({ seconds: 0, spareDigits: 0 });
-            else count(at);
-          }
-          const shows = phase !== "online";
+          const shows = store.get().phase !== "online";
           if (shows === showing) return;
           showing = shows;
           stop();
@@ -307,8 +298,8 @@ export const connectionStatusPrimitive: ConnectionStatusPrimitive = definePrimit
         const unsubscribe = store.subscribe(follow);
         return () => {
           unsubscribe();
+          unbindCountdown();
           cancelAnimationFrame(frame);
-          clearTimeout(timer);
           stop();
         };
       },

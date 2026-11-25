@@ -39,4 +39,40 @@ export const budgets: Partial<Budgets> = {
   // A search renders the rows whose marks changed; at 5,000 messages the mark track is already full. Scrolling to the
   // current match releases the stick to bottom, which finds the row in view to keep still (10 reads).
   conversationSearchType: { writes: 51, renders: 24, notified: 0, layoutReads: 14 },
+
+  // Wave 7 markers (AGENTS.md "Wave 7 shared-file markers"): each task adds its budgets right below its own line.
+
+  // wave-7-task-2: Composer steering and Queue's Send now
+
+  // wave-7-task-3: Message delivery mark and retrying
+
+  // wave-7-task-4: Terminal approval and Confirmation's Always allow
+
+  // wave-7-task-5: Tool retry and retrying
+
+  // wave-7-task-6: Diff
+
+  // wave-7-task-7: Step Group
+
+  // wave-7-task-8: Handoff
+
+  // wave-7-task-10: Trace
+
+  // wave-7-task-11: Run Timeline
+
+  // wave-7-task-12: Job Progress
+
+  // wave-7-task-13: Schedule Card
+
+  // wave-7-task-14: Agent Card
+
+  // wave-7-task-15: Usage Meter and Context Meter's breakdown
+
+  // wave-7-task-16: Quota Notice
+
+  // wave-7-task-17: Activity Graph
+
+  // wave-7-task-18: Thread List inbox
+
+  // wave-7-task-19: Flow Graph
 };

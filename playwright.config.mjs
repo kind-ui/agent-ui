@@ -75,7 +75,7 @@ const webServer = servers.map(({ layer, mode, index }) => ({
 // the root-level specs (`parity.spec.ts`, `hydration.spec.ts`) in a `root-<layer>` project. A project with no specs
 // matches nothing.
 const nothing = /^$/;
-const waves = ["wave-1", "wave-2", "wave-3", "wave-4", "wave-5", "wave-6"];
+const waves = ["wave-1", "wave-2", "wave-3", "wave-4", "wave-5", "wave-6", "wave-7"];
 const testMatchOf = (layer, folder) => {
   if (!manifests[layer]) return `${folder}/**/*.spec.ts`;
   const specs = specsOf(layer).filter((spec) =>

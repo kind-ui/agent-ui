@@ -308,9 +308,11 @@ const NO_THREADS: Thread[] = [];
 // The rows' height before the viewport binds and reads `--kind-thread-row-height`.
 const ROW_HEIGHT = 36;
 const STATUS_LABELS: Record<NonNullable<Thread["status"]>, string> = {
+  queued: "Queued",
   running: "Running",
   "awaiting-input": "Needs input",
   error: "Failed",
+  complete: "Done",
 };
 
 /** The threads as grid rows: each group's heading, then its threads. */

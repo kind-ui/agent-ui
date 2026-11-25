@@ -41,4 +41,40 @@ export const budgets: Partial<Budgets> = {
   // measurement under load (AGENTS.md "Svelte conformance"); the stick to bottom runs its pass on the wrap's mutation
   // and resize too (28 reads when they share a window, as React's budget allows).
   terminalChunk: { writes: 13, renders: 0, notified: 2, layoutReads: 28 },
+
+  // Wave 7 markers (AGENTS.md "Wave 7 shared-file markers"): each task adds its budgets right below its own line.
+
+  // wave-7-task-2: Composer steering and Queue's Send now
+
+  // wave-7-task-3: Message delivery mark and retrying
+
+  // wave-7-task-4: Terminal approval and Confirmation's Always allow
+
+  // wave-7-task-5: Tool retry and retrying
+
+  // wave-7-task-6: Diff
+
+  // wave-7-task-7: Step Group
+
+  // wave-7-task-8: Handoff
+
+  // wave-7-task-10: Trace
+
+  // wave-7-task-11: Run Timeline
+
+  // wave-7-task-12: Job Progress
+
+  // wave-7-task-13: Schedule Card
+
+  // wave-7-task-14: Agent Card
+
+  // wave-7-task-15: Usage Meter and Context Meter's breakdown
+
+  // wave-7-task-16: Quota Notice
+
+  // wave-7-task-17: Activity Graph
+
+  // wave-7-task-18: Thread List inbox
+
+  // wave-7-task-19: Flow Graph
 };

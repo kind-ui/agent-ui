@@ -1,5 +1,5 @@
 import type { PlanItem, TaskItem, TestSuite } from "./records.js";
-import type { ToolCall } from "./tool.js";
+import type { Approval, ToolCall } from "./tool.js";
 
 export type StepStatus = "pending" | "running" | "awaiting-input" | "complete" | "error" | "cancelled";
 
@@ -19,6 +19,6 @@ export type Step =
   | (StepBase & { kind: "task"; items: TaskItem[] })
   | (StepBase & { kind: "plan"; items: PlanItem[] })
   | (StepBase & { kind: "subagent"; agent: { id: string; name: string } })
-  | (StepBase & { kind: "terminal"; command: string; output: string; exitCode?: number })
+  | (StepBase & { kind: "terminal"; command: string; output: string; exitCode?: number; approval?: Approval })
   | (StepBase & { kind: "tests"; suites: TestSuite[] })
   | (StepBase & { kind: "custom"; name: string; data: unknown });

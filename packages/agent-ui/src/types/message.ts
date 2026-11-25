@@ -1,4 +1,4 @@
-import type { MessageAuthor, Source } from "./records.js";
+import type { MessageAuthor, RetryState, Source } from "./records.js";
 import type { Step } from "./step.js";
 
 export type Role = "user" | "assistant" | "system";
@@ -15,6 +15,10 @@ export interface Message {
   author?: MessageAuthor;
   /** Why a message with status `"error"` failed. */
   error?: { message: string };
+  /** How a user message sent while a turn ran was delivered: steered into that turn, or queued for the next. */
+  delivery?: "steered" | "queued";
+  /** The turn is retrying. Its status stays `"submitted"` or `"streaming"`, and the text so far stays. */
+  retry?: RetryState;
   metadata?: Record<string, unknown>;
 }
 

@@ -10,11 +10,16 @@ export {
 } from "./guards.js";
 export type { Message, MessageStatus, Part, Role } from "./message.js";
 export type {
+  ActivityDay,
+  AgentInfo,
   Answers,
   ApprovalModeOption,
   ContextChip,
+  DiffFile,
   EffortLevel,
   FileTreeEntry,
+  FlowEdge,
+  FlowNode,
   MenuEntry,
   MessageAuthor,
   ModelOption,
@@ -25,6 +30,9 @@ export type {
   QuestionOption,
   QueueItem,
   RegenerateOption,
+  RetryState,
+  RunEvent,
+  Schedule,
   SelectionActionItem,
   SettingsChoice,
   SettingsEntry,
@@ -39,8 +47,10 @@ export type {
   TestSuite,
   Thread,
   TokenUsage,
+  TraceSpan,
   TranscriptSegment,
   TranscriptWord,
+  UsageSlice,
 } from "./records.js";
 export type { Step, StepBase, StepStatus } from "./step.js";
 export type { Approval, ToolCall } from "./tool.js";

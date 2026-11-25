@@ -103,7 +103,7 @@ AI components need general controls. These are UI SDK components or `@ui-sdk/cor
 | Popover, Tooltip | Popover (`createPopup`; Context Meter and Inline Citation add hover and focus opening; Wave 5 popups take `presentation`), Tooltip | Feedback, Checkpoint, Context Meter, Inline Citation, Picker, Context Bar |
 | Menu | Menu (checkbox and radio items, submenus, `presentation`) | Message, Add Menu, Settings Menu, Approval Mode, Model Control, Thread List (row actions) |
 | Command | Command | Picker, Model Selector, Thread Search |
-| Slider, Switch | Slider; Switch's look for Settings Menu's checkbox items | Settings Menu, Model Control |
+| Slider, Switch | Slider; Switch's look for Settings Menu's checkbox items; Switch | Settings Menu, Model Control, Schedule Card (Wave 7) |
 | Alert Dialog, Dialog | Alert Dialog, Dialog (`createPopup` with `dialogPreset` for Generated Image) | Checkpoint, Generated Image, Thread List (delete), Thread Search, Share Dialog |
 | Resizable, Drawer | Resizable (a collapsible panel with pixel sizes and a saved layout), Drawer (a side sheet) | Sidebar |
 | Input | Input, Input Group, Clear | Transcript, Conversation Search, Share Dialog |
@@ -117,6 +117,8 @@ AI components need general controls. These are UI SDK components or `@ui-sdk/cor
 | Avatar | Avatar | Message, Subagent |
 | Meter, Progress | Meter, Progress | Context Meter, Plan, Uploader, Generated Image |
 | Radio, Checkbox, Textarea | Radio, Checkbox, Textarea | Question, Feedback, Confirmation |
+| Waterfall | Waterfall, `visibleWaterfallRows` | Trace (Wave 7) |
+| Timeline | Timeline | Run Timeline (Wave 7) |
 
 ### Repository layout
 
@@ -296,6 +298,8 @@ interface Message {
   createdAt?: string; // ISO 8601
   author?: { id: string; name: string; avatarUrl?: string }; // who wrote it, when it isn't obvious from role
   error?: { message: string }; // why a message with status "error" failed
+  delivery?: "steered" | "queued"; // Wave 7: a user message sent while a turn ran
+  retry?: RetryState; // Wave 7: the turn is retrying; status stays "submitted" or "streaming"
   metadata?: Record<string, unknown>;
 }
 
@@ -306,7 +310,9 @@ interface Thread {
   pinned?: boolean;
   group?: string; // a host group (a project, a folder) in place of the date group
   href?: string; // the thread's own URL, so a row is a real link
-  status?: "running" | "awaiting-input" | "error"; // work still going on in the background
+  status?: "queued" | "running" | "awaiting-input" | "error" | "complete"; // background work; Wave 7 adds queued and complete
+  progress?: number; // Wave 7: 0 to 1, for a running background run
+  summary?: string; // Wave 7: "+120 −8 in 4 files", shown under the title
   unread?: boolean;
   snippet?: string; // Thread Search: the text that matched
 }
@@ -338,7 +344,7 @@ type Step =
   | (StepBase & { kind: "task"; items: TaskItem[] })
   | (StepBase & { kind: "plan"; items: PlanItem[] })
   | (StepBase & { kind: "subagent"; agent: { id: string; name: string } })
-  | (StepBase & { kind: "terminal"; command: string; output: string; exitCode?: number })
+  | (StepBase & { kind: "terminal"; command: string; output: string; exitCode?: number; approval?: Approval })
   | (StepBase & { kind: "tests"; suites: TestSuite[] })
   | (StepBase & { kind: "custom"; name: string; data: unknown });
 
@@ -351,6 +357,15 @@ interface ToolCall {
   output?: { state: "available" | "preliminary"; value: unknown };
   outcome?: "error" | "denied" | "cancelled";
   approval?: Approval;
+  retry?: RetryState; // Wave 7
+}
+
+// Wave 7: a retry in progress. `attempt` counts from 1 for the first retry.
+interface RetryState {
+  attempt: number;
+  maxAttempts?: number;
+  retryAt?: string; // ISO 8601; a countdown runs to it
+  reason?: string; // "Rate limited", "Server error 503"
 }
 
 interface Approval {
@@ -361,7 +376,7 @@ interface Approval {
 }
 ```
 
-`Source`, `TaskItem`, `PlanItem`, and `TestSuite` are plain data records in `packages/agent-ui/src/types/` with exactly the fields their components render (§7). Type-level rules from §4.1:
+Wave 7 adds `DiffFile`, `TraceSpan`, `RunEvent`, `AgentInfo`, `Schedule`, `UsageSlice`, `ActivityDay`, `FlowNode` and `FlowEdge` (Wave 7 spec §3.1). `Source`, `TaskItem`, `PlanItem`, and `TestSuite` are plain data records in `packages/agent-ui/src/types/` with exactly the fields their components render (§7). Type-level rules from §4.1:
 
 - Preserve `id`, `toolCallId`, and `approvalId` across updates; components key by them.
 - `0`, `false`, `""`, and `null` are valid tool output.
@@ -454,7 +469,7 @@ Code highlighting is pluggable through `highlight?: (code, lang) => Promise<Toke
 - Each primitive declares `agent: { actions: [...] }` and `controlled` snapshot keys in its `definePrimitive` definition. This spec writes actions as `component.action` (for example `composer.submit`); a snapshot shows them as `component: "composer"`, `actions: ["submit"]`.
 - An action is listed only while available. `composer.stop` appears only while a submission is in flight and the host supplies `onStop`. Host-callback actions (for example `message.regenerate`) appear only when the host supplies the callback. On Web Components, where a listener can't be seen, a `can-<action>` boolean attribute (for example `can-regenerate`) stands for the callback, and the callback is a DOM event.
 - Actions run the same code paths as pointer and keyboard input. Change callbacks receive `details.source === "agent"` so hosts can distinguish and cancel agent changes.
-- These consequential actions render `data-agent-confirm`, so `createAgent` permissions and WebMCP `registerTools` `allow` require a person: `composer.submit`, `confirmation.approve`, `confirmation.deny`, `checkpoint.restore`, `plan.accept`, `subagent.cancel`, `question.submit`, `approvalMode.setValue`, `dictation.start`, every `shareDialog` action, and the Delete button of Thread List's delete dialog (`threadList.delete` opens the dialog; only its Delete calls `onDelete`, as Checkpoint's Restore does). Confirmation's marking cannot be turned off; the others accept the primitive option `agentConfirm: false`.
+- These consequential actions render `data-agent-confirm`, so `createAgent` permissions and WebMCP `registerTools` `allow` require a person: `composer.submit`, `confirmation.approve`, `confirmation.deny`, `checkpoint.restore`, `plan.accept`, `subagent.cancel`, `question.submit`, `approvalMode.setValue`, `dictation.start`, every `shareDialog` action, and the Delete button of Thread List's delete dialog (`threadList.delete` opens the dialog; only its Delete calls `onDelete`, as Checkpoint's Restore does). Wave 7 adds `composer.steer` and `composer.queue` (the composer is already marked), `terminal.approve`, `terminal.deny` and `terminal.alwaysAllow` (through Confirmation), `handoff.approve` and `handoff.deny`, `diff.revert` (Diff's root is marked while `agentConfirm` and `onRevert` are set, so `accept` and `copy` need a person then too), and every Schedule Card action (`setEnabled`, `runNow`, `edit`). Confirmation's marking cannot be turned off; the others accept the primitive option `agentConfirm: false`.
 - No other action renders `data-agent-confirm`, including Queue `reorder` and `remove`, Uploader `cancel` and `retry`, Attachments `remove`, and Wave 3's `suggestion.pick`, `feedback.rate`, `feedback.submitComment`, `notice.dismiss` and `setValue`. UI SDK's bridge reads the mark per component, not per action, so marking one action would gate every action of that component. A host that wants a person for any of them requires it through `createAgent`'s or `registerTools`' `allow`, and those components' docs show how.
 - Every component root with a role requires an accessible name; agents address components by that label or by `ref`. Markdown and Streaming Text are content with no role, which ARIA does not let a name sit on, and offer no actions.
 - Kind UI ships no agent bridge. Hosts create one with `createAgent` from `@ui-sdk/react/agent` or `@ui-sdk/web/agent`. Docs show both, plus `registerTools` for WebMCP.
@@ -620,6 +635,10 @@ Behavior requirements:
 - **Conversation:** `status: "loading"` shows a fixed-height skeleton in the rows' place; `"error"` shows the failure's words and, with `onRetry`, Retry; the empty part gains a title and a description for a welcome, with suggestions below as the host chooses.
 
 Component count: 13 + 8 + 10 + 10 + 7 + 8 = 56 rows, with Selection and Action counted as one family.
+
+### Wave 7 (0.9 and 0.10): agent ops
+
+Specified in `docs/superpowers/specs/2026-11-25-agent-ui-wave-7-design.md`, which binds Wave 7: 7a (0.9) adds Composer steering, Message's delivery mark, Terminal approval, retrying on Message and Tool, Diff, Step Group and Handoff; 7b (0.10) adds Trace, Run Timeline, Job Progress, Schedule Card, Agent Card, Usage Meter, Quota Notice, Activity Graph, Flow Graph, Context Meter's breakdown and Thread List's inbox.
 
 ### Framework layers (0.7)
 

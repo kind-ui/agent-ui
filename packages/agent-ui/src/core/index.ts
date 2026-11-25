@@ -16,6 +16,7 @@ export {
   addMenuPrimitive,
   addMenuSections,
 } from "./add-menu/index.js";
+export { aggregateStatus } from "./aggregate.js";
 export { type AnsiLine, type AnsiLines, type AnsiSpan, createAnsiLines } from "./ansi.js";
 export { approvalKey, approvalLabel, isActionable } from "./approval.js";
 export {
@@ -33,6 +34,12 @@ export {
   approvalModePrimitive,
   approvalModeRows,
 } from "./approval-mode/index.js";
+export {
+  type ApprovalPartOptions,
+  type ApprovalPartState,
+  type ApprovalState,
+  approvalPart,
+} from "./approval-part.js";
 export {
   ATTACHMENT_ERRORS,
   type AttachmentItem,
@@ -144,6 +151,7 @@ export {
   type FollowState,
   nextFollowState,
 } from "./conversation/index.js";
+export { type Countdown, type CountdownOptions, countdownText, createCountdown } from "./countdown.js";
 export {
   createSpeechDictation,
   type DictationEvent,
@@ -291,6 +299,15 @@ export {
   messagePrimitive,
 } from "./message/index.js";
 export {
+  type MeterBaseApi,
+  type MeterBaseConfig,
+  type MeterBaseOptions,
+  type MeterBaseState,
+  type MeterOpenChangeReason,
+  type MeterValueState,
+  meterBase,
+} from "./meter-base.js";
+export {
   MODEL_CONTROL_EFFORT,
   MODEL_CONTROL_MODEL,
   type ModelControlApi,
@@ -410,6 +427,13 @@ export {
   type ReasoningEffortValueChangeReason,
   reasoningEffortPrimitive,
 } from "./reasoning-effort/index.js";
+export {
+  type RetryPartConfig,
+  type RetryPartState,
+  retryAnnouncement,
+  retryPart,
+  retryText,
+} from "./retry.js";
 export {
   type SelectionActionReason,
   type SelectionActionRun,
@@ -738,3 +762,39 @@ export {
   findMatches,
   searchText,
 } from "./conversation-search/index.js";
+
+// Wave 7 markers (AGENTS.md "Wave 7 shared-file markers"): each task adds its exports right below its own line.
+
+// wave-7-task-2: Composer steering and Queue's Send now
+
+// wave-7-task-3: Message delivery mark and retrying
+
+// wave-7-task-4: Terminal approval and Confirmation's Always allow
+
+// wave-7-task-5: Tool retry and retrying
+
+// wave-7-task-6: Diff
+
+// wave-7-task-7: Step Group
+
+// wave-7-task-8: Handoff
+
+// wave-7-task-10: Trace
+
+// wave-7-task-11: Run Timeline
+
+// wave-7-task-12: Job Progress
+
+// wave-7-task-13: Schedule Card
+
+// wave-7-task-14: Agent Card
+
+// wave-7-task-15: Usage Meter and Context Meter's breakdown
+
+// wave-7-task-16: Quota Notice
+
+// wave-7-task-17: Activity Graph
+
+// wave-7-task-18: Thread List inbox
+
+// wave-7-task-19: Flow Graph

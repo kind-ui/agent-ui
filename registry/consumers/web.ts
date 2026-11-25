@@ -86,6 +86,42 @@ import { defineShareDialog } from "./components/ui/web/share-dialog.js";
 
 import { defineConversationSearch } from "./components/ui/web/conversation-search.js";
 
+// Wave 7 markers (AGENTS.md "Wave 7 shared-file markers"): each task adds its imports right below its own line.
+
+// wave-7-task-2: Composer steering and Queue's Send now
+
+// wave-7-task-3: Message delivery mark and retrying
+
+// wave-7-task-4: Terminal approval and Confirmation's Always allow
+
+// wave-7-task-5: Tool retry and retrying
+
+// wave-7-task-6: Diff
+
+// wave-7-task-7: Step Group
+
+// wave-7-task-8: Handoff
+
+// wave-7-task-10: Trace
+
+// wave-7-task-11: Run Timeline
+
+// wave-7-task-12: Job Progress
+
+// wave-7-task-13: Schedule Card
+
+// wave-7-task-14: Agent Card
+
+// wave-7-task-15: Usage Meter and Context Meter's breakdown
+
+// wave-7-task-16: Quota Notice
+
+// wave-7-task-17: Activity Graph
+
+// wave-7-task-18: Thread List inbox
+
+// wave-7-task-19: Flow Graph
+
 import "./index.css";
 
 for (const define of [
@@ -175,6 +211,42 @@ for (const define of [
   // wave-6-task-11: Conversation Search
 
   defineConversationSearch,
+
+  // Wave 7 markers (AGENTS.md "Wave 7 shared-file markers"): each task adds its define function right below its own line.
+
+  // wave-7-task-2: Composer steering and Queue's Send now
+
+  // wave-7-task-3: Message delivery mark and retrying
+
+  // wave-7-task-4: Terminal approval and Confirmation's Always allow
+
+  // wave-7-task-5: Tool retry and retrying
+
+  // wave-7-task-6: Diff
+
+  // wave-7-task-7: Step Group
+
+  // wave-7-task-8: Handoff
+
+  // wave-7-task-10: Trace
+
+  // wave-7-task-11: Run Timeline
+
+  // wave-7-task-12: Job Progress
+
+  // wave-7-task-13: Schedule Card
+
+  // wave-7-task-14: Agent Card
+
+  // wave-7-task-15: Usage Meter and Context Meter's breakdown
+
+  // wave-7-task-16: Quota Notice
+
+  // wave-7-task-17: Activity Graph
+
+  // wave-7-task-18: Thread List inbox
+
+  // wave-7-task-19: Flow Graph
 ]) {
   define();
 }
@@ -293,6 +365,42 @@ const items = {
   // wave-6-task-11: Conversation Search
 
   "conversation-search": `<kind-conversation-search default-open></kind-conversation-search>`,
+
+  // Wave 7 markers (AGENTS.md "Wave 7 shared-file markers"): each task adds its item right below its own line.
+
+  // wave-7-task-2: Composer steering and Queue's Send now
+
+  // wave-7-task-3: Message delivery mark and retrying
+
+  // wave-7-task-4: Terminal approval and Confirmation's Always allow
+
+  // wave-7-task-5: Tool retry and retrying
+
+  // wave-7-task-6: Diff
+
+  // wave-7-task-7: Step Group
+
+  // wave-7-task-8: Handoff
+
+  // wave-7-task-10: Trace
+
+  // wave-7-task-11: Run Timeline
+
+  // wave-7-task-12: Job Progress
+
+  // wave-7-task-13: Schedule Card
+
+  // wave-7-task-14: Agent Card
+
+  // wave-7-task-15: Usage Meter and Context Meter's breakdown
+
+  // wave-7-task-16: Quota Notice
+
+  // wave-7-task-17: Activity Graph
+
+  // wave-7-task-18: Thread List inbox
+
+  // wave-7-task-19: Flow Graph
 };
 
 const main = document.createElement("main");

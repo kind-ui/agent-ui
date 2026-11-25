@@ -1,6 +1,6 @@
 # `@kind-ui/agent-ui` Wave 7 design: agent ops
 
-- **Status:** Proposed 2026-11-25, for review in the plan PR. Nothing here is built yet. **Open** marks a decision that needs the user's answer before Task 1 merges.
+- **Status:** Proposed 2026-11-25, for review in the plan PR. Task 1 (groundwork) froze §3. The §10 questions have the coordinator's answers, flagged for the user's review; **Open** marks the components those answers keep.
 - **Extends:** `docs/superpowers/specs/2026-11-14-agent-ui-design.md` (the base spec). Every rule there binds Wave 7: §2 "Building on UI SDK", §4.1 ownership, §5 Step base, §6 motion and agent actions, §8 accessibility, §9 distribution, and the framework layers (0.7). This document adds Wave 7's components, the changes to shipped ones, and the neutral types they share. Task 1 folds §4 and the §6 confirm list below into the base spec.
 - **Plan:** `docs/superpowers/plans/2026-11-25-agent-ui-wave-7.md`.
 - **Builds on:** UI SDK `0.1.0-beta.17` (Waterfall, Timeline, Progress, Meter, Switch, Menu, `createGridFocus`, `createViewport`, `spatialMove`, `createPopup`, `createPendingAction`'s pattern), and three OSS packages: `diff` (jsdiff, BSD-3-Clause) for Diff, `@dagrejs/dagre` (MIT) for Flow Graph's layout, and nothing else new.
@@ -326,9 +326,11 @@ Base spec §10 holds, with the framework layers' parity and hydration checks for
 
 ## 10. Open questions
 
-1. **Flow Graph:** keep it as 7b's last task (adds `@dagrejs/dagre`, 17 KB gzip measured, in its own primitive's bundle only) or drop it from Wave 7?
-2. **Agent Card:** keep, or drop as composable?
-3. **Names:** Step Group (tool group and subagent list), Trace (trace waterfall and tool timeline), Run Timeline (timeline and run activity), Usage Meter (cost meter), Quota Notice (quota banner). Rename any?
-4. **Background runs as Thread List's `groupBy: "status"`** rather than a separate inbox component: agreed?
-5. **Composer's split Send while running** (Send plus a chevron menu for the other mode): agreed, or one mode only by pointer with the other by key?
-6. **Versions:** 7a as 0.9.0 and 7b as 0.10.0, two changesets; or one 0.9.0 at the end of 7b?
+Answered by the coordinator on 2026-11-25 and flagged for the user's review in Task 1's PR. A changed answer rewrites this spec and the plan's affected tasks before any component task starts.
+
+1. **Flow Graph:** kept, as 7b's last task (adds `@dagrejs/dagre`, 17 KB gzip measured, in its own primitive's bundle only).
+2. **Agent Card:** kept.
+3. **Names:** kept as written: Step Group, Trace, Run Timeline, Usage Meter, Quota Notice.
+4. **Background runs:** Thread List's `groupBy: "status"`, not a separate inbox component.
+5. **Composer's Send while running:** Send plus a chevron menu offering the other mode, so both modes have a pointer path.
+6. **Versions:** two releases, 7a as 0.9.0 and 7b as 0.10.0, with two changesets.

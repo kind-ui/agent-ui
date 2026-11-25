@@ -1,3 +1,5 @@
+import type { StepStatus } from "./step.js";
+
 export interface Source {
   id: string;
   title: string;
@@ -27,8 +29,12 @@ export interface Thread {
   group?: string;
   /** The thread's own URL, so its row is a real link. */
   href?: string;
-  /** Work still going on in the background. */
-  status?: "running" | "awaiting-input" | "error";
+  /** Where the thread's background work stands. */
+  status?: "queued" | "running" | "awaiting-input" | "error" | "complete";
+  /** How far a running background run has come, from 0 to 1. */
+  progress?: number;
+  /** A line under the title, like "+120 −8 in 4 files". */
+  summary?: string;
   unread?: boolean;
   /** The text that matched a search. */
   snippet?: string;
@@ -265,4 +271,107 @@ export interface RegenerateOption<Icon = unknown> {
   description?: string;
   icon?: Icon;
   items?: RegenerateOption<Icon>[];
+}
+
+/** A retry in progress. */
+export interface RetryState {
+  /** Counts from 1 for the first retry. */
+  attempt: number;
+  maxAttempts?: number;
+  /** ISO 8601. A countdown runs to it. */
+  retryAt?: string;
+  /** Why it's retrying, in words, like "Rate limited" or "Server error 503". */
+  reason?: string;
+}
+
+/** The file a diff changes. */
+export interface DiffFile {
+  path: string;
+  /** The path before a rename. */
+  oldPath?: string;
+  status?: "added" | "modified" | "deleted" | "renamed";
+  /** The language for `highlight`. */
+  language?: string;
+}
+
+/** A span of a trace, timed in milliseconds from the trace's start or as ISO 8601 instants. */
+export interface TraceSpan {
+  id: string;
+  name: string;
+  kind?: "agent" | "model" | "tool" | "other";
+  status?: StepStatus;
+  start: number | string;
+  /** Absent while running: the span grows to now. */
+  end?: number | string;
+  /** Shown when the span is selected. */
+  attributes?: Record<string, string | number | boolean>;
+  children?: TraceSpan[];
+}
+
+/** A dated event of a run. */
+export interface RunEvent {
+  id: string;
+  /** ISO 8601. */
+  at: string;
+  title: string;
+  /** Markdown. */
+  description?: string;
+  status?: StepStatus;
+  /** Who did it. */
+  actor?: MessageAuthor;
+}
+
+/** An agent: who it is and what it can do. */
+export interface AgentInfo {
+  id: string;
+  name: string;
+  avatarUrl?: string;
+  description?: string;
+  model?: string;
+  capabilities?: string[];
+}
+
+/** A recurring run. */
+export interface Schedule {
+  id: string;
+  label: string;
+  /** The schedule in words, which the host writes, like "Weekdays at 9:00". */
+  description: string;
+  enabled: boolean;
+  /** ISO 8601. */
+  nextRunAt?: string;
+  /** The last run: when it started (ISO 8601), how it ended, and where to see it. */
+  lastRun?: { at: string; status: StepStatus; href?: string };
+}
+
+/** A part of a total, like the tokens the system prompt takes up in a context window. */
+export interface UsageSlice {
+  id: string;
+  label: string;
+  value: number;
+}
+
+/** How much happened on a day. */
+export interface ActivityDay {
+  /** `YYYY-MM-DD`. */
+  date: string;
+  count: number;
+}
+
+/** A node of a flow graph: an agent, a tool or a person. */
+export interface FlowNode {
+  id: string;
+  label: string;
+  kind?: "agent" | "tool" | "person" | "other";
+  status?: StepStatus;
+  description?: string;
+}
+
+/** An edge of a flow graph, from one node's `id` to another's. */
+export interface FlowEdge {
+  id: string;
+  from: string;
+  to: string;
+  label?: string;
+  status?: StepStatus;
 }
