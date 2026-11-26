@@ -3,13 +3,20 @@ import type { AgentAction } from "@ui-sdk/solid/agent";
 import { createSignal, onSettled } from "solid-js";
 import { ThreadList } from "../../../../src/solid/thread-list.js";
 import { expose } from "../../shared/expose.js";
-import { threads as fixed, manyThreads, NOW, threadListHost } from "../../shared/thread-list.js";
+import {
+  threads as fixed,
+  inboxThreads,
+  manyThreads,
+  NOW,
+  threadListHost,
+} from "../../shared/thread-list.js";
 
-const { host, select, newThread, rename, pin, share, remove, loadMore } = threadListHost();
+const { host, select, newThread, rename, pin, share, readChange, archive, remove, loadMore } =
+  threadListHost();
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 
-function Threads(props: { initial: Thread[]; confirmDelete?: boolean }) {
+function Threads(props: { initial: Thread[]; confirmDelete?: boolean; inbox?: boolean }) {
   const [threads, setThreads] = createSignal(props.initial);
   const [value, setValue] = createSignal<string | null>(props.initial[1]?.id ?? null);
   const [loadStatus, setLoadStatus] = createSignal<"idle" | "loading" | "error">();
@@ -33,6 +40,9 @@ function Threads(props: { initial: Thread[]; confirmDelete?: boolean }) {
         onPinChange={pin}
         onShare={share}
         onDelete={remove}
+        groupBy={props.inbox ? "status" : undefined}
+        onArchive={props.inbox ? archive : undefined}
+        onReadChange={props.inbox ? readChange : undefined}
         confirmDelete={props.confirmDelete}
         hasMore={props.initial.length > 100}
         onLoadMore={loadMore}
@@ -47,4 +57,5 @@ export const cases = {
   "no-confirm": () => <Threads initial={fixed} confirmDelete={false} />,
   ten: () => <Threads initial={manyThreads(10)} />,
   thousand: () => <Threads initial={manyThreads(1000)} />,
+  inbox: () => <Threads initial={inboxThreads} inbox />,
 };

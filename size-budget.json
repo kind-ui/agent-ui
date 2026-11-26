@@ -1,6 +1,6 @@
 {
   ".": 265,
-  "./core": 252600,
+  "./core": 253600,
   "./adapters/ai-sdk": 1345,
   "imports": {
     "stepBase": 5500,
@@ -28,7 +28,7 @@
     "modelControlPrimitive": 9500,
     "contextBarPrimitive": 84600,
     "dictationButtonPrimitive": 8000,
-    "threadListPrimitive": 23000,
+    "threadListPrimitive": 24000,
     "sidebarPrimitive": 11000,
     "daySeparatorPrimitive": 5500,
     "connectionStatusPrimitive": 7500,

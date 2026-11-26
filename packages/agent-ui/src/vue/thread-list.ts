@@ -1,14 +1,17 @@
 import {
   type MenuPartState,
+  type ThreadListDescriptionState,
   type ThreadListDialogState,
   type ThreadListGridState,
   type ThreadListLinkState,
   type ThreadListMenuContentState,
+  type ThreadListProgressState,
   type ThreadListState,
   type ThreadListTimeState,
   threadListPrimitive,
 } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/vue/primitive";
+import { Progress, ProgressIndicator, ProgressTrack } from "@ui-sdk/vue/progress";
 import { defineComponent, h, type Slots, type SlotsType, type VNode, type VNodeChild } from "vue";
 import {
   KindAlertDialog,
@@ -21,7 +24,7 @@ import { KindMenu, KindMenuContent, KindMenuItem, menuProps } from "./internal/m
 
 // `@ui-sdk/vue`'s `createParts` hands the primitive an emitter for every callback, whether or not anything listens, so
 // the callbacks whose presence offers an action (New chat, the menu's items, `select`, loading more) are declared
-// function props instead, which `@select`, `@new`, `@pin-change`, `@share` and `@load-more` bind.
+// function props instead, which `@select`, `@new`, `@pin-change`, `@read-change`, `@share` and `@load-more` bind.
 const primitive = Object.defineProperty(
   Object.assign((options: never) => threadListPrimitive(options), threadListPrimitive, {
     options: {
@@ -29,6 +32,7 @@ const primitive = Object.defineProperty(
       onSelect: "action",
       onNew: "action",
       onPinChange: "action",
+      onReadChange: "action",
       onShare: "action",
       onLoadMore: "action",
     },
@@ -49,6 +53,8 @@ const parts = createParts(primitive, {
   link: "a",
   status: "span",
   unread: "span",
+  description: "span",
+  progress: "div",
   time: "span",
   editor: "input",
   "more-cell": "div",
@@ -115,7 +121,21 @@ export const ThreadListHeading = defineComponent({
   },
 });
 
-/** A thread's link: its title, then its status and unread marks, unless you pass a slot. */
+const description = ({ state }: { state: ThreadListDescriptionState }) => [
+  state.summary ? h("span", { "data-thread-list-summary": "" }, state.summary) : null,
+  state.progress ? h("span", { "data-thread-list-progress-text": "" }, state.progress) : null,
+];
+
+// Named only for UI SDK's check: the bar is hidden, and the description has its words.
+const progress = ({ state }: { state: ThreadListProgressState }) =>
+  h(Progress, { value: state.value, "aria-label": "Progress" }, () =>
+    h(ProgressTrack, null, () => h(ProgressIndicator)),
+  );
+
+/**
+ * A thread's link: its title, its status and unread marks, then its summary and progress under them, unless you pass
+ * a slot.
+ */
 export const ThreadListLink = withDefault(
   "ThreadListLink",
   parts.Link,
@@ -123,6 +143,8 @@ export const ThreadListLink = withDefault(
     h("span", { "data-thread-list-title": "" }, state.title),
     h(parts.Status, { value: state.value }),
     h(parts.Unread, { value: state.value }),
+    h(parts.Description, { value: state.value }, stable(description)),
+    h(parts.Progress, { value: state.value }, stable(progress)),
   ],
 );
 
@@ -208,7 +230,8 @@ const items = (state: ThreadListMenuContentState) =>
   );
 
 /**
- * UI SDK's `MenuContent` with Rename, Pin or Unpin, Share and Delete, each while its callback is set. A default slot,
+ * UI SDK's `MenuContent` with Rename, Pin or Unpin, Mark as read or unread, Share, Archive and Delete, each while its
+ * callback is set. A default slot,
  * given `{ state: { finalFocus, thread, actions } }`, replaces the items. Attributes go to the `MenuContent`.
  */
 export const ThreadListMenuContent = defineComponent({
@@ -340,7 +363,8 @@ const defaultParts = () => [
 ];
 
 /**
- * The threads as a navigation grid, grouped by pinned, the host's groups and date, with New chat above and one menu
- * of Rename, Pin, Share and Delete for every row. A default slot replaces the default parts.
+ * The threads as a navigation grid, grouped by pinned, the host's groups and date, or by status for an inbox of
+ * background runs, with New chat above and one menu of Rename, Pin, Mark as read, Share, Archive and Delete for every
+ * row. A default slot replaces the default parts.
  */
 export const ThreadList = withDefault("ThreadList", parts.Root, defaultParts);

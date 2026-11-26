@@ -252,9 +252,7 @@ const cases = {
           "editor",
           "more-cell",
           "more",
-        ].map(
-          (slot) => [slot, ["a"]],
-        ),
+        ].map((slot) => [slot, ["a"]]),
       ),
     },
   },

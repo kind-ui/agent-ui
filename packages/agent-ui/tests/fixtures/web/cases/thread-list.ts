@@ -1,9 +1,16 @@
 import type { Thread } from "@kind-ui/agent-ui";
 import type { AgentAction } from "@ui-sdk/web/agent";
 import { defineThreadList } from "../../../../src/web/thread-list.js";
-import { threads as fixed, inboxThreads, manyThreads, NOW, threadListHost } from "../../shared/thread-list.js";
+import {
+  threads as fixed,
+  inboxThreads,
+  manyThreads,
+  NOW,
+  threadListHost,
+} from "../../shared/thread-list.js";
 
-const { host, select, newThread, rename, pin, share, readChange, archive, remove, loadMore } = threadListHost();
+const { host, select, newThread, rename, pin, share, readChange, archive, remove, loadMore } =
+  threadListHost();
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 

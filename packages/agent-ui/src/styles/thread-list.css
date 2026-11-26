@@ -305,6 +305,21 @@
     transition: opacity var(--kind-duration-fast) var(--kind-ease-in-out);
   }
 
+  /* With a summary under the title, the time and More line up with the title, as its marks do. */
+  [data-slot="kind-thread-list-row"]:where([data-summary]) {
+    & [data-slot="kind-thread-list-time"] {
+      align-self: flex-start;
+      margin-top: calc(var(--kind-thread-row-height-tall) / 2 - var(--kind-text-xs-leading));
+    }
+    & [data-slot="kind-thread-list-more-cell"] {
+      align-items: flex-start;
+      padding-top: calc(
+        (var(--kind-thread-row-height-tall) - var(--kind-text-xs-leading) - var(--kind-control-height-sm)) /
+        2
+      );
+    }
+  }
+
   :where([data-slot="kind-thread-list-row"]:is(:hover, :focus-within, [data-menu-open])) {
     & [data-slot="kind-thread-list-more-cell"] {
       opacity: 1;
@@ -397,12 +412,15 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    :where([data-slot="kind-thread-list"][data-motion="auto"]) [data-slot="progress-indicator"] {
+    :where([data-slot="kind-thread-list"][data-motion="auto"])
+      [data-slot="kind-thread-list-progress"]
+      [data-slot="progress-indicator"] {
       transition: none;
     }
   }
 
   :where([data-slot="kind-thread-list"]:is([data-motion="reduced"], [data-motion="none"]))
+    [data-slot="kind-thread-list-progress"]
     [data-slot="progress-indicator"] {
     transition: none;
   }

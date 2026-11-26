@@ -485,7 +485,9 @@ const byValue = ({ props }: { props: Cell }) => [props.value];
 
 const progressOf = (thread: Thread | undefined) => {
   const progress = thread?.status === "running" ? thread.progress : undefined;
-  return typeof progress === "number" && Number.isFinite(progress) ? Math.min(1, Math.max(0, progress)) : undefined;
+  return typeof progress === "number" && Number.isFinite(progress)
+    ? Math.min(1, Math.max(0, progress))
+    : undefined;
 };
 
 const progressText = (progress: number | undefined, locale: string | undefined) => {
@@ -982,7 +984,9 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         return store.get().canShare ? (id: string) => share(id) : undefined;
       },
       get markRead() {
-        return store.get().canMarkRead ? (id: string, read?: boolean) => markRead(id, read ?? true) : undefined;
+        return store.get().canMarkRead
+          ? (id: string, read?: boolean) => markRead(id, read ?? true)
+          : undefined;
       },
       get archive() {
         const { canArchive, archivePending } = store.get();
@@ -1059,7 +1063,8 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         viewport = el;
         const style = getComputedStyle(el);
         rowHeight = Number.parseFloat(style.getPropertyValue("--kind-thread-row-height")) || ROW_HEIGHT;
-        tallHeight = Number.parseFloat(style.getPropertyValue("--kind-thread-row-height-tall")) || TALL_ROW_HEIGHT;
+        tallHeight =
+          Number.parseFloat(style.getPropertyValue("--kind-thread-row-height-tall")) || TALL_ROW_HEIGHT;
         const disconnect = virtual.connect(el);
         showVisible();
         return () => {
@@ -1239,6 +1244,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         "data-menu-open": state.menuOpenFor === props.value ? "" : undefined,
         "data-renaming": state.renaming === props.value ? "" : undefined,
         "data-unread": threadOf(state, props.value)?.unread ? "" : undefined,
+        "data-summary": threadOf(state, props.value)?.summary ? "" : undefined,
       }),
       // Rows mount as the list scrolls, and a web row's parts get their attributes after it's styled.
       bind: (el) => holdTransitions(el),
@@ -1257,7 +1263,9 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       attrs: (state, { props, api, id }) => ({
         href: threadOf(state, props.value)?.href,
         "aria-current": state.value === props.value ? "page" : undefined,
-        "aria-describedby": describes(threadOf(state, props.value)) ? descriptionId(id, props.value) : undefined,
+        "aria-describedby": describes(threadOf(state, props.value))
+          ? descriptionId(id, props.value)
+          : undefined,
         tabindex: api.grid.tabIndex(state, cellOf(state, props.value, 0)),
       }),
       on: {

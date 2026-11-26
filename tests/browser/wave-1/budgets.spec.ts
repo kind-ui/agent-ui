@@ -413,7 +413,11 @@ for (const threads of ["ten", "thousand"])
     const step = (progress: string) => `kindThreadList.setThreads((threads) =>
       threads.map((thread) => (thread.id === "m2" ? { ...thread, status: "running", progress: ${progress} } : thread)))`;
     await page.evaluate(step("0"));
-    const counts = await most(page, 4, step("((window.kindProgress = ((window.kindProgress ?? 0) + 0.1) % 1))"));
+    const counts = await most(
+      page,
+      4,
+      step("((window.kindProgress = ((window.kindProgress ?? 0) + 0.1) % 1))"),
+    );
     expect(counts.writes).toBeLessThanOrEqual(limit.writes);
     expect(counts.renders).toBeLessThanOrEqual(limit.renders);
     expect(counts.notified).toBeLessThanOrEqual(limit.notified);

@@ -79,7 +79,13 @@ const byStatus = (threads: readonly Thread[], options: ThreadGroupOptions): Thre
   ranked.get("done")?.sort((a, b) => updated(b.thread) - updated(a.thread));
   return [...ranked].flatMap(([key, entries]) =>
     entries.length
-      ? [{ key, label: options.labels?.[key] ?? STATUS_LABELS[key], threads: entries.map((entry) => entry.thread) }]
+      ? [
+          {
+            key,
+            label: options.labels?.[key] ?? STATUS_LABELS[key],
+            threads: entries.map((entry) => entry.thread),
+          },
+        ]
       : [],
   );
 };

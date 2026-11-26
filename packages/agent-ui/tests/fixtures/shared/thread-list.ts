@@ -19,7 +19,14 @@ export const threads: Thread[] = [
 
 /** Background runs for `groupBy: "status"`, in the host's order. */
 export const inboxThreads: Thread[] = [
-  { id: "r1", title: "Weekly report", updatedAt: "2026-11-17T09:00:00Z", pinned: true, status: "complete", href: "#r1" },
+  {
+    id: "r1",
+    title: "Weekly report",
+    updatedAt: "2026-11-17T09:00:00Z",
+    pinned: true,
+    status: "complete",
+    href: "#r1",
+  },
   {
     id: "r2",
     title: "Refactor the auth module",
@@ -46,7 +53,13 @@ export const inboxThreads: Thread[] = [
     unread: true,
     summary: "+48 in 1 file",
   },
-  { id: "r5", title: "Update dependencies", updatedAt: "2026-11-18T09:00:00Z", href: "#r5", status: "queued" },
+  {
+    id: "r5",
+    title: "Update dependencies",
+    updatedAt: "2026-11-18T09:00:00Z",
+    href: "#r5",
+    status: "queued",
+  },
   {
     id: "r6",
     title: "Audit the logging",
@@ -63,7 +76,13 @@ export const inboxThreads: Thread[] = [
     status: "error",
     summary: "Failed after 3 attempts",
   },
-  { id: "r8", title: "Translate the docs", updatedAt: "2026-11-17T18:00:00Z", href: "#r8", status: "complete" },
+  {
+    id: "r8",
+    title: "Translate the docs",
+    updatedAt: "2026-11-17T18:00:00Z",
+    href: "#r8",
+    status: "complete",
+  },
 ];
 
 /** `count` threads a minute apart, newest first, all today, then yesterday, then earlier. */

@@ -79,7 +79,9 @@ test("a running row reads its summary and progress, and every thread's row is ta
     expect(height, String(slot)).toBe(slot === "kind-thread-list-row" ? 52 : 36);
 });
 
-test("Archive calls onArchive, and focus moves to the next row once the host removes it", async ({ page }) => {
+test("Archive calls onArchive, and focus moves to the next row once the host removes it", async ({
+  page,
+}) => {
   await load(page);
   await more(page, "Migrate the billing tables").click();
   await item(page, "Archive").click();

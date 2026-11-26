@@ -1,15 +1,18 @@
 import {
   type MenuPartState,
+  type ThreadListDescriptionState,
   type ThreadListDialogState,
   type ThreadListGridState,
   type ThreadListLinkState,
   type ThreadListMenuContentState,
+  type ThreadListProgressState,
   type ThreadListState,
   type ThreadListTimeState,
   threadListPrimitive,
 } from "@kind-ui/agent-ui/core";
 import type { ComponentProps, JSX } from "@solidjs/web";
 import { createParts } from "@ui-sdk/solid/primitive";
+import { Progress, ProgressIndicator, ProgressTrack } from "@ui-sdk/solid/progress";
 import { For, omit, Show } from "solid-js";
 import {
   KindAlertDialog,
@@ -32,6 +35,8 @@ const parts = createParts(threadListPrimitive, {
   link: "a",
   status: "span",
   unread: "span",
+  description: "span",
+  progress: "div",
   time: "span",
   editor: "input",
   "more-cell": "div",
@@ -49,8 +54,9 @@ const parts = createParts(threadListPrimitive, {
 export type ThreadListProps = ComponentProps<typeof parts.Root>;
 
 /**
- * The threads as a navigation grid, grouped by pinned, the host's groups and date, with New chat above and one menu
- * of Rename, Pin, Share and Delete for every row. Any `children` replace the default parts.
+ * The threads as a navigation grid, grouped by pinned, the host's groups and date, or by status for an inbox of
+ * background runs, with New chat above and one menu of Rename, Pin, Mark as read, Share, Archive and Delete for every
+ * row. Any `children` replace the default parts.
  */
 export function ThreadList(props: ThreadListProps) {
   return <parts.Root {...omit(props, "children")}>{props.children ?? <DefaultParts />}</parts.Root>;
@@ -138,7 +144,10 @@ export function ThreadListRow(props: ThreadListRowProps) {
 
 export type ThreadListLinkProps = ComponentProps<typeof parts.Link>;
 
-/** A thread's link: its title, then its status and unread marks, unless you pass children. */
+/**
+ * A thread's link: its title, its status and unread marks, then its summary and progress under them, unless you pass
+ * children.
+ */
 export function ThreadListLink(props: ThreadListLinkProps) {
   return (
     <parts.Link {...omit(props, "children")}>
@@ -148,6 +157,28 @@ export function ThreadListLink(props: ThreadListLinkProps) {
             <span data-thread-list-title="">{state.title}</span>
             <parts.Status value={state.value} />
             <parts.Unread value={state.value} />
+            <parts.Description value={state.value}>
+              {(description: ThreadListDescriptionState) => (
+                <>
+                  <Show when={description.summary}>
+                    <span data-thread-list-summary="">{description.summary}</span>
+                  </Show>
+                  <Show when={description.progress}>
+                    <span data-thread-list-progress-text="">{description.progress}</span>
+                  </Show>
+                </>
+              )}
+            </parts.Description>
+            {/* Named only for UI SDK's check: the bar is hidden, and the description has its words. */}
+            <parts.Progress value={state.value}>
+              {(progress: ThreadListProgressState) => (
+                <Progress value={progress.value} aria-label="Progress">
+                  <ProgressTrack>
+                    <ProgressIndicator />
+                  </ProgressTrack>
+                </Progress>
+              )}
+            </parts.Progress>
           </>
         ))}
     </parts.Link>
@@ -172,7 +203,10 @@ export type ThreadListMenuContentProps = Omit<ComponentProps<typeof KindMenuCont
   children?: (state: ThreadListMenuContentState) => JSX.Element;
 };
 
-/** UI SDK's `MenuContent` with Rename, Pin or Unpin, Share and Delete, each while its callback is set. */
+/**
+ * UI SDK's `MenuContent` with Rename, Pin or Unpin, Mark as read or unread, Share, Archive and Delete, each while its
+ * callback is set.
+ */
 export function ThreadListMenuContent(props: ThreadListMenuContentProps) {
   return (
     <parts.MenuContent>

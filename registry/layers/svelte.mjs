@@ -283,6 +283,8 @@ export default {
 
     // wave-7-task-18: Thread List inbox
 
+    "wave-7/thread-list-inbox.spec.ts",
+
     // wave-7-task-19: Flow Graph
   ],
 };
