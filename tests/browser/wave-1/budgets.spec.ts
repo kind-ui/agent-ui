@@ -255,6 +255,21 @@ for (const lines of [10, 1000]) {
   });
 }
 
+// A streamed line costs the same in a file of 10 lines as in one of 1,000: the new row renders, and its file's table,
+// not the rows before it.
+for (const lines of [10, 1000]) {
+  test(`a streamed line after ${lines} diff lines`, async ({ page }) => {
+    const limit = BUDGETS.diffStream;
+    await page.goto(`/?c=diff&case=budget&lines=${lines}`);
+    await expect(page.locator('[data-slot="kind-diff-line"]').first()).toBeVisible();
+    const counts = await most(page, 20, "kindDiffStream()");
+    expect(counts.writes).toBeLessThanOrEqual(limit.writes);
+    expect(counts.renders).toBeLessThanOrEqual(limit.renders);
+    expect(counts.notified).toBeLessThanOrEqual(limit.notified);
+    expect(counts.layoutReads).toBeLessThanOrEqual(limit.layoutReads);
+  });
+}
+
 // Playback that moves to the next word or segment, and a search, cost the same at 100 segments as at 5,000: playback
 // writes its marks without a render, following it mounts the one segment it scrolls into view, and a search renders
 // only the segments in view.
