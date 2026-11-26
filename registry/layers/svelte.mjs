@@ -83,6 +83,8 @@ export default {
 
     // wave-7-task-8: Handoff
 
+    "handoff",
+
     // wave-7-task-10: Trace
 
     // wave-7-task-11: Run Timeline
@@ -266,6 +268,8 @@ export default {
     // wave-7-task-7: Step Group
 
     // wave-7-task-8: Handoff
+
+    "wave-7/handoff.spec.ts",
 
     // wave-7-task-10: Trace
 

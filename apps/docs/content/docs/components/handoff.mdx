@@ -1,0 +1,74 @@
+---
+title: Handoff
+description: Show one agent passing the conversation to another agent or a person, and ask before it does.
+---
+
+import HandoffExample from "../../../examples/handoff/basic";
+
+Use a handoff when an agent passes the conversation on: to an agent that knows more, like billing or legal, or to a person. It says who handed off to whom, why, and where the handoff stands, and it can ask a person first.
+
+<Example caption="Press Approve to let Billing take over, or Deny to keep the conversation with Support. Tab and Enter work too.">
+  <HandoffExample />
+
+  <ExampleCode example="handoff/basic" />
+</Example>
+
+## Installation
+
+<Install name="handoff" />
+
+## Composition
+
+```text
+Handoff
+├── HandoffFromAvatar
+├── HandoffToAvatar
+├── HandoffText
+├── HandoffStatus
+│   └── HandoffStatusIcon
+├── HandoffReason
+└── HandoffApproval
+```
+
+`Handoff` renders these parts in a group named "Handoff to Billing". `HandoffFromAvatar` and `HandoffToAvatar` are small round UI SDK Avatars, with an arrow between them, and render only for agents: a person shows by name alone. `HandoffText` reads "Support handed off to Billing", and `HandoffStatus` shows the status in words beside its mark in `HandoffStatusIcon`. `HandoffReason` quotes the `reason`, and renders only with one. `HandoffApproval` holds a [Confirmation](./confirmation.mdx) while there's an `approval`. Pass `Handoff` children to arrange the parts yourself.
+
+## Usage
+
+### Who and Why
+
+Pass `from` and `to`, each an agent (`{ id, name, avatarUrl? }`) or a person (`{ kind: "person", name }`), and the `reason` in a sentence. An agent's avatar shows its image, else its initials. The avatars are hidden from screen readers, since the text names both.
+
+```tsx
+<Handoff
+  from={{ id: "support", name: "Support" }}
+  to={{ kind: "person", name: "Dana Reyes" }}
+  reason="Refunds over $500 need a person"
+  status="accepted"
+/>
+```
+
+### Status
+
+`status` is `pending`, `accepted`, `declined` or `complete`, shown as "Waiting", "Accepted", "Declined" or "Done" beside its mark. When a handoff the page showed as `pending` turns `accepted`, screen readers hear "Handed off to Billing", once; when it turns `declined`, "Billing declined". A handoff that loaded already decided stays quiet, so a conversation's history doesn't speak.
+
+### Approve a Handoff
+
+Pass `approval` to ask before the handoff happens. A Confirmation asks "Let Billing take over?" under the text, with **Approve** for `onApprove`, **Always allow** for `onAlwaysAllow` and **Deny** for `onDeny`, and the mark shows that it waits on a person. Each is called with the approval's `approvalId` and `generation`; Always allow adds `always: true`. `approvalReason` adds a box for the reason Deny sends. Once you record the decision, set `status` to `accepted` or `declined`; the Confirmation keeps what was decided in place of its choices, so nothing moves.
+
+### Keyboard and Motion
+
+Tab reaches the Confirmation's choices, and Enter or Space presses one. A handoff has nothing else to focus. The mark morphs between statuses; under `prefers-reduced-motion`, or with `motion="reduced"`, it fades over 120 ms instead, and with `motion="none"` it changes at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/handoff/handoff.ts" name="HandoffOptions" />
+
+<FrameworkNames name="handoff" />
+
+### Agent
+
+An agent connected with `createAgent` finds the handoff by its name, "Handoff to Billing", and reads its `status`. The handoff offers no actions of its own: its approval is a Confirmation of its own, named "Let Billing take over?", whose `approve`, `alwaysAllow` and `deny` always wait for a person to confirm.
+
+<Caption>
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-handoff>`, set `from`, `to` and `approval` as properties; `status`, `reason` and `label` are attributes. The `can-approve`, `can-always-allow` and `can-deny` attributes offer the choices, which fire `approve`, `alwaysallow` and `deny`.
+</Caption>
