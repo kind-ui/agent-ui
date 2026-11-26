@@ -2,11 +2,15 @@ import {
   type ComposerAttachmentsState,
   type ComposerInputState,
   type ComposerRootState,
+  type ComposerSteerMenuState,
+  type ComposerSteerMenuTriggerState,
+  type ComposerSteerState,
   type ComposerTriggerItem,
   type ComposerTriggerMenuState,
   composerPrimitive,
 } from "@kind-ui/agent-ui/core";
 import { FileInput, FileInputDropzone, FileInputTrigger } from "@ui-sdk/vue/file-input";
+import { MenuTrigger } from "@ui-sdk/vue/menu";
 import { createParts } from "@ui-sdk/vue/primitive";
 import {
   type Token,
@@ -17,6 +21,7 @@ import {
 } from "@ui-sdk/vue/token-input";
 import { defineComponent, h } from "vue";
 import { Attachments } from "./attachments.js";
+import { KindMenu, KindMenuContent, KindMenuItem } from "./internal/menu.js";
 import {
   KindTriggerMenu,
   KindTriggerMenuContent,
@@ -42,6 +47,9 @@ const parts = createParts(primitive, {
   "trigger-menu": "div",
   attachments: "div",
   submit: "button",
+  steer: "button",
+  "steer-menu": "div",
+  "steer-menu-trigger": "span",
   stop: "button",
   restored: "div",
   discard: "button",
@@ -188,5 +196,94 @@ export const ComposerRestored = defineComponent({
 
 /** Sends the draft. Hidden while Stop shows. */
 export const ComposerSubmit = parts.Submit;
-/** Shown in Send's place while a submission is pending, when the composer has `onStop`. */
+/** Shown in Send's place while a submission is pending or `running`, when the composer has `onStop`. */
 export const ComposerStop = parts.Stop;
+
+const pendingMark = () =>
+  h("span", {
+    "data-kind-pending-mark": "",
+    "data-status-mark": "",
+    "data-status": "running",
+    "aria-hidden": "true",
+  });
+
+/** Send while a turn runs: "Steer" or "Queue" by `steerMode`, unless you fill the slot. */
+export const ComposerSteer = defineComponent({
+  name: "ComposerSteer",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () =>
+      h(parts.Steer, attrs, {
+        ...slots,
+        default:
+          slots.default ?? (({ state }: { state: ComposerSteerState }) => [state.label, pendingMark()]),
+      });
+  },
+}) as unknown as typeof parts.Steer;
+
+const chevron = () => h("span", { "data-composer-chevron": "", "aria-hidden": "true" });
+
+/** Opens the menu of send modes: UI SDK's `MenuTrigger`, a chevron unless you fill the slot. Attributes go to it. */
+export const ComposerSteerMenuTrigger = defineComponent({
+  name: "ComposerSteerMenuTrigger",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () =>
+      h(parts.SteerMenuTrigger, null, {
+        default: ({ state }: { state: ComposerSteerMenuTriggerState }) =>
+          // Hidden from agents, which use the composer's `steer` and `queue`.
+          h(
+            MenuTrigger,
+            {
+              "aria-label": state["aria-label"],
+              disabled: state.disabled,
+              "data-agent-hidden": "",
+              "data-kind-icon-button": "",
+              "data-kind-size": "lg",
+              ...attrs,
+            },
+            { ...slots, default: slots.default ?? chevron },
+          ),
+      });
+  },
+});
+
+/**
+ * Send, its menu of modes and Stop's neighbor while a turn runs and the composer has `onSteer`: Steer or Queue, and
+ * a chevron offering "Steer now" and "Queue for next turn". Put it beside `ComposerSubmit` and `ComposerStop`.
+ */
+export const ComposerSteerMenu = defineComponent({
+  name: "ComposerSteerMenu",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () =>
+      h(parts.SteerMenu, attrs, {
+        render: slots.render,
+        default: ({ state }: { state: ComposerSteerMenuState }) =>
+          h(
+            KindMenu,
+            { controller: state.controller, onOpenChange: state.onOpenChange, onAction: state.onAction },
+            () =>
+              slots.default?.() ?? [
+                h(ComposerSteer),
+                h(ComposerSteerMenuTrigger),
+                h(KindMenuContent, { align: "end", side: "top", sideOffset: 6 }, () =>
+                  state.items.map((item) =>
+                    h(
+                      KindMenuItem,
+                      {
+                        key: item.value,
+                        value: item.value,
+                        label: item.label,
+                        shortcut: item.shortcut,
+                        disabled: item.disabled,
+                      },
+                      () => item.label,
+                    ),
+                  ),
+                ),
+              ],
+          ),
+      });
+  },
+});

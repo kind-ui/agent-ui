@@ -1,6 +1,6 @@
-import type { AgentAction } from "@ui-sdk/react/agent";
 import type { QueueItem } from "@kind-ui/agent-ui";
 import type { ComposerSteerMode } from "@kind-ui/agent-ui/core";
+import type { AgentAction } from "@ui-sdk/react/agent";
 import { useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 import {
@@ -60,8 +60,7 @@ function SendNow() {
 }
 
 // An agent needs a person for every composer action, unless the test permits it.
-export const allow = (step: AgentAction) =>
-  !step.confirm || (window as { permit?: boolean }).permit === true;
+export const allow = (step: AgentAction) => !step.confirm || (window as { permit?: boolean }).permit === true;
 
 export const cases = {
   steer: (params: URLSearchParams) => <Steer params={params} />,

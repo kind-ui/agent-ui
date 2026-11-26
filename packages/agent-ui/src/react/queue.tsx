@@ -36,7 +36,7 @@ export const QueueItemRemove = parts.ItemRemove;
 
 export type QueueItemSendProps = ComponentProps<typeof parts.ItemSend>;
 
-/** Sends a queued item now, shown while `onSend` is set: "Send now" unless you pass children. Pointer only: Enter on the item sends it too. */
+/** Sends a queued item now, shown while `onSend` is set: "Send now" unless you pass children. Pointer only: Ctrl+Enter or Cmd+Enter on the item sends it too. */
 export function QueueItemSend({ children, ...props }: QueueItemSendProps) {
   return (
     <parts.ItemSend {...props}>

@@ -24,7 +24,9 @@ const SECTIONS: QueueSection[] = ["pending", "complete"];
 const section = (value: QueueSection) =>
   `<kind-queue-section value="${value}"><kind-queue-section-trigger><button><span data-title></span><span data-count></span></button></kind-queue-section-trigger><kind-queue-section-content><kind-queue-list></kind-queue-list></kind-queue-section-content></kind-queue-section>`;
 const DEFAULT_PARTS = `${SECTIONS.map(section).join("")}<kind-queue-instructions></kind-queue-instructions>`;
-const ITEM_PARTS = `<kind-queue-item-icon></kind-queue-item-icon><span data-text><kind-queue-item-title></kind-queue-item-title><kind-queue-item-description></kind-queue-item-description></span><kind-queue-item-send>Send now<span data-kind-pending-mark data-status-mark data-status="running" aria-hidden="true"></span></kind-queue-item-send><kind-queue-item-remove></kind-queue-item-remove>`;
+const ITEM_PARTS = `<kind-queue-item-icon></kind-queue-item-icon><span data-text><kind-queue-item-title></kind-queue-item-title><kind-queue-item-description></kind-queue-item-description></span><kind-queue-item-send></kind-queue-item-send><kind-queue-item-remove></kind-queue-item-remove>`;
+
+const SEND_PARTS = `Send now<span data-kind-pending-mark data-status-mark data-status="running" aria-hidden="true"></span>`;
 
 const write = (el: Element | null, text: string) => {
   if (el && el.textContent !== text) el.textContent = text;
@@ -40,7 +42,12 @@ function move(list: Movable, item: Element, before: Element | null): void {
 
 // Each list keeps only its own section's rows, so an item that completes gets a new element under Completed, as in
 // React.
-function drawList(list: Movable, items: QueueItem[], drawn: WeakMap<Element, QueueItem>): void {
+function drawList(
+  list: Movable,
+  items: QueueItem[],
+  drawn: WeakMap<Element, QueueItem>,
+  canSend: boolean,
+): void {
   const existing = new Map([...list.children].map((child) => [child.getAttribute("value"), child]));
   items.forEach((item, index) => {
     let child = existing.get(item.id);
@@ -50,6 +57,9 @@ function drawList(list: Movable, items: QueueItem[], drawn: WeakMap<Element, Que
       child.setAttribute("value", item.id);
       child.innerHTML = ITEM_PARTS;
     }
+    // Send now's words only while it can show, so a queue without `can-send` holds no hidden text.
+    const send = child.querySelector("kind-queue-item-send");
+    if (send && canSend !== !!send.firstChild) send.innerHTML = canSend ? SEND_PARTS : "";
     if (drawn.get(child) !== item) {
       write(child.querySelector("kind-queue-item-title"), item.title);
       write(child.querySelector("kind-queue-item-description"), item.description ?? "");
@@ -102,7 +112,7 @@ export function defineQueue(): void {
             write(part.querySelector("[data-count]"), String(count));
             const list = part.querySelector("kind-queue-list");
             const rows = queueRows(state.rows, state.moving, value).map((row) => row.item);
-            if (list) drawList(list, rows, drawn);
+            if (list) drawList(list, rows, drawn, state.canSend);
           }
           write(el.querySelector("kind-queue-instructions"), queueInstructions(state));
         };

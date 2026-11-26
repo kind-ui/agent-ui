@@ -254,6 +254,8 @@ export default {
 
     // wave-7-task-2: Composer steering and Queue's Send now
 
+    "wave-7/composer-steer.spec.ts",
+
     // wave-7-task-3: Message delivery mark and retrying
 
     // wave-7-task-4: Terminal approval and Confirmation's Always allow

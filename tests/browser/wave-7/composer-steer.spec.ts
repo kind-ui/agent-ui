@@ -27,6 +27,7 @@ const steers = (page: Page) =>
   );
 const settleSteer = (page: Page, how: "resolve" | "reject") =>
   page.evaluate((how) => (window as unknown as Fixture).kindSteer.steers.at(-1)?.[how](), how);
+const settled = (page: Page) => page.waitForFunction(() => document.getAnimations().length === 0);
 const steer = (page: Page) => page.getByRole("button", { name: /^(Steer|Queue)$/ });
 
 test("while running, Send steers beside Stop: Enter steers, Mod+Enter queues", async ({ page }) => {
@@ -34,7 +35,13 @@ test("while running, Send steers beside Stop: Enter steers, Mod+Enter queues", a
   await expect(page.getByRole("button", { name: "Stop" })).toBeVisible();
   await expect(steer(page)).toHaveText("Steer");
   await expect(page.getByRole("button", { name: "Send", exact: true })).toHaveCount(0);
-  const before = await page.getByRole("button", { name: "Stop" }).boundingBox();
+  const stop = page.getByRole("button", { name: "Stop" });
+  const box = () =>
+    stop.evaluate(async (el) => {
+      await Promise.all(el.getAnimations().map((animation) => animation.finished));
+      return el.getBoundingClientRect().toJSON();
+    });
+  const before = await box();
 
   await page.keyboard.type("look at the tests");
   await page.keyboard.press("Enter");
@@ -49,7 +56,7 @@ test("while running, Send steers beside Stop: Enter steers, Mod+Enter queues", a
   ]);
   // Mod+Enter sends rather than starting a line.
   await expect(editor).toHaveText("and the logs");
-  expect(await page.getByRole("button", { name: "Stop" }).boundingBox()).toEqual(before);
+  expect(await box()).toEqual(before);
 });
 
 test("a pending steer locks sending; resolving clears only what was sent, rejecting keeps it", async ({
@@ -165,7 +172,13 @@ test("running without onSteer: Stop takes Send's place", async ({ page }) => {
 
 test("agents steer and queue through the composer's mark", async ({ page }) => {
   await open(page);
-  await expectAgentActions(page, "Message", ["setValue", "insertToken", "removeAttachment", "submit", "stop"]);
+  await expectAgentActions(page, "Message", [
+    "setValue",
+    "insertToken",
+    "removeAttachment",
+    "submit",
+    "stop",
+  ]);
   await page.keyboard.type("go");
   await expectAgentActions(page, "Message", [
     "setValue",
@@ -195,6 +208,7 @@ test("axe passes in light and dark, with the menu open", async ({ page }) => {
   await expect(page.getByRole("menu")).toBeVisible();
   for (const scheme of ["light", "dark"] as const) {
     await page.emulateMedia({ colorScheme: scheme });
+    await settled(page);
     const { violations } = await new AxeBuilder({ page }).include("#root").include('[role="menu"]').analyze();
     expect(violations).toEqual([]);
   }
@@ -206,7 +220,7 @@ test.describe("Queue's Send now", () => {
       (window as unknown as Fixture).kindSend.sends.map(({ id, reason, source }) => ({ id, reason, source })),
     );
 
-  test("sends by pointer and Enter, locked until the host removes the item", async ({ page }) => {
+  test("sends by pointer and Mod+Enter, locked until the host removes the item", async ({ page }) => {
     await page.goto("/?c=composer-steer&case=queue");
     const queue = page.getByRole("region", { name: "Queue" });
     await expect(queue.locator('[data-slot="kind-queue-item-send"]:not([hidden])')).toHaveCount(2);
@@ -220,7 +234,7 @@ test.describe("Queue's Send now", () => {
     await page.evaluate(() => (window as unknown as Fixture).kindQueue.remove("a"));
     await expectAgentActions(page, "Queue", ["send"]);
     await queue.getByRole("listitem").filter({ hasText: "Then open a PR" }).focus();
-    await page.keyboard.press("Enter");
+    await page.keyboard.press(`${MOD}+Enter`);
     await page.evaluate(() => (window as unknown as Fixture).kindSend.sends.at(-1)?.reject());
     await expectAgentActions(page, "Queue", ["send"]);
     expect(await sends(page)).toEqual([

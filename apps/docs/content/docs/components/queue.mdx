@@ -29,6 +29,7 @@ Queue
 │               ├── QueueItemIcon
 │               ├── QueueItemTitle
 │               ├── QueueItemDescription
+│               ├── QueueItemSend
 │               └── QueueItemRemove
 └── QueueInstructions
 ```
@@ -53,6 +54,12 @@ If the item being moved leaves `items`, the move is cancelled, `onReorder` isn't
 
 Pass `onRemove` to let people remove items. It gets the item's `id`, and you take the item out of `items`. Each item shows a remove button on hover, and Delete or Backspace removes the focused item. Focus then moves to the next item, or the previous one at the end.
 
+### Send Now
+
+Pass `onSend` to show **Send now** on each queued item, for a follow-up waiting for the next turn that a person wants to steer the running one with. It gets the item's `id`; send it, then take it out of `items`. Ctrl+Enter or Cmd+Enter on a focused item sends it too. Return a promise to lock sending until it settles; once it resolves, sending stays locked until you remove or change the item, and a rejection unlocks it.
+
+<ExampleCode example="queue/send-now" />
+
 ### Keyboard
 
 The items are one Tab stop. The arrow keys move between them, across both sections while Completed is open, and Home and End go to the first and last. Items in a closed section can't take focus.
@@ -69,11 +76,11 @@ A new item fades in once as it arrives. A removed item stays in place and fades 
 
 ### Agent
 
-An agent connected with `createAgent` finds the queue by its `label` and reads its `items`, and can name an item by its title. It can run `reorder` while `onReorder` is set and two or more items are queued, and `remove` while `onRemove` is set. Both go through your callbacks, with `details.source` set to `agent`.
+An agent connected with `createAgent` finds the queue by its `label` and reads its `items`, and can name an item by its title. It can run `reorder` while `onReorder` is set and two or more items are queued, `remove` while `onRemove` is set, and `send` while `onSend` is set, an item is queued and nothing is being sent. They go through your callbacks, with `details.source` set to `agent`.
 
-<auto-type-table path="../../../../../packages/agent-ui/src/core/queue/queue.ts" name="QueueAgentActions" type='Pick<QueueApi, "reorder" | "remove">' />
+<auto-type-table path="../../../../../packages/agent-ui/src/core/queue/queue.ts" name="QueueAgentActions" type='Pick<QueueApi, "reorder" | "remove" | "send">' />
 
-Neither action waits for a person to confirm, since each only changes the list. To ask the person first, return their answer from your `allow`, which also answers every action that does need a person:
+None of them waits for a person to confirm. To ask the person first, return their answer from your `allow`, which also answers every action that does need a person:
 
 ```ts
 import { createAgent } from "@ui-sdk/react/agent";
@@ -88,5 +95,5 @@ const agent = createAgent({
 ```
 
 <Caption>
-  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-queue>`, `items` and `openSections` are properties only, and `label` and `motion` are attributes. Reordering needs the `can-reorder` attribute and fires `reorder`, and removing needs `can-remove` and fires `remove`, each with the item's `id` in `event.detail.value`; `reorder` also has `event.detail.index`. The element fills in its sections and items itself.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-queue>`, `items` and `openSections` are properties only, and `label` and `motion` are attributes. Reordering needs the `can-reorder` attribute and fires `reorder`, removing needs `can-remove` and fires `remove`, and Send now needs `can-send` and fires `queuesend`, whose listeners can call `event.detail.waitUntil(promise)`, each with the item's `id` in `event.detail.value`; `reorder` also has `event.detail.index`. The element fills in its sections and items itself.
 </Caption>

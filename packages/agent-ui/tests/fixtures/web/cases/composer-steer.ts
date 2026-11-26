@@ -48,8 +48,7 @@ function steer(root: HTMLElement, params: URLSearchParams, submitOn: "enter" | "
 }
 
 // An agent needs a person for every composer action, unless the test permits it.
-export const allow = (step: AgentAction) =>
-  !step.confirm || (window as { permit?: boolean }).permit === true;
+export const allow = (step: AgentAction) => !step.confirm || (window as { permit?: boolean }).permit === true;
 
 export const cases = {
   steer: (root: HTMLElement, params: URLSearchParams) => steer(root, params, "enter"),
@@ -62,7 +61,9 @@ export const cases = {
     const onSend = sendRecorder();
     queue.addEventListener("queuesend", ({ detail }) => detail.waitUntil(onSend(detail.value, detail)));
     expose({
-      kindQueue: { remove: (id: string) => (queue.items = (queue.items ?? []).filter((item) => item.id !== id)) },
+      kindQueue: {
+        remove: (id: string) => (queue.items = (queue.items ?? []).filter((item) => item.id !== id)),
+      },
     });
   },
 };

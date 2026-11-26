@@ -5,8 +5,8 @@ import {
   type ComposerDraft,
   type ComposerOptions,
   type ComposerState,
+  type ComposerSteerDetails,
   type ComposerSteerMenuState,
-  type ComposerSteerMode,
   type ComposerValueChangeReason,
   composerPrimitive,
 } from "@kind-ui/agent-ui/core";
@@ -213,9 +213,7 @@ export type KindComposerEvents = {
   valuechange: UiChangeEvent<ComposerDraft, ComposerValueChangeReason>;
   composersubmit: CustomEvent<{ value: ComposerDraft } & Pick<UiActionDetail, "waitUntil">>;
   stop: CustomEvent<{ value: undefined }>;
-  steer: CustomEvent<
-    { value: ComposerDraft; mode: ComposerSteerMode; source: string } & Pick<UiActionDetail, "waitUntil">
-  >;
+  steer: CustomEvent<{ value: ComposerDraft } & ComposerSteerDetails & Pick<UiActionDetail, "waitUntil">>;
 };
 
 export interface KindComposerElement

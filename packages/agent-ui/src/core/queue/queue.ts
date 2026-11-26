@@ -6,6 +6,7 @@ import {
   definePrimitive,
   dispatch,
   hiddenAttrs,
+  matchesShortcut,
   openAttrs,
   type Reorder,
   type ReorderDraft,
@@ -26,7 +27,7 @@ export type QueueSection = QueueItem["status"];
 
 export type QueueReorderReason = "drag" | "move-key" | "imperative";
 
-/** `"send-press"`: Send now. `"send-key"`: Enter on a queued item. `"imperative"`: an `api` call, like an agent's `send`. */
+/** `"send-press"`: Send now. `"send-key"`: Mod+Enter on a queued item. `"imperative"`: an `api` call, like an agent's `send`. */
 export type QueueSendReason = "send-press" | "send-key" | "imperative";
 
 /** `onSend`'s details: what caused it and who. */
@@ -60,7 +61,7 @@ export type QueueOptions = {
   onRemove?: (id: string, details: ChangeDetails<"remove-press" | "imperative">) => void;
   /**
    * Called with a queued item's `id` when someone sends it now, as a steer into the running turn. While it's set,
-   * queued items show Send now, and Enter on one sends it. Return a promise to lock sending until it settles; a
+   * queued items show Send now, and Ctrl+Enter or Cmd+Enter on one sends it. Return a promise to lock sending until it settles; a
    * resolved send stays locked until the host removes or changes the item.
    */
   onSend?: (id: string, details: QueueSendDetails) => unknown;
@@ -240,7 +241,7 @@ export const queueInstructions = ({
   [
     canReorder &&
       "To move a queued item, press Space, then the arrow keys. Press Space again to drop it, or Escape to cancel.",
-    canSend && "Press Enter to send a queued item now.",
+    canSend && "Press Control+Enter, or Command+Enter on a Mac, to send a queued item now.",
     canRemove && "Press Delete to remove an item.",
   ]
     .filter(Boolean)
@@ -595,10 +596,7 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
             sortable || state.canRemove || (state.canSend && row?.item.status === "pending")
               ? `${part.id}-instructions`
               : undefined,
-          "aria-keyshortcuts":
-            [state.canSend && row?.item.status === "pending" && "Enter", state.canRemove && "Delete"]
-              .filter(Boolean)
-              .join(" ") || undefined,
+          "aria-keyshortcuts": state.canRemove ? "Delete" : undefined,
           "aria-busy": state.sending === part.key && state.sendPending ? "true" : undefined,
           "data-sending": state.sending === part.key ? "" : undefined,
           "aria-hidden": row?.leaving ? "true" : undefined,
@@ -613,11 +611,13 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
         // A picked-up item takes every key, as in UI SDK's sortable list; then Delete, then arrows between items.
         keydown: (event, { el, api, key }) => {
           const press = event as KeyboardEvent;
-          if (api.reordering.keydown(press, key)) return;
-          if (press.key === "Enter" && press.target === el && api.send) {
+          if (matchesShortcut(press, "mod+enter") && press.target === el && api.send) {
             press.preventDefault();
             api.send(key, press);
-          } else if ((press.key === "Delete" || press.key === "Backspace") && api.remove) {
+            return;
+          }
+          if (api.reordering.keydown(press, key)) return;
+          if ((press.key === "Delete" || press.key === "Backspace") && api.remove) {
             press.preventDefault();
             api.remove(key, press);
           } else if (el) {
@@ -652,7 +652,7 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       props: fromItem,
       state: (state, { key }) => ({ description: state.rowsById[key]?.item.description ?? "" }),
     }),
-    // Pointer only, like Remove: keyboard users press Enter on the item.
+    // Pointer only, like Remove: keyboard users press Mod+Enter on the item.
     "item-send": slot<InnerProps>({
       props: fromItem,
       present: (state, { key }) => state.canSend && state.rowsById[key]?.item.status === "pending",

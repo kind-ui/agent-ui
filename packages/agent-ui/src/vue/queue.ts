@@ -23,6 +23,7 @@ const parts = createParts(primitive, {
   "item-icon": "span",
   "item-title": "span",
   "item-description": "span",
+  "item-send": "span",
   "item-remove": "span",
   instructions: "span",
 });
@@ -46,6 +47,17 @@ export const QueueSectionContent = parts.SectionContent;
 export const QueueItemIcon = parts.ItemIcon;
 export const QueueItemRemove = parts.ItemRemove;
 
+/** Sends a queued item now, shown while `@send` is bound: "Send now" unless you fill the slot. Pointer only: Ctrl+Enter or Cmd+Enter on the item sends it too. */
+export const QueueItemSend = withDefault(parts.ItemSend, "QueueItemSend", () => [
+  "Send now",
+  h("span", {
+    "data-kind-pending-mark": "",
+    "data-status-mark": "",
+    "data-status": "running",
+    "aria-hidden": "true",
+  }),
+]);
+
 /** The section's title and count, unless you fill the slot. */
 export const QueueSectionTrigger = withDefault<QueueSectionState>(
   parts.SectionTrigger,
@@ -67,10 +79,11 @@ export const QueueItemDescription = withDefault<{ description: string }>(
   ({ state }) => state.description,
 );
 
-/** The item whose `id` is `value`. Without a default slot, it shows the item's mark, title, description and remove button. */
+/** The item whose `id` is `value`. Without a default slot, it shows the item's mark, title, description, Send now and remove button. */
 export const QueueItem = withDefault(parts.Item, "QueueItem", () => [
   h(QueueItemIcon),
   h("span", { "data-text": "" }, [h(QueueItemTitle), h(QueueItemDescription)]),
+  h(QueueItemSend),
   h(QueueItemRemove),
 ]);
 

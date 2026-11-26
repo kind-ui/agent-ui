@@ -325,10 +325,10 @@ export const components = {
   },
   composer: {
     group: "chat",
-    when: "a person writes the prompt: send and stop, mentions, commands, attachments and saved drafts.",
+    when: "a person writes the prompt: send, steer and stop, mentions, commands, attachments and saved drafts.",
     title: "Composer",
     description: "A prompt input with mentions, commands, attachments, submit and stop.",
-    uses: ["attachments", "internal-trigger-menu"],
+    uses: ["attachments", "internal-trigger-menu", "internal-menu"],
   },
   attachments: {
     group: "chat",
