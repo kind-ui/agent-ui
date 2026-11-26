@@ -1,3 +1,5 @@
+"use client";
+
 import type { ToolCall } from "@kind-ui/agent-ui";
 import { StepGroup } from "@/components/ui/step-group";
 import { Tool } from "@/components/ui/tool";
