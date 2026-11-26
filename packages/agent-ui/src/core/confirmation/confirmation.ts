@@ -4,6 +4,7 @@ import {
   createFocusRecovery,
   definePrimitive,
   type SlotDefinition,
+  sourceOf,
 } from "@ui-sdk/core";
 import { createInputController, type InputController } from "@ui-sdk/core/input";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
@@ -390,6 +391,9 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
         if (!mounting) void enter(el, "fade", { motion: store.get().motion });
       },
       bindRoot: () => {
+        // Starts UI SDK's input tracking, which `actionSource` doesn't, so a first decision by key or pointer reports
+        // it rather than "virtual", in a Tool, Terminal or Handoff as alone. Here, since a server creates the api too.
+        sourceOf();
         const frame = requestAnimationFrame(() => {
           mounting = false;
         });

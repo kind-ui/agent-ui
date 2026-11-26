@@ -1,4 +1,4 @@
-import { announce, definePrimitive, type SlotDefinition, sourceOf } from "@ui-sdk/core";
+import { announce, definePrimitive, type SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { AgentInfo, Approval, StepStatus } from "../../types/index.js";
 import { isActionable } from "../approval.js";
@@ -215,11 +215,6 @@ export const handoffPrimitive: HandoffPrimitive = definePrimitive<
   slots: (slot) => ({
     root: slot({
       role: "group",
-      // Starts UI SDK's input tracking, which nothing else in a handoff does, so the Confirmation's first decision
-      // reports the key or pointer behind it. In `bind`, since a server creates the primitive too.
-      bind: () => {
-        sourceOf();
-      },
       attrs: (state) => ({
         "aria-label": state.label,
         "data-status": state.status,
