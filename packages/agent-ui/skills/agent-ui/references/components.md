@@ -94,4 +94,4 @@ All 57 components, grouped by the job they do. The item is the React name: add `
 
 | Item | Component | Use it when |
 | --- | --- | --- |
-| `flow-graph` | Flow Graph | You show which agents, tools and people a run handed work between, as a graph to pan and zoom. Not yet in Svelte. |
+| `flow-graph` | Flow Graph | You show which agents, tools and people a run handed work between, as a graph to pan and zoom. |
