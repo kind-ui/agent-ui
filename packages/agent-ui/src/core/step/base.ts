@@ -11,11 +11,19 @@ import {
 } from "@ui-sdk/core";
 import type { StepStatus } from "../../types/index.js";
 import type { MotionMode } from "../motion/index.js";
+import {
+  NOT_STALLED,
+  STALLED_OPTIONS,
+  type StalledOptions,
+  type StalledState,
+  stalledText,
+  watchStalled,
+} from "../stalled.js";
 import { nextOpen, type StepAutoOpen } from "./auto-open.js";
 
 export type StepOpenChangeReason = "trigger-press" | "find-in-page" | "imperative" | "auto";
 
-export type StepOptions = {
+export type StepOptions = StalledOptions & {
   /**
    * What the step is doing. The icon shows it.
    * @default "pending"
@@ -49,7 +57,7 @@ export type StepOptions = {
   motion?: MotionMode;
 };
 
-export type StepState = {
+export type StepState = StalledState & {
   open: boolean;
   status: StepStatus;
   kind: string | undefined;
@@ -74,6 +82,8 @@ export type StepApi = {
   toggle: (event?: Event) => boolean;
   /** The trigger's element, where focus goes when the content closes with focus inside. Called by the content slot. */
   trigger: () => HTMLElement | undefined;
+  /** Follows `lastActivityAt` while running. Bound by the root. */
+  bindStalled: () => () => void;
 };
 
 export type StepBaseConfig<State extends StepState = StepState, Options extends StepOptions = StepOptions> = {
@@ -191,6 +201,7 @@ export const stepBase = <
       autoOpen: "string",
       durationSeconds: "number",
       motion: "string",
+      ...STALLED_OPTIONS,
     } as const,
     state: (options: Options): StepState => {
       const status = statusOf(options);
@@ -201,6 +212,7 @@ export const stepBase = <
         open: options.open ?? options.defaultOpen ?? autoOpened,
         userToggled: false,
         exiting: false,
+        ...NOT_STALLED,
       };
     },
     // Typed on `State`, so a component's own `sync` can spread it.
@@ -215,6 +227,12 @@ export const stepBase = <
       const change = createChange(context as PrimitiveContext<StepOptions, StepState, string>);
       let prevStatus = context.store.get().status;
       let wasOpen = context.store.get().open;
+      const stalledInput = (options: Options) => ({
+        running: statusOf(options) === "running",
+        lastActivityAt: options.lastActivityAt,
+        stalledAfter: options.stalledAfter,
+      });
+      const stalled = watchStalled(context.store, () => stalledInput(context.options()));
 
       const setOpen = (open: boolean, { reason = "imperative", event }: Cause = {}) => {
         const auto = reason === "auto";
@@ -240,6 +258,7 @@ export const stepBase = <
       });
 
       context.onOptions((options, synced) => {
+        stalled.check(stalledInput(options));
         const status = statusOf(options);
         if (status === prevStatus) return;
         const { open, userToggled } = context.store.get();
@@ -265,6 +284,7 @@ export const stepBase = <
         collapse: () => toggledBy(setOpen(false)),
         toggle: (event?: Event) => setOpen(!context.store.get().open, { reason: "trigger-press", event }),
         trigger: () => context.element("trigger"),
+        bindStalled: stalled.bind,
       };
     },
     slots: (slot: SlotFactory<State, Api>) => ({
@@ -275,13 +295,21 @@ export const stepBase = <
           "data-step-part": "root",
           "data-status": state.status,
           "data-kind": state.kind,
+          "data-stalled": state.stalled ? "" : undefined,
           ...openAttrs(state.open),
           style: css({
             "--kind-step-duration":
               state.durationSeconds === undefined ? undefined : `${state.durationSeconds}s`,
           }),
         }),
-        bind: holdTransitions,
+        bind: (el, { api }) => {
+          const release = holdTransitions(el);
+          const unwatch = api.bindStalled();
+          return () => {
+            release();
+            unwatch();
+          };
+        },
       }),
       trigger: slot({
         role: "button",
@@ -314,8 +342,13 @@ export const stepBase = <
           "data-motion": state.motion,
         }),
       }),
+      // While stalled, `step.css` shows "No update for 2 min" from `data-stalled` in place of the meta's own words.
       meta: slot({
-        attrs: (state) => ({ "data-step-part": "meta", "data-status": state.status }),
+        attrs: (state) => ({
+          "data-step-part": "meta",
+          "data-status": state.status,
+          "data-stalled": state.stalled ? stalledText(state.stalledMinutes) : undefined,
+        }),
       }),
       content: slot({
         attrs: (state, part) => ({

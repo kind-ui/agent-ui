@@ -38,6 +38,18 @@ export const WORDS = {
   sendUnavailable: "Available after you answer the pending request",
   queuedMessage: "Queued message",
   notSentYet: "not sent",
+  steering: "Steering…",
+  steeringDescription: "Steering, not yet read",
+  queuedNotSent: "Queued, not sent",
+  messageNotSent: "Not sent",
+  withdraw: "Withdraw",
+  retrying: "Retrying",
+  retryNow: "Retry now",
+  attempt: "attempt",
+  failedAfter: "Failed after",
+  noUpdateFor: "No update for",
+  stillWorking: "Still working",
+  workingAgain: "Working again",
 } as const;
 
 /**

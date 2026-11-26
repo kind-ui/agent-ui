@@ -1,4 +1,4 @@
-import type { MessageAuthor, Source } from "./records.js";
+import type { MessageAuthor, RetryState, Source } from "./records.js";
 import type { Step } from "./step.js";
 
 export type Role = "user" | "assistant" | "system";
@@ -15,6 +15,10 @@ export interface Message {
   author?: MessageAuthor;
   /** Why a message with status `"error"` failed. */
   error?: { message: string };
+  /** A user message that isn't with the agent yet. Absent once delivered. */
+  delivery?: "queued" | "steering" | "not-sent";
+  /** The request is being retried. */
+  retry?: RetryState;
   metadata?: Record<string, unknown>;
 }
 

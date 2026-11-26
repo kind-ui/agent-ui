@@ -189,7 +189,7 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
       // How long the call took, once the host passes `durationSeconds`.
       meta: slot<BaseSlotProps, { duration: string }>({
         ...meta,
-        present: (state) => stepDuration(state.durationSeconds) !== "",
+        present: (state) => state.stalled || stepDuration(state.durationSeconds) !== "",
         state: (state) => ({ duration: stepDuration(state.durationSeconds) }),
       }),
       // Outside the content, so a request shows while the tool is closed, and its outcome stays once decided.
