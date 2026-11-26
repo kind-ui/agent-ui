@@ -23,6 +23,7 @@
     "feedback",
     "notice",
     "guardrail-notice",
+    "quota-notice",
     "sources",
     "inline-citation",
     "document",

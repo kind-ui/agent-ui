@@ -1,6 +1,6 @@
 {
   ".": 265,
-  "./core": 267600,
+  "./core": 269600,
   "./adapters/ai-sdk": 1345,
   "imports": {
     "stepBase": 5500,
@@ -40,6 +40,7 @@
     "jobProgressPrimitive": 10000,
     "scheduleCardPrimitive": 9500,
     "agentCardPrimitive": 5500,
-    "usageMeterPrimitive": 47500
+    "usageMeterPrimitive": 47500,
+    "quotaNoticePrimitive": 43000
   }
 }

@@ -141,6 +141,8 @@ import { UsageMeter } from "./components/ui/usage-meter.js";
 
 // wave-7-task-16: Quota Notice
 
+import { QuotaNotice } from "./components/ui/quota-notice.js";
+
 // wave-7-task-17: Activity Graph
 
 // wave-7-task-18: Thread List inbox
@@ -503,6 +505,8 @@ const items = {
   "usage-meter": <UsageMeter used={3.2} limit={5} period="This month" />,
 
   // wave-7-task-16: Quota Notice
+
+  "quota-notice": <QuotaNotice used={800} limit={1000} period="this month" />,
 
   // wave-7-task-17: Activity Graph
 

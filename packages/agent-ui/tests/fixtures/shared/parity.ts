@@ -349,6 +349,10 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
 
   // wave-7-task-16: Quota Notice
 
+  "quota-notice": [
+    { c: "quota-notice", case: "all", interaction: press('[data-slot="kind-quota-notice-upgrade"]') },
+  ],
+
   // wave-7-task-17: Activity Graph
 
   // wave-7-task-18: Thread List inbox

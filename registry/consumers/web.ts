@@ -128,6 +128,8 @@ import { defineUsageMeter } from "./components/ui/web/usage-meter.js";
 
 // wave-7-task-16: Quota Notice
 
+import { defineQuotaNotice } from "./components/ui/web/quota-notice.js";
+
 // wave-7-task-17: Activity Graph
 
 // wave-7-task-18: Thread List inbox
@@ -265,6 +267,8 @@ for (const define of [
   defineUsageMeter,
 
   // wave-7-task-16: Quota Notice
+
+  defineQuotaNotice,
 
   // wave-7-task-17: Activity Graph
 
@@ -433,6 +437,8 @@ const items = {
   "usage-meter": `<kind-usage-meter used="3.2" limit="5" period="This month"></kind-usage-meter>`,
 
   // wave-7-task-16: Quota Notice
+
+  "quota-notice": `<kind-quota-notice used="800" limit="1000" period="this month"></kind-quota-notice>`,
 
   // wave-7-task-17: Activity Graph
 

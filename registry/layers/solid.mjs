@@ -108,6 +108,8 @@ export default {
 
     // wave-7-task-16: Quota Notice
 
+    "quota-notice",
+
     // wave-7-task-17: Activity Graph
 
     // wave-7-task-18: Thread List inbox
@@ -305,6 +307,8 @@ export default {
     "wave-7/usage-meter.spec.ts",
 
     // wave-7-task-16: Quota Notice
+
+    "wave-7/quota-notice.spec.ts",
 
     // wave-7-task-17: Activity Graph
 
