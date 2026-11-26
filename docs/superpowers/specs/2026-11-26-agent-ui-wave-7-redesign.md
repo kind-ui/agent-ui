@@ -323,6 +323,18 @@ Status is `aggregateStatus(items)` unless the host passes one. Agent actions are
 
 The draft's title was a count ("Read 4 files, edited 2"), had no live step while running, aggregated status as "running if any running", had a Stop all action, and could fold with an approval inside. Now: the live step is the title while running, targets are named, status takes the most urgent child, a closed group never hides an approval, it never folds under the reader, small groups don't group, and Stop all is gone (the composer's Stop stops the turn).
 
+### Tool titles in words (added with this layer)
+
+**Problem.** A Step Group names the work in sentences, but the rows under it read `create_reminder` and `search_code`: raw identifiers a person has to translate.
+
+**Change.** Tool's title is words, and follows the call (§2.3: present tense while running, past when done):
+
+- `heading?: string | ((call: { name: string; input: unknown; status: StepStatus }) => string)`: "Reading `sign-in.ts`" while running, "Read `sign-in.ts`" once complete. Code is in backticks, as in Confirmation's question.
+- `ToolCall.title?: string`, which the AI SDK adapter fills from `fromUIMessages(messages, chat, { toolTitles })`: a map by tool name to a string or the same function of `{ status, input }`, set once per tool.
+- Without either, the name in words: `search_code`, `searchCode` and `search-code` read "Search code" (`humanizeToolName`).
+- `label` keeps its 0.8 meaning: a name that replaces the title and the identifier together. The copy buttons ("Copy search_code input"), the code blocks' names and the approval question ("Run `search_code`?") keep the tool's name, since there it identifies the tool. Announcements read the title.
+- Every docs example and showcase titles its tools in words.
+
 ## 6. Composer and Queue (change)
 
 **Problem.** I need to correct a running agent without throwing away its current step, and see, edit or send now what I've queued.

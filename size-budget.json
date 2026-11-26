@@ -1,7 +1,7 @@
 {
   ".": 265,
   "./core": 262300,
-  "./adapters/ai-sdk": 1345,
+  "./adapters/ai-sdk": 1400,
   "imports": {
     "stepBase": 6900,
     "statusPrimitive": 5300,
@@ -34,6 +34,7 @@
     "connectionStatusPrimitive": 7500,
     "shareDialogPrimitive": 42000,
     "conversationSearchPrimitive": 62500,
-    "threadSearchPrimitive": 59100
+    "threadSearchPrimitive": 59100,
+    "stepGroupPrimitive": 11600
   }
 }
