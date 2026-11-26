@@ -94,4 +94,4 @@ All 57 components, grouped by the job they do. The item is the React name: add `
 
 | Item | Component | Use it when |
 | --- | --- | --- |
-| `schedule-card` | Schedule Card | A recurring agent run needs its schedule, next and last run, an on/off switch and Run now in one place. Not yet in Vue, Svelte, Solid. |
+| `schedule-card` | Schedule Card | A recurring agent run needs its schedule, next and last run, an on/off switch and Run now in one place. |
