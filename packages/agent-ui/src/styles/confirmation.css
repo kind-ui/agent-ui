@@ -1,14 +1,28 @@
-/* Confirmation (spec §7): the title, a reason box Deny opens, then the choices, which the outcome replaces at the same
-   height. The buttons are the shared ones (controls.css). */
+/* Confirmation (spec §7, Wave 7 spec §9): the title and its meta, a risk line, a reason box Deny opens, then the
+   choices (Deny, Always allow, Approve: the primary last), which the outcome replaces at the same height. The buttons
+   are the shared ones (controls.css). */
 @layer components {
   [data-slot="kind-confirmation"] {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
+    row-gap: 8px;
+    align-items: baseline;
     font-size: var(--kind-text-md);
     line-height: var(--kind-text-md-leading);
     letter-spacing: var(--kind-text-md-tracking);
     color: var(--kind-color-fg);
+
+    /* Every part but the title and its meta takes the whole row. */
+    & > :not([data-slot="kind-confirmation-title"], [data-slot="kind-confirmation-meta"]) {
+      grid-column: 1 / -1;
+    }
+
+    /* Text in backticks. */
+    & code {
+      font-family: var(--kind-font-mono);
+      font-size: 0.95em;
+    }
   }
 
   [data-slot="kind-confirmation-title"] {
@@ -17,14 +31,41 @@
     overflow-wrap: anywhere;
   }
 
+  [data-slot="kind-confirmation-meta"] {
+    display: block;
+    grid-column: 2;
+    justify-self: end;
+    white-space: nowrap;
+    font-size: var(--kind-text-sm);
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
+    font-variant-numeric: tabular-nums;
+    color: var(--kind-color-muted);
+  }
+
   /* A Tool already names the request. */
   :where([data-slot="kind-tool-approval"]) [data-slot="kind-confirmation-title"] {
     display: none;
   }
 
+  [data-slot="kind-confirmation-risk"] {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-wrap: anywhere;
+  }
+
   /* Custom elements on Web Components are inline until styled. */
-  [data-slot="kind-confirmation-reason"] {
+  :is([data-slot="kind-confirmation-reason"], [data-slot="kind-confirmation-detail"]) {
     display: block;
+  }
+
+  [data-slot="kind-confirmation-detail"] {
+    font-size: var(--kind-text-sm);
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
+    color: var(--kind-color-muted);
+    overflow-wrap: anywhere;
   }
 
   /* One height for the choices and the outcome, so a decision swaps them in place. */
@@ -33,6 +74,30 @@
     align-items: center;
     gap: 8px;
     min-height: var(--kind-control-height);
+  }
+
+  [data-slot="kind-confirmation-choices"] {
+    flex-wrap: wrap;
+    container: kind-confirmation-choices / inline-size;
+  }
+
+  /* When the three don't fit, Always allow takes its own row above Deny and Approve, so the primary stays last and
+     under the thumb (Wave 7 spec §9). The break is a zero-height item after it. */
+  @container kind-confirmation-choices (width < 26rem) {
+    [data-slot="kind-confirmation-always"]:not([hidden]) {
+      order: -2;
+    }
+    [data-slot="kind-confirmation-choices"]:has(
+        > * [data-slot="kind-confirmation-always"]:not([hidden])
+      )::before,
+    [data-slot="kind-confirmation-choices"]:has(
+        > [data-slot="kind-confirmation-always"]:not([hidden])
+      )::before {
+      content: "";
+      order: -1;
+      flex-basis: 100%;
+      height: 0;
+    }
   }
 
   [data-slot="kind-confirmation-error"] {
@@ -44,27 +109,27 @@
     color: var(--kind-color-danger);
   }
 
+  /* Muted words after the mark, so an outcome never looks like the button it replaced; a denial's reason in ink. */
   [data-slot="kind-confirmation-outcome"] {
     border-radius: var(--kind-radius-sm);
+    color: var(--kind-color-muted);
 
     &:focus-visible {
       outline: var(--kind-focus-ring);
       outline-offset: var(--kind-focus-offset);
     }
-    &[data-state="submitting"] {
-      color: var(--kind-color-muted);
-    }
 
     & [data-confirmation-label] {
       flex-shrink: 0;
-      font-weight: var(--kind-font-weight-medium);
     }
     & [data-confirmation-reason] {
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      color: var(--kind-color-muted);
+      margin-inline-start: -4px;
+      font-weight: var(--kind-font-weight-medium);
+      color: var(--kind-color-fg);
     }
     & [data-confirmation-reason]:empty {
       display: none;
@@ -73,12 +138,16 @@
 
   :is(
     [data-slot="kind-confirmation-title"],
+    [data-slot="kind-confirmation-meta"],
+    [data-slot="kind-confirmation-risk"],
     [data-slot="kind-confirmation-reason"],
     [data-slot="kind-confirmation-choices"],
     [data-slot="kind-confirmation-approve"],
+    [data-slot="kind-confirmation-always"],
     [data-slot="kind-confirmation-deny"],
     [data-slot="kind-confirmation-cancel"],
     [data-slot="kind-confirmation-error"],
+    [data-slot="kind-confirmation-detail"],
     [data-slot="kind-confirmation-outcome"]
   )[hidden] {
     display: none;
