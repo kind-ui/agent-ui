@@ -2,11 +2,15 @@ import {
   type ComposerAttachmentsState,
   type ComposerInputState,
   type ComposerRootState,
+  type ComposerSendMenuState,
+  type ComposerSendMenuTriggerState,
+  type ComposerSteerState,
   type ComposerTriggerItem,
   type ComposerTriggerMenuState,
   composerPrimitive,
 } from "@kind-ui/agent-ui/core";
 import { FileInput, FileInputDropzone, FileInputTrigger } from "@ui-sdk/vue/file-input";
+import { MenuTrigger } from "@ui-sdk/vue/menu";
 import { createParts } from "@ui-sdk/vue/primitive";
 import {
   type Token,
@@ -15,8 +19,9 @@ import {
   TokenInputToken,
   TokenInputTokenRemove,
 } from "@ui-sdk/vue/token-input";
-import { defineComponent, h } from "vue";
+import { defineComponent, Fragment, h } from "vue";
 import { Attachments } from "./attachments.js";
+import { KindMenu, KindMenuContent, KindMenuItem, KindMenuSeparator } from "./internal/menu.js";
 import {
   KindTriggerMenu,
   KindTriggerMenuContent,
@@ -42,6 +47,9 @@ const parts = createParts(primitive, {
   "trigger-menu": "div",
   attachments: "div",
   submit: "button",
+  steer: "button",
+  "send-menu": "div",
+  "send-menu-trigger": "span",
   stop: "button",
   restored: "div",
   discard: "button",
@@ -186,7 +194,101 @@ export const ComposerRestored = defineComponent({
   },
 });
 
-/** Sends the draft. Hidden while Stop shows. */
+/** Sends the draft. Hidden while a turn runs or Stop shows. */
 export const ComposerSubmit = parts.Submit;
-/** Shown in Send's place while a submission is pending, when the composer has `onStop`. */
+/**
+ * Shown in Send's place while a submission is pending or a turn is `running`, when the composer has `@stop`. Quiet
+ * while Send shows beside it.
+ */
 export const ComposerStop = parts.Stop;
+
+/** Send while a turn runs: "Steer" or "Queue" by `steerMode`, unless you fill the slot. */
+export const ComposerSteer = defineComponent({
+  name: "ComposerSteer",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () =>
+      h(parts.Steer, attrs, {
+        ...slots,
+        default: slots.default ?? (({ state }: { state: ComposerSteerState }) => state.label),
+      });
+  },
+}) as unknown as typeof parts.Steer;
+
+const chevron = () => h("span", { "data-composer-chevron": "", "aria-hidden": "true" });
+
+/** Opens Send's menu: UI SDK's `MenuTrigger`, a chevron unless you fill the slot. Attributes go to it. */
+export const ComposerSendMenuTrigger = defineComponent({
+  name: "ComposerSendMenuTrigger",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () =>
+      h(parts.SendMenuTrigger, null, {
+        default: ({ state }: { state: ComposerSendMenuTriggerState }) =>
+          // Hidden from agents, which use the composer's `steer`, `queue` and `stopAndSend`.
+          h(
+            MenuTrigger,
+            {
+              "aria-label": state["aria-label"],
+              disabled: state.disabled,
+              "data-agent-hidden": "",
+              ...attrs,
+            },
+            { ...slots, default: slots.default ?? chevron },
+          ),
+      });
+  },
+});
+
+const sendItems = (items: ComposerSendMenuState["items"]) =>
+  items.map((item) =>
+    h(Fragment, { key: item.value }, [
+      item.value === "stop-and-send" ? h(KindMenuSeparator) : null,
+      h(
+        KindMenuItem,
+        { value: item.value, label: item.label, "data-current": item.checked ? "" : undefined },
+        () => [
+          h("span", { "data-composer-check": "", "aria-hidden": "true" }),
+          h("span", { "data-composer-send-text": "" }, [
+            h("span", { "data-composer-send-label": "" }, item.label),
+            h("span", { "data-composer-send-description": "" }, item.description),
+          ]),
+          item.shortcut ? h("kbd", { "data-composer-send-keys": "" }, item.shortcut) : null,
+        ],
+      ),
+    ]),
+  );
+
+/**
+ * Send and its menu while a turn runs, shown once there's text when the composer has `@steer`: Steer or Queue, and
+ * a chevron offering Steer now, Queue for later and Stop and send, each with its keys. Put it beside `ComposerStop`.
+ */
+export const ComposerSendMenu = defineComponent({
+  name: "ComposerSendMenu",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () =>
+      h(parts.SendMenu, attrs, {
+        default: ({ state }: { state: ComposerSendMenuState }) =>
+          h(
+            KindMenu,
+            {
+              controller: state.controller,
+              open: state.open,
+              onOpenChange: state.onOpenChange,
+              onAction: state.onAction,
+            },
+            () =>
+              slots.default?.() ?? [
+                h(ComposerSteer),
+                h(ComposerSendMenuTrigger),
+                h(
+                  KindMenuContent,
+                  { align: "end", side: "top", sideOffset: 8, "data-composer-send-menu": "" },
+                  () => sendItems(state.items),
+                ),
+              ],
+          ),
+      });
+  },
+});

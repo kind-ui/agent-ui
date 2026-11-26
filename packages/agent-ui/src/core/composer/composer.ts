@@ -182,6 +182,8 @@ export type ComposerState = {
   steerMode: "steer" | "queue";
   /** Whether Stop and send is offered. */
   stopAndSend: boolean;
+  /** Whether a pending submission carries attachments, so Stop reads "Cancel sending". */
+  uploading: boolean;
   /** Whether a steer, queue or stop-and-send is in flight; sending is locked until it settles. */
   steerPending: boolean;
   /** Whether Send's menu is open. */
@@ -398,7 +400,13 @@ const sendShortcuts = (submitOn: ComposerState["submitOn"], mode: ComposerState[
 
 const keysOf = (submitOn: ComposerState["submitOn"], mode: ComposerState["steerMode"]): ComposerKeys => {
   const shortcuts = sendShortcuts(submitOn, mode);
-  const keys = (shortcut: string) => ({ label: formatShortcut(shortcut), aria: ariaKeyshortcuts(shortcut) });
+  // The Return symbol reads as an arrow, or as an emoji in some fonts, so the key is spelled out: "⌥ Enter".
+  const keys = (shortcut: string) => ({
+    label: formatShortcut(shortcut)
+      .replace(/(?<=[\u2325\u21e7\u2318\u2303])[\u21a9\u23ce]/u, " Enter")
+      .replace(/[\u21a9\u23ce]/u, "Enter"),
+    aria: ariaKeyshortcuts(shortcut),
+  });
   return {
     steer: keys(shortcuts.steer),
     queue: keys(shortcuts.queue),
@@ -443,6 +451,7 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       pending: false,
       attachmentsClosing: false,
       restored: false,
+      uploading: false,
       steerPending: false,
       sendMenuOpen: false,
       keys: null,
@@ -513,7 +522,7 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
     const settle = (submitted: ComposerDraft, outcome: "resolved" | "rejected") => {
       if (destroyed) return;
       returningFromStop = store.get().canStop;
-      store.set({ pending: false });
+      store.set({ pending: false, uploading: false });
       if (outcome === "rejected") announce("Message not sent", { priority: "polite" });
       const current = store.get().value;
       const next = draftAfterSettle(current, submitted, outcome);
@@ -579,6 +588,8 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
 
     const readInput = () => {
       const segments = tokenInput.getValue();
+      // A Token Input that moved to another composer has left this controller, though its edits still reach us.
+      if (segments === undefined) return;
       const { value } = store.get();
       const text = toText(segments);
       if (text === value.text) return;
@@ -721,7 +732,7 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       history.reset();
       const submission = onSubmit(value);
       if (!isThenable(submission)) return settle(value, "resolved");
-      store.set({ pending: true });
+      store.set({ pending: true, uploading: value.attachments.length > 0 });
       announce("Sending", { priority: "polite" });
       submission.then(
         () => settle(value, "resolved"),
@@ -1107,7 +1118,8 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       press: ({ api }, event) => api.stop?.(event),
       attrs: (state) => ({
         type: "button",
-        "aria-label": state.running ? WORDS.stopGenerating : WORDS.cancelSending,
+        // A submission still uploading its files can be cancelled; past that, Stop ends the reply.
+        "aria-label": !state.running && state.uploading ? WORDS.cancelSending : WORDS.stopGenerating,
         // Send is the one primary while it shows, so Stop turns quiet.
         "data-quiet": showsSend(state) ? "" : undefined,
         "data-motion": state.motion,
