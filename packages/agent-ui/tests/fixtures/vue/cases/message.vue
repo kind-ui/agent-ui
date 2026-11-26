@@ -14,8 +14,8 @@ export const variants = [
 </script>
 
 <script setup lang="ts">
-import type { MessageStatus } from "@kind-ui/agent-ui";
-import type { MessageOptions, MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
+import type { Message as MessageData, MessageStatus, RetryState } from "@kind-ui/agent-ui";
+import type { MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
 import { computed, onMounted, ref, shallowRef } from "vue";
 import {
   Conversation,
@@ -129,9 +129,7 @@ const outcomeRows = [
   { id: "earlier", label: "Earlier answer", props: { onRetry: wait("retry") } },
 ];
 
-type RetryState = NonNullable<MessageOptions["retry"]>;
-type Delivery = MessageOptions["delivery"];
-const deliveries = ref<Record<string, Delivery>>({ steered: "steered", queued: "queued" });
+const deliveries = ref<Record<string, MessageData["delivery"]>>({ steered: "steered", queued: "queued" });
 const retry = shallowRef<RetryState | undefined>(retrying);
 const answerStatus = ref<MessageStatus>("streaming");
 const withdraw = (details: { reason: string; source: string }) => {
@@ -172,7 +170,7 @@ onMounted(() => {
     expose({
       kindDelivery: {
         calls,
-        deliver: (id: string, value: Delivery | null) =>
+        deliver: (id: string, value: MessageData["delivery"] | null) =>
           flush(() => (deliveries.value = { ...deliveries.value, [id]: value ?? undefined })),
         retry: (value: RetryState | null) => flush(() => (retry.value = value ?? undefined)),
         status: (value: MessageStatus) => flush(() => (answerStatus.value = value)),

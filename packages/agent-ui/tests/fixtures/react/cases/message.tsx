@@ -1,8 +1,5 @@
-import type { MessageStatus } from "@kind-ui/agent-ui";
-import type { MessageOptions, MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
-
-type RetryState = NonNullable<MessageOptions["retry"]>;
-type Delivery = MessageOptions["delivery"];
+import type { Message as MessageData, MessageStatus, RetryState } from "@kind-ui/agent-ui";
+import type { MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
 
 import { type ReactNode, useEffect, useState } from "react";
 import { flushSync } from "react-dom";
@@ -302,7 +299,7 @@ function Outcomes() {
 }
 
 function Delivery() {
-  const [deliveries, setDeliveries] = useState<Record<string, Delivery>>({
+  const [deliveries, setDeliveries] = useState<Record<string, MessageData["delivery"]>>({
     steered: "steered",
     queued: "queued",
   });
@@ -313,7 +310,7 @@ function Delivery() {
     Object.assign(window, {
       kindDelivery: {
         calls,
-        deliver: (id: string, value: Delivery | null) =>
+        deliver: (id: string, value: MessageData["delivery"] | null) =>
           flushSync(() => setDeliveries((current) => ({ ...current, [id]: value ?? undefined }))),
         retry: (value: RetryState | null) => flushSync(() => setRetry(value ?? undefined)),
         status: (value: MessageStatus) => flushSync(() => setStatus(value)),

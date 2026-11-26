@@ -1,5 +1,5 @@
-import type { MessageStatus } from "@kind-ui/agent-ui";
-import type { MessageOptions, MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
+import type { Message as MessageData, MessageStatus, RetryState } from "@kind-ui/agent-ui";
+import type { MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
 import type { JSX } from "@solidjs/web";
 import { createSignal, For, flush, onSettled } from "solid-js";
 import {
@@ -46,9 +46,6 @@ import {
   retrying,
   timing,
 } from "../../shared/message.js";
-
-type RetryState = NonNullable<MessageOptions["retry"]>;
-type Delivery = MessageOptions["delivery"];
 
 const replies = [
   "Retry with exponential backoff, and cap the number of attempts.",
@@ -331,7 +328,7 @@ function Outcomes() {
 }
 
 function Delivery() {
-  const [deliveries, setDeliveries] = createSignal<Record<string, Delivery>>({
+  const [deliveries, setDeliveries] = createSignal<Record<string, MessageData["delivery"]>>({
     steered: "steered",
     queued: "queued",
   });
@@ -342,7 +339,7 @@ function Delivery() {
     expose({
       kindDelivery: {
         calls,
-        deliver: (id: string, value: Delivery | null) => {
+        deliver: (id: string, value: MessageData["delivery"] | null) => {
           setDeliveries((current) => ({ ...current, [id]: value ?? undefined }));
           flush();
         },

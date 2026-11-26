@@ -19,8 +19,8 @@
 </script>
 
 <script lang="ts">
-  import type { MessageStatus } from "@kind-ui/agent-ui";
-  import type { MessageOptions, MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
+  import type { Message as MessageData, MessageStatus, RetryState } from "@kind-ui/agent-ui";
+  import type { MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
   import { flushSync, type Snippet } from "svelte";
   import {
     Conversation,
@@ -66,7 +66,6 @@
     timing,
   } from "../../shared/message.js";
 
-  type RetryState = NonNullable<MessageOptions["retry"]>;
   type Deferred = { resolve(): void; reject(): void };
 
   let { variant }: { variant: string; params: URLSearchParams } = $props();
@@ -88,7 +87,7 @@
     earlier: "error",
   });
   const deferred: Deferred[] = [];
-  let deliveries: Record<string, MessageOptions["delivery"]> = $state.raw({ steered: "steered", queued: "queued" });
+  let deliveries: Record<string, MessageData["delivery"]> = $state.raw({ steered: "steered", queued: "queued" });
   let retry: RetryState | undefined = $state.raw(retrying);
   let answerStatus: MessageStatus = $state("streaming");
 
@@ -110,7 +109,7 @@
     },
     kindDelivery: {
       calls,
-      deliver: (id: string, value: MessageOptions["delivery"] | null) =>
+      deliver: (id: string, value: MessageData["delivery"] | null) =>
         flushSync(() => (deliveries = { ...deliveries, [id]: value ?? undefined })),
       retry: (value: RetryState | null) => flushSync(() => (retry = value ?? undefined)),
       status: (value: MessageStatus) => flushSync(() => (answerStatus = value)),
