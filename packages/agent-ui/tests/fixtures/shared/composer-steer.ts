@@ -11,10 +11,6 @@ export const queuedMessages: QueueItem[] = [
 
 export const steerText = "Use the session table, not a cookie";
 
-/**
- * The host of a running turn: queued steers join the Queue, Edit and Send now take items out of it, Stop ends the
- * turn. With `?hold`, each steer waits until the test settles it through `window.kindSteer.held`.
- */
 export function steerHost(
   params: URLSearchParams,
   host: {

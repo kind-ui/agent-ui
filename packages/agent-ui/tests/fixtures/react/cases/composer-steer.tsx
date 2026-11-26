@@ -18,10 +18,6 @@ import { expose } from "../../shared/expose.js";
 import { controls } from "../../shared/full-composer.js";
 import { levels, models } from "../../shared/model-control.js";
 
-/**
- * A composer while a turn runs. `?text` starts with a draft, `?mode=queue` sends after the turn, `?queue` docks two
- * queued messages, `?folded` folds them, `?idle` has no turn running and `?pending` disables Send now.
- */
 function Steer({ params }: { params: URLSearchParams }) {
   const [running, setRunning] = useState(!params.has("idle"));
   const [items, setItems] = useState<QueueItem[]>(params.has("queue") ? queuedMessages : []);
@@ -70,7 +66,6 @@ function Steer({ params }: { params: URLSearchParams }) {
   );
 }
 
-// An agent needs a person for every composer action, unless the test permits it.
 export const allow = (step: AgentAction) => !step.confirm || (window as { permit?: boolean }).permit === true;
 
 export const cases = {

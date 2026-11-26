@@ -3,14 +3,9 @@
 
   export const variants = ["steer", "text", "docked"];
 
-  // An agent needs a person for every composer action, unless the test permits it.
   export const allow = (step: AgentAction) => !step.confirm || (window as { permit?: boolean }).permit === true;
 </script>
 
-<!--
-  A composer while a turn runs. `?text` starts with a draft, `?mode=queue` sends after the turn, `?queue` docks two
-  queued messages, `?folded` folds them, `?idle` has no turn running and `?pending` disables Send now.
--->
 <script lang="ts">
   import type { QueueItem } from "@kind-ui/agent-ui";
   import { flushSync, untrack } from "svelte";

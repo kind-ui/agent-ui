@@ -3,7 +3,6 @@ import type { AgentAction } from "@ui-sdk/vue/agent";
 
 export const variants = ["steer", "text", "docked"] as const;
 
-// An agent needs a person for every composer action, unless the test permits it.
 export const allow = (step: AgentAction) => !step.confirm || (window as { permit?: boolean }).permit === true;
 </script>
 
@@ -27,10 +26,6 @@ import { controls } from "../../shared/full-composer.js";
 import { levels, models } from "../../shared/model-control.js";
 import { useFlush } from "./flush.js";
 
-/**
- * A composer while a turn runs. `?text` starts with a draft, `?mode=queue` sends after the turn, `?queue` docks two
- * queued messages, `?folded` folds them, `?idle` has no turn running and `?pending` disables Send now.
- */
 const props = defineProps<{ variant: string; params: URLSearchParams }>();
 
 const params =

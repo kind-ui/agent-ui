@@ -68,6 +68,7 @@ export const bindTextSource = (el: Element, link: TextSourceLink): (() => void) 
 /** Takes back the last item of the first source docked inside `el`. Returns whether there was one. */
 export const takeBackText = (el: Element, source: ChangeSource): boolean => {
   const target = targets.get(el);
+  if (!target) return false;
   for (const [node, link] of sources) {
     if (el.contains(node) && targetAround(node) === target) return link.takeBack(source);
   }

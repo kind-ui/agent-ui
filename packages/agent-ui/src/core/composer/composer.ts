@@ -491,7 +491,6 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       const { value, disabled } = store.get();
       const words = text.trim();
       if (disabled || !words) return false;
-      // A queued message comes back on its own line, a dictation after a space.
       const joiner = reason === "queue-edit" ? "\n" : " ";
       const joined = value.text.trim() ? `${value.text.trimEnd()}${joiner}${words}` : words;
       appendSource = source;
@@ -866,7 +865,6 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
     const sendKeydown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.isComposing) return false;
       const { canSteer, steerMode, value, disabled } = store.get();
-      // Alt+Up in an empty composer takes back the last message queued in a docked Queue.
       if (matchesShortcut(event, "alt+ArrowUp")) {
         const root = context.element("root");
         if (disabled || !root || isSubmittable(value)) return false;
@@ -1074,7 +1072,6 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
         return part.api.recovery.bind(el, part);
       },
     }),
-    // While a turn runs, Send shows beside Stop once there's text, named by what it does.
     steer: slot<BaseSlotProps, ComposerSteerState>({
       role: "button",
       focus: "native",

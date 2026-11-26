@@ -16,7 +16,6 @@ import { queuedMessages, steerHost, steerText } from "../../shared/composer-stee
 import { expose } from "../../shared/expose.js";
 import { levels, models } from "../../shared/model-control.js";
 
-// `shared/full-composer.ts`'s `controls`, in the kebab-case keys a Solid `style` takes.
 const controls = {
   "grid-area": "attach",
   display: "flex",
@@ -26,10 +25,6 @@ const controls = {
   "min-width": "0",
 };
 
-/**
- * A composer while a turn runs. `?text` starts with a draft, `?mode=queue` sends after the turn, `?queue` docks two
- * queued messages, `?folded` folds them, `?idle` has no turn running and `?pending` disables Send now.
- */
 function Steer(props: { params: URLSearchParams }) {
   const params = props.params;
   const [running, setRunning] = createSignal(!params.has("idle"));
@@ -85,7 +80,6 @@ function Steer(props: { params: URLSearchParams }) {
   );
 }
 
-// An agent needs a person for every composer action, unless the test permits it.
 export const allow = (step: AgentAction) => !step.confirm || (window as { permit?: boolean }).permit === true;
 
 export const cases = {

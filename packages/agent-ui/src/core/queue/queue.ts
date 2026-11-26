@@ -264,7 +264,6 @@ const itemsIndex = (items: readonly QueueItem[], order: string[], id: string) =>
 export const queueSection = (state: QueueState, section: QueueSection): QueueSectionState => {
   const count = state.items.filter((item) => item.status === section).length;
   return {
-    // Docked in a Composer, the header says it in words: "2 queued".
     title:
       state.docked && section === "pending"
         ? `${count} ${WORDS.queued.toLowerCase()}`
@@ -370,7 +369,6 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
     // The item being sent, as it was then: the lock lifts once the host removes or changes it.
     let sent: QueueItem | undefined;
     const sendLock = createPendingAction(context, { state: "sendPending" });
-    // Items being edited, until their call settles.
     const editing = new Set<string>();
     let lastItems = store.get().items;
     context.onOptions((options) => {
@@ -486,7 +484,6 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
           takeBack,
           dock: (running) => store.set({ docked: running !== null, running: running ?? false }),
         });
-        // Docked, the Queue grows from the composer's top edge as its first item arrives, and folds as its last leaves.
         let filled = store.get().order.length > 0;
         const unsubscribe = store.subscribe(() => {
           const { docked, order, motion } = store.get();
@@ -781,7 +778,6 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       on: { pointerdown: (event) => event.preventDefault() },
       attrs: (state, part) => ({
         type: "button",
-        // The focused row's buttons follow it in Tab order.
         tabindex: part.api.roving.tabIndex(state, { ...part, props: { value: part.key } }),
         "aria-label": WORDS.sendNow,
         title: state.sendDisabledReason ?? (state.running ? WORDS.steerTooltip : WORDS.sendNow),
@@ -799,7 +795,6 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       on: { pointerdown: (event) => event.preventDefault() },
       attrs: (state, part) => ({
         type: "button",
-        // The focused row's buttons follow it in Tab order.
         tabindex: part.api.roving.tabIndex(state, { ...part, props: { value: part.key } }),
         "aria-label": "Edit",
         title: "Edit",
@@ -816,7 +811,6 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       on: { pointerdown: (event) => event.preventDefault() },
       attrs: (state, part) => ({
         type: "button",
-        // The focused row's buttons follow it in Tab order.
         tabindex: part.api.roving.tabIndex(state, { ...part, props: { value: part.key } }),
         "aria-label": "Remove",
         title: "Remove",
