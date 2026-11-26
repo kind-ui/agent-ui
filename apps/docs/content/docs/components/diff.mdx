@@ -1,0 +1,102 @@
+---
+title: Diff
+description: Show one file's change, with its lines numbered and the words that changed marked.
+---
+
+import DiffExample from "../../../examples/diff/basic";
+
+Use a diff when the agent edits a file, so readers can check the change before they accept it. It's one file in a unified view: old and new line numbers, a `+` or `−` for each changed line, the words that changed marked, and long runs of unchanged lines folded away.
+
+<Example caption="Press Show 3 lines, or Tab to it and press Enter, to see the folded lines. Accept and Revert stay locked until the host settles them.">
+  <DiffExample />
+
+  <ExampleCode example="diff/basic" />
+</Example>
+
+## Installation
+
+<Install name="diff" />
+
+## Composition
+
+```text
+Diff
+├── DiffHeader
+│   ├── DiffPath
+│   ├── DiffStatus
+│   ├── DiffStats
+│   ├── DiffCopy
+│   ├── DiffRevert
+│   └── DiffAccept
+└── DiffViewport
+    └── DiffTable
+        └── DiffRow
+            ├── DiffOldNumber
+            ├── DiffNewNumber
+            ├── DiffSign
+            └── DiffCode
+                ├── DiffCollapsed
+                └── DiffCollapsedText
+```
+
+`DiffHeader` holds the path in `DiffPath` (the old path, an arrow and the new one for a rename), "Added", "Deleted" or "Renamed" in `DiffStatus`, and "+12 −3" in `DiffStats`, which reads as "12 added, 3 removed". `DiffCopy` copies the patch; `DiffRevert` and `DiffAccept` show while you pass `onRevert` and `onAccept`. `DiffViewport` scrolls `DiffTable`, a table that renders a `DiffRow` for each row: a hunk's `@@` header, a line, or a folded run. A row's `DiffOldNumber` and `DiffNewNumber` are its row headers, `DiffSign` shows `+` or `−` and reads as "added" or "removed", and `DiffCode` holds the code, with each changed word in a `mark`. A folded run's `DiffCode` holds the **Show N lines** button, `DiffCollapsed`, and the folded lines in `DiffCollapsedText`, hidden until find in page matches them.
+
+## Usage
+
+### A Patch or Two Files
+
+Pass `patch`, a unified diff of one file as `git diff` writes it, or `before` and `after`, which are diffed with 3 lines of context. `file` names the file: its `path`, an `oldPath` for a rename, a `status` and the `language` your highlighter takes. A patch's own headers fill in what `file` leaves out, so a `git diff` with a rename shows it without one. The diff is named by its `label`, else its path.
+
+```tsx
+<Diff file={{ path: "src/greet.ts" }} before={before} after={after} />
+```
+
+### Streaming
+
+Pass the whole patch again on each update, with `streaming` while it arrives. When it continues the last one, only its last hunk is parsed again, and rows already shown keep their elements. Past 400 rows only the rows in view render, so a 2,000-line diff scrolls as smoothly as a short one. The view grows up to `--kind-diff-max-height` (24rem), then scrolls.
+
+### Changed Words and Highlighting
+
+A removed line and the added line that replaces it are compared word by word, and the words that differ are marked on both. Pass `highlight`, Code Block's highlighter, to color the code: it's called once for each side of the diff with `file.language`, and the lines show plain until it resolves. Marks and colors show together.
+
+### Folded Lines
+
+A run of more than 6 unchanged lines between changes keeps 3 lines on each side and folds the rest behind **Show N lines**, at the height of one line, so showing it moves nothing above. Find in page searches the folded lines too, and shows a run when it matches one.
+
+### Accept and Revert
+
+Pass `onAccept` and `onRevert` to offer them. Return a promise to keep both locked until it settles: a failure unlocks them, so the person can try again. Each call's `details.source` says whether a mouse, the keyboard or an agent pressed it.
+
+### Approving an Edit
+
+To ask before an edit tool writes a file, put a Diff in the Tool's content, so the person reads the change beside **Approve** and **Deny**:
+
+```tsx
+<Tool call={call} onApprove={approve} onDeny={deny}>
+  <ToolTrigger>…</ToolTrigger>
+  <ToolContent>
+    <Diff file={{ path: call.input.value.path }} before={current} after={call.input.value.content} />
+  </ToolContent>
+  <ToolApproval />
+</Tool>
+```
+
+### Keyboard
+
+Tab reaches **Copy diff**, **Revert**, **Accept**, each **Show N lines** and the lines, which scroll with the arrow keys, Page Up and Page Down.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/diff/diff.ts" name="DiffOptions" />
+
+<FrameworkNames name="diff" />
+
+### Agent
+
+An agent connected with `createAgent` finds the diff by its path, or its `label`. It can `accept` and `revert` while you pass `onAccept` and `onRevert`, `expandAll` while a run is folded, and `copy`. While `onRevert` is set the diff asks a person to confirm every agent action on it, unless `agentConfirm` is `false`.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/diff/diff.ts" name="DiffAgentActions" type='Pick<DiffApi, "accept" | "revert" | "expandAll" | "copy">' />
+
+<Caption>
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-diff>`, set `file`, `patch`, `before`, `after` and `highlight` as properties; the other props are kebab-case attributes. The `can-accept` and `can-revert` attributes offer Accept and Revert, which fire `diffaccept` and `diffrevert`, and `onCopy` is `diffcopy`.
+</Caption>

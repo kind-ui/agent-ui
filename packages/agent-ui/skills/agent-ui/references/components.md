@@ -66,6 +66,7 @@ All 57 components, grouped by the job they do. The item is the React name: add `
 | `transcript` | Transcript | You show timed, speaker-labelled speech with search and seeking. |
 | `selection` | Selection | A person selects text in a reply and picks an action for it. |
 | `action` | Action | You show an action run on selected text, quoting the text above its result. |
+| `diff` | Diff | You show one file's change for review or approval, with its lines numbered and changed words marked. |
 
 ## Indicators and notices
 

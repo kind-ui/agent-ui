@@ -789,6 +789,24 @@ export {
 
 // wave-7-task-6: Diff
 
+export {
+  type DiffActionDetails,
+  type DiffApi,
+  type DiffCopyReason,
+  type DiffHunk,
+  type DiffOptions,
+  type DiffPiece,
+  type DiffPrimitive,
+  type DiffRow,
+  type DiffRows,
+  type DiffRowsInput,
+  type DiffState,
+  type DiffWord,
+  diffPieces,
+  diffPrimitive,
+  diffRows,
+} from "./diff/index.js";
+
 // wave-7-task-7: Step Group
 
 // wave-7-task-8: Handoff

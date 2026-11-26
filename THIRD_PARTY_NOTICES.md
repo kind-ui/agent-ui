@@ -121,6 +121,10 @@
 
 <!-- wave-7-task-6: Diff -->
 
+- `packages/agent-ui/src/styles/diff.css` (Diff): `arrow-right`, `undo-2` and `chevrons-up-down`, unchanged; `arrow-right` derives from Feather. Copy and Accept reuse `copy` and `check` from `agent-ui.css`.
+
+- jsdiff (`diff@9.0.0`, https://github.com/kpdecker/jsdiff, BSD-3-Clause, Copyright (c) 2009-2015, Kevin Decker): a runtime dependency of `packages/agent-ui/src/core/diff/`, used unchanged through its `parsePatch`, `structuredPatch`, `createTwoFilesPatch` and `diffWordsWithSpace`; its license ships with the package in `node_modules/diff/LICENSE`.
+
 <!-- wave-7-task-7: Step Group -->
 
 <!-- wave-7-task-8: Handoff -->

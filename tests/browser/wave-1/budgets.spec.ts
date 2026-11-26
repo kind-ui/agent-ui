@@ -382,6 +382,24 @@ for (const messages of [100, 5000]) {
 
 // wave-7-task-6: Diff
 
+// A streamed hunk renders only the rows it adds and the table: below 400 rows that's its four rows; past 400 only the
+// rows in view are drawn, so on a 2,000-line diff the hunk below the view renders none.
+for (const lines of [40, 2000]) {
+  test(`a hunk streamed onto a ${lines}-line diff`, async ({ page }) => {
+    const limit = BUDGETS.diffHunk;
+    await page.goto(`/?c=diff&case=stream-${lines}`);
+    await expect(page.locator('[data-slot="kind-diff-row"]').first()).toBeVisible();
+    const counts = await most(
+      page,
+      10,
+      'kindDiff.append("stream", `@@ -${(window.kindHunk = (window.kindHunk ?? 5000) + 10)},2 +${window.kindHunk},3 @@\\n a\\n+b\\n c\\n`)',
+    );
+    expect(counts.writes).toBeLessThanOrEqual(limit.writes);
+    expect(counts.renders).toBeLessThanOrEqual(limit.renders);
+    expect(counts.notified).toBeLessThanOrEqual(limit.notified);
+  });
+}
+
 // wave-7-task-7: Step Group
 
 // wave-7-task-8: Handoff

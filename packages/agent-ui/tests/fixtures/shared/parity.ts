@@ -292,6 +292,11 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
 
   // wave-7-task-6: Diff
 
+  diff: [
+    { c: "diff", case: "all", interaction: press('[data-slot="kind-diff-collapsed"]') },
+    { c: "diff", case: "stream-40" },
+  ],
+
   // wave-7-task-7: Step Group
 
   // wave-7-task-8: Handoff

@@ -98,6 +98,8 @@ import { defineConversationSearch } from "./components/ui/web/conversation-searc
 
 // wave-7-task-6: Diff
 
+import { defineDiff } from "./components/ui/web/diff.js";
+
 // wave-7-task-7: Step Group
 
 // wave-7-task-8: Handoff
@@ -225,6 +227,8 @@ for (const define of [
   // wave-7-task-5: Tool retry and retrying
 
   // wave-7-task-6: Diff
+
+  defineDiff,
 
   // wave-7-task-7: Step Group
 
@@ -381,6 +385,8 @@ const items = {
   // wave-7-task-5: Tool retry and retrying
 
   // wave-7-task-6: Diff
+
+  diff: `<kind-diff label="src/a.ts"></kind-diff>`,
 
   // wave-7-task-7: Step Group
 

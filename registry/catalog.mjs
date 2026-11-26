@@ -465,6 +465,15 @@ export const components = {
 
   // wave-7-task-6: Diff
 
+  diff: {
+    group: "output",
+    when: "you show one file's change for review or approval, with its lines numbered and changed words marked.",
+    title: "Diff",
+    description:
+      "One file's change as a unified diff: old and new line numbers, changed words marked, long unchanged runs folded, Copy, Accept and Revert.",
+    uses: [],
+  },
+
   // wave-7-task-7: Step Group
 
   // wave-7-task-8: Handoff
