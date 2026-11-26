@@ -78,6 +78,8 @@ const pages = [
 
   // wave-7-task-13: Schedule Card
 
+  "schedule-card&case=all",
+
   // wave-7-task-14: Agent Card
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown

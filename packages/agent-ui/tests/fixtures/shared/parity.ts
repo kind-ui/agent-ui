@@ -318,6 +318,15 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
 
   // wave-7-task-13: Schedule Card
 
+  "schedule-card": [
+    {
+      c: "schedule-card",
+      case: "all",
+      interaction: press('[data-slot="kind-schedule-card-enabled"] [role="switch"]'),
+    },
+    { c: "schedule-card", case: "paused" },
+  ],
+
   // wave-7-task-14: Agent Card
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown

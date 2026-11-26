@@ -97,6 +97,8 @@ export default {
 
     // wave-7-task-13: Schedule Card
 
+    "schedule-card",
+
     // wave-7-task-14: Agent Card
 
     // wave-7-task-15: Usage Meter and Context Meter's breakdown
@@ -289,6 +291,8 @@ export default {
     "wave-7/job-progress.spec.ts",
 
     // wave-7-task-13: Schedule Card
+
+    "wave-7/schedule-card.spec.ts",
 
     // wave-7-task-14: Agent Card
 

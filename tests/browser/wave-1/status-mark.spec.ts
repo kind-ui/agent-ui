@@ -90,6 +90,8 @@ const consumers: Record<string, string> = {
 
   // wave-7-task-13: Schedule Card
 
+  "schedule-card/schedule-card.ts": "kind-schedule-card-last-mark",
+
   // wave-7-task-14: Agent Card
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
@@ -243,6 +245,8 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
   // wave-7-task-12: Job Progress
 
   // wave-7-task-13: Schedule Card
+
+  { url: "/?c=schedule-card&case=all", slots: ["kind-schedule-card-last-mark"] },
 
   // wave-7-task-14: Agent Card
 

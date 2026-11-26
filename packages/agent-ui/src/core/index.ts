@@ -834,6 +834,20 @@ export {
 
 // wave-7-task-13: Schedule Card
 
+export {
+  type ScheduleCardActionDetails,
+  type ScheduleCardApi,
+  type ScheduleCardEnabledState,
+  type ScheduleCardLastState,
+  type ScheduleCardOptions,
+  type ScheduleCardPrimitive,
+  type ScheduleCardState,
+  type ScheduleEnabledChangeReason,
+  scheduleCardPrimitive,
+  scheduleLastText,
+  scheduleNextText,
+} from "./schedule-card/index.js";
+
 // wave-7-task-14: Agent Card
 
 // wave-7-task-15: Usage Meter and Context Meter's breakdown
