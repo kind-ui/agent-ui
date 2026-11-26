@@ -21,7 +21,10 @@ export type ApprovalPartOptions = {
    * @default false
    */
   approvalReason?: boolean;
-  /** Approve's label, as Confirmation's `approveLabel`. */
+  /**
+   * Approve's label, as Confirmation's `approveLabel`.
+   * @default "Approve"
+   */
   approveLabel?: string;
   /** @default "Always allow" */
   alwaysLabel?: string;
@@ -37,9 +40,7 @@ export type ApprovalPartOptions = {
   riskText?: string;
 };
 
-/** The Confirmation the approval part renders. */
-export type ApprovalPartState = Pick<
-  ConfirmationOptions,
+type ConfirmationProp =
   | "approval"
   | "label"
   | "onApprove"
@@ -54,8 +55,10 @@ export type ApprovalPartState = Pick<
   | "risk"
   | "riskText"
   | "focusFallback"
-  | "motion"
->;
+  | "motion";
+
+/** The Confirmation the approval part renders. */
+export type ApprovalPartState = { [Key in ConfirmationProp]?: ConfirmationOptions[Key] | undefined };
 
 /** What a component that spreads the approval part keeps in its state. */
 export type ApprovalState = {
@@ -69,22 +72,20 @@ export type ApprovalState = {
   canAlwaysAllow: boolean;
   /** The `approvalReason` option. */
   approvalReason: boolean;
-  approveLabel: string | undefined;
-  alwaysLabel: string | undefined;
-  alwaysTarget: string | undefined;
-  alwaysScope: string | undefined;
-  alwaysDetail: string | undefined;
-  risk: "danger" | undefined;
-  riskText: string | undefined;
+} & {
+  [Key in
+    | "approveLabel"
+    | "alwaysLabel"
+    | "alwaysTarget"
+    | "alwaysScope"
+    | "alwaysDetail"
+    | "risk"
+    | "riskText"]: ApprovalPartOptions[Key] | undefined;
 };
 
 type HostState = ApprovalState & { motion: MotionMode };
 
-type HostContext = {
-  options: () => ApprovalPartOptions;
-  // A method, so a component's context, whose `element` takes only its own slot names, fits.
-  element(slot: string): HTMLElement | undefined;
-};
+type HostContext = { options: () => ApprovalPartOptions };
 
 export type ApprovalPartConfig<State extends HostState> = {
   /** The Confirmation's question, from the host's state. */
@@ -162,13 +163,14 @@ export const approvalPart = {
         ...(canApprove && { onApprove: approve }),
         ...(canDeny && { onDeny: deny }),
         ...(canAlwaysAllow && { onAlwaysAllow: always }),
-        ...(approveLabel !== undefined && { approveLabel }),
-        ...(alwaysLabel !== undefined && { alwaysLabel }),
-        ...(alwaysTarget !== undefined && { alwaysTarget }),
-        ...(alwaysScope !== undefined && { alwaysScope }),
-        ...(alwaysDetail !== undefined && { alwaysDetail }),
-        ...(risk && { risk }),
-        ...(riskText !== undefined && { riskText }),
+        // Always present, so a Web Components host that writes these onto its Confirmation clears one it dropped.
+        approveLabel,
+        alwaysLabel,
+        alwaysTarget,
+        alwaysScope,
+        alwaysDetail,
+        risk,
+        riskText,
       }),
     );
     return (state) =>

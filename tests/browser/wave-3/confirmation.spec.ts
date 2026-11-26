@@ -331,6 +331,13 @@ test("Always allow takes its own row above Deny and Approve only when the three 
   const [deny2, always2, approve2] = await tops();
   expect(always2).toBeLessThan(deny2 as number);
   expect(deny2).toBe(approve2);
+  const gap = await confirmation(page, "always")
+    .locator('[data-slot="kind-confirmation-choices"] [data-kind-button]:visible')
+    .evaluateAll(([deny, always]) => {
+      const [a, b] = [always?.getBoundingClientRect(), deny?.getBoundingClientRect()];
+      return Math.round((b?.top ?? 0) - (a?.bottom ?? 0));
+    });
+  expect(gap).toBe(8);
 });
 
 for (const colorScheme of ["light", "dark"] as const) {
