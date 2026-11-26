@@ -1,6 +1,6 @@
 # `@kind-ui/agent-ui` Wave 7 redesign: the working turn
 
-- **Status:** Proposed 2026-11-26, design only, for the user's review. Nothing here is built. Mockups for every item, in light and dark at 1280 and 390 px, are attached to the PR that adds this file.
+- **Status:** Approved 2026-11-26 (decisions in §20, build order in §21). Design only; nothing here is built yet. Mockups for every item, in light and dark at 1280 and 390 px, are attached to the PR that adds this file.
 - **Replaces:** the first Wave 7 draft (`2026-11-25-agent-ui-wave-7-design.md`, on the unmerged `wave-7b` branch), which proposed 12 new components and 8 changes. Each item below says how it differs from that draft.
 - **Extends:** `docs/superpowers/specs/2026-11-14-agent-ui-design.md` (the base spec). Every rule there binds Wave 7: §2 "Building on UI SDK", §4.1 ownership and the approval contract, §5 Step base, §6 motion and agent actions, §8 accessibility, §9 distribution, and the five render layers. `docs/design-principles.md` decides the look.
 - **Builds on:** UI SDK `0.1.0-beta.17` (Progress, Meter, Menu, Alert Dialog, Radio group, `createVirtualizer`, `createListFocus`'s pattern, `createPopup`, `bindStepPanel`, `announce`) and one new OSS package, `diff` (jsdiff, BSD-3-Clause), for Diff.
@@ -17,7 +17,7 @@ The moments that recur, strongest first: approve an act where it shows, with how
 
 ### 1.1 Scope
 
-| Item | Kind | Release |
+| Item | Kind | Release (superseded by §21: all in 0.9.0) |
 | --- | --- | --- |
 | **Diff** (§4) | New. One component for one file or a run's changes: the summary, Keep all and Undo all, per-file and per-change Keep and Undo. | 7a (0.9.0) |
 | **Step Group** (§5) | New. One line that names a turn's work and expands to the host's own step rows. | 7a |
@@ -31,7 +31,7 @@ The moments that recur, strongest first: approve an act where it shows, with how
 | **Thread List** (§13) | Change. Group by what needs the person; Archive with Unarchive; one mark per row. | 7b |
 | **Checkpoint** (§14) | Change. Restore scope (code, conversation or both) and what will be lost, with Compare. | 7b |
 | **Cost hint** (§15) | Change to Model Selector and Model Control. A relative cost per model, in the row. | 7b |
-| **Schedule Card** (§16) | **Pending user decision.** New, after 7b if kept. | — |
+| **Schedule Card** (§16) | **Waits** (§20): not in this wave. | — |
 
 **Dropped** from the first draft, each because no in-app moment needs it: Trace, Run Timeline, Job Progress, Agent Card, Activity Graph, Flow Graph, Handoff, and Tool's Retry button (§17). Usage Meter and Quota Notice fold into Context Meter and Notice. Dropping Flow Graph drops `@dagrejs/dagre`.
 
@@ -722,7 +722,7 @@ A row's trailing meta shows `cost` in tabular figures ("1×", "3×", "Free"). A 
 
 New.
 
-## 16. Schedule Card (pending user decision)
+## 16. Schedule Card (waits, not in this wave)
 
 **Problem.** Is my recurring run on, when does it run next, did the last run work, and can I run it now?
 
@@ -751,10 +751,28 @@ Every item meets base spec §8. Specifically: every status has words; outcomes t
 
 Static prototypes built from the library's own compiled stylesheet and tokens, with the new parts drawn from tokens only, rendered in light and dark at 1280 and 390 px. One page per item, every state above in numbered frames: `diff`, `step-group`, `composer`, `message`, `terminal`, `confirmation`, `stalled`, `context-meter`, `notice`, `thread-list`, `checkpoint`, `cost-hint`, `schedule-card`. They're attached to this spec's PR, not committed. Product names in the mockups' sample data (model names) are example data a host would pass, not references.
 
-## 20. Open questions
+## 20. Decisions
 
-1. **Schedule Card:** build after 7b, or wait for a host (§16)?
-2. **Per-change Keep and Undo in 7a:** the mockups show them; if a host can't apply per-change decisions, Diff still works per file (`perChange: false`). Ship both now, or per file first?
-3. **Steer as the default mode:** Send reads "Steer" while running. Some hosts may prefer "Queue" as the safer default; `steerMode` allows either, but which do the docs show?
-4. **Confirmation's button order** flips to Deny before Approve (§9). It matches the vocabulary but changes 0.8's visual order. Accept the change?
-5. **Where a run's result goes after an approval** (§2.1, §8): the research said the outcome line turns into the result ("Exited with code 1"). Terminal's header already says it, so this spec keeps the decision on the outcome line and says the result once, in the header. Agree?
+The user's answers to the open questions, 2026-11-26:
+
+1. **Schedule Card waits.** It isn't in this wave; it's built when a host needs it, as §16 describes.
+2. **Diff ships per-change Keep and Undo now,** beside per-file Keep and Undo and Keep all and Undo all. `perChange: false` stays for hosts that can only apply whole files.
+3. **The docs show Steer as the running Send's default** (`steerMode: "steer"`, as in §6). Queue is one key or one menu choice away, and a docs example shows `steerMode: "queue"` for hosts that want it.
+4. **Deny comes before Approve,** with the primary action on the right, in Confirmation and everything that composes it (Tool, Terminal). The 0.9.0 changeset names the change of order.
+5. **Terminal says the result once, in its header;** the outcome line keeps the decision (§2.1, §8).
+
+## 21. Build order
+
+One stacked PR per layer, bottom to top; each builds on the one below. The whole stack ships as one release, 0.9.0, so this order replaces the 7a and 7b split in §1.1.
+
+1. This spec.
+2. Marks and Confirmation: the shared outcome vocabulary (`core/words.ts`), the denied and expired glyphs, Always allow's scope, expiry, and Deny before Approve.
+3. Terminal approval.
+4. Composer and Queue.
+5. Message, and the stalled state.
+6. Step Group.
+7. Diff.
+8. Checkpoint.
+9. Context Meter, Notice's limit options and recipe, and the cost hint.
+10. Thread List inbox.
+11. The docs index, the published skill, and the 0.9.0 changeset.
