@@ -102,6 +102,8 @@ import { defineConversationSearch } from "./components/ui/web/conversation-searc
 
 // wave-7-task-8: Handoff
 
+import { defineHandoff } from "./components/ui/web/handoff.js";
+
 // wave-7-task-10: Trace
 
 // wave-7-task-11: Run Timeline
@@ -227,6 +229,8 @@ for (const define of [
   // wave-7-task-7: Step Group
 
   // wave-7-task-8: Handoff
+
+  defineHandoff,
 
   // wave-7-task-10: Trace
 
@@ -381,6 +385,8 @@ const items = {
   // wave-7-task-7: Step Group
 
   // wave-7-task-8: Handoff
+
+  handoff: `<kind-handoff status="accepted" reason="Refunds need a person"></kind-handoff>`,
 
   // wave-7-task-10: Trace
 

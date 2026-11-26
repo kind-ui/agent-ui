@@ -80,6 +80,8 @@ const consumers: Record<string, string> = {
 
   // wave-7-task-8: Handoff
 
+  "handoff/handoff.ts": "kind-handoff-status-icon",
+
   // wave-7-task-10: Trace
 
   // wave-7-task-11: Run Timeline
@@ -231,6 +233,8 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
   // wave-7-task-7: Step Group
 
   // wave-7-task-8: Handoff
+
+  { url: "/?c=handoff&case=all", slots: ["kind-handoff-status-icon"] },
 
   // wave-7-task-10: Trace
 

@@ -291,6 +291,10 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
 
   // wave-7-task-8: Handoff
 
+  handoff: [
+    { c: "handoff", case: "all", interaction: press('#billing [data-slot="kind-confirmation-deny"]') },
+  ],
+
   // wave-7-task-10: Trace
 
   // wave-7-task-11: Run Timeline

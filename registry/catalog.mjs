@@ -469,6 +469,15 @@ export const components = {
 
   // wave-7-task-8: Handoff
 
+  handoff: {
+    group: "steps",
+    when: "one agent passes the conversation to another agent or a person, maybe after a person approves.",
+    title: "Handoff",
+    description:
+      "One agent handing the conversation to another agent or a person: who, why, its status and approval.",
+    uses: ["confirmation"],
+  },
+
   // wave-7-task-10: Trace
 
   // wave-7-task-11: Run Timeline

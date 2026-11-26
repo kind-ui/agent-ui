@@ -1,4 +1,4 @@
-import { announce, definePrimitive, type SlotDefinition } from "@ui-sdk/core";
+import { announce, definePrimitive, type SlotDefinition, sourceOf } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { AgentInfo, Approval, StepStatus } from "../../types/index.js";
 import { isActionable } from "../approval.js";
@@ -188,6 +188,9 @@ export const handoffPrimitive: HandoffPrimitive = definePrimitive<
   state: presentation,
   sync: presentation,
   api: (context) => {
+    // Starts UI SDK's input tracking, which nothing else in a handoff does, so the Confirmation's first decision
+    // reports the key or pointer behind it.
+    sourceOf();
     // Outcomes are announced only for a handoff this instance saw waiting, so a conversation's earlier ones are quiet.
     let last = context.store.get().status;
     let saw = last === "pending";

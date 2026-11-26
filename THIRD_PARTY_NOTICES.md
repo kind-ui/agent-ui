@@ -121,6 +121,8 @@
 
 <!-- wave-7-task-8: Handoff -->
 
+- `packages/agent-ui/src/styles/handoff.css` (Handoff): `arrow-right`, unchanged; it derives from Feather.
+
 <!-- wave-7-task-10: Trace -->
 
 <!-- wave-7-task-11: Run Timeline -->
