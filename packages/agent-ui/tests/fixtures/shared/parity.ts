@@ -241,6 +241,11 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
     { c: "stalled", case: "all" },
   ],
   "streaming-text": [indicators],
+  "step-group": [
+    { c: "step-group", case: "all", interaction: press('#done [data-slot="kind-step-group-trigger"]') },
+    { c: "step-group", case: "live" },
+    { c: "step-group", case: "titles" },
+  ],
   subagent: [{ c: "subagent", case: "all", interaction: press('[data-slot="kind-subagent-trigger"]') }],
   suggestion: [
     suggestion,

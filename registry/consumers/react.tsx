@@ -45,6 +45,7 @@ import { Sources } from "./components/ui/sources.js";
 import { StackTrace } from "./components/ui/stack-trace.js";
 import { Status } from "./components/ui/status.js";
 import { Step, StepContent, StepIcon, StepTitle, StepTrigger } from "./components/ui/step.js";
+import { StepGroup } from "./components/ui/step-group.js";
 import { StreamingText } from "./components/ui/streaming-text.js";
 import { Subagent } from "./components/ui/subagent.js";
 import { Suggestion } from "./components/ui/suggestion.js";
@@ -148,6 +149,19 @@ const items = {
       items={[{ id: "audit", status: "complete", title: "Audit the current schema" }]}
       defaultOpen
     />
+  ),
+  "step-group": (
+    <StepGroup
+      label="Read 3 files"
+      items={[
+        { id: "a", status: "complete" },
+        { id: "b", status: "complete" },
+        { id: "c", status: "complete" },
+      ]}
+      defaultOpen
+    >
+      <p>Read three files.</p>
+    </StepGroup>
   ),
   subagent: (
     <Subagent agentName="Code reviewer" status="complete" result="No issues found." defaultOpen>

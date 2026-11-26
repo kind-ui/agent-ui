@@ -1,9 +1,8 @@
 "use client";
 
-import { stepGroupPrimitive } from "@kind-ui/agent-ui/core";
+import { codeSpans, stepGroupPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/react/primitive";
-import type { ComponentProps, ReactNode } from "react";
-import { withCode } from "./confirmation.js";
+import { type ComponentProps, Fragment, type ReactNode } from "react";
 
 const parts = createParts(stepGroupPrimitive, {
   root: "div",
@@ -41,6 +40,13 @@ export const StepGroupTrigger = parts.Trigger;
 export const StepGroupIcon = parts.Icon;
 export const StepGroupContent = parts.Content;
 export const StepGroupChildren = parts.Children;
+
+// Text with its backticks as `code`.
+const withCode = (text: string) =>
+  codeSpans(text).map((piece, index) =>
+    // biome-ignore lint/suspicious/noArrayIndexKey: the pieces never move.
+    index % 2 ? <code key={index}>{piece}</code> : <Fragment key={index}>{piece}</Fragment>,
+  );
 
 export type StepGroupTitleProps = ComponentProps<typeof parts.Title>;
 
