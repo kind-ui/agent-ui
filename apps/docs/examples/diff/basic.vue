@@ -40,6 +40,7 @@ const changes: DiffFile[] = [
 ];
 
 const files = shallowRef(changes);
+const open = changes.slice(0, 1).map((file) => file.path);
 const wait = () => new Promise((resolve) => setTimeout(resolve, 600));
 
 // The edits are already applied: Keep leaves them, Undo reverts them. Report each decision once it's done.
@@ -62,7 +63,7 @@ const undo = decide("undone");
 
 <template>
   <div class="flex w-full max-w-2xl flex-col items-start gap-3">
-    <Diff class="w-full" :files="files" :default-open="[changes[0].path]" :on-keep="keep" :on-undo="undo" />
+    <Diff class="w-full" :files="files" :default-open="open" :on-keep="keep" :on-undo="undo" />
     <button type="button" data-kind-button="secondary" @click="files = changes">Start again</button>
   </div>
 </template>

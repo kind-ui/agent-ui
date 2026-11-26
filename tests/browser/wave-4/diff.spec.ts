@@ -67,7 +67,9 @@ test("the summary, file rows and change headers say what changed in words", asyn
   // Numbers and signs come from attributes, so a copy holds only code.
   const number = ready.locator('[data-slot="kind-diff-new-number"][data-line="19"]').first();
   await expect(number).toHaveText("");
-  await expect(ready.getByRole("button", { name: "Show 17 lines, unchanged lines before change 1" })).toBeVisible();
+  await expect(
+    ready.getByRole("button", { name: "Show 17 lines, unchanged lines before change 1" }),
+  ).toBeVisible();
 
   const partly = page.locator("#partly");
   await expect(partly.locator('[data-slot="kind-diff-summary-progress"]')).toHaveText("1 of 4 reviewed");

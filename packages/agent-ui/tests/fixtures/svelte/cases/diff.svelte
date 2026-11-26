@@ -29,8 +29,9 @@
   let extra = $state(0);
   const big = $derived([bigPatch(count, extra)]);
 
-  if (variant === "budget") expose({ kindDiffStream: () => extra++ });
-  else if (variant !== "all") expose({ kindDiff: host.handle });
+  const handles = () =>
+    variant === "budget" ? { kindDiffStream: () => extra++ } : variant === "all" ? {} : { kindDiff: host.handle };
+  expose(handles());
 </script>
 
 {#if variant === "all"}

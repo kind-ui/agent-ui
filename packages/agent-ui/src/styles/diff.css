@@ -194,7 +194,8 @@
   }
 
   /* Descendants, since on Web Components a button part sits in a `display: contents` wrapper. */
-  [data-slot="kind-diff-file"]:has(> [data-slot="kind-diff-file-actions"]) [data-slot="kind-diff-file-trigger"] {
+  [data-slot="kind-diff-file"]:has(> [data-slot="kind-diff-file-actions"])
+    [data-slot="kind-diff-file-trigger"] {
     padding-inline-end: calc(var(--kind-diff-actions-width) + 2.5rem);
   }
 
