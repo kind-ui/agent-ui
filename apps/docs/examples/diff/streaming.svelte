@@ -2,10 +2,8 @@
   import { Diff } from "@/components/ui/svelte/diff/index.js";
 
   const lines = [
-    'import { randomUUID } from "node:crypto";',
-    "",
     "export async function create(userId: string) {",
-    "  const id = randomUUID();",
+    "  const id = crypto.randomUUID();",
     "  await db.sessions.insert({ id, userId });",
     "  return id;",
     "}",
