@@ -2,7 +2,8 @@
 
 import { type AnsiSpan, terminalPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/react/primitive";
-import { type ComponentProps, memo } from "react";
+import { type ComponentProps, Fragment, memo } from "react";
+import { Confirmation } from "./confirmation.js";
 
 const parts = createParts(terminalPrimitive, {
   root: "div",
@@ -11,6 +12,7 @@ const parts = createParts(terminalPrimitive, {
   title: "span",
   exit: "span",
   meta: "span",
+  approval: "div",
   content: "div",
   command: "div",
   copy: "button",
@@ -23,8 +25,8 @@ const parts = createParts(terminalPrimitive, {
 export type TerminalProps = ComponentProps<typeof parts.Root>;
 
 /**
- * A command and its output as a step: the command, its exit code and duration, then the output with its ANSI colors,
- * following its end while it streams. Any `children` replace the default parts.
+ * A command and its output as a step: the command, its exit code and duration, its approval while it has one, then
+ * the output with its ANSI colors, following its end while it streams. Any `children` replace the default parts.
  */
 export function Terminal({ children, ...props }: TerminalProps) {
   return <parts.Root {...props}>{children !== undefined ? children : DEFAULT_PARTS}</parts.Root>;
@@ -39,23 +41,43 @@ export const TerminalViewport = parts.Viewport;
 
 export type TerminalTitleProps = ComponentProps<typeof parts.Title>;
 
-/** The command, or the `label`, unless you pass children. */
-export function TerminalTitle({ children = ({ title }) => title, ...props }: TerminalTitleProps) {
+/** The command, or the `label`, or "Run <command>?" while the approval waits, unless you pass children. */
+export function TerminalTitle({
+  children = ({ spans }) =>
+    // biome-ignore lint/suspicious/noArrayIndexKey: the pieces never move.
+    spans.map((piece, index) =>
+      index % 2 ? <code key={index}>{piece}</code> : <Fragment key={index}>{piece}</Fragment>,
+    ),
+  ...props
+}: TerminalTitleProps) {
   return <parts.Title {...props}>{children}</parts.Title>;
 }
 
 export type TerminalExitProps = ComponentProps<typeof parts.Exit>;
 
-/** "exit N" once there's an exit code, unless you pass children. */
+/** "Exit N" once there's an exit code other than 0, unless you pass children. */
 export function TerminalExit({ children = ({ text }) => text, ...props }: TerminalExitProps) {
   return <parts.Exit {...props}>{children}</parts.Exit>;
 }
 
 export type TerminalMetaProps = ComponentProps<typeof parts.Meta>;
 
-/** The duration as "N s", unless you pass children. */
-export function TerminalMeta({ children = ({ duration }) => duration, ...props }: TerminalMetaProps) {
+/** "Waiting for approval" while the approval waits, else the duration as "6 sec", unless you pass children. */
+export function TerminalMeta({ children = ({ text }) => text, ...props }: TerminalMetaProps) {
   return <parts.Meta {...props}>{children}</parts.Meta>;
+}
+
+export type TerminalApprovalProps = ComponentProps<typeof parts.Approval>;
+
+/**
+ * A Confirmation for the command's approval while it has one: the choices whose callbacks are set while the request
+ * waits, then what was decided. Pass children to render it yourself.
+ */
+export function TerminalApproval({
+  children = (confirmation) => <Confirmation {...confirmation} />,
+  ...props
+}: TerminalApprovalProps) {
+  return <parts.Approval {...props}>{children}</parts.Approval>;
 }
 
 export type TerminalCommandProps = ComponentProps<typeof parts.Command>;
@@ -128,6 +150,7 @@ const DEFAULT_PARTS = (
       <TerminalExit />
       <TerminalMeta />
     </TerminalTrigger>
+    <TerminalApproval />
     <TerminalContent>
       <div data-terminal-screen="" data-kind-code="">
         <div data-terminal-header="">

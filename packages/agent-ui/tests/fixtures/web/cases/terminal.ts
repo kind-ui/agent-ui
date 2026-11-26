@@ -1,6 +1,7 @@
 import type { TerminalOptions } from "@kind-ui/agent-ui/core";
 import { defineTerminal } from "../../../../src/web/terminal.js";
-import { installRun, manyLines, testRun } from "../../shared/terminal.js";
+import { confirmationHost } from "../../shared/confirmation.js";
+import { approvalTerminals, installRun, manyLines, testRun } from "../../shared/terminal.js";
 
 type Row = TerminalOptions & { id: string; keepClipboard?: boolean };
 
@@ -51,7 +52,39 @@ const owned: Row[] = [
   { id: "empty", command: "npm run build", output: "" },
 ];
 
+const approvals = (root: HTMLElement) => {
+  defineTerminal();
+  const { host, approve, deny, always } = confirmationHost();
+  const list = document.createElement("div");
+  list.className = "flex w-full max-w-[40rem] flex-col gap-4 p-6";
+  for (const { id, options } of approvalTerminals()) {
+    const terminal = document.createElement("kind-terminal");
+    terminal.id = id;
+    Object.assign(terminal, { canApprove: true, canDeny: true, canAlwaysAllow: true });
+    terminal.addEventListener("approve", (event) =>
+      event.detail.waitUntil(Promise.resolve(approve(event.detail.value, event.detail))),
+    );
+    terminal.addEventListener("deny", (event) =>
+      event.detail.waitUntil(Promise.resolve(deny(event.detail.value, event.detail))),
+    );
+    terminal.addEventListener("alwaysallow", (event) =>
+      event.detail.waitUntil(Promise.resolve(always(event.detail.value, event.detail))),
+    );
+    list.append(terminal);
+    Object.assign(terminal, options);
+  }
+  root.append(list);
+  Object.assign(window, {
+    kindHost: host,
+    kindTerminal: {
+      set: (id: string, next: Partial<TerminalOptions>) =>
+        Object.assign(root.querySelector(`#${id}`) as HTMLElementTagNameMap["kind-terminal"], next),
+    },
+  });
+};
+
 export const cases = {
+  approval: approvals,
   all: terminals(all),
   owned: terminals(owned),
   "stream-10": terminals([{ id: "stream", command: "npm run build", output: manyLines(10) }]),

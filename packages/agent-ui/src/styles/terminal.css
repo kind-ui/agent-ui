@@ -1,6 +1,6 @@
-/* Terminal (spec §7): the Step base's header with the command, its exit code and duration, over a code surface
-   (`data-kind-code`, controls.css) with the output in its ANSI colors. The trigger and the panel's motion come from
-   step.css, through `data-step-part`. */
+/* Terminal (spec §7, Wave 7 spec §8): the Step base's header with the command, its exit code and duration, its
+   approval under it, then a code surface (`data-kind-code`, controls.css) with the output in its ANSI colors. The
+   trigger and the panel's motion come from step.css, through `data-step-part`. */
 @layer components {
   [data-slot="kind-terminal"] {
     --kind-terminal-max-height: 20rem;
@@ -11,6 +11,37 @@
   [data-slot="kind-terminal-title"]:where([data-command]) {
     font-family: var(--kind-font-mono);
     font-size: var(--kind-terminal-font-size);
+  }
+
+  /* The question shows the whole command, wrapping rather than truncating at any width (Wave 7 spec §8). */
+  [data-slot="kind-terminal-title"]:where([data-question]) {
+    white-space: normal;
+    overflow-wrap: anywhere;
+
+    & code {
+      font-family: var(--kind-font-mono);
+      font-size: var(--kind-terminal-font-size);
+    }
+  }
+
+  /* A wrapped title keeps the mark, the meta and the chevron on its first line. */
+  [data-slot="kind-terminal-trigger"] {
+    --kind-terminal-header-line: var(--kind-text-md-leading);
+    align-items: flex-start;
+
+    & > :is([data-step-part="icon"], [data-step-part="meta"], [data-slot="kind-terminal-exit"]) {
+      line-height: var(--kind-terminal-header-line);
+    }
+    & > [data-step-part="icon"] {
+      margin-block-start: calc((var(--kind-terminal-header-line) - var(--kind-status-mark-size, 16px)) / 2);
+    }
+    &::after {
+      margin-block-start: calc((var(--kind-terminal-header-line) - 6px) / 2);
+    }
+    /* It can't close while its approval waits. */
+    &[aria-disabled="true"] {
+      cursor: default;
+    }
   }
 
   /* Custom elements on Web Components are inline until styled. */
@@ -44,12 +75,48 @@
     display: none;
   }
 
-  /* No guide line: the screen sits under the header at full width. */
   [data-slot="kind-terminal-content"] {
-    margin-inline-start: 0;
-    padding-inline-start: 0;
-    border-inline-start: 0;
     color: var(--kind-color-fg);
+  }
+
+  /* Under the header at the title's indent, on the guide line, so the request, its outcome and the output read as
+     one block. */
+  [data-slot="kind-terminal-approval"] {
+    display: block;
+    margin-inline-start: var(--kind-step-guide);
+    padding-block: 4px;
+    padding-inline-start: calc(
+      var(--kind-step-indent) -
+      var(--kind-step-guide) -
+      var(--kind-step-guide-width)
+    );
+    border-inline-start: var(--kind-step-guide-width) solid var(--kind-color-border);
+  }
+
+  /* The header asks the question and carries the mark. */
+  :where([data-slot="kind-terminal-approval"]) [data-slot="kind-confirmation-title"] {
+    display: none;
+  }
+
+  /* An approval keeps a quiet check before its words; a command that never ran has its mark in the header, so its
+     outcome reads only words (Wave 7 spec §2.1 Marks). */
+  :where([data-slot="kind-terminal-approval"]) [data-slot="kind-confirmation-outcome-icon"] {
+    --kind-status-mark-complete: transparent;
+    --kind-color-on-status: var(--kind-color-muted);
+
+    &:not([data-status="complete"]) {
+      display: none;
+    }
+  }
+
+  /* No screen while a command that waits on its approval, or never ran, has printed nothing. */
+  [data-terminal-screen]:not(
+    :has(
+      [data-slot="kind-terminal-viewport"]:not([hidden]),
+      [data-slot="kind-terminal-command"]:not([hidden])
+    )
+  ) {
+    display: none;
   }
 
   /* A filled code surface, no edge (docs/design-principles.md "System"). */
@@ -119,7 +186,9 @@
 
   /* Its line height is the virtualizer's guess for every line, so a line that doesn't wrap never moves the ones
      after it when it's measured. */
+  /* At least a line high, so once a command is approved its first line moves nothing. */
   [data-slot="kind-terminal-viewport"] {
+    min-height: calc(var(--kind-terminal-line-height) + 1rem);
     max-height: var(--kind-terminal-max-height);
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -259,7 +328,9 @@
   :is(
     [data-slot="kind-terminal-jump"],
     [data-slot="kind-terminal-exit"],
-    [data-slot="kind-terminal-command"]
+    [data-slot="kind-terminal-command"],
+    [data-slot="kind-terminal-approval"],
+    [data-slot="kind-terminal-viewport"]
   )[hidden] {
     display: none;
   }
