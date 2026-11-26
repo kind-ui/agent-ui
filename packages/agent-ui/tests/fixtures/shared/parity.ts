@@ -88,6 +88,8 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
       interaction: openMenu,
       needs: ["add-menu", "approval-mode", "context-bar", "dictation", "model-control", "settings-menu"],
     },
+    { c: "composer-steer", case: "steer", interaction: openMenu },
+    { c: "composer-steer", case: "steer&idle" },
   ],
   confirmation: [confirmation],
   "connection-status": [
@@ -214,6 +216,7 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
       interaction: press('[data-slot="kind-queue-section-trigger"][aria-expanded="false"]'),
     },
     { c: "queue", case: "readonly" },
+    { c: "composer-steer", case: "queue" },
   ],
   reasoning: [{ c: "reasoning", case: "all", interaction: press('[data-slot="kind-reasoning-trigger"]') }],
   "reasoning-effort": [

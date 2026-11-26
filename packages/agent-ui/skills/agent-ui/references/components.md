@@ -17,7 +17,7 @@ All 56 components, grouped by the job they do. The item is the React name: add `
 | `markdown` | Markdown | You render model text, streamed or finished; it repairs half-written blocks as they arrive. |
 | `code-block` | Code Block | You show code outside Markdown, or need its copy, wrap or a highlight function. |
 | `markdown-table` | Markdown Table | You show a table outside Markdown that has to scroll sideways and copy. |
-| `composer` | Composer | A person writes the prompt: send and stop, mentions, commands, attachments and saved drafts. |
+| `composer` | Composer | A person writes the prompt: send, steer and stop, mentions, commands, attachments and saved drafts. |
 | `attachments` | Attachments | You list attached files on their own, outside the Composer, which already shows them. |
 | `uploader` | Uploader | Files upload with progress, and a person can cancel or retry each one. |
 

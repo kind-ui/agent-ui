@@ -156,6 +156,33 @@ import { ModelControl } from "@/components/ui/model-control";
 
 Below 28rem the Model Control and Approval Mode buttons show only their icon. Dictation hands its text to the composer itself. `createSpeechDictation()` from `@kind-ui/agent-ui/core` is a source over the browser's speech recognition. The full example is the Composer page's "Controls and narrow screens".
 
+## Steer a running turn
+
+Pass `running` while the agent's turn runs. With `onSteer`, Send stays beside Stop as Steer: Enter steers the turn, Ctrl/Cmd+Enter queues for the next, and a chevron menu offers both. Queued follow-ups go in a Queue whose `onSend` sends one now:
+
+```tsx
+import { Composer, ComposerInput, ComposerSteerMenu, ComposerStop, ComposerSubmit } from "@/components/ui/composer";
+import { Queue } from "@/components/ui/queue";
+
+<Queue label="Queued follow-ups" items={queued} onSend={(id) => steerWith(id)} onRemove={dropQueued} />
+<Composer
+  aria-label="Message"
+  running={status === "streaming"}
+  onSubmit={send}
+  onStop={stop}
+  onSteer={(draft, { mode }) => (mode === "steer" ? steer(draft.text) : enqueue(draft.text))}
+>
+  <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
+  <ComposerSubmit />
+  <ComposerSteerMenu />
+  <ComposerStop />
+</Composer>
+```
+
+- Return a promise from `onSteer` to lock sending until it settles; a resolve clears only what was sent, a reject keeps the draft.
+- Without `onSteer`, `running` alone shows Stop in Send's place for the whole turn.
+- An agent's `steer` and `queue` actions wait for a person while `agentConfirm` is on, as every composer action does.
+
 ## The sidebar shell
 
 A chat app: chats in a resizable Sidebar that turns into a drawer on phones, with search and a thread list, and the chat beside them.

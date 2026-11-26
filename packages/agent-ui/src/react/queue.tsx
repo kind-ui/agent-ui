@@ -14,6 +14,7 @@ const parts = createParts(queuePrimitive, {
   "item-icon": "span",
   "item-title": "span",
   "item-description": "span",
+  "item-send": "span",
   "item-remove": "span",
   instructions: "span",
 });
@@ -32,6 +33,22 @@ export const QueueSection = parts.Section;
 export const QueueSectionContent = parts.SectionContent;
 export const QueueItemIcon = parts.ItemIcon;
 export const QueueItemRemove = parts.ItemRemove;
+
+export type QueueItemSendProps = ComponentProps<typeof parts.ItemSend>;
+
+/** Sends a queued item now, shown while `onSend` is set: "Send now" unless you pass children. Pointer only: Ctrl+Enter or Cmd+Enter on the item sends it too. */
+export function QueueItemSend({ children, ...props }: QueueItemSendProps) {
+  return (
+    <parts.ItemSend {...props}>
+      {children ?? (
+        <>
+          Send now
+          <span data-kind-pending-mark="" data-status-mark="" data-status="running" aria-hidden="true" />
+        </>
+      )}
+    </parts.ItemSend>
+  );
+}
 
 export type QueueSectionTriggerProps = ComponentProps<typeof parts.SectionTrigger>;
 
@@ -97,6 +114,7 @@ const DEFAULT_ITEM_PARTS = (
       <QueueItemTitle />
       <QueueItemDescription />
     </span>
+    <QueueItemSend />
     <QueueItemRemove />
   </>
 );

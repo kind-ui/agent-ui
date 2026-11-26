@@ -5,6 +5,8 @@ export {
   type QueueReorderReason,
   type QueueSection,
   type QueueSectionState,
+  type QueueSendDetails,
+  type QueueSendReason,
   type QueueState,
   queueInstructions,
   queuePrimitive,

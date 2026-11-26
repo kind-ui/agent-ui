@@ -2,6 +2,7 @@
 
 import { type ComposerTriggerItem, composerPrimitive } from "@kind-ui/agent-ui/core";
 import { FileInput, FileInputDropzone, FileInputTrigger } from "@ui-sdk/react/file-input";
+import { MenuTrigger } from "@ui-sdk/react/menu";
 import { createParts } from "@ui-sdk/react/primitive";
 import {
   type Token,
@@ -12,6 +13,7 @@ import {
 } from "@ui-sdk/react/token-input";
 import type { ComponentProps, ReactNode } from "react";
 import { Attachments, type AttachmentsProps } from "./attachments.js";
+import { KindMenu, KindMenuContent, KindMenuItem } from "./internal/menu.js";
 import {
   KindTriggerMenu,
   KindTriggerMenuContent,
@@ -26,6 +28,9 @@ const parts = createParts(composerPrimitive, {
   "trigger-menu": "div",
   attachments: "div",
   submit: "button",
+  steer: "button",
+  "steer-menu": "div",
+  "steer-menu-trigger": "span",
   stop: "button",
   restored: "div",
   discard: "button",
@@ -135,5 +140,82 @@ export function ComposerRestored({ children, ...props }: ComponentProps<typeof p
 
 /** Sends the draft. Hidden while Stop shows. */
 export const ComposerSubmit = parts.Submit;
-/** Shown in Send's place while a submission is pending, when the composer has `onStop`. */
+/** Shown in Send's place while a submission is pending or `running`, when the composer has `onStop`. */
 export const ComposerStop = parts.Stop;
+
+export type ComposerSteerProps = ComponentProps<typeof parts.Steer>;
+
+/** Send while a turn runs: "Steer" or "Queue" by `steerMode`, unless you pass children. */
+export function ComposerSteer({ children, ...props }: ComposerSteerProps) {
+  return (
+    <parts.Steer {...props}>
+      {children ??
+        (({ label }) => (
+          <>
+            {label}
+            <span data-kind-pending-mark="" data-status-mark="" data-status="running" aria-hidden="true" />
+          </>
+        ))}
+    </parts.Steer>
+  );
+}
+
+export type ComposerSteerMenuTriggerProps = ComponentProps<typeof MenuTrigger>;
+
+/** Opens the menu of send modes: UI SDK's `MenuTrigger`, a chevron unless you pass children. */
+export function ComposerSteerMenuTrigger({ children, ...props }: ComposerSteerMenuTriggerProps) {
+  return (
+    <parts.SteerMenuTrigger>
+      {(trigger) => (
+        // Hidden from agents, which use the composer's `steer` and `queue`.
+        <MenuTrigger
+          {...trigger}
+          data-agent-hidden=""
+          data-kind-icon-button=""
+          data-kind-size="lg"
+          {...props}
+        >
+          {children ?? <span data-composer-chevron="" aria-hidden="true" />}
+        </MenuTrigger>
+      )}
+    </parts.SteerMenuTrigger>
+  );
+}
+
+export type ComposerSteerMenuProps = Omit<ComponentProps<typeof parts.SteerMenu>, "children"> & {
+  children?: ReactNode;
+};
+
+/**
+ * Send, its menu of modes and Stop's neighbor while a turn runs and the composer has `onSteer`: Steer or Queue, and
+ * a chevron offering "Steer now" and "Queue for next turn". Put it beside `ComposerSubmit` and `ComposerStop`.
+ */
+export function ComposerSteerMenu({ children, ...props }: ComposerSteerMenuProps) {
+  return (
+    <parts.SteerMenu {...props}>
+      {({ items, ...menu }) => (
+        <KindMenu {...menu}>
+          {children ?? (
+            <>
+              <ComposerSteer />
+              <ComposerSteerMenuTrigger />
+              <KindMenuContent align="end" side="top" sideOffset={6}>
+                {items.map((item) => (
+                  <KindMenuItem
+                    key={item.value}
+                    value={item.value}
+                    label={item.label}
+                    shortcut={item.shortcut}
+                    disabled={item.disabled}
+                  >
+                    {item.label}
+                  </KindMenuItem>
+                ))}
+              </KindMenuContent>
+            </>
+          )}
+        </KindMenu>
+      )}
+    </parts.SteerMenu>
+  );
+}
