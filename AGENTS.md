@@ -386,6 +386,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- wave-7-task-11: Run Timeline -->
 
+- **Run Timeline (Wave 7 Task 11):** `runTimelinePrimitive` composes UI SDK Timeline (`internal-timeline`), which owns the list, roving focus, `feed`, `busy` and `aria-current`; our `item` part is a `display`-free wrapper around each `TimelineItem` (the Timeline finds its items by `data-slot` inside it), and the root is a `group` named by `label`, since the bridge names a component by its root. The connector carries `data-agent-hidden`, which takes the Timeline out of the snapshot while the events stay the Run Timeline's (`agent.items`, closed; no actions but the bridge's `press` for Show earlier). `events` reach state in `onOptions` as `rows` and per-id `entries` (an unchanged event keeps its entry), not through `sync`. Times are `timeLabel` read with `now` from the root's `bind` and `everyMinute`, so server markup shows each date. The status mark says nothing to screen readers, so the title adds the status in words, visually hidden ("Ran the tests (failed)"). The plan's `end` slot holds Show earlier (the `more` button, `aria-disabled` and reading "Loading" while `busy`, so focus stays on it) or "Loading" alone; Show earlier's focus recovery moves to the oldest event. `onLoadMore(details)` gets `{ reason: "more-press" | "imperative", source }`; web needs `can-load-more` and fires `loadmore`.
+
 <!-- wave-7-task-12: Job Progress -->
 
 <!-- wave-7-task-13: Schedule Card -->

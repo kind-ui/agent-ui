@@ -1,0 +1,86 @@
+---
+title: Run Timeline
+description: Show what happened in an agent's run, in time order, on UI SDK's Timeline.
+---
+
+import RunTimelineExample from "../../../examples/run-timeline/basic";
+
+Use a run timeline beside or after a run, to show what happened and when: the run starting, a person approving a command, tests failing, a pull request opening. Each event shows its status, its time, who did it and a short description. Tab reaches the list once, and Up and Down move between events.
+
+<Example caption="Tab into the activity: focus lands on Running checks, the step running now. Press Up and Down to move, or Show earlier to load the event before the first.">
+  <RunTimelineExample />
+
+  <ExampleCode example="run-timeline/basic" />
+</Example>
+
+## Installation
+
+<Install name="run-timeline" />
+
+## Composition
+
+```text
+RunTimeline
+├── RunTimelineEnd
+│   └── RunTimelineMore
+└── Timeline
+    └── RunTimelineItem
+        └── TimelineItem
+            ├── TimelineMarker
+            │   └── RunTimelineMarker
+            ├── TimelineConnector
+            ├── TimelineTitle
+            │   └── RunTimelineTitle
+            ├── TimelineTime
+            │   └── RunTimelineTime
+            └── TimelineDescription
+                ├── RunTimelineActor
+                └── RunTimelineDescription
+```
+
+`RunTimeline` holds a UI SDK Timeline and renders a `RunTimelineEvent` for each event, keyed by its `id`. `RunTimelineMarker` is the event's status mark, or a dot without a status. `RunTimelineTitle` shows the `title`, with the status in words for screen readers. `RunTimelineTime` shows the time of day, with the date when it isn't today. `RunTimelineActor` shows who did it, and `RunTimelineDescription` the `description` as Markdown. `RunTimelineEnd` sits before the oldest event and holds Show earlier, or "Loading" while earlier events load without it. To draw the events yourself, pass them as children of `RunTimeline`.
+
+## Usage
+
+### Events
+
+Pass `events`, oldest first, each with an `id`, an `at` (an ISO 8601 date-time) and a `title`, and optionally a `status`, an `actor` and a `description`. The newest event, while its status is `running`, is the current step: Tab lands on it first.
+
+```tsx
+<RunTimeline
+  events={[
+    { id: "started", at: "2026-11-10T14:02:00Z", title: "Run started", status: "complete" },
+    { id: "checks", at: "2026-11-10T14:20:00Z", title: "Running checks", status: "running" },
+  ]}
+/>
+```
+
+### Streaming Events
+
+Append events as the run goes, keeping each `id`. An event added after the first render fades up once; events already shown never move or replay it. At full motion it fades up; with `prefers-reduced-motion` or `motion="reduced"` it fades in over 120 ms; with `motion="none"` it shows at once.
+
+### Times
+
+Times read in `timeZone` (default UTC) and `locale` (default English). Server markup shows each date, and the browser reads today from its clock after it hydrates, so an event from today reads just its time. Pass `now` to fix today, as tests do.
+
+### Order and Feeds
+
+Set `order="newest-first"` to show the newest event first; Show earlier then sits after the list. Set `feed` for a long history: the list becomes a feed of articles, which Page Down and Page Up move between, and `busy` tells screen readers to wait while you load more.
+
+### Loading Earlier Events
+
+Pass `hasMore` and `onLoadMore` to show Show earlier. It calls `onLoadMore` with `"more-press"` and who pressed it; set `busy` while the events load, and Show earlier reads "Loading" and does nothing until you clear it. When it leaves, focus moves to the oldest event.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/run-timeline/run-timeline.ts" name="RunTimelineOptions" />
+
+<FrameworkNames name="run-timeline" />
+
+### Agent
+
+An agent connected with `createAgent` finds the timeline by its `label` and reads its events as items. A run timeline is content, so it offers no actions of its own; like any component with a button, it has UI SDK's generic `press` for Show earlier.
+
+<Caption>
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-run-timeline>`, set `events` as a property; the other props are kebab-case attributes, so `timeZone` is `time-zone`. Add `can-load-more` to show Show earlier, which fires `loadmore` with the reason as `detail.reason`.
+</Caption>

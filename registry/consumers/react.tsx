@@ -121,6 +121,8 @@ import { Trace } from "./components/ui/trace.js";
 
 // wave-7-task-11: Run Timeline
 
+import { RunTimeline } from "./components/ui/run-timeline.js";
+
 // wave-7-task-12: Job Progress
 
 // wave-7-task-13: Schedule Card
@@ -458,6 +460,12 @@ const items = {
   trace: <Trace spans={[{ id: "run", name: "Run", kind: "agent", start: 0, end: 120 }]} />,
 
   // wave-7-task-11: Run Timeline
+
+  "run-timeline": (
+    <RunTimeline
+      events={[{ id: "start", at: "2026-11-10T14:02:00Z", title: "Run started", status: "complete" }]}
+    />
+  ),
 
   // wave-7-task-12: Job Progress
 

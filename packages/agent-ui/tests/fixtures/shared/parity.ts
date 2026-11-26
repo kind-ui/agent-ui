@@ -48,6 +48,11 @@ const question = { c: "question", case: "all", interaction: press('[role="radio"
 const sidebar = { c: "sidebar", case: "all", interaction: press('[data-slot="kind-sidebar-trigger"]') };
 const suggestion = { c: "suggestion", case: "all" };
 // A wrapper checked only on a component's page needs that component.
+const runTimeline = {
+  c: "run-timeline",
+  case: "all",
+  interaction: [{ key: "ArrowDown", focus: '[data-slot="timeline-item"]' }],
+} as const;
 const on = (page: ParityPage, component: string): ParityPage => ({ ...page, needs: [component] });
 const internal = (variant: string, interaction?: readonly ParityStep[]): readonly ParityPage[] => [
   interaction ? { c: "internal", case: variant, interaction } : { c: "internal", case: variant },
@@ -301,6 +306,9 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
   ],
 
   // wave-7-task-11: Run Timeline
+
+  "run-timeline": [runTimeline, { c: "run-timeline", case: "feed" }],
+  "internal-timeline": [on(runTimeline, "run-timeline")],
 
   // wave-7-task-12: Job Progress
 

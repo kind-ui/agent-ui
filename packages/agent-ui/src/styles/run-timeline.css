@@ -1,0 +1,76 @@
+/* Run Timeline (Wave 7 spec §5): a run's events on UI SDK Timeline. The internal Timeline lays each event out as a
+   grid, with its marker and connector in the first column; this file draws the marker, the end row and the words. */
+@layer components {
+  [data-run-timeline-part="root"] {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: var(--kind-text-md);
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
+    color: var(--kind-color-fg);
+  }
+
+  [data-run-timeline-part="item"] {
+    display: block;
+  }
+
+  /* The connector after the last event goes once the Timeline marks it; before that, in server markup, by place. */
+  [data-run-timeline-part="item"]:last-child [data-slot="timeline-connector"] {
+    display: none;
+  }
+
+  /* An event without a status is a 6px dot, sized by its padding: only status-mark.css sizes the mark. */
+  [data-run-timeline-part="marker"]:not([data-status-mark]) {
+    display: block;
+    padding: 3px;
+    border-radius: var(--kind-radius-full);
+    background-color: var(--kind-color-muted);
+  }
+
+  [data-run-timeline-status] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  [data-run-timeline-part="time"] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  [data-run-timeline-part="actor"] {
+    display: block;
+    font-size: var(--kind-text-sm);
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
+    font-weight: var(--kind-font-weight-medium);
+    color: var(--kind-color-muted);
+  }
+
+  [data-run-timeline-part="description"] {
+    display: block;
+    --kind-markdown-font-size: var(--kind-text-md);
+    --kind-markdown-line-height: var(--kind-text-md-leading);
+    --kind-markdown-color: var(--kind-color-fg);
+  }
+
+  /* Lines up with the events' text, after the marker column. */
+  [data-run-timeline-part="end"] {
+    display: flex;
+    min-height: 28px;
+    align-items: center;
+    gap: 8px;
+    padding-inline-start: calc(0.25rem + 1rem + 0.75rem);
+    font-size: var(--kind-text-sm);
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
+    color: var(--kind-color-muted);
+  }
+
+  [data-run-timeline-part="more"] {
+    gap: 6px;
+  }
+}

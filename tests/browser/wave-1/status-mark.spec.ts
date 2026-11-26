@@ -84,6 +84,8 @@ const consumers: Record<string, string> = {
 
   // wave-7-task-11: Run Timeline
 
+  "run-timeline/run-timeline.ts": "kind-run-timeline-marker",
+
   // wave-7-task-12: Job Progress
 
   // wave-7-task-13: Schedule Card
@@ -235,6 +237,8 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
   // wave-7-task-10: Trace
 
   // wave-7-task-11: Run Timeline
+
+  { url: "/?c=run-timeline&case=all", slots: ["kind-run-timeline-marker"] },
 
   // wave-7-task-12: Job Progress
 
