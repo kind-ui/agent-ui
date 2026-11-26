@@ -49,7 +49,7 @@ Pass `from` and `to`, each an agent (`{ id, name, avatarUrl? }`) or a person (`{
 
 ### Status
 
-`status` is `pending`, `accepted`, `declined` or `complete`, shown as "Waiting", "Accepted", "Declined" or "Done" beside its mark. When a handoff the page showed as `pending` turns `accepted`, screen readers hear "Handed off to Billing", once; when it turns `declined`, "Billing declined". A handoff that loaded already decided stays quiet, so a conversation's history doesn't speak.
+`status` is `pending`, `accepted`, `declined` or `complete`, shown as "Waiting", "Accepted", "Declined" or "Done" beside its mark. When a handoff you passed as `pending` turns `accepted`, screen readers hear "Handed off to Billing", once; when it turns `declined`, "Billing declined". A handoff that loaded already decided, or without a `status`, stays quiet, so a conversation's history doesn't speak.
 
 ### Approve a Handoff
 

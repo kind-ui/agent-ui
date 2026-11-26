@@ -117,6 +117,17 @@ test("accepting announces the handoff once; declining announces it too", async (
   expect(await announced(page)).toEqual(["Handed off to Research", "Billing declined"]);
 });
 
+test("the arrow between the avatars points from one to the other in right-to-left text too", async ({
+  page,
+}) => {
+  await open(page);
+  const arrow = () =>
+    part(page, "billing", "to-avatar").evaluate((el) => getComputedStyle(el, "::before").scale);
+  expect(await arrow()).toBe("none");
+  await page.evaluate(() => document.documentElement.setAttribute("dir", "rtl"));
+  expect(await arrow()).toBe("-1 1");
+});
+
 for (const colorScheme of ["light", "dark"] as const) {
   test(`axe reports no violations in ${colorScheme} mode`, async ({ page }) => {
     await page.emulateMedia({ colorScheme, reducedMotion: "reduce" });

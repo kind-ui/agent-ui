@@ -9,6 +9,7 @@ export const handoffs: Record<string, HandoffOptions & { approve?: boolean }> = 
     from: support,
     to: billing,
     reason: "The customer asked for a refund",
+    status: "pending",
     approval: { approvalId: "billing", generation: 1, state: "requested" },
     approve: true,
   },

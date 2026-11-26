@@ -18,7 +18,7 @@
   :is([data-handoff-part="from-avatar"], [data-handoff-part="to-avatar"]) {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 8px;
     grid-row: 1;
     margin-inline-end: 8px;
 
@@ -62,12 +62,16 @@
   }
 
   /* The arrow shows only between two avatars; a person has none, and the text names both parties. */
-  [data-handoff-part="from-avatar"]:not([hidden]) + [data-handoff-part="to-avatar"]::before {
+  :where([data-handoff-part="from-avatar"]:not([hidden])) + [data-handoff-part="to-avatar"]::before {
     content: "";
     width: 12px;
     height: 12px;
     background-color: var(--kind-color-muted);
     mask: var(--kind-handoff-arrow) center / 100% 100% no-repeat;
+  }
+
+  :where([data-handoff-part="from-avatar"]:not([hidden])) + [data-handoff-part="to-avatar"]:dir(rtl)::before {
+    scale: -1 1;
   }
 
   [data-handoff-part="text"] {
@@ -78,10 +82,13 @@
     overflow-wrap: anywhere;
   }
 
+  /* Wide enough for the widest status word, so a status change never rewraps the text beside it. */
   [data-handoff-part="status"] {
     display: inline-flex;
     grid-row: 1;
     grid-column: 4;
+    min-width: 6.5em;
+    justify-content: flex-end;
     align-items: center;
     gap: 6px;
     margin-inline-start: 12px;
@@ -109,13 +116,14 @@
     line-height: var(--kind-text-sm-leading);
     letter-spacing: var(--kind-text-sm-tracking);
     overflow-wrap: anywhere;
+    quotes: auto;
 
     &::before {
-      content: "\201C";
+      content: open-quote;
     }
 
     &::after {
-      content: "\201D";
+      content: close-quote;
     }
   }
 
@@ -125,7 +133,7 @@
 
   @media (forced-colors: active) {
     /* Forced colors replace a background, which is all a mask draws. */
-    [data-handoff-part="from-avatar"]:not([hidden]) + [data-handoff-part="to-avatar"]::before {
+    :where([data-handoff-part="from-avatar"]:not([hidden])) + [data-handoff-part="to-avatar"]::before {
       forced-color-adjust: none;
       background-color: CanvasText;
     }

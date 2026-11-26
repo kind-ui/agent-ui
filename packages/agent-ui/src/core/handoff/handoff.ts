@@ -38,7 +38,7 @@ export type HandoffOptions = ApprovalPartOptions & {
    * whose callbacks are set.
    */
   approval?: Approval;
-  /** Names the handoff. Defaults to "Handoff to <to>". */
+  /** Names the handoff. Defaults to "Handoff to <to>", or "Handoff" without a `to`. */
   label?: string;
   /**
    * How the status mark and the approval's choices change. `"auto"` follows `prefers-reduced-motion`.
@@ -73,7 +73,7 @@ export type HandoffState = ApprovalState & {
   statusText: string;
   /** The status mark's status. */
   mark: StepStatus;
-  /** The `label`, else "Handoff to <to>". */
+  /** The `label`, else "Handoff to <to>", else "Handoff". */
   label: string;
   /** The `motion` option. */
   motion: MotionMode;
@@ -188,20 +188,18 @@ export const handoffPrimitive: HandoffPrimitive = definePrimitive<
   state: presentation,
   sync: presentation,
   api: (context) => {
-    // Starts UI SDK's input tracking, which nothing else in a handoff does, so the Confirmation's first decision
-    // reports the key or pointer behind it.
-    sourceOf();
-    // Outcomes are announced only for a handoff this instance saw waiting, so a conversation's earlier ones are quiet.
+    // Outcomes are announced only for a handoff the host showed waiting, so a conversation's earlier ones are quiet.
+    // A web host sets `status` once the element exists, so the default `pending` doesn't count as shown.
     let last = context.store.get().status;
-    let saw = last === "pending";
+    let saw = context.options().status === "pending";
     let accepted = false;
     context.onOptions((options) => {
       const status = statusOf(options);
+      if (options.status === "pending") saw = true;
       if (status === last) return;
       last = status;
       const to = options.to?.name || "someone";
-      if (status === "pending") saw = true;
-      else if (saw && status === "accepted" && !accepted) {
+      if (saw && status === "accepted" && !accepted) {
         accepted = true;
         announce(`Handed off to ${to}`, { priority: "polite" });
       } else if (saw && status === "declined") announce(`${to} declined`, { priority: "polite" });
@@ -217,6 +215,11 @@ export const handoffPrimitive: HandoffPrimitive = definePrimitive<
   slots: (slot) => ({
     root: slot({
       role: "group",
+      // Starts UI SDK's input tracking, which nothing else in a handoff does, so the Confirmation's first decision
+      // reports the key or pointer behind it. In `bind`, since a server creates the primitive too.
+      bind: () => {
+        sourceOf();
+      },
       attrs: (state) => ({
         "aria-label": state.label,
         "data-status": state.status,

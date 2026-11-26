@@ -35,13 +35,17 @@ const fill = (part: Element | null, text: string) => {
   if (claim(part) && part.textContent !== text) part.textContent = text;
 };
 
-/** The status's words, after the mark the element keeps before them. */
+/** The status's words, in a text node of their own after the mark, unless someone wrote the part's content. */
 const fillStatus = (part: Element | null, text: string) => {
   if (!part) return;
-  let words = [...part.childNodes].find((node) => node.nodeType === Node.TEXT_NODE);
+  let words = [...part.childNodes].find((node) => owned.has(node));
   if (!words) {
-    if ([...part.childNodes].some((node) => node.nodeName !== "KIND-HANDOFF-STATUS-ICON")) return;
+    const written = [...part.childNodes].some(
+      (node) => node.nodeName !== "KIND-HANDOFF-STATUS-ICON" && node.textContent?.trim(),
+    );
+    if (written) return;
     words = part.appendChild(part.ownerDocument.createTextNode(""));
+    owned.add(words);
   }
   if (words.textContent !== text) words.textContent = text;
 };
@@ -110,7 +114,21 @@ export function defineHandoff(): void {
           }
         };
         draw();
-        return instance.subscribe(draw);
+        const unsubscribe = instance.subscribe(draw);
+        // Parts written after the element connected, like a reason a framework renders later, are filled in too.
+        const arrivals = new MutationObserver((records) => {
+          const arrived = records.some(
+            (record) =>
+              !(record.target instanceof Element && record.target.closest("kind-confirmation")) &&
+              [...record.addedNodes].some((node) => node instanceof Element),
+          );
+          if (arrived) draw();
+        });
+        arrivals.observe(el, { childList: true, subtree: true });
+        return () => {
+          unsubscribe();
+          arrivals.disconnect();
+        };
       },
     },
     "from-avatar": "kind-handoff-from-avatar",

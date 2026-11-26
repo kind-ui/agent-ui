@@ -111,6 +111,7 @@ Last reviewed: `cb3f3e12` (UI SDK 0.1.0-beta.17 upgrade)
 
 - **A Test Results count's name changes as a run streams** (Design Wave 1 Batch D): each count is a toggle button named by its text ("2 passed"), which the ARIA pattern asks to keep fixed. Needs a screen reader check, or a fixed name with the number as a description.
 - **File Tree reads `tones` and `letters` with the host's `change` unchecked** (`file-tree.ts`): a value like `"constructor"` writes a function's text into `data-kind-badge`. Predates Batch D for `letters`.
+- Handoff (Wave 7 Task 8): a host that records an approval and sets `status` in one update hears Confirmation's "Approved" and Handoff's "Handed off to <to>" together, and which polite `announce` lands last can differ by layer. Kept: the plan asks for both; revisit with Confirmation starting its own input tracking (it doesn't yet, so Handoff's root `bind` calls `sourceOf()`).
 
 ## Resolved
 
