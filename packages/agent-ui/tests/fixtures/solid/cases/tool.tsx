@@ -4,10 +4,15 @@ import { createSignal, For, onSettled } from "solid-js";
 import { Tool } from "../../../../src/solid/tool.js";
 import { confirmationHost } from "../../shared/confirmation.js";
 import { expose } from "../../shared/expose.js";
+import { retryHost, retryRows } from "../../shared/tool-retry.js";
 
 const { host, approve, deny } = confirmationHost();
+const { retries, retry } = retryHost();
 
-type Row = Pick<ToolOptions, "status" | "error" | "motion" | "label" | "onApprove" | "onDeny"> & {
+type Row = Pick<
+  ToolOptions,
+  "status" | "error" | "motion" | "label" | "onApprove" | "onDeny" | "onRetry" | "retry" | "defaultOpen"
+> & {
   call: ToolCall;
 };
 
@@ -45,6 +50,7 @@ function Tools(props: { rows: Record<string, Row> }) {
       setRows((all) => ({ ...all, [id]: next(all[id] as Row) }));
     expose({
       kindHost: host,
+      kindRetries: retries,
       kindTool: {
         set: (id: string, next: Partial<Row>) => update(id, (row) => ({ ...row, ...next })),
         setCall: (id: string, next: Partial<ToolCall>) =>
@@ -65,6 +71,9 @@ function Tools(props: { rows: Record<string, Row> }) {
             label={entry()[1].label}
             onApprove={entry()[1].onApprove}
             onDeny={entry()[1].onDeny}
+            onRetry={entry()[1].onRetry}
+            retry={entry()[1].retry}
+            defaultOpen={entry()[1].defaultOpen}
           />
         )}
       </For>
@@ -72,8 +81,15 @@ function Tools(props: { rows: Record<string, Row> }) {
   );
 }
 
+const retrying: Record<string, Row> = {
+  failed: { ...retryRows.failed, onRetry: retry("failed") },
+  other: { ...retryRows.other, onRetry: retry("other") },
+  retrying: retryRows.retrying,
+};
+
 export const cases = {
   all: () => <Tools rows={initial} />,
+  retry: () => <Tools rows={retrying} />,
   "many-10": () => <Tools rows={many(10)} />,
   "many-500": () => <Tools rows={many(500)} />,
 };

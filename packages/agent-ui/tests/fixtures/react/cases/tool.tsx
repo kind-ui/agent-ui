@@ -3,10 +3,15 @@ import type { ToolOptions } from "@kind-ui/agent-ui/core";
 import { memo, useEffect, useState } from "react";
 import { Tool } from "../../../../src/react/tool.js";
 import { confirmationHost } from "../../shared/confirmation.js";
+import { retryHost, retryRows } from "../../shared/tool-retry.js";
 
 const { host, approve, deny } = confirmationHost();
+const { retries, retry } = retryHost();
 
-type Row = Pick<ToolOptions, "status" | "error" | "motion" | "label" | "onApprove" | "onDeny"> & {
+type Row = Pick<
+  ToolOptions,
+  "status" | "error" | "motion" | "label" | "onApprove" | "onDeny" | "onRetry" | "retry" | "defaultOpen"
+> & {
   call: ToolCall;
 };
 
@@ -48,6 +53,7 @@ function Tools({ rows: first }: { rows: Record<string, Row> }) {
       setRows((all) => ({ ...all, [id]: next(all[id] as Row) }));
     Object.assign(window, {
       kindHost: host,
+      kindRetries: retries,
       kindTool: {
         set: (id: string, next: Partial<Row>) => update(id, (row) => ({ ...row, ...next })),
         setCall: (id: string, next: Partial<ToolCall>) =>
@@ -64,8 +70,15 @@ function Tools({ rows: first }: { rows: Record<string, Row> }) {
   );
 }
 
+const retrying: Record<string, Row> = {
+  failed: { ...retryRows.failed, onRetry: retry("failed") },
+  other: { ...retryRows.other, onRetry: retry("other") },
+  retrying: retryRows.retrying,
+};
+
 export const cases = {
   all: () => <Tools rows={initial} />,
+  retry: () => <Tools rows={retrying} />,
   "many-10": () => <Tools rows={many(10)} />,
   "many-500": () => <Tools rows={many(500)} />,
 };

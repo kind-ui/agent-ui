@@ -19,7 +19,9 @@ const parts = createParts(toolPrimitive, {
   "input-copy": "button",
   output: "div",
   "output-copy": "button",
+  retry: "p",
   error: "p",
+  "retry-button": "button",
 });
 
 export type ToolProps = ComponentProps<typeof parts.Root>;
@@ -131,10 +133,43 @@ export function ToolMeta({ children = ({ duration }) => duration, ...props }: To
   return <parts.Meta {...props}>{children}</parts.Meta>;
 }
 
+export type ToolRetryProps = ComponentProps<typeof parts.Retry>;
+
+/**
+ * While the call retries: "Retrying, attempt 2 of 5, in 4 sec" and the reason, after a running mark, unless you
+ * pass children.
+ */
+export function ToolRetry({
+  children = ({ text }) => (
+    <>
+      <span data-status-mark="" data-status="running" aria-hidden="true" />
+      {text}
+    </>
+  ),
+  ...props
+}: ToolRetryProps) {
+  return <parts.Retry {...props}>{children}</parts.Retry>;
+}
+
+export type ToolRetryButtonProps = ComponentProps<typeof parts.RetryButton>;
+
+/** Runs the call again through `onRetry`. Rendered while it's set and the status is `error`. */
+export function ToolRetryButton({ children = "Retry", ...props }: ToolRetryButtonProps) {
+  return <parts.RetryButton {...props}>{children}</parts.RetryButton>;
+}
+
 export type ToolErrorProps = ComponentProps<typeof parts.Error>;
 
-/** The `error` message while the status is `error`, unless you pass children. */
-export function ToolError({ children = ({ message }) => message, ...props }: ToolErrorProps) {
+/** The `error` message while the status is `error`, then Retry, unless you pass children. */
+export function ToolError({
+  children = ({ message }) => (
+    <>
+      <span data-tool-error-message="">{message}</span>
+      <ToolRetryButton />
+    </>
+  ),
+  ...props
+}: ToolErrorProps) {
   return <parts.Error {...props}>{children}</parts.Error>;
 }
 
@@ -149,6 +184,7 @@ const DEFAULT_PARTS = (
     <ToolContent>
       <ToolInput />
       <ToolOutput />
+      <ToolRetry />
       <ToolError />
     </ToolContent>
     <ToolApproval />

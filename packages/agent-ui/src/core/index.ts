@@ -621,6 +621,7 @@ export {
   type ToolApprovalState,
   type ToolOptions,
   type ToolPrimitive,
+  type ToolRetryDetails,
   type ToolState,
   toolCode,
   toolPrimitive,

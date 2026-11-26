@@ -1,6 +1,7 @@
-import { definePrimitive, type SlotDefinition } from "@ui-sdk/core";
+import { type ChangeSource, createFocusRecovery, definePrimitive, type SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
-import { hasOutput, type StepStatus, type ToolCall } from "../../types/index.js";
+import { hasOutput, type RetryState, type StepStatus, type ToolCall } from "../../types/index.js";
+import { actionSource } from "../action-source.js";
 import {
   type ApprovalPartOptions,
   type ApprovalPartState,
@@ -10,8 +11,18 @@ import {
 import { stepDuration } from "../chain-of-thought/open-steps.js";
 import { createCopy } from "../clipboard.js";
 import type { Highlight } from "../code-block/index.js";
+import type { Countdown } from "../countdown.js";
+import { createPendingAction } from "../pending.js";
+import { retryPart } from "../retry.js";
 import { type StepApi, type StepOptions, type StepState, stepAnnouncement, stepBase } from "../step/base.js";
 import { toolCode, toolStatus, toolValue } from "./format.js";
+
+/** What Retry passes `onRetry`. */
+export type ToolRetryDetails = {
+  reason: "retry-press" | "imperative";
+  /** Who pressed it, like `"mouse"`, `"keyboard"` or `"agent"`. */
+  source: ChangeSource;
+};
 
 export type ToolOptions = Omit<StepOptions, "status" | "label"> &
   ApprovalPartOptions & {
@@ -28,6 +39,16 @@ export type ToolOptions = Omit<StepOptions, "status" | "label"> &
     error?: { message: string };
     /** Colors the input and output code, as Code Block's `highlight` does. */
     highlight?: Highlight;
+    /**
+     * A retry in progress, shown as "Retrying, attempt 2 of 5, in 4 sec" with a countdown to `retryAt`. The status
+     * stays what it is. Defaults to the call's `retry`.
+     */
+    retry?: RetryState;
+    /**
+     * Called to run a failed call again. Shows Retry in the error while set and the status is `error`. Return a
+     * promise to keep Retry locked until the call's status changes; a rejection makes it available again.
+     */
+    onRetry?: (call: ToolCall | undefined, details: ToolRetryDetails) => unknown;
   };
 
 /** The Confirmation the approval part renders. */
@@ -61,6 +82,14 @@ export type ToolState = StepState &
     inputCopied: boolean;
     /** True for 2 s after the output is copied. */
     outputCopied: boolean;
+    /** The retry in progress, if any: the `retry` option, else the call's. */
+    retry: RetryState | undefined;
+    /** Whole seconds until `retry.retryAt`, `null` on the server and while nothing counts. Live. */
+    retrySeconds: number | null;
+    /** Whether `onRetry` is set. Retry shows while this is true and the status is `error`. */
+    canRetry: boolean;
+    /** Whether Retry was pressed and the call's status hasn't changed since. */
+    retryPending: boolean;
   };
 
 export type ToolApi = StepApi & {
@@ -68,8 +97,14 @@ export type ToolApi = StepApi & {
   readonly copyInput: (() => Promise<boolean>) | undefined;
   /** Copies the output as shown, and resolves with whether the clipboard write went through. Only while there is output. */
   readonly copyOutput: (() => Promise<boolean>) | undefined;
+  /** Calls `onRetry`. Offered while it's set, the status is `error` and no retry is pending. */
+  readonly retry: ((event?: Event) => void) | undefined;
   /** Hands the approval part its Confirmation's props. Called by the approval slot. */
   approvalState: (state: ToolState) => ToolApprovalState;
+  /** The countdown to `retry.retryAt`, which the root binds. */
+  retryCountdown: Countdown;
+  /** Moves focus to the trigger when Retry leaves while focused. */
+  retryRecovery: ReturnType<typeof createFocusRecovery>;
 };
 
 type ToolSlot<Public extends object = Record<never, never>> = SlotDefinition<
@@ -97,7 +132,9 @@ type ToolSlots = {
     highlight: Highlight | undefined;
   }>;
   "output-copy": ToolSlot;
+  retry: ToolSlot<{ text: string }>;
   error: ToolSlot<{ message: string }>;
+  "retry-button": ToolSlot;
 };
 
 // Named explicitly because the inferred type references UI SDK types that no public entry exports (TS2742).
@@ -112,6 +149,14 @@ const base = stepBase<ToolState, ToolApi, ToolOptions>({
       : stepAnnouncement(status, title),
   status: (options) => (options.call ? toolStatus(options.call) : "pending"),
 });
+
+const retry = retryPart<ToolOptions, "retrySeconds">({
+  retry: (options) => options.retry ?? options.call?.retry,
+  countdownKey: "retrySeconds",
+});
+
+const statusOf = (options: ToolOptions) =>
+  options.status ?? (options.call ? toolStatus(options.call) : "pending");
 
 const presentation = (options: ToolOptions) => {
   const { call, label, error, highlight } = options;
@@ -131,6 +176,7 @@ const presentation = (options: ToolOptions) => {
     outcome: call?.outcome,
     errorMessage: error?.message ?? "The tool failed.",
     highlight,
+    canRetry: options.onRetry !== undefined,
   };
 };
 
@@ -149,20 +195,52 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
     call: "value",
     error: "value",
     highlight: "value",
+    retry: "value",
+    onRetry: "action",
     ...approvalPart.options,
   },
   state: (options) => ({
     ...base.state(options),
     ...presentation(options),
+    ...retry.state(options),
     inputCopied: false,
     outputCopied: false,
+    retryPending: false,
   }),
-  sync: (options) => ({ ...base.sync(options), ...presentation(options) }),
+  sync: (options) => ({ ...base.sync(options), ...presentation(options), ...retry.sync(options) }),
+  live: retry.live,
   api: (context) => {
     const { store } = context;
     const copyInput = createCopy(context, "inputCopied");
     const copyOutput = createCopy(context, "outputCopied");
     const approvalState = approvalPart.approvalState(context);
+    const retryCountdown = retry.onOptions(context);
+    const pendingRetry = createPendingAction(context, {
+      state: "retryPending",
+      key: () => context.options().call?.toolCallId ?? "",
+    });
+    let status = statusOf(context.options());
+    let callId = context.options().call?.toolCallId;
+    // A new status or call answers a pending Retry, base spec §4.1.
+    context.onOptions((options) => {
+      const next = statusOf(options);
+      if (next === status && options.call?.toolCallId === callId) return;
+      status = next;
+      callId = options.call?.toolCallId;
+      pendingRetry.release();
+    });
+    const runRetry = (event?: Event) => {
+      const { onRetry, call } = context.options();
+      if (!onRetry) return;
+      const reason = event ? "retry-press" : "imperative";
+      const details = { reason, source: actionSource(event, reason) } as const;
+      // Stays locked once the host took it, until the call's status changes.
+      void pendingRetry
+        .run(() => onRetry(call, details))
+        ?.then((result) => {
+          if (result === "done") store.set({ retryPending: true });
+        });
+    };
     return {
       ...base.api(context),
       get copyInput() {
@@ -173,13 +251,29 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
         const { output, outputText } = store.get();
         return output === undefined ? undefined : () => copyOutput(outputText);
       },
+      get retry() {
+        const { canRetry, status, retryPending } = store.get();
+        return canRetry && status === "error" && !retryPending ? runRetry : undefined;
+      },
       approvalState,
+      retryCountdown,
+      retryRecovery: createFocusRecovery({ fallback: () => context.element("trigger") }),
     };
   },
   slots: (slot) => {
     const { root, trigger, icon, title, meta, content } = base.slots(slot);
     return {
-      root,
+      root: slot({
+        ...root,
+        bind: (el, part) => {
+          const release = root.bind?.(el, part);
+          const stop = part.api.retryCountdown.bind();
+          return () => {
+            if (typeof release === "function") release();
+            stop();
+          };
+        },
+      }),
       trigger,
       icon,
       title: slot<BaseSlotProps, { title: string }>({ ...title, state: (state) => ({ title: state.title }) }),
@@ -240,11 +334,26 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
         press: ({ api }) => void api.copyOutput?.(),
         attrs: (state) => copyAttrs(state.title ? state.outputLabel : "output", state.outputCopied),
       }),
+      // Under the output, so its words tick without moving what's above them.
+      retry: slot<BaseSlotProps, { text: string }>(retry.slot<ToolState, ToolApi>()),
       error: slot<BaseSlotProps, { message: string }>({
         present: (state) => state.status === "error",
         state: (state) => ({ message: state.errorMessage }),
       }),
+      "retry-button": slot({
+        role: "button",
+        focus: "native",
+        present: (state) => state.canRetry && state.status === "error",
+        press: ({ api }, event) => api.retry?.(event),
+        attrs: (state) => ({
+          type: "button",
+          "aria-disabled": state.retryPending ? "true" : undefined,
+          "data-pending": state.retryPending ? "" : undefined,
+          "data-kind-button": "secondary",
+        }),
+        bind: (el, part) => part.api.retryRecovery.bind(el, part),
+      }),
     };
   },
-  agent: { actions: ["expand", "collapse", "copyInput", "copyOutput"] },
+  agent: { actions: ["expand", "collapse", "copyInput", "copyOutput", "retry"] },
 });

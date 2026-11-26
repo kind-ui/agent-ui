@@ -271,6 +271,7 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
   tool: [
     { c: "tool", case: "all", interaction: press('[data-slot="kind-tool-trigger"]') },
     { c: "tool", case: "many-10" },
+    { c: "tool", case: "retry", interaction: press('[data-slot="kind-tool-retry-button"]') },
   ],
   transcript: [
     { c: "transcript", case: "all" },

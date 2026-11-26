@@ -1,12 +1,14 @@
 import {
+  retryText as formatRetry,
   type StepOpenChangeReason,
   stepDuration,
   type ToolApi,
   type ToolOptions,
+  type ToolRetryDetails,
   type ToolState,
   toolPrimitive,
 } from "@kind-ui/agent-ui/core";
-import { createParts, wrappedButton } from "@ui-sdk/web";
+import { createParts, type UiActionDetail, wrappedButton } from "@ui-sdk/web";
 import type { AttributeProperties, UiChangeEvent, UiElement } from "@ui-sdk/web/events";
 import { defineCodeBlock, type KindCodeBlockElement } from "./code-block.js";
 import {
@@ -20,8 +22,11 @@ import {
 } from "./confirmation.js";
 import { defineMarkdown, type KindMarkdownElement } from "./markdown.js";
 
-const DEFAULT_PARTS = `<kind-tool-trigger><button><kind-tool-icon></kind-tool-icon><kind-tool-title></kind-tool-title><kind-tool-meta></kind-tool-meta></button></kind-tool-trigger><kind-tool-content><kind-tool-input></kind-tool-input><kind-tool-output></kind-tool-output><kind-tool-error></kind-tool-error></kind-tool-content><kind-tool-approval></kind-tool-approval>`;
+const DEFAULT_PARTS = `<kind-tool-trigger><button><kind-tool-icon></kind-tool-icon><kind-tool-title></kind-tool-title><kind-tool-meta></kind-tool-meta></button></kind-tool-trigger><kind-tool-content><kind-tool-input></kind-tool-input><kind-tool-output></kind-tool-output><kind-tool-retry></kind-tool-retry><kind-tool-error></kind-tool-error></kind-tool-content><kind-tool-approval></kind-tool-approval>`;
 const INPUT_PARTS = `<div data-tool-heading>Input<span data-tool-badge data-kind-badge>Partial</span><kind-tool-input-copy><button></button></kind-tool-input-copy></div><kind-code-block headerless language="json"></kind-code-block>`;
+const RETRY_PARTS = `<span data-status-mark data-status="running" aria-hidden="true"></span>`;
+const ERROR_PARTS = "<span data-tool-error-message></span>";
+const RETRY_BUTTON = "<kind-tool-retry-button><button>Retry</button></kind-tool-retry-button>";
 const OUTPUT_PARTS = `<div data-tool-heading>Output<span data-tool-badge data-kind-badge>Preliminary</span><kind-tool-output-copy><button></button></kind-tool-output-copy></div><kind-code-block headerless language="json"></kind-code-block><kind-markdown></kind-markdown>`;
 
 // Parts this element wrote text into, and code blocks it wrote. A part someone wrote into keeps what they wrote, as
@@ -34,6 +39,24 @@ const fill = (part: Element | null, text: string) => {
   if (part.textContent !== text) part.textContent = text;
 };
 
+// Fills a part nobody wrote into, so a part written with text keeps it, as `fill` does.
+const fillEmpty = (part: Element | null, html: string) => {
+  if (part && !part.firstChild) {
+    part.innerHTML = html;
+    owned.add(part);
+  }
+  return part && owned.has(part) ? part : null;
+};
+
+// Writes the text after the part's mark, in one text node, so a tick changes nothing else.
+const fillText = (part: Element | null, text: string) => {
+  if (!part) return;
+  const node = part.lastChild;
+  if (node instanceof Text) {
+    if (node.data !== text) node.data = text;
+  } else part.append(text);
+};
+
 const fillParts = (part: Element | null, html: string) => {
   if (part && !part.firstElementChild) {
     part.innerHTML = html;
@@ -42,6 +65,8 @@ const fillParts = (part: Element | null, html: string) => {
   }
   return part;
 };
+
+const retryText = (state: ToolState) => (state.retry ? formatRetry(state.retry, state.retrySeconds) : "");
 
 // Names a code block this element wrote, after the tool, as React's default parts do.
 const label = (code: KindCodeBlockElement | null | undefined, text: string) => {
@@ -72,9 +97,14 @@ export function defineTool(): void {
   createParts(toolPrimitive, {
     root: {
       tag: "kind-tool",
-      kinds: { ...APPROVAL_KINDS },
+      kinds: { ...APPROVAL_KINDS, canRetry: "boolean" },
+      // Message's `retry` bubbles from inside a message, so a tool in one fires its own.
+      events: { onRetry: "toolretry" },
       // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
-      options: (el) => approvalOptions(el as KindToolElement),
+      options: (el) => {
+        const tool = el as KindToolElement;
+        return { ...approvalOptions(tool), ...(!tool.canRetry && { onRetry: undefined }) };
+      },
       state: {
         open: {
           get: (api) => api.isOpen(),
@@ -98,7 +128,12 @@ export function defineTool(): void {
               "<kind-confirmation></kind-confirmation>",
             )?.querySelector<KindConfirmationElement>(":scope > kind-confirmation");
           if (approval) writeApproval(approval, api.approvalState(state));
-          fill(el.querySelector("kind-tool-error"), state.errorMessage);
+          fillText(fillEmpty(el.querySelector("kind-tool-retry"), RETRY_PARTS), retryText(state));
+          // An error this element filled holds the message, then Retry once there's `can-retry`.
+          const error = fillEmpty(el.querySelector("kind-tool-error"), ERROR_PARTS);
+          fill(error?.querySelector("[data-tool-error-message]") ?? null, state.errorMessage);
+          if (error && state.canRetry && !error.querySelector(":scope > kind-tool-retry-button"))
+            error.insertAdjacentHTML("beforeend", RETRY_BUTTON);
           const input = fillParts(el.querySelector("kind-tool-input"), INPUT_PARTS);
           const inputCode = input?.querySelector<KindCodeBlockElement>(":scope > kind-code-block");
           label(inputCode, state.inputLabel);
@@ -157,7 +192,9 @@ export function defineTool(): void {
     "input-copy": { tag: "kind-tool-input-copy", target: wrappedButton, display: "contents" },
     output: "kind-tool-output",
     "output-copy": { tag: "kind-tool-output-copy", target: wrappedButton, display: "contents" },
+    retry: "kind-tool-retry",
     error: "kind-tool-error",
+    "retry-button": { tag: "kind-tool-retry-button", target: wrappedButton, display: "contents" },
   });
 }
 
@@ -166,16 +203,21 @@ export type KindToolEvents = {
   approve: KindConfirmationEvents["approve"];
   deny: KindConfirmationEvents["deny"];
   alwaysallow: KindConfirmationEvents["alwaysallow"];
+  toolretry: CustomEvent<
+    { value: ToolOptions["call"] } & ToolRetryDetails & Pick<UiActionDetail, "waitUntil">
+  >;
 };
 
 export interface KindToolElement
   extends UiElement<KindToolEvents>,
-    AttributeProperties<typeof toolPrimitive, "api" | "open" | "call" | "error" | "highlight">,
+    AttributeProperties<typeof toolPrimitive, "api" | "open" | "call" | "error" | "highlight" | "retry">,
     ApprovalAttributes {
   open: boolean;
+  canRetry: boolean;
   call?: ToolOptions["call"];
   error?: ToolOptions["error"];
   highlight?: ToolOptions["highlight"];
+  retry?: ToolOptions["retry"];
   api: Pick<ToolApi, "isOpen" | "setOpen" | "expand" | "collapse" | "toggle">;
 }
 
@@ -192,6 +234,8 @@ declare global {
     "kind-tool-input-copy": HTMLElement;
     "kind-tool-output": HTMLElement;
     "kind-tool-output-copy": HTMLElement;
+    "kind-tool-retry": HTMLElement;
     "kind-tool-error": HTMLElement;
+    "kind-tool-retry-button": HTMLElement;
   }
 }

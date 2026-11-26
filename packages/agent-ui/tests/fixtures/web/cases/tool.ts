@@ -1,11 +1,16 @@
 import type { ToolCall } from "@kind-ui/agent-ui";
 import { defineTool } from "../../../../src/web/tool.js";
 import { confirmationHost } from "../../shared/confirmation.js";
+import { retryHost, retryRows } from "../../shared/tool-retry.js";
 
 const { host, approve, deny } = confirmationHost();
+const { retries, retry } = retryHost();
 
-type Row = Partial<Pick<HTMLElementTagNameMap["kind-tool"], "status" | "error" | "motion" | "label">> & {
+type Row = Partial<
+  Pick<HTMLElementTagNameMap["kind-tool"], "status" | "error" | "motion" | "label" | "retry" | "defaultOpen">
+> & {
   call: ToolCall;
+  canRetry?: boolean;
 };
 
 const call = (name: string, fields: Partial<ToolCall> = {}): ToolCall => ({
@@ -54,10 +59,15 @@ const tools = (rows: Record<string, Row>) => (root: HTMLElement) => {
       event.detail.waitUntil(Promise.resolve(deny(event.detail.value, event.detail))),
     );
   }
+  for (const tool of list.querySelectorAll("kind-tool"))
+    tool.addEventListener("toolretry", (event) =>
+      event.detail.waitUntil(retry(tool.id)(event.detail.value, event.detail)),
+    );
   root.append(list);
   const element = (id: string) => root.querySelector(`#${id}`) as HTMLElementTagNameMap["kind-tool"];
   Object.assign(window, {
     kindHost: host,
+    kindRetries: retries,
     kindTool: {
       set: (id: string, next: Partial<Row>) => Object.assign(element(id), next),
       setCall: (id: string, next: Partial<ToolCall>) => {
@@ -69,6 +79,11 @@ const tools = (rows: Record<string, Row>) => (root: HTMLElement) => {
 
 export const cases = {
   all: tools(initial),
+  retry: tools({
+    failed: { ...retryRows.failed, canRetry: true },
+    other: { ...retryRows.other, canRetry: true },
+    retrying: retryRows.retrying,
+  }),
   "many-10": tools(many(10)),
   "many-500": tools(many(500)),
 };

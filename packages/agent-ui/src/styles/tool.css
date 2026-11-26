@@ -122,4 +122,41 @@
     letter-spacing: var(--kind-text-md-tracking);
     overflow-wrap: anywhere;
   }
+
+  /* The message, then Retry at the line's end, which wraps under a long message rather than squeezing it. */
+  [data-slot="kind-tool-error"]:has(> [data-tool-error-message]) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 0.75rem;
+    row-gap: 4px;
+  }
+  [data-tool-error-message] {
+    flex: 1 1 12rem;
+    min-width: 0;
+  }
+  [data-slot="kind-tool-retry-button"] {
+    flex: none;
+  }
+
+  /* One line under the output, so its words tick without moving anything above. */
+  [data-slot="kind-tool-retry"] {
+    --kind-status-mark-size: 14px;
+
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: var(--kind-control-height);
+    margin-block: 2px;
+    color: var(--kind-color-muted);
+    font-size: var(--kind-text-sm);
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Web keeps parts that aren't present in the page, with `hidden`. */
+  :is([data-slot="kind-tool-retry"], [data-slot="kind-tool-error"])[hidden] {
+    display: none;
+  }
 }

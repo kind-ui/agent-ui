@@ -13,5 +13,7 @@ export const parts = createParts(toolPrimitive, {
   "input-copy": "button",
   output: "div",
   "output-copy": "button",
+  retry: "p",
   error: "p",
+  "retry-button": "button",
 });
