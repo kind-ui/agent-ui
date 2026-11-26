@@ -125,6 +125,8 @@ import { RunTimeline } from "./components/ui/run-timeline.js";
 
 // wave-7-task-12: Job Progress
 
+import { JobProgress } from "./components/ui/job-progress.js";
+
 // wave-7-task-13: Schedule Card
 
 // wave-7-task-14: Agent Card
@@ -468,6 +470,12 @@ const items = {
   ),
 
   // wave-7-task-12: Job Progress
+
+  "job-progress": (
+    <JobProgress label="Build docs" status="running" value={0.42} stage="Installing dependencies">
+      <pre>added 491 packages</pre>
+    </JobProgress>
+  ),
 
   // wave-7-task-13: Schedule Card
 

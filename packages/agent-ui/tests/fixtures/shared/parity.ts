@@ -312,6 +312,10 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
 
   // wave-7-task-12: Job Progress
 
+  "job-progress": [
+    { c: "job-progress", case: "all", interaction: press('[data-slot="kind-job-progress-trigger"]') },
+  ],
+
   // wave-7-task-13: Schedule Card
 
   // wave-7-task-14: Agent Card

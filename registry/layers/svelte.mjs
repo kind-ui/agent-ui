@@ -93,6 +93,8 @@ export default {
 
     // wave-7-task-12: Job Progress
 
+    "job-progress",
+
     // wave-7-task-13: Schedule Card
 
     // wave-7-task-14: Agent Card
@@ -282,6 +284,8 @@ export default {
     "wave-7/run-timeline.spec.ts",
 
     // wave-7-task-12: Job Progress
+
+    "wave-7/job-progress.spec.ts",
 
     // wave-7-task-13: Schedule Card
 

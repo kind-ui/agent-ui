@@ -334,6 +334,10 @@ const cases = {
 
   // wave-7-task-12: Job Progress
 
+  jobProgress: {
+    options: { ...step, value: 0.4, stage: "Installing", stageIndex: 2, stageCount: 7, onCancel: noop },
+  },
+
   // wave-7-task-13: Schedule Card
 
   // wave-7-task-14: Agent Card

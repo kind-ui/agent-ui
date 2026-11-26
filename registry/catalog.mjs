@@ -492,6 +492,14 @@ export const components = {
 
   // wave-7-task-12: Job Progress
 
+  "job-progress": {
+    group: "steps",
+    when: "a long job runs with a percent or stage, its time left, Cancel or Retry, and a log.",
+    title: "Job Progress",
+    description: "A long job: its progress and stage, time elapsed and left, Cancel and Retry, and its log.",
+    uses: [],
+  },
+
   // wave-7-task-13: Schedule Card
 
   // wave-7-task-14: Agent Card

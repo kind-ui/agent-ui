@@ -1,0 +1,122 @@
+/* Job Progress (Wave 7 spec §5): a Step with a UI SDK Progress under its header, outside the content so it shows while
+   closed: the stage on the left, the percent on the right and the track under both. Cancel or Retry sits after the
+   content, so neither moves the header when it comes or goes. */
+@layer components {
+  [data-job-progress-part="progress"] {
+    display: block;
+    padding-block: 0 4px;
+    padding-inline: var(--kind-step-indent) 6px;
+
+    & [data-slot="progress"] {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: baseline;
+      gap: 4px 8px;
+      font-size: var(--kind-text-xs);
+      line-height: var(--kind-text-xs-leading);
+      letter-spacing: var(--kind-text-xs-tracking);
+      color: var(--kind-color-muted);
+    }
+
+    & [data-slot="progress-label"] {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    & [data-slot="progress-value"] {
+      font-variant-numeric: tabular-nums;
+    }
+
+    & [data-slot="progress-track"] {
+      grid-column: 1 / -1;
+      height: 4px;
+      overflow: hidden;
+      border-radius: var(--kind-radius-full);
+      background-color: var(--kind-color-border);
+    }
+
+    /* UI SDK Progress writes the fill's width inline; a `scale` fill would squash its rounded ends. */
+    & [data-slot="progress-indicator"] {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background-color: var(--kind-color-accent);
+      transition:
+        width var(--kind-duration-panel) var(--kind-ease-enter),
+        background-color var(--kind-duration-base);
+    }
+
+    /* Indeterminate: a still, full-width fill at rest, which sweeps only while the job runs at full motion. */
+    & [data-slot="progress-indicator"][data-indeterminate] {
+      width: 100%;
+      opacity: 0.35;
+    }
+
+    &[data-status="complete"] [data-slot="progress-indicator"] {
+      background-color: var(--kind-color-success);
+    }
+
+    &[data-status="error"] [data-slot="progress-indicator"] {
+      background-color: var(--kind-color-danger);
+    }
+
+    &:is([data-status="cancelled"]) [data-slot="progress-indicator"] {
+      background-color: var(--kind-color-muted);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    [data-job-progress-part="progress"][data-motion="auto"][data-status="running"]
+      [data-slot="progress-indicator"][data-indeterminate] {
+      width: 30%;
+      opacity: 1;
+      animation: kind-job-progress-sweep 1.4s var(--kind-ease-in-out) infinite;
+
+      &:dir(rtl) {
+        --kind-job-progress-sweep: -1;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-job-progress-part="progress"] [data-slot="progress-indicator"] {
+      transition: none;
+    }
+  }
+
+  [data-job-progress-part="progress"]:is([data-motion="reduced"], [data-motion="none"])
+    [data-slot="progress-indicator"] {
+    transition: none;
+  }
+
+  /* Without a stage the label is the title, which the header already shows, so only assistive technology reads it. */
+  [data-job-progress-part="stage"][data-fallback] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* Cancel and Retry take one place, aligned with the title. */
+  :is([data-slot="kind-job-progress-cancel"], [data-slot="kind-job-progress-retry"]) {
+    align-self: flex-start;
+    margin-block: 4px 2px;
+    margin-inline-start: var(--kind-step-indent);
+
+    &[hidden] {
+      display: none;
+    }
+  }
+}
+
+@keyframes kind-job-progress-sweep {
+  from {
+    translate: calc(-100% * var(--kind-job-progress-sweep, 1)) 0;
+  }
+  to {
+    translate: calc(340% * var(--kind-job-progress-sweep, 1)) 0;
+  }
+}

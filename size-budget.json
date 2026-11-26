@@ -1,6 +1,6 @@
 {
   ".": 265,
-  "./core": 257600,
+  "./core": 259600,
   "./adapters/ai-sdk": 1345,
   "imports": {
     "stepBase": 5500,
@@ -36,6 +36,7 @@
     "conversationSearchPrimitive": 62500,
     "threadSearchPrimitive": 59100,
     "tracePrimitive": 14500,
-    "runTimelinePrimitive": 41500
+    "runTimelinePrimitive": 41500,
+    "jobProgressPrimitive": 10000
   }
 }
