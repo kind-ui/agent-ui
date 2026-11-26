@@ -6,6 +6,7 @@ Last reviewed: 8aee26be
 
 ## Settled
 
+- Wave 7: `scripts/tests/words.test.mjs` scans `src/` only. Docs prose quotes the words on purpose, so it isn't scanned.
 - **Core is the one contract for five render layers (framework layers plan, 2026-11-20):** the Vue, Svelte and Solid layers call `createParts` on the same primitives. A behavior gap a new layer finds is fixed here, with React's and Web's specs for that component run again; never patched in one render layer. Don't propose framework-specific options, state or actions.
 - **`appendText` returns `true` for a controlled composer before the owner applies the value (Task 17):** it goes through `createChange`, as `setValue` does.
 - **Dictation keeps its run when the host passes a new `source` object (Wave 5 Task 11):** only dropping `source` cancels, since React hosts often write the source inline, a new object each render; the new source is used from the next start.
@@ -56,6 +57,8 @@ Last reviewed: 8aee26be
 
 - **A command with backticks loses them in Terminal's Confirmation name** (`terminal.ts` `question`): the label wraps the command in backticks and Confirmation's `codeSpans` splits on the command's own, so `echo \`date\`` is named "Run echo date?". The header title is right (it uses `titleSpans`). Needs Confirmation to take pieces or an escape (Wave 7 layer 3 review).
 
+- Wave 7 layer 2: `createCountdown` counts to an ISO instant; spec §3 asks for a relative `seconds` value and for Connection Status to spread it. Layer 5 (Message, retry) adds the relative form and moves Connection Status onto it.
+- Wave 7 layer 2: `toolStatus` reads an `expired` or `cancelled` approval without an `outcome` as `running`; the host sets `outcome` today, as for a denial. Needs a spec answer.
 - **Step base `onOptions` reads `open` from the store** (`step/base.ts`): under `@ui-sdk/svelte`, which hands options over through `follow`, that is the new controlled `open`, so an owner changing `open` and `status` together might see one more or fewer auto `onOpenChange`. Not reproduced (Task Svelte-2 review); check with the Svelte step family.
 
 - **`menuBase` holds `partState.menu`'s `open` while a `ui-menu` reports its own `openchange`** (Design Wave 0): UI SDK web highlights the first item and leaves focus on the trigger when `open` is written back during that event, as its own controlled example does. Ask upstream; remove `applying` once fixed.

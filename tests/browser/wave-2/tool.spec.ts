@@ -189,7 +189,7 @@ test("an approval request is decided in the tool, which stays awaiting input unt
   page,
 }) => {
   await open(page);
-  const confirmation = tool(page, "approve").getByRole("group", { name: "Run delete_file?" });
+  const confirmation = tool(page, "approve").getByRole("group", { name: "Allow delete_file?" });
   await expect(tool(page, "approve")).toHaveAttribute("data-status", "awaiting-input");
   await confirmation.getByRole("button", { name: "Approve" }).click();
   expect(await decisions(page)).toEqual([

@@ -44,6 +44,8 @@ Last reviewed: 8aee26be
 
 - **A Terminal that never ran toggles an empty panel** (Wave 7 layer 3): denied or expired with no output, its screen is hidden, so the chevron opens nothing; the mockup draws it open. Decide in core whether such a row opens by default or stops being a toggle.
 
+- Wave 7 layer 2: Confirmation's meta row ("Decide in 4 min", "Sending decision") appears after bind or on a press; inside a Tool, whose title is hidden, it adds a row above the choices. Server markup can't count the deadline.
+- Wave 7 layer 2: the choices stack (Always allow above Deny and Approve) only once core measures them, so a narrow server render first wraps naturally.
 - **`KindFileInputTrigger` and `KindScrollAreaScrollToEnd` stay 32px, bordered and filled** (Design Wave 0): their adopters own the look; Wave 1 moves them onto the shared controls.
 - **Connection Status's pill narrows when the countdown ends at "Reconnecting"** (Wave 6 Task 7): the words change, so the width does; centred by `translate`, both edges move. Nothing else moves.
 - **Every one of the 128 bars transitions its `scale` on each level, clipped ones too (Task 17):** cost not profiled.

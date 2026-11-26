@@ -24,7 +24,7 @@ const open = async (page: Page) => {
 const byId = (id: string) => (page: Page) => page.locator(`[id="${id}"]`);
 
 const confirmation = { component: "kind-confirmation", label: "Run the migration?", id: "confirmation" };
-const toolApproval = { component: "kind-confirmation", label: "Run delete_file?", id: "delete_file" };
+const toolApproval = { component: "kind-confirmation", label: "Allow delete_file?", id: "delete_file" };
 const question = { component: "kind-question", label: "Deploy questions", id: "question" };
 const checkpoint = { component: "kind-checkpoint", label: "Checkpoint", id: "checkpoint" };
 const model = { component: "kind-model-selector", label: "Model, GPT-5", id: "model" };
@@ -177,7 +177,7 @@ test("one snapshot lists every Wave 1, 2 and 3 component, each Wave 3 one by nam
   expect(listed).toEqual(
     [
       'kind-checkpoint "Checkpoint": press restore',
-      'kind-confirmation "Run delete_file?": approve deny',
+      'kind-confirmation "Allow delete_file?": approve deny',
       'kind-confirmation "Run the migration?": approve deny',
       'kind-context-meter "Context": open press',
       'kind-feedback "Feedback": press rate',

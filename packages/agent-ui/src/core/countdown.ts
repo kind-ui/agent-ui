@@ -43,7 +43,7 @@ export function createCountdown<Key extends string, State extends Record<Key, nu
 
   const count = (time: number) => {
     const left = time - Date.now();
-    if (minutes && left >= MINUTE) {
+    if (minutes && left > MINUTE) {
       write(Math.floor(left / MINUTE) * 60);
       timer = setTimeout(count, left % MINUTE || MINUTE, time);
       return;
@@ -76,7 +76,7 @@ export function createCountdown<Key extends string, State extends Record<Key, nu
   };
 }
 
-/** A countdown's words, like "4 min" or "40 sec", in `locale`'s short units. Empty at zero, below or without one. */
+/** A countdown's words, like "in 4 min" or "in 40 sec", in `locale`'s short units. Empty at zero, below or without one. */
 export function countdownText(seconds: number | null, locale?: string): string {
-  return seconds !== null && seconds > 0 ? durationLabel(seconds, locale) : "";
+  return seconds !== null && seconds > 0 ? `in ${durationLabel(seconds, locale)}` : "";
 }

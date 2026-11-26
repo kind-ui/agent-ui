@@ -20,7 +20,8 @@ test("the shared words are written only in core/words.ts (Wave 7 spec §2)", () 
   const found = [];
   for (const file of files) {
     const text = code(readFileSync(new URL(file, src), "utf8"));
-    for (const match of text.matchAll(/"([^"\n]+)"|'([^'\n]+)'|>([^<>{}\n]+)<|}([^<>{}\n]+){/g)) {
+    // String literals, templates without placeholders, and text between tags or blocks, on one line or several.
+    for (const match of text.matchAll(/"([^"\n]+)"|'([^'\n]+)'|`([^`$]+)`|>([^<>{}]+)<|}([^<>{}]+){/g)) {
       const literal = match.slice(1).find(Boolean)?.trim();
       if (literal && words.has(literal)) found.push(`${file}: ${literal}`);
     }
