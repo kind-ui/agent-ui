@@ -8,13 +8,14 @@ import { onMounted, shallowRef } from "vue";
 import { StepList, StepListItem } from "../../../../src/vue/step.js";
 import { StepGroup } from "../../../../src/vue/step-group.js";
 import {
+  SubagentContent,
   SubagentIcon,
   SubagentMeta,
   SubagentRoot,
   SubagentTitle,
   SubagentTrigger,
 } from "../../../../src/vue/subagent.js";
-import { Tool, ToolApproval, ToolIcon, ToolMeta, ToolTitle, ToolTrigger } from "../../../../src/vue/tool.js";
+import { Tool, ToolApproval, ToolContent, ToolIcon, ToolMeta, ToolTitle, ToolTrigger } from "../../../../src/vue/tool.js";
 import { expose } from "../../shared/expose.js";
 import {
   callOf,
@@ -75,6 +76,7 @@ onMounted(() => {
               <SubagentTitle />
               <SubagentMeta />
             </StepListItem>
+            <SubagentContent><p>Details</p></SubagentContent>
           </SubagentRoot>
           <Tool
             v-else
@@ -93,6 +95,7 @@ onMounted(() => {
               <ToolTitle />
               <ToolMeta />
             </StepListItem>
+            <ToolContent><p>Details</p></ToolContent>
             <ToolApproval />
           </Tool>
         </template>
@@ -123,6 +126,7 @@ onMounted(() => {
             <SubagentTitle />
             <SubagentMeta />
           </StepListItem>
+          <SubagentContent><p>Details</p></SubagentContent>
         </SubagentRoot>
       </StepList>
     </StepGroup>

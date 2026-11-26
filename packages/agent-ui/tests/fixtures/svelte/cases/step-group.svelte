@@ -7,6 +7,7 @@
   import { StepList, StepListItem } from "../../../../src/svelte/step/index.js";
   import { StepGroup } from "../../../../src/svelte/step-group/index.js";
   import {
+    SubagentContent,
     SubagentIcon,
     SubagentMeta,
     SubagentRoot,
@@ -16,6 +17,7 @@
   import {
     Tool,
     ToolApproval,
+    ToolContent,
     ToolIcon,
     ToolMeta,
     ToolTitle,
@@ -67,6 +69,7 @@
                 /><SubagentMeta
               /></SubagentTrigger
             >{/snippet}</StepListItem
+          ><SubagentContent><p>Details</p></SubagentContent
           ></SubagentRoot
         >{:else}<Tool
           call={callOf(row)}
@@ -82,6 +85,7 @@
                 /><ToolMeta
               /></ToolTrigger
             >{/snippet}</StepListItem
+          ><ToolContent><p>Details</p></ToolContent
           ><ToolApproval
         /></Tool
       >{/if}{/each}</StepList

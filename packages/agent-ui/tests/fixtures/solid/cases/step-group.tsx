@@ -3,6 +3,7 @@ import { createSignal, For, onSettled, Show } from "solid-js";
 import { StepList, StepListItem } from "../../../../src/solid/step.js";
 import { StepGroup } from "../../../../src/solid/step-group.js";
 import {
+  SubagentContent,
   SubagentIcon,
   SubagentMeta,
   SubagentRoot,
@@ -12,6 +13,7 @@ import {
 import {
   Tool,
   ToolApproval,
+  ToolContent,
   ToolIcon,
   ToolMeta,
   ToolTitle,
@@ -51,6 +53,9 @@ function Rows(props: { rows: StepGroupRow[]; label: string }) {
                   <ToolTitle />
                   <ToolMeta />
                 </StepListItem>
+                <ToolContent>
+                  <p>Details</p>
+                </ToolContent>
                 <ToolApproval />
               </Tool>
             }
@@ -61,6 +66,9 @@ function Rows(props: { rows: StepGroupRow[]; label: string }) {
                 <SubagentTitle />
                 <SubagentMeta />
               </StepListItem>
+              <SubagentContent>
+                <p>Details</p>
+              </SubagentContent>
             </SubagentRoot>
           </Show>
         )}

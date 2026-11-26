@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { StepList, StepListItem } from "../../../../src/react/step.js";
 import { StepGroup } from "../../../../src/react/step-group.js";
 import {
+  SubagentContent,
   SubagentIcon,
   SubagentMeta,
   SubagentRoot,
@@ -12,6 +13,7 @@ import {
 import {
   Tool,
   ToolApproval,
+  ToolContent,
   ToolIcon,
   ToolMeta,
   ToolTitle,
@@ -40,6 +42,9 @@ function Rows({ rows, label }: { rows: StepGroupRow[]; label: string }) {
               <SubagentTitle />
               <SubagentMeta />
             </StepListItem>
+            <SubagentContent>
+              <p>Details</p>
+            </SubagentContent>
           </SubagentRoot>
         ) : (
           <Tool
@@ -56,6 +61,9 @@ function Rows({ rows, label }: { rows: StepGroupRow[]; label: string }) {
               <ToolTitle />
               <ToolMeta />
             </StepListItem>
+            <ToolContent>
+              <p>Details</p>
+            </ToolContent>
             <ToolApproval />
           </Tool>
         ),
