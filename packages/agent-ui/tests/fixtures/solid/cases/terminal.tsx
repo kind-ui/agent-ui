@@ -1,8 +1,9 @@
 import type { TerminalOptions } from "@kind-ui/agent-ui/core";
 import { createSignal, For, onSettled } from "solid-js";
 import { Terminal } from "../../../../src/solid/terminal.js";
+import { confirmationHost } from "../../shared/confirmation.js";
 import { expose } from "../../shared/expose.js";
-import { installRun, manyLines, testRun } from "../../shared/terminal.js";
+import { approvalTerminals, installRun, manyLines, testRun } from "../../shared/terminal.js";
 
 type Row = TerminalOptions & { id: string; keepClipboard?: boolean };
 
@@ -65,7 +66,49 @@ const owned: Row[] = [
   { id: "empty", command: "npm run build", output: "" },
 ];
 
+function Approvals() {
+  const { host, approve, deny, always } = confirmationHost();
+  const [rows, setRows] = createSignal(approvalTerminals());
+  onSettled(() =>
+    expose({
+      kindHost: host,
+      kindTerminal: {
+        set: (id: string, next: Partial<TerminalOptions>) =>
+          setRows((all) =>
+            all.map((row) => (row.id === id ? { ...row, options: { ...row.options, ...next } } : row)),
+          ),
+      },
+    }),
+  );
+  return (
+    <div class="flex w-full max-w-[40rem] flex-col gap-4 p-6">
+      <For each={rows()} keyed={(row) => row.id}>
+        {(row) => (
+          <Terminal
+            id={row().id}
+            command={row().options.command}
+            approval={row().options.approval}
+            alwaysTarget={row().options.alwaysTarget}
+            alwaysScope={row().options.alwaysScope}
+            alwaysDetail={row().options.alwaysDetail}
+            risk={row().options.risk}
+            riskText={row().options.riskText}
+            output={row().options.output}
+            exitCode={row().options.exitCode}
+            durationSeconds={row().options.durationSeconds}
+            defaultOpen={row().options.defaultOpen}
+            onApprove={approve}
+            onDeny={deny}
+            onAlwaysAllow={always}
+          />
+        )}
+      </For>
+    </div>
+  );
+}
+
 export const cases = {
+  approval: () => <Approvals />,
   all: () => <Terminals rows={all} />,
   owned: () => <Terminals rows={owned} />,
   "stream-10": () => <Terminals rows={[{ id: "stream", command: "npm run build", output: manyLines(10) }]} />,

@@ -18,6 +18,22 @@ A Tool whose `call.approval.state` is `"requested"` shows **Approve** and **Deny
 - A callback may return a promise. The buttons lock while it's pending, and after it resolves they stay locked until the host reports the request (`state: "responded"`, a new `approvalId` or a new `generation`). A rejection unlocks them; to show "Decision not sent. Try again.", set the approval's `state` to `"submit-failed"`.
 - Once the approval is `"responded"`, the buttons give way to the outcome ("Approved", "Denied"), at the same height, so the conversation keeps what was decided.
 
+## Command approval
+
+A Terminal takes the same `approval`, `onApprove` and `onDeny` before its command runs. While it waits, its title asks "Run `npm test`?" and the approve button reads **Run**. Record the decision on `approval`, then start the command and stream its `output`; the outcome stays above the output.
+
+```tsx
+<Terminal
+  command="npm test"
+  approval={approval}
+  output={output}
+  onApprove={() => record(true)}
+  onDeny={() => record(false)}
+/>
+```
+
+Pass `onAlwaysAllow` with `alwaysTarget` ("npm test") and `alwaysScope` ("in this project") only if your app keeps an allow list, and use the same words in your settings. Pass `risk="danger"` with a `riskText` for a destructive command; it can't be always-allowed.
+
 ## Confirmation
 
 For an action that isn't a tool call (sending an email, deleting a file), render a Confirmation with an `Approval`:
