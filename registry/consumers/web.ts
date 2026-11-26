@@ -120,6 +120,8 @@ import { defineScheduleCard } from "./components/ui/web/schedule-card.js";
 
 // wave-7-task-14: Agent Card
 
+import { defineAgentCard } from "./components/ui/web/agent-card.js";
+
 // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
 // wave-7-task-16: Quota Notice
@@ -253,6 +255,8 @@ for (const define of [
   defineScheduleCard,
 
   // wave-7-task-14: Agent Card
+
+  defineAgentCard,
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
@@ -417,6 +421,8 @@ const items = {
   "schedule-card": `<kind-schedule-card can-run-now></kind-schedule-card>`,
 
   // wave-7-task-14: Agent Card
+
+  "agent-card": `<kind-agent-card status="running"></kind-agent-card>`,
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
 

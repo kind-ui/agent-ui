@@ -398,6 +398,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- wave-7-task-14: Agent Card -->
 
+- **Agent Card (Wave 7 Task 14):** `agentCardPrimitive`'s root is an `article` labelled by its `name` heading (`role: "heading"` with `aria-level` from `level`, as Day Separator), so the bridge names the card by the agent's name. Two slots beyond the plan's: `capability` (a `listitem` keyed by its text, which writes `data-kind-badge`, since a shared control is opted into by its core slot) inside the `capabilities` list (`role: "list"` on a `ul`, kept explicit because `list-style: none` drops a list in Safari), and `status-icon`, the status mark, `aria-hidden` beside the status words as Message's `outcome-icon` is. The avatar is the bare UI SDK Avatar with `avatarInitials` as its fallback, `aria-hidden`. `href` goes through the Markdown view's `sanitizeUrl`, and the name renders an `a` only with a safe one. `onAction(agentId, details)` is a `callback` called through `dispatch` (`"action-press"` or `"imperative"`), as Suggestion's `onPick`, so an agent's `run` reports `source: "agent"`; `run` is a getter offered only while `onAction` is set. The action's name is "<actionLabel> <name>" ("Open Planner"), starting with its visible text, so cards side by side differ. Web: `agent` is a property, `can-run` offers the action, event `agentaction`.
+
 <!-- wave-7-task-15: Usage Meter and Context Meter's breakdown -->
 
 <!-- wave-7-task-16: Quota Notice -->

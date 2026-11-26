@@ -10,6 +10,7 @@
     "plan",
     "subagent",
     "job-progress",
+    "agent-card",
     "queue",
     "confirmation",
     "question",

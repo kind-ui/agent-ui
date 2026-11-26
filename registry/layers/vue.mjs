@@ -101,6 +101,8 @@ export default {
 
     // wave-7-task-14: Agent Card
 
+    "agent-card",
+
     // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
     // wave-7-task-16: Quota Notice
@@ -295,6 +297,8 @@ export default {
     "wave-7/schedule-card.spec.ts",
 
     // wave-7-task-14: Agent Card
+
+    "wave-7/agent-card.spec.ts",
 
     // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
