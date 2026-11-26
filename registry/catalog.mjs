@@ -473,6 +473,15 @@ export const components = {
 
   // wave-7-task-11: Run Timeline
 
+  "run-timeline": {
+    group: "ops",
+    when: "you show what happened in a run, in time order, from start to the step running now.",
+    title: "Run Timeline",
+    description:
+      "A run's dated events in order, each with its status, actor and description, as a list or a feed.",
+    uses: ["internal-timeline", "markdown"],
+  },
+
   // wave-7-task-12: Job Progress
 
   // wave-7-task-13: Schedule Card
@@ -507,6 +516,7 @@ const internals = [
   "slider",
   "switch",
   "textarea",
+  "timeline",
   "toggle",
   "token-input",
   "toolbar",

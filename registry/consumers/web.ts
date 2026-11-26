@@ -106,6 +106,8 @@ import { defineConversationSearch } from "./components/ui/web/conversation-searc
 
 // wave-7-task-11: Run Timeline
 
+import { defineRunTimeline } from "./components/ui/web/run-timeline.js";
+
 // wave-7-task-12: Job Progress
 
 // wave-7-task-13: Schedule Card
@@ -231,6 +233,8 @@ for (const define of [
   // wave-7-task-10: Trace
 
   // wave-7-task-11: Run Timeline
+
+  defineRunTimeline,
 
   // wave-7-task-12: Job Progress
 
@@ -385,6 +389,8 @@ const items = {
   // wave-7-task-10: Trace
 
   // wave-7-task-11: Run Timeline
+
+  "run-timeline": `<kind-run-timeline label="Activity"></kind-run-timeline>`,
 
   // wave-7-task-12: Job Progress
 

@@ -296,6 +296,24 @@ const cases = {
 
   // wave-7-task-11: Run Timeline
 
+  runTimeline: {
+    options: {
+      events: [
+        { id: "e1", at: "2026-11-10T14:20:00Z", title: "Started", actor: { id: "ada", name: "Ada" } },
+        {
+          id: "e2",
+          at: "2026-11-10T14:32:00Z",
+          title: "Running checks",
+          status: "running",
+          description: "312 tests",
+        },
+      ],
+      hasMore: true,
+      onLoadMore: noop,
+    },
+    keys: { item: ["e1", "e2"] },
+  },
+
   // wave-7-task-12: Job Progress
 
   // wave-7-task-13: Schedule Card

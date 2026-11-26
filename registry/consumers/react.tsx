@@ -119,6 +119,8 @@ import { ConversationSearch } from "./components/ui/conversation-search.js";
 
 // wave-7-task-11: Run Timeline
 
+import { RunTimeline } from "./components/ui/run-timeline.js";
+
 // wave-7-task-12: Job Progress
 
 // wave-7-task-13: Schedule Card
@@ -454,6 +456,12 @@ const items = {
   // wave-7-task-10: Trace
 
   // wave-7-task-11: Run Timeline
+
+  "run-timeline": (
+    <RunTimeline
+      events={[{ id: "start", at: "2026-11-10T14:02:00Z", title: "Run started", status: "complete" }]}
+    />
+  ),
 
   // wave-7-task-12: Job Progress
 

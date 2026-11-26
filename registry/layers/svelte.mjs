@@ -87,6 +87,8 @@ export default {
 
     // wave-7-task-11: Run Timeline
 
+    "run-timeline",
+
     // wave-7-task-12: Job Progress
 
     // wave-7-task-13: Schedule Card
@@ -152,6 +154,8 @@ export default {
     // wave-7-task-10: Trace
 
     // wave-7-task-11: Run Timeline
+
+    "timeline",
 
     // wave-7-task-12: Job Progress
 
@@ -268,6 +272,8 @@ export default {
     // wave-7-task-10: Trace
 
     // wave-7-task-11: Run Timeline
+
+    "wave-7/run-timeline.spec.ts",
 
     // wave-7-task-12: Job Progress
 

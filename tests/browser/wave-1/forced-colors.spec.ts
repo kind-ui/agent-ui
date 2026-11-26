@@ -72,6 +72,8 @@ const pages = [
 
   // wave-7-task-11: Run Timeline
 
+  "run-timeline&case=all",
+
   // wave-7-task-12: Job Progress
 
   // wave-7-task-13: Schedule Card

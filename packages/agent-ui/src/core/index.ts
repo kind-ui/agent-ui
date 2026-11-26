@@ -783,6 +783,22 @@ export {
 
 // wave-7-task-11: Run Timeline
 
+export {
+  type RunTimelineApi,
+  type RunTimelineEndState,
+  type RunTimelineEntry,
+  type RunTimelineLoadDetails,
+  type RunTimelineLoadReason,
+  type RunTimelineOptions,
+  type RunTimelineOrder,
+  type RunTimelinePrimitive,
+  type RunTimelineRootState,
+  type RunTimelineState,
+  type RunTimelineTimeState,
+  type RunTimelineTitleState,
+  runTimelinePrimitive,
+} from "./run-timeline/index.js";
+
 // wave-7-task-12: Job Progress
 
 // wave-7-task-13: Schedule Card
