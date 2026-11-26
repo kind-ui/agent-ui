@@ -188,6 +188,7 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
     { c: "message", case: "options", interaction: openMenu },
     { c: "message", case: "author" },
     { c: "message", case: "outcomes" },
+    { c: "message", case: "delivery" },
     { c: "message", case: "custom-rows" },
   ],
   "model-control": [{ c: "model-control", case: "all", interaction: openMenu }],
@@ -235,7 +236,10 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
     { c: "stack-trace", case: "owned" },
   ],
   status: [{ c: "status", case: "all" }],
-  step: [{ c: "step", case: "list", interaction: press('[data-slot="kind-step-trigger"]') }],
+  step: [
+    { c: "step", case: "list", interaction: press('[data-slot="kind-step-trigger"]') },
+    { c: "stalled", case: "all" },
+  ],
   "streaming-text": [indicators],
   subagent: [{ c: "subagent", case: "all", interaction: press('[data-slot="kind-subagent-trigger"]') }],
   suggestion: [

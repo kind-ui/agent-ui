@@ -108,6 +108,8 @@ export default {
     "wave-1/markdown.spec.ts",
     "wave-1/conversation.spec.ts",
     "wave-1/message.spec.ts",
+    "wave-1/message-delivery.spec.ts",
+    "wave-1/stalled.spec.ts",
     "wave-1/composer.spec.ts",
     "wave-3/suggestion.spec.ts",
     "wave-3/feedback.spec.ts",
