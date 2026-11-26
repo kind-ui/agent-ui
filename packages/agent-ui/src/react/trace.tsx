@@ -91,7 +91,11 @@ export const TraceRow = memo(function TraceRow({ row }: TraceRowProps) {
   return (
     <KindWaterfallRow {...row.props} style={{ top: row.top }}>
       <KindWaterfallRowHeader>
-        {row.branch ? <KindWaterfallIndicator>{CHEVRON}</KindWaterfallIndicator> : <span data-trace-spacer="" />}
+        {row.branch ? (
+          <KindWaterfallIndicator>{CHEVRON}</KindWaterfallIndicator>
+        ) : (
+          <span data-trace-spacer="" />
+        )}
         <TraceName value={row.key} />
       </KindWaterfallRowHeader>
       <KindWaterfallCell>

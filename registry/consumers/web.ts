@@ -104,6 +104,8 @@ import { defineConversationSearch } from "./components/ui/web/conversation-searc
 
 // wave-7-task-10: Trace
 
+import { defineTrace } from "./components/ui/web/trace.js";
+
 // wave-7-task-11: Run Timeline
 
 // wave-7-task-12: Job Progress
@@ -229,6 +231,8 @@ for (const define of [
   // wave-7-task-8: Handoff
 
   // wave-7-task-10: Trace
+
+  defineTrace,
 
   // wave-7-task-11: Run Timeline
 
@@ -383,6 +387,8 @@ const items = {
   // wave-7-task-8: Handoff
 
   // wave-7-task-10: Trace
+
+  trace: `<kind-trace></kind-trace>`,
 
   // wave-7-task-11: Run Timeline
 

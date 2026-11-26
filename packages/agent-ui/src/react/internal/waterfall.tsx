@@ -35,7 +35,11 @@ export const KindWaterfallColumnHeader = withKindClass(
   "relative flex min-w-0 h-full items-center px-2",
   "KindWaterfallColumnHeader",
 );
-export const KindWaterfallAxis = withKindClass(WaterfallAxis, "relative block h-full w-full", "KindWaterfallAxis");
+export const KindWaterfallAxis = withKindClass(
+  WaterfallAxis,
+  "relative block h-full w-full",
+  "KindWaterfallAxis",
+);
 export const KindWaterfallRow = withKindClass(
   WaterfallRow,
   `${grid} [&[hidden]]:hidden cursor-default rounded-[var(--kind-radius-sm)] outline-hidden select-none hover:bg-[var(--kind-color-hover)] data-selected:bg-[var(--kind-color-selected)] focus-visible:[outline:var(--kind-focus-ring)] focus-visible:[outline-offset:var(--kind-focus-offset-inset)]`,

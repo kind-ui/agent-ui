@@ -123,6 +123,8 @@
 
 <!-- wave-7-task-10: Trace -->
 
+- Lucide `bot`, `message-square`, `wrench` and `x` are CSS mask images in `packages/agent-ui/src/styles/trace.css` (a span's kind and the details' Close), and `chevron-right` is inline SVG in each layer's Trace render file (a span's arrow).
+
 <!-- wave-7-task-11: Run Timeline -->
 
 <!-- wave-7-task-12: Job Progress -->

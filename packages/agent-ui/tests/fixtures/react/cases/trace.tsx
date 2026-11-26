@@ -44,7 +44,9 @@ function Many({ count }: { count: number }) {
           select: (id: string | null) => flushSync(() => setValue(id)),
           toggle: (id: string) =>
             flushSync(() =>
-              setExpanded((open) => (open.includes(id) ? open.filter((other) => other !== id) : [...open, id])),
+              setExpanded((open) =>
+                open.includes(id) ? open.filter((other) => other !== id) : [...open, id],
+              ),
             ),
         },
       }),

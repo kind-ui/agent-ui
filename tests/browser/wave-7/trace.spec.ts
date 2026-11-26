@@ -41,7 +41,9 @@ test("each row reads its span's name, status, duration and bar", async ({ page }
   await expect(row(page, /^Summarize sources/)).toHaveCount(0);
 });
 
-test("the keyboard expands, collapses, selects, and Escape in the details returns to the row", async ({ page }) => {
+test("the keyboard expands, collapses, selects, and Escape in the details returns to the row", async ({
+  page,
+}) => {
   await open(page);
   await page.keyboard.press("Tab");
   await expect(row(page, /^Answer the question/)).toBeFocused();
@@ -65,15 +67,33 @@ test("the keyboard expands, collapses, selects, and Escape in the details return
   await expect(row(page, /^Researcher/)).toBeFocused();
   await expect(details(page)).toBeVisible();
   expect((await log(page)).values).toEqual(["researcher item-press"]);
-  expect((await log(page)).expanded).toEqual([" list-navigation", "run list-navigation", "run,researcher list-navigation"]);
+  expect((await log(page)).expanded).toEqual([
+    " list-navigation",
+    "run list-navigation",
+    "run,researcher list-navigation",
+  ]);
 });
 
 test("a press selects a row, its details list the attributes, and Close returns focus", async ({ page }) => {
   await open(page);
   await rowHeader(page, /^web_search/).click();
   await expect(details(page)).toBeVisible();
-  await expect(details(page).locator("dt")).toHaveText(["Kind", "Status", "Start", "Duration", "query", "results"]);
-  await expect(details(page).locator("dd")).toHaveText(["Tool", "Complete", "120 ms", "340 ms", "waterfall charts", "8"]);
+  await expect(details(page).locator("dt")).toHaveText([
+    "Kind",
+    "Status",
+    "Start",
+    "Duration",
+    "query",
+    "results",
+  ]);
+  await expect(details(page).locator("dd")).toHaveText([
+    "Tool",
+    "Complete",
+    "120 ms",
+    "340 ms",
+    "waterfall charts",
+    "8",
+  ]);
   await page.getByRole("button", { name: "Close details" }).click();
   await expect(details(page)).toBeHidden();
   await expect(row(page, /^web_search/)).toBeFocused();

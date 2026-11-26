@@ -110,7 +110,10 @@ const drawDetails = (details: Element, state: TraceState, api: TraceApi) => {
   if (list.getAttribute("data-drawn") === text) return;
   list.setAttribute("data-drawn", text);
   list.replaceChildren(
-    ...rows.flatMap(({ term, detail }) => [element(document, "dt", {}, term), element(document, "dd", {}, detail)]),
+    ...rows.flatMap(({ term, detail }) => [
+      element(document, "dt", {}, term),
+      element(document, "dd", {}, detail),
+    ]),
   );
 };
 
@@ -171,7 +174,10 @@ export function defineTrace(): void {
           for (const key of keys)
             if (shown[key] !== props[key] && (key !== "items" || state.rows.length || !props.items.length))
               shown[key] = props[key];
-          const attributes = { "aria-label": props["aria-label"], "aria-rowcount": String(props["aria-rowcount"]) };
+          const attributes = {
+            "aria-label": props["aria-label"],
+            "aria-rowcount": String(props["aria-rowcount"]),
+          };
           for (const [name, value] of Object.entries(attributes))
             if (shown.getAttribute(name) !== value) shown.setAttribute(name, value);
           const size = `${height}px`;
@@ -215,7 +221,10 @@ export interface KindTraceElement
   defaultExpanded?: string[];
   range?: TraceOptions["range"];
   now?: TraceOptions["now"];
-  api: Pick<TraceApi, "getValue" | "setValue" | "getExpanded" | "setExpanded" | "select" | "expand" | "collapse">;
+  api: Pick<
+    TraceApi,
+    "getValue" | "setValue" | "getExpanded" | "setExpanded" | "select" | "expand" | "collapse"
+  >;
 }
 
 declare global {

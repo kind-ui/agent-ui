@@ -117,6 +117,8 @@ import { ConversationSearch } from "./components/ui/conversation-search.js";
 
 // wave-7-task-10: Trace
 
+import { Trace } from "./components/ui/trace.js";
+
 // wave-7-task-11: Run Timeline
 
 // wave-7-task-12: Job Progress
@@ -452,6 +454,8 @@ const items = {
   // wave-7-task-8: Handoff
 
   // wave-7-task-10: Trace
+
+  trace: <Trace spans={[{ id: "run", name: "Run", kind: "agent", start: 0, end: 120 }]} />,
 
   // wave-7-task-11: Run Timeline
 
