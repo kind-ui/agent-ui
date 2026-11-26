@@ -72,9 +72,13 @@ export {
 } from "./chain-of-thought/index.js";
 export {
   type CheckpointApi,
+  type CheckpointChanges,
   type CheckpointDialogState,
   type CheckpointOptions,
   type CheckpointPrimitive,
+  type CheckpointRestoreDetails,
+  type CheckpointScope,
+  type CheckpointScopeState,
   type CheckpointState,
   checkpointPrimitive,
 } from "./checkpoint/index.js";
@@ -778,6 +782,29 @@ export {
   searchText,
 } from "./conversation-search/index.js";
 export { type Countdown, type CountdownOptions, countdownText, createCountdown } from "./countdown.js";
+export {
+  type DiffAction,
+  type DiffActionDetails,
+  type DiffApi,
+  type DiffChangeView,
+  type DiffFileView,
+  type DiffLineView,
+  type DiffOpenReason,
+  type DiffOptions,
+  type DiffPiece,
+  type DiffPrimitive,
+  type DiffRow,
+  type DiffRows,
+  type DiffState,
+  type DiffSummaryView,
+  type DiffTableRow,
+  type DiffTarget,
+  type DiffWord,
+  diffCounts,
+  diffCountsName,
+  diffPrimitive,
+  diffRows,
+} from "./diff/index.js";
 export { failedAfterText, retryAnnouncement, retryReason, retryText } from "./retry.js";
 export {
   NOT_STALLED,
@@ -803,27 +830,4 @@ export {
   stepGroupSentence,
   stepGroupTitle,
 } from "./step-group/index.js";
-export {
-  type DiffAction,
-  type DiffActionDetails,
-  type DiffApi,
-  type DiffChangeView,
-  type DiffFileView,
-  type DiffLineView,
-  type DiffOpenReason,
-  type DiffOptions,
-  type DiffPiece,
-  type DiffPrimitive,
-  type DiffRow,
-  type DiffRows,
-  type DiffState,
-  type DiffSummaryView,
-  type DiffTableRow,
-  type DiffTarget,
-  type DiffWord,
-  diffCounts,
-  diffCountsName,
-  diffPrimitive,
-  diffRows,
-} from "./diff/index.js";
 export { codeSpans, plainText, WORDS } from "./words.js";

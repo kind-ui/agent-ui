@@ -57,7 +57,15 @@ const cases = {
     options: { ...step, steps: [{ id: "a", title: "Read", status: "complete" }], defaultOpenSteps: ["a"] },
     keys: { item: ["a"] },
   },
-  checkpoint: { options: { label: "Checkpoint", onRestore: noop } },
+  checkpoint: {
+    options: {
+      label: "Checkpoint",
+      onRestore: noop,
+      scopes: ["both", "code"],
+      onCompare: noop,
+      defaultOpen: true,
+    },
+  },
   codeBlock: { options: { code: "let a = 1", language: "js" } },
   composer: { options: { value: { text: "Hi", tokens: [], attachments: [] }, onSubmit: noop } },
   confirmation: {
