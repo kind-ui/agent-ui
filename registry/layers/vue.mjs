@@ -83,6 +83,8 @@ export default {
 
     // wave-7-task-8: Handoff
 
+    "handoff",
+
     // wave-7-task-10: Trace
 
     // wave-7-task-11: Run Timeline
@@ -262,6 +264,8 @@ export default {
 
     // wave-7-task-4: Terminal approval and Confirmation's Always allow
 
+    "wave-7/terminal-approval.spec.ts",
+
     // wave-7-task-5: Tool retry and retrying
 
     // wave-7-task-6: Diff
@@ -269,6 +273,8 @@ export default {
     // wave-7-task-7: Step Group
 
     // wave-7-task-8: Handoff
+
+    "wave-7/handoff.spec.ts",
 
     // wave-7-task-10: Trace
 

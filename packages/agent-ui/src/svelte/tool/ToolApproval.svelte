@@ -19,4 +19,5 @@
         motion={state.motion}
         onApprove={state.onApprove}
         onDeny={state.onDeny}
+        onAlwaysAllow={state.onAlwaysAllow}
     />{/if}{/snippet}</parts.Approval>

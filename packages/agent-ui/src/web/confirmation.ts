@@ -1,4 +1,5 @@
 import {
+  type ApprovalPartState,
   type ConfirmationApi,
   type ConfirmationCallback,
   type ConfirmationDecision,
@@ -12,7 +13,7 @@ import type { AttributeProperties, UiElement } from "@ui-sdk/web/events";
 import { defineInternalTextarea } from "./internal/textarea.js";
 
 const PENDING_MARK = `<span data-kind-pending-mark="" data-status-mark="" data-status="running" aria-hidden="true"></span>`;
-const DEFAULT_PARTS = `<kind-confirmation-title></kind-confirmation-title><kind-confirmation-reason><kind-internal-textarea><ui-textarea><textarea aria-label="Reason for denying" placeholder="Add a reason (optional)" rows="2"></textarea></ui-textarea></kind-internal-textarea></kind-confirmation-reason><kind-confirmation-choices><kind-confirmation-approve><button>${PENDING_MARK}<span data-kind-label></span></button></kind-confirmation-approve><kind-confirmation-deny><button>${PENDING_MARK}<span data-kind-label></span></button></kind-confirmation-deny><kind-confirmation-cancel><button>Cancel</button></kind-confirmation-cancel><kind-confirmation-error>Decision not sent. Try again.</kind-confirmation-error></kind-confirmation-choices><kind-confirmation-outcome><kind-confirmation-outcome-icon></kind-confirmation-outcome-icon><span data-confirmation-label></span><span data-confirmation-reason></span></kind-confirmation-outcome>`;
+const DEFAULT_PARTS = `<kind-confirmation-title></kind-confirmation-title><kind-confirmation-reason><kind-internal-textarea><ui-textarea><textarea aria-label="Reason for denying" placeholder="Add a reason (optional)" rows="2"></textarea></ui-textarea></kind-internal-textarea></kind-confirmation-reason><kind-confirmation-choices><kind-confirmation-approve><button>${PENDING_MARK}<span data-kind-label></span></button></kind-confirmation-approve><kind-confirmation-always><button>${PENDING_MARK}<span data-kind-label></span></button></kind-confirmation-always><kind-confirmation-deny><button>${PENDING_MARK}<span data-kind-label></span></button></kind-confirmation-deny><kind-confirmation-cancel><button>Cancel</button></kind-confirmation-cancel><kind-confirmation-error>Decision not sent. Try again.</kind-confirmation-error></kind-confirmation-choices><kind-confirmation-outcome><kind-confirmation-outcome-icon></kind-confirmation-outcome-icon><span data-confirmation-label></span><span data-confirmation-reason></span></kind-confirmation-outcome>`;
 
 // Parts this element wrote text into. A part someone wrote text into keeps it, as React's children do. Kept across
 // instances, because UI SDK rebuilds one when the element returns to the page.
@@ -35,11 +36,42 @@ const write = <Target extends object, Key extends keyof Target>(
   if (target && target[key] !== value) target[key] = value;
 };
 
+/** The `can-*` attributes that offer the choices of a component's approval part, as Tool's. */
+export const APPROVAL_KINDS = {
+  canApprove: "boolean",
+  canDeny: "boolean",
+  canAlwaysAllow: "boolean",
+} as const;
+
+export type ApprovalAttributes = { canApprove: boolean; canDeny: boolean; canAlwaysAllow: boolean };
+
+/** Leaves out each approval callback whose attribute is off; with it, `@ui-sdk/web` fills it in with an event. */
+export const approvalOptions = ({ canApprove, canDeny, canAlwaysAllow }: ApprovalAttributes) => ({
+  ...(!canApprove && { onApprove: undefined }),
+  ...(!canDeny && { onDeny: undefined }),
+  ...(!canAlwaysAllow && { onAlwaysAllow: undefined }),
+});
+
+/** Writes an approval part's props onto the `kind-confirmation` inside it, its callbacks as the handlers. */
+export const writeApproval = (
+  confirmation: KindConfirmationElement,
+  { onApprove, onDeny, onAlwaysAllow, ...props }: ApprovalPartState,
+): void => {
+  const target = confirmation as unknown as Record<string, unknown>;
+  for (const [key, value] of Object.entries({
+    ...props,
+    approveHandler: onApprove,
+    denyHandler: onDeny,
+    alwaysAllowHandler: onAlwaysAllow,
+  }))
+    if (target[key] !== value) target[key] = value;
+};
+
 /**
  * `<kind-confirmation label="Run search_docs?">` fills in its title, reason box, choices and outcome when it has no
- * children. Set `approval` as a property. The `can-approve` and `can-deny` attributes show Approve and Deny, which
- * fire `approve` and `deny` with the decision as `detail.value`: call `event.detail.waitUntil(promise)` to keep both
- * choices disabled until it settles.
+ * children. Set `approval` as a property. The `can-approve`, `can-always-allow` and `can-deny` attributes show
+ * Approve, Always allow and Deny, which fire `approve`, `alwaysallow` and `deny` with the decision as
+ * `detail.value`: call `event.detail.waitUntil(promise)` to keep the choices disabled until it settles.
  */
 export function defineConfirmation(): void {
   if (customElements.get("kind-confirmation")) return;
@@ -47,15 +79,18 @@ export function defineConfirmation(): void {
   createParts(confirmationPrimitive, {
     root: {
       tag: "kind-confirmation",
-      kinds: { canApprove: "boolean", canDeny: "boolean" },
-      // A Tool's own handlers, which offer the choices without the attributes.
-      properties: ["approveHandler", "denyHandler"],
+      kinds: APPROVAL_KINDS,
+      // The handlers of a Tool or Terminal, which offer the choices without the attributes.
+      properties: ["approveHandler", "denyHandler", "alwaysAllowHandler"],
       // Without either, the callback is left out; with only the attribute, `@ui-sdk/web` fills it in with an event.
       options: (el) => {
-        const { canApprove, canDeny, approveHandler, denyHandler } = el as KindConfirmationElement;
+        const confirmation = el as KindConfirmationElement;
+        const { approveHandler, denyHandler, alwaysAllowHandler } = confirmation;
         return {
-          ...(approveHandler ? { onApprove: approveHandler } : !canApprove && { onApprove: undefined }),
-          ...(denyHandler ? { onDeny: denyHandler } : !canDeny && { onDeny: undefined }),
+          ...approvalOptions(confirmation),
+          ...(approveHandler && { onApprove: approveHandler }),
+          ...(denyHandler && { onDeny: denyHandler }),
+          ...(alwaysAllowHandler && { onAlwaysAllow: alwaysAllowHandler }),
         };
       },
       render: (el, instance) => {
@@ -65,6 +100,7 @@ export function defineConfirmation(): void {
           const state = instance.get() as ConfirmationState;
           fill(el.querySelector("kind-confirmation-title"), state.title ?? "");
           fill(label(el.querySelector("kind-confirmation-approve button")), state.approveLabel);
+          fill(label(el.querySelector("kind-confirmation-always button")), state.alwaysLabel);
           fill(label(el.querySelector("kind-confirmation-deny button")), state.denyLabel);
           fill(el.querySelector("kind-confirmation-outcome [data-confirmation-label]"), state.outcome ?? "");
           fill(
@@ -100,6 +136,7 @@ export function defineConfirmation(): void {
     reason: "kind-confirmation-reason",
     choices: "kind-confirmation-choices",
     approve: { tag: "kind-confirmation-approve", target: wrappedButton, display: "contents" },
+    always: { tag: "kind-confirmation-always", target: wrappedButton, display: "contents" },
     deny: { tag: "kind-confirmation-deny", target: wrappedButton, display: "contents" },
     cancel: { tag: "kind-confirmation-cancel", target: wrappedButton, display: "contents" },
     error: "kind-confirmation-error",
@@ -112,17 +149,23 @@ type DecisionEvent = CustomEvent<
   { value: ConfirmationDecision } & ActionDetails & Pick<UiActionDetail, "waitUntil">
 >;
 
-export type KindConfirmationEvents = { approve: DecisionEvent; deny: DecisionEvent };
+export type KindConfirmationEvents = {
+  approve: DecisionEvent;
+  deny: DecisionEvent;
+  alwaysallow: DecisionEvent;
+};
 
 export interface KindConfirmationElement
   extends UiElement<KindConfirmationEvents>,
     AttributeProperties<typeof confirmationPrimitive, "approval" | "focusFallback"> {
   canApprove: boolean;
   canDeny: boolean;
+  canAlwaysAllow: boolean;
   approval?: ConfirmationOptions["approval"];
   focusFallback?: ConfirmationOptions["focusFallback"];
   approveHandler?: ConfirmationCallback;
   denyHandler?: ConfirmationCallback;
+  alwaysAllowHandler?: ConfirmationCallback;
 }
 
 declare global {
@@ -132,6 +175,7 @@ declare global {
     "kind-confirmation-reason": HTMLElement;
     "kind-confirmation-choices": HTMLElement;
     "kind-confirmation-approve": HTMLElement;
+    "kind-confirmation-always": HTMLElement;
     "kind-confirmation-deny": HTMLElement;
     "kind-confirmation-cancel": HTMLElement;
     "kind-confirmation-error": HTMLElement;

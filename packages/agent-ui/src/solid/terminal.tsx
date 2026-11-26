@@ -2,6 +2,7 @@ import { type AnsiSpan, terminalPrimitive } from "@kind-ui/agent-ui/core";
 import type { ComponentProps, JSX } from "@solidjs/web";
 import { createParts } from "@ui-sdk/solid/primitive";
 import { For, omit } from "solid-js";
+import { Confirmation } from "./confirmation.js";
 
 const parts = createParts(terminalPrimitive, {
   root: "div",
@@ -10,6 +11,7 @@ const parts = createParts(terminalPrimitive, {
   title: "span",
   exit: "span",
   meta: "span",
+  approval: "div",
   content: "div",
   command: "div",
   copy: "button",
@@ -22,8 +24,8 @@ const parts = createParts(terminalPrimitive, {
 export type TerminalProps = ComponentProps<typeof parts.Root>;
 
 /**
- * A command and its output as a step: the command, its exit code and duration, then the output with its ANSI colors,
- * following its end while it streams. Any `children` replace the default parts.
+ * A command and its output as a step: the command, its exit code and duration, its approval while it has one, then
+ * the output with its ANSI colors, following its end while it streams. Any `children` replace the default parts.
  */
 export function Terminal(props: TerminalProps) {
   return (
@@ -36,6 +38,7 @@ export function Terminal(props: TerminalProps) {
             <TerminalExit />
             <TerminalMeta />
           </TerminalTrigger>
+          <TerminalApproval />
           <TerminalContent>
             <div data-terminal-screen="" data-kind-code="">
               <div data-terminal-header="">
@@ -81,6 +84,32 @@ export type TerminalMetaProps = ComponentProps<typeof parts.Meta>;
 export function TerminalMeta(props: TerminalMetaProps) {
   return (
     <parts.Meta {...omit(props, "children")}>{props.children ?? ((state) => state.duration)}</parts.Meta>
+  );
+}
+
+export type TerminalApprovalProps = ComponentProps<typeof parts.Approval>;
+
+/**
+ * A Confirmation asking "Run <command>?" while there's an approval: the choices whose callbacks are set while the
+ * request is open, then what was decided. Pass children to render it yourself.
+ */
+export function TerminalApproval(props: TerminalApprovalProps) {
+  return (
+    <parts.Approval {...omit(props, "children")}>
+      {props.children ??
+        ((state) => (
+          <Confirmation
+            approval={state.approval}
+            label={state.label}
+            onApprove={state.onApprove}
+            onDeny={state.onDeny}
+            onAlwaysAllow={state.onAlwaysAllow}
+            reason={state.reason}
+            focusFallback={state.focusFallback}
+            motion={state.motion}
+          />
+        ))}
+    </parts.Approval>
   );
 }
 

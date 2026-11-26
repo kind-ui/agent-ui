@@ -1,6 +1,6 @@
 {
   ".": 265,
-  "./core": 252600,
+  "./core": 253600,
   "./adapters/ai-sdk": 1345,
   "imports": {
     "stepBase": 5500,
@@ -12,7 +12,7 @@
     "documentPrimitive": 7000,
     "generatedImagePrimitive": 41100,
     "fileTreePrimitive": 41700,
-    "terminalPrimitive": 19100,
+    "terminalPrimitive": 19500,
     "stackTracePrimitive": 13500,
     "testResultsPrimitive": 12000,
     "transcriptPrimitive": 19000,
@@ -34,6 +34,7 @@
     "connectionStatusPrimitive": 7500,
     "shareDialogPrimitive": 42000,
     "conversationSearchPrimitive": 62500,
-    "threadSearchPrimitive": 59100
+    "threadSearchPrimitive": 59100,
+    "handoffPrimitive": 6000
   }
 }

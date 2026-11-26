@@ -3,6 +3,7 @@
 import { type AnsiSpan, terminalPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/react/primitive";
 import { type ComponentProps, memo } from "react";
+import { Confirmation } from "./confirmation.js";
 
 const parts = createParts(terminalPrimitive, {
   root: "div",
@@ -11,6 +12,7 @@ const parts = createParts(terminalPrimitive, {
   title: "span",
   exit: "span",
   meta: "span",
+  approval: "div",
   content: "div",
   command: "div",
   copy: "button",
@@ -23,8 +25,8 @@ const parts = createParts(terminalPrimitive, {
 export type TerminalProps = ComponentProps<typeof parts.Root>;
 
 /**
- * A command and its output as a step: the command, its exit code and duration, then the output with its ANSI colors,
- * following its end while it streams. Any `children` replace the default parts.
+ * A command and its output as a step: the command, its exit code and duration, its approval while it has one, then
+ * the output with its ANSI colors, following its end while it streams. Any `children` replace the default parts.
  */
 export function Terminal({ children, ...props }: TerminalProps) {
   return <parts.Root {...props}>{children !== undefined ? children : DEFAULT_PARTS}</parts.Root>;
@@ -56,6 +58,19 @@ export type TerminalMetaProps = ComponentProps<typeof parts.Meta>;
 /** The duration as "N s", unless you pass children. */
 export function TerminalMeta({ children = ({ duration }) => duration, ...props }: TerminalMetaProps) {
   return <parts.Meta {...props}>{children}</parts.Meta>;
+}
+
+export type TerminalApprovalProps = ComponentProps<typeof parts.Approval>;
+
+/**
+ * A Confirmation asking "Run <command>?" while there's an approval: the choices whose callbacks are set while the
+ * request is open, then what was decided. Pass children to render it yourself.
+ */
+export function TerminalApproval({
+  children = (confirmation) => <Confirmation {...confirmation} />,
+  ...props
+}: TerminalApprovalProps) {
+  return <parts.Approval {...props}>{children}</parts.Approval>;
 }
 
 export type TerminalCommandProps = ComponentProps<typeof parts.Command>;
@@ -128,6 +143,7 @@ const DEFAULT_PARTS = (
       <TerminalExit />
       <TerminalMeta />
     </TerminalTrigger>
+    <TerminalApproval />
     <TerminalContent>
       <div data-terminal-screen="" data-kind-code="">
         <div data-terminal-header="">

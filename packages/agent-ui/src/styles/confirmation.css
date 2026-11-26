@@ -17,8 +17,9 @@
     overflow-wrap: anywhere;
   }
 
-  /* A Tool already names the request. */
-  :where([data-slot="kind-tool-approval"]) [data-slot="kind-confirmation-title"] {
+  /* A Tool or Terminal already names the request. */
+  :where([data-slot="kind-tool-approval"], [data-slot="kind-terminal-approval"])
+    [data-slot="kind-confirmation-title"] {
     display: none;
   }
 
@@ -76,6 +77,7 @@
     [data-slot="kind-confirmation-reason"],
     [data-slot="kind-confirmation-choices"],
     [data-slot="kind-confirmation-approve"],
+    [data-slot="kind-confirmation-always"],
     [data-slot="kind-confirmation-deny"],
     [data-slot="kind-confirmation-cancel"],
     [data-slot="kind-confirmation-error"],

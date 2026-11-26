@@ -70,6 +70,8 @@ const pages = [
 
   // wave-7-task-8: Handoff
 
+  "handoff&case=all",
+
   // wave-7-task-10: Trace
 
   // wave-7-task-11: Run Timeline

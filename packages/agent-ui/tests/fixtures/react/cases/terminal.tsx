@@ -1,7 +1,9 @@
 import type { TerminalOptions } from "@kind-ui/agent-ui/core";
 import { useEffect, useState } from "react";
 import { Terminal } from "../../../../src/react/terminal.js";
-import { installRun, manyLines, testRun } from "../../shared/terminal.js";
+import { Tool } from "../../../../src/react/tool.js";
+import { confirmationHost } from "../../shared/confirmation.js";
+import { approvalCall, approvalRuns, installRun, manyLines, testRun } from "../../shared/terminal.js";
 
 type Row = TerminalOptions & { id: string; keepClipboard?: boolean };
 
@@ -56,6 +58,45 @@ const owned: Row[] = [
   { id: "empty", command: "npm run build", output: "" },
 ];
 
+function Approvals() {
+  const [{ host, approve, deny, always }] = useState(confirmationHost);
+  const [rows, setRows] = useState<Record<string, Partial<TerminalOptions>>>(() =>
+    Object.fromEntries(
+      Object.keys(approvalRuns).map((id) => [
+        id,
+        { approval: { approvalId: id, generation: 1, state: "requested" }, output: "" },
+      ]),
+    ),
+  );
+  useEffect(() => {
+    Object.assign(window, {
+      kindHost: host,
+      kindTerminal: {
+        set: (id: string, next: Partial<TerminalOptions>) =>
+          setRows((all) => ({ ...all, [id]: { ...all[id], ...next } })),
+      },
+    });
+  }, [host]);
+  return (
+    <div className="flex w-[34rem] flex-col gap-3 p-6">
+      <p id="above">Above the terminals</p>
+      {Object.entries(approvalRuns).map(([id, run]) => (
+        <Terminal
+          key={id}
+          id={id}
+          command={run.command}
+          {...rows[id]}
+          approvalReason={run.reason}
+          onApprove={approve}
+          onDeny={deny}
+          onAlwaysAllow={run.always ? always : undefined}
+        />
+      ))}
+      <Tool id="tool" call={approvalCall} onApprove={approve} onDeny={deny} onAlwaysAllow={always} />
+    </div>
+  );
+}
+
 export const cases = {
   all: () => <Terminals rows={all} />,
   owned: () => <Terminals rows={owned} />,
@@ -63,4 +104,5 @@ export const cases = {
   "stream-1000": () => (
     <Terminals rows={[{ id: "stream", command: "npm run build", output: manyLines(1000) }]} />
   ),
+  approval: () => <Approvals />,
 };

@@ -13,7 +13,7 @@ export const request = (
 });
 
 export type Decision = {
-  choice: "approve" | "deny";
+  choice: "approve" | "deny" | "always";
   decision: ConfirmationDecision;
   source: string;
   resolve(): void;
@@ -29,5 +29,5 @@ export function confirmationHost() {
       new Promise<void>((resolve, reject) =>
         decisions.push({ choice, decision, source: details.source, resolve, reject }),
       );
-  return { host, approve: answer("approve"), deny: answer("deny") };
+  return { host, approve: answer("approve"), deny: answer("deny"), always: answer("always") };
 }

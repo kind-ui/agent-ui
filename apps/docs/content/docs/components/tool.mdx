@@ -68,6 +68,8 @@ While the call has an approval, the tool shows a [Confirmation](./confirmation.m
 />
 ```
 
+Pass `onAlwaysAllow` to offer **Always allow** too: it approves with `always: true` in the decision, so you can remember the tool in your own allow list.
+
 The tool's status stays `awaiting-input` until the decision is recorded, even when it wasn't sent.
 
 When the status is `error`, the content shows `error.message`, or "The tool failed." without one.
@@ -93,5 +95,5 @@ An agent connected with `createAgent` finds a tool by its name and reads its `op
 <auto-type-table path="../../../../../packages/agent-ui/src/core/tool/tool.ts" name="ToolAgentActions" type='Pick<ToolApi, "expand" | "collapse" | "copyInput" | "copyOutput">' />
 
 <Caption>
-  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-tool>`, `call`, `error` and `highlight` are properties only, other props are kebab-case attributes, and `onOpenChange` fires `openchange`. Approve and Deny need the `can-approve` and `can-deny` attributes and fire `approve` and `deny` on the tool, as Confirmation's do. The element fills in its parts when it has no children, and an empty `<kind-tool-input>` or `<kind-tool-output>` with its heading, copy button and code block, writes its title and error into those parts while they're empty, and writes the input and output into the `<kind-code-block>` and `<kind-markdown>` inside them.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-tool>`, `call`, `error` and `highlight` are properties only, other props are kebab-case attributes, and `onOpenChange` fires `openchange`. Approve, Always allow and Deny need the `can-approve`, `can-always-allow` and `can-deny` attributes and fire `approve`, `alwaysallow` and `deny` on the tool, as Confirmation's do. The element fills in its parts when it has no children, and an empty `<kind-tool-input>` or `<kind-tool-output>` with its heading, copy button and code block, writes its title and error into those parts while they're empty, and writes the input and output into the `<kind-code-block>` and `<kind-markdown>` inside them.
 </Caption>

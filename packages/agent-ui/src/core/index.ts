@@ -109,6 +109,7 @@ export {
 export {
   type ConfirmationApi,
   type ConfirmationCallback,
+  type ConfirmationChoice,
   type ConfirmationDecision,
   type ConfirmationOptions,
   type ConfirmationPrimitive,
@@ -571,6 +572,7 @@ export {
 } from "./task/index.js";
 export {
   type TerminalApi,
+  type TerminalApprovalState,
   type TerminalCopyReason,
   type TerminalOptions,
   type TerminalPrimitive,
@@ -789,6 +791,18 @@ export {
 // wave-7-task-7: Step Group
 
 // wave-7-task-8: Handoff
+
+export {
+  type HandoffApi,
+  type HandoffAvatarState,
+  type HandoffOptions,
+  type HandoffParty,
+  type HandoffPerson,
+  type HandoffPrimitive,
+  type HandoffState,
+  type HandoffStatus,
+  handoffPrimitive,
+} from "./handoff/index.js";
 
 // wave-7-task-10: Trace
 

@@ -1,9 +1,10 @@
 <!--
   Asks a person to approve or deny a request, then shows what was decided. Only the choices the host supplies
-  (`onApprove`, `onDeny`) render. Any `children` replace the default parts.
+  (`onApprove`, `onAlwaysAllow`, `onDeny`) render. Any `children` replace the default parts.
 -->
 <script lang="ts">
   import type { ComponentProps } from "svelte";
+  import ConfirmationAlways from "./ConfirmationAlways.svelte";
   import ConfirmationApprove from "./ConfirmationApprove.svelte";
   import ConfirmationCancel from "./ConfirmationCancel.svelte";
   import ConfirmationDeny from "./ConfirmationDeny.svelte";
@@ -21,6 +22,7 @@
       /><ConfirmationReason
       /><parts.Choices
         ><ConfirmationApprove
+        /><ConfirmationAlways
         /><ConfirmationDeny
         /><ConfirmationCancel
         /><ConfirmationError

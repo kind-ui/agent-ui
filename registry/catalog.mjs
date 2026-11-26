@@ -188,11 +188,11 @@ export const components = {
   },
   terminal: {
     group: "output",
-    when: "you show a command's output in ANSI colors as it streams, with its exit code.",
+    when: "you show a command's output in ANSI colors as it streams, with its exit code, or ask before it runs.",
     title: "Terminal",
     description:
-      "A command and its output in ANSI colors, following the end as it streams, with its exit code and duration.",
-    uses: [],
+      "A command and its output in ANSI colors, following the end as it streams, with its exit code, duration and approval.",
+    uses: ["confirmation"],
   },
   "stack-trace": {
     group: "output",
@@ -468,6 +468,15 @@ export const components = {
   // wave-7-task-7: Step Group
 
   // wave-7-task-8: Handoff
+
+  handoff: {
+    group: "steps",
+    when: "one agent passes the conversation to another agent or a person, maybe after a person approves.",
+    title: "Handoff",
+    description:
+      "One agent handing the conversation to another agent or a person: who, why, its status and approval.",
+    uses: ["confirmation"],
+  },
 
   // wave-7-task-10: Trace
 

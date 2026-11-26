@@ -44,6 +44,36 @@
     display: none;
   }
 
+  /* Under the command, at the title's indent, before the output. */
+  [data-slot="kind-terminal-approval"] {
+    display: block;
+    padding-block: 2px 4px;
+    padding-inline: var(--kind-step-indent) 6px;
+  }
+
+  /* The trigger's mark already says the command waits, so the outcome reads only words until it's decided. */
+  :where(
+      [data-slot="kind-terminal-approval"]
+        [data-slot="kind-confirmation-outcome"]:is(
+          [data-state="requested"],
+          [data-state="submitting"],
+          [data-state="submit-failed"]
+        )
+    )
+    [data-slot="kind-confirmation-outcome-icon"] {
+    display: none;
+  }
+
+  /* No screen while a command that waits on its approval, or was denied, has printed nothing. */
+  [data-terminal-screen]:not(
+    :has(
+      [data-slot="kind-terminal-viewport"]:not([hidden]),
+      [data-slot="kind-terminal-command"]:not([hidden])
+    )
+  ) {
+    display: none;
+  }
+
   /* No guide line: the screen sits under the header at full width. */
   [data-slot="kind-terminal-content"] {
     margin-inline-start: 0;
@@ -259,7 +289,9 @@
   :is(
     [data-slot="kind-terminal-jump"],
     [data-slot="kind-terminal-exit"],
-    [data-slot="kind-terminal-command"]
+    [data-slot="kind-terminal-command"],
+    [data-slot="kind-terminal-approval"],
+    [data-slot="kind-terminal-viewport"]
   )[hidden] {
     display: none;
   }

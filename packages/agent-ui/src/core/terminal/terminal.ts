@@ -14,8 +14,15 @@ import {
   type VirtualItem,
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
-import type { StepStatus } from "../../types/index.js";
+import type { Approval, StepStatus } from "../../types/index.js";
 import { type AnsiLine, type AnsiLines, type AnsiSpan, createAnsiLines } from "../ansi.js";
+import { isActionable } from "../approval.js";
+import {
+  type ApprovalPartOptions,
+  type ApprovalPartState,
+  type ApprovalState,
+  approvalPart,
+} from "../approval-part.js";
 import { stepDuration } from "../chain-of-thought/open-steps.js";
 import { createCopy } from "../clipboard.js";
 import { resolveMotion } from "../motion/presets.js";
@@ -24,55 +31,68 @@ import { type StepApi, type StepOptions, type StepState, stepAnnouncement, stepB
 /** What copied the output: the copy button, or a call to the api or an agent. */
 export type TerminalCopyReason = "copy-press" | "imperative";
 
-export type TerminalOptions = Omit<StepOptions, "status" | "label"> & {
-  /**
-   * The command that ran, shown as the title. With a `label`, the label is the title and the command shows after a
-   * prompt above the output.
-   * @default ""
-   */
-  command?: string;
-  /**
-   * Everything the command printed so far, ANSI escapes included. Pass the whole output on each update: when it
-   * continues the last one, only the new text is parsed.
-   * @default ""
-   */
-  output?: string;
-  /** The command's exit code, once it has finished. Shown as "exit N" beside the duration. */
-  exitCode?: number;
-  /** Defaults to `running` without an `exitCode`, then `complete` for 0 and `error` for any other code. */
-  status?: StepStatus;
-  /** Replaces the title, which is the command, and names the run in announcements. */
-  label?: string;
-  /** Called before the output is copied, without its escapes. Cancel it to copy something else yourself. */
-  onCopy?: (output: string, details: ChangeDetails<TerminalCopyReason>) => void;
-};
+export type TerminalOptions = Omit<StepOptions, "status" | "label"> &
+  ApprovalPartOptions & {
+    /**
+     * The command that ran, shown as the title. With a `label`, the label is the title and the command shows after a
+     * prompt above the output.
+     * @default ""
+     */
+    command?: string;
+    /**
+     * Everything the command printed so far, ANSI escapes included. Pass the whole output on each update: when it
+     * continues the last one, only the new text is parsed.
+     * @default ""
+     */
+    output?: string;
+    /** The command's exit code, once it has finished. Shown as "exit N" beside the duration. */
+    exitCode?: number;
+    /**
+     * A request to approve the command before it runs. While it waits, a Confirmation asking "Run <command>?" sits
+     * between the command and the output, and the output shows only once there is some.
+     */
+    approval?: Approval;
+    /**
+     * Defaults to `complete` for an `exitCode` of 0 and `error` for any other code; without one, `awaiting-input`
+     * while the approval waits on a decision, `cancelled` once it's denied, else `running`.
+     */
+    status?: StepStatus;
+    /** Replaces the title, which is the command, and names the run in announcements. */
+    label?: string;
+    /** Called before the output is copied, without its escapes. Cancel it to copy something else yourself. */
+    onCopy?: (output: string, details: ChangeDetails<TerminalCopyReason>) => void;
+  };
 
-export type TerminalState = StepState & {
-  /** The `label`, else the command. */
-  title: string;
-  /** The `command` option. */
-  command: string;
-  /** The `exitCode` option. */
-  exitCode: number | undefined;
-  /** The duration as "N s", or empty without `durationSeconds`. */
-  duration: string;
-  /** Parses the output as it grows. */
-  ansi: AnsiLines;
-  /** The output's lines. While the output grows, only the last ones change. */
-  lines: readonly AnsiLine[];
-  /** Whether the output scrolls to new lines. Set by `createStickToBottom`; in the agent snapshot. */
-  following: boolean;
-  /** Whether Jump to latest is still animating out after following resumed. */
-  jumpExiting: boolean;
-  /** The lines to render, from `createVirtualizer`. */
-  rows: readonly VirtualItem[];
-  /** The height of every line together, in pixels. */
-  size: number;
-  /** Whether the output shows any text, so there's something to copy. */
-  hasOutput: boolean;
-  /** True for 2 s after the output is copied. */
-  copied: boolean;
-};
+export type TerminalState = StepState &
+  ApprovalState & {
+    /** The `label`, else the command. */
+    title: string;
+    /** The `command` option. */
+    command: string;
+    /** The `exitCode` option. */
+    exitCode: number | undefined;
+    /** The duration as "N s", or empty without `durationSeconds`. */
+    duration: string;
+    /** Parses the output as it grows. */
+    ansi: AnsiLines;
+    /** The output's lines. While the output grows, only the last ones change. */
+    lines: readonly AnsiLine[];
+    /** Whether the output scrolls to new lines. Set by `createStickToBottom`; in the agent snapshot. */
+    following: boolean;
+    /** Whether Jump to latest is still animating out after following resumed. */
+    jumpExiting: boolean;
+    /** The lines to render, from `createVirtualizer`. */
+    rows: readonly VirtualItem[];
+    /** The height of every line together, in pixels. */
+    size: number;
+    /** Whether the output shows any text, so there's something to copy. */
+    hasOutput: boolean;
+    /** True for 2 s after the output is copied. */
+    copied: boolean;
+  };
+
+/** The Confirmation the approval part renders. */
+export type TerminalApprovalState = ApprovalPartState;
 
 export type TerminalApi = StepApi & {
   /**
@@ -88,6 +108,8 @@ export type TerminalApi = StepApi & {
   measureLine: (index: number, el: HTMLElement) => () => void;
   /** Moves focus to the viewport when Jump to latest leaves with it. */
   recovery: FocusRecovery;
+  /** Hands the approval part its Confirmation's props. Called by the approval slot. */
+  approvalState: (state: TerminalState) => TerminalApprovalState;
 };
 
 // `value` keys the part, so each line's element is measured at its own index. React's `TerminalLine` sets it.
@@ -105,6 +127,7 @@ type TerminalSlots = {
   title: TerminalSlot<BaseSlotProps, { title: string }>;
   exit: TerminalSlot<BaseSlotProps, { text: string }>;
   meta: TerminalSlot<BaseSlotProps, { duration: string }>;
+  approval: TerminalSlot<BaseSlotProps, TerminalApprovalState>;
   content: TerminalSlot;
   command: TerminalSlot<BaseSlotProps, { command: string }>;
   copy: TerminalSlot;
@@ -121,19 +144,32 @@ export type TerminalPrimitive = ReturnType<
 
 const base = stepBase<TerminalState, TerminalApi, TerminalOptions>({
   kind: "terminal",
-  status: ({ exitCode }) => (exitCode === undefined ? "running" : exitCode === 0 ? "complete" : "error"),
-  announcement: (status, title, state) =>
-    status === "error" && state.exitCode
-      ? `${title} failed, exit code ${state.exitCode}`
-      : stepAnnouncement(status, title),
+  status: ({ exitCode, approval }) => {
+    if (exitCode !== undefined) return exitCode === 0 ? "complete" : "error";
+    if (isActionable(approval) || approval?.state === "submitting") return "awaiting-input";
+    return approval?.decision?.approved === false ? "cancelled" : "running";
+  },
+  announcement: (status, title, state) => {
+    if (status === "error" && state.exitCode) return `${title} failed, exit code ${state.exitCode}`;
+    // The Confirmation announces the denial as it arrives, in the same update.
+    if (status === "cancelled" && state.approval?.decision?.approved === false) return undefined;
+    return stepAnnouncement(status, title);
+  },
 });
 
-const presentation = ({ command = "", label, exitCode, durationSeconds }: TerminalOptions) => ({
-  title: label ?? command,
-  command,
-  exitCode,
-  duration: stepDuration(durationSeconds),
-});
+const presentation = (options: TerminalOptions) => {
+  const { command = "", label, exitCode, durationSeconds } = options;
+  return {
+    title: label ?? command,
+    command,
+    exitCode,
+    duration: stepDuration(durationSeconds),
+    ...approvalPart.presentation(options.approval, options),
+  };
+};
+
+// The command waits on its approval, or was denied, and printed nothing: the output has nowhere to show yet.
+const showsOutput = (state: TerminalState) => state.hasOutput || state.approval === undefined;
 
 const hasText = (lines: readonly AnsiLine[]) => lines.length > 1 || (lines[0]?.spans.length ?? 0) > 0;
 
@@ -190,9 +226,11 @@ export const terminalPrimitive: TerminalPrimitive = definePrimitive<
   ...base,
   options: {
     ...base.options,
+    ...approvalPart.options,
     command: "string",
     output: "value",
     exitCode: "number",
+    approval: "value",
     onCopy: "callback",
   },
   state: (options) => {
@@ -246,6 +284,9 @@ export const terminalPrimitive: TerminalPrimitive = definePrimitive<
 
     return {
       ...base.api(context),
+      approvalState: approvalPart.approvalState<TerminalState>(context, {
+        question: (state) => (state.command ? `Run ${state.command}?` : "Run this command?"),
+      }),
       get copy() {
         if (!store.get().hasOutput) return undefined;
         return async (event?: Event) => {
@@ -304,6 +345,11 @@ export const terminalPrimitive: TerminalPrimitive = definePrimitive<
         selects: outsideOutput,
         state: (state) => ({ duration: state.duration }),
       }),
+      // Between the command and the output, outside the content, so a request shows while the step is closed.
+      approval: slot<BaseSlotProps, TerminalApprovalState>({
+        ...approvalPart.slot<TerminalState, TerminalApi>(),
+        selects: outsideOutput,
+      }),
       content: slot({ ...content, selects: outsideOutput }),
       // The title is the command unless a `label` replaced it, so the command shows here only then.
       command: slot<BaseSlotProps, { command: string }>({
@@ -328,6 +374,7 @@ export const terminalPrimitive: TerminalPrimitive = definePrimitive<
       }),
       viewport: slot({
         selects: outsideOutput,
+        present: showsOutput,
         role: "log",
         // A tab stop, so the keyboard can scroll it, as UI SDK Scroll Area's viewport is.
         focus: "tab-stop",

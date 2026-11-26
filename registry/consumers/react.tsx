@@ -115,6 +115,8 @@ import { ConversationSearch } from "./components/ui/conversation-search.js";
 
 // wave-7-task-8: Handoff
 
+import { Handoff } from "./components/ui/handoff.js";
+
 // wave-7-task-10: Trace
 
 // wave-7-task-11: Run Timeline
@@ -450,6 +452,15 @@ const items = {
   // wave-7-task-7: Step Group
 
   // wave-7-task-8: Handoff
+
+  handoff: (
+    <Handoff
+      from={{ id: "support", name: "Support" }}
+      to={{ kind: "person", name: "Dana" }}
+      reason="Refunds need a person"
+      status="accepted"
+    />
+  ),
 
   // wave-7-task-10: Trace
 

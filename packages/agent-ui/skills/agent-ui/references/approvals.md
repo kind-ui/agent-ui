@@ -18,6 +18,29 @@ A Tool whose `call.approval.state` is `"requested"` shows **Approve** and **Deny
 - A callback may return a promise. The buttons lock while it's pending, and after it resolves they stay locked until the host reports the request (`state: "responded"`, a new `approvalId` or a new `generation`). A rejection unlocks them; to show "Decision not sent. Try again.", set the approval's `state` to `"submit-failed"`.
 - Once the approval is `"responded"`, the buttons give way to the outcome ("Approved", "Denied"), at the same height, so the conversation keeps what was decided.
 
+## Always allow
+
+Pass `onAlwaysAllow` (on a Tool, a Terminal or a Confirmation) to offer **Always allow** between Approve and Deny. It approves, and its decision carries `always: true`. Keep the allow list yourself, where the tools run, and skip the approval next time on the server; don't hide the request on the client. `alwaysLabel` renames it on a Confirmation, like "Always allow in this chat".
+
+## Terminal approval
+
+A shell command the agent wants to run is a Terminal with an `approval`: it shows the command, asks "Run <command>?" under it, and shows the output after the outcome once the command runs. Wire `onApprove`, `onDeny` and `onAlwaysAllow` as on a Tool. Pass `output` and `exitCode` only once the command runs; a denied command keeps its header, shows "Denied" with the reason, and its status is `cancelled`.
+
+```tsx
+<Terminal
+  command="npm test"
+  approval={approval}
+  output={output}
+  exitCode={exitCode}
+  onApprove={(decision) => respond({ ...decision, approved: true })}
+  onAlwaysAllow={(decision) => {
+    allowList.add("npm test");
+    respond({ ...decision, approved: true });
+  }}
+  onDeny={(decision) => respond({ ...decision, approved: false })}
+/>
+```
+
 ## Confirmation
 
 For an action that isn't a tool call (sending an email, deleting a file), render a Confirmation with an `Approval`:
@@ -56,4 +79,4 @@ Approval Mode only records the person's choice. Enforce it where the tools run: 
 
 ## For agents
 
-A Confirmation, a Tool's approval and the components in the table render `data-agent-confirm`, so an agent's `approve`, `deny`, `accept`, `submit`, `skip`, `restore`, `cancel` or `setValue` waits for the person through `createAgent`'s `allow`. See [agents.md](agents.md#ask-the-person-first).
+A Confirmation, a Tool's or Terminal's approval and the components in the table render `data-agent-confirm`, so an agent's `approve`, `alwaysAllow`, `deny`, `accept`, `submit`, `skip`, `restore`, `cancel` or `setValue` waits for the person through `createAgent`'s `allow`. See [agents.md](agents.md#ask-the-person-first).

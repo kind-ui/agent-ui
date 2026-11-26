@@ -26,6 +26,7 @@ Last reviewed: `cb3f3e12` (UI SDK 0.1.0-beta.17 upgrade)
 - **A status change while a `kind-status` is out of the document isn't announced when it returns:** nobody could see the change.
 - **`kind-model-control`'s `model` and `effort` setters refuse while disabled, and `effort` while the model has no levels,** as Settings Menu's `values` refuses while disabled (Wave 5 Task 9).
 - Sidebar with `side="end"`: the handle's `aria-valuenow` and `aria-controls` are the inset's, since UI SDK's splitter reports the panel before the handle. That's the window splitter pattern; kept.
+- `registry/consumers/web.ts` renders `kind-handoff` from attributes only ("Someone handed off to someone"): `from` and `to` are properties, and the file's Wave 7 markers hold no property assignments. The React, Vue, Svelte and Solid items pass both.
 
 ## Known and open (don't report again, check whether fixed)
 
@@ -81,6 +82,7 @@ Last reviewed: `cb3f3e12` (UI SDK 0.1.0-beta.17 upgrade)
 - **A Retry or Continue pending when a `kind-message` is moved comes back pressable (Wave 6 Task 9):** `outcomePending` isn't carried to the rebuilt instance, as with Plan's Accept and Subagent's Stop.
 - **`kind-conversation-search`'s `open` property doesn't reflect to the `open` attribute** (Wave 6 Task 11), the same class as the Picker and `menuBase` entry.
 - **`kind-thread-search` has no moved, shadow-root or written-parts fixture case** (Wave 6 Task 3): all three, and a removal while open, were checked by hand in review; add cases with Picker's. Its uncontrolled search text isn't root state, so a move while open may lose it (not reproduced).
+- `kind-handoff`: `claim` treats a whitespace-only part as written (as `kind-message`'s does), and the fixture has no hand-written-parts or put-back case. Add both when `claim` changes for every element.
 
 ## Resolved
 

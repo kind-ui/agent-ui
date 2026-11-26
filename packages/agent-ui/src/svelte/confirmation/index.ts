@@ -1,5 +1,6 @@
 import type { ComponentProps } from "svelte";
 import Confirmation from "./Confirmation.svelte";
+import ConfirmationAlways from "./ConfirmationAlways.svelte";
 import ConfirmationApprove from "./ConfirmationApprove.svelte";
 import ConfirmationCancel from "./ConfirmationCancel.svelte";
 import ConfirmationDeny from "./ConfirmationDeny.svelte";
@@ -11,6 +12,7 @@ import { parts } from "./parts.js";
 
 export {
   Confirmation,
+  ConfirmationAlways,
   ConfirmationApprove,
   ConfirmationCancel,
   ConfirmationDeny,
@@ -26,6 +28,7 @@ export type ConfirmationProps = ComponentProps<typeof Confirmation>;
 export type ConfirmationTitleProps = ComponentProps<typeof ConfirmationTitle>;
 export type ConfirmationReasonProps = ComponentProps<typeof ConfirmationReason>;
 export type ConfirmationApproveProps = ComponentProps<typeof ConfirmationApprove>;
+export type ConfirmationAlwaysProps = ComponentProps<typeof ConfirmationAlways>;
 export type ConfirmationDenyProps = ComponentProps<typeof ConfirmationDeny>;
 export type ConfirmationCancelProps = ComponentProps<typeof ConfirmationCancel>;
 export type ConfirmationErrorProps = ComponentProps<typeof ConfirmationError>;

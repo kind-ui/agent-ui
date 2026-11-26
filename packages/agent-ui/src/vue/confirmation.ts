@@ -9,6 +9,7 @@ const parts = createParts(confirmationPrimitive, {
   reason: "div",
   choices: "div",
   approve: "button",
+  always: "button",
   deny: "button",
   cancel: "button",
   error: "span",
@@ -72,6 +73,12 @@ export const ConfirmationReason = withDefault<ConfirmationReasonState>(
 export const ConfirmationApprove = withDefault(parts.Approve, "ConfirmationApprove", withPendingMark);
 
 /**
+ * Calls `onAlwaysAllow`, which approves and tells the host to remember. Reads the `alwaysLabel` unless you fill the
+ * slot. Rendered only while `onAlwaysAllow` is set.
+ */
+export const ConfirmationAlways = withDefault(parts.Always, "ConfirmationAlways", withPendingMark);
+
+/**
  * Calls `onDeny`. With `reason`, a person's first press opens the reason box instead. Reads the `denyLabel` unless
  * you fill the slot. Rendered only while `onDeny` is set.
  */
@@ -103,6 +110,7 @@ const defaultParts = () => [
   h(ConfirmationReason),
   h(ConfirmationChoices, null, () => [
     h(ConfirmationApprove),
+    h(ConfirmationAlways),
     h(ConfirmationDeny),
     h(ConfirmationCancel),
     h(ConfirmationError),
@@ -112,6 +120,6 @@ const defaultParts = () => [
 
 /**
  * Asks a person to approve or deny a request, then shows what was decided. Only the choices the host supplies
- * (`onApprove`, `onDeny`) render. A default slot replaces the default parts.
+ * (`onApprove`, `onAlwaysAllow`, `onDeny`) render. A default slot replaces the default parts.
  */
 export const Confirmation = withDefault(parts.Root, "Confirmation", defaultParts);

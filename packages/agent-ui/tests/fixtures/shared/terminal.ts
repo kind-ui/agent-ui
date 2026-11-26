@@ -1,3 +1,5 @@
+import type { ToolCall } from "@kind-ui/agent-ui";
+
 const ESC = "\x1b";
 
 export const testRun = [
@@ -18,3 +20,18 @@ export const manyLines = (count: number) =>
     { length: count },
     (_, i) => `${ESC}[90m${String(i + 1).padStart(4)}${ESC}[0m line of output`,
   ).join("\n");
+
+/** The commands of `?c=terminal&case=approval`, each waiting on its approval. */
+export const approvalRuns = {
+  run: { command: "npm test", reason: true, always: true },
+  plain: { command: "rm -rf build", reason: false, always: false },
+} as const;
+
+/** The tool call beside them, with Always allow. */
+export const approvalCall: ToolCall = {
+  toolCallId: "search",
+  name: "search_docs",
+  dynamic: false,
+  input: { state: "ready", value: { query: "steps" } },
+  approval: { approvalId: "t1", generation: 1, state: "requested" },
+};

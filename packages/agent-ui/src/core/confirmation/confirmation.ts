@@ -20,6 +20,8 @@ export interface ConfirmationDecision {
   generation: number;
   /** The reason box's text, or what an agent passed to `deny`. Only on a denial, and only when not empty. */
   reason?: string;
+  /** Set by Always allow: approve, and remember the choice. The host keeps the allow list. */
+  always?: true;
 }
 
 /**
@@ -42,6 +44,11 @@ export type ConfirmationOptions = {
   /** Called when the request is denied. Shows Deny while set. */
   onDeny?: ConfirmationCallback;
   /**
+   * Called when a person chooses to approve and remember, with `always: true` in the decision. Shows Always allow
+   * between Approve and Deny while set. The host keeps the allow list.
+   */
+  onAlwaysAllow?: ConfirmationCallback;
+  /**
    * Asks for the reason Deny sends, while `onDeny` is set: a person's first Deny opens a box for it above the
    * choices, and Deny then sends it. It keeps its text through a new `generation` of the same request, and empties
    * for a new `approvalId`.
@@ -52,6 +59,8 @@ export type ConfirmationOptions = {
   approveLabel?: string;
   /** @default "Deny" */
   denyLabel?: string;
+  /** @default "Always allow" */
+  alwaysLabel?: string;
   /** Where focus goes when a choice leaves while focused, like a tool's trigger. Defaults to the outcome. */
   focusFallback?: () => HTMLElement | null | undefined;
   /**
@@ -83,11 +92,13 @@ export type ConfirmationState = {
   /** Whether a decision was sent and the host hasn't reported on it yet, so both choices stay disabled. */
   sent: boolean;
   /** The choice that was pressed, while its decision is pending or sent. */
-  pressed: "approve" | "deny" | undefined;
+  pressed: ConfirmationChoice | undefined;
   /** Whether `onApprove` is set. */
   canApprove: boolean;
   /** Whether `onDeny` is set. */
   canDeny: boolean;
+  /** Whether `onAlwaysAllow` is set. */
+  canAlwaysAllow: boolean;
   /** The `reason` option. */
   reason: boolean;
   /** The reason box's text. */
@@ -100,9 +111,14 @@ export type ConfirmationState = {
   approveLabel: string;
   /** The `denyLabel`, else "Deny". */
   denyLabel: string;
+  /** The `alwaysLabel`, else "Always allow". */
+  alwaysLabel: string;
   /** The `motion` option. */
   motion: MotionMode;
 };
+
+/** A choice a person can press. */
+export type ConfirmationChoice = "approve" | "always" | "deny";
 
 export type ConfirmationReasonState = {
   /** Pass it to the Textarea as its `controller`, so an agent's reason fills it. */
@@ -120,10 +136,14 @@ export type ConfirmationApi = {
    */
   readonly deny: ((reason?: string) => void) | undefined;
   /**
-   * Decides as a press does. Called by the approve and deny slots. With `reason`, Deny first opens the reason box,
-   * and decides once it's open.
+   * Calls `onAlwaysAllow`. Offered only while it's set, the request is actionable and no decision is in flight.
    */
-  press: (choice: "approve" | "deny", event?: Event) => void;
+  readonly alwaysAllow: (() => void) | undefined;
+  /**
+   * Decides as a press does. Called by the approve, always and deny slots. With `reason`, Deny first opens the reason
+   * box, and decides once it's open.
+   */
+  press: (choice: ConfirmationChoice, event?: Event) => void;
   /** Closes the reason box without deciding. Called by the cancel slot. */
   cancelReason: () => void;
   /** Hands the reason box its props. Called by the reason slot. */
@@ -158,6 +178,7 @@ type ConfirmationSlots = {
   reason: Slot<ConfirmationReasonState>;
   choices: Slot;
   approve: Slot<ChoiceState>;
+  always: Slot<ChoiceState>;
   deny: Slot<ChoiceState>;
   cancel: Slot;
   error: Slot;
@@ -182,16 +203,18 @@ const presentation = (options: ConfirmationOptions) => ({
   outcomeReason: options.approval?.decision?.reason,
   canApprove: options.onApprove !== undefined,
   canDeny: options.onDeny !== undefined,
+  canAlwaysAllow: options.onAlwaysAllow !== undefined,
   reason: options.reason ?? false,
   approveLabel: options.approveLabel ?? "Approve",
   denyLabel: options.denyLabel ?? "Deny",
+  alwaysLabel: options.alwaysLabel ?? "Always allow",
   motion: options.motion ?? "auto",
 });
 
 const isLocked = (state: ConfirmationState) => state.pending || state.sent;
 
 const showsChoices = (state: ConfirmationState) =>
-  (state.canApprove || state.canDeny) && (state.actionable || isLocked(state));
+  (state.canApprove || state.canDeny || state.canAlwaysAllow) && (state.actionable || isLocked(state));
 
 const isResolved = (state: Approval["state"] | undefined) => state === "responded" || state === "auto";
 
@@ -210,7 +233,7 @@ const OUTCOME_STATUS: Record<Approval["state"], StepStatus> = {
   auto: "complete",
 };
 
-const choiceAttrs = (state: ConfirmationState, choice: "approve" | "deny") => ({
+const choiceAttrs = (state: ConfirmationState, choice: ConfirmationChoice) => ({
   type: "button",
   "data-kind-button": choice === "approve" ? "primary" : "secondary",
   "aria-disabled": state.actionable && !isLocked(state) ? undefined : "true",
@@ -229,9 +252,11 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
     label: "string",
     onApprove: "action",
     onDeny: "action",
+    onAlwaysAllow: "action",
     reason: "boolean",
     approveLabel: "string",
     denyLabel: "string",
+    alwaysLabel: "string",
     focusFallback: "value",
     motion: "string",
   },
@@ -293,15 +318,16 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
       else if (isResolved(state) && outcome) announce(outcome, { priority: "polite" });
     });
 
-    const decide = (choice: "approve" | "deny", event?: Event, reason?: string) => {
-      const { approval, onApprove, onDeny } = context.options();
-      const callback = choice === "approve" ? onApprove : onDeny;
+    const decide = (choice: ConfirmationChoice, event?: Event, reason?: string) => {
+      const { approval, onApprove, onDeny, onAlwaysAllow } = context.options();
+      const callback = choice === "approve" ? onApprove : choice === "always" ? onAlwaysAllow : onDeny;
       const state = store.get();
       if (!callback || !approval || !state.actionable || isLocked(state)) return;
       const decision: ConfirmationDecision = {
         approvalId: approval.approvalId,
         generation: approval.generation,
         ...(reason && { reason }),
+        ...(choice === "always" && { always: true as const }),
       };
       const details = { source: actionSource(event, "decision-press") };
       const asked = reported;
@@ -315,7 +341,7 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
           else store.set({ pressed: undefined });
         });
     };
-    const offered = (name: "canApprove" | "canDeny") => {
+    const offered = (name: "canApprove" | "canDeny" | "canAlwaysAllow") => {
       const state = store.get();
       return state[name] && state.actionable && !isLocked(state);
     };
@@ -339,8 +365,11 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
       get deny() {
         return offered("canDeny") ? (reason?: string) => deny(reason) : undefined;
       },
+      get alwaysAllow() {
+        return offered("canAlwaysAllow") ? () => decide("always") : undefined;
+      },
       press: (choice, event) => {
-        if (choice === "approve") return decide("approve", event);
+        if (choice !== "deny") return decide(choice, event);
         // A person writes the reason; an agent's press decides at once, as its `deny` does.
         const person = actionSource(event, "decision-press") !== "agent";
         if (person && store.get().reason && !store.get().composing && offered("canDeny")) return openReason();
@@ -443,6 +472,16 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
       attrs: (state) => choiceAttrs(state, "approve"),
       bind: (el, part) => part.api.recovery.bind(el, part),
     }),
+    // Approves too, so it leaves with Approve while the reason box is open.
+    always: slot<BaseSlotProps, ChoiceState>({
+      role: "button",
+      focus: "native",
+      present: (state) => state.canAlwaysAllow && showsChoices(state) && !showsReason(state),
+      press: ({ api }, event) => api.press("always", event),
+      state: (state) => ({ label: state.alwaysLabel, pending: state.pressed === "always" }),
+      attrs: (state) => choiceAttrs(state, "always"),
+      bind: (el, part) => part.api.recovery.bind(el, part),
+    }),
     deny: slot<BaseSlotProps, ChoiceState>({
       role: "button",
       focus: "native",
@@ -486,5 +525,5 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
       }),
     }),
   }),
-  agent: { actions: ["approve", "deny"] },
+  agent: { actions: ["approve", "alwaysAllow", "deny"] },
 });

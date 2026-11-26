@@ -253,6 +253,7 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
     { c: "terminal", case: "all", interaction: press('[data-slot="kind-terminal-trigger"]') },
     { c: "terminal", case: "owned" },
     { c: "terminal", case: "stream-10" },
+    { c: "terminal", case: "approval", interaction: press('#run [data-slot="kind-confirmation-deny"]') },
   ],
   "test-results": [
     { c: "test-results", case: "all", interaction: press('[data-slot="kind-test-results-count"]') },
@@ -293,6 +294,10 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
   // wave-7-task-7: Step Group
 
   // wave-7-task-8: Handoff
+
+  handoff: [
+    { c: "handoff", case: "all", interaction: press('#billing [data-slot="kind-confirmation-deny"]') },
+  ],
 
   // wave-7-task-10: Trace
 
