@@ -146,6 +146,8 @@ export type ConfirmationState = {
   reasonText: string;
   /** Whether a person opened the reason box with Deny. */
   composing: boolean;
+  /** Whether the choices don't fit one row, so Always allow takes its own row above Deny and Approve. */
+  stacked: boolean;
   /** Whether the reason box is collapsing after a decision was recorded. */
   reasonClosing: boolean;
   /** The `approveLabel`, else "Approve". */
@@ -186,6 +188,8 @@ export type ConfirmationApi = {
   recovery: ReturnType<typeof createFocusRecovery>;
   /** Moves focus to Deny when Cancel leaves while focused. */
   cancelRecovery: ReturnType<typeof createFocusRecovery>;
+  /** Measures whether the choices fit one row, setting `stacked`. Called by the choices slot. */
+  bindChoices: (el: HTMLElement) => () => void;
   /** Fades in the choices or the outcome when they swap, after the first frame. */
   enterSwap: (el: HTMLElement) => void;
   /** Starts counting swaps after the first frame, and the deadline. Called by the root slot. */
@@ -324,6 +328,7 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
     pressed: undefined,
     reasonText: "",
     composing: false,
+    stacked: false,
     reasonClosing: false,
   }),
   sync: presentation,
@@ -451,6 +456,31 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
         fallback: () => context.options().focusFallback?.() ?? context.element("outcome"),
       }),
       cancelRecovery: createFocusRecovery({ fallback: () => context.element("deny") }),
+      bindChoices: (el) => {
+        // The buttons' own widths and the gaps between them, against the row: a stacked row reads the same widths,
+        // so stacking never undoes itself.
+        const buttons = () => [...el.querySelectorAll<HTMLElement>("[data-kind-button]")];
+        const measure = () => {
+          const shown = buttons().filter((button) => button.offsetWidth > 0);
+          const gap = Number.parseFloat(getComputedStyle(el).columnGap) || 0;
+          const needed =
+            shown.reduce((sum, button) => sum + button.offsetWidth, 0) + gap * (shown.length - 1);
+          const stacked = shown.length > 2 && needed > el.clientWidth;
+          if (stacked !== store.get().stacked) store.set({ stacked });
+        };
+        const observer = new ResizeObserver(measure);
+        const observe = () => {
+          observer.disconnect();
+          observer.observe(el);
+          for (const button of buttons()) observer.observe(button);
+        };
+        observe();
+        const unsubscribe = store.subscribe(() => queueMicrotask(observe));
+        return () => {
+          unsubscribe();
+          observer.disconnect();
+        };
+      },
       enterSwap: (el) => {
         if (!mounting) void enter(el, "fade", { motion: store.get().motion });
       },
@@ -551,7 +581,11 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
     }),
     choices: slot({
       present: showsChoices,
-      bind: (el, { api }) => api.enterSwap(el),
+      attrs: (state) => ({ "data-stacked": state.stacked ? "" : undefined }),
+      bind: (el, { api }) => {
+        api.enterSwap(el);
+        return api.bindChoices(el);
+      },
     }),
     // Approves too, so it leaves with Approve while the reason box is open.
     always: slot<BaseSlotProps, ChoiceState>({

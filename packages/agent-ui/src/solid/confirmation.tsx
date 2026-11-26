@@ -1,18 +1,23 @@
-import { confirmationPrimitive } from "@kind-ui/agent-ui/core";
+import { codeSpans, confirmationPrimitive, WORDS } from "@kind-ui/agent-ui/core";
 import type { ComponentProps, JSX } from "@solidjs/web";
 import { createParts } from "@ui-sdk/solid/primitive";
-import { omit, Show } from "solid-js";
+import { For, omit, Show } from "solid-js";
 import { KindTextarea } from "./internal/textarea.js";
 
 const parts = createParts(confirmationPrimitive, {
   root: "div",
   title: "div",
+  meta: "span",
+  risk: "div",
+  "risk-icon": "span",
   reason: "div",
   choices: "div",
   approve: "button",
+  always: "button",
   deny: "button",
   cancel: "button",
   error: "span",
+  detail: "div",
   outcome: "div",
   "outcome-icon": "span",
 });
@@ -21,7 +26,7 @@ export type ConfirmationProps = ComponentProps<typeof parts.Root>;
 
 /**
  * Asks a person to approve or deny a request, then shows what was decided. Only the choices the host supplies
- * (`onApprove`, `onDeny`) render. Any `children` replace the default parts.
+ * (`onDeny`, `onAlwaysAllow`, `onApprove`) render, in that order. Any `children` replace the default parts.
  */
 export function Confirmation(props: ConfirmationProps) {
   return <parts.Root {...omit(props, "children")}>{props.children ?? <DefaultParts />}</parts.Root>;
@@ -29,6 +34,16 @@ export function Confirmation(props: ConfirmationProps) {
 
 export const ConfirmationChoices = parts.Choices;
 export const ConfirmationOutcomeIcon = parts.OutcomeIcon;
+export const ConfirmationRiskIcon = parts.RiskIcon;
+
+// Text with its backticks as `code`.
+function Code(props: { text: string }) {
+  return (
+    <For each={codeSpans(props.text)} keyed={false}>
+      {(piece, index) => (index % 2 ? <code>{piece()}</code> : piece())}
+    </For>
+  );
+}
 
 export type ConfirmationTitleProps = ComponentProps<typeof parts.Title>;
 
@@ -36,8 +51,38 @@ export type ConfirmationTitleProps = ComponentProps<typeof parts.Title>;
 export function ConfirmationTitle(props: ConfirmationTitleProps) {
   return (
     <parts.Title {...omit(props, "children")}>
-      {props.children ?? ((state: { label: string }) => state.label)}
+      {props.children ?? ((state: { label: string }) => <Code text={state.label} />)}
     </parts.Title>
+  );
+}
+
+export type ConfirmationMetaProps = ComponentProps<typeof parts.Meta>;
+
+/** "Sending decision", else the deadline ("Decide in 4 min", then "Expired"), unless you pass children. */
+export function ConfirmationMeta(props: ConfirmationMetaProps) {
+  return (
+    <parts.Meta {...omit(props, "children")}>
+      {props.children ?? ((state: { text: string }) => state.text)}
+    </parts.Meta>
+  );
+}
+
+export type ConfirmationRiskProps = ComponentProps<typeof parts.Risk>;
+
+/** The `riskText` after a warning mark, unless you pass children. Rendered only while `riskText` is set. */
+export function ConfirmationRisk(props: ConfirmationRiskProps) {
+  return (
+    <parts.Risk {...omit(props, "children")}>
+      {props.children ??
+        ((state: { text: string }) => (
+          <>
+            <ConfirmationRiskIcon />
+            <span>
+              <Code text={state.text} />
+            </span>
+          </>
+        ))}
+    </parts.Risk>
   );
 }
 
@@ -71,6 +116,16 @@ export function ConfirmationApprove(props: ConfirmationApproveProps) {
   return <parts.Approve {...omit(props, "children")}>{props.children ?? withPendingMark}</parts.Approve>;
 }
 
+export type ConfirmationAlwaysProps = ComponentProps<typeof parts.Always>;
+
+/**
+ * Calls `onAlwaysAllow`, which approves and asks the host to remember. Reads the `alwaysLabel` and `alwaysTarget`
+ * unless you pass children. Rendered only while `onAlwaysAllow` is set and `risk` isn't `"danger"`.
+ */
+export function ConfirmationAlways(props: ConfirmationAlwaysProps) {
+  return <parts.Always {...omit(props, "children")}>{props.children ?? withPendingMark}</parts.Always>;
+}
+
 export type ConfirmationDenyProps = ComponentProps<typeof parts.Deny>;
 
 /**
@@ -92,10 +147,17 @@ export type ConfirmationErrorProps = ComponentProps<typeof parts.Error>;
 
 /** "Decision not sent. Try again." while the host reports `submit-failed`, unless you pass children. */
 export function ConfirmationError(props: ConfirmationErrorProps) {
+  return <parts.Error {...omit(props, "children")}>{props.children ?? WORDS.notSentRetry}</parts.Error>;
+}
+
+export type ConfirmationDetailProps = ComponentProps<typeof parts.Detail>;
+
+/** The `alwaysDetail`, unless you pass children. Rendered under the choices while Always allow shows. */
+export function ConfirmationDetail(props: ConfirmationDetailProps) {
   return (
-    <parts.Error {...omit(props, "children")}>
-      {props.children ?? "Decision not sent. Try again."}
-    </parts.Error>
+    <parts.Detail {...omit(props, "children")}>
+      {props.children ?? ((state: { text: string }) => <Code text={state.text} />)}
+    </parts.Detail>
   );
 }
 
@@ -109,7 +171,9 @@ export function ConfirmationOutcome(props: ConfirmationOutcomeProps) {
         ((state) => (
           <>
             <ConfirmationOutcomeIcon />
-            <span data-confirmation-label="">{state.label}</span>
+            <span data-confirmation-label="">
+              <Code text={state.label} />
+            </span>{" "}
             <Show when={state.reason}>
               <span data-confirmation-reason="">{state.reason}</span>
             </Show>
@@ -123,7 +187,7 @@ export function ConfirmationOutcome(props: ConfirmationOutcomeProps) {
 const withPendingMark = (state: { label: string }): JSX.Element => (
   <>
     <span data-kind-pending-mark="" data-status-mark="" data-status="running" aria-hidden="true" />
-    {state.label}
+    <Code text={state.label} />
   </>
 );
 
@@ -131,13 +195,17 @@ function DefaultParts() {
   return (
     <>
       <ConfirmationTitle />
+      <ConfirmationMeta />
+      <ConfirmationRisk />
       <ConfirmationReason />
       <ConfirmationChoices>
-        <ConfirmationApprove />
-        <ConfirmationDeny />
         <ConfirmationCancel />
+        <ConfirmationDeny />
+        <ConfirmationAlways />
+        <ConfirmationApprove />
         <ConfirmationError />
       </ConfirmationChoices>
+      <ConfirmationDetail />
       <ConfirmationOutcome />
     </>
   );

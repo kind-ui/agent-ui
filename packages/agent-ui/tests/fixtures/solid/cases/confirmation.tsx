@@ -1,12 +1,13 @@
 import type { Approval } from "@kind-ui/agent-ui";
 import type { ConfirmationOptions } from "@kind-ui/agent-ui/core";
 import type { AgentAction } from "@ui-sdk/solid/agent";
-import { createSignal, onSettled } from "solid-js";
+import { createSignal, For, onSettled } from "solid-js";
 import { Confirmation } from "../../../../src/solid/confirmation.js";
-import { confirmationHost, request } from "../../shared/confirmation.js";
+import { confirmationHost, moreConfirmations, request } from "../../shared/confirmation.js";
 import { expose } from "../../shared/expose.js";
 
-const { host, approve, deny } = confirmationHost();
+const { host, approve, deny, always } = confirmationHost();
+const more = moreConfirmations();
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 
@@ -25,7 +26,7 @@ function Confirmations(props: { motion?: ConfirmationOptions["motion"] }) {
     }),
   );
   return (
-    <div class="flex w-[28rem] flex-col gap-4 p-6">
+    <div class="flex w-full max-w-[28rem] flex-col gap-4 p-6">
       <p id="above">Above</p>
       <Confirmation
         id="confirm"
@@ -57,6 +58,18 @@ function Confirmations(props: { motion?: ConfirmationOptions["motion"] }) {
         onApprove={approve}
         onDeny={deny}
       />
+      <For each={more}>
+        {({ id, options }) => (
+          <Confirmation
+            id={id}
+            {...options}
+            onApprove={approve}
+            onDeny={deny}
+            onAlwaysAllow={options.alwaysTarget ? always : undefined}
+            motion={props.motion}
+          />
+        )}
+      </For>
     </div>
   );
 }

@@ -64,7 +64,15 @@ export function ToolApproval(props: ToolApprovalProps) {
             label={state.label}
             onApprove={state.onApprove}
             onDeny={state.onDeny}
+            onAlwaysAllow={state.onAlwaysAllow}
             reason={state.reason}
+            approveLabel={state.approveLabel}
+            alwaysLabel={state.alwaysLabel}
+            alwaysTarget={state.alwaysTarget}
+            alwaysScope={state.alwaysScope}
+            alwaysDetail={state.alwaysDetail}
+            risk={state.risk}
+            riskText={state.riskText}
             focusFallback={state.focusFallback}
             motion={state.motion}
           />
