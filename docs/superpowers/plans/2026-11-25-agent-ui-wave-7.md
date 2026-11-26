@@ -2,27 +2,26 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Each task is one session and one PR, opened and left for the user's review: **no task merges its own PR.**
 
-**Goal:** Ship Wave 7, "agent ops", in two releases. **7a (0.9.0)** fixes the four gaps fx-gui hit first (Composer steering, Message's delivery mark, Terminal approval, retrying on Message and Tool), then adds a minimal Diff, Step Group and Handoff. **7b (0.10.0)** adds Trace, Run Timeline, Job Progress, Schedule Card, Agent Card, Usage Meter, Quota Notice, Activity Graph and Flow Graph, with Context Meter's breakdown and Thread List's inbox. Every new component and change ships in core and all five render layers (React, Web Components, Vue, Svelte, Solid), with registry items, docs pages, the published skill's references, size budgets and one changeset per release.
+**Goal:** Ship Wave 7, "agent ops", in two releases. **7a (0.9.0)** fixes four gaps in a running turn first (Composer steering, Message's delivery mark, Terminal approval, retrying on Message and Tool), then adds a minimal Diff, Step Group and Handoff. **7b (0.10.0)** adds Trace, Run Timeline, Job Progress, Schedule Card, Agent Card, Usage Meter, Quota Notice, Activity Graph and Flow Graph, with Context Meter's breakdown and Thread List's inbox. Every new component and change ships in core and all five render layers (React, Web Components, Vue, Svelte, Solid), with registry items, docs pages, the published skill's references, size budgets and one changeset per release.
 
 **Architecture:** Every Wave 7 component is one `definePrimitive` that composes UI SDK, as Waves 1–6 do. Trace is UI SDK Waterfall; Run Timeline is UI SDK Timeline; Job Progress and Quota Notice use Progress and Meter; Schedule Card uses Switch; Activity Graph is `createGridFocus`; Flow Graph is `createViewport` with `spatialMove`. Step-shaped components spread `stepBase`; Usage Meter and Context Meter share a `meterBase` extracted from Context Meter; Terminal, Tool and Handoff share an `approvalPart` extracted from Tool; Message and Tool share a `retryPart` over a `createCountdown` extracted from Connection Status. Diffing is jsdiff, graph layout is dagre: pure data in core, like the Markdown engine's libraries.
 
 **Tech Stack:** `@ui-sdk/*` stay at `0.1.0-beta.17`, `motion` at `14.14.0`. New runtime dependencies, each exact-pinned by the task that first imports it: `diff@9.0.0` (BSD-3-Clause, 4.9 KB gzip for the three functions Diff uses; Task 6) and `@dagrejs/dagre@3.1.4` (MIT, 17 KB gzip, with `@dagrejs/graphlib`; Task 19, if Flow Graph stays).
 
-**Spec:** `docs/superpowers/specs/2026-11-25-agent-ui-wave-7-design.md` (binding for Wave 7; its §2 is the scope, §3 the frozen contracts, §4–§5 each component's behavior, §9 the fx-gui stop-gaps) and the base spec `docs/superpowers/specs/2026-11-14-agent-ui-design.md` (§2 "Building on UI SDK", §4.1, §5, §6, §8, §9, §10). Also read `AGENTS.md` ("UI SDK API notes", "Framework layers: shared interfaces", Verification policy, the streaming UX checklist), `.agents/experts/*/decisions.md`, the Wave 6 plan for the routine this one keeps, and the framework layers plan for D5 (names in each framework) and D10 (markers).
+**Spec:** `docs/superpowers/specs/2026-11-25-agent-ui-wave-7-design.md` (binding for Wave 7; its §2 is the scope, §3 the frozen contracts, §4–§5 each component's behavior, §9 the open questions) and the base spec `docs/superpowers/specs/2026-11-14-agent-ui-design.md` (§2 "Building on UI SDK", §4.1, §5, §6, §8, §9, §10). Also read `AGENTS.md` ("UI SDK API notes", "Framework layers: shared interfaces", Verification policy, the streaming UX checklist), `.agents/experts/*/decisions.md`, the Wave 6 plan for the routine this one keeps, and the framework layers plan for D5 (names in each framework) and D10 (markers).
 
 ## Decisions
 
-Proposed 2026-11-25. The scope decisions (what merges, what's dropped, Diff in 7a) are the spec's §2 and its §10 open questions; this list covers how the work runs.
+Proposed 2026-11-25. The scope decisions (what merges, what's dropped, Diff in 7a) are the spec's §2 and its §9 open questions; this list covers how the work runs.
 
-- **D1. Scope and order.** Spec §2: 12 new components and 8 changed. The five fx-gui gaps go first: Batch A is gaps 1, 2, 3 and 5 (Tasks 2–5); gap 4, the Diff, opens Batch B (Task 6) because it's a new component rather than an option on a shipped one, and Terminal's and Tool's approvals (Batch A) are what it serves. 7b starts only once 7a's tasks are open as PRs.
+- **D1. Scope and order.** Spec §2: 12 new components and 8 changed. The five running-turn gaps (spec §2.1) go first: Batch A is gaps 1, 2, 3 and 5 (Tasks 2–5); gap 4, the Diff, opens Batch B (Task 6) because it's a new component rather than an option on a shipped one, and Terminal's and Tool's approvals (Batch A) are what it serves. 7b starts only once 7a's tasks are open as PRs.
 - **D2. Contracts freeze first.** Task 1 lands every Wave 7 type (spec §3.1), the four shared core modules (spec §3.2: `countdown`, `retry`, `approval-part`, `aggregate`, `meter-base`) as refactors with no API change, the markers, the `wave-7` Playwright projects and the skill's `ops` group. No component task edits a shared type or module; one that needs a change opens a small PR against `main` that every open task merges before it continues (framework layers plan D10).
 - **D3. Five layers in every task.** A task isn't done until its component renders in React, Web Components, Vue, Svelte and Solid with React's part names (framework layers plan D5), is listed in each `registry/layers/<layer>.mjs`, passes `parity.spec.ts` and `hydration.spec.ts` on every layer, and has docs examples in all four example languages. React and Web are written first by the owner; Vue, Svelte and Solid go to three parallel subagents once the core primitive is frozen (step 3 of the routine).
 - **D4. Shared files take per-task markers.** As Wave 6 D21: Task 1 adds one `wave-7-task-<n>: <name>` marker per task in `core/index.ts`, `registry/catalog.mjs`, the five `registry/layers/<layer>.mjs`, `tests/fixtures/shared/parity.ts`, `packages/agent-ui/tests/core/ui-sdk-testing.test.mjs`, `tests/browser/budgets/{react,vue,svelte,solid}.ts`, `tests/browser/wave-1/{forced-colors,status-mark}.spec.ts`, `packages/agent-ui/src/styles/agent-ui.css`, the registry consumers, `THIRD_PARTY_NOTICES.md` and `AGENTS.md` ("UI SDK API notes"). JSON files (`size-budget.json`, `apps/docs/content/docs/components/meta.json`) and lockfile changes are rebased by whichever task lands second. Task 21 removes the markers.
-- **D5. Two releases, two integration points.** 7a tasks (2–8) branch from `main` after Task 1 and open PRs against `main`. 7b tasks (10–19) open PRs against a `wave-7b` branch the coordinator cuts from `main` after Task 1, so nothing from 7b ships in 0.9.0's tarball; Task 21 opens `wave-7b` → `main` once 0.9.0 has published. Task 9 writes the 0.9.0 changeset, Task 21 the 0.10.0 one. No other task writes a changeset. (Spec §10 Q6: if the user wants one 0.9.0, Task 9 drops its changeset, 7b targets `main`, and Task 21 writes one.)
-- **D6. Ports.** Each task's session owns ports `7000 + 50 × N` to `7049 + 50 × N` (Task 1: 7050–7099; Task 21: 8050–8099). Within it, `KIND_FIXTURE_PORT_BASE` is the session base + 0 for React and Web, + 10 for the Vue subagent, + 20 Svelte, + 30 Solid, and + 40 for the one full `npm run check`. No other Wave 7 session or fx-gui (6100–6299) uses them.
+- **D5. Two releases, two integration points.** 7a tasks (2–8) branch from `main` after Task 1 and open PRs against `main`. 7b tasks (10–19) open PRs against a `wave-7b` branch the coordinator cuts from `main` after Task 1, so nothing from 7b ships in 0.9.0's tarball; Task 21 opens `wave-7b` → `main` once 0.9.0 has published. Task 9 writes the 0.9.0 changeset, Task 21 the 0.10.0 one. No other task writes a changeset. (Spec §9 Q6: if the user wants one 0.9.0, Task 9 drops its changeset, 7b targets `main`, and Task 21 writes one.)
+- **D6. Ports.** Each task's session owns ports `7000 + 50 × N` to `7049 + 50 × N` (Task 1: 7050–7099; Task 21: 8050–8099). Within it, `KIND_FIXTURE_PORT_BASE` is the session base + 0 for React and Web, + 10 for the Vue subagent, + 20 Svelte, + 30 Solid, and + 40 for the one full `npm run check`. No other Wave 7 session uses them.
 - **D7. Tests never slow the build (user rule).** Build first, then the task's own spec on its own layers; `npm run check` once, alone, before push, through one subagent. Unit tests only for pure helpers. Each browser spec stays under 30 s per layer: fixed fixture data, fixed sizes, deferred promises resolved by the test, no sleeps.
-- **D8. fx-gui is the test bed.** Each task's PR names the fx-gui stop-gap its change replaces (spec §9) and, for 7a, adds a short "fx-gui swap" note to the PR body: the stop-gap file, the component and options that replace it. Swapping fx-gui itself is fx-gui's work after the release; no Agent UI task edits fx-gui.
-- **D9. No showcase.** Every 7a change is a conversation part its own page shows, and 7b's are single components. Task 21 adds an "Agent ops" example to the Trace page (a Run Timeline, a Trace and a Usage Meter of one fixture run) only if the docs review asks for a together view; no scripted showcase.
+- **D8. No showcase.** Every 7a change is a conversation part its own page shows, and 7b's are single components. Task 21 adds an "Agent ops" example to the Trace page (a Run Timeline, a Trace and a Usage Meter of one fixture run) only if the docs review asks for a together view; no scripted showcase.
 
 ## Global Constraints
 
@@ -132,7 +131,7 @@ Tasks 2–8 and 10–19 each follow these steps after their own **Interfaces** a
 - [ ] **6. Screenshots.** Light and dark of the docs example, nothing focused, plus one with its popup, approval or menu open and one at 390 px, into `artifacts/screenshots/<name>-{light,dark,open,narrow}.png`, attached to the PR with the `github-pr-media` skill. Then run `impeccable` `audit` and `critique` on them and `web-interface-guidelines` on the render and style files; fix what they find or say why not.
 - [ ] **7. Size.** `npm run check:size`, then set budgets as Global Constraints say.
 - [ ] **8. Finish.** Write the task's bullet under its "UI SDK API notes" marker in `AGENTS.md` (only what differs from UI SDK or from this plan), and `decisions.md` entries for what the experts should keep. Run `unslop` on the diff, then `expert-review` (`node scripts/expert-scope.mjs --base main` names the experts), and fix the findings. Run `npm run check` once, alone, through one subagent, with `KIND_FIXTURE_PORT_BASE=<base + 40>`. Expected: PASS.
-- [ ] **9. PR.** Commit `feat(<name>): …`, push, and open the PR against the batch's base. The body reports what was checked by hand in a real browser (keyboard, focus rings only on keyboard, 390 px with touch, reduced motion through the media query and the `motion` option, light and dark), what wasn't, the fx-gui stop-gap it replaces (spec §9) and, for 7a, the swap note (D8). **Don't merge.**
+- [ ] **9. PR.** Commit `feat(<name>): …`, push, and open the PR against the batch's base. The body reports what was checked by hand in a real browser (keyboard, focus rings only on keyboard, 390 px with touch, reduced motion through the media query and the `motion` option, light and dark), and what wasn't. **Don't merge.**
 
 ---
 
@@ -172,7 +171,7 @@ test("countdownText reads whole seconds", () => {
 
 - [ ] **Step 2: Run** `npm run test:unit`. Expected: the new tests FAIL.
 - [ ] **Step 3: Implement** the types and modules, and the three refactors. Every existing spec of Connection Status, Tool and Context Meter must pass unchanged in every layer: run `npx playwright test tests/browser/wave-6/connection-status.spec.ts tests/browser/wave-2/tool.spec.ts tests/browser/wave-3/context-meter.spec.ts tests/browser/parity.spec.ts --grep "connection-status|tool|context-meter"` with `KIND_FIXTURE_PORT_BASE=7050`.
-- [ ] **Step 4: Spec.** If the user changed any spec §10 answer, rewrite the Wave 7 spec and this plan's affected tasks now, before any component starts.
+- [ ] **Step 4: Spec.** If the user changed any spec §9 answer, rewrite the Wave 7 spec and this plan's affected tasks now, before any component starts.
 - [ ] **Step 5: Run** `npm run lint && npm run typecheck && npm run test:unit && npm run test:scripts && npm run check:size`. Expected: PASS (sizes unchanged within 100 bytes).
 - [ ] **Step 6:** Write the "Wave 7 groundwork" bullet in `AGENTS.md`. Commit `feat: Wave 7 groundwork`, push, open the PR against `main`. Don't merge.
 
@@ -180,7 +179,7 @@ test("countdownText reads whole seconds", () => {
 
 ### Task 2: Composer steering and Queue's Send now
 
-Spec §4 "Composer steering", gap 1. Replaces fx-gui `components/stopgaps/steer-keys.tsx`.
+Spec §4 "Composer steering", gap 1.
 
 **UI SDK:** Token Input (`submitShortcut`, IME), Menu (`docs/components/menu.md`, "Controller"), `createFocusRecovery`, `isComposing`.
 
@@ -212,7 +211,7 @@ Spec §4 "Composer steering", gap 1. Replaces fx-gui `components/stopgaps/steer-
 
 ### Task 3: Message delivery mark and retrying
 
-Spec §4 "Message delivery mark", "Retrying"; gaps 2 and 5. Replaces fx-gui `components/stopgaps/{delivery-mark,retrying}.tsx`.
+Spec §4 "Message delivery mark", "Retrying"; gaps 2 and 5.
 
 **UI SDK:** `announce`, `createFocusRecovery`.
 
@@ -238,7 +237,7 @@ Spec §4 "Message delivery mark", "Retrying"; gaps 2 and 5. Replaces fx-gui `com
 
 ### Task 4: Terminal approval and Confirmation's Always allow
 
-Spec §4 "Terminal approval and the shared approval part"; gap 3. Replaces fx-gui's Confirmation stacked above Terminal, and its "Always allow in this thread" host button.
+Spec §4 "Terminal approval and the shared approval part"; gap 3.
 
 **UI SDK:** as Confirmation (`createPendingAction`, Textarea, focus recovery).
 
@@ -284,7 +283,7 @@ Spec §2.2 "tool failure + retry", §4 "Retrying"; gap 5.
 
 ### Task 6: Diff
 
-Spec §2.1 gap 4 decision, §4 "Diff". Replaces fx-gui `components/stopgaps/diff-view.tsx`.
+Spec §2.1 gap 4 decision, §4 "Diff".
 
 **UI SDK:** `createVirtualizer` ("Rows of Any Height"), internal Scroll Area, `bindFindable` and `hiddenAttrs`, `createPendingAction`'s pattern, `createCopy`.
 
@@ -311,7 +310,7 @@ Spec §2.1 gap 4 decision, §4 "Diff". Replaces fx-gui `components/stopgaps/diff
 
 ### Task 7: Step Group
 
-Spec §2.2 "tool group", "subagent list", §4 "Step Group". Replaces fx-gui's use of Chain of Thought to fold a turn's tool calls.
+Spec §2.2 "tool group", "subagent list", §4 "Step Group".
 
 **UI SDK:** as Step (`bindPanel`, `createRovingFocus` through StepList, `announce`).
 
@@ -353,7 +352,7 @@ Spec §2.2 "handoff", §4 "Handoff". Depends on Task 4 (`approvalPart` with `onA
 
 ### Task 9: 7a conformance, docs index and the 0.9.0 changeset
 
-Spec §3.3, §7; D5, D9.
+Spec §3.3, §7; D5, D8.
 
 **Files:**
 - Modify: `packages/agent-ui/tests/fixtures/{react,web,vue,svelte,solid}/cases/agent.*` (a `case=wave-7a` page: the Wave 1 page plus a running Composer with `onSteer`, a Queue with `onSend`, a queued user Message with `onWithdraw`, a retrying Message, a Terminal awaiting approval, a failed Tool with `onRetry`, a Diff, a Step Group and a Handoff awaiting approval; the bridge lists 100 components at most, so it doesn't extend the Wave 6 page); `apps/docs/content/docs/index.mdx`; `packages/agent-ui/README.md` (component list, the adapter note); `skills/agent-ui/SKILL.md` (count, description); `scripts/tests/docs.test.mjs` (visible pages)
@@ -366,7 +365,7 @@ Spec §3.3, §7; D5, D9.
   - `checkServer` for Diff, Step Group and Handoff; `checkPattern` for Diff (table) and Composer's steer menu (menu); Svelte's root `id` gap goes through `rootIdGap(testInfo)` as before.
 - [ ] **Step 2: Run** `npx playwright test tests/browser/wave-7/agent.spec.ts tests/browser/wave-7/aria-patterns.spec.ts` (port 7450). Expected: PASS; fix the owning primitive for any failure, in a PR against `main`.
 - [ ] **Step 3: Changeset** `.changeset/agent-ui-wave-7a.md`: `"@kind-ui/agent-ui": minor`, listing Diff, Step Group and Handoff; Composer's `running`, `onSteer`, `steerMode`; Queue's `onSend`; Message's `delivery`, `onWithdraw`, `retry`; Tool's `retry`, `onRetry`; Terminal's approval; Confirmation's `onAlwaysAllow`; the neutral `RetryState`, `DiffFile`, `Message.delivery`/`retry`, `ToolCall.retry`, and the terminal step's `approval`.
-- [ ] **Step 4: Docs index** in the site's voice (`write-docs`), with "fx-gui swap" notes collected in the PR body (D8). Run `npm run build:docs`, then `npm run check` alone through a subagent (port 7490). Expected: PASS.
+- [ ] **Step 4: Docs index** in the site's voice (`write-docs`). Run `npm run build:docs`, then `npm run check` alone through a subagent (port 7490). Expected: PASS.
 - [ ] **Step 5:** `unslop`, `expert-review`. Commit `docs: index Wave 7a and add the 0.9.0 changeset`, push, open the PR. Don't merge, publish or version.
 
 ---
@@ -460,7 +459,7 @@ Spec §2.2 "schedule card", §5 "Schedule Card".
 
 ### Task 14: Agent Card (Open)
 
-Spec §2.2 "agent card", §5 "Agent Card". Skip this task if the user drops Agent Card (spec §10 Q2).
+Spec §2.2 "agent card", §5 "Agent Card". Skip this task if the user drops Agent Card (spec §9 Q2).
 
 **Files:**
 - Create: `packages/agent-ui/src/core/agent-card/{agent-card,index}.ts`; render files; `src/styles/agent-card.css`
@@ -567,7 +566,7 @@ Spec §2.2 "background runs inbox", §5 "Thread List inbox".
 
 ### Task 19: Flow Graph (Open)
 
-Spec §2.2 "flow graph", §5 "Flow Graph". Skip this task if the user drops Flow Graph (spec §10 Q1).
+Spec §2.2 "flow graph", §5 "Flow Graph". Skip this task if the user drops Flow Graph (spec §9 Q1).
 
 **UI SDK:** `core.md` "Canvas" (`createViewport`: "Pan and Zoom", "Fit, Reveal and Zoom from Code"), "Spatial Focus" (`spatialMove`), `createRovingFocus`.
 
@@ -605,7 +604,7 @@ As Task 9 Step 1–2, for 7b, against `wave-7b`.
 
 ### Task 21: Docs index, the 0.10.0 changeset and the release merge
 
-D4, D5, D9.
+D4, D5, D8.
 
 **Files:**
 - Create: `.changeset/agent-ui-wave-7b.md`
@@ -639,5 +638,5 @@ D4, D5, D9.
 
 - **Scope coverage (spec §2):** agent card (14), handoff (8), background runs inbox (18), schedule card (13), job progress (12), run activity and timeline (11), tool group and subagent list (7), tool timeline and trace waterfall (10), tool failure + retry (5), tool fallback (5, a recipe), flow graph (19), cost meter (15), context breakdown (15), quota banner (16), activity/heat graph (17). Gaps: steering (2), delivery mark (3), Terminal approval (4), diff (6), retrying (3, 5). Gaps 1, 2, 3 and 5 are Batch A, the first after groundwork.
 - **Five layers:** every component task's routine step 3; parity, hydration and agent conformance in each layer (Tasks 9, 20).
-- **Open items:** spec §10's six questions. Two tasks (14, 19) are skipped outright if dropped, and no other task depends on them.
+- **Open items:** spec §9's six questions. Two tasks (14, 19) are skipped outright if dropped, and no other task depends on them.
 - **Out of scope:** spec §6.
