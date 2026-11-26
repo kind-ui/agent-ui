@@ -1,34 +1,74 @@
 ---
-title: Tool Calls and Approvals
-description: Show each tool call an AI SDK agent makes, and ask a person to approve the risky ones before they run.
+title: Show Tool Calls and Approvals
+description: Show an agent's reasoning and tool calls in the chat, and ask a person before a risky tool runs.
 ---
 
-To show an AI agent's tool calls and ask for approval in React, render each tool part as a [Tool](../components/tool.mdx), and mark the tools that need a person with `needsApproval: true` on the server. `fromUIMessages` turns every AI SDK tool part into a step with a `call`, which the Tool shows with its input, output and status. When a call waits for approval, the Tool shows a [Confirmation](../components/confirmation.mdx) with **Approve** and **Deny**; pass the decision back with `toApprovalResponse` and `useChat`'s `addToolApprovalResponse`, and the chat continues on its own.
+To show what an agent is doing, render each part of its messages with the component that fits: reasoning as [Reasoning](../components/reasoning.mdx), tool calls as [Tool](../components/tool.mdx). This guide extends the chat from [Build an AI Chat with the AI SDK](./ai-sdk-chat.mdx).
 
-The samples use React. The same components ship for Vue, Svelte and Solid, with the same parts and props spelled the way each framework expects, so the page translates component for component: add `<name>-vue`, `<name>-svelte` or `<name>-solid` in place of each item below, as [Choose a Framework](../index.mdx#choose-a-framework) shows. `fromUIMessages` and `toApprovalResponse` don't depend on a framework, so they map the messages of the AI SDK's `@ai-sdk/vue` and `@ai-sdk/svelte` chats too.
+import Chat from "../../../examples/guides/agent";
+import Preview from "../../../examples/guides/preview";
 
-## Installation
+<Example caption="Send a prompt. The agent thinks, lists the branches, then waits: press Approve or Deny to decide whether it deletes fix-retry. The preview answers from a scripted model in your browser.">
+  <Preview route="agent">
+    <Chat />
+  </Preview>
 
-Set up the `@kind-ui` registry as [Get Started](../index.mdx#install-with-the-shadcn-cli) shows, then add the components, the AI SDK and Zod for the tool schemas:
+  <ExampleCode example="guides/agent" />
+</Example>
 
-```bash
-npx shadcn@latest add @kind-ui/conversation @kind-ui/message @kind-ui/markdown @kind-ui/composer @kind-ui/tool
-npm install ai @ai-sdk/react zod
-```
+## Install the Components
 
-## The Server Route
+Add Reasoning and Tool to the chat's components:
 
-`get_weather` runs on its own. `delete_branch` has `needsApproval: true`, so the model's call stops and waits for a person's decision before `execute` runs.
+<Tabs groupId="framework" persist items={["React", "Vue", "Svelte", "Solid", "Web Components"]}>
+  <Tab value="React">
+    ```bash
+    npx shadcn@latest add @kind-ui/reasoning @kind-ui/tool
+    npm install zod
+    ```
+  </Tab>
+  <Tab value="Vue">
+    ```bash
+    npx shadcn@latest add @kind-ui/reasoning-vue @kind-ui/tool-vue
+    npm install zod
+    ```
+  </Tab>
+  <Tab value="Svelte">
+    ```bash
+    npx shadcn@latest add @kind-ui/reasoning-svelte @kind-ui/tool-svelte
+    npm install zod
+    ```
+  </Tab>
+  <Tab value="Solid">
+    ```bash
+    npx shadcn@latest add @kind-ui/reasoning-solid @kind-ui/tool-solid
+    npm install zod
+    ```
+  </Tab>
+  <Tab value="Web Components">
+    ```bash
+    npx shadcn@latest add @kind-ui/reasoning-web @kind-ui/tool-web
+    npm install zod
+    ```
+  </Tab>
+</Tabs>
+
+## Mark the Tools That Need a Person
+
+Give the route its tools. `list_branches` runs on its own. `delete_branch` has `needsApproval: true`, so its call waits for a decision before `execute` runs.
 
 ```ts title="app/api/chat/route.ts"
 import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from "ai";
 import { z } from "zod";
 
 const tools = {
-  get_weather: tool({
-    description: "Get the weather in a city",
-    inputSchema: z.object({ city: z.string() }),
-    execute: async ({ city }) => ({ city, temperature: 18, sky: "cloudy" }),
+  list_branches: tool({
+    description: "List the git branches",
+    inputSchema: z.object({}),
+    execute: async () => [
+      { name: "main", merged: false },
+      { name: "fix-retry", merged: true },
+    ],
   }),
   delete_branch: tool({
     description: "Delete a git branch",
@@ -45,102 +85,21 @@ export async function POST(request: Request) {
     messages: await convertToModelMessages(messages, { tools }),
     tools,
     stopWhen: stepCountIs(5),
+    abortSignal: request.signal,
   });
   return result.toUIMessageStreamResponse();
 }
 ```
 
-## The Chat Page
+The model must send its reasoning for the chat to show it; some providers turn that on through their own options.
 
-```tsx title="app/page.tsx"
-"use client";
-import { useChat } from "@ai-sdk/react";
-import type { Part } from "@kind-ui/agent-ui";
-import { fromUIMessages, toApprovalResponse } from "@kind-ui/agent-ui/adapters/ai-sdk";
-import { lastAssistantMessageIsCompleteWithApprovalResponses } from "ai";
-import { Composer, ComposerInput, ComposerStop, ComposerSubmit } from "@/components/ui/composer";
-import {
-  Conversation,
-  ConversationContent,
-  ConversationJump,
-  ConversationRow,
-  ConversationViewport,
-} from "@/components/ui/conversation";
-import { Markdown } from "@/components/ui/markdown";
-import { Message, MessageContent } from "@/components/ui/message";
-import { Tool } from "@/components/ui/tool";
+## Render Reasoning and Tools
 
-export default function Chat() {
-  const { messages, status, error, sendMessage, stop, addToolApprovalResponse } = useChat({
-    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
-  });
-  const rendered = fromUIMessages(messages, { status, error });
+The example's code renders each part by its `type`:
 
-  const renderPart = (part: Part) => {
-    if (part.type === "text") {
-      return <Markdown key={part.id} source={part.text} streaming={part.state === "streaming"} />;
-    }
-    if (part.type === "step" && part.step.kind === "tool") {
-      const { call, error } = part.step;
-      const approval = call.approval;
-      return (
-        <Tool
-          key={part.id}
-          call={call}
-          error={error}
-          approvalReason
-          onApprove={() => approval && addToolApprovalResponse(toApprovalResponse(approval, { approved: true }))}
-          onDeny={({ reason }) =>
-            approval && addToolApprovalResponse(toApprovalResponse(approval, { approved: false, reason }))
-          }
-        />
-      );
-    }
-    return null;
-  };
+- **Reasoning:** a `reasoning` part renders as a Reasoning, `running` while the part streams, so it shows the thoughts, then `complete`, when it collapses to "Thought".
+- **Tool calls:** a tool call is a `step` part whose `step.kind` is `"tool"`. Pass its `call` and `error` to a Tool, which shows the input and output and closes into its header when the call completes.
+- **Approval:** `onApprove` and `onDeny` show **Approve** and **Deny** while the call waits. Each passes `toApprovalResponse(approval, { approved })` to `addToolApprovalResponse`. Once the decision is recorded, the buttons give way to the outcome, like "Approved".
+- **Continuing:** `sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses` sends the chat back once every waiting call has a decision, so an approved call runs and the model answers.
 
-  return (
-    <main className="mx-auto flex h-dvh max-w-2xl flex-col gap-4 p-4">
-      <Conversation aria-label="Chat" messageCount={rendered.length} className="min-h-0 flex-1">
-        <ConversationViewport>
-          <ConversationContent>
-            {rendered.map((message, index) => (
-              <ConversationRow key={message.id} value={message.id} index={index}>
-                <Message
-                  aria-label={message.role === "user" ? "Your message" : "Assistant message"}
-                  messageRole={message.role}
-                  status={message.status}
-                >
-                  <MessageContent>{message.parts.map(renderPart)}</MessageContent>
-                </Message>
-              </ConversationRow>
-            ))}
-          </ConversationContent>
-        </ConversationViewport>
-        <ConversationJump />
-      </Conversation>
-      <Composer aria-label="Message" onSubmit={(draft) => sendMessage({ text: draft.text })} onStop={stop}>
-        <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
-        <ComposerSubmit />
-        <ComposerStop />
-      </Composer>
-    </main>
-  );
-}
-```
-
-## How It Works
-
-- **Tool calls:** each tool part becomes a part of type `step` whose `step.kind` is `"tool"`. Pass its `call` and `error` to the Tool and key it by the part's id, so updates to one call never reset another. The Tool shows the input as it streams, then the output, and closes into its header when the call completes.
-- **Status:** the Tool reads its status from the call: `running`, `awaiting-input` while it waits for approval, `complete`, `error`, or `cancelled` when it was denied.
-- **Approval:** `onApprove` and `onDeny` show **Approve** and **Deny**. `approvalReason` makes a person's first Deny open a box for the reason, which `onDeny` gets and sends with the denial. `toApprovalResponse(approval, decision)` builds the argument `addToolApprovalResponse` takes.
-- **Continuing:** `sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses` sends the chat back to the server once every waiting call has a decision, so an approved call runs and the model answers.
-- **Outcome:** once the decision is recorded, the buttons give way to the outcome, like "Approved", so the conversation keeps what was decided.
-
-Screen readers hear the tool's name and its outcome, like "delete_branch complete", and the decision, like "Approved". An agent connected with `createAgent` finds the confirmation by its name, like "Run delete_branch?", and can approve or deny it, but every decision waits for a person to confirm unless your `allow` lets it through.
-
-## Next Steps
-
-- Show the model's reasoning and plan beside its tool calls: [Reasoning and Agent Steps](./reasoning-and-steps.mdx).
-- Ask before an action that isn't a tool call with a standalone [Confirmation](../components/confirmation.mdx), or ask the person a question with [Question](../components/question.mdx).
-- Let people choose how much the agent may do on its own with [Approval Mode](../components/approval-mode.mdx).
+Pass `approvalReason` to let a person say why they deny a call; `onDeny` gets it as `reason`, which `toApprovalResponse` sends along.
