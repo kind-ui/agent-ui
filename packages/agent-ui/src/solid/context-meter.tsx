@@ -1,4 +1,9 @@
-import { type ContextMeterValueState, type ContextRow, contextMeterPrimitive } from "@kind-ui/agent-ui/core";
+import {
+  type ContextMeterValueState,
+  type ContextRow,
+  contextMeterPrimitive,
+  type MeterSlice,
+} from "@kind-ui/agent-ui/core";
 import type { ComponentProps } from "@solidjs/web";
 import { Meter, MeterTrack, MeterValue } from "@ui-sdk/solid/meter";
 import { createParts } from "@ui-sdk/solid/primitive";
@@ -11,6 +16,8 @@ const parts = createParts(contextMeterPrimitive, {
   content: "div",
   title: "h2",
   description: "p",
+  breakdown: "div",
+  "breakdown-rows": "dl",
   rows: "dl",
 });
 
@@ -59,7 +66,7 @@ export function ContextMeterValue(props: ContextMeterValueProps) {
 
 export type ContextMeterContentProps = ComponentProps<typeof parts.Content>;
 
-/** The details: the title, the value and each count, unless you pass children. Leaves focus on the trigger. */
+/** The details: the title, the value, the breakdown and each count, unless you pass children. Leaves focus on the trigger. */
 export function ContextMeterContent(props: ContextMeterContentProps) {
   return (
     <parts.Content initialFocus="none" {...omit(props, "children")}>
@@ -90,6 +97,44 @@ export function ContextMeterDescription(props: ContextMeterDescriptionProps) {
   );
 }
 
+export type ContextMeterBreakdownProps = ComponentProps<typeof parts.Breakdown>;
+
+/** A stacked bar of the `breakdown`, a segment per slice, unless you pass children. Rendered only with a breakdown. */
+export function ContextMeterBreakdown(props: ContextMeterBreakdownProps) {
+  return (
+    <parts.Breakdown {...omit(props, "children")}>
+      {props.children ??
+        ((state: { slices: MeterSlice[] }) => (
+          <For each={state.slices} keyed={(slice) => slice.id}>
+            {(slice) => <span data-slice={slice().color} style={{ width: slice().width }} />}
+          </For>
+        ))}
+    </parts.Breakdown>
+  );
+}
+
+export type ContextMeterBreakdownRowsProps = ComponentProps<typeof parts.BreakdownRows>;
+
+/** Each slice of the `breakdown` with its tokens and percent, unless you pass children. */
+export function ContextMeterBreakdownRows(props: ContextMeterBreakdownRowsProps) {
+  return (
+    <parts.BreakdownRows {...omit(props, "children")}>
+      {props.children ??
+        ((state: { slices: MeterSlice[] }) => (
+          <For each={state.slices} keyed={(slice) => slice.id}>
+            {(slice) => (
+              <div data-slice={slice().color}>
+                <dt>{slice().label}</dt>
+                <dd>{slice().value}</dd>
+                <dd>{slice().percent}</dd>
+              </div>
+            )}
+          </For>
+        ))}
+    </parts.BreakdownRows>
+  );
+}
+
 export type ContextMeterRowsProps = ComponentProps<typeof parts.Rows>;
 
 /** Each count and the cost supplied, unless you pass children. Rendered only when there's one. */
@@ -115,6 +160,8 @@ const DefaultDetails = () => (
   <>
     <ContextMeterTitle />
     <ContextMeterDescription />
+    <ContextMeterBreakdown />
+    <ContextMeterBreakdownRows />
     <ContextMeterRows />
   </>
 );

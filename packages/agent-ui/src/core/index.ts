@@ -304,6 +304,7 @@ export {
   type MeterBaseOptions,
   type MeterBaseState,
   type MeterOpenChangeReason,
+  type MeterSlice,
   type MeterValueState,
   meterBase,
 } from "./meter-base.js";
@@ -864,6 +865,19 @@ export {
 } from "./agent-card/index.js";
 
 // wave-7-task-15: Usage Meter and Context Meter's breakdown
+
+export {
+  type UsageLevel,
+  type UsageMeterApi,
+  type UsageMeterOpenChangeReason,
+  type UsageMeterOptions,
+  type UsageMeterPrimitive,
+  type UsageMeterState,
+  type UsageUnit,
+  usageCountText,
+  usageMeterPrimitive,
+  usageValueText,
+} from "./usage-meter/index.js";
 
 // wave-7-task-16: Quota Notice
 

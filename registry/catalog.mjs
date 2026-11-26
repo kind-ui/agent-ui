@@ -122,7 +122,7 @@ export const components = {
     when: "you show how full the context window is, with token counts and cost.",
     title: "Context Meter",
     description:
-      "How full the context window is, as a ring and a percentage, with token counts and cost in a popover.",
+      "How full the context window is, as a ring and a percentage, with what fills it, token counts and cost in a popover.",
     uses: [],
   },
   feedback: {
@@ -522,6 +522,15 @@ export const components = {
   },
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
+
+  "usage-meter": {
+    group: "ops",
+    when: "you show usage against a limit, like spend, requests or tokens this month, with what makes it up.",
+    title: "Usage Meter",
+    description:
+      "Usage against a limit, as a ring that warns near it, with the amounts, the reset and a breakdown in a popover.",
+    uses: [],
+  },
 
   // wave-7-task-16: Quota Notice
 

@@ -12,6 +12,8 @@ const parts = createParts(contextMeterPrimitive, {
   content: "div",
   title: "h2",
   description: "p",
+  breakdown: "div",
+  "breakdown-rows": "dl",
   rows: "dl",
 });
 
@@ -49,7 +51,7 @@ export function ContextMeterValue({
 
 export type ContextMeterContentProps = ComponentProps<typeof parts.Content>;
 
-/** The details: the title, the value and each count, unless you pass children. Leaves focus on the trigger. */
+/** The details: the title, the value, the breakdown and each count, unless you pass children. Leaves focus on the trigger. */
 export function ContextMeterContent({ children = DEFAULT_DETAILS, ...props }: ContextMeterContentProps) {
   return (
     <parts.Content initialFocus="none" {...props}>
@@ -75,6 +77,34 @@ export function ContextMeterDescription({
   return <parts.Description {...props}>{children}</parts.Description>;
 }
 
+export type ContextMeterBreakdownProps = ComponentProps<typeof parts.Breakdown>;
+
+/** A stacked bar of the `breakdown`, a segment per slice, unless you pass children. Rendered only with a breakdown. */
+export function ContextMeterBreakdown({
+  children = ({ slices }) =>
+    slices.map(({ id, width, color }) => <span key={id} data-slice={color} style={{ width }} />),
+  ...props
+}: ContextMeterBreakdownProps) {
+  return <parts.Breakdown {...props}>{children}</parts.Breakdown>;
+}
+
+export type ContextMeterBreakdownRowsProps = ComponentProps<typeof parts.BreakdownRows>;
+
+/** Each slice of the `breakdown` with its tokens and percent, unless you pass children. */
+export function ContextMeterBreakdownRows({
+  children = ({ slices }) =>
+    slices.map(({ id, label, value, percent, color }) => (
+      <div key={id} data-slice={color}>
+        <dt>{label}</dt>
+        <dd>{value}</dd>
+        <dd>{percent}</dd>
+      </div>
+    )),
+  ...props
+}: ContextMeterBreakdownRowsProps) {
+  return <parts.BreakdownRows {...props}>{children}</parts.BreakdownRows>;
+}
+
 export type ContextMeterRowsProps = ComponentProps<typeof parts.Rows>;
 
 /** Each count and the cost supplied, unless you pass children. Rendered only when there's one. */
@@ -98,6 +128,8 @@ const DEFAULT_DETAILS = (
   <>
     <ContextMeterTitle />
     <ContextMeterDescription />
+    <ContextMeterBreakdown />
+    <ContextMeterBreakdownRows />
     <ContextMeterRows />
   </>
 );

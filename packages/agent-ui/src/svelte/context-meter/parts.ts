@@ -8,5 +8,7 @@ export const parts = createParts(contextMeterPrimitive, {
   content: "div",
   title: "h2",
   description: "p",
+  breakdown: "div",
+  "breakdown-rows": "dl",
   rows: "dl",
 });

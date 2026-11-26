@@ -43,6 +43,8 @@ export type ContextMeterOptions = MeterBaseOptions & {
    * @default "Context"
    */
   label?: string;
+  /** What fills the window, in tokens, like system, tools, messages and files. */
+  breakdown?: MeterBaseOptions["breakdown"];
 };
 
 export type ContextMeterState = MeterBaseState & {
@@ -99,6 +101,7 @@ const base = meterBase<ContextMeterOptions, ContextMeterState, ContextMeterApi>(
   amount: (state) => ({ value: state.used, max: state.total }),
   valueText: (state, locale) => contextValueText(state.used, state.total, locale),
   countText: (state, locale) => contextCountText(state.used, state.total, locale),
+  sliceText: (value, _state, locale) => new Intl.NumberFormat(locale).format(value),
   keys: ["used", "total"],
 });
 

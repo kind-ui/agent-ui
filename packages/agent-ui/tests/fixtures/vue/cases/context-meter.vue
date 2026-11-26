@@ -1,5 +1,5 @@
 <script lang="ts">
-export const variants = ["all", "high", "full", "reduced", "german"] as const;
+export const variants = ["all", "high", "full", "reduced", "german", "breakdown"] as const;
 </script>
 
 <script setup lang="ts">
@@ -7,6 +7,7 @@ import { onMounted, ref } from "vue";
 import { ContextMeter } from "../../../../src/vue/context-meter.js";
 import { expose } from "../../shared/expose.js";
 import { context, contextHost, levels } from "../../shared/context-meter.js";
+import { contextBreakdown } from "../../shared/usage-meter.js";
 
 const props = defineProps<{ variant: string; params: URLSearchParams }>();
 
@@ -39,6 +40,7 @@ onMounted(() =>
         :used="used"
         :motion="variant === 'reduced' ? 'reduced' : undefined"
         :locale="variant === 'german' ? 'de-DE' : undefined"
+        :breakdown="variant === 'breakdown' ? contextBreakdown : undefined"
         @open-change="record"
       />
       <span id="beside">Beside</span>

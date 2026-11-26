@@ -369,6 +369,17 @@ const cases = {
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
+  usageMeter: {
+    options: {
+      used: 3.2,
+      limit: 5,
+      period: "This month",
+      resetAt: "2026-12-01T00:00:00Z",
+      breakdown: [{ id: "a", label: "Model One", value: 2 }],
+      locale: "en",
+    },
+  },
+
   // wave-7-task-16: Quota Notice
 
   // wave-7-task-17: Activity Graph

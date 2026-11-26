@@ -86,6 +86,8 @@ const pages = [
 
   // wave-7-task-15: Usage Meter and Context Meter's breakdown
 
+  "usage-meter&case=warning",
+
   // wave-7-task-16: Quota Notice
 
   // wave-7-task-17: Activity Graph

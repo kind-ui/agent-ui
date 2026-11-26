@@ -1,121 +1,13 @@
-/* Context Meter (spec §7): a ring and a percentage for how full the context window is, with its counts in a popover. */
-/* UI SDK Meter writes where its value sits as `--meter-value` for a ring to follow. Registered so the ring can sweep. */
-@property --meter-value {
-  syntax: "<percentage>";
-  inherits: true;
-  initial-value: 0%;
-}
-
+/* Context Meter (spec §7): how full the context window is. `meter.css` draws it; this maps its levels. */
 @layer components {
-  [data-slot="kind-context-meter"] {
-    --kind-context-color: var(--kind-color-fg);
-    --kind-context-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M8 4.5v4.25'/%3E%3Cpath d='M8 11.5h.01'/%3E%3C/svg%3E");
-
-    display: inline-flex;
-    font-size: var(--kind-text-xs);
-    line-height: 1rem;
-    color: var(--kind-color-muted);
-  }
-
   :where([data-slot="kind-context-meter"])[data-level="high"] {
-    --kind-context-color: var(--kind-color-warning);
+    --kind-meter-color: var(--kind-color-warning);
   }
   :where([data-slot="kind-context-meter"])[data-level="full"] {
-    --kind-context-color: var(--kind-color-danger);
+    --kind-meter-color: var(--kind-color-danger);
   }
 
-  [data-slot="kind-context-meter-value"] {
-    display: contents;
-  }
-
-  :where([data-slot="kind-context-meter"]) [data-slot="meter"] {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: --meter-value var(--kind-duration-panel) var(--kind-ease-enter);
-  }
-
-  /* The ring is the track's `::before`, the level's glyph its `::after`, so the glyph sits inside the ring without
-     taking room of its own. */
-  :where([data-slot="kind-context-meter"]) [data-slot="meter-track"] {
-    position: relative;
-    flex-shrink: 0;
-    width: 16px;
-    height: 16px;
-
-    &::before,
-    &::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-    }
-    &::before {
-      /* A track as visible as the arc's start, so a part-full ring reads as a gauge and not a spinner. */
-      background: conic-gradient(
-        var(--kind-context-color) var(--meter-value),
-        color-mix(in oklab, var(--kind-color-muted) 35%, transparent) 0
-      );
-      mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
-    }
-  }
-
-  :where([data-slot="kind-context-meter"][data-level="high"]) [data-slot="meter-track"]::after {
-    background-color: var(--kind-context-color);
-    mask: var(--kind-context-glyph) center / 12px no-repeat;
-  }
-
-  /* Full fills the ring's middle, so it reads apart from high without color. */
-  :where([data-slot="kind-context-meter"][data-level="full"]) [data-slot="meter-track"]::after {
-    inset: 4px;
-    background-color: var(--kind-context-color);
-  }
-
-  /* Forced colors replace a background, which is all a mask draws, and drop the ring's gradient. */
-  @media (forced-colors: active) {
-    :where([data-slot="kind-context-meter"]) [data-slot="meter-track"]::before {
-      forced-color-adjust: none;
-      background: conic-gradient(ButtonText var(--meter-value), GrayText 0);
-    }
-    :where([data-slot="kind-context-meter"]:is([data-level="high"], [data-level="full"]))
-      [data-slot="meter-track"]::after {
-      forced-color-adjust: none;
-      background-color: ButtonText;
-    }
-  }
-
-  /* As wide as "100 %", the widest a locale writes it, so a new value never moves what's beside the meter. */
-  :where([data-slot="kind-context-meter"]) [data-slot="meter-value"] {
-    min-width: calc(4ch + 1em);
-    font-variant-numeric: tabular-nums;
-  }
-
-  [data-slot="kind-context-meter-content"] {
-    z-index: 50;
-    width: 15rem;
-    max-width: calc(100vw - 16px);
-    padding: 12px;
-    font-size: var(--kind-text-xs);
-    line-height: 1rem;
-    outline: none;
-    transform-origin: var(--transform-origin);
-  }
-
-  [data-slot="kind-context-meter-title"] {
-    display: block;
-    margin: 0;
-    font-size: var(--kind-text-sm);
-    font-weight: 600;
-    line-height: 1.25rem;
-  }
-
-  [data-slot="kind-context-meter-description"] {
-    display: block;
-    margin: 0;
-    color: var(--kind-color-muted);
-    font-variant-numeric: tabular-nums;
-  }
-
+  /* The counts under the breakdown, a label and its count per line. */
   [data-slot="kind-context-meter-rows"] {
     display: grid;
     gap: 4px;
@@ -135,46 +27,7 @@
     }
   }
 
-  /* Motion: the ring sweeps to a new value and the details scale in, as every shared popup does. Reduced motion
-     only fades, in 120 ms; `none` doesn't animate. */
-  @media (prefers-reduced-motion: reduce) {
-    :where([data-slot="kind-context-meter"][data-motion="auto"]) [data-slot="meter"] {
-      transition: none;
-    }
-    :where([data-slot="kind-context-meter"][data-motion="auto"]) [data-slot="kind-context-meter-content"] {
-      transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
-
-      &:is([data-starting-style], [data-ending-style]) {
-        translate: none;
-        scale: none;
-        transition-duration: var(--kind-duration-reduced);
-      }
-    }
-  }
-
-  :where([data-slot="kind-context-meter"][data-motion="reduced"]) [data-slot="meter"] {
-    transition: none;
-  }
-  :where([data-slot="kind-context-meter"][data-motion="reduced"]) [data-slot="kind-context-meter-content"] {
-    transition: opacity var(--kind-duration-reduced) var(--kind-ease-in-out);
-
-    &:is([data-starting-style], [data-ending-style]) {
-      translate: none;
-      scale: none;
-      transition-duration: var(--kind-duration-reduced);
-    }
-  }
-
-  :where([data-slot="kind-context-meter"][data-motion="none"])
-    :is(
-      [data-slot="kind-context-meter-trigger"],
-      [data-slot="meter"],
-      [data-slot="kind-context-meter-content"]
-    ) {
-    transition: none;
-  }
-
-  :where([data-slot="kind-context-meter-content"], [data-slot="kind-context-meter-rows"])[hidden] {
+  [data-slot="kind-context-meter-rows"][hidden] {
     display: none;
   }
 }

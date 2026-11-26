@@ -1,0 +1,80 @@
+---
+title: Usage Meter
+description: Show usage against a limit, like spend, requests or tokens this month, with what makes it up a hover away.
+---
+
+import UsageMeterExample from "../../../examples/usage-meter/basic";
+
+Use a usage meter where a person keeps an eye on a budget: spend against a monthly limit, requests against a daily quota, tokens against a plan. It's a small ring and a percentage that warns as the limit nears, and its details read the amounts, the period, when it resets and what makes it up.
+
+<Example caption="Rest the pointer on the meter, or press it, to show its details. Press Escape to close them.">
+  <UsageMeterExample />
+
+  <ExampleCode example="usage-meter/basic" />
+</Example>
+
+## Installation
+
+<Install name="usage-meter" />
+
+## Composition
+
+```text
+UsageMeter
+├── UsageMeterTrigger
+│   └── UsageMeterValue
+└── UsageMeterContent
+    ├── UsageMeterTitle
+    ├── UsageMeterDescription
+    ├── UsageMeterPeriod
+    ├── UsageMeterBreakdown
+    └── UsageMeterBreakdownRows
+```
+
+`UsageMeter` renders these parts when you pass no children: a group named by its `label`. `UsageMeterTrigger` is a button that opens the details, and `UsageMeterValue` holds UI SDK's Meter, drawn as a ring with the percentage beside it. `UsageMeterContent` is the popover with the details: `UsageMeterTitle` names it, `UsageMeterDescription` reads the amount used and the limit, `UsageMeterPeriod` the period and the time to the reset, and `UsageMeterBreakdown` and `UsageMeterBreakdownRows` what makes the usage up.
+
+## Usage
+
+### The Value
+
+Pass `used` and `limit`. By default they're money, in `currency` (`"USD"` unless you say); pass `unit="requests"` or `unit="tokens"` to count those instead. Screen readers hear the button as "Usage, $3.20 of $5.00, 64%". Numbers follow the page's `lang`, or the browser's language without one; pass `locale` to choose another.
+
+```tsx
+<UsageMeter label="Requests" unit="requests" used={120} limit={500} period="Today" />
+```
+
+### Levels
+
+From `warnAt`, a share of the limit that's `0.8` unless you pass one, the ring turns to the warning color with an exclamation mark inside it, and at the limit to the danger color with its middle filled. The root's `data-level` reads `normal`, `warning` or `error` for your own styles.
+
+### Period and Reset
+
+Pass `period`, like "This month", to say what the limit covers, and `resetAt`, an ISO 8601 instant, to count down to when it starts over: "This month · Resets in 3 days", then hours, minutes and seconds within the last day. The countdown starts once the meter is in the page, so server markup shows the period alone, and it's never announced.
+
+### Breakdown
+
+Pass `breakdown`, a list of `{ id, label, value }` in the meter's unit, like each model or agent. The details draw a stacked bar whose segments add up to the share used, and a row per slice with its amount and its share of the limit. The bar is decoration; the rows say the same in words. Slices take five colors in turn, `--kind-usage-slice-1` to `-5`, which read your `--kind-chart-1` to `-5` when you define them and the accent and status colors otherwise.
+
+### Opening
+
+The details open as Context Meter's do: when the pointer or keyboard focus rests on the meter, and when it's pressed. They close on Escape, a press outside or focus leaving the meter, and leave focus on the meter, since they hold nothing to press. Pass `open` and `onOpenChange` to control them, or `defaultOpen` to start with them open.
+
+### Motion
+
+The ring sweeps to a new value, and the details rise and fade in. Under `prefers-reduced-motion`, or with `motion="reduced"`, the ring moves at once and the details only fade, over 120 ms, and with `motion="none"` nothing animates.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/usage-meter/usage-meter.ts" name="UsageMeterOptions" />
+
+<FrameworkNames name="usage-meter" />
+
+### Agent
+
+An agent connected with `createAgent` finds the meter by its label and reads whether its details are open. `open` is offered while they're closed and `close` while they're open; both report `details.source` as `"agent"` to `onOpenChange`. Like any component with a button, it also has UI SDK's generic `press`.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/usage-meter/usage-meter.ts" name="UsageMeterAgentActions" type='Pick<UsageMeterApi, "open" | "close">' />
+
+<Caption>
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-usage-meter>`, props are kebab-case attributes, `breakdown` and `open` are properties, and `onOpenChange` is the `openchange` event. The element fills in its parts when it has no children.
+</Caption>

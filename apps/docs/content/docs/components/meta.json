@@ -19,6 +19,7 @@
     "reasoning-effort",
     "suggestion",
     "context-meter",
+    "usage-meter",
     "feedback",
     "notice",
     "guardrail-notice",

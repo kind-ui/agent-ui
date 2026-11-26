@@ -402,6 +402,8 @@ Differences between the plan's named APIs and the pinned UI SDK version. Tasks 2
 
 <!-- wave-7-task-15: Usage Meter and Context Meter's breakdown -->
 
+- **Usage Meter and Context Meter's breakdown (Wave 7 Task 15):** `meterBase` gains the `breakdown` option (`UsageSlice[]`), a `sliceText` config and two slots: `breakdown`, the stacked bar (`aria-hidden`, a span per slice with `data-slice` and its `width`), and `breakdown-rows`, a `dl` with a `dt` and two `dd`s (amount, percent) per slice, rather than the plan's per-row `breakdown-row` part, as Context Meter's `rows` already lists its counts. Every base slot writes `data-meter-part`, and the shared styles are `meter.css` (ring, popover and breakdown), not a breakdown-only block, so Usage Meter draws the same ring without copying it. Usage Meter's `period` part reads "This month · Resets in 3 hr" from `countdownText` over a `createCountdown` the root binds (server markup has the period alone). `usageMeterPrimitive`'s bundle is Context Meter's plus 0.6 KB. Web: `kind-usage-meter`, `breakdown` is a property.
+
 <!-- wave-7-task-16: Quota Notice -->
 
 <!-- wave-7-task-17: Activity Graph -->
