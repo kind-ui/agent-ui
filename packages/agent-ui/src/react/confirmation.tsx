@@ -1,6 +1,6 @@
 "use client";
 
-import { codeSpans, confirmationPrimitive } from "@kind-ui/agent-ui/core";
+import { codeSpans, confirmationPrimitive, WORDS } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/react/primitive";
 import { type ComponentProps, Fragment } from "react";
 import { KindTextarea } from "./internal/textarea.js";
@@ -134,10 +134,7 @@ export function ConfirmationCancel({ children = "Cancel", ...props }: Confirmati
 export type ConfirmationErrorProps = ComponentProps<typeof parts.Error>;
 
 /** "Decision not sent. Try again." while the host reports `submit-failed`, unless you pass children. */
-export function ConfirmationError({
-  children = "Decision not sent. Try again.",
-  ...props
-}: ConfirmationErrorProps) {
+export function ConfirmationError({ children = WORDS.notSentRetry, ...props }: ConfirmationErrorProps) {
   return <parts.Error {...props}>{children}</parts.Error>;
 }
 

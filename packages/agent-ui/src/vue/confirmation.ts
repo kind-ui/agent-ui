@@ -1,4 +1,9 @@
-import { type ConfirmationReasonState, confirmationPrimitive } from "@kind-ui/agent-ui/core";
+import {
+  type ConfirmationReasonState,
+  codeSpans,
+  confirmationPrimitive,
+  WORDS,
+} from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/vue/primitive";
 import { type Component, defineComponent, h, type Slot, type VNodeChild } from "vue";
 import { KindTextarea } from "./internal/textarea.js";
@@ -6,12 +11,17 @@ import { KindTextarea } from "./internal/textarea.js";
 const parts = createParts(confirmationPrimitive, {
   root: "div",
   title: "div",
+  meta: "span",
+  risk: "div",
+  "risk-icon": "span",
   reason: "div",
   choices: "div",
   approve: "button",
+  always: "button",
   deny: "button",
   cancel: "button",
   error: "span",
+  detail: "div",
   outcome: "div",
   "outcome-icon": "span",
 });
@@ -30,6 +40,10 @@ const withDefault = <State, Part extends Component = Component>(
     },
   }) as unknown as Part;
 
+/** Text with its backticks as `code`. */
+export const withCode = (text: string) =>
+  codeSpans(text).map((piece, index) => (index % 2 ? h("code", piece) : piece));
+
 // The mark shows only while the button's call is pending (controls.css).
 const withPendingMark = ({ state }: { state: { label: string } }) => [
   h("span", {
@@ -38,18 +52,32 @@ const withPendingMark = ({ state }: { state: { label: string } }) => [
     "data-status": "running",
     "aria-hidden": "true",
   }),
-  state.label,
+  ...withCode(state.label),
 ];
 
 export const ConfirmationChoices = parts.Choices;
 export const ConfirmationOutcomeIcon = parts.OutcomeIcon;
+export const ConfirmationRiskIcon = parts.RiskIcon;
 
 /** The `label`, unless you fill the slot. Rendered only while `label` is set, and hidden inside a Tool. */
 export const ConfirmationTitle = withDefault<{ label: string }>(
   parts.Title,
   "ConfirmationTitle",
-  ({ state }) => state.label,
+  ({ state }) => withCode(state.label),
 );
+
+/** "Sending decision", else the deadline ("Decide in 4 min", then "Expired"), unless you fill the slot. */
+export const ConfirmationMeta = withDefault<{ text: string }>(
+  parts.Meta,
+  "ConfirmationMeta",
+  ({ state }) => state.text,
+);
+
+/** The `riskText` after a warning mark, unless you fill the slot. Rendered only while `riskText` is set. */
+export const ConfirmationRisk = withDefault<{ text: string }>(parts.Risk, "ConfirmationRisk", ({ state }) => [
+  h(ConfirmationRiskIcon),
+  h("span", withCode(state.text)),
+]);
 
 /**
  * A box for the reason Deny sends, unless you fill the slot. Rendered with the `reason` option, once a person's Deny
@@ -72,6 +100,12 @@ export const ConfirmationReason = withDefault<ConfirmationReasonState>(
 export const ConfirmationApprove = withDefault(parts.Approve, "ConfirmationApprove", withPendingMark);
 
 /**
+ * Calls `onAlwaysAllow`, which approves and asks the host to remember. Reads the `alwaysLabel` and `alwaysTarget`
+ * unless you fill the slot. Rendered only while `onAlwaysAllow` is set and `risk` isn't `"danger"`.
+ */
+export const ConfirmationAlways = withDefault(parts.Always, "ConfirmationAlways", withPendingMark);
+
+/**
  * Calls `onDeny`. With `reason`, a person's first press opens the reason box instead. Reads the `denyLabel` unless
  * you fill the slot. Rendered only while `onDeny` is set.
  */
@@ -81,10 +115,13 @@ export const ConfirmationDeny = withDefault(parts.Deny, "ConfirmationDeny", with
 export const ConfirmationCancel = withDefault(parts.Cancel, "ConfirmationCancel", () => "Cancel");
 
 /** "Decision not sent. Try again." while the host reports `submit-failed`, unless you fill the slot. */
-export const ConfirmationError = withDefault(
-  parts.Error,
-  "ConfirmationError",
-  () => "Decision not sent. Try again.",
+export const ConfirmationError = withDefault(parts.Error, "ConfirmationError", () => WORDS.notSentRetry);
+
+/** The `alwaysDetail`, unless you fill the slot. Rendered under the choices while Always allow shows. */
+export const ConfirmationDetail = withDefault<{ text: string }>(
+  parts.Detail,
+  "ConfirmationDetail",
+  ({ state }) => withCode(state.text),
 );
 
 /** Where the request stands, like "Approved", with the denial's reason, unless you fill the slot. */
@@ -93,25 +130,30 @@ export const ConfirmationOutcome = withDefault<{ label: string; reason: string |
   "ConfirmationOutcome",
   ({ state }) => [
     h(ConfirmationOutcomeIcon),
-    h("span", { "data-confirmation-label": "" }, state.label),
+    h("span", { "data-confirmation-label": "" }, withCode(state.label)),
+    " ",
     state.reason ? h("span", { "data-confirmation-reason": "" }, state.reason) : null,
   ],
 );
 
 const defaultParts = () => [
   h(ConfirmationTitle),
+  h(ConfirmationMeta),
+  h(ConfirmationRisk),
   h(ConfirmationReason),
   h(ConfirmationChoices, null, () => [
-    h(ConfirmationApprove),
-    h(ConfirmationDeny),
     h(ConfirmationCancel),
+    h(ConfirmationDeny),
+    h(ConfirmationAlways),
+    h(ConfirmationApprove),
     h(ConfirmationError),
   ]),
+  h(ConfirmationDetail),
   h(ConfirmationOutcome),
 ];
 
 /**
  * Asks a person to approve or deny a request, then shows what was decided. Only the choices the host supplies
- * (`onApprove`, `onDeny`) render. A default slot replaces the default parts.
+ * (`onDeny`, `onAlwaysAllow`, `onApprove`) render, in that order. A default slot replaces the default parts.
  */
 export const Confirmation = withDefault(parts.Root, "Confirmation", defaultParts);

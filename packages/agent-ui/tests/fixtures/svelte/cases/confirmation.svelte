@@ -1,10 +1,11 @@
 <script module lang="ts">
   import type { AgentAction } from "@ui-sdk/svelte/agent";
-  import { confirmationHost } from "../../shared/confirmation.js";
+  import { confirmationHost, moreConfirmations } from "../../shared/confirmation.js";
 
   export const variants = ["all", "reduced"];
 
-  const { host, approve, deny } = confirmationHost();
+  const { host, approve, deny, always } = confirmationHost();
+  const more = moreConfirmations();
 
   export const allow = (step: AgentAction) => !step.confirm || host.permit;
 </script>
@@ -27,7 +28,7 @@
   });
 </script>
 
-<div class="flex w-[28rem] flex-col gap-4 p-6">
+<div class="flex w-full max-w-[28rem] flex-col gap-4 p-6">
   <p id="above">Above</p
   ><Confirmation
     id="confirm"
@@ -51,5 +52,12 @@
     approval={request("auto", 1, { approved: true })}
     onApprove={approve}
     onDeny={deny}
-  />
+  />{#each more as { id, options } (id)}<Confirmation
+      {id}
+      {...options}
+      onApprove={approve}
+      onDeny={deny}
+      onAlwaysAllow={options.alwaysTarget ? always : undefined}
+      motion={variant === "reduced" ? "reduced" : undefined}
+    />{/each}
 </div>

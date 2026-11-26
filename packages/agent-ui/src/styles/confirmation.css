@@ -78,25 +78,20 @@
 
   [data-slot="kind-confirmation-choices"] {
     flex-wrap: wrap;
-    container: kind-confirmation-choices / inline-size;
   }
 
-  /* When the three don't fit, Always allow takes its own row above Deny and Approve, so the primary stays last and
-     under the thumb (Wave 7 spec §9). The break is a zero-height item after it. */
-  @container kind-confirmation-choices (width < 26rem) {
-    [data-slot="kind-confirmation-always"]:not([hidden]) {
+  /* When the three don't fit (core measures), Always allow takes its own row above Deny and Approve, so the primary
+     stays last and under the thumb (Wave 7 spec §9). The break is a zero-height item after it. */
+  [data-slot="kind-confirmation-choices"][data-stacked] {
+    & [data-slot="kind-confirmation-always"] {
       order: -2;
     }
-    [data-slot="kind-confirmation-choices"]:has(
-        > * [data-slot="kind-confirmation-always"]:not([hidden])
-      )::before,
-    [data-slot="kind-confirmation-choices"]:has(
-        > [data-slot="kind-confirmation-always"]:not([hidden])
-      )::before {
+    &::before {
       content: "";
       order: -1;
       flex-basis: 100%;
       height: 0;
+      margin-block-end: -8px;
     }
   }
 

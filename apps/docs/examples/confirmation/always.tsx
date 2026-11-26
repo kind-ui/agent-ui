@@ -9,7 +9,8 @@ export default function ConfirmationAlwaysExample() {
     generation: 1,
     state: "requested",
   });
-  const record = (decision: Approval["decision"]) => setApproval({ ...approval, state: "responded", decision });
+  const record = (decision: Approval["decision"]) =>
+    setApproval({ ...approval, state: "responded", decision });
   return (
     <Confirmation
       label="Allow `search_docs`?"
