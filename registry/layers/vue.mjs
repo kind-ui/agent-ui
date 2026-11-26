@@ -46,6 +46,7 @@ export default {
     "plan",
     "subagent",
     "queue",
+    "step-group",
 
     "sources",
     "inline-citation",
@@ -112,6 +113,7 @@ export default {
     "wave-1/message-delivery.spec.ts",
     "wave-1/stalled.spec.ts",
     "wave-1/composer.spec.ts",
+    "wave-1/composer-steer.spec.ts",
     "wave-3/suggestion.spec.ts",
     "wave-3/feedback.spec.ts",
     "wave-3/confirmation.spec.ts",
@@ -144,6 +146,7 @@ export default {
     "wave-2/plan.spec.ts",
     "wave-2/subagent.spec.ts",
     "wave-2/queue.spec.ts",
+    "wave-2/step-group.spec.ts",
 
     "wave-4/sources.spec.ts",
     "wave-4/inline-citation.spec.ts",

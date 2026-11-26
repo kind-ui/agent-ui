@@ -17,7 +17,7 @@ All 58 components, grouped by the job they do. The item is the React name: add `
 | `markdown` | Markdown | You render model text, streamed or finished; it repairs half-written blocks as they arrive. |
 | `code-block` | Code Block | You show code outside Markdown, or need its copy, wrap or a highlight function. |
 | `markdown-table` | Markdown Table | You show a table outside Markdown that has to scroll sideways and copy. |
-| `composer` | Composer | A person writes the prompt: send and stop, mentions, commands, attachments and saved drafts. |
+| `composer` | Composer | A person writes the prompt: send and stop, steering a running turn, mentions, commands, attachments and saved drafts. |
 | `attachments` | Attachments | You list attached files on their own, outside the Composer, which already shows them. |
 | `uploader` | Uploader | Files upload with progress, and a person can cancel or retry each one. |
 
@@ -44,11 +44,11 @@ All 58 components, grouped by the job they do. The item is the React name: add `
 | `reasoning` | Reasoning | The model streams its thinking; it collapses to "Thought for N s" when done. |
 | `tool` | Tool | The model calls a tool: its input, output, error and, when asked, approval. |
 | `chain-of-thought` | Chain of Thought | Many steps fold under one summary that opens into each step. |
-| `step-group` | Step Group | A turn's tool calls, commands or agents fold under one line that names the work and its status. Not yet in Vue, Svelte, Solid. |
+| `step-group` | Step Group | A turn's tool calls, commands or agents fold under one line that names the work and its status. |
 | `task` | Task | An agent works through a list of steps and you count how many are done. |
 | `plan` | Plan | The agent proposes steps a person can Accept, with a progress bar. |
 | `subagent` | Subagent | A subagent runs its own steps, can be stopped, and returns a result. |
-| `queue` | Queue | Prompts wait their turn, and a person can reorder or clear them. |
+| `queue` | Queue | Prompts wait their turn, and a person can reorder, send now, edit or clear them; inside a Composer it docks to its top edge. |
 | `confirmation` | Confirmation | An action that isn't a tool call needs a person to approve or deny it. |
 | `question` | Question | The agent asks a person to choose an option or write an answer before it goes on. |
 | `checkpoint` | Checkpoint | A person can restore the conversation to an earlier point, after a dialog asks first. |
@@ -59,7 +59,7 @@ All 58 components, grouped by the job they do. The item is the React name: add `
 | --- | --- | --- |
 | `document` | Document | The agent hands back a document with copy, download and a preview. |
 | `generated-image` | Generated Image | The agent makes an image, from progress to a full-size view. |
-| `diff` | Diff | A person reviews what an agent changed and keeps or undoes it, by file or by change. Not yet in Svelte. |
+| `diff` | Diff | A person reviews what an agent changed and keeps or undoes it, by file or by change. |
 | `file-tree` | File Tree | You show the files a change touched, with lines added and removed. |
 | `terminal` | Terminal | You show a command's output in ANSI colors as it streams, with its exit code, or ask to run it first. |
 | `stack-trace` | Stack Trace | You show an error's frames, with library frames folded and frames that open files. |

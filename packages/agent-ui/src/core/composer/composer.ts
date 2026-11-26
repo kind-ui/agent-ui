@@ -182,6 +182,8 @@ export type ComposerState = {
   steerMode: "steer" | "queue";
   /** Whether Stop and send is offered. */
   stopAndSend: boolean;
+  /** Whether a pending submission carries attachments, so Stop reads "Cancel sending". */
+  uploading: boolean;
   /** Whether a steer, queue or stop-and-send is in flight; sending is locked until it settles. */
   steerPending: boolean;
   /** Whether Send's menu is open. */
@@ -398,7 +400,13 @@ const sendShortcuts = (submitOn: ComposerState["submitOn"], mode: ComposerState[
 
 const keysOf = (submitOn: ComposerState["submitOn"], mode: ComposerState["steerMode"]): ComposerKeys => {
   const shortcuts = sendShortcuts(submitOn, mode);
-  const keys = (shortcut: string) => ({ label: formatShortcut(shortcut), aria: ariaKeyshortcuts(shortcut) });
+  // The Return symbol reads as an arrow, or as an emoji in some fonts, so the key is spelled out: "⌥ Enter".
+  const keys = (shortcut: string) => ({
+    label: formatShortcut(shortcut)
+      .replace(/(?<=[\u2325\u21e7\u2318\u2303])[\u21a9\u23ce]/u, " Enter")
+      .replace(/[\u21a9\u23ce]/u, "Enter"),
+    aria: ariaKeyshortcuts(shortcut),
+  });
   return {
     steer: keys(shortcuts.steer),
     queue: keys(shortcuts.queue),
@@ -443,6 +451,7 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       pending: false,
       attachmentsClosing: false,
       restored: false,
+      uploading: false,
       steerPending: false,
       sendMenuOpen: false,
       keys: null,
@@ -482,7 +491,6 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       const { value, disabled } = store.get();
       const words = text.trim();
       if (disabled || !words) return false;
-      // A queued message comes back on its own line, a dictation after a space.
       const joiner = reason === "queue-edit" ? "\n" : " ";
       const joined = value.text.trim() ? `${value.text.trimEnd()}${joiner}${words}` : words;
       appendSource = source;
@@ -513,7 +521,7 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
     const settle = (submitted: ComposerDraft, outcome: "resolved" | "rejected") => {
       if (destroyed) return;
       returningFromStop = store.get().canStop;
-      store.set({ pending: false });
+      store.set({ pending: false, uploading: false });
       if (outcome === "rejected") announce("Message not sent", { priority: "polite" });
       const current = store.get().value;
       const next = draftAfterSettle(current, submitted, outcome);
@@ -579,6 +587,8 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
 
     const readInput = () => {
       const segments = tokenInput.getValue();
+      // A Token Input that moved to another composer has left this controller, though its edits still reach us.
+      if (segments === undefined) return;
       const { value } = store.get();
       const text = toText(segments);
       if (text === value.text) return;
@@ -715,13 +725,13 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
 
     const submit = () => {
       const { onSubmit } = context.options();
-      const { value, pending, running, disabled } = store.get();
-      // Enter never starts a new turn while one runs.
-      if (disabled || pending || running || !onSubmit || !isSubmittable(value)) return;
+      const { value, pending, steerPending, running, disabled } = store.get();
+      // Enter never starts a new turn while one runs, and one lock covers every way to send.
+      if (disabled || pending || steerPending || running || !onSubmit || !isSubmittable(value)) return;
       history.reset();
       const submission = onSubmit(value);
       if (!isThenable(submission)) return settle(value, "resolved");
-      store.set({ pending: true });
+      store.set({ pending: true, uploading: value.attachments.length > 0 });
       announce("Sending", { priority: "polite" });
       submission.then(
         () => settle(value, "resolved"),
@@ -729,11 +739,11 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       );
     };
 
-    // A resolved send clears what it sent: the text it started with, and its attachments; text typed since stays.
+    // A resolved send clears what it sent and keeps what was typed after it, past a space or a line break; a draft
+    // edited in any other way stays whole, as the submit contract keeps it.
     const afterSend = (current: ComposerDraft, sent: ComposerDraft): ComposerDraft => {
-      const text = current.text.startsWith(sent.text)
-        ? current.text.slice(sent.text.length).trimStart()
-        : current.text;
+      const rest = current.text.startsWith(sent.text) ? current.text.slice(sent.text.length) : undefined;
+      const text = rest !== undefined && (rest === "" || /^\s/.test(rest)) ? rest.trimStart() : current.text;
       const sentIds = new Set(sent.attachments.map((item) => item.id));
       const attachments = current.attachments.filter((item) => !sentIds.has(item.id));
       if (text === current.text && attachments.length === current.attachments.length) return current;
@@ -855,12 +865,10 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
     const sendKeydown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.isComposing) return false;
       const { canSteer, steerMode, value, disabled } = store.get();
-      // Alt+Up in an empty composer takes back the last message queued in a docked Queue.
       if (matchesShortcut(event, "alt+ArrowUp")) {
         const root = context.element("root");
-        if (disabled || !root || isSubmittable(value)) return false;
+        if (disabled || !root || isSubmittable(value) || !takeBackText(root, "keyboard")) return false;
         event.preventDefault();
-        takeBackText(root, "keyboard");
         return true;
       }
       if (!canSteer) return false;
@@ -992,7 +1000,12 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       bind: (el, { api, store }) => {
         const stopForwarding = forwardFileInputEvents(el, api.intake);
         const unbindDraft = api.bindDraft();
-        const text = bindTextTarget(el, api.appendText, () => store.get().running);
+        const text = bindTextTarget(
+          el,
+          api.appendText,
+          () => store.get().running,
+          () => !store.get().disabled,
+        );
         // Key labels depend on the platform, so they're written once the page has hydrated.
         const { submitOn, steerMode } = store.get();
         store.set({ keys: keysOf(submitOn, steerMode) });
@@ -1052,7 +1065,10 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       attrs: (state) => ({
         type: "button",
         "aria-label": "Send",
-        "aria-disabled": state.pending || state.disabled || !isSubmittable(state.value) ? "true" : undefined,
+        "aria-disabled":
+          state.pending || state.steerPending || state.disabled || !isSubmittable(state.value)
+            ? "true"
+            : undefined,
         "data-pending": state.pending ? "" : undefined,
         "data-motion": state.motion,
       }),
@@ -1063,7 +1079,6 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
         return part.api.recovery.bind(el, part);
       },
     }),
-    // While a turn runs, Send shows beside Stop once there's text, named by what it does.
     steer: slot<BaseSlotProps, ComposerSteerState>({
       role: "button",
       focus: "native",
@@ -1107,7 +1122,8 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       press: ({ api }, event) => api.stop?.(event),
       attrs: (state) => ({
         type: "button",
-        "aria-label": state.running ? WORDS.stopGenerating : WORDS.cancelSending,
+        // A submission still uploading its files can be cancelled; past that, Stop ends the reply.
+        "aria-label": !state.running && state.uploading ? WORDS.cancelSending : WORDS.stopGenerating,
         // Send is the one primary while it shows, so Stop turns quiet.
         "data-quiet": showsSend(state) ? "" : undefined,
         "data-motion": state.motion,

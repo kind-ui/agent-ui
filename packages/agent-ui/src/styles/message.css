@@ -203,11 +203,6 @@
     visibility: hidden;
   }
 
-  /* People are circles, agents rounded squares. */
-  [data-slot="kind-message-avatar"][data-author="agent"] :where([data-slot="avatar"]) {
-    border-radius: var(--kind-radius-sm);
-  }
-
   [data-slot="kind-message-avatar"]:where([data-author]) :where([data-slot="avatar"]) {
     position: relative;
     display: inline-flex;
@@ -233,6 +228,11 @@
       height: 100%;
       object-fit: cover;
     }
+  }
+
+  /* People are circles, agents rounded squares. */
+  [data-slot="kind-message-avatar"]:where([data-author="agent"]) :where([data-slot="avatar"]) {
+    border-radius: var(--kind-radius-sm);
   }
 
   [data-slot="kind-message-header"],
@@ -295,7 +295,8 @@
   }
 
   /* Queued on the server: the bubble steps back, muted and dashed, at its own size. */
-  [data-slot="kind-message"][data-delivery="queued"] [data-slot="kind-message-content"][data-role="user"] {
+  :where([data-slot="kind-message"][data-delivery="queued"])
+    [data-slot="kind-message-content"][data-role="user"] {
     background-color: transparent;
     color: var(--kind-color-muted);
     outline: 1px dashed var(--kind-color-border);
@@ -321,12 +322,20 @@
       opacity: 0;
     }
 
-    &[data-motion="none"] {
+    &:where([data-motion="reduced"]) {
+      transition-duration: var(--kind-duration-reduced);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition-duration: var(--kind-duration-reduced);
+    }
+
+    &:where([data-motion="none"]) {
       transition: none;
     }
   }
 
-  [data-slot="kind-message-delivery-text"][data-delivery="not-sent"] {
+  [data-slot="kind-message-delivery-text"]:where([data-delivery="not-sent"]) {
     color: var(--kind-color-danger);
   }
 

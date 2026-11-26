@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `cb3f3e12` (UI SDK 0.1.0-beta.17 upgrade)
+Last reviewed: 2d09eea1
 
 ## Settled
 
+- Wave 7: `withCode` (React, Vue) and `WithCode` (Svelte, Solid, private) are each layer's own helpers, like other lowercase exports; parity compares PascalCase parts only.
 - **React is the structural reference for the Vue, Svelte and Solid layers (framework layers plan, 2026-11-20):** they export the same part names and render the same default children and classes, which `scripts/tests/parity.test.mjs` and `tests/browser/parity.spec.ts` compare against React. Renaming or restructuring a React part is a change to all five layers.
 - **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.
 - **Fixture `main` files carry no comment for the case `<script type="module">`** (Wave 4 Task 12): fixtures hold no comments; the reason is in AGENTS.md "Fixture servers".
@@ -17,6 +18,7 @@ Last reviewed: `cb3f3e12` (UI SDK 0.1.0-beta.17 upgrade)
 
 ## Known and open (don't report again, check whether fixed)
 
+- `ComposerSendMenu`'s children replace Steer, the chevron and the rows together, with no content part that hands a custom row its words and keys (Wave 7 layer 4).
 - **No fixture covers a controlled Composer taking dictated text (Task 17):** a throwaway case passed in both React projects; the docs examples are uncontrolled now.
 - **Context Bar server markup shows every chip until the bar measures** (Wave 5 Task 10): widths exist only in the browser, so hydration swaps the chip clipped at the edge for "+N" (nothing below moves; the root has a fixed height), and the server markup exposes every chip to assistive technology until then.
 - **Adding or removing `regenerateOptions` while mounted remounts Message's Regenerate button and drops its focus** (Wave 5 Task 7): the button sits inside `KindMenu` only while there are options. Keeping the menu mounted would make a plain button a menu trigger.

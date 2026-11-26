@@ -74,9 +74,10 @@ export const components = {
   },
   queue: {
     group: "steps",
-    when: "prompts wait their turn, and a person can reorder or clear them.",
+    when: "prompts wait their turn, and a person can reorder, send now, edit or clear them; inside a Composer it docks to its top edge.",
     title: "Queue",
-    description: "The agent's to-do list, queued and completed, that people can reorder and clear.",
+    description:
+      "The agent's to-do list, queued and completed, that people can reorder, send now, edit and clear, or the messages queued in a Composer.",
     uses: [],
   },
   confirmation: {
@@ -340,10 +341,11 @@ export const components = {
   },
   composer: {
     group: "chat",
-    when: "a person writes the prompt: send and stop, mentions, commands, attachments and saved drafts.",
+    when: "a person writes the prompt: send and stop, steering a running turn, mentions, commands, attachments and saved drafts.",
     title: "Composer",
-    description: "A prompt input with mentions, commands, attachments, submit and stop.",
-    uses: ["attachments", "internal-trigger-menu"],
+    description:
+      "A prompt input with mentions, commands, attachments, submit, stop, and steer or queue while a turn runs.",
+    uses: ["attachments", "internal-menu", "internal-trigger-menu"],
   },
   attachments: {
     group: "chat",

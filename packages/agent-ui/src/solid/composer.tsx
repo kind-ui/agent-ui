@@ -1,6 +1,13 @@
-import { type ComposerTriggerItem, composerPrimitive } from "@kind-ui/agent-ui/core";
+import {
+  type ComposerSendMenuState,
+  type ComposerSendMenuTriggerState,
+  type ComposerSteerState,
+  type ComposerTriggerItem,
+  composerPrimitive,
+} from "@kind-ui/agent-ui/core";
 import type { ComponentProps, JSX } from "@solidjs/web";
 import { FileInput, FileInputDropzone, FileInputTrigger } from "@ui-sdk/solid/file-input";
+import { MenuTrigger } from "@ui-sdk/solid/menu";
 import { createParts } from "@ui-sdk/solid/primitive";
 import {
   type Token,
@@ -11,6 +18,13 @@ import {
 } from "@ui-sdk/solid/token-input";
 import { createSignal, For, omit, onFlush, onSettled, Show } from "solid-js";
 import { Attachments, type AttachmentsProps } from "./attachments.js";
+import {
+  KindMenu,
+  KindMenuContent,
+  KindMenuItem,
+  KindMenuSeparator,
+  menuTriggerProps,
+} from "./internal/menu.js";
 import {
   KindTriggerMenu,
   KindTriggerMenuContent,
@@ -25,6 +39,9 @@ const parts = createParts(composerPrimitive, {
   "trigger-menu": "div",
   attachments: "div",
   submit: "button",
+  steer: "button",
+  "send-menu": "div",
+  "send-menu-trigger": "span",
   stop: "button",
   restored: "div",
   discard: "button",
@@ -153,7 +170,92 @@ export function ComposerRestored(props: ComponentProps<typeof parts.Restored>) {
   );
 }
 
-/** Sends the draft. Hidden while Stop shows. */
+/** Sends the draft. Hidden while a turn runs or Stop shows. */
 export const ComposerSubmit = parts.Submit;
-/** Shown in Send's place while a submission is pending, when the composer has `onStop`. */
+/**
+ * Shown in Send's place while a submission is pending or a turn is `running`, when the composer has `onStop`. Quiet
+ * while Send shows beside it.
+ */
 export const ComposerStop = parts.Stop;
+
+export type ComposerSteerProps = ComponentProps<typeof parts.Steer>;
+
+/** Send while a turn runs: "Steer" or "Queue" by `steerMode`, unless you pass children. */
+export function ComposerSteer(props: ComposerSteerProps) {
+  return (
+    <parts.Steer {...omit(props, "children")}>
+      {props.children ?? ((state: ComposerSteerState) => state.label)}
+    </parts.Steer>
+  );
+}
+
+export type ComposerSendMenuTriggerProps = ComponentProps<typeof MenuTrigger>;
+
+/** Opens Send's menu: UI SDK's `MenuTrigger`, a chevron unless you pass children. */
+export function ComposerSendMenuTrigger(props: ComposerSendMenuTriggerProps) {
+  return (
+    <parts.SendMenuTrigger>
+      {(trigger: ComposerSendMenuTriggerState) => (
+        // Hidden from agents, which use the composer's `steer`, `queue` and `stopAndSend`.
+        <MenuTrigger {...menuTriggerProps(trigger)} data-agent-hidden="" {...omit(props, "children")}>
+          {props.children ?? <span data-composer-chevron="" aria-hidden="true" />}
+        </MenuTrigger>
+      )}
+    </parts.SendMenuTrigger>
+  );
+}
+
+export type ComposerSendMenuProps = Omit<ComponentProps<typeof parts.SendMenu>, "children"> & {
+  children?: JSX.Element;
+};
+
+/**
+ * Send and its menu while a turn runs, shown once there's text when the composer has `onSteer`: Steer or Queue, and
+ * a chevron offering Steer now, Queue for later and Stop and send, each with its keys. Put it beside `ComposerStop`.
+ */
+export function ComposerSendMenu(props: ComposerSendMenuProps) {
+  return (
+    <parts.SendMenu {...omit(props, "children")}>
+      {(state: ComposerSendMenuState) => (
+        <KindMenu
+          controller={state.controller}
+          open={state.open}
+          onOpenChange={state.onOpenChange}
+          onAction={state.onAction}
+        >
+          {props.children ?? (
+            <>
+              <ComposerSteer />
+              <ComposerSendMenuTrigger />
+              <KindMenuContent align="end" side="top" sideOffset={8} data-composer-send-menu="">
+                <For each={state.items} keyed={(item) => item.value}>
+                  {(item) => (
+                    <>
+                      <Show when={item().value === "stop-and-send"}>
+                        <KindMenuSeparator />
+                      </Show>
+                      <KindMenuItem
+                        value={item().value}
+                        label={item().label}
+                        data-current={item().checked ? "" : undefined}
+                      >
+                        <span data-composer-check="" aria-hidden="true" />
+                        <span data-composer-send-text="">
+                          <span data-composer-send-label="">{item().label}</span>
+                          <span data-composer-send-description="">{item().description}</span>
+                        </span>
+                        <Show when={item().shortcut}>
+                          <kbd data-composer-send-keys="">{item().shortcut}</kbd>
+                        </Show>
+                      </KindMenuItem>
+                    </>
+                  )}
+                </For>
+              </KindMenuContent>
+            </>
+          )}
+        </KindMenu>
+      )}
+    </parts.SendMenu>
+  );
+}

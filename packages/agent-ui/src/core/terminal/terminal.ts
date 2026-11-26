@@ -174,8 +174,8 @@ const base = stepBase<TerminalState, TerminalApi, TerminalOptions>({
   },
   announcement: (status, title, state) => {
     if (status === "error" && state.exitCode) return `${title} failed, exit code ${state.exitCode}`;
-    // The Confirmation announces the decision itself.
-    if (state.waiting || state.declined) return undefined;
+    // The Confirmation announces a command that never ran: "Denied", "Expired before a decision".
+    if (state.declined) return undefined;
     return stepAnnouncement(status, title);
   },
 });
@@ -330,8 +330,6 @@ export const terminalPrimitive: TerminalPrimitive = definePrimitive<
       toggle: (event) => !holds(!store.get().open) && step.toggle(event),
       approvalState: approvalPart.approvalState<TerminalState>(context, {
         question: (state) => question(state.command),
-        // Focus moves to the outcome, which takes the choices' place (Wave 7 spec §8).
-        fallback: () => undefined,
       }),
       titleSpans: ({ waiting, title, command }) => spans(waiting, title, command),
       get copy() {

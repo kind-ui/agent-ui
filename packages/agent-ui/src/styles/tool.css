@@ -1,10 +1,6 @@
-/* Tool (spec §7): the Step base's look, with the tool's name as code and its input and output as code blocks. */
+/* Tool (spec §7): the Step base's look, its title in words with code in backticks as code (step.css), and its input
+   and output as code blocks. */
 @layer components {
-  [data-slot="kind-tool-title"] {
-    font-family: var(--kind-font-mono);
-    font-size: var(--kind-text-sm);
-  }
-
   [data-slot="kind-tool-approval"] {
     display: block;
     padding-block: 2px 4px;
