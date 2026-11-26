@@ -34,6 +34,8 @@
     "connectionStatusPrimitive": 7500,
     "shareDialogPrimitive": 42000,
     "conversationSearchPrimitive": 62500,
-    "threadSearchPrimitive": 59100
+    "threadSearchPrimitive": 59100,
+    "confirmationPrimitive": 43000,
+    "toolPrimitive": 10300
   }
 }

@@ -12,11 +12,13 @@ When the agent wants to do something a person should decide, the person decides.
 
 ## Tool approval
 
-A Tool whose `call.approval.state` is `"requested"` shows **Approve** and **Deny** as soon as you pass `onApprove` and `onDeny` (see [compose.md](compose.md#tool-calls-and-approvals) and [ai-sdk.md](ai-sdk.md)):
+A Tool whose `call.approval.state` is `"requested"` shows **Deny** and **Approve** (in that order, the primary last) as soon as you pass `onDeny` and `onApprove` (see [compose.md](compose.md#tool-calls-and-approvals) and [ai-sdk.md](ai-sdk.md)):
 
 - `approvalReason` opens a reason box on the first Deny; `onDeny` gets `{ reason }`.
 - A callback may return a promise. The buttons lock while it's pending, and after it resolves they stay locked until the host reports the request (`state: "responded"`, a new `approvalId` or a new `generation`). A rejection unlocks them; to show "Decision not sent. Try again.", set the approval's `state` to `"submit-failed"`.
-- Once the approval is `"responded"`, the buttons give way to the outcome ("Approved", "Denied"), at the same height, so the conversation keeps what was decided.
+- `onAlwaysAllow` adds **Always allow** between them. Pass `alwaysTarget` (what, like `"search_docs"`) and `alwaysScope` (where, like `"in this project"`); the decision carries `always: true` and `scope`. Record both in `decision`, and keep the allow list yourself. `risk: "danger"` hides it and makes Approve a danger button.
+- Set `expiresAt` on the approval to show "Decide in 4 min"; report `state: "expired"` (or `"cancelled"`) when it lapses.
+- Once the approval is settled, the buttons give way to the outcome ("Approved", "Always allowed `search_docs` in this project", "Denied: <reason>", "Expired before a decision"), at the same height, so the conversation keeps what was decided.
 
 ## Confirmation
 

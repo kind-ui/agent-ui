@@ -4,6 +4,7 @@ description: Ask a person to approve or deny what the agent wants to do, and kee
 ---
 
 import ConfirmationExample from "../../../examples/confirmation/basic";
+import ConfirmationAlwaysExample from "../../../examples/confirmation/always";
 
 Use a confirmation when the agent needs a person's go-ahead before it acts, like deleting a file or sending an email. It names the request, offers the choices the host supplies, then shows the recorded outcome in their place.
 
@@ -22,23 +23,28 @@ Use a confirmation when the agent needs a person's go-ahead before it acts, like
 ```text
 Confirmation
 ├── ConfirmationTitle
+├── ConfirmationMeta
+├── ConfirmationRisk
+│   └── ConfirmationRiskIcon
 ├── ConfirmationReason
 ├── ConfirmationChoices
-│   ├── ConfirmationApprove
-│   ├── ConfirmationDeny
 │   ├── ConfirmationCancel
+│   ├── ConfirmationDeny
+│   ├── ConfirmationAlways
+│   ├── ConfirmationApprove
 │   └── ConfirmationError
+├── ConfirmationDetail
 └── ConfirmationOutcome
     └── ConfirmationOutcomeIcon
 ```
 
-`Confirmation` renders these parts when you pass no children. It's a group named by its `label`, which `ConfirmationTitle` shows above the choices and keeps above the outcome; inside a [Tool](./tool.mdx) the title is hidden, since the tool already names the request. `ConfirmationReason` is a text box for the reason Deny sends, `ConfirmationApprove` and `ConfirmationDeny` are native buttons, `ConfirmationCancel` closes the reason box, and `ConfirmationError` says "Decision not sent. Try again." beside them. `ConfirmationOutcome` takes the choices' place once they're gone, with a status mark and where the request stands.
+`Confirmation` renders these parts when you pass no children. It's a group named by its `label`, which `ConfirmationTitle` shows above the choices and keeps above the outcome; inside a [Tool](./tool.mdx) the title is hidden, since the tool already names the request. Text in backticks shows as code, as in ``"Allow `search_docs`?"``. `ConfirmationMeta` sits at the title's end, `ConfirmationRisk` says what could go wrong, and `ConfirmationReason` is a text box for the reason Deny sends. The choices are native buttons, Deny first and Approve, the primary, last; `ConfirmationCancel` closes the reason box, and `ConfirmationError` says "Decision not sent. Try again." beside them. `ConfirmationDetail` says what Always allow covers. `ConfirmationOutcome` takes the choices' place once they're gone, with a status mark and where the request stands.
 
 ## Usage
 
 ### Requests
 
-Pass the host's request as `approval`: an `approvalId`, a `generation` and a `state` of `requested`, `submitting`, `submit-failed`, `responded` or `auto`, with the `decision` once there is one. Pass `onApprove` to show **Approve** and `onDeny` to show **Deny**; only the choices you pass render. Each is called with the `approvalId` and `generation` it decides, and `details.source` says who decided, like `"mouse"` or `"agent"`.
+Pass the host's request as `approval`: an `approvalId`, a `generation` and a `state` of `requested`, `submitting`, `submit-failed`, `responded`, `auto`, `expired` or `cancelled`, with the `decision` once there is one. Pass `onDeny` to show **Deny** and `onApprove` to show **Approve**; only the choices you pass render. Each is called with the `approvalId` and `generation` it decides, and `details.source` says who decided, like `"mouse"` or `"agent"`.
 
 ```tsx
 <Confirmation
@@ -51,9 +57,25 @@ Pass the host's request as `approval`: an `approvalId`, a `generation` and a `st
 
 An `auto` request shows its outcome, like "Approved automatically", and no choices.
 
+### Always Allow
+
+Pass `onAlwaysAllow` to offer **Always allow** between Deny and Approve, for a person who doesn't want to be asked again. `alwaysTarget` says what it covers and shows in the button, `alwaysScope` says where, and `alwaysDetail` is a line under the choices. The decision carries `always: true` and the scope; record them in the approval's `decision`, and the outcome reads "Always allowed `search_docs` in this project". You keep the allow list, and the way to take it back.
+
+<Example caption="Press Always allow. The outcome keeps what it covers and where.">
+  <ConfirmationAlwaysExample />
+
+  <ExampleCode example="confirmation/always" />
+</Example>
+
+When the choices don't fit one row, Always allow takes its own row above Deny and Approve, so Approve stays last.
+
+### Risk and Deadlines
+
+`risk="danger"` makes Approve a danger button and leaves out Always allow; `riskText` says why, after a warning mark. With `expiresAt` on the approval, the meta reads "Decide in 4 min", then in seconds under a minute. Past it the meta reads "Expired" and the choices stay until you report the request `expired`.
+
 ### Sending a Decision
 
-A press disables both choices at once, so a second press, even on the other choice, calls nothing. The pressed choice shows a running mark beside its label while its call is pending. Return a promise to keep them disabled until it settles; they stay disabled after that until the host reports on the request, whether it's `submitting`, `submit-failed` or `responded`. A rejection, or `submit-failed`, makes them available again, and `submit-failed` shows "Decision not sent. Try again." beside them.
+A press disables every choice at once, so a second press, even on another choice, calls nothing. The pressed choice shows a running mark in place of its label, and the meta reads "Sending decision", while its call is pending. Return a promise to keep them disabled until it settles; they stay disabled after that until the host reports on the request, whether it's `submitting`, `submit-failed` or `responded`. A rejection, or `submit-failed`, makes them available again, and `submit-failed` shows "Decision not sent. Try again." beside them.
 
 When the host replaces the request with a new `generation`, the choices are available again, and a late result for the old one changes nothing.
 
@@ -63,7 +85,7 @@ Pass `reason` to ask why before a denial. Approve stays one press. The first pre
 
 ### Outcome
 
-While the host sends a decision, the outcome reads "Sending decision". Once it's recorded, it reads "Approved", "Denied", "Approved automatically" or "Denied automatically". It has the same height as the choices, so nothing above or below moves. If a choice had focus when it went away, focus moves to the outcome, or to the element `focusFallback` returns.
+While the host sends a decision, the outcome reads "Sending decision". Once it's recorded, it reads "Approved", "Always allowed", "Approved automatically", "Denied" (with the reason), "Expired before a decision" or "Cancelled before a decision", each after its own mark: a check, a slash in a ring, a clock or a minus. It has the same height as the choices, so nothing above or below moves. If a choice had focus when it went away, focus moves to the outcome, or to the element `focusFallback` returns.
 
 Screen readers hear "Decision not sent" when a decision fails, and the outcome when it's recorded.
 
@@ -79,10 +101,10 @@ The choices and the outcome fade in when they swap, and the reason box expands a
 
 ### Agent
 
-An agent connected with `createAgent` finds the confirmation by its label and reads its `approvalState`. It can approve or deny while those choices show, and `deny` takes a reason, which it sends at once without opening the reason box. Every decision waits for a person to confirm, unless the host's `allow` lets it through; this can't be turned off.
+An agent connected with `createAgent` finds the confirmation by its label and reads its `approvalState`. It can approve, always allow or deny while those choices show, and `deny` takes a reason, which it sends at once without opening the reason box. Every decision waits for a person to confirm, unless the host's `allow` lets it through; this can't be turned off.
 
-<auto-type-table path="../../../../../packages/agent-ui/src/core/confirmation/confirmation.ts" name="ConfirmationAgentActions" type='Pick<ConfirmationApi, "approve" | "deny">' />
+<auto-type-table path="../../../../../packages/agent-ui/src/core/confirmation/confirmation.ts" name="ConfirmationAgentActions" type='Pick<ConfirmationApi, "approve" | "alwaysAllow" | "deny">' />
 
 <Caption>
-  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-confirmation>`, `approval` and `focusFallback` are properties only, and other props are kebab-case attributes, so `approveLabel` is `approve-label`. Approve and Deny need the `can-approve` and `can-deny` attributes and fire `approve` and `deny` with the decision as `detail.value`: call `event.detail.waitUntil(promise)` to keep the choices disabled. The element fills in its parts when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-confirmation>`, `approval` and `focusFallback` are properties only, and other props are kebab-case attributes, so `approveLabel` is `approve-label`. Deny, Always allow and Approve need the `can-deny`, `can-always-allow` and `can-approve` attributes and fire `deny`, `alwaysallow` and `approve` with the decision as `detail.value`: call `event.detail.waitUntil(promise)` to keep the choices disabled. The element fills in its parts when it has no children.
 </Caption>
