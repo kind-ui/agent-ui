@@ -23,6 +23,10 @@ Use a thinking indicator between sending a message and the first word of the rep
 
 Pass `label` to say what the agent is doing, like "Searching the docs". It shows after the dots and names the indicator, "Thinking…" by default. The indicator is a polite status, so screen readers read a new label when it changes. The dots are hidden from them.
 
+### Stalled
+
+Pass `lastActivityAt` whenever an update arrives. Once nothing arrives for `stalledAfter` seconds, 120 by default, the label reads "Still working · no update for 2 min". See [Step](./step.mdx#stalled).
+
 ### Motion
 
 The dots flow one after another; the label stays still. Under `prefers-reduced-motion`, or with `motion="reduced"` or `"none"`, the dots hold still too. The indicator takes no focus and has no keys.

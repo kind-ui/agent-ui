@@ -10,6 +10,7 @@
     "author",
     "author-clock",
     "outcomes",
+    "delivery",
     "custom-rows",
   ];
 
@@ -19,8 +20,14 @@
 
 <script lang="ts">
   import type { MessageStatus } from "@kind-ui/agent-ui";
-  import type { MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
+  import type { MessageOptions, MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
   import { flushSync, type Snippet } from "svelte";
+  import {
+    Composer,
+    ComposerInput,
+    ComposerStop,
+    ComposerSubmit,
+  } from "../../../../src/svelte/composer/index.js";
   import {
     Conversation,
     ConversationContent,
@@ -41,6 +48,7 @@
     MessageBranchPrevious,
     MessageContent,
     MessageCopy,
+    MessageDelivery,
     MessageDuration,
     MessageEdit,
     MessageEditor,
@@ -48,6 +56,7 @@
     MessageOutcome,
     MessageRegenerate,
     MessageRegenerateContent,
+    MessageRetrying,
     MessageTime,
     MessageToolbar,
   } from "../../../../src/svelte/message/index.js";
@@ -55,6 +64,7 @@
   import {
     author,
     authored,
+    delivery,
     outcomeError,
     outcomeText,
     regenerateOptions,
@@ -62,6 +72,7 @@
   } from "../../shared/message.js";
 
   type Deferred = { resolve(): void; reject(): void };
+  type DeliveryRow = Partial<Pick<MessageOptions, "delivery" | "retry" | "status">>;
 
   let { variant }: { variant: string; params: URLSearchParams } = $props();
 
@@ -82,6 +93,13 @@
     earlier: "error",
   });
   const deferred: Deferred[] = [];
+  let rows: Record<string, DeliveryRow> = $state.raw({
+    steering: { delivery: "steering" },
+    queued: { delivery: "queued" },
+    "not-sent": { delivery: "not-sent" },
+    retrying: { status: "streaming", retry: delivery.retry },
+  });
+  let gone: string[] = $state.raw([]);
 
   let refusing = $derived(variant === "refusing");
   let clock = $derived(variant === "author-clock");
@@ -97,6 +115,12 @@
     kindOutcome: {
       calls,
       status: (id: string, value: MessageStatus) => flushSync(() => (statuses = { ...statuses, [id]: value })),
+      settle: (ok: boolean) => deferred.shift()?.[ok ? "resolve" : "reject"](),
+    },
+    kindDelivery: {
+      calls,
+      set: (id: string, row: DeliveryRow) => flushSync(() => (rows = { ...rows, [id]: row })),
+      remove: (id: string) => flushSync(() => (gone = [...gone, id])),
       settle: (ok: boolean) => deferred.shift()?.[ok ? "resolve" : "reject"](),
     },
   });
@@ -226,6 +250,23 @@
   </Message>
 {/snippet}
 
+{#snippet deliveryUser(id: string, text: string, label: string)}
+  {#if !gone.includes(id)}
+    <Message
+      {id}
+      aria-label={label}
+      messageRole="user"
+      {text}
+      onWithdraw={wait("withdraw")}
+      onResend={wait("resend")}
+      {...rows[id]}
+    >
+      <MessageContent>{text}</MessageContent
+      ><MessageDelivery />
+    </Message>
+  {/if}
+{/snippet}
+
 {#if variant === "all"}
   <div class="m-4 flex w-[36rem] flex-col gap-6">
     {@render user()}{@render assistant(true)}
@@ -260,6 +301,34 @@
   </Conversation>
 {:else if variant === "options" || variant === "refusing"}
   {@render withOptions(false)}
+{:else if variant === "delivery"}
+  <div class="m-4 flex w-[36rem] flex-col gap-6">
+    <Message aria-label="Assistant message">
+      <MessageContent>{delivery.answer}</MessageContent>
+    </Message
+    >{@render deliveryUser("steering", delivery.steering, "Steering message")}{@render deliveryUser(
+      "queued",
+      delivery.queued,
+      "Queued message",
+    )}{@render deliveryUser("not-sent", delivery.notSent, "Unsent message")}<Message
+      id="retrying"
+      aria-label="Retrying answer"
+      text={delivery.retrying}
+      onRetryNow={wait("retry-now")}
+      onCancelRetry={wait("cancel-retry")}
+      onRetry={wait("retry")}
+      {...rows.retrying}
+    >
+      <MessageContent>{delivery.retrying}</MessageContent
+      ><MessageRetrying
+      /><MessageOutcome />
+    </Message
+    ><Composer aria-label="Message" onSubmit={() => {}}>
+      <ComposerInput aria-label="Prompt"
+      /><ComposerSubmit
+      /><ComposerStop />
+    </Composer>
+  </div>
 {:else if variant === "custom-rows"}
   {@render withOptions(true)}
 {:else if variant === "author" || variant === "author-clock"}

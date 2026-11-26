@@ -297,7 +297,7 @@ export const components = {
   },
   message: {
     group: "chat",
-    when: "you render one turn, with its role, status, author, time and copy, regenerate, edit or retry.",
+    when: "you render one turn, with its role, status, author, time, delivery or retrying, and copy, regenerate, edit or retry.",
     title: "Message",
     description: "A chat message with copy, regenerate, edit and branch controls.",
     uses: ["internal-toolbar", "internal-menu"],

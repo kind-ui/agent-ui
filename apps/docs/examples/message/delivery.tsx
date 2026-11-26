@@ -20,7 +20,9 @@ export default function MessageDeliveryExample() {
   return (
     <div className="flex w-full max-w-xl flex-col gap-4">
       <Message aria-label="Assistant message">
-        <MessageContent>I'll store the session in a signed cookie and check it on each request.</MessageContent>
+        <MessageContent>
+          I'll store the session in a signed cookie and check it on each request.
+        </MessageContent>
       </Message>
       {sent.map((message) => (
         <Message

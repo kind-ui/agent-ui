@@ -68,6 +68,16 @@ const message = createParts(primitive, {
   "outcome-text": "span",
   retry: "button",
   continue: "button",
+  delivery: "div",
+  "delivery-text": "span",
+  withdraw: "button",
+  resend: "button",
+  retrying: "div",
+  "retrying-icon": "span",
+  "retrying-reason": "span",
+  "retrying-text": "span",
+  "retry-now": "button",
+  "cancel-retry": "button",
 });
 
 /**
@@ -135,7 +145,7 @@ export const MessageDuration = defineComponent({
 
 export const MessageOutcomeIcon = message.OutcomeIcon;
 
-/** "Stopped", or the `error` option's words. */
+/** "Stopped", "Failed after 5 attempts" while `retry` is still set, or the `error` option's words. */
 export const MessageOutcomeText = defineComponent({
   name: "MessageOutcomeText",
   inheritAttrs: false,
@@ -177,6 +187,115 @@ export const MessageOutcome = defineComponent({
   inheritAttrs: false,
   setup(_, { attrs, slots }) {
     return () => h(message.Outcome, attrs, { ...slots, default: slots.default ?? outcome });
+  },
+});
+
+/** "Steering…", "Queued, not sent" or "Not sent": the message's accessible description while it isn't delivered. */
+export const MessageDeliveryText = defineComponent({
+  name: "MessageDeliveryText",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () =>
+      h(message.DeliveryText, attrs, {
+        ...slots,
+        default: ({ state }: { state: { text: string } }) => state.text,
+      });
+  },
+});
+
+const labelled = ({ state }: { state: { label: string } }) => state.label;
+
+/** Shown while `onWithdraw` is set and the message is queued or steering. "Withdraw", unless you pass children. */
+export const MessageWithdraw = defineComponent({
+  name: "MessageWithdraw",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () => h(message.Withdraw, attrs, { ...slots, default: slots.default ?? labelled });
+  },
+});
+
+/** Shown while `onResend` is set and the message wasn't sent. "Retry", unless you pass children. */
+export const MessageResend = defineComponent({
+  name: "MessageResend",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () => h(message.Resend, attrs, { ...slots, default: slots.default ?? labelled });
+  },
+});
+
+const delivery = () => [h(MessageDeliveryText), h(MessageWithdraw), h(MessageResend)];
+
+/** Under a user message that isn't delivered yet: its words, then Withdraw or Retry, unless you pass children. */
+export const MessageDelivery = defineComponent({
+  name: "MessageDelivery",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () => h(message.Delivery, attrs, { ...slots, default: slots.default ?? delivery });
+  },
+});
+
+export const MessageRetryingIcon = message.RetryingIcon;
+
+/** The retry's `reason`, as a sentence: "Rate limited.". */
+export const MessageRetryingReason = defineComponent({
+  name: "MessageRetryingReason",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () =>
+      h(message.RetryingReason, attrs, {
+        ...slots,
+        default: ({ state }: { state: { reason: string } }) => state.reason,
+      });
+  },
+});
+
+/** "Retrying in 4 sec, attempt 2 of 5", counting down. */
+export const MessageRetryingText = defineComponent({
+  name: "MessageRetryingText",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () =>
+      h(message.RetryingText, attrs, {
+        ...slots,
+        default: ({ state }: { state: { text: string } }) => state.text,
+      });
+  },
+});
+
+/** Shown while `onRetryNow` is set. "Retry now", unless you pass children. */
+export const MessageRetryNow = defineComponent({
+  name: "MessageRetryNow",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () => h(message.RetryNow, attrs, { ...slots, default: slots.default ?? labelled });
+  },
+});
+
+/** Shown while `onCancelRetry` is set. "Cancel", unless you pass children. */
+export const MessageCancelRetry = defineComponent({
+  name: "MessageCancelRetry",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () => h(message.CancelRetry, attrs, { ...slots, default: slots.default ?? labelled });
+  },
+});
+
+const retrying = () => [
+  h(MessageRetryingIcon),
+  h("span", null, [h(MessageRetryingReason), " ", h(MessageRetryingText)]),
+  h(MessageRetryNow),
+  h(MessageCancelRetry),
+];
+
+/**
+ * Shown after the content while `retry` is set and the request hasn't failed: a running mark, the reason, the
+ * countdown and attempt, then Retry now and Cancel, unless you pass children.
+ */
+export const MessageRetrying = defineComponent({
+  name: "MessageRetrying",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () => h(message.Retrying, attrs, { ...slots, default: slots.default ?? retrying });
   },
 });
 

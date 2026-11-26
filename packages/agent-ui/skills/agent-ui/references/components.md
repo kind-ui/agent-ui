@@ -13,7 +13,7 @@ All 56 components, grouped by the job they do. The item is the React name: add `
 | `sources` | Sources | A reply used sources and you show them as a count that opens a list of links. |
 | `inline-citation` | Inline Citation | A sentence cites sources and you mark the spot with a card that shows them. |
 | `conversation` | Conversation | You show a scrolling list of messages that follows new content as it streams. |
-| `message` | Message | You render one turn, with its role, status, author, time and copy, regenerate, edit or retry. |
+| `message` | Message | You render one turn, with its role, status, author, time, delivery or retrying, and copy, regenerate, edit or retry. |
 | `markdown` | Markdown | You render model text, streamed or finished; it repairs half-written blocks as they arrive. |
 | `code-block` | Code Block | You show code outside Markdown, or need its copy, wrap or a highlight function. |
 | `markdown-table` | Markdown Table | You show a table outside Markdown that has to scroll sideways and copy. |
@@ -59,7 +59,7 @@ All 56 components, grouped by the job they do. The item is the React name: add `
 | `document` | Document | The agent hands back a document with copy, download and a preview. |
 | `generated-image` | Generated Image | The agent makes an image, from progress to a full-size view. |
 | `file-tree` | File Tree | You show the files a change touched, with lines added and removed. |
-| `terminal` | Terminal | You show a command's output in ANSI colors as it streams, with its exit code. |
+| `terminal` | Terminal | You show a command's output in ANSI colors as it streams, with its exit code, or ask to run it first. |
 | `stack-trace` | Stack Trace | You show an error's frames, with library frames folded and frames that open files. |
 | `test-results` | Test Results | You show a test run's counts over a tree of suites and failures. |
 | `transcript` | Transcript | You show timed, speaker-labelled speech with search and seeking. |

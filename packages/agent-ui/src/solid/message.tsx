@@ -46,6 +46,16 @@ const message = createParts(messagePrimitive, {
   "outcome-text": "span",
   retry: "button",
   continue: "button",
+  delivery: "div",
+  "delivery-text": "span",
+  withdraw: "button",
+  resend: "button",
+  retrying: "div",
+  "retrying-icon": "span",
+  "retrying-reason": "span",
+  "retrying-text": "span",
+  "retry-now": "button",
+  "cancel-retry": "button",
 });
 
 /** A regenerate option, whose `icon` is an image URL or an element such as an inline `svg`. */
@@ -104,7 +114,7 @@ export function MessageDuration(props: Omit<ComponentProps<typeof message.Durati
 
 export const MessageOutcomeIcon = message.OutcomeIcon;
 
-/** "Stopped", or the `error` option's words. */
+/** "Stopped", "Failed after 5 attempts" while `retry` is still set, or the `error` option's words. */
 export function MessageOutcomeText(props: Omit<ComponentProps<typeof message.OutcomeText>, "children">) {
   return <message.OutcomeText {...props}>{(state) => state.text}</message.OutcomeText>;
 }
@@ -135,6 +145,95 @@ export function MessageOutcome(props: ComponentProps<typeof message.Outcome>) {
         </>
       )}
     </message.Outcome>
+  );
+}
+
+/** "Steering…", "Queued, not sent" or "Not sent": the message's accessible description while it isn't delivered. */
+export function MessageDeliveryText(props: Omit<ComponentProps<typeof message.DeliveryText>, "children">) {
+  return <message.DeliveryText {...props}>{(state) => state.text}</message.DeliveryText>;
+}
+
+/** Shown while `onWithdraw` is set and the message is queued or steering. "Withdraw", unless you pass children. */
+export function MessageWithdraw(props: ComponentProps<typeof message.Withdraw>) {
+  return (
+    <message.Withdraw {...omit(props, "children")}>
+      {props.children ?? ((state) => state.label)}
+    </message.Withdraw>
+  );
+}
+
+/** Shown while `onResend` is set and the message wasn't sent. "Retry", unless you pass children. */
+export function MessageResend(props: ComponentProps<typeof message.Resend>) {
+  return (
+    <message.Resend {...omit(props, "children")}>{props.children ?? ((state) => state.label)}</message.Resend>
+  );
+}
+
+/** Under a user message that isn't delivered yet: its words, then Withdraw or Retry, unless you pass children. */
+export function MessageDelivery(props: ComponentProps<typeof message.Delivery>) {
+  return (
+    <message.Delivery {...omit(props, "children")}>
+      {props.children ?? (
+        <>
+          <MessageDeliveryText />
+          <MessageWithdraw />
+          <MessageResend />
+        </>
+      )}
+    </message.Delivery>
+  );
+}
+
+export const MessageRetryingIcon = message.RetryingIcon;
+
+/** The retry's `reason`, as a sentence: "Rate limited.". */
+export function MessageRetryingReason(
+  props: Omit<ComponentProps<typeof message.RetryingReason>, "children">,
+) {
+  return <message.RetryingReason {...props}>{(state) => state.reason}</message.RetryingReason>;
+}
+
+/** "Retrying in 4 sec, attempt 2 of 5", counting down. */
+export function MessageRetryingText(props: Omit<ComponentProps<typeof message.RetryingText>, "children">) {
+  return <message.RetryingText {...props}>{(state) => state.text}</message.RetryingText>;
+}
+
+/** Shown while `onRetryNow` is set. "Retry now", unless you pass children. */
+export function MessageRetryNow(props: ComponentProps<typeof message.RetryNow>) {
+  return (
+    <message.RetryNow {...omit(props, "children")}>
+      {props.children ?? ((state) => state.label)}
+    </message.RetryNow>
+  );
+}
+
+/** Shown while `onCancelRetry` is set. "Cancel", unless you pass children. */
+export function MessageCancelRetry(props: ComponentProps<typeof message.CancelRetry>) {
+  return (
+    <message.CancelRetry {...omit(props, "children")}>
+      {props.children ?? ((state) => state.label)}
+    </message.CancelRetry>
+  );
+}
+
+/**
+ * Shown after the content while `retry` is set and the request hasn't failed: a running mark, the reason, the
+ * countdown and attempt, then Retry now and Cancel, unless you pass children.
+ */
+export function MessageRetrying(props: ComponentProps<typeof message.Retrying>) {
+  return (
+    <message.Retrying {...omit(props, "children")}>
+      {props.children ?? (
+        <>
+          <MessageRetryingIcon />
+          <span>
+            <MessageRetryingReason /> <MessageRetryingText />
+          </span>
+          <MessageRetryNow />
+          <MessageCancelRetry />
+        </>
+      )}
+    </message.Retrying>
   );
 }
 
