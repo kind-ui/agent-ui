@@ -4,7 +4,7 @@
 
   const lines = ["> app@1.0.0 test\n", "✓ sign-in.test.ts (12 tests)\n", "✓ session.test.ts (9 tests)"];
 
-  let approval: Approval = $state({ approvalId: "test", generation: 1, state: "requested" });
+  let approval: Approval = $state.raw({ approvalId: "test", generation: 1, state: "requested" });
   let shown = $state(0);
   const record = (decision: Approval["decision"]) => (approval = { ...approval, state: "responded", decision });
   const running = $derived(approval.decision?.approved === true && shown < lines.length);
@@ -13,7 +13,8 @@
   // Stands in for the command running once it's approved.
   $effect(() => {
     if (!running) return;
-    const timer = setTimeout(() => shown++, 600);
+    const next = shown + 1;
+    const timer = setTimeout(() => (shown = next), 600);
     return () => clearTimeout(timer);
   });
 </script>
@@ -22,7 +23,8 @@
   command="npm test"
   {approval}
   output={lines.slice(0, shown).join("")}
-  {...done && { exitCode: 0, durationSeconds: 2 }}
+  exitCode={done ? 0 : undefined}
+  durationSeconds={done ? 2 : undefined}
   alwaysTarget="npm test"
   alwaysScope="in this project"
   alwaysDetail="Covers commands starting with `npm test`, in this project."

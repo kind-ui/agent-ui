@@ -13,7 +13,7 @@ export default function TerminalApprovalExample() {
   });
   const [shown, setShown] = useState(0);
   const record = (decision: Approval["decision"]) =>
-    setApproval({ ...approval, state: "responded", decision });
+    setApproval((current) => ({ ...current, state: "responded", decision }));
   const running = approval.decision?.approved === true && shown < lines.length;
 
   // Stands in for the command running once it's approved.

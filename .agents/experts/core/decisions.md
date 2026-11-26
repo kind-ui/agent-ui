@@ -54,6 +54,8 @@ Last reviewed: `cb3f3e12` (UI SDK 0.1.0-beta.17 upgrade)
 
 ## Known and open (don't report again, check whether fixed)
 
+- **A command with backticks loses them in Terminal's Confirmation name** (`terminal.ts` `question`): the label wraps the command in backticks and Confirmation's `codeSpans` splits on the command's own, so `echo \`date\`` is named "Run echo date?". The header title is right (it uses `titleSpans`). Needs Confirmation to take pieces or an escape (Wave 7 layer 3 review).
+
 - **Step base `onOptions` reads `open` from the store** (`step/base.ts`): under `@ui-sdk/svelte`, which hands options over through `follow`, that is the new controlled `open`, so an owner changing `open` and `status` together might see one more or fewer auto `onOpenChange`. Not reproduced (Task Svelte-2 review); check with the Svelte step family.
 
 - **`menuBase` holds `partState.menu`'s `open` while a `ui-menu` reports its own `openchange`** (Design Wave 0): UI SDK web highlights the first item and leaves focus on the trigger when `open` is written back during that event, as its own controlled example does. Ask upstream; remove `applying` once fixed.
