@@ -29,8 +29,10 @@ export function steerHost(
         )
       : undefined;
   const without = (id: string) => host.setItems(host.items().filter((item) => item.id !== id));
-  expose({ kindSteer: { calls, held } });
+  const handles = { calls, held };
+  expose({ kindSteer: handles });
   return {
+    handles,
     onSteer: (draft: ComposerDraft, { mode, reason, source }: ComposerSteerDetails) => {
       calls.push({ type: "steer", text: draft.text, mode, reason, source });
       if (mode === "queue")

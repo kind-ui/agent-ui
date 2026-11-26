@@ -19,7 +19,7 @@ function steer(root: HTMLElement, params: URLSearchParams) {
         <form aria-label="Message">
           <ui-file-input>
             <ui-file-input-dropzone>
-              <kind-queue label="Queued messages" can-send can-edit can-remove></kind-queue>
+              <kind-queue label="Queued messages" can-send can-edit can-remove${params.has("folded") ? ' default-open-sections="complete"' : ""}></kind-queue>
               <kind-composer-input>
                 <ui-token-input>
                   <ui-token-input-editor aria-label="Prompt" placeholder="Ask anything"></ui-token-input-editor>
@@ -36,7 +36,6 @@ function steer(root: HTMLElement, params: URLSearchParams) {
     </div>`;
   const composer = root.querySelector("kind-composer") as KindComposerElement;
   const queue = root.querySelector("kind-queue") as KindQueueElement;
-  if (params.has("folded")) queue.defaultOpenSections = [];
   if (params.has("pending")) queue.sendDisabledReason = "Available after you answer the pending request";
   queue.items = params.has("queue") ? queuedMessages : [];
   composer.running = !params.has("idle");

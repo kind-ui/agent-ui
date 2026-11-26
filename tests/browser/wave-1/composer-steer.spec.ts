@@ -71,6 +71,24 @@ test("Enter steers, Alt+Enter queues into the docked Queue, Shift+Mod+Enter stop
     { text: "then the logs", mode: "queue", reason: "send-key", source: "keyboard" },
     { text: "start over", mode: "stop-and-send", reason: "send-key", source: "keyboard" },
   ]);
+  // Once the turn ends, Send comes back in Stop's place, and the menu that left stays gone.
+  await page.keyboard.type("next");
+  await expect(send(page)).toBeVisible();
+  await page.evaluate(() => (window as unknown as Fixture).setRunning(false));
+  await expect(page.getByRole("button", { name: "Send", exact: true })).toBeVisible();
+  await expect(stop(page)).toBeHidden();
+  await expect(send(page)).toHaveCount(0);
+  await page.evaluate(() => (window as unknown as Fixture).setRunning(true));
+  await expect(send(page)).toBeVisible();
+});
+
+test("a resolved send keeps a word typed onto the end of the sent text whole", async ({ page }) => {
+  const editor = await open(page, "hold");
+  await page.keyboard.type("use the cache");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("s");
+  await settle(page, "resolve");
+  await expect(editor).toHaveText("use the caches");
 });
 
 test("a pending send locks sending; resolving clears only what was sent, rejecting keeps it", async ({

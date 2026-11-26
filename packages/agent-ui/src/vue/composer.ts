@@ -269,6 +269,7 @@ export const ComposerSendMenu = defineComponent({
   setup(_, { attrs, slots }) {
     return () =>
       h(parts.SendMenu, attrs, {
+        render: slots.render,
         default: ({ state }: { state: ComposerSendMenuState }) =>
           h(
             KindMenu,

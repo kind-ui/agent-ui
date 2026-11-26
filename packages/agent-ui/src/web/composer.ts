@@ -14,10 +14,10 @@ import { createParts, type UiActionDetail, wrappedButton, wrappedChild } from "@
 import type { AttributeProperties, UiChangeEvent, UiElement } from "@ui-sdk/web/events";
 import type { Token } from "@ui-sdk/web/token-input";
 import { defineAttachments } from "./attachments.js";
-import { defineInternalMenu } from "./internal/menu.js";
+import { defineInternalMenu, menuElement, placeMenuChild } from "./internal/menu.js";
 import { defineInternalTriggerMenu } from "./internal/trigger-menu.js";
 
-const SEND_MENU = `<kind-internal-menu><ui-menu><kind-composer-steer><button></button></kind-composer-steer><kind-composer-send-menu-trigger><ui-menu-trigger><button type="button" data-agent-hidden><span data-composer-chevron aria-hidden="true"></span></button></ui-menu-trigger></kind-composer-send-menu-trigger><ui-menu-content side="top" align="end" side-offset="8" data-composer-send-menu></ui-menu-content></ui-menu></kind-internal-menu>`;
+const SEND_MENU = `<kind-internal-menu><ui-menu><kind-composer-steer><button></button></kind-composer-steer><kind-composer-send-menu-trigger data-menu-part="trigger"><ui-menu-trigger><button type="button" data-agent-hidden><span data-composer-chevron aria-hidden="true"></span></button></ui-menu-trigger></kind-composer-send-menu-trigger><ui-menu-content side="top" align="end" side-offset="8" data-composer-send-menu></ui-menu-content></ui-menu></kind-internal-menu>`;
 
 // Parts this element filled in, and so keeps drawing. Kept across instances, since UI SDK rebuilds one when the
 // element returns to the page.
@@ -28,25 +28,42 @@ const write = (el: Element | null, text: string) => {
   if (el && el.textContent !== text) el.textContent = text;
 };
 
-// A row's check, words and keys, as React's default rows are.
+// A row's check, words and keys, as React's default rows are, kept by `value` so an open menu keeps its rows.
 function drawSendItems(content: Element, items: ComposerSendMenuState["items"]): void {
   if (!content.firstElementChild) owned.add(content);
   if (!owned.has(content) || drawn.get(content) === items) return;
   drawn.set(content, items);
-  content.replaceChildren();
+  const doc = content.ownerDocument;
+  let before: Element | null = content.firstElementChild;
+  const place = (child: Element) => {
+    placeMenuChild(content, child, before);
+    before = child.nextElementSibling;
+  };
+  const kept = new Set<Element>();
   for (const item of items) {
-    if (item.value === "stop-and-send")
-      content.append(content.ownerDocument.createElement("ui-menu-separator"));
-    const row = content.ownerDocument.createElement("ui-menu-item");
-    row.setAttribute("value", item.value);
-    row.setAttribute("label", item.label);
-    row.toggleAttribute("data-current", item.checked);
-    row.innerHTML = `<span data-composer-check aria-hidden="true"></span><span data-composer-send-text><span data-composer-send-label></span><span data-composer-send-description></span></span>${item.shortcut ? "<kbd data-composer-send-keys></kbd>" : ""}`;
+    if (item.value === "stop-and-send") {
+      const separator =
+        content.querySelector(":scope > ui-menu-separator") ?? menuElement(doc, "ui-menu-separator");
+      place(separator);
+      kept.add(separator);
+    }
+    let row = content.querySelector(`:scope > ui-menu-item[value="${item.value}"]`);
+    if (!row) {
+      row = menuElement(doc, "ui-menu-item", { value: item.value });
+      row.innerHTML =
+        '<span data-composer-check aria-hidden="true"></span><span data-composer-send-text><span data-composer-send-label></span><span data-composer-send-description></span></span><kbd data-composer-send-keys></kbd>';
+    }
+    if (row.getAttribute("label") !== item.label) row.setAttribute("label", item.label);
+    if (row.hasAttribute("data-current") !== item.checked) row.toggleAttribute("data-current", item.checked);
     write(row.querySelector("[data-composer-send-label]"), item.label);
     write(row.querySelector("[data-composer-send-description]"), item.description);
-    write(row.querySelector("[data-composer-send-keys]"), item.shortcut);
-    content.append(row);
+    const keys = row.querySelector("[data-composer-send-keys]") as HTMLElement;
+    write(keys, item.shortcut);
+    keys.hidden = !item.shortcut;
+    place(row);
+    kept.add(row);
   }
+  for (const child of [...content.children]) if (!kept.has(child)) child.remove();
 }
 
 // Writes only what changed: setting a UI SDK element's property makes it render again.

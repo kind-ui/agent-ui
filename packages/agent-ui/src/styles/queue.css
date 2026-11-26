@@ -177,7 +177,8 @@
       color var(--kind-duration-fast),
       background-color var(--kind-duration-fast);
 
-    &::before {
+    /* The icon, unless the host gives the button children of its own. */
+    &:empty::before {
       content: "";
       width: 1rem;
       height: 1rem;
@@ -230,44 +231,47 @@
     &[data-empty] {
       display: none;
     }
+  }
 
-    & [data-slot="kind-queue-section"][data-section="complete"],
-    & [data-slot="kind-queue-item-icon"],
-    & [data-slot="kind-queue-item-description"] {
+  :where([data-slot="kind-queue"][data-docked])
+    :is(
+      [data-slot="kind-queue-section"][data-section="complete"],
+      [data-slot="kind-queue-item-icon"],
+      [data-slot="kind-queue-item-description"]
+    ) {
+    display: none;
+  }
+
+  :where([data-slot="kind-queue"][data-docked]) [data-slot="kind-queue-section-trigger"] {
+    padding-inline-start: 0.5rem;
+    color: var(--kind-color-muted);
+    font-size: var(--kind-text-sm);
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
+
+    & > [data-title] {
+      flex: none;
+      font-weight: inherit;
+    }
+    & > [data-count] {
       display: none;
     }
+  }
 
-    & [data-slot="kind-queue-section-trigger"] {
-      padding-inline-start: 0.5rem;
-      color: var(--kind-color-muted);
-      font-size: var(--kind-text-sm);
-      line-height: var(--kind-text-sm-leading);
-      letter-spacing: var(--kind-text-sm-tracking);
+  :where([data-slot="kind-queue"][data-docked]) [data-slot="kind-queue-item"] {
+    align-items: center;
+    padding: 0.25rem 0.25rem 0.25rem 0.5rem;
+    border-radius: var(--kind-radius-md);
+  }
 
-      & > [data-title] {
-        flex: none;
-        font-weight: inherit;
-      }
-      & > [data-count] {
-        display: none;
-      }
-    }
+  :where([data-slot="kind-queue"][data-docked]) [data-slot="kind-queue-item-title"] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
-    & [data-slot="kind-queue-item"] {
-      align-items: center;
-      padding: 0.25rem 0.25rem 0.25rem 0.5rem;
-      border-radius: var(--kind-radius-md);
-    }
-
-    & [data-slot="kind-queue-item-title"] {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    & [data-queue-actions] {
-      margin-block: 0;
-    }
+  :where([data-slot="kind-queue"][data-docked]) [data-queue-actions] {
+    margin-block: 0;
   }
 
   /* A narrow composer has no room to wait for a hover, so the buttons stay. */

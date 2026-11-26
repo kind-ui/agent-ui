@@ -128,7 +128,9 @@ export const ComposerDiscard = parts.Discard;
 export function ComposerRestored({ children, ...props }: ComponentProps<typeof parts.Restored>) {
   return (
     <parts.Restored {...props}>
-      {children ?? (
+      {children !== undefined ? (
+        children
+      ) : (
         <>
           <span>Draft restored</span>
           <ComposerDiscard>Discard</ComposerDiscard>
@@ -150,7 +152,7 @@ export type ComposerSteerProps = ComponentProps<typeof parts.Steer>;
 
 /** Send while a turn runs: "Steer" or "Queue" by `steerMode`, unless you pass children. */
 export function ComposerSteer({ children, ...props }: ComposerSteerProps) {
-  return <parts.Steer {...props}>{children ?? (({ label }) => label)}</parts.Steer>;
+  return <parts.Steer {...props}>{children !== undefined ? children : ({ label }) => label}</parts.Steer>;
 }
 
 export type ComposerSendMenuTriggerProps = ComponentProps<typeof MenuTrigger>;
@@ -162,7 +164,7 @@ export function ComposerSendMenuTrigger({ children, ...props }: ComposerSendMenu
       {(trigger) => (
         // Hidden from agents, which use the composer's `steer`, `queue` and `stopAndSend`.
         <MenuTrigger {...trigger} data-agent-hidden="" {...props}>
-          {children ?? <span data-composer-chevron="" aria-hidden="true" />}
+          {children !== undefined ? children : <span data-composer-chevron="" aria-hidden="true" />}
         </MenuTrigger>
       )}
     </parts.SendMenuTrigger>
@@ -182,7 +184,9 @@ export function ComposerSendMenu({ children, ...props }: ComposerSendMenuProps) 
     <parts.SendMenu {...props}>
       {({ items, controller, open, onOpenChange, onAction }) => (
         <KindMenu controller={controller} open={open} onOpenChange={onOpenChange} onAction={onAction}>
-          {children ?? (
+          {children !== undefined ? (
+            children
+          ) : (
             <>
               <ComposerSteer />
               <ComposerSendMenuTrigger />

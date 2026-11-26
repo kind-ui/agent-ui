@@ -1,6 +1,6 @@
 import type { QueueItem } from "@kind-ui/agent-ui";
 import type { AgentAction } from "@ui-sdk/react/agent";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { AddMenu } from "../../../../src/react/add-menu.js";
 import {
@@ -22,7 +22,9 @@ function Steer({ params }: { params: URLSearchParams }) {
   const [running, setRunning] = useState(!params.has("idle"));
   const [items, setItems] = useState<QueueItem[]>(params.has("queue") ? queuedMessages : []);
   const itemsRef = useRef(items);
-  itemsRef.current = items;
+  useLayoutEffect(() => {
+    itemsRef.current = items;
+  });
   const [host] = useState(() =>
     steerHost(params, {
       items: () => itemsRef.current,
@@ -30,7 +32,11 @@ function Steer({ params }: { params: URLSearchParams }) {
       setRunning: (next) => setRunning(next),
     }),
   );
-  useEffect(() => expose({ setRunning: (next: boolean) => flushSync(() => setRunning(next)) }), []);
+  useEffect(
+    () =>
+      expose({ kindSteer: host.handles, setRunning: (next: boolean) => flushSync(() => setRunning(next)) }),
+    [host],
+  );
   return (
     <div className="mx-auto max-w-xl p-6">
       <Composer

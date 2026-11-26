@@ -13,7 +13,7 @@ export type TextSourceLink = {
 };
 
 /** Elements that take text another component produces, like a Composer's root taking dictated text. */
-const targets = new WeakMap<Element, { insert: Insert; running: () => boolean }>();
+const targets = new WeakMap<Element, { insert: Insert; running: () => boolean; accepts: () => boolean }>();
 /** Elements that hand text back to the target around them, like a Queue docked in a Composer. */
 const sources = new Map<Element, TextSourceLink>();
 
@@ -29,8 +29,13 @@ const targetAround = (el: Element | undefined) => {
  * Makes `el` take text through `insert`, which returns whether it did, and docks the sources inside it. Call the
  * returned `update` when `running` changes; `cleanup` undocks them.
  */
-export const bindTextTarget = (el: Element, insert: Insert, running: () => boolean = () => false) => {
-  const target = { insert, running };
+export const bindTextTarget = (
+  el: Element,
+  insert: Insert,
+  running: () => boolean = () => false,
+  accepts: () => boolean = () => true,
+) => {
+  const target = { insert, running, accepts };
   targets.set(el, target);
   const inside = () =>
     [...sources].filter(([source]) => el.contains(source) && targetAround(source) === target);
@@ -53,6 +58,9 @@ export const insertText = (
   source: ChangeSource,
   reason: TextInsertReason = "dictation",
 ): boolean => targetAround(el)?.insert(text, source, reason) ?? false;
+
+/** Whether a target around `el` would take text now, so a source can keep its item until one does. */
+export const canInsertText = (el: Element | undefined): boolean => targetAround(el)?.accepts() ?? false;
 
 /** Registers `el` as a source and docks it in the target around it, if any. Returns a cleanup. */
 export const bindTextSource = (el: Element, link: TextSourceLink): (() => void) => {

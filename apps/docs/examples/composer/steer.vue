@@ -31,10 +31,10 @@ const steer = (draft: ComposerDraft, { mode }: ComposerSteerDetails) => {
     aria-label="Message"
     :running="running"
     :on-submit="() => (running = true)"
-    :on-stop="() => (running = false)"
-    :on-steer="steer"
+    @stop="running = false"
+    @steer="steer"
   >
-    <Queue label="Queued messages" :items="queued" :on-send="drop" :on-edit="drop" :on-remove="drop" />
+    <Queue label="Queued messages" :items="queued" @send="drop" @edit="drop" @remove="drop" />
     <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
     <ComposerSubmit />
     <ComposerStop />

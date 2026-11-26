@@ -725,9 +725,9 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
 
     const submit = () => {
       const { onSubmit } = context.options();
-      const { value, pending, running, disabled } = store.get();
-      // Enter never starts a new turn while one runs.
-      if (disabled || pending || running || !onSubmit || !isSubmittable(value)) return;
+      const { value, pending, steerPending, running, disabled } = store.get();
+      // Enter never starts a new turn while one runs, and one lock covers every way to send.
+      if (disabled || pending || steerPending || running || !onSubmit || !isSubmittable(value)) return;
       history.reset();
       const submission = onSubmit(value);
       if (!isThenable(submission)) return settle(value, "resolved");
@@ -739,11 +739,11 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       );
     };
 
-    // A resolved send clears what it sent: the text it started with, and its attachments; text typed since stays.
+    // A resolved send clears what it sent and keeps what was typed after it, past a space or a line break; a draft
+    // edited in any other way stays whole, as the submit contract keeps it.
     const afterSend = (current: ComposerDraft, sent: ComposerDraft): ComposerDraft => {
-      const text = current.text.startsWith(sent.text)
-        ? current.text.slice(sent.text.length).trimStart()
-        : current.text;
+      const rest = current.text.startsWith(sent.text) ? current.text.slice(sent.text.length) : undefined;
+      const text = rest !== undefined && (rest === "" || /^\s/.test(rest)) ? rest.trimStart() : current.text;
       const sentIds = new Set(sent.attachments.map((item) => item.id));
       const attachments = current.attachments.filter((item) => !sentIds.has(item.id));
       if (text === current.text && attachments.length === current.attachments.length) return current;
@@ -867,9 +867,8 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       const { canSteer, steerMode, value, disabled } = store.get();
       if (matchesShortcut(event, "alt+ArrowUp")) {
         const root = context.element("root");
-        if (disabled || !root || isSubmittable(value)) return false;
+        if (disabled || !root || isSubmittable(value) || !takeBackText(root, "keyboard")) return false;
         event.preventDefault();
-        takeBackText(root, "keyboard");
         return true;
       }
       if (!canSteer) return false;
@@ -1001,7 +1000,12 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       bind: (el, { api, store }) => {
         const stopForwarding = forwardFileInputEvents(el, api.intake);
         const unbindDraft = api.bindDraft();
-        const text = bindTextTarget(el, api.appendText, () => store.get().running);
+        const text = bindTextTarget(
+          el,
+          api.appendText,
+          () => store.get().running,
+          () => !store.get().disabled,
+        );
         // Key labels depend on the platform, so they're written once the page has hydrated.
         const { submitOn, steerMode } = store.get();
         store.set({ keys: keysOf(submitOn, steerMode) });
@@ -1061,7 +1065,10 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       attrs: (state) => ({
         type: "button",
         "aria-label": "Send",
-        "aria-disabled": state.pending || state.disabled || !isSubmittable(state.value) ? "true" : undefined,
+        "aria-disabled":
+          state.pending || state.steerPending || state.disabled || !isSubmittable(state.value)
+            ? "true"
+            : undefined,
         "data-pending": state.pending ? "" : undefined,
         "data-motion": state.motion,
       }),
