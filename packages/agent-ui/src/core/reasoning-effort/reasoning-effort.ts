@@ -1,9 +1,10 @@
-import { type ChangeDetails, createChange, definePrimitive, type SlotDefinition } from "@ui-sdk/core";
+import { type ChangeDetails, createChange, type SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import {
   createSegmentedControlController,
   type SegmentedControlController,
 } from "@ui-sdk/core/segmented-control";
+import { definePrimitive } from "../define-primitive.js";
 import { memo } from "../memo.js";
 import type { MotionMode } from "../motion/index.js";
 

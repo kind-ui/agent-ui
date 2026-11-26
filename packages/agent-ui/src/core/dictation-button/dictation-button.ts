@@ -4,7 +4,6 @@ import {
   type ChangeSource,
   createFocusRecovery,
   css,
-  definePrimitive,
   dispatch,
   live,
   type SlotDefinition,
@@ -12,6 +11,7 @@ import {
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { actionSource } from "../action-source.js";
+import { definePrimitive } from "../define-primitive.js";
 import type { DictationSource } from "../dictation.js";
 import type { MotionMode } from "../motion/index.js";
 import { insertText } from "../text-target.js";

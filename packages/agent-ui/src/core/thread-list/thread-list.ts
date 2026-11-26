@@ -9,7 +9,6 @@ import {
   createTypeahead,
   createVirtualizer,
   css,
-  definePrimitive,
   dispatch,
   type GridCell,
   type GridFocus,
@@ -25,6 +24,7 @@ import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { Thread } from "../../types/index.js";
 import { actionSource } from "../action-source.js";
 import { hearComposed } from "../composed-events.js";
+import { definePrimitive } from "../define-primitive.js";
 import { memo } from "../memo.js";
 import {
   type MenuBaseApi,

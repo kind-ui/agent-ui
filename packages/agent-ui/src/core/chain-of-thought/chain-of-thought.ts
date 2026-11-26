@@ -3,7 +3,6 @@ import {
   type ChangeDetails,
   createChange,
   css,
-  definePrimitive,
   hiddenAttrs,
   idPart,
   live,
@@ -13,6 +12,7 @@ import {
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { StepStatus } from "../../types/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import { createListFocus, type ListFocus } from "../list-focus.js";
 import { memo } from "../memo.js";
 import { enter } from "../motion/index.js";

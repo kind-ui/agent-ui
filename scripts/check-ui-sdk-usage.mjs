@@ -204,7 +204,11 @@ export function checkUiSdkUsage(root, exceptions) {
       const exported = new RegExp(
         `export\\s+const\\s+${camelCase(name)}Primitive\\b[^=]*=\\s*definePrimitive\\b`,
       ).test(source);
-      if (!importsFrom(source, "definePrimitive", "@ui-sdk/core") || calls.length !== 1 || !exported) {
+      // `core/define-primitive.ts` is UI SDK's, for actions offered only while available.
+      const imported =
+        importsFrom(source, "definePrimitive", "@ui-sdk/core") ||
+        importsFrom(source, "definePrimitive", "\\.\\./define-primitive\\.js");
+      if (!imported || calls.length !== 1 || !exported) {
         errors.push(`${file}: component must be defined with definePrimitive`);
       }
     }

@@ -2,12 +2,12 @@ import {
   type ChangeDetails,
   createFocusRecovery,
   createRovingFocus,
-  definePrimitive,
   dispatch,
   type Part,
   type SlotDefinition,
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
+import { definePrimitive } from "../define-primitive.js";
 import { fileExtension, fileKind, fileSize } from "../file-info.js";
 import { bindLeavingRow, createRowSlide, dropRow, type LeavingRow, leavingRows } from "../leaving.js";
 import { enter, type MotionMode } from "../motion/index.js";

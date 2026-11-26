@@ -1,4 +1,4 @@
-import { definePrimitive, type SlotDefinition } from "@ui-sdk/core";
+import type { SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { type Approval, hasOutput, type StepStatus, type ToolCall } from "../../types/index.js";
 import { approvalLabel, isActionable } from "../approval.js";
@@ -6,6 +6,7 @@ import { stepDuration } from "../chain-of-thought/open-steps.js";
 import { createCopy } from "../clipboard.js";
 import type { Highlight } from "../code-block/index.js";
 import type { ConfirmationCallback, ConfirmationOptions } from "../confirmation/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import { memo } from "../memo.js";
 import { type StepApi, type StepOptions, type StepState, stepAnnouncement, stepBase } from "../step/base.js";
 import { toolCode, toolStatus, toolValue } from "./format.js";

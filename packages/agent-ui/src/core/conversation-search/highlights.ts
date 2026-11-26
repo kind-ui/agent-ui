@@ -42,6 +42,45 @@ const spanAt = (spans: readonly Span[], offset: number, end: boolean) =>
     end ? offset > start && offset <= start + node.length : offset >= start && offset < start + node.length,
   );
 
+/*
+ * Every match, and the current one stronger. The current match is dark text on amber (6.9:1 in light, 9.8:1 in dark);
+ * other matches keep the page's text over a dim amber (12.9:1 in light, 6.6:1 in dark). These rules join the page
+ * here, not in `conversation-search.css`: Tailwind before 4.3.5 optimizes an app's CSS with Lightning CSS 1.32, which
+ * warns on every `::highlight()`. In `components`, the stylesheets' layer, so a page's unlayered rule or utility wins.
+ */
+const STYLES = `@layer components {
+  ::highlight(kind-search) {
+    background-color: color-mix(in oklab, var(--kind-color-warning) 35%, transparent);
+    color: var(--kind-color-fg);
+  }
+  ::highlight(kind-search-current) {
+    background-color: var(--kind-color-warning);
+    color: var(--kind-color-on-warning);
+  }
+  @media (forced-colors: active) {
+    ::highlight(kind-search) {
+      background-color: Mark;
+      color: MarkText;
+    }
+    ::highlight(kind-search-current) {
+      background-color: Highlight;
+      color: HighlightText;
+    }
+  }
+}`;
+
+let sheet: CSSStyleSheet | undefined;
+
+function adoptStyles(): void {
+  if (!sheet) {
+    sheet = new CSSStyleSheet();
+    sheet.replaceSync(STYLES);
+  }
+  if (!document.adoptedStyleSheets.includes(sheet)) {
+    document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+  }
+}
+
 let owner: object | undefined;
 
 /**
@@ -51,6 +90,7 @@ let owner: object | undefined;
  */
 export function paintMatches(by: object, rows: readonly PaintedRow[]): void {
   if (typeof CSS === "undefined" || !("highlights" in CSS)) return;
+  adoptStyles();
   const all = new Highlight();
   const current = new Highlight();
   current.priority = 1;

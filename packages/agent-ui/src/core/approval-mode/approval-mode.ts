@@ -2,13 +2,13 @@ import {
   type ChangeDetails,
   type ChangeSource,
   createChange,
-  definePrimitive,
   dispatch,
   type SlotDefinition,
 } from "@ui-sdk/core";
 import type { MenuData } from "@ui-sdk/core/menu";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { ApprovalModeOption } from "../../types/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import { cached, memo } from "../memo.js";
 import {
   type MenuBaseApi,

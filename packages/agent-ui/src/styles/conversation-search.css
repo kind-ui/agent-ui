@@ -156,16 +156,7 @@
     transition: none;
   }
 
-  /* Every match, and the current one stronger. The current match is dark text on amber (6.9:1 in light, 9.8:1 in
-     dark); other matches keep the page's text over a dim amber (12.9:1 in light, 6.6:1 in dark). */
-  ::highlight(kind-search) {
-    background-color: color-mix(in oklab, var(--kind-color-warning) 35%, transparent);
-    color: var(--kind-color-fg);
-  }
-  ::highlight(kind-search-current) {
-    background-color: var(--kind-color-warning);
-    color: var(--kind-color-on-warning);
-  }
+  /* The highlights' own rules are in `core/conversation-search/highlights.ts`. */
 
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
@@ -183,14 +174,6 @@
         [data-slot="kind-conversation-search-next"]
       )[aria-disabled="true"]::after {
       background-color: GrayText;
-    }
-    ::highlight(kind-search) {
-      background-color: Mark;
-      color: MarkText;
-    }
-    ::highlight(kind-search-current) {
-      background-color: Highlight;
-      color: HighlightText;
     }
   }
 }

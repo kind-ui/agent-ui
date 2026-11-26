@@ -4,7 +4,6 @@ import {
   createChange,
   createVirtualizer,
   css,
-  definePrimitive,
   direct,
   dispatch,
   type PrimitiveContext,
@@ -18,6 +17,7 @@ import { createInputController, type InputController } from "@ui-sdk/core/input"
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { MatchSegment } from "@ui-sdk/core/text-match";
 import type { TranscriptSegment } from "../../types/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import { createListFocus, type ListFocus } from "../list-focus.js";
 import { cached, memo } from "../memo.js";
 import type { MotionMode } from "../motion/index.js";

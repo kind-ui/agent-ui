@@ -1,6 +1,5 @@
 import {
   type ChangeDetails,
-  definePrimitive,
   dispatch,
   type PopupPartState,
   popupBackdrop,
@@ -12,6 +11,7 @@ import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { ariaKeyshortcuts, formatShortcut, registerShortcut } from "@ui-sdk/core/shortcuts";
 import { fuzzyScore, matchRanges } from "@ui-sdk/core/text-match";
 import type { PickerAction, PickerItem, Thread } from "../../types/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import {
   type PickerBaseApi,
   type PickerBaseOptions,

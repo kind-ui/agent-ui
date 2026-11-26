@@ -1,6 +1,7 @@
-import { type ChangeDetails, createChange, css, definePrimitive, type SlotDefinition } from "@ui-sdk/core";
+import { type ChangeDetails, createChange, css, type SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { createCopy } from "../clipboard.js";
+import { definePrimitive } from "../define-primitive.js";
 
 /**
  * A run of highlighted code. Its `content` may hold line breaks. `color` is any CSS color: a

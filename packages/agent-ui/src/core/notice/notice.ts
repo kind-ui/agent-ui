@@ -1,5 +1,6 @@
-import { definePrimitive, type SlotDefinition } from "@ui-sdk/core";
+import type { SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
+import { definePrimitive } from "../define-primitive.js";
 import { type NoticeApi, type NoticeOptions, type NoticeState, noticeBase } from "./base.js";
 
 type Slot<Public extends object = Record<never, never>> = SlotDefinition<

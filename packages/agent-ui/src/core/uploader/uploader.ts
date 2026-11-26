@@ -2,13 +2,13 @@ import {
   announce,
   type ChangeDetails,
   createFocusRecovery,
-  definePrimitive,
   dispatch,
   type Part,
   type SlotDefinition,
 } from "@ui-sdk/core";
 import type { FileInputOptions, FileInputValueChangeReason, FileRejection } from "@ui-sdk/core/file-input";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
+import { definePrimitive } from "../define-primitive.js";
 import { fileKind, fileSize } from "../file-info.js";
 import { type FileIntake, forwardFileInputEvents } from "../file-input-events.js";
 import { bindLeavingRow, createRowSlide, dropRow, type LeavingRow, leavingRows } from "../leaving.js";

@@ -1,7 +1,6 @@
 import {
   type ChangeDetails,
   createChange,
-  definePrimitive,
   dispatch,
   type PrimitiveContext,
   type SlotDefinition,
@@ -15,6 +14,7 @@ import type {
   SettingsEntry,
   SettingsOption,
 } from "../../types/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import { cached, memo } from "../memo.js";
 import type { MenuTriggerState } from "../menu-base.js";
 import {

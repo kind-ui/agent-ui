@@ -61,6 +61,18 @@ test("typing counts every match, paints them, marks their messages and announces
   await expect(field(page)).toHaveAccessibleDescription("17 of 17");
   await expect.poll(() => painted(page, "kind-search").then((ranges) => ranges?.length)).toBe(17);
   expect(await painted(page, "kind-search-current")).toEqual(["rollout"]);
+  // The current match is drawn on the warning amber, from the rules the painter adds to the page.
+  expect(
+    await page.evaluate(() => {
+      const row = document.querySelector('[data-slot="kind-conversation-row"]') as Element;
+      const probe = document.createElement("i");
+      probe.style.color = "var(--kind-color-warning)";
+      row.append(probe);
+      const amber = getComputedStyle(probe).color;
+      probe.remove();
+      return getComputedStyle(row, "::highlight(kind-search-current)").backgroundColor === amber;
+    }),
+  ).toBe(true);
   await expect(marks(page)).not.toHaveCount(0);
   await expect.poll(() => announced(page)).toEqual(["17 of 17"]);
   await field(page).fill("résumé");

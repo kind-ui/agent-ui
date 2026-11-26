@@ -4,7 +4,6 @@ import {
   type ChangeDetails,
   createChange,
   css,
-  definePrimitive,
   formatShortcut,
   type SlotDefinition,
 } from "@ui-sdk/core";
@@ -20,6 +19,7 @@ import {
 } from "@ui-sdk/core/resizable";
 import { registerShortcut } from "@ui-sdk/core/shortcuts";
 import { hearComposed } from "../composed-events.js";
+import { definePrimitive } from "../define-primitive.js";
 import { memo } from "../memo.js";
 import type { MotionMode } from "../motion/index.js";
 

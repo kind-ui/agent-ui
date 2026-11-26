@@ -6,7 +6,6 @@ import {
   createStickToBottom,
   createVirtualizer,
   css,
-  definePrimitive,
   dispatch,
   type FocusRecovery,
   type SlotDefinition,
@@ -18,6 +17,7 @@ import type { StepStatus } from "../../types/index.js";
 import { type AnsiLine, type AnsiLines, type AnsiSpan, createAnsiLines } from "../ansi.js";
 import { stepDuration } from "../chain-of-thought/open-steps.js";
 import { createCopy } from "../clipboard.js";
+import { definePrimitive } from "../define-primitive.js";
 import { resolveMotion } from "../motion/presets.js";
 import { type StepApi, type StepOptions, type StepState, stepAnnouncement, stepBase } from "../step/base.js";
 
