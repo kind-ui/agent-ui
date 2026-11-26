@@ -306,6 +306,16 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
 
   // wave-7-task-17: Activity Graph
 
+  "activity-graph": [
+    {
+      c: "activity-graph",
+      case: "all",
+      interaction: [{ key: "ArrowLeft", focus: '[role="gridcell"][tabindex="0"]' }],
+    },
+    { c: "activity-graph", case: "monday" },
+    { c: "activity-graph", case: "hydrate" },
+  ],
+
   // wave-7-task-18: Thread List inbox
 
   // wave-7-task-19: Flow Graph

@@ -1,0 +1,134 @@
+/* Activity Graph (Wave 7 spec §5), shared by every render layer: a calendar heat map with weekdays down and weeks
+   across, in fixed cells so nothing depends on fonts. A day's shade mixes `--kind-activity-color` into the empty fill
+   by its level, unless a `--kind-activity-level-<n>` token names one. */
+@layer components {
+  [data-slot="kind-activity-graph"] {
+    --kind-activity-cell: 12px;
+    --kind-activity-gap: 3px;
+    --kind-activity-weekday-width: 2rem;
+    --kind-activity-color: var(--kind-color-accent);
+    --kind-activity-empty: var(--kind-color-hover);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+    color: var(--kind-color-muted);
+    font-size: var(--kind-text-xs);
+    line-height: var(--kind-text-xs-leading);
+    letter-spacing: var(--kind-text-xs-tracking);
+  }
+
+  /* Reversed, so a graph wider than its box starts scrolled to the latest week. */
+  [data-slot="kind-activity-graph-viewport"] {
+    display: flex;
+    flex-direction: row-reverse;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+
+  [data-slot="kind-activity-graph-grid"] {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: var(--kind-activity-gap);
+  }
+
+  [data-slot="kind-activity-graph-months"] {
+    position: relative;
+    height: var(--kind-text-xs-leading);
+    margin-inline-start: calc(var(--kind-activity-weekday-width) + var(--kind-activity-gap));
+  }
+
+  [data-slot="kind-activity-graph-month"] {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: calc(
+      var(--kind-activity-col) *
+      (var(--kind-activity-cell) + var(--kind-activity-gap))
+    );
+    white-space: nowrap;
+  }
+
+  [data-slot="kind-activity-graph-row"] {
+    display: flex;
+    gap: var(--kind-activity-gap);
+    height: var(--kind-activity-cell);
+  }
+
+  [data-slot="kind-activity-graph-weekday"] {
+    flex: none;
+    width: var(--kind-activity-weekday-width);
+    overflow: visible;
+    line-height: var(--kind-activity-cell);
+    white-space: nowrap;
+
+    /* The rows are shorter than a line, so every other weekday is read but not seen. */
+    &[data-quiet] {
+      opacity: 0;
+    }
+  }
+
+  [data-slot="kind-activity-graph-cell"],
+  [data-slot="kind-activity-graph-swatch"] {
+    flex: none;
+    width: var(--kind-activity-cell);
+    height: var(--kind-activity-cell);
+    border-radius: 3px;
+    background-color: var(
+      --kind-activity-fill,
+      color-mix(
+        in oklab,
+        var(--kind-activity-color) calc(var(--kind-activity-ratio, 0) * 100%),
+        var(--kind-activity-empty)
+      )
+    );
+    box-shadow: inset 0 0 0 1px var(--kind-color-hairline);
+  }
+
+  [data-slot="kind-activity-graph-cell"] {
+    &[data-future] {
+      background: none;
+      box-shadow: none;
+    }
+
+    &[data-selectable] {
+      cursor: pointer;
+    }
+
+    &:focus-visible {
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
+    }
+  }
+
+  [data-slot="kind-activity-graph-legend"] {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--kind-activity-gap);
+
+    & > span:not([data-slot]) {
+      padding-inline: 0.25rem;
+    }
+  }
+
+  [data-slot="kind-activity-graph-summary"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* Forced colors drop backgrounds, so the shades become system ink at the level's strength. */
+  @media (forced-colors: active) {
+    [data-slot="kind-activity-graph-cell"]:not([data-future]),
+    [data-slot="kind-activity-graph-swatch"] {
+      forced-color-adjust: none;
+      background-color: color-mix(in srgb, CanvasText calc(var(--kind-activity-ratio, 0) * 100%), Canvas);
+      box-shadow: inset 0 0 0 1px GrayText;
+    }
+  }
+}

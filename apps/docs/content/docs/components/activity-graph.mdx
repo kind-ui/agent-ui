@@ -1,0 +1,86 @@
+---
+title: Activity Graph
+description: Show how much an agent did each day over a year, as a calendar heat map with one Tab stop.
+---
+
+import ActivityGraphExample from "../../../examples/activity-graph/basic";
+
+Use an activity graph to show how busy an agent, a schedule or a person's runs have been, day by day. Each day is a cell shaded by how much happened, weekdays down and weeks across, so quiet weekends and busy stretches stand out.
+
+<Example caption="A year of runs, ending with today's week. Tab to the grid, move between days with the arrows, and each day reads its count and date.">
+  <ActivityGraphExample />
+
+  <ExampleCode example="activity-graph/basic" />
+</Example>
+
+## Installation
+
+<Install name="activity-graph" />
+
+## Composition
+
+```text
+ActivityGraph
+├── ActivityGraphViewport
+│   └── ActivityGraphGrid
+│       ├── ActivityGraphMonths
+│       │   └── ActivityGraphMonth
+│       └── ActivityGraphRow
+│           ├── ActivityGraphWeekday
+│           └── ActivityGraphCell
+├── ActivityGraphLegend
+│   └── ActivityGraphSwatch
+└── ActivityGraphSummary
+```
+
+`ActivityGraph` renders every part when you pass no children. The grid has a row per weekday, its short name as the row header, and a cell per week. The month labels and the legend are hidden from assistive technology, since each day's name already says its count and date. `ActivityGraphSummary` is visually hidden and describes the grid: "812 runs in the last year".
+
+## Usage
+
+### Days
+
+Pass `days`, one `{ date, count }` per day, with `date` as `YYYY-MM-DD`. Days you leave out count as none, and two entries for the same day add up. `unit` says what the counts are, in the plural, and `unitOne` names one:
+
+```tsx
+<ActivityGraph days={days} unit="tokens" unitOne="token" label="Tokens" />
+```
+
+A day reads "12 runs on Tuesday, November 3, 2026", "1 run on …" or "No runs on …". Dates and numbers read in `locale`, else the page's language, else English.
+
+### Range
+
+The graph shows `weeks` weeks (53 by default) ending with today's, from `weekStart`, which defaults to the locale's first day of the week. Days after today are empty cells that can't take focus. Today is read in the browser, in `timeZone`; server markup ends with the last day in `days` until then, so hydration never mismatches. Pass `now` to fix the last day, as a report for a past period would.
+
+A graph wider than its box scrolls sideways and starts at the latest week.
+
+### Levels
+
+Days above zero take one of `levels` shades (4 by default), by quantile: each shade holds about as many days, and the busiest day always takes the darkest. The shades mix `--kind-activity-color` (the accent) into the empty fill. Set `--kind-activity-level-1` to `--kind-activity-level-4` to choose each shade yourself.
+
+### Selecting a Day
+
+Pass `onSelect` to let a person choose a day, by pressing it or pressing Enter on it. It gets the date and `details.source`, so you can open that day's runs:
+
+```tsx
+<ActivityGraph days={days} onSelect={(date) => showRuns(date)} />
+```
+
+### Keyboard
+
+The grid is one Tab stop, which starts on today. The arrows move by day (Up and Down) and by week (Left and Right, flipped in right-to-left text). Home and End go to the first and last day of the week, and with Control (Command on a Mac) to the first and last day of the graph. Enter selects the day.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/activity-graph/activity-graph.ts" name="ActivityGraphOptions" />
+
+<FrameworkNames name="activity-graph" />
+
+### Agent
+
+An agent connected with `createAgent` finds the graph by its label and reads each day with its count. Its `select` takes a date, the same as a person pressing that day, and refuses one that isn't shown or hasn't happened yet. It's offered only while `onSelect` is set.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/activity-graph/activity-graph.ts" name="ActivityGraphAgentActions" type='Pick<ActivityGraphApi, "select">' />
+
+<Caption>
+  Runs in React, Vue, Svelte, Solid and Web Components. Call `defineActivityGraph()`, write `<kind-activity-graph unit="runs">`, and set `days` as a property. Add `can-select` to let a person choose a day, which fires `dayselect` with the date as `detail.value`.
+</Caption>

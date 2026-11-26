@@ -118,6 +118,8 @@ import { defineConversationSearch } from "./components/ui/web/conversation-searc
 
 // wave-7-task-17: Activity Graph
 
+import { defineActivityGraph } from "./components/ui/web/activity-graph.js";
+
 // wave-7-task-18: Thread List inbox
 
 // wave-7-task-19: Flow Graph
@@ -243,6 +245,8 @@ for (const define of [
   // wave-7-task-16: Quota Notice
 
   // wave-7-task-17: Activity Graph
+
+  defineActivityGraph,
 
   // wave-7-task-18: Thread List inbox
 
@@ -397,6 +401,8 @@ const items = {
   // wave-7-task-16: Quota Notice
 
   // wave-7-task-17: Activity Graph
+
+  "activity-graph": `<kind-activity-graph now="2026-11-18"></kind-activity-graph>`,
 
   // wave-7-task-18: Thread List inbox
 

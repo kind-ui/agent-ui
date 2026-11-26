@@ -485,6 +485,14 @@ export const components = {
 
   // wave-7-task-17: Activity Graph
 
+  "activity-graph": {
+    group: "ops",
+    when: "you show how much an agent ran each day over a year, as a calendar heat map.",
+    title: "Activity Graph",
+    description: "A calendar heat map of runs or tokens per day, one Tab stop with arrows between days.",
+    uses: [],
+  },
+
   // wave-7-task-18: Thread List inbox
 
   // wave-7-task-19: Flow Graph

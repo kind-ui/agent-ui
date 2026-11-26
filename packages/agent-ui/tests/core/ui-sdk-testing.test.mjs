@@ -308,6 +308,17 @@ const cases = {
 
   // wave-7-task-17: Activity Graph
 
+  activityGraph: {
+    options: { days: [{ date: "2026-11-20", count: 3 }], now: "2026-11-25", weeks: 2, onSelect: noop },
+    keys: {
+      month: ["0"],
+      row: ["0"],
+      weekday: ["0"],
+      cell: ["0:0", "0:1"],
+      swatch: ["0", "1"],
+    },
+  },
+
   // wave-7-task-18: Thread List inbox
 
   // wave-7-task-19: Flow Graph

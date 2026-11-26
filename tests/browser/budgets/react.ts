@@ -74,6 +74,9 @@ export const budgets = {
 
   // wave-7-task-17: Activity Graph
 
+  // A move writes the two cells' `tabindex` and focuses the new one, whose `focus` reads layout once to scroll.
+  activityMove: { writes: 2, renders: 2, notified: 2, layoutReads: 1 },
+
   // wave-7-task-18: Thread List inbox
 
   // wave-7-task-19: Flow Graph

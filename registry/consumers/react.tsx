@@ -131,6 +131,8 @@ import { ConversationSearch } from "./components/ui/conversation-search.js";
 
 // wave-7-task-17: Activity Graph
 
+import { ActivityGraph } from "./components/ui/activity-graph.js";
+
 // wave-7-task-18: Thread List inbox
 
 // wave-7-task-19: Flow Graph
@@ -466,6 +468,8 @@ const items = {
   // wave-7-task-16: Quota Notice
 
   // wave-7-task-17: Activity Graph
+
+  "activity-graph": <ActivityGraph days={[{ date: "2026-11-18", count: 3 }]} now="2026-11-18" />,
 
   // wave-7-task-18: Thread List inbox
 

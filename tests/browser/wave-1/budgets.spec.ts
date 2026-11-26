@@ -402,6 +402,28 @@ for (const messages of [100, 5000]) {
 
 // wave-7-task-17: Activity Graph
 
+// Moving between days rewrites the Tab stop on the day it leaves and the one it lands on: at 8 weeks as at 53.
+for (const [name, label] of [
+  ["monday", "Tokens"],
+  ["all", "Activity"],
+] as const) {
+  test(`moving between days in a ${name === "all" ? "53" : "8"} week activity graph`, async ({ page }) => {
+    const limit = BUDGETS.activityMove;
+    await page.goto(`/?c=activity-graph&case=${name}`);
+    await expect(page.getByRole("grid", { name: label })).toBeVisible();
+    await page.keyboard.press("Tab");
+    const counts = await most(
+      page,
+      10,
+      `document.activeElement.dispatchEvent(new KeyboardEvent("keydown", { key: (window.kindStep = ((window.kindStep ?? 0) + 1) % 2) ? "ArrowUp" : "ArrowDown", bubbles: true, cancelable: true }))`,
+    );
+    expect(counts.writes).toBeLessThanOrEqual(limit.writes);
+    expect(counts.renders).toBeLessThanOrEqual(limit.renders);
+    expect(counts.notified).toBeLessThanOrEqual(limit.notified);
+    expect(counts.layoutReads).toBeLessThanOrEqual(limit.layoutReads);
+  });
+}
+
 // wave-7-task-18: Thread List inbox
 
 // wave-7-task-19: Flow Graph
