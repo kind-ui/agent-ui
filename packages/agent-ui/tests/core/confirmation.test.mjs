@@ -165,3 +165,42 @@ test("an agent's deny decides at once without opening the box", () => {
   assert.equal(confirmation.get().composing, false);
   assert.deepEqual(calls, [{ approvalId: "a", generation: 1, reason: "Too broad" }]);
 });
+
+test("Always allow sends always and its scope, and isn't offered for a danger request", () => {
+  const calls = [];
+  const options = {
+    approval: request("requested"),
+    onAlwaysAllow: (decision) => calls.push(decision),
+    alwaysTarget: "search_docs",
+    alwaysScope: "in this project",
+  };
+  const confirmation = confirmationPrimitive(options);
+  assert.equal(confirmation.get().alwaysLabel, "Always allow `search_docs`");
+  assert.equal(confirmation.get().alwaysName, "Always allow search_docs in this project");
+  confirmation.api.alwaysAllow();
+  assert.deepEqual(calls, [{ approvalId: "a", generation: 1, always: true, scope: "in this project" }]);
+  confirmation.setOptions({
+    ...options,
+    approval: request("responded", 1, { approved: true, always: true, scope: "in this project" }),
+  });
+  assert.equal(confirmation.get().outcome, "Always allowed `search_docs` in this project");
+
+  const danger = confirmationPrimitive({ ...options, risk: "danger" });
+  assert.equal(danger.get().canAlwaysAllow, false);
+  assert.equal(danger.api.alwaysAllow, undefined);
+  danger.api.press("always");
+  assert.equal(calls.length, 1);
+});
+
+test("a denial keeps its reason apart from its words, and each outcome has its mark", () => {
+  const denied = confirmationPrimitive({
+    approval: request("responded", 1, { approved: false, reason: "Too broad" }),
+  });
+  assert.equal(denied.get().outcome, "Denied:");
+  assert.equal(denied.get().outcomeReason, "Too broad");
+  assert.equal(denied.get().outcomeMark, "denied");
+  const expired = confirmationPrimitive({ approval: request("expired"), onApprove: () => {} });
+  assert.equal(expired.get().outcome, "Expired before a decision");
+  assert.equal(expired.get().outcomeMark, "expired");
+  assert.equal(expired.api.approve, undefined);
+});

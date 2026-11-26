@@ -3,9 +3,10 @@ import type { ConfirmationOptions } from "@kind-ui/agent-ui/core";
 import type { AgentAction } from "@ui-sdk/react/agent";
 import { useEffect, useState } from "react";
 import { Confirmation } from "../../../../src/react/confirmation.js";
-import { confirmationHost, request } from "../../shared/confirmation.js";
+import { confirmationHost, moreConfirmations, request } from "../../shared/confirmation.js";
 
-const { host, approve, deny } = confirmationHost();
+const { host, approve, deny, always } = confirmationHost();
+const more = moreConfirmations();
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 
@@ -21,7 +22,7 @@ function Confirmations({ motion }: { motion?: ConfirmationOptions["motion"] }) {
     });
   }, []);
   return (
-    <div className="flex w-[28rem] flex-col gap-4 p-6">
+    <div className="flex w-full max-w-[28rem] flex-col gap-4 p-6">
       <p id="above">Above</p>
       <Confirmation
         id="confirm"
@@ -53,6 +54,17 @@ function Confirmations({ motion }: { motion?: ConfirmationOptions["motion"] }) {
         onApprove={approve}
         onDeny={deny}
       />
+      {more.map(({ id, options }) => (
+        <Confirmation
+          key={id}
+          id={id}
+          {...options}
+          onApprove={approve}
+          onDeny={deny}
+          onAlwaysAllow={options.alwaysTarget ? always : undefined}
+          motion={motion}
+        />
+      ))}
     </div>
   );
 }

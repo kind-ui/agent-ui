@@ -44,8 +44,8 @@ export const ToolOutputCopy = parts.OutputCopy;
 export const ToolTitle = withDefault<{ title: string }>(parts.Title, "ToolTitle", ({ state }) => state.title);
 
 /**
- * A Confirmation for the call's approval while it has one: Approve and Deny while `onApprove` and `onDeny` are set
- * and the request is open, then what was decided. Fill the slot to render it yourself.
+ * A Confirmation for the call's approval while it has one: Deny, Always allow and Approve while `onDeny`,
+ * `onAlwaysAllow` and `onApprove` are set and the request is open, then what was decided. Fill the slot to render it yourself.
  */
 // Slot state is a proxy with no keys of its own, so the Confirmation's props are read one by one.
 export const ToolApproval = withDefault<ToolApprovalState>(parts.Approval, "ToolApproval", ({ state }) =>
@@ -54,7 +54,15 @@ export const ToolApproval = withDefault<ToolApprovalState>(parts.Approval, "Tool
     label: state.label,
     onApprove: state.onApprove,
     onDeny: state.onDeny,
+    onAlwaysAllow: state.onAlwaysAllow,
     reason: state.reason,
+    approveLabel: state.approveLabel,
+    alwaysLabel: state.alwaysLabel,
+    alwaysTarget: state.alwaysTarget,
+    alwaysScope: state.alwaysScope,
+    alwaysDetail: state.alwaysDetail,
+    risk: state.risk,
+    riskText: state.riskText,
     focusFallback: state.focusFallback,
     motion: state.motion,
   }),

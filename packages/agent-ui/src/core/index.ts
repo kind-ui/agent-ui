@@ -17,7 +17,14 @@ export {
   addMenuSections,
 } from "./add-menu/index.js";
 export { type AnsiLine, type AnsiLines, type AnsiSpan, createAnsiLines } from "./ansi.js";
-export { approvalKey, approvalLabel, isActionable } from "./approval.js";
+export {
+  type AlwaysScope,
+  approvalKey,
+  approvalLabel,
+  approvalMark,
+  isActionable,
+  isSettled,
+} from "./approval.js";
 export {
   APPROVAL_MODE_GROUP,
   APPROVAL_MODE_LEARN_MORE,
@@ -33,6 +40,13 @@ export {
   approvalModePrimitive,
   approvalModeRows,
 } from "./approval-mode/index.js";
+export {
+  type ApprovalPartConfig,
+  type ApprovalPartOptions,
+  type ApprovalPartState,
+  type ApprovalState,
+  approvalPart,
+} from "./approval-part.js";
 export {
   ATTACHMENT_ERRORS,
   type AttachmentItem,
@@ -96,11 +110,13 @@ export {
 export {
   type ConfirmationApi,
   type ConfirmationCallback,
+  type ConfirmationChoice,
   type ConfirmationDecision,
   type ConfirmationOptions,
   type ConfirmationPrimitive,
   type ConfirmationReasonState,
   type ConfirmationState,
+  confirmationMeta,
   confirmationPrimitive,
 } from "./confirmation/index.js";
 export {
@@ -738,3 +754,6 @@ export {
   findMatches,
   searchText,
 } from "./conversation-search/index.js";
+
+export { type Countdown, type CountdownOptions, countdownText, createCountdown } from "./countdown.js";
+export { codeSpans, plainText, WORDS } from "./words.js";

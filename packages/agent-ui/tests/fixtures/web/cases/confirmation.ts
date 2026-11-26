@@ -2,9 +2,10 @@ import type { Approval } from "@kind-ui/agent-ui";
 import type { ConfirmationOptions } from "@kind-ui/agent-ui/core";
 import type { AgentAction } from "@ui-sdk/web/agent";
 import { defineConfirmation, type KindConfirmationElement } from "../../../../src/web/confirmation.js";
-import { confirmationHost, request } from "../../shared/confirmation.js";
+import { confirmationHost, moreConfirmations, request } from "../../shared/confirmation.js";
 
-const { host, approve, deny } = confirmationHost();
+const { host, approve, deny, always } = confirmationHost();
+const more = moreConfirmations();
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 
@@ -27,13 +28,16 @@ const confirmation = (
   el.addEventListener("deny", (event) =>
     event.detail.waitUntil(Promise.resolve(deny(event.detail.value, event.detail))),
   );
+  el.addEventListener("alwaysallow", (event) =>
+    event.detail.waitUntil(Promise.resolve(always(event.detail.value, event.detail))),
+  );
   return el;
 };
 
 const confirmations = (motion?: ConfirmationOptions["motion"]) => (root: HTMLElement) => {
   defineConfirmation();
   const page = document.createElement("div");
-  page.className = "flex w-[28rem] flex-col gap-4 p-6";
+  page.className = "flex w-full max-w-[28rem] flex-col gap-4 p-6";
   const above = Object.assign(document.createElement("p"), { id: "above", textContent: "Above" });
   const below = Object.assign(document.createElement("p"), { id: "below", textContent: "Below" });
   const main = confirmation("confirm", "Run search_docs?", request("requested"));
@@ -46,6 +50,12 @@ const confirmations = (motion?: ConfirmationOptions["motion"]) => (root: HTMLEle
     withReason,
     confirmation("approve-only", "Open the link?", request("requested"), { canDeny: false }),
     confirmation("auto", "Read README.md?", request("auto", 1, { approved: true })),
+    ...more.map(({ id, options: { label = "", approval, ...options } }) => {
+      const el = confirmation(id, label, approval ?? request("requested"));
+      Object.assign(el, options, { canAlwaysAllow: Boolean(options.alwaysTarget) });
+      if (motion) el.motion = motion;
+      return el;
+    }),
   );
   root.append(page);
   Object.assign(window, {

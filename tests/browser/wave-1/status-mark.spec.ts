@@ -104,7 +104,10 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
       await page.evaluate(() => (window as unknown as Fixture).kindCheckpoint.restore(true));
     },
   },
-  { url: "/?c=confirmation&case=all", slots: ["kind-confirmation-outcome-icon"] },
+  {
+    url: "/?c=confirmation&case=all",
+    slots: ["kind-confirmation-outcome-icon", "kind-confirmation-risk-icon"],
+  },
   // Only a completed row draws a mark; a queued one shows its grip.
   { url: "/?c=queue&case=all", slots: ["kind-queue-item-icon"] },
   {
@@ -227,7 +230,7 @@ for (const { url, slots, show } of pages) {
   });
 }
 
-const statuses = ["complete", "error", "cancelled", "skipped", "info", "warning", "awaiting-input"];
+const statuses = ["complete", "error", "cancelled", "skipped", "denied", "info", "warning", "awaiting-input"];
 
 const place = (page: Page, status: string, size: number) =>
   page.evaluate(
@@ -309,6 +312,21 @@ for (const scale of [1, 2]) {
         await page.close();
       });
     }
+
+    // A clock's hands meet at the mark's center rather than balance on it, so their centroid sits up and to the right.
+    test(`at ${scale}x a ${size}px expired mark has its hands from the center`, async ({
+      browser,
+    }, testInfo) => {
+      const page = await browser.newPage({ deviceScaleFactor: scale, baseURL: testInfo.project.use.baseURL });
+      await page.goto("/?c=status&case=all");
+      await place(page, "expired", size);
+      const [x, y, sum] = await glyphOffset(page, scale);
+      expect(sum).toBeGreaterThan(0);
+      expect(x as number).toBeGreaterThan(0);
+      expect(y as number).toBeLessThan(0);
+      expect(Math.hypot(x as number, y as number)).toBeLessThan(size / 6);
+      await page.close();
+    });
 
     test(`at ${scale}x a ${size}px running mark has its arc on its track`, async ({ browser }, testInfo) => {
       const page = await browser.newPage({ deviceScaleFactor: scale, baseURL: testInfo.project.use.baseURL });

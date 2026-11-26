@@ -1,82 +1,68 @@
 import { definePrimitive, type SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
-import { type Approval, hasOutput, type StepStatus, type ToolCall } from "../../types/index.js";
-import { approvalLabel, isActionable } from "../approval.js";
+import { hasOutput, type StepStatus, type ToolCall } from "../../types/index.js";
+import {
+  type ApprovalPartOptions,
+  type ApprovalPartState,
+  type ApprovalState,
+  approvalPart,
+} from "../approval-part.js";
 import { stepDuration } from "../chain-of-thought/open-steps.js";
 import { createCopy } from "../clipboard.js";
 import type { Highlight } from "../code-block/index.js";
-import type { ConfirmationCallback, ConfirmationOptions } from "../confirmation/index.js";
-import { memo } from "../memo.js";
 import { type StepApi, type StepOptions, type StepState, stepAnnouncement, stepBase } from "../step/base.js";
+import { WORDS } from "../words.js";
 import { toolCode, toolStatus, toolValue } from "./format.js";
 
-export type ToolOptions = Omit<StepOptions, "status" | "label"> & {
-  /** The call to show, from the host. Update it as its input streams, its approval moves and its output arrives. */
-  call?: ToolCall;
-  /** Defaults to the call's: `error`, `cancelled`, `awaiting-input`, `complete` or `running`, as `toolStatus` reads it. */
-  status?: StepStatus;
-  /**
-   * Replaces the title, which is the tool's name, and names the tool in announcements and in its copy buttons and
-   * code blocks ("<label> input"), so keep it a name.
-   */
-  label?: string;
-  /** What went wrong, shown while the status is `error`. Without it, the tool shows "The tool failed." */
-  error?: { message: string };
-  /** Colors the input and output code, as Code Block's `highlight` does. */
-  highlight?: Highlight;
-  /** Called when the call's approval is approved, with its `approvalId` and `generation`. Shows Approve while set. */
-  onApprove?: ConfirmationCallback;
-  /** Called when the call's approval is denied, with its `approvalId`, `generation` and reason. Shows Deny while set. */
-  onDeny?: ConfirmationCallback;
-  /**
-   * Shows a box for the reason Deny sends, as Confirmation's `reason` does.
-   * @default false
-   */
-  approvalReason?: boolean;
-};
+export type ToolOptions = Omit<StepOptions, "status" | "label"> &
+  ApprovalPartOptions & {
+    /** The call to show, from the host. Update it as its input streams, its approval moves and its output arrives. */
+    call?: ToolCall;
+    /** Defaults to the call's: `error`, `cancelled`, `awaiting-input`, `complete` or `running`, as `toolStatus` reads it. */
+    status?: StepStatus;
+    /**
+     * Replaces the title, which is the tool's name, and names the tool in announcements and in its copy buttons and
+     * code blocks ("<label> input"), so keep it a name.
+     */
+    label?: string;
+    /** What went wrong, shown while the status is `error`. Without it, the tool shows "The tool failed." */
+    error?: { message: string };
+    /** Colors the input and output code, as Code Block's `highlight` does. */
+    highlight?: Highlight;
+  };
 
 /** The Confirmation the approval part renders. */
-export type ToolApprovalState = Pick<
-  ConfirmationOptions,
-  "approval" | "label" | "onApprove" | "onDeny" | "reason" | "focusFallback" | "motion"
->;
+export type ToolApprovalState = ApprovalPartState;
 
-export type ToolState = StepState & {
-  /** The `label`, else the tool's name. */
-  title: string;
-  /** The call's approval, decided through the Confirmation in the approval part. */
-  approval: Approval | undefined;
-  /** Whether `onApprove` is set. */
-  canApprove: boolean;
-  /** Whether `onDeny` is set. */
-  canDeny: boolean;
-  /** The `approvalReason` option. */
-  approvalReason: boolean;
-  /** The input code block's name, like "search_docs input", or "Input" without a title. */
-  inputLabel: string;
-  /** The output code block's name, like "search_docs output", or "Output" without a title. */
-  outputLabel: string;
-  /** The input as indented JSON, empty before any arrives. */
-  input: string;
-  /** Whether the input is still arriving, labeled "Partial". */
-  inputStreaming: boolean;
-  /** How the output shows, or `undefined` while there is none. */
-  output: "markdown" | "code" | undefined;
-  /** The output as markdown or code, `0`, `false`, `""` and `null` included. */
-  outputText: string;
-  /** Whether the output may still change, labeled "Preliminary". */
-  outputPreliminary: boolean;
-  /** The call's outcome, so a denial is announced apart from a cancellation. */
-  outcome: ToolCall["outcome"];
-  /** The `error` message, else "The tool failed." */
-  errorMessage: string;
-  /** The `highlight` option. */
-  highlight: Highlight | undefined;
-  /** True for 2 s after the input is copied. */
-  inputCopied: boolean;
-  /** True for 2 s after the output is copied. */
-  outputCopied: boolean;
-};
+export type ToolState = StepState &
+  ApprovalState & {
+    /** The `label`, else the tool's name. */
+    title: string;
+    /** The input code block's name, like "search_docs input", or "Input" without a title. */
+    inputLabel: string;
+    /** The output code block's name, like "search_docs output", or "Output" without a title. */
+    outputLabel: string;
+    /** The input as indented JSON, empty before any arrives. */
+    input: string;
+    /** Whether the input is still arriving, labeled "Partial". */
+    inputStreaming: boolean;
+    /** How the output shows, or `undefined` while there is none. */
+    output: "markdown" | "code" | undefined;
+    /** The output as markdown or code, `0`, `false`, `""` and `null` included. */
+    outputText: string;
+    /** Whether the output may still change, labeled "Preliminary". */
+    outputPreliminary: boolean;
+    /** The call's outcome, so a denial is announced apart from a cancellation. */
+    outcome: ToolCall["outcome"];
+    /** The `error` message, else "The tool failed." */
+    errorMessage: string;
+    /** The `highlight` option. */
+    highlight: Highlight | undefined;
+    /** True for 2 s after the input is copied. */
+    inputCopied: boolean;
+    /** True for 2 s after the output is copied. */
+    outputCopied: boolean;
+  };
 
 export type ToolApi = StepApi & {
   /** Copies the input as shown, and resolves with whether the clipboard write went through. Only while there is input. */
@@ -128,18 +114,17 @@ const base = stepBase<ToolState, ToolApi, ToolOptions>({
   status: (options) => (options.call ? toolStatus(options.call) : "pending"),
 });
 
-const presentation = ({ call, label, error, highlight, onApprove, onDeny, approvalReason }: ToolOptions) => {
+// Reads options by name, since on Web Components `@ui-sdk/web` fills in the callbacks on read.
+const presentation = (options: ToolOptions) => {
+  const { call, label, error, highlight } = options;
   const output = call && hasOutput(call) ? toolValue(call.output.value) : undefined;
   const title = label ?? call?.name ?? "";
   return {
+    ...approvalPart.presentation(call?.approval, options),
     title,
     // Named by the tool, so agents and screen readers can tell one tool's input from another's.
     inputLabel: title ? `${title} input` : "Input",
     outputLabel: title ? `${title} output` : "Output",
-    approval: call?.approval,
-    canApprove: onApprove !== undefined,
-    canDeny: onDeny !== undefined,
-    approvalReason: approvalReason ?? false,
     input: call?.input.value === undefined ? "" : toolCode(call.input.value),
     inputStreaming: call?.input.state === "streaming",
     output: output?.kind,
@@ -166,9 +151,7 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
     call: "value",
     error: "value",
     highlight: "value",
-    onApprove: "action",
-    onDeny: "action",
-    approvalReason: "boolean",
+    ...approvalPart.options,
   },
   state: (options) => ({
     ...base.state(options),
@@ -181,28 +164,9 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
     const { store } = context;
     const copyInput = createCopy(context, "inputCopied");
     const copyOutput = createCopy(context, "outputCopied");
-    const approve: ConfirmationCallback = (decision, details) =>
-      context.options().onApprove?.(decision, details);
-    const deny: ConfirmationCallback = (decision, details) => context.options().onDeny?.(decision, details);
-    const focusTrigger = () => context.element("trigger");
-    const approvalState = memo(
-      (
-        approval: Approval | undefined,
-        title: string,
-        canApprove: boolean,
-        canDeny: boolean,
-        reason: boolean,
-        motion: ToolState["motion"],
-      ): ToolApprovalState => ({
-        ...(approval && { approval }),
-        label: title ? `Run ${title}?` : "Run this tool?",
-        reason,
-        focusFallback: focusTrigger,
-        motion,
-        ...(canApprove && { onApprove: approve }),
-        ...(canDeny && { onDeny: deny }),
-      }),
-    );
+    const approvalState = approvalPart.approvalState<ToolState>(context, {
+      question: (state) => (state.title ? `Allow \`${state.title}\`?` : WORDS.allowThisTool),
+    });
     return {
       ...base.api(context),
       get copyInput() {
@@ -213,15 +177,7 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
         const { output, outputText } = store.get();
         return output === undefined ? undefined : () => copyOutput(outputText);
       },
-      approvalState: (state) =>
-        approvalState(
-          state.approval,
-          state.title,
-          state.canApprove,
-          state.canDeny,
-          state.approvalReason,
-          state.motion,
-        ),
+      approvalState,
     };
   },
   slots: (slot) => {
@@ -238,11 +194,7 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
         state: (state) => ({ duration: stepDuration(state.durationSeconds) }),
       }),
       // Outside the content, so a request shows while the tool is closed, and its outcome stays once decided.
-      approval: slot<BaseSlotProps, ToolApprovalState>({
-        present: (state) => isActionable(state.approval) || approvalLabel(state.approval) !== undefined,
-        state: (state, { api }) => api.approvalState(state),
-        attrs: (state) => ({ "data-approval": state.approval?.state }),
-      }),
+      approval: slot<BaseSlotProps, ToolApprovalState>(approvalPart.slot<ToolState, ToolApi>()),
       content,
       input: slot<
         BaseSlotProps,

@@ -9,7 +9,15 @@ import {
 import { createParts, wrappedButton } from "@ui-sdk/web";
 import type { AttributeProperties, UiChangeEvent, UiElement } from "@ui-sdk/web/events";
 import { defineCodeBlock, type KindCodeBlockElement } from "./code-block.js";
-import { defineConfirmation, type KindConfirmationEvents } from "./confirmation.js";
+import {
+  APPROVAL_KINDS,
+  type ApprovalAttributes,
+  approvalOptions,
+  defineConfirmation,
+  type KindConfirmationElement,
+  type KindConfirmationEvents,
+  writeApproval,
+} from "./confirmation.js";
 import { defineMarkdown, type KindMarkdownElement } from "./markdown.js";
 
 const DEFAULT_PARTS = `<kind-tool-trigger><button><kind-tool-icon></kind-tool-icon><kind-tool-title></kind-tool-title><kind-tool-meta></kind-tool-meta></button></kind-tool-trigger><kind-tool-content><kind-tool-input></kind-tool-input><kind-tool-output></kind-tool-output><kind-tool-error></kind-tool-error></kind-tool-content><kind-tool-approval></kind-tool-approval>`;
@@ -52,8 +60,9 @@ const write = <Target extends object, Key extends keyof Target>(
  * `<kind-tool>` fills in its trigger and content when it has no children, and an empty `<kind-tool-input>` or
  * `<kind-tool-output>` with its heading, copy button and code block. Set `call` as a property. It writes its title
  * and error into those parts while they're empty, and its values into the code blocks and Markdown view. While `call`
- * has an approval, an empty `<kind-tool-approval>` gets a `kind-confirmation`, which offers Approve with the `can-approve` attribute and Deny with `can-deny`,
- * which fire `approve` and `deny` on the tool, as Confirmation's do.
+ * has an approval, an empty `<kind-tool-approval>` gets a `kind-confirmation`, which offers Deny with the `can-deny`
+ * attribute, Always allow with `can-always-allow` and Approve with `can-approve`, which fire `deny`, `alwaysallow` and
+ * `approve` on the tool, as Confirmation's do.
  */
 export function defineTool(): void {
   if (customElements.get("kind-tool")) return;
@@ -63,12 +72,9 @@ export function defineTool(): void {
   createParts(toolPrimitive, {
     root: {
       tag: "kind-tool",
-      kinds: { canApprove: "boolean", canDeny: "boolean" },
+      kinds: APPROVAL_KINDS,
       // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
-      options: (el) => {
-        const { canApprove, canDeny } = el as KindToolElement;
-        return { ...(!canApprove && { onApprove: undefined }), ...(!canDeny && { onDeny: undefined }) };
-      },
+      options: (el) => approvalOptions(el as KindToolElement),
       state: {
         open: {
           get: (api) => api.isOpen(),
@@ -90,16 +96,8 @@ export function defineTool(): void {
             fillParts(
               el.querySelector("kind-tool-approval"),
               "<kind-confirmation></kind-confirmation>",
-            )?.querySelector(":scope > kind-confirmation");
-          if (approval) {
-            const { onApprove, onDeny, ...confirmation } = api.approvalState(state);
-            for (const [key, value] of Object.entries({
-              ...confirmation,
-              approveHandler: onApprove,
-              denyHandler: onDeny,
-            }))
-              write(approval as unknown as Record<string, unknown>, key, value);
-          }
+            )?.querySelector<KindConfirmationElement>(":scope > kind-confirmation");
+          if (approval) writeApproval(approval, api.approvalState(state));
           fill(el.querySelector("kind-tool-error"), state.errorMessage);
           const input = fillParts(el.querySelector("kind-tool-input"), INPUT_PARTS);
           const inputCode = input?.querySelector<KindCodeBlockElement>(":scope > kind-code-block");
@@ -167,14 +165,14 @@ export type KindToolEvents = {
   openchange: UiChangeEvent<boolean, StepOpenChangeReason>;
   approve: KindConfirmationEvents["approve"];
   deny: KindConfirmationEvents["deny"];
+  alwaysallow: KindConfirmationEvents["alwaysallow"];
 };
 
 export interface KindToolElement
   extends UiElement<KindToolEvents>,
+    ApprovalAttributes,
     AttributeProperties<typeof toolPrimitive, "api" | "open" | "call" | "error" | "highlight"> {
   open: boolean;
-  canApprove: boolean;
-  canDeny: boolean;
   call?: ToolOptions["call"];
   error?: ToolOptions["error"];
   highlight?: ToolOptions["highlight"];

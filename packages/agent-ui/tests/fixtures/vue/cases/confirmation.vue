@@ -1,10 +1,11 @@
 <script lang="ts">
 import type { AgentAction } from "@ui-sdk/vue/agent";
-import { confirmationHost } from "../../shared/confirmation.js";
+import { confirmationHost, moreConfirmations } from "../../shared/confirmation.js";
 
 export const variants = ["all", "reduced"] as const;
 
-const { host, approve, deny } = confirmationHost();
+const { host, approve, deny, always } = confirmationHost();
+const more = moreConfirmations();
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 </script>
@@ -36,7 +37,7 @@ onMounted(() =>
 </script>
 
 <template>
-  <div class="flex w-[28rem] flex-col gap-4 p-6">
+  <div class="flex w-full max-w-[28rem] flex-col gap-4 p-6">
     <p id="above">Above</p>
     <Confirmation
       id="confirm"
@@ -57,5 +58,15 @@ onMounted(() =>
     />
     <Confirmation id="approve-only" label="Open the link?" :approval="approveOnly" :on-approve="approve" />
     <Confirmation id="auto" label="Read README.md?" :approval="auto" :on-approve="approve" :on-deny="deny" />
+    <Confirmation
+      v-for="{ id, options } in more"
+      :id="id"
+      :key="id"
+      v-bind="options"
+      :on-approve="approve"
+      :on-deny="deny"
+      :on-always-allow="options.alwaysTarget ? always : undefined"
+      :motion="motion"
+    />
   </div>
 </template>
