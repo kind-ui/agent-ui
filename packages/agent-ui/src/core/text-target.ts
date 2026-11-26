@@ -60,23 +60,26 @@ export const insertText = (
 ): boolean => targetAround(el)?.insert(text, source, reason) ?? false;
 
 /**
- * Hands `text` to the nearest target around `el`, else to the first target inside the nearest ancestor that holds
- * one, like the Composer beside a Conversation whose message gives its text back. Climbs through `parentNode`, so a
- * shadow root holding both counts. Returns whether one took it.
+ * The nearest target around `el`, else the first target inside the nearest ancestor that holds one, like the Composer
+ * beside a Conversation whose message gives its text back. Climbs through `parentNode`, so a shadow root holding both
+ * counts. Read it while `el` is in the page; the returned `insert` works after `el` leaves.
  */
+export const textTargetNearby = (el: Element | undefined): Insert | undefined => {
+  const around = targetAround(el);
+  if (around) return around.insert;
+  for (let node: Node | null | undefined = el?.parentNode; node; node = node.parentNode) {
+    for (const [target, { insert }] of targets) if (node.contains(target)) return insert;
+  }
+  return undefined;
+};
+
+/** Hands `text` to `textTargetNearby(el)`, and returns whether one took it. */
 export const insertTextNearby = (
   el: Element | undefined,
   text: string,
   source: ChangeSource,
   reason: TextInsertReason,
-): boolean => {
-  const around = targetAround(el);
-  if (around) return around.insert(text, source, reason);
-  for (let node: Node | null | undefined = el?.parentNode; node; node = node.parentNode) {
-    for (const [target, { insert }] of targets) if (node.contains(target)) return insert(text, source, reason);
-  }
-  return false;
-};
+): boolean => textTargetNearby(el)?.(text, source, reason) ?? false;
 
 /** Whether a target around `el` would take text now, so a source can keep its item until one does. */
 export const canInsertText = (el: Element | undefined): boolean => targetAround(el)?.accepts() ?? false;

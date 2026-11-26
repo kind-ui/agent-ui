@@ -100,13 +100,16 @@
 
   /* Stalled: "No update for 2 min" takes the meta's place, in warning words, while the mark keeps running. The meta's
      own words collapse but stay in the trigger's name, followed by the generated words. */
-  [data-step-part="meta"][data-stalled] {
+  /* `line-height: 0` keeps the collapsed words' strut from making the meta taller and lifting the generated words. */
+  [data-step-part="meta"]:where([data-stalled]) {
     font-size: 0;
+    line-height: 0;
 
     &::after {
       content: attr(data-stalled);
       color: var(--kind-color-warning-text);
       font-size: var(--kind-text-xs);
+      line-height: var(--kind-text-xs-leading);
     }
   }
 

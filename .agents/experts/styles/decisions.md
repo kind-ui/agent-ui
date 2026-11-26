@@ -39,6 +39,7 @@ Last reviewed: 9994de73
 - **Day Separator's `::first-letter` capitalizes a host's `DaySeparatorLabel` children too** (Wave 6 Task 6): by design, since a heading starts with a capital; a locale whose date shouldn't start with one passes `relative={false}` or its own text.
 - **Thread Search capitalizes its `meta` with `::first-letter`** (Wave 6 Task 3): every `meta` it writes is a date group's words ("today"); a host can't set `meta`.
 - **A Context Bar chip's remove target stays under 44px on a coarse pointer (Design Wave 1 Batch B):** it grows to about 32×28px, since the bar is one 28px row that clips and a larger target would reach the next chip; the gap widens instead. The rule for 44px names shared controls, which a chip's remove isn't.
+- A stalled meta's words are `::after` content, so a Step-based row without a `meta` part (Reasoning, Action, Stack Trace) shows no stalled words, and a utility class that sizes the meta's text undoes the collapse (layer 5).
 
 ## Known and open (don't report again, check whether fixed)
 
@@ -77,6 +78,7 @@ Last reviewed: 9994de73
 - **Under `(hover: none)` Copy always covers the end of the table's last header and Terminal's first lines** (Design Wave 1 Batch D): nothing in the fixtures overlaps, but a long last header or first output line would sit under it.
 - **Inline-size containment on Test Results' root, Document's header and Sources' content** (Design Wave 1 Batch D): in a shrink-to-fit parent these parts no longer give the card its width, as with the composer.
 - **A Stack Trace location ends in an ellipsis** (Design Wave 1 Batch D): deep in a narrow Test Results row the `:line:col` can be cut, and the `title` with the full path doesn't reach touch or keyboard.
+- Retry now and Cancel move sideways as the retry countdown loses a digit or drops "in …"; figure-space padding as in Connection Status would hold them (layer 5).
 
 ## Resolved
 
