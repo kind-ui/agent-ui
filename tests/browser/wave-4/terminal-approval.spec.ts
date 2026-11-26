@@ -8,6 +8,7 @@ type Decision = { choice: string; decision: unknown; source: string; resolve(): 
 type Fixture = {
   kindTerminal: { set(id: string, next: Record<string, unknown>): void };
   kindHost: { decisions: Decision[] };
+  kindAnnounced: string[];
 };
 
 const terminal = (page: Page, id: string) => page.locator(`#${id}`);
@@ -23,7 +24,30 @@ const resolve = (page: Page, index: number) =>
   page.evaluate((i) => (window as unknown as Fixture).kindHost.decisions[i]?.resolve(), index);
 
 test.beforeEach(async ({ page }) => {
+  // Records each text UI SDK's live regions are given.
+  await page.addInitScript(() => {
+    const texts: string[] = [];
+    Object.assign(window, { kindAnnounced: texts });
+    new MutationObserver((mutations) => {
+      for (const { target } of mutations) {
+        if (target instanceof Element && target.hasAttribute("aria-live") && target.textContent)
+          texts.push(target.textContent);
+      }
+    }).observe(document, { childList: true, subtree: true });
+  });
   await page.goto("/?c=terminal&case=approval");
+});
+
+test("a new request is announced as waiting on the person", async ({ page }) => {
+  await expect(part(page, "running", "icon")).toHaveAttribute("data-status", "running");
+  await set(page, "running", {
+    approval: { approvalId: "running", generation: 2, state: "requested" },
+    output: "",
+  });
+  await expect(part(page, "running", "meta")).toHaveText("Waiting for approval");
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as Fixture).kindAnnounced))
+    .toContainEqual(expect.stringContaining("needs input"));
 });
 
 test("a waiting command asks in full, says it waits in words, and can't fold", async ({ page }) => {

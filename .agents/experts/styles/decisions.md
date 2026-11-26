@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `bfb9bb7` (Design Wave 1 Batch D)
+Last reviewed: 8aee26be
 
 ## Settled
 
@@ -41,6 +41,8 @@ Last reviewed: `bfb9bb7` (Design Wave 1 Batch D)
 - **A Context Bar chip's remove target stays under 44px on a coarse pointer (Design Wave 1 Batch B):** it grows to about 32×28px, since the bar is one 28px row that clips and a larger target would reach the next chip; the gap widens instead. The rule for 44px names shared controls, which a chip's remove isn't.
 
 ## Known and open (don't report again, check whether fixed)
+
+- **A Terminal that never ran toggles an empty panel** (Wave 7 layer 3): denied or expired with no output, its screen is hidden, so the chevron opens nothing; the mockup draws it open. Decide in core whether such a row opens by default or stops being a toggle.
 
 - **`KindFileInputTrigger` and `KindScrollAreaScrollToEnd` stay 32px, bordered and filled** (Design Wave 0): their adopters own the look; Wave 1 moves them onto the shared controls.
 - **Connection Status's pill narrows when the countdown ends at "Reconnecting"** (Wave 6 Task 7): the words change, so the width does; centred by `translate`, both edges move. Nothing else moves.

@@ -202,11 +202,11 @@ test("an approval request is decided in the tool, which stays awaiting input unt
   await expect.poll(() => announced(page)).toEqual(["Decision not sent"]);
 });
 
-test("when the choices leave with focus, focus moves to the tool's trigger", async ({ page }) => {
+test("when the choices leave with focus, focus moves to the outcome in their place", async ({ page }) => {
   await open(page);
   await tool(page, "approve").getByRole("button", { name: "Deny" }).focus();
   await setCall(page, "approve", approval("responded", { approved: false }));
-  await expect(trigger(page, "approve")).toBeFocused();
+  await expect(tool(page, "approve").locator('[data-slot="kind-confirmation-outcome"]')).toBeFocused();
 });
 
 for (const colorScheme of ["light", "dark"] as const) {
