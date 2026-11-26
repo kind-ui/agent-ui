@@ -619,7 +619,7 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
   }),
   sync: (options) => ({ ...menu.sync(options), ...presentation(options) }),
   live: ["retrySeconds"],
-  controlled: ["branchIndex", "branchCount", "status", "outcome", "delivery"],
+  controlled: ["branchIndex", "branchCount", "status", "outcome"],
   api: (context): MessageApi => {
     const { store } = context;
     const regenerateMenu = menu.api(context);

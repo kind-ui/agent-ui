@@ -93,7 +93,7 @@ test("retrying leads with the reason, counts down unannounced, and ends in Faile
   page,
 }) => {
   await expect(part(page, "retrying", "retrying")).toHaveText(
-    /^Rate limited\. Retrying in \d sec, attempt 2 of 5\s*Retry now\s*Cancel$/,
+    /^Rate limited\. Retrying in 1 min, attempt 2 of 5\s*Retry now\s*Cancel$/,
     shown,
   );
   await expect(part(page, "retrying", "retrying")).toHaveRole("status");

@@ -33,5 +33,6 @@ export const delivery = {
   queued: "Then add a test for the expired session case",
   notSent: "Also log failed refreshes",
   retrying: "Retry with exponential backoff, and cap the number of attempts. The client should",
-  retry: { attempt: 2, maxAttempts: 5, retryAfter: 4, reason: "Rate limited" },
+  // A minute out, so the countdown reads "1 min" and holds still while pages are compared.
+  retry: { attempt: 2, maxAttempts: 5, retryAfter: 110, reason: "Rate limited" },
 };
