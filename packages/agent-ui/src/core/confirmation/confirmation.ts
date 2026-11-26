@@ -380,7 +380,8 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
         ...(done && { composing: false }),
         ...(closing && { reasonClosing: true }),
       });
-      const { outcome, outcomeReason } = store.get();
+      // From the options, since React hands the store the synced state only after this listener runs.
+      const { outcome, outcomeReason } = presentation(options);
       if (mounting) return;
       if (state === "submit-failed") announce(WORDS.notSent, { priority: "polite" });
       else if (isSettled(state) && outcome)
