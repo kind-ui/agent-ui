@@ -247,7 +247,8 @@ function fileOf(head: string): { file: Partial<DiffFile>; binary: boolean } {
   let file: Partial<DiffFile> = {};
   if (index?.oldFileName === "/dev/null" && path) file = { path, status: "added" };
   else if (index?.newFileName === "/dev/null" && oldPath) file = { path: oldPath, status: "deleted" };
-  else if (oldPath && path && (index?.isRename || oldPath !== path)) file = { path, oldPath, status: "renamed" };
+  else if (oldPath && path && (index?.isRename || oldPath !== path))
+    file = { path, oldPath, status: "renamed" };
   else if (path) file = { path, status: "modified" };
   return { file, binary };
 }
@@ -266,7 +267,8 @@ function fromPatch(patch: string, previous: DiffRows | undefined): Omit<DiffRows
   const offsets = hunkOffsets(patch);
   const before = previous?.input.patch;
   // Every hunk but the last was complete before the patch grew, so only the last is parsed again.
-  const kept = previous && before !== undefined && patch.startsWith(before) ? previous.hunks.slice(0, -1) : [];
+  const kept =
+    previous && before !== undefined && patch.startsWith(before) ? previous.hunks.slice(0, -1) : [];
   const hunks: DiffHunk[] = [...kept];
   for (let i = kept.length; i < offsets.length; i++) {
     const offset = offsets[i] as number;
@@ -321,7 +323,14 @@ function fromFiles(before: string, after: string): Omit<DiffRows, "input"> {
     shift += hunk.newLines - hunk.oldLines;
   });
   const end = hunks.length > 0 ? gap(lines.length, "end", true) : [];
-  return { file: {}, binary: false, hunks, end, added: total(hunks, "added"), removed: total(hunks, "removed") };
+  return {
+    file: {},
+    binary: false,
+    hunks,
+    end,
+    added: total(hunks, "added"),
+    removed: total(hunks, "removed"),
+  };
 }
 
 /**

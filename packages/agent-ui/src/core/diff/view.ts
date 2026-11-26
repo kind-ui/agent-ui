@@ -28,6 +28,8 @@ export interface DiffFileView {
   decision: DiffDecision | undefined;
   /** What's being sent for the file, until the host reports a decision. */
   working: DiffAction | undefined;
+  /** "Kept", "Undone", "Keeping…" or "Undoing…"; empty while undecided. */
+  outcome: string;
   /** "Couldn't undo `auth.ts`" after a call for the file failed. */
   error: string;
   /** Whether Keep and Undo show for the file. */
@@ -45,6 +47,7 @@ export interface DiffChangeView {
   title: string;
   decision: DiffDecision | undefined;
   working: DiffAction | undefined;
+  outcome: string;
   error: string;
   actionable: boolean;
 }
@@ -65,7 +68,7 @@ export interface DiffLineView {
   undone: boolean;
   /** A collapsed run's "Show 12 lines". */
   show: string;
-  /** Where a collapsed run is, in hidden words: ", unchanged lines after change 2". */
+  /** Where a collapsed run is, for its name: "unchanged lines after change 2". */
   where: string;
   /** A collapsed run's lines, hidden until find in page matches one. */
   hiddenText: string;
@@ -80,6 +83,8 @@ export interface DiffTableRow {
 export interface DiffSummaryView {
   /** "4 files changed", "Editing 2 files" or "All changes reviewed". */
   title: string;
+  added: number;
+  removed: number;
   counts: string;
   countsName: string;
   /** "2 of 4 reviewed" or "3 kept, 1 undone"; empty until something is decided. */
@@ -95,7 +100,10 @@ export interface DiffViewInput {
   files: readonly DiffFile[];
   parsed: ReadonlyMap<string, DiffRows>;
   /** The highlighter's tokens for each line of each side, by path and line number. */
-  tokens: ReadonlyMap<string, { old: Readonly<Record<number, Token[]>>; new: Readonly<Record<number, Token[]>> }>;
+  tokens: ReadonlyMap<
+    string,
+    { old: Readonly<Record<number, Token[]>>; new: Readonly<Record<number, Token[]>> }
+  >;
   expanded: ReadonlySet<string>;
   full: ReadonlySet<string>;
   working: Readonly<Record<string, DiffAction>>;
@@ -132,13 +140,18 @@ const plural = (count: number, one: string, many = `${one}s`) =>
 
 /** "+4 −2", with the zero side left out. */
 export const diffCounts = (added: number, removed: number): string =>
-  [added > 0 && `+${added.toLocaleString("en-US")}`, removed > 0 && `${MINUS}${removed.toLocaleString("en-US")}`]
+  [
+    added > 0 && `+${added.toLocaleString("en-US")}`,
+    removed > 0 && `${MINUS}${removed.toLocaleString("en-US")}`,
+  ]
     .filter(Boolean)
     .join(" ");
 
 /** "4 additions, 2 deletions", with the zero side left out. */
 export const diffCountsName = (added: number, removed: number): string =>
-  [added > 0 && plural(added, "addition"), removed > 0 && plural(removed, "deletion")].filter(Boolean).join(", ");
+  [added > 0 && plural(added, "addition"), removed > 0 && plural(removed, "deletion")]
+    .filter(Boolean)
+    .join(", ");
 
 /** The last part of a path, as announcements and errors name a file. */
 export const fileName = (path: string): string => path.slice(path.lastIndexOf("/") + 1) || path;
@@ -160,6 +173,12 @@ export const diffError = (action: DiffAction, path?: string, change?: number): s
   const verb = `Couldn't ${action}`;
   if (path === undefined) return `${verb} all changes`;
   return change === undefined ? `${verb} \`${fileName(path)}\`` : `${verb} change ${change + 1}`;
+};
+
+const outcomeText = (decision: DiffDecision | undefined, working: DiffAction | undefined) => {
+  if (decision) return decision === "kept" ? WORDS.kept : WORDS.undone;
+  if (working) return working === "keep" ? WORDS.keeping : WORDS.undoing;
+  return "";
 };
 
 /** Whether a file is decided: by its own decision, or every change of it. */
@@ -190,11 +209,20 @@ const prefixOf = (row: DiffRow, undone: boolean) => {
 };
 
 // One view per row, kept while its row, tokens and decision hold, so an unchanged row keeps its object.
-const lineViews = new WeakMap<DiffRow, { tokens: Token[] | undefined; undone: boolean; where: string; view: DiffLineView }>();
+const lineViews = new WeakMap<
+  DiffRow,
+  { tokens: Token[] | undefined; undone: boolean; where: string; view: DiffLineView }
+>();
 
-const lineView = (row: DiffRow, tokens: Token[] | undefined, undone: boolean, where: string): DiffLineView => {
+const lineView = (
+  row: DiffRow,
+  tokens: Token[] | undefined,
+  undone: boolean,
+  where: string,
+): DiffLineView => {
   const cached = lineViews.get(row);
-  if (cached && cached.tokens === tokens && cached.undone === undone && cached.where === where) return cached.view;
+  if (cached && cached.tokens === tokens && cached.undone === undone && cached.where === where)
+    return cached.view;
   const collapsed = row.kind === "collapsed";
   const count = row.lines?.length ?? 0;
   const view: DiffLineView = {
@@ -207,7 +235,7 @@ const lineView = (row: DiffRow, tokens: Token[] | undefined, undone: boolean, wh
     prefix: collapsed ? "" : prefixOf(row, undone),
     undone,
     show: collapsed ? `Show ${plural(count, "line")}` : "",
-    where: collapsed ? `, ${where}` : "",
+    where: collapsed ? where : "",
     hiddenText: collapsed ? (row.lines ?? []).map((line) => line.text).join("\n") : "",
   };
   lineViews.set(row, { tokens, undone, where, view });
@@ -232,7 +260,10 @@ const shallowSame = (a: unknown, b: unknown): boolean => {
 };
 
 /** `next`, with each entry `previous` already had in an equal form kept, and `previous` itself when nothing changed. */
-export function keepSame<Value>(previous: Record<string, Value>, next: Record<string, Value>): Record<string, Value> {
+export function keepSame<Value>(
+  previous: Record<string, Value>,
+  next: Record<string, Value>,
+): Record<string, Value> {
   let changed = Object.keys(previous).length !== Object.keys(next).length;
   for (const key of Object.keys(next)) {
     const old = previous[key];
@@ -299,21 +330,26 @@ export function diffView(input: DiffViewInput): DiffView {
     };
 
     hunks.forEach((hunk, index) => {
-      addRows(hunk.gap, index === 0 ? `unchanged lines before change 1` : `unchanged lines after change ${index}`, false);
+      addRows(
+        hunk.gap,
+        index === 0 ? `unchanged lines before change 1` : `unchanged lines after change ${index}`,
+        false,
+      );
       const changeUndone = changeDecision(file, index) === "undone";
       if (hunks.length > 1) {
         const key = `${path}#h${index}`;
         const changeWorking = working[targetKey(path, index)] ?? fileWorking;
         const changeOwn = file.decision ? undefined : file.changes?.[index]?.decision;
+        const shownWorking = file.decision || changeOwn ? undefined : changeWorking;
         changes[key] = {
           path,
           index,
           title: `Change ${index + 1} of ${hunks.length} · line ${hunk.line}`,
           decision: changeOwn,
-          working: file.decision || changeOwn ? undefined : changeWorking,
+          working: shownWorking,
+          outcome: outcomeText(changeOwn, shownWorking),
           error: errors[targetKey(path, index)] ?? "",
-          actionable:
-            canDecide && perChange && !decision && !changeOwn && !changeWorking && !fileWorking,
+          actionable: canDecide && perChange && !decision && !changeOwn && !changeWorking && !fileWorking,
         };
         push(
           key,
@@ -353,6 +389,7 @@ export function diffView(input: DiffViewInput): DiffView {
       changeCount: hunks.length,
       decision,
       working: decision ? undefined : fileWorking,
+      outcome: outcomeText(decision, decision ? undefined : fileWorking),
       error: errors[path] ?? "",
       actionable: canDecide && !decision && !fileWorking,
       digits: String(maxLine).length,
@@ -376,6 +413,8 @@ export function diffView(input: DiffViewInput): DiffView {
         : allReviewed
           ? WORDS.allReviewed
           : `${plural(count, "file")} changed`,
+      added,
+      removed,
       counts: streaming || allReviewed ? "" : diffCounts(added, removed),
       countsName: streaming || allReviewed ? "" : diffCountsName(added, removed),
       progress: allReviewed

@@ -18,19 +18,19 @@ import type { DiffFile } from "../../types/index.js";
 import { actionSource } from "../action-source.js";
 import { createCopy } from "../clipboard.js";
 import type { Highlight, Token } from "../code-block/code-block.js";
-import { type ListFocus, createListFocus } from "../list-focus.js";
+import { createListFocus, type ListFocus } from "../list-focus.js";
 import type { MotionMode } from "../motion/index.js";
 import { bindStepPanel } from "../step/base.js";
-import { WORDS } from "../words.js";
+import { plainText, WORDS } from "../words.js";
 import { type DiffRow, type DiffRows, diffRows, tokenLines } from "./rows.js";
 import {
+  changeDecision,
   type DiffAction,
   type DiffChangeView,
   type DiffFileView,
   type DiffLineView,
   type DiffSummaryView,
   type DiffTableRow,
-  changeDecision,
   diffAnnouncement,
   diffError,
   diffView,
@@ -143,7 +143,11 @@ export type DiffApi = {
   readonly expandAll: (() => void) | undefined;
   /** Copies a file's patch, and resolves with whether the clipboard write went through. */
   readonly copy: ((path: string) => Promise<boolean>) | undefined;
-  setOpen: (path: string, open: boolean, cause?: { reason?: DiffOpenReason; event?: Event | undefined }) => boolean;
+  setOpen: (
+    path: string,
+    open: boolean,
+    cause?: { reason?: DiffOpenReason; event?: Event | undefined },
+  ) => boolean;
   /** Shows a collapsed run, by its line's key. */
   expand: (key: string) => void;
   /** Shows the rest of a cut-off file. */
@@ -171,14 +175,17 @@ type DiffSlot<
 > = SlotDefinition<DiffState, DiffApi, Props, Public>;
 
 type Text = { text: string };
+/** "+4" and "−2", each empty when zero, and "4 additions, 2 deletions" for screen readers. */
+type Counts = { added: string; removed: string; name: string };
 
 type DiffSlots = {
   root: DiffSlot;
   summary: DiffSlot;
   "summary-title": DiffSlot<BaseSlotProps, Text>;
-  "summary-counts": DiffSlot<BaseSlotProps, { text: string; name: string }>;
+  "summary-counts": DiffSlot<BaseSlotProps, Counts>;
   "summary-mark": DiffSlot;
   "summary-progress": DiffSlot<BaseSlotProps, Text>;
+  "summary-outcome": DiffSlot<BaseSlotProps, Text>;
   "summary-actions": DiffSlot;
   "undo-all": DiffSlot<BaseSlotProps, Text>;
   "keep-all": DiffSlot<BaseSlotProps, Text>;
@@ -192,18 +199,17 @@ type DiffSlots = {
   "file-path": DiffSlot<FromFile, Text>;
   "file-old-path": DiffSlot<FromFile, Text>;
   "file-status": DiffSlot<FromFile, Text>;
-  "file-counts": DiffSlot<FromFile, { text: string; name: string }>;
+  "file-counts": DiffSlot<FromFile, Counts>;
   "file-mark": DiffSlot<FromFile>;
   "file-actions": DiffSlot<FromFile>;
   "file-undo": DiffSlot<FromFile, Text>;
   "file-keep": DiffSlot<FromFile, Text>;
   "file-outcome": DiffSlot<FromFile, { text: string; working: boolean }>;
-  "file-outcome-mark": DiffSlot<FromFile>;
   "file-error": DiffSlot<FromFile, Text>;
   "file-content": DiffSlot<FromFile>;
   "file-note": DiffSlot<FromFile, Text>;
   viewport: DiffSlot<FromFile>;
-  table: DiffSlot<FromFile, { rows: readonly DiffTableRow[] }>;
+  table: DiffSlot<FromFile, { rows: readonly DiffTableRow[]; columns: readonly string[] }>;
   head: DiffSlot<FromFile>;
   column: DiffSlot<{ value?: string } & BaseSlotProps, Text>;
   change: DiffSlot<FromLine>;
@@ -211,14 +217,13 @@ type DiffSlots = {
   "change-undo": DiffSlot<FromLine, Text>;
   "change-keep": DiffSlot<FromLine, Text>;
   "change-outcome": DiffSlot<FromLine, { text: string; working: boolean }>;
-  "change-outcome-mark": DiffSlot<FromLine>;
   "change-error": DiffSlot<FromLine, Text>;
   line: DiffSlot<FromLine, { kind: DiffLineView["kind"] }>;
   "old-number": DiffSlot<FromLine, Text>;
   "new-number": DiffSlot<FromLine, Text>;
   sign: DiffSlot<FromLine, Text>;
   code: DiffSlot<FromLine, { line: DiffLineView | undefined }>;
-  collapsed: DiffSlot<FromLine, { text: string; where: string }>;
+  collapsed: DiffSlot<FromLine, Text>;
   "collapsed-text": DiffSlot<FromLine, Text>;
   "show-all": DiffSlot<FromFile, Text>;
 };
@@ -233,6 +238,17 @@ const COLUMNS: Record<string, string> = {
   new: "New line",
   sign: "Change",
   code: "Code",
+};
+
+// Each file's column header keys, `<path>#old` and so on, since a part's key is unique in the component.
+const columnKeys = new Map<string, readonly string[]>();
+const columnsOf = (path: string) => {
+  let keys = columnKeys.get(path);
+  if (!keys) {
+    keys = Object.keys(COLUMNS).map((column) => `${path}#${column}`);
+    columnKeys.set(path, keys);
+  }
+  return keys;
 };
 
 const SIGNS: Partial<Record<DiffLineView["kind"], string>> = { add: "+", remove: "\u2212" };
@@ -438,7 +454,7 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
         if (count > 0) words.push(diffAnnouncement(allWorking, undefined, undefined, count));
         store.set({ allWorking: null, confirming: false });
       }
-      if (words.length > 0) announce(words.join(". "), { priority: "polite" });
+      if (words.length > 0) announce(plainText(words.join(". ")), { priority: "polite" });
     };
 
     const run = (action: DiffAction, target: DiffTarget, event: Event | undefined, shortcut: boolean) => {
@@ -502,7 +518,7 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
           if (path === undefined) {
             store.set({ allWorking: null, allError: message, confirming: false });
           } else errors = { ...errors, [targetKey(path, index)]: message };
-          announce(message, { priority: "polite" });
+          announce(plainText(message), { priority: "polite" });
         }
         compute();
         releaseSettled();
@@ -544,7 +560,8 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
       highlighted.set(id, status);
       const lines = sideLines(parsed.get(path), side);
       const code = lines.map((line) => line.text).join("\n");
-      if (!highlight || !file || status.busy || code === status.requested || code === status.failed || !code) return;
+      if (!highlight || !file || status.busy || code === status.requested || code === status.failed || !code)
+        return;
       status.busy = true;
       const settle = (result?: Token[]) => {
         if (destroyed) return;
@@ -659,14 +676,15 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
       recovery: createFocusRecovery({
         fallback: ({ key, el }) => {
           const slot = el.getAttribute("data-slot") ?? "";
-          if (slot.includes("change-")) return context.element("change-outcome", key) ?? context.element("change", key);
+          if (slot.includes("change-"))
+            return context.element("change-outcome", key) ?? context.element("change", key);
           if (slot.includes("file-")) {
             return context.element("file-outcome", key) ?? context.element("file-trigger", key);
           }
           if (slot.includes("undo-all-confirm") || slot.includes("undo-all-cancel")) {
-            return context.element("undo-all") ?? context.element("summary-title");
+            return context.element("undo-all") ?? context.element("summary-outcome");
           }
-          return context.element("undo-all-cancel") ?? context.element("summary-title");
+          return context.element("undo-all-cancel") ?? context.element("summary-outcome");
         },
       }),
       bindContent: (el, path) =>
@@ -734,19 +752,16 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
         "data-confirming": state.confirming ? "" : undefined,
       }),
     }),
-    // The summary is a heading, and a Tab stop once every change is reviewed, so focus has somewhere to go when Keep
-    // all and Undo all leave.
     "summary-title": slot<BaseSlotProps, Text>({
       selects: outside,
       role: "heading",
-      focus: "tab-stop",
       state: (state) => ({ text: state.summary.title }),
-      attrs: (state) => ({ "aria-level": "3", ...(state.summary.allReviewed && { tabindex: "0" }) }),
+      attrs: () => ({ "aria-level": "3" }),
     }),
-    "summary-counts": slot<BaseSlotProps, { text: string; name: string }>({
+    "summary-counts": slot<BaseSlotProps, Counts>({
       selects: outside,
       present: (state) => state.summary.counts !== "",
-      state: (state) => ({ text: state.summary.counts, name: state.summary.countsName }),
+      state: (state) => countsOf(state.summary.added, state.summary.removed, state.summary.countsName),
     }),
     "summary-mark": slot({
       selects: outside,
@@ -760,8 +775,17 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
     }),
     "summary-progress": slot<BaseSlotProps, Text>({
       selects: outside,
-      present: (state) => state.summary.progress !== "",
+      present: (state) => state.summary.progress !== "" && !state.summary.allReviewed,
       state: (state) => ({ text: state.summary.progress }),
+    }),
+    // "3 kept, 1 undone" once every change is reviewed. A Tab stop, so focus has somewhere to go when Keep all and
+    // Undo all leave.
+    "summary-outcome": slot<BaseSlotProps, Text>({
+      selects: outside,
+      focus: "tab-stop",
+      present: (state) => state.summary.allReviewed,
+      state: (state) => ({ text: state.summary.progress }),
+      attrs: () => ({ tabindex: "0" }),
     }),
     "summary-actions": slot({
       selects: outside,
@@ -912,11 +936,14 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
       present: (state, { key }) => (state.files[key]?.statusText ?? "") !== "",
       state: (state, { key }) => ({ text: state.files[key]?.statusText ?? "" }),
     }),
-    "file-counts": slot<FromFile, { text: string; name: string }>({
+    "file-counts": slot<FromFile, Counts>({
       props: fromFile,
       selects: ownFile,
       present: (state, { key }) => (state.files[key]?.counts ?? "") !== "",
-      state: (state, { key }) => ({ text: state.files[key]?.counts ?? "", name: state.files[key]?.countsName ?? "" }),
+      state: (state, { key }) => {
+        const file = state.files[key];
+        return countsOf(file?.added ?? 0, file?.removed ?? 0, file?.countsName ?? "");
+      },
     }),
     "file-mark": slot<FromFile>({
       props: fromFile,
@@ -975,21 +1002,13 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
       selects: ownFile,
       focus: "tab-stop",
       present: (state, { key }) => Boolean(state.files[key]?.decision || state.files[key]?.working),
-      state: (state, { key }) => outcome(state.files[key]),
+      state: (state, { key }) => ({
+        text: state.files[key]?.outcome ?? "",
+        working: state.files[key]?.working !== undefined,
+      }),
       attrs: (state, { key }) => ({
         tabindex: "0",
         "data-state": state.files[key]?.decision ?? (state.files[key]?.working ? "working" : undefined),
-      }),
-    }),
-    "file-outcome-mark": slot<FromFile>({
-      props: fromFile,
-      selects: ownFile,
-      present: (state, { key }) => state.files[key]?.working !== undefined,
-      attrs: (state) => ({
-        "aria-hidden": "true",
-        "data-status-mark": "",
-        "data-status": "running",
-        "data-motion": state.motion,
       }),
     }),
     "file-error": slot<FromFile, Text>({
@@ -1031,11 +1050,11 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
       }),
       bind: (el, { api, key }) => api.bindViewport(el, key),
     }),
-    table: slot<FromFile, { rows: readonly DiffTableRow[] }>({
+    table: slot<FromFile, { rows: readonly DiffTableRow[]; columns: readonly string[] }>({
       props: fromFile,
       selects: own<FromFile>("tables"),
       role: "table",
-      state: (state, { key }) => ({ rows: state.tables[key] ?? [] }),
+      state: (state, { key }) => ({ rows: state.tables[key] ?? [], columns: columnsOf(key) }),
       attrs: (_, { key }) => ({ "aria-label": key }),
     }),
     // Column headers for screen readers; the stylesheet hides them.
@@ -1044,7 +1063,7 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
       props: { value: "string" },
       selects: outside,
       role: "columnheader",
-      state: (_, { props }) => ({ text: COLUMNS[props.value ?? ""] ?? "" }),
+      state: (_, { key }) => ({ text: COLUMNS[key.slice(key.lastIndexOf("#") + 1)] ?? "" }),
     }),
     change: slot<FromLine>({
       props: { value: "string" },
@@ -1115,21 +1134,13 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
       selects: ownChange,
       focus: "tab-stop",
       present: (state, { key }) => Boolean(state.changes[key]?.decision || state.changes[key]?.working),
-      state: (state, { key }) => outcome(state.changes[key]),
+      state: (state, { key }) => ({
+        text: state.changes[key]?.outcome ?? "",
+        working: state.changes[key]?.working !== undefined,
+      }),
       attrs: (state, { key }) => ({
         tabindex: "0",
         "data-state": state.changes[key]?.decision ?? (state.changes[key]?.working ? "working" : undefined),
-      }),
-    }),
-    "change-outcome-mark": slot<FromLine>({
-      props: fromChange,
-      selects: ownChange,
-      present: (state, { key }) => state.changes[key]?.working !== undefined,
-      attrs: (state) => ({
-        "aria-hidden": "true",
-        "data-status-mark": "",
-        "data-status": "running",
-        "data-motion": state.motion,
       }),
     }),
     "change-error": slot<FromLine, Text>({
@@ -1183,15 +1194,19 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
       role: "cell",
       state: (state, { key }) => ({ line: state.lines[key] }),
     }),
-    collapsed: slot<FromLine, { text: string; where: string }>({
+    // Named "Show 12 lines, unchanged lines after change 2", so its name says where they are.
+    collapsed: slot<FromLine, Text>({
       props: fromLine,
       selects: ownLine,
       role: "button",
       focus: "native",
       present: (state, { key }) => state.lines[key]?.kind === "collapsed",
       press: ({ api, key }) => api.expand(key),
-      state: (state, { key }) => ({ text: state.lines[key]?.show ?? "", where: state.lines[key]?.where ?? "" }),
-      attrs: () => ({ type: "button" }),
+      state: (state, { key }) => ({ text: state.lines[key]?.show ?? "" }),
+      attrs: (state, { key }) => {
+        const line = state.lines[key];
+        return { type: "button", "aria-label": line ? `${line.show}, ${line.where}` : undefined };
+      },
     }),
     // The run's lines, hidden until find in page matches one, which shows the run.
     "collapsed-text": slot<FromLine, Text>({
@@ -1224,15 +1239,17 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
   },
 });
 
+function countsOf(added: number, removed: number, name: string): Counts {
+  return {
+    added: added > 0 ? `+${added.toLocaleString("en-US")}` : "",
+    removed: removed > 0 ? `\u2212${removed.toLocaleString("en-US")}` : "",
+    name,
+  };
+}
+
 function targetOf(path: string | undefined, change: number | undefined): DiffTarget {
   return {
     ...(path !== undefined && { path }),
     ...(path !== undefined && change !== undefined && { change }),
   };
-}
-
-function outcome(view: { decision?: DiffFileView["decision"]; working?: DiffAction | undefined } | undefined) {
-  if (view?.decision) return { text: view.decision === "kept" ? WORDS.kept : WORDS.undone, working: false };
-  if (view?.working) return { text: view.working === "keep" ? WORDS.keeping : WORDS.undoing, working: true };
-  return { text: "", working: false };
 }
