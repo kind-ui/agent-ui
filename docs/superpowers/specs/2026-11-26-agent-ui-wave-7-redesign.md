@@ -47,10 +47,12 @@ These words are binding: every component in this wave, and its docs and examples
 | --- | --- | --- |
 | Question | "Run `npm test`?", "Edit `src/app.ts`?", "Allow `search_docs`?" | The question names the act and its object. A command shows in full while it waits, never truncated. |
 | Choices | **Deny** · **Approve** · optional **Always allow** with its scope ("Always allow `npm test`") | Deny is the quieter button and comes first; Approve is the primary pill and comes last. Always allow is secondary, sits between them, and exists only when the host offers it. Never OK, Yes or No. On Terminal the approve verb is **Run**. |
+| Scope | One model: *what* (the button: "`npm test`") and *where* (the host's `alwaysScope`, "in this project"), in the same words in the detail line and the outcome | Detail: "Covers commands starting with `npm test`, in this project." Outcome: "Always allowed `npm test` in this project". A host whose lasting choice ends with the session writes "in this session" in both places; never one word before and another after. |
 | Waiting | "Waiting for approval", in the meta beside the mark | Words, not only the ring. |
 | Sending | "Sending decision" | Already Confirmation's. |
-| Decided | **Approved** · **Always allowed** (+ scope) · **Approved automatically** · **Denied: <reason>** · **Expired before a decision** · **Cancelled before a decision** | Past tense, in the buttons' place on the same line, focusable. After the act runs, its result is said once, where the component already says results: a Terminal's header mark and meta ("Exit 1 · 6 sec"). The outcome line keeps the decision, so a lasting choice ("Always allowed `npm test` · this session") stays visible. |
+| Decided | **Approved** · **Always allowed** (+ what and where) · **Approved automatically** · **Denied: <reason>** · **Expired before a decision** · **Cancelled before a decision** | Past tense, in the buttons' place on the same line, focusable. After the act runs, its result is said once, where the component already says results: a Terminal's header mark and meta ("Exit 1 · 6 sec"). The outcome line keeps the decision, so a lasting choice ("Always allowed `npm test` in this project") stays visible. |
 | Edits after the fact | **Keep** · **Undo** (per change, per file, **Keep all**, **Undo all**) → **Kept** / **Undone** | Approve and Deny gate a write before it happens. Keep and Undo judge a write already applied. Never both pairs on one control. |
+| Marks | Approved: check. Denied: a slash in a ring. Expired: a clock in a ring. Stopped and Cancelled: the minus. Failed: the ✕. | One meaning per mark, the same in every component. Denied and expired join `status-mark.css` as glyphs (`data-status="denied"`, `"expired"`), so a step that never ran doesn't look stopped. Where a header already carries the mark (Terminal), the outcome line under it carries only words. |
 | Roles | Never `role="alert"` on mount. Announce the outcome once, politely. | — |
 
 ### 2.2 Status placement
@@ -193,6 +195,7 @@ interface UsageLimit {
 ### Anatomy
 
 - **Summary** (several files only): "4 files changed" then `+120 −8`, then **Undo all** (quiet) and **Keep all** (secondary). Under the title, review progress once anything is decided: "2 of 4 reviewed".
+- **Row actions on hover or focus.** Undo all and Keep all always show. A file row's and a change header's Undo and Keep show on `:hover` and `:focus-within`, and always under `(hover: none)` and at 390 px, so at most one row's pair is on screen with a pointer. Their space is reserved, so nothing moves when they appear. Outcomes and "Keeping…" always show.
 - **File row:** a status word for added, deleted and renamed files (modified says nothing, binary included), the path with an ellipsis at its *start* when it's long so the file name stays, "from `old/path.ts`" on a second line for a rename, `+N −M` in tabular figures with a real minus sign and the zero side hidden, then **Undo** and **Keep**, then the chevron. While the patch streams, the counts are replaced by the running mark.
 - **Change header** (a hunk): "Change 1 of 3 · line 19" in words, never raw `@@`, with that change's **Undo** and **Keep** at the end. Present only when the host takes per-change decisions.
 - **Lines:** four columns: old number, new number, sign, code. Numbers and signs are drawn from attributes, so a copy is clean code. Added and removed lines are real `<ins>` and `<del>` with visually hidden "Added:" and "Removed:". Changed words inside a paired line get a stronger tint. Fills are faint tints from tokens (`--kind-diff-added`, `--kind-diff-removed`), and the sign carries the change for color-blind readers.
@@ -205,7 +208,7 @@ interface UsageLimit {
 | --- | --- | --- | --- |
 | Streaming | "Editing 2 files" + running mark | running mark in place of counts. No Keep or Undo on any file until the whole patch has arrived | — |
 | Ready | "4 files changed · +120 −8", Undo all, Keep all | counts, Undo, Keep | Undo, Keep |
-| Sending | the pressed button holds its width under a running mark; the others are `aria-disabled` | same | same |
+| Sending | the pressed button holds its width under a running mark; the others are `aria-disabled` | "Keeping…" or "Undoing…" after a running mark, in the buttons' place | same |
 | Partly reviewed | "2 of 4 reviewed" under the title | **Kept** / **Undone** in place of the buttons | same |
 | All reviewed | "All changes reviewed · 3 kept, 1 undone"; Keep all and Undo all leave, focus moves to the summary | — | — |
 | Undo all asked | the actions line becomes "Undo all 4 files? This can't be undone." **Cancel** · **Undo all** (danger), in place | — | — |
@@ -274,7 +277,7 @@ The title names the work, not a count. The host gives each kind four forms; core
 | State | Title | Meta |
 | --- | --- | --- |
 | Running | the live step: "Running `npm test`" | "3 of 5" |
-| Waiting | the work so far, "Read `package.json` and `build.ts`"; the waiting child shows the question | "Waiting for approval" |
+| Waiting | the work so far, "Read `package.json` and `build.ts`"; the waiting child shows the question | open (as it opens by itself): "1 waiting", since the child says what; folded: "Waiting for approval" |
 | Done | "Read `auth.ts`, `db.ts` and ran `npm test`" | "41 sec" |
 | Done, with a failure | the same title | "1 failed · 41 sec", in the name too |
 | Stopped | the same title | "Stopped after 41 sec" |
@@ -329,7 +332,7 @@ The draft's title was a count ("Read 4 files, edited 2"), had no live step while
 ### Anatomy
 
 - **Actions row while running:** with an empty draft, only **Stop**. Once there's text, **Send** appears beside Stop, named by its effect: "Steer" (deliver at the agent's next step) or "Queue" (after this turn). A chevron on Send opens a menu of the other mode and **Stop and send**, each with its key.
-- **The docked queue:** when Queue is a direct child of the composer, it docks to the composer's top edge as part of the same box: a header "2 queued" with a chevron, then one row per message with its text on one line and **Send now**, **Edit** and **Remove**, always visible. It stays docked whether or not a turn runs.
+- **The docked queue:** when Queue is a direct child of the composer, it docks to the composer's top edge as part of the same box: a header "2 queued" with a chevron, then one row per message with its text on one line and **Send now**, **Edit** and **Remove** as named icon buttons. They show on hover and focus, and always on touch, as Diff's row actions do. It stays docked whether or not a turn runs.
 
 ### States and wording
 
@@ -385,7 +388,7 @@ The composer finds a docked Queue through `core/text-target.ts`'s registry (Wave
 
 ### How it differs from the first draft
 
-The draft had two modes and a separate Queue list with Send now only. Now: Stop and send joins the menu; Send shows only once there's text; the Queue docks to the composer with Send now, Edit and Remove always visible; stopping doesn't drain the queue; and a key takes back the last queued message.
+The draft had two modes and a separate Queue list with Send now only. Now: Stop and send joins the menu; Send shows only once there's text; the Queue docks to the composer with Send now, Edit and Remove on every row (on hover or focus, always on touch); stopping doesn't drain the queue; and a key takes back the last queued message.
 
 ## 7. Message (change)
 
@@ -449,14 +452,14 @@ The draft labelled delivered messages "Steered" forever and put a turn-arrow gly
 
 | State | Header | Body |
 | --- | --- | --- |
-| Waiting | mark (waiting), "Run `npm test`?", meta "Waiting for approval" | the command in full in the code well; an optional risk line ("Deletes files outside the project"); **Deny** · **Always allow `npm test`** · **Run** |
-| Danger | the same | the risk line in danger words after the warning mark; **Deny** · **Run** (danger); no Always allow |
+| Waiting | mark (waiting), "Run `npm test`?", meta "Waiting for approval" | an optional risk line ("Deletes files outside the project"); **Deny** · **Always allow `npm test`** · **Run**; the detail "Covers commands starting with `npm test`, in this project." |
+| Danger | the same | the risk line after the warning mark (the mark carries the color, the words stay ink); **Deny** · **Run** (danger); no Always allow |
 | Sending | — | "Sending decision", buttons locked |
-| Approved, running | `npm test`, running mark, meta "4 sec" | outcome line "Approved" (or "Always allowed `npm test` · this session"), then the output, which grows below |
+| Approved, running | `npm test`, running mark, meta "4 sec" | outcome line "Approved" (or "Always allowed `npm test` in this project") after a muted check, then the output, which grows below |
 | Ran | `npm test`, complete mark, meta "6 sec" | the outcome keeps the decision; the output stays |
 | Failed | `npm test`, failed mark, meta "Exit 1 · 6 sec" | the same |
-| Denied | `npm test`, stopped mark, no meta | outcome "Denied: not outside the project"; no output |
-| Expired | the same | outcome "Expired before a decision" |
+| Denied | `npm test`, denied mark (slash), no meta | outcome "Denied: not outside the project", words only; no output |
+| Expired | `npm test`, expired mark (clock), no meta | outcome "Expired before a decision", words only |
 
 The block can't be collapsed while it waits (its trigger is `aria-disabled` for closing).
 
@@ -470,7 +473,7 @@ Confirmation's (§9). The waiting title wraps instead of truncating, at every wi
 
 ### API
 
-Terminal spreads `approvalPart`: `approval`, `onApprove`, `onDeny`, `onAlwaysAllow`, `alwaysLabel`, `alwaysDetail`, `risk`, `riskText`, `approveLabel` (default "Run"). Agent actions `approve`, `deny`, `alwaysAllow`, through its Confirmation, which is marked.
+Terminal spreads `approvalPart`: `approval`, `onApprove`, `onDeny`, `onAlwaysAllow`, `alwaysLabel`, `alwaysTarget`, `alwaysScope`, `alwaysDetail`, `risk`, `riskText`, `approveLabel` (default "Run"). Agent actions `approve`, `deny`, `alwaysAllow`, through its Confirmation, which is marked.
 
 ### How it differs from the first draft
 
@@ -485,9 +488,9 @@ The draft put a Confirmation between the command and the output, kept a generic 
 ### Anatomy and wording
 
 - **Choices**, in this order: **Deny** (secondary) · **Always allow `<scope>`** (secondary, host-offered) · **Approve** (primary). This reverses 0.8's Approve-first order; the 0.9 changeset says so.
-- **Scope line** under the choices when `alwaysDetail` is set: "Commands starting with `npm test`, in this project". The host owns the list and its revocation (settings, not here).
+- **Scope line** under the choices when `alwaysDetail` is set: "Covers `search_docs` in this project." The outcome repeats the same *where* (§2.1 Scope). The host owns the list and its revocation (settings, not here).
 - **Deadline:** with `expiresAt`, the meta reads "Decide in 4 min", in minutes, then "Decide in 40 sec" under a minute.
-- **Outcomes:** "Approved", "Always allowed `npm test` · this session", "Approved automatically", "Denied: <reason>", "Expired before a decision", "Cancelled before a decision".
+- **Outcomes:** "Approved", "Always allowed `search_docs` in this project", "Approved automatically", "Denied: <reason>", "Expired before a decision", "Cancelled before a decision", each after its mark (§2.1 Marks).
 - **Danger:** `risk: "danger"` gives the danger mark, the risk line, a danger Approve, and no Always allow.
 
 ### After an action
@@ -508,7 +511,8 @@ Deny and Approve stay on one row; Always allow takes its own row above them when
 type ConfirmationOptions = /* 0.8 */ & {
   onAlwaysAllow?: ConfirmationCallback; // the decision carries always: true and scope
   alwaysLabel?: string; // default "Always allow"
-  alwaysScope?: string; // "npm test", shown in the label and the outcome
+  alwaysTarget?: string; // what: "npm test", shown in the label and the outcome
+  alwaysScope?: string; // where: "in this project", shown in the detail and the outcome
   alwaysDetail?: string;
   risk?: "danger";
   riskText?: string;
@@ -555,7 +559,7 @@ The trigger stays a ring. The details card has three bands:
 
 - **Summary:** "57% full" and "72,900 of 128,000 tokens", with **Compact** (when `onCompact` is set) at the row's end; a stacked bar of the breakdown with a tick at `compactAt`; and the level in words when it's high: "86% full · Filling up" (80%), "Almost full" (95%).
 - **Breakdown rows:** swatch, label, tokens, percent, then **Free space** last with a hollow swatch. Rows with 0 stay, so the card's height is stable. Focusing or hovering a row highlights its slice.
-- **Limits** (with `limits`): one row per window, "5-hour limit · 62% used · Resets 5:00 PM, in 3 hr" and "Weekly limit · 24% used · Resets Tue", each with a thin bar and, with `windowStartedAt`, "Ahead of pace" or "On pace".
+- **Limits** (with `limits`): one row per window, "5-hour limit · 62% used · Resets 5:00 PM, in 3 hr" and "Weekly limit · 24% used · Resets Tue", each with a thin bar and, with `windowStartedAt`, "Ahead of pace" or "On pace". From 80% a window says "Running low" first, so its warning color is never alone.
 
 ### States and wording
 
@@ -635,15 +639,15 @@ With `groupBy: "status"`:
 
 | Group | Heading | Order | Row meta |
 | --- | --- | --- | --- |
-| Needs you | "Needs you 3" | oldest waiting first | second line "Approval · Run `rm -rf dist`?" or "Question · Which payment provider?"; time waiting at the end of the first |
-| Running | "2 running · 1 queued" | newest first | second line the latest step, "Editing `theme.css` · +48 −6" |
-| Done | "12 done", folded behind a disclosure row, paged | newest first | the summary |
+| Needs you | "Needs you 3" (each heading is its name and a muted count) | oldest waiting first | second line "Approval · Run `rm -rf dist`?" or "Question · Which payment provider?"; time waiting at the end of the first |
+| Running | "Running 3"; a queued row says "Queued" itself | newest first | second line the latest step, "Editing `theme.css` · +48 −6" |
+| Done | "Done 13", the newest shown, the rest behind "12 more done", paged | newest first | the summary |
 
 A row is two lines: the title with its one mark and time at the end, then the second line. Empty "Needs you": the group is absent; when nothing at all is waiting and nothing runs, the list's empty text is "Nothing is waiting on you." One mark per row, by priority: approval > question > failed (unseen) > running > done (unseen). Failed and done marks show only while unread, so a seen failure leaves "Needs you".
 
 ### After an action
 
-**Archive** (row menu) moves a thread out at once and calls `onArchive`; if that rejects, it comes back and "`<title>` was restored" is announced. An `archived` view lists archived threads with **Unarchive** when the host offers `onUnarchive`.
+**Archive** (row menu) moves a thread out at once and calls `onArchive`; if that rejects, it comes back and "`<title>` was restored" is announced. An `archived` view lists archived threads; with `onUnarchive`, **Unarchive** takes the time's place on hover or focus, always on touch.
 
 ### Keyboard, ARIA, mobile, motion
 
