@@ -23,7 +23,9 @@ const parts = createParts(primitive, {
   "item-icon": "span",
   "item-title": "span",
   "item-description": "span",
-  "item-remove": "span",
+  "item-send": "button",
+  "item-edit": "button",
+  "item-remove": "button",
   instructions: "span",
 });
 
@@ -44,6 +46,11 @@ const withDefault = <State, Part extends Component = Component>(
 export const QueueSection = parts.Section;
 export const QueueSectionContent = parts.SectionContent;
 export const QueueItemIcon = parts.ItemIcon;
+/** Sends a queued item now, shown while `@send` is bound. Named "Send now"; an arrow unless you fill the slot. */
+export const QueueItemSend = parts.ItemSend;
+/** Gives a queued item back to the Composer it's docked in, shown while `@edit` is bound. A pencil unless you fill the slot. */
+export const QueueItemEdit = parts.ItemEdit;
+/** Removes an item, shown while `@remove` is bound. An ✕ unless you fill the slot. */
 export const QueueItemRemove = parts.ItemRemove;
 
 /** The section's title and count, unless you fill the slot. */
@@ -67,11 +74,14 @@ export const QueueItemDescription = withDefault<{ description: string }>(
   ({ state }) => state.description,
 );
 
-/** The item whose `id` is `value`. Without a default slot, it shows the item's mark, title, description and remove button. */
+/**
+ * The item whose `id` is `value`. Without a default slot, it shows the item's mark, title and description, then Send
+ * now, Edit and Remove.
+ */
 export const QueueItem = withDefault(parts.Item, "QueueItem", () => [
   h(QueueItemIcon),
   h("span", { "data-text": "" }, [h(QueueItemTitle), h(QueueItemDescription)]),
-  h(QueueItemRemove),
+  h("span", { "data-queue-actions": "" }, [h(QueueItemSend), h(QueueItemEdit), h(QueueItemRemove)]),
 ]);
 
 /** An item for each of the section's rows, unless you fill the slot. */
@@ -97,7 +107,8 @@ const section = (value: "pending" | "complete") =>
 const defaultParts = () => [section("pending"), section("complete"), h(QueueInstructions)];
 
 /**
- * The agent's queue: pending items under Queued, complete ones under Completed, each with a count. Moving and removing
- * items are offered while `@reorder` and `@remove` are bound. A default slot replaces the default sections.
+ * The agent's queue: pending items under Queued, complete ones under Completed, each with a count. Moving, removing,
+ * sending now and editing items are offered while `@reorder`, `@remove`, `@send` and `@edit` are bound. A default
+ * slot replaces the default sections.
  */
 export const Queue = withDefault(parts.Root, "Queue", defaultParts);

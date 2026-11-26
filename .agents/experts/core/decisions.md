@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: 8aee26be
+Last reviewed: 9994de73
 
 ## Settled
 
+- Composer's `submit` stays a plain method while a turn runs and refuses there, though the bridge lists it: a getter would drop it from web's `element.api`, which hosts call. `steer`, `queue` and `stopAndSend` are the running turn's actions (Wave 7 layer 4).
 - Wave 7: `scripts/tests/words.test.mjs` scans `src/` only. Docs prose quotes the words on purpose, so it isn't scanned.
 - **Core is the one contract for five render layers (framework layers plan, 2026-11-20):** the Vue, Svelte and Solid layers call `createParts` on the same primitives. A behavior gap a new layer finds is fixed here, with React's and Web's specs for that component run again; never patched in one render layer. Don't propose framework-specific options, state or actions.
 - **`appendText` returns `true` for a controlled composer before the owner applies the value (Task 17):** it goes through `createChange`, as `setValue` does.
@@ -55,6 +56,8 @@ Last reviewed: 8aee26be
 
 ## Known and open (don't report again, check whether fixed)
 
+- Send's menu marks the current mode with `data-current` and an `aria-hidden` check only, so a screen reader doesn't hear which mode Enter uses; Send's own name says it (Wave 7 layer 4).
+- A queued message given back by Edit to a controlled composer that cancels the change is lost: the host has already removed the item. The composer refuses while disabled, so Edit isn't offered then (Wave 7 layer 4).
 - **A command with backticks loses them in Terminal's Confirmation name** (`terminal.ts` `question`): the label wraps the command in backticks and Confirmation's `codeSpans` splits on the command's own, so `echo \`date\`` is named "Run echo date?". The header title is right (it uses `titleSpans`). Needs Confirmation to take pieces or an escape (Wave 7 layer 3 review).
 
 - Wave 7 layer 2: `createCountdown` counts to an ISO instant; spec §3 asks for a relative `seconds` value and for Connection Status to spread it. Layer 5 (Message, retry) adds the relative form and moves Connection Status onto it.

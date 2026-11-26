@@ -1,5 +1,7 @@
 import {
+  announce,
   type ChangeDetails,
+  type ChangeSource,
   createReorder,
   definePrimitive,
   dispatch,
@@ -11,16 +13,27 @@ import {
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { QueueItem } from "../../types/index.js";
+import { actionSource } from "../action-source.js";
 import { bindLeavingRow, dropRow, type LeavingRow, leavingRows } from "../leaving.js";
 import { createListFocus, type ListFocus } from "../list-focus.js";
 import { memo } from "../memo.js";
-import { enter, layout, type MotionMode, resolvedMotion } from "../motion/index.js";
+import { cancel, enter, exit, layout, type MotionMode, resolvedMotion } from "../motion/index.js";
+import { createPendingAction } from "../pending.js";
 import { bindStepPanel } from "../step/base.js";
+import { bindTextSource, canInsertText, insertText } from "../text-target.js";
+import { WORDS } from "../words.js";
 
 /** The section an item shows in: Queued while `pending`, Completed once `complete`. */
 export type QueueSection = QueueItem["status"];
 
 export type QueueReorderReason = "drag" | "move-key" | "imperative";
+
+/** Send now's and Edit's details: what caused it and who. `"take-back"` is Alt+Up in the composer it's docked in. */
+export type QueueItemActionDetails = {
+  reason: "send-press" | "edit-press" | "take-back" | "imperative";
+  event?: Event;
+  source: ChangeSource;
+};
 
 export type QueueOptions = {
   /**
@@ -49,6 +62,23 @@ export type QueueOptions = {
    */
   onRemove?: (id: string, details: ChangeDetails<"remove-press" | "imperative">) => void;
   /**
+   * Called with a queued item's `id` when someone sends it now: into the running turn, or as the next message. While
+   * it's set, queued items show Send now. Return a promise to lock sending until it settles; a resolved send stays
+   * locked until the host removes or changes the item.
+   */
+  onSend?: (id: string, details: QueueItemActionDetails) => unknown;
+  /**
+   * Called with a queued item's `id` when someone edits it: remove it from `items`. Once the call resolves, its title
+   * goes back into the Composer the Queue is docked in, on its own line. While it's set and the Queue is docked, queued
+   * items show Edit, and Alt+Up in that Composer's empty editor takes back the last one.
+   */
+  onEdit?: (id: string, details: QueueItemActionDetails) => unknown;
+  /**
+   * Why Send now can't run right now, like "Available after you answer the pending request". While it's set, Send
+   * now is disabled and says this.
+   */
+  sendDisabledReason?: string;
+  /**
    * `"auto"` follows `prefers-reduced-motion`. A removed item fades out before the items after it move up; under
    * `"none"` it leaves at once.
    * @default "auto"
@@ -76,6 +106,22 @@ export type QueueState = {
   canReorder: boolean;
   /** Whether `onRemove` is set. */
   canRemove: boolean;
+  /** Whether `onSend` is set. */
+  canSend: boolean;
+  /** Whether `onEdit` is set. */
+  canEdit: boolean;
+  /** The `sendDisabledReason` option; Send now is disabled and says it while set. */
+  sendDisabledReason: string | undefined;
+  /** The item being sent, from Send now until the host removes or changes it, or the send fails. */
+  sending: string | null;
+  /** Whether a send is in flight. */
+  sendPending: boolean;
+  /** Whether the Queue sits inside a Composer, docked to its top edge. */
+  docked: boolean;
+  /** Whether the Composer it's docked in has a turn running. */
+  running: boolean;
+  /** Whether the docked Queue is collapsing after its last queued item left; it stays shown until it ends. */
+  closing: boolean;
   motion: MotionMode;
 };
 
@@ -98,6 +144,22 @@ export type QueueApi = ListFocus<QueueState, ItemProps> & {
    * again until the host passes a new object for it. Offered only while `onRemove` is set and there are items.
    */
   readonly remove: ((id: string, event?: Event) => boolean) | undefined;
+  /**
+   * Sends a queued item now, through `onSend`. Returns whether it was asked; an unknown or completed item is refused.
+   * Offered only while `onSend` is set, an item is queued, no `sendDisabledReason` is set, and no send is in flight or
+   * awaiting the host.
+   */
+  readonly send: ((id: string, event?: Event) => boolean) | undefined;
+  /**
+   * Edits a queued item, through `onEdit`, giving its title back to the Composer it's docked in. Returns whether it
+   * was asked; an unknown or completed item is refused, and so is any while the Composer can't take text. Offered only
+   * while `onEdit` is set, the Queue is docked and an item is queued.
+   */
+  readonly edit: ((id: string, event?: Event) => boolean) | undefined;
+  /** Edits the last queued item, as Alt+Up in the Composer does. Returns whether there was one. */
+  takeBack: (source: ChangeSource) => boolean;
+  /** Docks the Queue in the Composer around it, and grows or folds it as its first item arrives or its last leaves. */
+  bindDock: (el: HTMLElement) => () => void;
   /** The `items` option. */
   getItems: () => readonly QueueItem[];
   /** Pointer and keyboard moves of pending items. Called by the item slot. */
@@ -139,6 +201,8 @@ export type QueuePrimitive = ReturnType<
       "item-icon": Slot<InnerProps & BaseSlotProps>;
       "item-title": Slot<InnerProps & BaseSlotProps, { title: string }>;
       "item-description": Slot<InnerProps & BaseSlotProps, { description: string }>;
+      "item-send": Slot<InnerProps & BaseSlotProps>;
+      "item-edit": Slot<InnerProps & BaseSlotProps>;
       "item-remove": Slot<InnerProps & BaseSlotProps>;
       instructions: Slot<BaseSlotProps, { text: string }>;
     }
@@ -146,7 +210,7 @@ export type QueuePrimitive = ReturnType<
 >;
 
 const NO_ITEMS: readonly QueueItem[] = [];
-const SECTION_TITLES: Record<QueueSection, string> = { pending: "Queued", complete: "Completed" };
+const SECTION_TITLES: Record<QueueSection, string> = { pending: WORDS.queued, complete: "Completed" };
 
 const byId = memo((rows: LeavingRow<QueueItem>[]) =>
   Object.fromEntries(rows.map((row) => [row.item.id, row])),
@@ -163,6 +227,9 @@ const presentation = (options: QueueOptions) => {
     order: pendingIds(items),
     canReorder: options.onReorder !== undefined,
     canRemove: options.onRemove !== undefined,
+    canSend: options.onSend !== undefined,
+    canEdit: options.onEdit !== undefined,
+    sendDisabledReason: options.sendDisabledReason || undefined,
     motion: options.motion ?? "auto",
   };
 };
@@ -196,11 +263,25 @@ const itemsIndex = (items: readonly QueueItem[], order: string[], id: string) =>
 };
 
 /** A section's title, how many items it has, and whether it's open. */
-export const queueSection = (state: QueueState, section: QueueSection): QueueSectionState => ({
-  title: SECTION_TITLES[section],
-  count: state.items.filter((item) => item.status === section).length,
-  open: state.openSections.includes(section),
-});
+export const queueSection = (state: QueueState, section: QueueSection): QueueSectionState => {
+  const count = state.items.filter((item) => item.status === section).length;
+  return {
+    title:
+      state.docked && section === "pending"
+        ? `${count} ${WORDS.queued.toLowerCase()}`
+        : SECTION_TITLES[section],
+    count,
+    open: state.openSections.includes(section),
+  };
+};
+
+/** A docked row's name, "Queued message 2 of 3, not sent", read before its text. */
+export const queueItemName = (state: Pick<QueueState, "order">, id: string) => {
+  const at = state.order.indexOf(id);
+  return at < 0
+    ? undefined
+    : `${WORDS.queuedMessage} ${at + 1} of ${state.order.length}, ${WORDS.notSentYet}`;
+};
 
 /** The keys that move and remove items, for the instructions part. */
 export const queueInstructions = ({ canReorder, canRemove }: Pick<QueueState, "canReorder" | "canRemove">) =>
@@ -222,6 +303,9 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
     label: "string",
     onReorder: "callback",
     onRemove: "callback",
+    onSend: "action",
+    onEdit: "action",
+    sendDisabledReason: "string",
     defaultOpenSections: "list",
     motion: "string",
   },
@@ -235,6 +319,11 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       focused: null,
       openSections: options.defaultOpenSections ?? ["pending"],
       exitingSections: [],
+      sending: null,
+      sendPending: false,
+      docked: false,
+      running: false,
+      closing: false,
     };
   },
   sync: presentation,
@@ -279,6 +368,10 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
 
     // Each item asked to be removed, as it was then: asked again only once the host passes it changed.
     const removing = new Map<string, QueueItem>();
+    // The item being sent, as it was then: the lock lifts once the host removes or changes it.
+    let sent: QueueItem | undefined;
+    const sendLock = createPendingAction(context, { state: "sendPending" });
+    const editing = new Set<string>();
     let lastItems = store.get().items;
     context.onOptions((options) => {
       const items = options.items ?? NO_ITEMS;
@@ -286,6 +379,11 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       lastItems = items;
       const current = new Map(items.map((item) => [item.id, item]));
       for (const [id, item] of removing) if (current.get(id) !== item) removing.delete(id);
+      if (sent && current.get(sent.id) !== sent) {
+        sent = undefined;
+        sendLock.release();
+        store.set({ sending: null });
+      }
       setRows(leavingRows(store.get().rows, items, options.motion));
     });
 
@@ -324,8 +422,95 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       return asked;
     };
 
+    const queued = (id: string) =>
+      store.get().items.find((item) => item.id === id && item.status === "pending");
+    const details = (
+      event: Event | undefined,
+      reason: QueueItemActionDetails["reason"],
+      source?: ChangeSource,
+    ): QueueItemActionDetails => ({
+      reason,
+      ...(event && { event }),
+      source: source ?? actionSource(event, reason),
+    });
+    const send = (id: string, event?: Event) => {
+      const { onSend } = context.options();
+      const item = queued(id);
+      if (!onSend || !item || store.get().sending !== null || store.get().sendDisabledReason) return false;
+      const call = details(event, event ? "send-press" : "imperative");
+      sent = item;
+      store.set({ sending: id });
+      void sendLock
+        .run(() => onSend(id, call))
+        ?.then((outcome) => {
+          if (outcome !== "failed") return;
+          sent = undefined;
+          store.set({ sending: null });
+          announce(`${item.title} ${WORDS.notSentYet}`, { priority: "polite" });
+        });
+      return true;
+    };
+    const edit = (id: string, event?: Event, source?: ChangeSource) => {
+      const { onEdit } = context.options();
+      const item = queued(id);
+      // The text has nowhere to go unless a composer around the Queue takes it, so the item stays.
+      if (!onEdit || !item || editing.has(id) || !canInsertText(context.element("root"))) return false;
+      const call = details(event, source ? "take-back" : event ? "edit-press" : "imperative", source);
+      editing.add(id);
+      new Promise((resolve) => resolve(onEdit(id, call))).then(
+        () => {
+          editing.delete(id);
+          if (!insertText(context.element("root"), item.title, call.source, "queue-edit"))
+            announce(`${item.title} ${WORDS.notSentYet}`, { priority: "polite" });
+        },
+        () => editing.delete(id),
+      );
+      return true;
+    };
+    const takeBack = (source: ChangeSource) => {
+      const last = store.get().order.at(-1);
+      return last !== undefined && edit(last, undefined, source);
+    };
+
     return {
       ...listFocus,
+      get send() {
+        const { canSend, sending, order, sendDisabledReason } = store.get();
+        return canSend && sending === null && !sendDisabledReason && order.length > 0 ? send : undefined;
+      },
+      get edit() {
+        const { canEdit, docked, order } = store.get();
+        return canEdit && docked && order.length > 0 ? edit : undefined;
+      },
+      takeBack,
+      bindDock: (el) => {
+        const unlink = bindTextSource(el, {
+          takeBack,
+          dock: (running) => store.set({ docked: running !== null, running: running ?? false }),
+        });
+        let filled = store.get().order.length > 0;
+        const unsubscribe = store.subscribe(() => {
+          const { docked, order, motion } = store.get();
+          if (filled === order.length > 0) return;
+          filled = !filled;
+          if (!docked) return;
+          if (filled) {
+            if (store.get().closing) store.set({ closing: false });
+            void enter(el, "expand", { motion });
+            return;
+          }
+          store.set({ closing: true });
+          exit(el, "expand", { motion }).then(
+            () => store.set({ closing: false }),
+            () => {},
+          );
+        });
+        return () => {
+          unsubscribe();
+          unlink();
+          cancel(el);
+        };
+      },
       get reorder() {
         const { canReorder, order } = store.get();
         return canReorder && order.length > 1 ? reorder : undefined;
@@ -445,8 +630,21 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
   slots: (slot) => ({
     root: slot({
       role: "region",
-      attrs: (state) => ({ "aria-label": state.label, "data-motion": state.motion }),
-      bind: (_el, { api }) => api.bindRoot(),
+      attrs: (state) => ({
+        "aria-label": state.label,
+        "data-docked": state.docked ? "" : undefined,
+        "data-running": state.running ? "" : undefined,
+        "data-empty": state.order.length === 0 && !state.closing ? "" : undefined,
+        "data-motion": state.motion,
+      }),
+      bind: (el, { api }) => {
+        const unbindRoot = api.bindRoot();
+        const unbindDock = api.bindDock(el);
+        return () => {
+          unbindRoot();
+          unbindDock();
+        };
+      },
     }),
     section: slot<ItemProps, QueueSectionState>({
       props: { value: "string" },
@@ -510,11 +708,19 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       attrs: (state, part) => {
         const row = state.rowsById[part.key];
         const sortable = state.canReorder && row?.item.status === "pending";
+        const name = state.docked ? queueItemName(state, part.key) : undefined;
+        const described = sortable || state.canRemove;
         return {
           tabindex: part.api.roving.tabIndex(state, part),
+          "aria-label": name,
           "aria-roledescription": sortable ? "sortable item" : undefined,
-          "aria-describedby": sortable || state.canRemove ? `${part.id}-instructions` : undefined,
+          "aria-describedby":
+            [name && `${part.id}-title-${part.key}`, described && `${part.id}-instructions`]
+              .filter(Boolean)
+              .join(" ") || undefined,
           "aria-keyshortcuts": state.canRemove ? "Delete" : undefined,
+          "aria-busy": state.sending === part.key && state.sendPending ? "true" : undefined,
+          "data-sending": state.sending === part.key ? "" : undefined,
           "aria-hidden": row?.leaving ? "true" : undefined,
           "data-status": row?.item.status,
           "data-sortable": sortable ? "" : undefined,
@@ -527,8 +733,10 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
         // A picked-up item takes every key, as in UI SDK's sortable list; then Delete, then arrows between items.
         keydown: (event, { el, api, key }) => {
           const press = event as KeyboardEvent;
-          if (api.reordering.keydown(press, key)) return;
-          if ((press.key === "Delete" || press.key === "Backspace") && api.remove) {
+          // A row's own buttons keep their keys, but the arrows still move between rows.
+          const own = press.target === el;
+          if (own && api.reordering.keydown(press, key)) return;
+          if (own && (press.key === "Delete" || press.key === "Backspace") && api.remove) {
             press.preventDefault();
             api.remove(key, press);
           } else if (el) {
@@ -558,19 +766,61 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
     "item-title": slot<InnerProps, { title: string }>({
       props: fromItem,
       state: (state, { key }) => ({ title: state.rowsById[key]?.item.title ?? "" }),
+      attrs: (_state, { id, key }) => ({ id: `${id}-title-${key}` }),
     }),
     "item-description": slot<InnerProps, { description: string }>({
       props: fromItem,
       state: (state, { key }) => ({ description: state.rowsById[key]?.item.description ?? "" }),
     }),
-    // Pointer only, like Attachments': keyboard users press Delete on the item.
+    // A queued row's buttons: Tab reaches the focused row's, and they show on hover or focus, always on touch.
+    "item-send": slot<InnerProps>({
+      role: "button",
+      focus: "native",
+      props: fromItem,
+      present: (state, { key }) => state.canSend && state.rowsById[key]?.item.status === "pending",
+      press: ({ api, key }, event) => api.send?.(key, event),
+      on: { pointerdown: (event) => event.preventDefault() },
+      attrs: (state, part) => ({
+        type: "button",
+        tabindex: part.api.roving.tabIndex(state, { ...part, props: { value: part.key } }),
+        "aria-label": WORDS.sendNow,
+        title: state.sendDisabledReason ?? (state.running ? WORDS.steerTooltip : WORDS.sendNow),
+        "aria-disabled": state.sending !== null || state.sendDisabledReason ? "true" : undefined,
+        "data-pending": state.sending === part.key && state.sendPending ? "" : undefined,
+        "data-queue-action": "send",
+      }),
+    }),
+    "item-edit": slot<InnerProps>({
+      role: "button",
+      focus: "native",
+      props: fromItem,
+      present: (state, { key }) =>
+        state.canEdit && state.docked && state.rowsById[key]?.item.status === "pending",
+      press: ({ api, key }, event) => api.edit?.(key, event),
+      on: { pointerdown: (event) => event.preventDefault() },
+      attrs: (state, part) => ({
+        type: "button",
+        tabindex: part.api.roving.tabIndex(state, { ...part, props: { value: part.key } }),
+        "aria-label": "Edit",
+        title: "Edit",
+        "data-queue-action": "edit",
+      }),
+    }),
     "item-remove": slot<InnerProps>({
+      role: "button",
+      focus: "native",
       props: fromItem,
       present: (state) => state.canRemove,
       press: ({ api, key }, event) => api.remove?.(key, event),
       // A handled pointerdown doesn't start a reorder, which would capture the pointer and take the click.
       on: { pointerdown: (event) => event.preventDefault() },
-      attrs: () => ({ "aria-hidden": "true" }),
+      attrs: (state, part) => ({
+        type: "button",
+        tabindex: part.api.roving.tabIndex(state, { ...part, props: { value: part.key } }),
+        "aria-label": "Remove",
+        title: "Remove",
+        "data-queue-action": "remove",
+      }),
     }),
     instructions: slot<BaseSlotProps, { text: string }>({
       state: (state) => ({ text: queueInstructions(state) }),
@@ -579,7 +829,7 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
   }),
   // Items are listed by title, so an agent can name one to move or remove, and an unknown one is refused.
   agent: {
-    actions: ["reorder", "remove"],
+    actions: ["reorder", "remove", "send", "edit"],
     items: (api: QueueApi) => api.getItems().map((item) => ({ value: item.id, label: item.title })),
     closed: true,
   },

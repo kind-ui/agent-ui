@@ -6,11 +6,19 @@ import {
   createFocusRecovery,
   createInputHistory,
   definePrimitive,
+  matchesShortcut,
   type SlotDefinition,
   type ValueStorage,
 } from "@ui-sdk/core";
 import type { FileInputOptions, FileInputValueChangeReason } from "@ui-sdk/core/file-input";
+import {
+  createMenuController,
+  type MenuActionDetails,
+  type MenuController,
+  type MenuOpenChangeReason,
+} from "@ui-sdk/core/menu";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
+import { ariaKeyshortcuts, formatShortcut } from "@ui-sdk/core/shortcuts";
 import {
   createTokenInputController,
   fromText,
@@ -20,11 +28,15 @@ import {
   toText,
 } from "@ui-sdk/core/token-input";
 import type { TriggerDefinition } from "@ui-sdk/core/trigger-menu";
+import { actionSource } from "../action-source.js";
 import type { AttachmentsOptions } from "../attachments/index.js";
+import { type ComposedHandler, hearComposed } from "../composed-events.js";
 import { type FileIntake, forwardFileInputEvents } from "../file-input-events.js";
 import { memo } from "../memo.js";
 import { cancel, enter, exit, type MotionMode } from "../motion/index.js";
-import { bindTextTarget } from "../text-target.js";
+import { createPendingAction } from "../pending.js";
+import { bindTextTarget, type TextInsertReason, takeBackText } from "../text-target.js";
+import { WORDS } from "../words.js";
 import {
   type ComposerAttachment,
   type ComposerDraft,
@@ -42,7 +54,8 @@ import {
  * back an earlier prompt. `"picker"`, `"drop"`, `"paste"`, `"reset"`: File Input attached files.
  * `"remove-press"`: an attachment was removed. `"submit"`: a resolved submission cleared the draft.
  * `"restore"`: the draft saved under `draftKey` came back. `"discard-press"`: Discard emptied it.
- * `"dictation"`: a Dictation inside the composer added its text. `"imperative"`: an `api` call without an event.
+ * `"dictation"`: a Dictation inside the composer added its text. `"queue-edit"`: a docked Queue's Edit, or Alt+Up,
+ * gave back a queued message. `"imperative"`: an `api` call without an event.
  */
 export type ComposerValueChangeReason =
   | "input-change"
@@ -51,7 +64,21 @@ export type ComposerValueChangeReason =
   | "submit"
   | "restore"
   | "discard-press"
-  | "dictation";
+  | TextInsertReason;
+
+/**
+ * How a draft goes while a turn runs: `"steer"` into the turn at the agent's next step, `"queue"` after it ends, or
+ * `"stop-and-send"`, which ends the turn and starts a new one with the draft.
+ */
+export type ComposerSteerMode = "steer" | "queue" | "stop-and-send";
+
+/** `onSteer`'s details: the mode, what caused it and who. */
+export type ComposerSteerDetails = {
+  mode: ComposerSteerMode;
+  reason: "send-press" | "send-key" | "item-press" | "imperative";
+  event?: Event;
+  source: ChangeSource;
+};
 
 export type ComposerOptions = {
   /** The draft. Passing it controls it: change it in `onValueChange`. Don't pass it with `defaultValue`. */
@@ -65,8 +92,34 @@ export type ComposerOptions = {
    * draft unless it changed meanwhile, and rejecting keeps it. Otherwise the draft clears right away.
    */
   onSubmit?: (draft: ComposerDraft) => unknown;
-  /** Called when Stop is pressed. While it's set, Stop takes Send's place during a pending submission. */
+  /**
+   * Called when Stop is pressed. While it's set, Stop takes Send's place during a pending submission and while
+   * `running`.
+   */
   onStop?: () => void;
+  /**
+   * Whether the agent's turn is running. Stop shows while it is (with `onStop`), and Enter never sends a new turn:
+   * with `onSteer`, a draft goes into the running turn instead.
+   * @default false
+   */
+  running?: boolean;
+  /**
+   * Called with the draft when someone sends it while `running`, with `details.mode`: `"steer"` into the turn,
+   * `"queue"` after it (add it to your Queue), or `"stop-and-send"` (stop the turn and send it as a new one). Return
+   * a promise to lock sending until it settles: resolving clears what was sent, keeping anything typed since, and
+   * rejecting keeps the draft. While it's set and a turn runs, Send shows beside Stop once there's text.
+   */
+  onSteer?: (draft: ComposerDraft, details: ComposerSteerDetails) => unknown;
+  /**
+   * What Send and Enter do while `running`. The other mode is in Send's menu and on Alt+Enter.
+   * @default "steer"
+   */
+  steerMode?: "steer" | "queue";
+  /**
+   * Offers Stop and send in Send's menu, and on Shift+Mod+Enter.
+   * @default true when `onStop` and `onSteer` are set
+   */
+  stopAndSend?: boolean;
   /**
    * Which keys send. With `"enter"`, Shift+Enter starts a new line; with `"mod-enter"`, Enter does.
    * @default "enter"
@@ -119,8 +172,24 @@ export type ComposerState = {
   attachmentsClosing: boolean;
   /** Whether the draft came back from `draftStorage` and hasn't been edited since; "Draft restored" shows. */
   restored: boolean;
-  /** Whether `onStop` is set, so Stop takes Send's place while pending. */
+  /** Whether `onStop` is set, so Stop takes Send's place while pending or running. */
   canStop: boolean;
+  /** The `running` option. */
+  running: boolean;
+  /** Whether `running` and `onSteer` are both set, so Send shows beside Stop once there's text. */
+  canSteer: boolean;
+  /** The `steerMode` option. */
+  steerMode: "steer" | "queue";
+  /** Whether Stop and send is offered. */
+  stopAndSend: boolean;
+  /** Whether a pending submission carries attachments, so Stop reads "Cancel sending". */
+  uploading: boolean;
+  /** Whether a steer, queue or stop-and-send is in flight; sending is locked until it settles. */
+  steerPending: boolean;
+  /** Whether Send's menu is open. */
+  sendMenuOpen: boolean;
+  /** The keys of each way to send, in the platform's symbols; `null` on the server and until the root binds. */
+  keys: ComposerKeys | null;
   /** The options of the same name, with their defaults. */
   disabled: boolean;
   submitOn: "enter" | "mod-enter";
@@ -141,18 +210,36 @@ export type ComposerApi = {
   setValue: (value: ComposerDraft | string, event?: Event) => boolean;
   /**
    * Adds text at the end of the draft, after a space, as a Dictation inside the composer does with what it heard.
-   * `source`, `"programmatic"` by default, is who caused it, as the change's details report. Returns whether the
-   * change was accepted.
+   * `source`, `"programmatic"` by default, is who caused it, as the change's details report. With `"queue-edit"`, as
+   * a docked Queue's Edit gives a message back, the text goes on its own line and the caret after it. Returns whether
+   * the change was accepted.
    */
-  appendText: (text: string, source?: ChangeSource) => boolean;
+  appendText: (text: string, source?: ChangeSource, reason?: TextInsertReason) => boolean;
   /** Inserts a mention or command at the caret. Returns whether it was inserted. */
   insertToken: (token: TokenToInsert) => boolean;
   /** Removes an attachment from the draft by its `id`. Returns whether the change was accepted. */
   removeAttachment: (id: string, event?: Event) => boolean;
   /** Sends the draft, unless there's nothing to send, it's pending or disabled, or `onSubmit` isn't set. */
   submit: (event?: Event) => void;
-  /** Calls `onStop`. Offered only while a submission is pending and `onStop` is set. */
+  /** Calls `onStop`. Offered only while a submission is pending or a turn is running, and `onStop` is set. */
   readonly stop: ((event?: Event) => void) | undefined;
+  /**
+   * Sends the draft into the running turn through `onSteer`. Offered only while `running` and `onSteer` are set,
+   * nothing is in flight, and there's something to send.
+   */
+  readonly steer: ((event?: Event) => void) | undefined;
+  /** Sends the draft after the running turn, through `onSteer`. Offered when `steer` is. */
+  readonly queue: ((event?: Event) => void) | undefined;
+  /** Stops the turn and sends the draft as a new one, through `onSteer`. Offered when `steer` is and `stopAndSend` is on. */
+  readonly stopAndSend: ((event?: Event) => void) | undefined;
+  /** Sends as Enter does: in `steerMode` while a turn runs and `onSteer` is set, else through `onSubmit`. */
+  sendDraft: (event?: Event) => void;
+  /** Handles Alt+Enter, Shift+Mod+Enter and Alt+Up in the editor. Returns whether it took the key. */
+  sendKeydown: (event: KeyboardEvent) => boolean;
+  /** Drives Send's menu. */
+  sendMenu: MenuController;
+  /** Send's menu's events on Web Components, heard by the send-menu slot through `hearComposed`. */
+  sendMenuEvents: Record<string, ComposedHandler>;
   /** Empties a restored draft and removes it from `draftStorage`. Offered only while "Draft restored" shows. */
   readonly discardDraft: ((event?: Event) => void) | undefined;
   /** Restores the saved draft and keeps saving it while the root is in the page. Returns a cleanup. */
@@ -181,8 +268,38 @@ export type ComposerApi = {
     input: (state: ComposerState) => ComposerInputState;
     triggerMenu: (state: ComposerState) => ComposerTriggerMenuState;
     attachments: (state: ComposerState) => ComposerAttachmentsState;
+    steer: (state: ComposerState) => ComposerSteerState;
+    sendMenu: (state: ComposerState) => ComposerSendMenuState;
+    sendMenuTrigger: (state: ComposerState) => ComposerSendMenuTriggerState;
   };
 };
+
+/** The keys of each way to send, as `formatShortcut` shows them, and for `aria-keyshortcuts`. */
+export type ComposerKeys = Record<ComposerSteerMode, { label: string; aria: string }>;
+
+/** What the steer slot hands render functions: Send's words while a turn runs. */
+export type ComposerSteerState = { label: string };
+
+/** A row of Send's menu: a way to send, its words, its keys, and whether it's `steerMode`. */
+export type ComposerSendItem = {
+  value: ComposerSteerMode;
+  label: string;
+  description: string;
+  shortcut: string;
+  checked: boolean;
+};
+
+/** What the send-menu slot hands UI SDK Menu, and its rows. On Web Components, write the Menu's keys onto the `ui-menu`. */
+export type ComposerSendMenuState = {
+  controller: MenuController;
+  open: boolean;
+  onOpenChange: (open: boolean, details: ChangeDetails<MenuOpenChangeReason>) => void;
+  onAction: (value: string, details: MenuActionDetails) => void;
+  items: ComposerSendItem[];
+};
+
+/** What the send-menu-trigger slot hands UI SDK's `MenuTrigger`. */
+export type ComposerSendMenuTriggerState = { "aria-label": string; disabled: boolean };
 
 export type ComposerRootState = {
   /** Props for the File Input around the form's content. */
@@ -227,6 +344,9 @@ export type ComposerPrimitive = ReturnType<
       "trigger-menu": ComposerSlot<ComposerTriggerMenuState>;
       attachments: ComposerSlot<ComposerAttachmentsState>;
       submit: ComposerSlot;
+      steer: ComposerSlot<ComposerSteerState>;
+      "send-menu": ComposerSlot<ComposerSendMenuState>;
+      "send-menu-trigger": ComposerSlot<ComposerSendMenuTriggerState>;
       stop: ComposerSlot;
       restored: ComposerSlot;
       discard: ComposerSlot;
@@ -249,17 +369,53 @@ const tokensOf = (segments: TokenInputValue): ComposerToken[] =>
 const lengthOf = (segments: TokenInputValue) =>
   segments.reduce((length, segment) => length + (typeof segment === "string" ? segment.length : 1), 0);
 
-const presentation = (options: ComposerOptions) => ({
-  canStop: options.onStop !== undefined,
-  disabled: options.disabled ?? false,
-  submitOn: options.submitOn ?? "enter",
-  agentConfirm: options.agentConfirm ?? true,
-  mentions: options.mentions,
-  commands: options.commands,
-  accept: options.accept,
-  maxSize: options.maxSize,
-  motion: options.motion ?? "auto",
-});
+const presentation = (options: ComposerOptions) => {
+  const running = options.running ?? false;
+  return {
+    canStop: options.onStop !== undefined,
+    running,
+    canSteer: running && options.onSteer !== undefined,
+    steerMode: options.steerMode === "queue" ? ("queue" as const) : ("steer" as const),
+    stopAndSend: options.stopAndSend ?? (options.onStop !== undefined && options.onSteer !== undefined),
+    disabled: options.disabled ?? false,
+    submitOn: options.submitOn ?? "enter",
+    agentConfirm: options.agentConfirm ?? true,
+    mentions: options.mentions,
+    commands: options.commands,
+    accept: options.accept,
+    maxSize: options.maxSize,
+    motion: options.motion ?? "auto",
+  };
+};
+
+/** The keys that send in each mode: `steerMode` on Enter (Mod+Enter under `"mod-enter"`), the other on Alt+Enter. */
+const sendShortcuts = (submitOn: ComposerState["submitOn"], mode: ComposerState["steerMode"]) => {
+  const primary = submitOn === "mod-enter" ? "mod+Enter" : "Enter";
+  return {
+    steer: mode === "steer" ? primary : "alt+Enter",
+    queue: mode === "queue" ? primary : "alt+Enter",
+    "stop-and-send": "shift+mod+Enter",
+  } satisfies Record<ComposerSteerMode, string>;
+};
+
+const keysOf = (submitOn: ComposerState["submitOn"], mode: ComposerState["steerMode"]): ComposerKeys => {
+  const shortcuts = sendShortcuts(submitOn, mode);
+  // The Return symbol reads as an arrow, or as an emoji in some fonts, so the key is spelled out: "⌥ Enter".
+  const keys = (shortcut: string) => ({
+    label: formatShortcut(shortcut)
+      .replace(/(?<=[\u2325\u21e7\u2318\u2303])[\u21a9\u23ce]/u, " Enter")
+      .replace(/[\u21a9\u23ce]/u, "Enter"),
+    aria: ariaKeyshortcuts(shortcut),
+  });
+  return {
+    steer: keys(shortcuts.steer),
+    queue: keys(shortcuts.queue),
+    "stop-and-send": keys(shortcuts["stop-and-send"]),
+  };
+};
+
+/** Whether Send shows beside Stop: a turn runs, `onSteer` is set and there's something to send. */
+const showsSend = (state: ComposerState) => state.canSteer && isSubmittable(state.value);
 
 export const composerPrimitive: ComposerPrimitive = definePrimitive({
   name: "kind-composer",
@@ -269,6 +425,10 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
     onValueChange: "callback",
     onSubmit: "action",
     onStop: "callback",
+    running: "boolean",
+    onSteer: "action",
+    steerMode: "string",
+    stopAndSend: "boolean",
     submitOn: "string",
     mentions: "value",
     commands: "value",
@@ -291,6 +451,10 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       pending: false,
       attachmentsClosing: false,
       restored: false,
+      uploading: false,
+      steerPending: false,
+      sendMenuOpen: false,
+      keys: null,
     };
   },
   sync: (options: ComposerOptions) => ({
@@ -301,7 +465,8 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
   api: (context): ComposerApi => {
     const { store } = context;
     const change = createChange(context);
-    const tokenInput = createTokenInputController();
+    const controller = createTokenInputController();
+    const tokenInput = controller;
     let destroyed = false;
     context.onDestroy(() => {
       destroyed = true;
@@ -318,17 +483,24 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
     // Text appended after its cause ended, like a dictation's source finishing, reports who caused it.
     let appendSource: ChangeSource = "programmatic";
     const appended = createChange(context, () => appendSource);
-    const appendText = (text: string, source: ChangeSource = "programmatic") => {
+    const appendText = (
+      text: string,
+      source: ChangeSource = "programmatic",
+      reason: TextInsertReason = "dictation",
+    ) => {
       const { value, disabled } = store.get();
       const words = text.trim();
       if (disabled || !words) return false;
-      const joined = value.text.trim() ? `${value.text.trimEnd()} ${words}` : words;
+      const joiner = reason === "queue-edit" ? "\n" : " ";
+      const joined = value.text.trim() ? `${value.text.trimEnd()}${joiner}${words}` : words;
       appendSource = source;
-      return appended(
+      const changed = appended(
         "value",
         { ...value, text: joined, tokens: tokensOf(fromText(joined)) },
-        { reason: "dictation" },
+        { reason },
       );
+      if (changed && reason === "queue-edit") controller.focus({ at: "end" });
+      return changed;
     };
 
     let nextAttachment = 0;
@@ -349,7 +521,7 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
     const settle = (submitted: ComposerDraft, outcome: "resolved" | "rejected") => {
       if (destroyed) return;
       returningFromStop = store.get().canStop;
-      store.set({ pending: false });
+      store.set({ pending: false, uploading: false });
       if (outcome === "rejected") announce("Message not sent", { priority: "polite" });
       const current = store.get().value;
       const next = draftAfterSettle(current, submitted, outcome);
@@ -377,7 +549,11 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
 
     // Send and Stop take each other's place; focus follows to whichever is shown, else the editor.
     const recovery = createFocusRecovery({
-      fallback: () => context.element("stop") ?? context.element("submit") ?? tokenInput.editor.element,
+      fallback: () =>
+        context.element("steer") ??
+        context.element("stop") ??
+        context.element("submit") ??
+        tokenInput.editor.element,
     });
 
     const intake: FileIntake = {
@@ -411,6 +587,8 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
 
     const readInput = () => {
       const segments = tokenInput.getValue();
+      // A Token Input that moved to another composer has left this controller, though its edits still reach us.
+      if (segments === undefined) return;
       const { value } = store.get();
       const text = toText(segments);
       if (text === value.text) return;
@@ -545,31 +723,197 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
     };
     const discardRecovery = createFocusRecovery({ fallback: focusEditor });
 
+    const submit = () => {
+      const { onSubmit } = context.options();
+      const { value, pending, steerPending, running, disabled } = store.get();
+      // Enter never starts a new turn while one runs, and one lock covers every way to send.
+      if (disabled || pending || steerPending || running || !onSubmit || !isSubmittable(value)) return;
+      history.reset();
+      const submission = onSubmit(value);
+      if (!isThenable(submission)) return settle(value, "resolved");
+      store.set({ pending: true, uploading: value.attachments.length > 0 });
+      announce("Sending", { priority: "polite" });
+      submission.then(
+        () => settle(value, "resolved"),
+        () => settle(value, "rejected"),
+      );
+    };
+
+    // A resolved send clears what it sent and keeps what was typed after it, past a space or a line break; a draft
+    // edited in any other way stays whole, as the submit contract keeps it.
+    const afterSend = (current: ComposerDraft, sent: ComposerDraft): ComposerDraft => {
+      const rest = current.text.startsWith(sent.text) ? current.text.slice(sent.text.length) : undefined;
+      const text = rest !== undefined && (rest === "" || /^\s/.test(rest)) ? rest.trimStart() : current.text;
+      const sentIds = new Set(sent.attachments.map((item) => item.id));
+      const attachments = current.attachments.filter((item) => !sentIds.has(item.id));
+      if (text === current.text && attachments.length === current.attachments.length) return current;
+      return { text, tokens: tokensOf(fromText(text)), attachments };
+    };
+    const steering = createPendingAction(context, { state: "steerPending" });
+    const canSend = () => {
+      const { canSteer, disabled, pending, steerPending, value } = store.get();
+      return canSteer && !disabled && !pending && !steerPending && isSubmittable(value);
+    };
+    const SENT: Record<ComposerSteerMode, string> = {
+      steer: WORDS.steerSent,
+      queue: WORDS.queued,
+      "stop-and-send": WORDS.stoppedAndSent,
+    };
+    const runSteer = (
+      mode: ComposerSteerMode,
+      event: Event | undefined,
+      reason: ComposerSteerDetails["reason"],
+    ) => {
+      const { onSteer } = context.options();
+      if (!onSteer || !canSend() || (mode === "stop-and-send" && !store.get().stopAndSend)) return;
+      const sent = store.get().value;
+      const details: ComposerSteerDetails = {
+        mode,
+        reason,
+        ...(event && { event }),
+        source: actionSource(event, reason),
+      };
+      history.reset();
+      void steering
+        .run(() => onSteer(sent, details))
+        ?.then((outcome) => {
+          if (outcome === "stale") return;
+          if (outcome === "failed") return announce("Message not sent", { priority: "polite" });
+          announce(SENT[mode], { priority: "polite" });
+          const current = store.get().value;
+          const next = afterSend(current, sent);
+          if (next !== current) change("value", next, { reason: "submit" });
+        });
+    };
+    const offered = (mode: ComposerSteerMode) =>
+      canSend() && (mode !== "stop-and-send" || store.get().stopAndSend)
+        ? (event?: Event) => runSteer(mode, event, event ? "send-press" : "imperative")
+        : undefined;
+    const otherMode = (mode: ComposerState["steerMode"]) => (mode === "steer" ? "queue" : "steer");
+
+    const sendMenu = createMenuController();
+    const onSendMenuOpenChange = (open: boolean) => store.set({ sendMenuOpen: open });
+    const onSendAction = (value: string, { event }: MenuActionDetails) => {
+      if (value === "steer" || value === "queue" || value === "stop-and-send")
+        runSteer(value, event, "item-press");
+    };
+    const ROWS: Record<ComposerSteerMode, Pick<ComposerSendItem, "label" | "description">> = {
+      steer: { label: WORDS.steerNow, description: WORDS.steerHint },
+      queue: { label: WORDS.queueForLater, description: WORDS.queueHint },
+      "stop-and-send": { label: WORDS.stopAndSend, description: WORDS.stopAndSendHint },
+    };
+    const sendMenuState = memo(
+      (
+        mode: ComposerState["steerMode"],
+        stopAndSend: boolean,
+        keys: ComposerKeys | null,
+        open: boolean,
+      ): ComposerSendMenuState => {
+        const modes: ComposerSteerMode[] = [
+          "steer",
+          "queue",
+          ...(stopAndSend ? (["stop-and-send"] as const) : []),
+        ];
+        return {
+          controller: sendMenu,
+          open,
+          onOpenChange: onSendMenuOpenChange,
+          onAction: onSendAction,
+          items: modes.map((value) => ({
+            value,
+            ...ROWS[value],
+            shortcut: keys?.[value].label ?? "",
+            checked: value === mode,
+          })),
+        };
+      },
+    );
+    const steerState = memo(
+      (mode: ComposerState["steerMode"]): ComposerSteerState => ({
+        label: mode === "steer" ? WORDS.steer : "Queue",
+      }),
+    );
+    const sendMenuTriggerState = memo(
+      (disabled: boolean): ComposerSendMenuTriggerState => ({ "aria-label": WORDS.moreWaysToSend, disabled }),
+    );
+    const sendMenuEvents: Record<string, ComposedHandler> = {
+      openchange: (detail, event) => {
+        if ((event.target as Element).localName === "ui-menu")
+          onSendMenuOpenChange((detail as { value: boolean }).value);
+      },
+      action: (detail, event) => {
+        if ((event.target as Element).localName !== "ui-menu") return;
+        const { value, event: cause } = detail as { value: string; event?: Event };
+        onSendAction(value, cause ? { event: cause } : {});
+      },
+    };
+    // Send comes back from Stop once the turn ends, and the menu closes once Send leaves.
+    let { running: wasRunning } = store.get();
+    context.onOptions(() => {
+      const { running, canStop, steerMode, submitOn, keys } = store.get();
+      if (wasRunning && !running && canStop) returningFromStop = true;
+      wasRunning = running;
+      if (keys) store.set({ keys: keysOf(submitOn, steerMode) });
+    });
+    context.onDestroy(
+      store.subscribe(() => {
+        const state = store.get();
+        if (state.sendMenuOpen && !showsSend(state)) sendMenu.close();
+      }),
+    );
+
+    const sendKeydown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.isComposing) return false;
+      const { canSteer, steerMode, value, disabled } = store.get();
+      if (matchesShortcut(event, "alt+ArrowUp")) {
+        const root = context.element("root");
+        if (disabled || !root || isSubmittable(value) || !takeBackText(root, "keyboard")) return false;
+        event.preventDefault();
+        return true;
+      }
+      if (!canSteer) return false;
+      const mode = matchesShortcut(event, "shift+mod+Enter")
+        ? "stop-and-send"
+        : matchesShortcut(event, "alt+Enter") ||
+            (store.get().submitOn === "enter" && matchesShortcut(event, "mod+Enter"))
+          ? otherMode(steerMode)
+          : undefined;
+      if (!mode) return false;
+      // Never a new line while a turn runs, even when there's nothing to send.
+      event.preventDefault();
+      runSteer(mode, event, "send-key");
+      return true;
+    };
+
     return {
       getValue: () => store.get().value,
       setValue,
       appendText,
       insertToken: ({ kind, value, label }) => tokenInput.insert({ type: kind, value, label }) === true,
       removeAttachment,
-      submit: () => {
-        const { onSubmit } = context.options();
-        const { value, pending, disabled } = store.get();
-        if (disabled || pending || !onSubmit || !isSubmittable(value)) return;
-        history.reset();
-        const submission = onSubmit(value);
-        if (!isThenable(submission)) return settle(value, "resolved");
-        store.set({ pending: true });
-        announce("Sending", { priority: "polite" });
-        submission.then(
-          () => settle(value, "resolved"),
-          () => settle(value, "rejected"),
-        );
-      },
+      submit,
       get stop() {
-        const { pending } = store.get();
+        const { pending, running } = store.get();
         const { onStop } = context.options();
-        return pending && onStop ? () => onStop() : undefined;
+        return (pending || running) && onStop ? () => onStop() : undefined;
       },
+      get steer() {
+        return offered("steer");
+      },
+      get queue() {
+        return offered("queue");
+      },
+      get stopAndSend() {
+        return offered("stop-and-send");
+      },
+      sendDraft: (event) => {
+        const { canSteer, steerMode } = store.get();
+        if (!canSteer) return submit();
+        runSteer(steerMode, event, event?.type === "submit" ? "send-key" : "send-press");
+      },
+      sendKeydown,
+      sendMenu,
+      sendMenuEvents,
       get discardDraft() {
         const { restored, disabled } = store.get();
         if (!restored || disabled) return undefined;
@@ -627,6 +971,11 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
         input: (state) => input(state.submitOn, state.disabled),
         triggerMenu: (state) => triggerMenu(state.mentions, state.commands),
         attachments: (state) => attachments(state.value.attachments, state.motion, state.disabled),
+        steer: (state) => steerState(state.steerMode),
+        sendMenu: (state) =>
+          sendMenuState(state.steerMode, state.stopAndSend, state.keys, state.sendMenuOpen),
+        sendMenuTrigger: (state) =>
+          sendMenuTriggerState(state.disabled || state.pending || state.steerPending),
       },
     };
   },
@@ -645,17 +994,32 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       on: {
         submit: (event, { api }) => {
           event.preventDefault();
-          api.submit(event);
+          api.sendDraft(event);
         },
       },
-      bind: (el, { api }) => {
+      bind: (el, { api, store }) => {
         const stopForwarding = forwardFileInputEvents(el, api.intake);
         const unbindDraft = api.bindDraft();
-        const unbindText = bindTextTarget(el, api.appendText);
+        const text = bindTextTarget(
+          el,
+          api.appendText,
+          () => store.get().running,
+          () => !store.get().disabled,
+        );
+        // Key labels depend on the platform, so they're written once the page has hydrated.
+        const { submitOn, steerMode } = store.get();
+        store.set({ keys: keysOf(submitOn, steerMode) });
+        let { running } = store.get();
+        const unsubscribe = store.subscribe(() => {
+          if (store.get().running === running) return;
+          running = store.get().running;
+          text.update();
+        });
         return () => {
           stopForwarding();
           unbindDraft();
-          unbindText();
+          unsubscribe();
+          text.cleanup();
         };
       },
     }),
@@ -665,7 +1029,8 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       state: (state, { api }) => api.partState.input(state),
       on: {
         keydown: (event, { api }) => {
-          if (!event.defaultPrevented) api.history.keydown(event as KeyboardEvent);
+          const press = event as KeyboardEvent;
+          if (!api.sendKeydown(press) && !press.defaultPrevented) api.history.keydown(press);
         },
       },
       bind: (_el, { api }) => {
@@ -695,12 +1060,15 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
     submit: slot({
       role: "button",
       focus: "native",
-      present: (state) => !(state.pending && state.canStop),
+      present: (state) => !state.running && !(state.pending && state.canStop),
       press: ({ api }, event) => api.submit(event),
       attrs: (state) => ({
         type: "button",
         "aria-label": "Send",
-        "aria-disabled": state.pending || state.disabled || !isSubmittable(state.value) ? "true" : undefined,
+        "aria-disabled":
+          state.pending || state.steerPending || state.disabled || !isSubmittable(state.value)
+            ? "true"
+            : undefined,
         "data-pending": state.pending ? "" : undefined,
         "data-motion": state.motion,
       }),
@@ -711,12 +1079,55 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
         return part.api.recovery.bind(el, part);
       },
     }),
+    steer: slot<BaseSlotProps, ComposerSteerState>({
+      role: "button",
+      focus: "native",
+      present: showsSend,
+      press: ({ api }, event) => api.sendDraft(event),
+      state: (state, { api }) => api.partState.steer(state),
+      attrs: (state) => {
+        const keys = state.keys?.[state.steerMode];
+        const hint = state.steerMode === "steer" ? WORDS.steerTooltip : WORDS.queueHint;
+        return {
+          type: "button",
+          title: keys ? `${hint} · ${keys.label}` : hint,
+          "aria-keyshortcuts": keys?.aria,
+          "aria-disabled": state.pending || state.steerPending || state.disabled ? "true" : undefined,
+          "aria-busy": state.steerPending ? "true" : undefined,
+          "data-pending": state.steerPending ? "" : undefined,
+          "data-steer-mode": state.steerMode,
+          "data-motion": state.motion,
+        };
+      },
+      on: { mousedown: (event) => event.preventDefault() },
+      bind: (el, part) => part.api.recovery.bind(el, part),
+    }),
+    // Wraps UI SDK Menu, which holds Send, its chevron and the other ways to send; on Web Components it hears the
+    // menu's events.
+    "send-menu": slot<BaseSlotProps, ComposerSendMenuState>({
+      present: showsSend,
+      state: (state, { api }) => api.partState.sendMenu(state),
+      attrs: (state) => ({ "data-open": state.sendMenuOpen ? "" : undefined, "data-motion": state.motion }),
+      bind: (el, { api }) => hearComposed(el, api.sendMenuEvents),
+    }),
+    // Wraps UI SDK's `MenuTrigger`, which agents don't see: `steer`, `queue` and `stopAndSend` are its actions.
+    "send-menu-trigger": slot<BaseSlotProps, ComposerSendMenuTriggerState>({
+      present: showsSend,
+      state: (state, { api }) => api.partState.sendMenuTrigger(state),
+    }),
     stop: slot({
       role: "button",
       focus: "native",
-      present: (state) => state.pending && state.canStop,
+      present: (state) => (state.pending || state.running) && state.canStop,
       press: ({ api }, event) => api.stop?.(event),
-      attrs: (state) => ({ type: "button", "aria-label": "Stop", "data-motion": state.motion }),
+      attrs: (state) => ({
+        type: "button",
+        // A submission still uploading its files can be cancelled; past that, Stop ends the reply.
+        "aria-label": !state.running && state.uploading ? WORDS.cancelSending : WORDS.stopGenerating,
+        // Send is the one primary while it shows, so Stop turns quiet.
+        "data-quiet": showsSend(state) ? "" : undefined,
+        "data-motion": state.motion,
+      }),
       on: { mousedown: (event) => event.preventDefault() },
       bind: (el, part) => part.api.recovery.bind(el, part),
     }),
@@ -738,5 +1149,17 @@ export const composerPrimitive: ComposerPrimitive = definePrimitive({
       bind: (el, part) => part.api.discardRecovery.bind(el, part),
     }),
   }),
-  agent: { actions: ["setValue", "insertToken", "removeAttachment", "submit", "stop", "discardDraft"] },
+  agent: {
+    actions: [
+      "setValue",
+      "insertToken",
+      "removeAttachment",
+      "submit",
+      "steer",
+      "queue",
+      "stopAndSend",
+      "stop",
+      "discardDraft",
+    ],
+  },
 });

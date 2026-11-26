@@ -21,6 +21,23 @@ export const WORDS = {
   deadlinePassed: "Expired",
   decide: "Decide",
   allowThisTool: "Allow this tool?",
+  steer: "Steer",
+  steerNow: "Steer now",
+  steerHint: "Deliver at the agent's next step",
+  queueForLater: "Queue for later",
+  queueHint: "Send after this turn",
+  stopAndSend: "Stop and send",
+  stopAndSendHint: "End this turn, start a new one",
+  steerTooltip: "Send into the current turn",
+  moreWaysToSend: "More ways to send",
+  stopGenerating: "Stop generating",
+  cancelSending: "Cancel sending",
+  steerSent: "Steer sent",
+  queued: "Queued",
+  stoppedAndSent: "Stopped and sent",
+  sendNow: "Send now",
+  queuedMessage: "Queued message",
+  notSentYet: "not sent",
 } as const;
 
 /**

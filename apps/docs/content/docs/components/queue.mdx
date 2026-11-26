@@ -29,11 +29,13 @@ Queue
 │               ├── QueueItemIcon
 │               ├── QueueItemTitle
 │               ├── QueueItemDescription
+│               ├── QueueItemSend
+│               ├── QueueItemEdit
 │               └── QueueItemRemove
 └── QueueInstructions
 ```
 
-`Queue` renders a Queued section and a Completed section when you pass no children, then the instructions. Each `QueueSection` takes a `value` of `pending` or `complete`, and hides while it has no items. Its trigger is a native button that shows or hides the section, with the section's title and count. `QueueList` renders an item for each of the section's items when you pass it no children, and each item shows its mark, title, description and remove button unless you give it children. A completed item's mark is a check; a queued item's is a grip while `onReorder` lets people move it, and empty otherwise, since every queued item is pending. `QueueInstructions` holds the keys that move and remove items: it's hidden from sight, and screen readers read it with each item.
+`Queue` renders a Queued section and a Completed section when you pass no children, then the instructions. Each `QueueSection` takes a `value` of `pending` or `complete`, and hides while it has no items. Its trigger is a native button that shows or hides the section, with the section's title and count. `QueueList` renders an item for each of the section's items when you pass it no children, and each item shows its mark, title, description, and its Send now, Edit and Remove buttons unless you give it children. A completed item's mark is a check; a queued item's is a grip while `onReorder` lets people move it, and empty otherwise, since every queued item is pending. `QueueInstructions` holds the keys that move and remove items: it's hidden from sight, and screen readers read it with each item.
 
 ## Usage
 
@@ -53,9 +55,17 @@ If the item being moved leaves `items`, the move is cancelled, `onReorder` isn't
 
 Pass `onRemove` to let people remove items. It gets the item's `id`, and you take the item out of `items`. Each item shows a remove button on hover, and Delete or Backspace removes the focused item. Focus then moves to the next item, or the previous one at the end.
 
+### Send Now and Edit
+
+Pass `onSend` to show **Send now** on each queued item, and `onEdit` to show **Edit**. Both get the item's `id`; take it out of `items`. Send now sends the message into the running turn, or as the next message when none runs. Pass `sendDisabledReason`, like "Available after you answer the pending request", while it can't, and Send now is disabled and says why.
+
+### In a Composer
+
+Put the queue inside a [Composer](./composer.mdx#while-a-turn-runs) and it docks to the composer's top edge, part of the same box: a header like "2 queued" that folds it, then each queued message on one line. Completed items don't show. Each row is named "Queued message 1 of 2, not sent". Its buttons show on hover and focus, and always on touch screens and in a narrow composer. Once `onEdit` resolves, the item's title goes back into the prompt, after a line break when there's text, with the caret at its end. Alt+Up in the empty prompt edits the last queued message. The queue grows from the composer's edge as its first item arrives, and folds away after its last leaves.
+
 ### Keyboard
 
-The items are one Tab stop. The arrow keys move between them, across both sections while Completed is open, and Home and End go to the first and last. Items in a closed section can't take focus.
+The items are one Tab stop, and Tab moves on from the focused item to its buttons. The arrow keys move between them, across both sections while Completed is open, and Home and End go to the first and last. Items in a closed section can't take focus.
 
 ### Motion
 
@@ -69,11 +79,11 @@ A new item fades in once as it arrives. A removed item stays in place and fades 
 
 ### Agent
 
-An agent connected with `createAgent` finds the queue by its `label` and reads its `items`, and can name an item by its title. It can run `reorder` while `onReorder` is set and two or more items are queued, and `remove` while `onRemove` is set. Both go through your callbacks, with `details.source` set to `agent`.
+An agent connected with `createAgent` finds the queue by its `label` and reads its `items`, and can name an item by its title. It can run `reorder` while `onReorder` is set and two or more items are queued, `remove` while `onRemove` is set, and `send` and `edit` while `onSend` and `onEdit` are set and an item is queued. Each goes through your callbacks, with `details.source` set to `agent`.
 
-<auto-type-table path="../../../../../packages/agent-ui/src/core/queue/queue.ts" name="QueueAgentActions" type='Pick<QueueApi, "reorder" | "remove">' />
+<auto-type-table path="../../../../../packages/agent-ui/src/core/queue/queue.ts" name="QueueAgentActions" type='Pick<QueueApi, "reorder" | "remove" | "send" | "edit">' />
 
-Neither action waits for a person to confirm, since each only changes the list. To ask the person first, return their answer from your `allow`, which also answers every action that does need a person:
+None of them waits for a person to confirm. To ask the person first, return their answer from your `allow`, which also answers every action that does need a person:
 
 ```ts
 import { createAgent } from "@ui-sdk/react/agent";
@@ -88,5 +98,5 @@ const agent = createAgent({
 ```
 
 <Caption>
-  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-queue>`, `items` and `openSections` are properties only, and `label` and `motion` are attributes. Reordering needs the `can-reorder` attribute and fires `reorder`, and removing needs `can-remove` and fires `remove`, each with the item's `id` in `event.detail.value`; `reorder` also has `event.detail.index`. The element fills in its sections and items itself.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-queue>`, `items` and `openSections` are properties only, and `label` and `motion` are attributes. Reordering needs the `can-reorder` attribute and fires `reorder`, removing needs `can-remove` and fires `remove`, and Send now and Edit need `can-send` and `can-edit` and fire `send` and `edit`, each with the item's `id` in `event.detail.value`; `reorder` also has `event.detail.index`. A `kind-queue` inside a `kind-composer` docks to it. The element fills in its sections and items itself.
 </Caption>

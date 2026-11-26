@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: 8aee26be
+Last reviewed: 9994de73
 
 ## Settled
 
@@ -18,6 +18,7 @@ Last reviewed: 8aee26be
 
 ## Known and open (don't report again, check whether fixed)
 
+- `ComposerSendMenu`'s children replace Steer, the chevron and the rows together, with no content part that hands a custom row its words and keys (Wave 7 layer 4).
 - **No fixture covers a controlled Composer taking dictated text (Task 17):** a throwaway case passed in both React projects; the docs examples are uncontrolled now.
 - **Context Bar server markup shows every chip until the bar measures** (Wave 5 Task 10): widths exist only in the browser, so hydration swaps the chip clipped at the edge for "+N" (nothing below moves; the root has a fixed height), and the server markup exposes every chip to assistive technology until then.
 - **Adding or removing `regenerateOptions` while mounted remounts Message's Regenerate button and drops its focus** (Wave 5 Task 7): the button sits inside `KindMenu` only while there are options. Keeping the menu mounted would make a plain button a menu trigger.

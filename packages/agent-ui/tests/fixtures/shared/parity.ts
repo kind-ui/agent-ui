@@ -81,6 +81,12 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
   ],
   composer: [
     { c: "composer", case: "shell" },
+    {
+      c: "composer-steer",
+      case: "text",
+      interaction: press('[data-slot="kind-composer-send-menu-trigger"] [aria-haspopup="menu"]'),
+      needs: ["queue", "add-menu", "model-control"],
+    },
     { c: "composer", case: "full" },
     {
       c: "full-composer",
@@ -208,6 +214,12 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
   plan: [{ c: "plan", case: "all", interaction: press('[data-slot="kind-plan-trigger"]') }],
   question: [question],
   queue: [
+    {
+      c: "composer-steer",
+      case: "docked",
+      interaction: press('[data-slot="kind-queue-section-trigger"]'),
+      needs: ["composer", "add-menu", "model-control"],
+    },
     {
       c: "queue",
       case: "all",
