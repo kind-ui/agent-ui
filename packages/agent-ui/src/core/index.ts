@@ -781,6 +781,18 @@ export {
 
 // wave-7-task-8: Handoff
 
+export {
+  type HandoffApi,
+  type HandoffAvatarState,
+  type HandoffOptions,
+  type HandoffParty,
+  type HandoffPerson,
+  type HandoffPrimitive,
+  type HandoffState,
+  type HandoffStatus,
+  handoffPrimitive,
+} from "./handoff/index.js";
+
 // wave-7-task-10: Trace
 
 // wave-7-task-11: Run Timeline

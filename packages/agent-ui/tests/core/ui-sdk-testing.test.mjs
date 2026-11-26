@@ -306,6 +306,17 @@ const cases = {
 
   // wave-7-task-8: Handoff
 
+  handoff: {
+    options: {
+      from: { id: "support", name: "Support" },
+      to: { kind: "person", name: "Dana" },
+      reason: "Refunds need a person",
+      approval: { approvalId: "a1", generation: 1, state: "requested" },
+      onApprove: noop,
+      onDeny: noop,
+    },
+  },
+
   // wave-7-task-10: Trace
 
   // wave-7-task-11: Run Timeline
