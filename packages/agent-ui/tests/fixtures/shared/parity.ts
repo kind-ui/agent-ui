@@ -191,6 +191,7 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
     { c: "message", case: "author" },
     { c: "message", case: "outcomes" },
     { c: "message", case: "custom-rows" },
+    { c: "message", case: "delivery", interaction: press('[data-slot="kind-message-withdraw"]') },
   ],
   "model-control": [{ c: "model-control", case: "all", interaction: openMenu }],
   "model-selector": [

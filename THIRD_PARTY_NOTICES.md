@@ -113,6 +113,8 @@
 
 <!-- wave-7-task-3: Message delivery mark and retrying -->
 
+  - `message.css`: `corner-down-right` (Steered), unchanged; derived from Feather.
+
 <!-- wave-7-task-4: Terminal approval and Confirmation's Always allow -->
 
 <!-- wave-7-task-5: Tool retry and retrying -->

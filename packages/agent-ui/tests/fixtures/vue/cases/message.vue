@@ -9,11 +9,12 @@ export const variants = [
   "author-clock",
   "outcomes",
   "custom-rows",
+  "delivery",
 ] as const;
 </script>
 
 <script setup lang="ts">
-import type { MessageStatus } from "@kind-ui/agent-ui";
+import type { Message as MessageData, MessageStatus, RetryState } from "@kind-ui/agent-ui";
 import type { MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
 import { computed, onMounted, ref, shallowRef } from "vue";
 import {
@@ -36,6 +37,7 @@ import {
   MessageBranchPrevious,
   MessageContent,
   MessageCopy,
+  MessageDelivery,
   MessageDuration,
   MessageEdit,
   MessageEditor,
@@ -43,6 +45,7 @@ import {
   MessageOutcome,
   MessageRegenerate,
   MessageRegenerateContent,
+  MessageRetrying,
   MessageTime,
   MessageToolbar,
 } from "../../../../src/vue/message.js";
@@ -51,9 +54,11 @@ import { answer } from "../../shared/markdown.js";
 import {
   author,
   authored,
+  delivered,
   outcomeError,
   outcomeText,
   regenerateOptions,
+  retrying,
   timing,
 } from "../../shared/message.js";
 import { useFlush } from "./flush.js";
@@ -124,6 +129,18 @@ const outcomeRows = [
   { id: "earlier", label: "Earlier answer", props: { onRetry: wait("retry") } },
 ];
 
+const deliveries = ref<Record<string, MessageData["delivery"]>>({ steered: "steered", queued: "queued" });
+const retry = shallowRef<RetryState | undefined>(retrying);
+const answerStatus = ref<MessageStatus>("streaming");
+const withdraw = (details: { reason: string; source: string }) => {
+  calls.push(`withdraw:${details.reason}:${details.source}`);
+  return new Promise<void>((resolve, reject) => deferred.push({ resolve, reject }));
+};
+const deliveryRows = [
+  { id: "steered", label: "Steered message", props: {} },
+  { id: "queued", label: "Queued message", props: { onWithdraw: withdraw } },
+] as const;
+
 const withOptions = ["options", "refusing", "custom-rows"].includes(props.variant);
 
 onMounted(() => {
@@ -146,6 +163,17 @@ onMounted(() => {
         calls,
         status: (id: string, value: MessageStatus) =>
           flush(() => (statuses.value = { ...statuses.value, [id]: value })),
+        settle: (ok: boolean) => deferred.shift()?.[ok ? "resolve" : "reject"](),
+      },
+    });
+  if (props.variant === "delivery")
+    expose({
+      kindDelivery: {
+        calls,
+        deliver: (id: string, value: MessageData["delivery"] | null) =>
+          flush(() => (deliveries.value = { ...deliveries.value, [id]: value ?? undefined })),
+        retry: (value: RetryState | null) => flush(() => (retry.value = value ?? undefined)),
+        status: (value: MessageStatus) => flush(() => (answerStatus.value = value)),
         settle: (ok: boolean) => deferred.shift()?.[ok ? "resolve" : "reject"](),
       },
     });
@@ -289,6 +317,36 @@ onMounted(() => {
       v-bind="row.props"
     >
       <MessageContent>{{ outcomeText }}</MessageContent>
+      <MessageOutcome />
+    </Message>
+    <input aria-label="Reply" class="w-full" />
+  </div>
+  <div v-else-if="variant === 'delivery'" class="m-4 flex w-[36rem] flex-col gap-6">
+    <Message
+      v-for="row in deliveryRows"
+      :id="row.id"
+      :key="row.id"
+      :aria-label="row.label"
+      message-role="user"
+      :text="delivered[row.id]"
+      :delivery="deliveries[row.id]"
+      v-bind="row.props"
+    >
+      <MessageHeader>
+        <MessageDelivery />
+      </MessageHeader>
+      <MessageContent>{{ delivered[row.id] }}</MessageContent>
+    </Message>
+    <Message
+      id="answer"
+      aria-label="Retrying answer"
+      :status="answerStatus"
+      :text="delivered.answer"
+      :retry="retry"
+      @retry="calls.push('retry')"
+    >
+      <MessageContent>{{ delivered.answer }}</MessageContent>
+      <MessageRetrying />
       <MessageOutcome />
     </Message>
     <input aria-label="Reply" class="w-full" />

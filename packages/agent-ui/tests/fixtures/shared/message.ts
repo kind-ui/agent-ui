@@ -25,3 +25,16 @@ export const authored = [
 ];
 export const outcomeText = "Retry with exponential backoff, and cap the number of attempts.";
 export const outcomeError = "The model is overloaded";
+
+// Delivery and retrying. The retry starts past its `retryAt`, so it shows no countdown until a test sets one.
+export const delivered = {
+  steered: "Use the staging database instead.",
+  queued: "Then run the migrations.",
+  answer: "Switching to the staging database before the",
+};
+export const retrying = {
+  attempt: 1,
+  maxAttempts: 5,
+  retryAt: "2026-11-18T09:42:00Z",
+  reason: "Rate limited",
+};

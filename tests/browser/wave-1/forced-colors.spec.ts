@@ -58,6 +58,8 @@ const pages = [
 
   // wave-7-task-3: Message delivery mark and retrying
 
+  "message&case=delivery",
+
   // wave-7-task-4: Terminal approval and Confirmation's Always allow
 
   // wave-7-task-5: Tool retry and retrying

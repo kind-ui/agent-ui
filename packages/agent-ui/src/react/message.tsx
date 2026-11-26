@@ -47,6 +47,12 @@ const message = createParts(messagePrimitive, {
   "outcome-text": "span",
   retry: "button",
   continue: "button",
+  delivery: "span",
+  "delivery-icon": "span",
+  "delivery-text": "span",
+  withdraw: "button",
+  retrying: "div",
+  "retrying-icon": "span",
 });
 
 /** A regenerate option, whose `icon` is an image URL or an element such as an inline `svg`. */
@@ -99,6 +105,53 @@ export function MessageTime(props: Omit<ComponentProps<typeof message.Time>, "ch
 /** How long the response took, like "1 min 12 sec". */
 export function MessageDuration(props: Omit<ComponentProps<typeof message.Duration>, "children">) {
   return <message.Duration {...props}>{({ label }) => label}</message.Duration>;
+}
+
+export const MessageDeliveryIcon = message.DeliveryIcon;
+
+/** "Steered" or "Queued". */
+export function MessageDeliveryText(props: Omit<ComponentProps<typeof message.DeliveryText>, "children">) {
+  return <message.DeliveryText {...props}>{({ text }) => text}</message.DeliveryText>;
+}
+
+/** Shown while `onWithdraw` is set and the message is queued. */
+export function MessageWithdraw({
+  children = "Withdraw",
+  ...props
+}: ComponentProps<typeof message.Withdraw>) {
+  return <message.Withdraw {...props}>{children}</message.Withdraw>;
+}
+
+const DELIVERY = (
+  <>
+    <MessageDeliveryIcon />
+    <MessageDeliveryText />
+    <MessageWithdraw />
+  </>
+);
+
+/** Put it in the header. With `delivery`, its mark and words, then Withdraw while queued, unless you pass children. */
+export function MessageDelivery({ children = DELIVERY, ...props }: ComponentProps<typeof message.Delivery>) {
+  return <message.Delivery {...props}>{children}</message.Delivery>;
+}
+
+export const MessageRetryingIcon = message.RetryingIcon;
+
+/**
+ * Put it after the content, where the outcome goes. While `retry` is set: a running mark and "Retrying, attempt 2 of
+ * 5, in 4 sec".
+ */
+export function MessageRetrying(props: Omit<ComponentProps<typeof message.Retrying>, "children">) {
+  return (
+    <message.Retrying {...props}>
+      {({ text }) => (
+        <>
+          <MessageRetryingIcon />
+          {text}
+        </>
+      )}
+    </message.Retrying>
+  );
 }
 
 export const MessageOutcomeIcon = message.OutcomeIcon;

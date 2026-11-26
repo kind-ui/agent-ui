@@ -28,4 +28,10 @@ export const parts = createParts(messagePrimitive, {
   "outcome-text": "span",
   retry: "button",
   continue: "button",
+  delivery: "span",
+  "delivery-icon": "span",
+  "delivery-text": "span",
+  withdraw: "button",
+  retrying: "div",
+  "retrying-icon": "span",
 });
