@@ -16,10 +16,18 @@ import { recorder } from "../../shared/composer.js";
 import { sendRecorder, steerQueue, steerRecorder } from "../../shared/composer-steer.js";
 import { expose } from "../../shared/expose.js";
 
-function Steer({ params, submitOn }: { params: URLSearchParams; submitOn?: "enter" | "mod-enter" }) {
+// Recorders are made once per page, outside render: StrictMode runs a `useState` initializer twice, and the second
+// would expose lists the component doesn't write to.
+type Recorders = ReturnType<typeof recorder> & ReturnType<typeof steerRecorder>;
+
+function Steer({
+  params,
+  submitOn,
+  onSubmit,
+  onSteer,
+  onStop,
+}: { params: URLSearchParams; submitOn?: "enter" | "mod-enter" } & Recorders) {
   const [running, setRunning] = useState(!params.has("idle"));
-  const [{ onSubmit }] = useState(recorder);
-  const [{ onSteer, onStop }] = useState(steerRecorder);
   useEffect(() => expose({ setRunning: (next: boolean) => flushSync(() => setRunning(next)) }), []);
   return (
     <div className="mx-auto max-w-xl p-6">
@@ -42,9 +50,8 @@ function Steer({ params, submitOn }: { params: URLSearchParams; submitOn?: "ente
   );
 }
 
-function SendNow() {
+function SendNow({ onSend }: { onSend: ReturnType<typeof sendRecorder> }) {
   const [items, setItems] = useState<QueueItem[]>(steerQueue);
-  const [onSend] = useState(sendRecorder);
   useEffect(
     () =>
       expose({
@@ -63,7 +70,9 @@ function SendNow() {
 export const allow = (step: AgentAction) => !step.confirm || (window as { permit?: boolean }).permit === true;
 
 export const cases = {
-  steer: (params: URLSearchParams) => <Steer params={params} />,
-  "steer-mod-enter": (params: URLSearchParams) => <Steer params={params} submitOn="mod-enter" />,
-  queue: () => <SendNow />,
+  steer: (params: URLSearchParams) => <Steer params={params} {...recorder()} {...steerRecorder()} />,
+  "steer-mod-enter": (params: URLSearchParams) => (
+    <Steer params={params} submitOn="mod-enter" {...recorder()} {...steerRecorder()} />
+  ),
+  queue: () => <SendNow onSend={sendRecorder()} />,
 };

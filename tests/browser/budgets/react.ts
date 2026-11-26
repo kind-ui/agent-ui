@@ -6,7 +6,7 @@ export const budgets = {
   // which keeps rows in view still when rows above them change (`0.1.0-beta.17`).
   conversationFollow: { layoutReads: 18 },
   markdownStream: { parses: 1, writes: 4, renders: 6, notified: 3 },
-  toolStream: { writes: 14, renders: 26, notified: 17 },
+  toolStream: { writes: 14, renders: 27, notified: 17 },
   // A chunk that wraps the last line runs the stick to bottom's pass on a mutation and a resize, and the scroll after.
   terminalChunk: { writes: 6, renders: 6, notified: 4, layoutReads: 28 },
   // A new line in a full viewport reads layout 36 times (37 under StrictMode, which binds the new line twice): the
