@@ -89,7 +89,7 @@ type HostContext = {
 export type ApprovalPartConfig<State extends HostState> = {
   /** The Confirmation's question, from the host's state. */
   question: (state: State) => string;
-  /** Where focus goes when the choices leave with nothing to take it. Defaults to the trigger part. */
+  /** Where focus goes when a choice leaves while focused. Defaults to the outcome, which takes the choices' place. */
   fallback?: () => HTMLElement | undefined;
 };
 
@@ -130,7 +130,7 @@ export const approvalPart = {
   /** Hands the approval part its Confirmation's props, the same object while they hold. */
   approvalState: <State extends HostState>(
     context: HostContext,
-    { question, fallback = () => context.element("trigger") }: ApprovalPartConfig<State>,
+    { question, fallback }: ApprovalPartConfig<State>,
   ): ((state: State) => ApprovalPartState) => {
     const approve: ConfirmationCallback = (decision, details) =>
       context.options().onApprove?.(decision, details);
@@ -157,7 +157,7 @@ export const approvalPart = {
         ...(approval && { approval }),
         label,
         reason,
-        focusFallback: fallback,
+        ...(fallback && { focusFallback: fallback }),
         motion,
         ...(canApprove && { onApprove: approve }),
         ...(canDeny && { onDeny: deny }),

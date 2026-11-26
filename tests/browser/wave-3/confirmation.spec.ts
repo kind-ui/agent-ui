@@ -245,6 +245,94 @@ test("with reduced motion the swap only fades", async ({ page }) => {
     .toEqual(["opacity"]);
 });
 
+const choiceNames = (page: Page, id: string) =>
+  confirmation(page, id)
+    .locator('[data-slot="kind-confirmation-choices"] [data-kind-button]:visible')
+    .evaluateAll((buttons) =>
+      buttons.map((button) => button.getAttribute("aria-label") ?? button.textContent),
+    );
+
+test("Deny comes first and Approve, the primary, last; Always allow names what and where", async ({
+  page,
+}) => {
+  await open(page);
+  expect(await choiceNames(page, "confirm")).toEqual(["Deny", "Approve"]);
+  expect(await choiceNames(page, "always")).toEqual([
+    "Deny",
+    "Always allow search_docs in this project",
+    "Approve",
+  ]);
+  await expect(approve(page, "always")).toHaveAttribute("data-kind-button", "primary");
+  await expect(confirmation(page, "always").locator("code").first()).toHaveText("search_docs");
+  await expect(part(page, "detail", "always")).toHaveText(
+    "Covers search_docs in this project. You can change it in Settings.",
+  );
+  await expectAgentActions(page, "Allow search_docs?", ["approve", "alwaysAllow", "deny"]);
+});
+
+test("Always allow sends always and its scope, and its outcome keeps both", async ({ page }) => {
+  await open(page);
+  const always = confirmation(page, "always").getByRole("button", { name: /^Always allow/ });
+  await always.focus();
+  await page.keyboard.press("Enter");
+  await expect(part(page, "meta", "always")).toHaveText("Sending decision");
+  await expect(always).toHaveAttribute("data-pending", "");
+  expect(await decisions(page)).toEqual([
+    {
+      choice: "always",
+      decision: { approvalId: "always", generation: 1, always: true, scope: "in this project" },
+      source: "keyboard",
+    },
+  ]);
+  await expect(part(page, "outcome", "always-allowed")).toHaveText(
+    "Always allowed search_docs in this project",
+  );
+});
+
+test("a danger request warns in words, has a danger Approve and no Always allow", async ({ page }) => {
+  await open(page);
+  await expect(part(page, "risk", "danger")).toHaveText("Changes how releases publish.");
+  await expect(approve(page, "danger")).toHaveAttribute("data-kind-button", "danger");
+  expect(await choiceNames(page, "danger")).toEqual(["Deny", "Approve"]);
+});
+
+test("a deadline reads in minutes, and past it Expired, with the choices kept", async ({ page }) => {
+  await open(page);
+  await expect(part(page, "meta", "deadline")).toHaveText("Decide in 4 min");
+  await expect(part(page, "meta", "late")).toHaveText("Expired");
+  await expect(approve(page, "late")).toBeVisible();
+});
+
+test("each outcome has its words and its mark", async ({ page }) => {
+  await open(page);
+  for (const [id, text, mark] of [
+    ["always-allowed", "Always allowed search_docs in this project", "complete"],
+    ["denied", "Denied: use the cached results instead", "denied"],
+    ["expired", "Expired before a decision", "expired"],
+    ["cancelled", "Cancelled before a decision", "cancelled"],
+  ] as const) {
+    await expect(part(page, "outcome", id)).toHaveText(text);
+    await expect(part(page, "outcome-icon", id)).toHaveAttribute("data-status", mark);
+  }
+});
+
+test("Always allow takes its own row above Deny and Approve only when the three don't fit", async ({
+  page,
+}) => {
+  await open(page);
+  const tops = () =>
+    confirmation(page, "always")
+      .locator('[data-slot="kind-confirmation-choices"] [data-kind-button]:visible')
+      .evaluateAll((buttons) => buttons.map((button) => Math.round(button.getBoundingClientRect().top)));
+  const [deny, always, approve] = await tops();
+  expect(new Set([deny, always, approve]).size).toBe(1);
+  await page.setViewportSize({ width: 340, height: 900 });
+  await expect(part(page, "choices", "always")).toHaveAttribute("data-stacked", "");
+  const [deny2, always2, approve2] = await tops();
+  expect(always2).toBeLessThan(deny2 as number);
+  expect(deny2).toBe(approve2);
+});
+
 for (const colorScheme of ["light", "dark"] as const) {
   test(`axe reports no violations in ${colorScheme} mode`, async ({ page }) => {
     await page.emulateMedia({ colorScheme, reducedMotion: "reduce" });

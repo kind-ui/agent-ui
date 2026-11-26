@@ -35,7 +35,6 @@ export const WORDS = {
   queued: "Queued",
   stoppedAndSent: "Stopped and sent",
   sendNow: "Send now",
-  sendUnavailable: "Available after you answer the pending request",
   queuedMessage: "Queued message",
   notSentYet: "not sent",
   steering: "Steering…",

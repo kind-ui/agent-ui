@@ -20,7 +20,9 @@ export type StalledState = {
   stalledMinutes: number | null;
 };
 
+/** The stalled options, for a primitive's `options` map. */
 export const STALLED_OPTIONS = { lastActivityAt: "string", stalledAfter: "number" } as const;
+/** The state before a root binds, as on a server: not stalled. */
 export const NOT_STALLED: StalledState = { stalled: false, stalledMinutes: null };
 
 /** Whole minutes since `lastActivityAt` once `after` seconds have passed at `now`, else `null`. */
@@ -37,11 +39,6 @@ export const stalledText = (minutes: number | null, locale?: string): string =>
 
 type StalledStore = { get(): StalledState; set(state: StalledState): void };
 
-/**
- * Follows `lastActivityAt` on Wave 6's one-minute clock while `running()`, writing `stalled` and `stalledMinutes`,
- * and announces "No update for 2 min" once as it starts and "Working again" as it ends. Bound from a root's `bind`,
- * so server markup is never stalled; a component calls `check` with its new options as they change.
- */
 type StalledInput = {
   running: boolean;
   lastActivityAt?: string | undefined;
@@ -49,8 +46,15 @@ type StalledInput = {
   locale?: string | undefined;
 };
 
+/**
+ * Follows `lastActivityAt` on Wave 6's one-minute clock while `running()`, writing `stalled` and `stalledMinutes`,
+ * and announces "No update for 2 min" once as it starts and "Working again" as it ends. Bound from a root's `bind`,
+ * so server markup is never stalled; a component calls `check` with its new options as they change.
+ */
 export function watchStalled(store: StalledStore, read: () => StalledInput) {
   let bound = false;
+  // Web hosts set `lastActivityAt` once the element exists, so a row stalled from the start stays quiet.
+  let started = false;
   /** Reads again, from `input` when given, like the new options an `onOptions` listener gets. */
   const check = (input: StalledInput = read()) => {
     if (!bound) return;
@@ -59,6 +63,7 @@ export function watchStalled(store: StalledStore, read: () => StalledInput) {
     const { stalled, stalledMinutes } = store.get();
     if (minutes === stalledMinutes) return;
     store.set({ stalled: minutes !== null, stalledMinutes: minutes });
+    if (!started) return;
     if (minutes !== null && !stalled) announce(stalledText(minutes, locale), { priority: "polite" });
     else if (minutes === null && running) announce(WORDS.workingAgain, { priority: "polite" });
   };
@@ -71,9 +76,14 @@ export function watchStalled(store: StalledStore, read: () => StalledInput) {
       if (minutes !== store.get().stalledMinutes)
         store.set({ stalled: minutes !== null, stalledMinutes: minutes });
       bound = true;
+      const frame = requestAnimationFrame(() => {
+        started = true;
+      });
       const stop = everyMinute(() => check());
       return () => {
         bound = false;
+        started = false;
+        cancelAnimationFrame(frame);
         stop();
       };
     },

@@ -20,7 +20,7 @@ import { memo } from "../memo.js";
 import { cancel, enter, exit, layout, type MotionMode, resolvedMotion } from "../motion/index.js";
 import { createPendingAction } from "../pending.js";
 import { bindStepPanel } from "../step/base.js";
-import { bindTextSource, insertText } from "../text-target.js";
+import { bindTextSource, canInsertText, insertText } from "../text-target.js";
 import { WORDS } from "../words.js";
 
 /** The section an item shows in: Queued while `pending`, Completed once `complete`. */
@@ -69,8 +69,8 @@ export type QueueOptions = {
   onSend?: (id: string, details: QueueItemActionDetails) => unknown;
   /**
    * Called with a queued item's `id` when someone edits it: remove it from `items`. Once the call resolves, its title
-   * goes back into the Composer the Queue is docked in, on its own line. While it's set, queued items show Edit, and
-   * Alt+Up in that Composer's empty editor takes back the last one.
+   * goes back into the Composer the Queue is docked in, on its own line. While it's set and the Queue is docked, queued
+   * items show Edit, and Alt+Up in that Composer's empty editor takes back the last one.
    */
   onEdit?: (id: string, details: QueueItemActionDetails) => unknown;
   /**
@@ -110,6 +110,7 @@ export type QueueState = {
   canSend: boolean;
   /** Whether `onEdit` is set. */
   canEdit: boolean;
+  /** The `sendDisabledReason` option; Send now is disabled and says it while set. */
   sendDisabledReason: string | undefined;
   /** The item being sent, from Send now until the host removes or changes it, or the send fails. */
   sending: string | null;
@@ -151,7 +152,8 @@ export type QueueApi = ListFocus<QueueState, ItemProps> & {
   readonly send: ((id: string, event?: Event) => boolean) | undefined;
   /**
    * Edits a queued item, through `onEdit`, giving its title back to the Composer it's docked in. Returns whether it
-   * was asked; an unknown or completed item is refused. Offered only while `onEdit` is set and an item is queued.
+   * was asked; an unknown or completed item is refused, and so is any while the Composer can't take text. Offered only
+   * while `onEdit` is set, the Queue is docked and an item is queued.
    */
   readonly edit: ((id: string, event?: Event) => boolean) | undefined;
   /** Edits the last queued item, as Alt+Up in the Composer does. Returns whether there was one. */
@@ -264,7 +266,6 @@ const itemsIndex = (items: readonly QueueItem[], order: string[], id: string) =>
 export const queueSection = (state: QueueState, section: QueueSection): QueueSectionState => {
   const count = state.items.filter((item) => item.status === section).length;
   return {
-    // Docked in a Composer, the header says it in words: "2 queued".
     title:
       state.docked && section === "pending"
         ? `${count} ${WORDS.queued.toLowerCase()}`
@@ -370,7 +371,6 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
     // The item being sent, as it was then: the lock lifts once the host removes or changes it.
     let sent: QueueItem | undefined;
     const sendLock = createPendingAction(context, { state: "sendPending" });
-    // Items being edited, until their call settles.
     const editing = new Set<string>();
     let lastItems = store.get().items;
     context.onOptions((options) => {
@@ -453,13 +453,15 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
     const edit = (id: string, event?: Event, source?: ChangeSource) => {
       const { onEdit } = context.options();
       const item = queued(id);
-      if (!onEdit || !item || editing.has(id)) return false;
+      // The text has nowhere to go unless a composer around the Queue takes it, so the item stays.
+      if (!onEdit || !item || editing.has(id) || !canInsertText(context.element("root"))) return false;
       const call = details(event, source ? "take-back" : event ? "edit-press" : "imperative", source);
       editing.add(id);
       new Promise((resolve) => resolve(onEdit(id, call))).then(
         () => {
           editing.delete(id);
-          insertText(context.element("root"), item.title, call.source, "queue-edit");
+          if (!insertText(context.element("root"), item.title, call.source, "queue-edit"))
+            announce(`${item.title} ${WORDS.notSentYet}`, { priority: "polite" });
         },
         () => editing.delete(id),
       );
@@ -477,8 +479,8 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
         return canSend && sending === null && !sendDisabledReason && order.length > 0 ? send : undefined;
       },
       get edit() {
-        const { canEdit, order } = store.get();
-        return canEdit && order.length > 0 ? edit : undefined;
+        const { canEdit, docked, order } = store.get();
+        return canEdit && docked && order.length > 0 ? edit : undefined;
       },
       takeBack,
       bindDock: (el) => {
@@ -486,7 +488,6 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
           takeBack,
           dock: (running) => store.set({ docked: running !== null, running: running ?? false }),
         });
-        // Docked, the Queue grows from the composer's top edge as its first item arrives, and folds as its last leaves.
         let filled = store.get().order.length > 0;
         const unsubscribe = store.subscribe(() => {
           const { docked, order, motion } = store.get();
@@ -781,7 +782,6 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       on: { pointerdown: (event) => event.preventDefault() },
       attrs: (state, part) => ({
         type: "button",
-        // The focused row's buttons follow it in Tab order.
         tabindex: part.api.roving.tabIndex(state, { ...part, props: { value: part.key } }),
         "aria-label": WORDS.sendNow,
         title: state.sendDisabledReason ?? (state.running ? WORDS.steerTooltip : WORDS.sendNow),
@@ -794,12 +794,12 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       role: "button",
       focus: "native",
       props: fromItem,
-      present: (state, { key }) => state.canEdit && state.rowsById[key]?.item.status === "pending",
+      present: (state, { key }) =>
+        state.canEdit && state.docked && state.rowsById[key]?.item.status === "pending",
       press: ({ api, key }, event) => api.edit?.(key, event),
       on: { pointerdown: (event) => event.preventDefault() },
       attrs: (state, part) => ({
         type: "button",
-        // The focused row's buttons follow it in Tab order.
         tabindex: part.api.roving.tabIndex(state, { ...part, props: { value: part.key } }),
         "aria-label": "Edit",
         title: "Edit",
@@ -816,7 +816,6 @@ export const queuePrimitive: QueuePrimitive = definePrimitive({
       on: { pointerdown: (event) => event.preventDefault() },
       attrs: (state, part) => ({
         type: "button",
-        // The focused row's buttons follow it in Tab order.
         tabindex: part.api.roving.tabIndex(state, { ...part, props: { value: part.key } }),
         "aria-label": "Remove",
         title: "Remove",

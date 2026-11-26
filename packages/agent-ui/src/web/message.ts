@@ -34,15 +34,17 @@ type RegenerateOption = MessageRegenerateContentState["options"][number];
 
 const HEADER = `<kind-message-author></kind-message-author><kind-message-time><time></time></kind-message-time><kind-message-duration></kind-message-duration>`;
 const EDIT_ACTIONS = `<kind-message-edit-cancel><button>Cancel</button></kind-message-edit-cancel><kind-message-edit-save><button>Save</button></kind-message-edit-save>`;
-const DELIVERY = `<kind-message-delivery-text></kind-message-delivery-text><kind-message-withdraw><button></button></kind-message-withdraw><kind-message-resend><button>Retry</button></kind-message-resend>`;
-const RETRYING = `<kind-message-retrying-icon></kind-message-retrying-icon><span><kind-message-retrying-reason></kind-message-retrying-reason> <kind-message-retrying-text></kind-message-retrying-text></span><kind-message-retry-now><button></button></kind-message-retry-now><kind-message-cancel-retry><button>Cancel</button></kind-message-cancel-retry>`;
+const DELIVERY = `<kind-message-delivery-text></kind-message-delivery-text><kind-message-withdraw><button></button></kind-message-withdraw><kind-message-resend><button></button></kind-message-resend>`;
+const RETRYING = `<kind-message-retrying-icon></kind-message-retrying-icon><span><kind-message-retrying-reason></kind-message-retrying-reason> <kind-message-retrying-text></kind-message-retrying-text></span><kind-message-retry-now><button></button></kind-message-retry-now><kind-message-cancel-retry><button></button></kind-message-cancel-retry>`;
 const OUTCOME = `<kind-message-outcome-icon></kind-message-outcome-icon><kind-message-outcome-text></kind-message-outcome-text><kind-message-retry><button>Retry</button></kind-message-retry><kind-message-continue><button>Continue</button></kind-message-continue>`;
 
 // Header, outcome and text parts this element filled in. A part someone wrote into keeps what they wrote, as
 // React's children do. Kept across instances, because UI SDK rebuilds one when the element returns to the page.
 const filled = new WeakSet<Element>();
+/** No elements and no text, so a part written across lines counts as empty. */
+const empty = (part: Element) => !part.firstElementChild && !part.textContent?.trim();
 const claim = (part: Element | null | undefined): part is Element => {
-  if (!part || !(filled.has(part) || !part.firstChild)) return false;
+  if (!part || !(filled.has(part) || empty(part))) return false;
   filled.add(part);
   return true;
 };
@@ -84,12 +86,12 @@ const drawDetails = (el: Element, api: MessageApi, state: MessageState) => {
   for (const part of own("kind-message-header")) if (claim(part) && !part.firstChild) part.innerHTML = HEADER;
   for (const part of own("kind-message-outcome"))
     if (claim(part) && !part.firstChild) part.innerHTML = OUTCOME;
-  for (const part of own("kind-message-delivery"))
-    if (claim(part) && !part.firstChild) part.innerHTML = DELIVERY;
-  for (const part of own("kind-message-retrying"))
-    if (claim(part) && !part.firstChild) part.innerHTML = RETRYING;
+  for (const part of own("kind-message-delivery")) if (claim(part) && empty(part)) part.innerHTML = DELIVERY;
+  for (const part of own("kind-message-retrying")) if (claim(part) && empty(part)) part.innerHTML = RETRYING;
   for (const part of own("kind-message-withdraw > button")) fill(part, WORDS.withdraw);
   for (const part of own("kind-message-retry-now > button")) fill(part, WORDS.retryNow);
+  for (const part of own("kind-message-resend > button")) fill(part, "Retry");
+  for (const part of own("kind-message-cancel-retry > button")) fill(part, "Cancel");
   for (const part of own("kind-message-delivery-text")) fill(part, messageDeliveryText(state.delivery));
   for (const part of own("kind-message-retrying-reason")) fill(part, retryReason(state.retryReason));
   for (const part of own("kind-message-retrying-text")) fill(part, messageRetryText(state));

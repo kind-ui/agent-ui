@@ -108,7 +108,7 @@ A message the person sends while a turn runs isn't with the agent at once. Set `
 - `"queued"`: in your store, waiting on the server, like a follow-up to a background run. The bubble turns muted with a dashed edge, and the footer reads "Queued, not sent". A message still in the browser belongs in a [Queue](./queue.mdx) docked in the [Composer](./composer.mdx), never in both.
 - `"not-sent"`: sending failed. The footer reads "Not sent", and the message announces it.
 
-Leave `delivery` out once the agent has the message: nothing says it was steered after the fact.
+Leave `delivery` out once the agent has the message: nothing says it was steered after the fact. `MessageDelivery` is what describes the message, so render it whenever you pass `delivery`.
 
 <Example caption="Press Withdraw on either message to take it back: once the call resolves, its text goes back into the composer. Press Retry to send the failed one again.">
   <MessageDeliveryExample />
@@ -116,7 +116,7 @@ Leave `delivery` out once the agent has the message: nothing says it was steered
   <ExampleCode example="message/delivery" />
 </Example>
 
-Pass `onWithdraw` to offer **Withdraw** on a steering or queued message. Once its promise resolves, the message hands its `text` to the nearest Composer, after a line break if the draft has text, with the caret at the end, and you remove the message. Pass `onResend` to offer **Retry** on a message that wasn't sent. Each stays unavailable until you change `delivery`; a rejection makes it available again.
+Pass `onWithdraw` to offer **Withdraw** on a steering or queued message, and remove the message in it. As its promise resolves, the message hands its `text` to the nearest Composer, after a line break if the draft has text, with the caret at the end, even if you've already removed it. Pass `onResend` to offer **Retry** on a message that wasn't sent. Each stays unavailable until you change `delivery`; a rejection makes it available again.
 
 ### Retrying
 

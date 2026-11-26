@@ -2,6 +2,7 @@ import { type AnsiSpan, terminalPrimitive } from "@kind-ui/agent-ui/core";
 import type { ComponentProps, JSX } from "@solidjs/web";
 import { createParts } from "@ui-sdk/solid/primitive";
 import { For, omit } from "solid-js";
+import { Confirmation } from "./confirmation.js";
 
 const parts = createParts(terminalPrimitive, {
   root: "div",
@@ -10,6 +11,7 @@ const parts = createParts(terminalPrimitive, {
   title: "span",
   exit: "span",
   meta: "span",
+  approval: "div",
   content: "div",
   command: "div",
   copy: "button",
@@ -22,8 +24,8 @@ const parts = createParts(terminalPrimitive, {
 export type TerminalProps = ComponentProps<typeof parts.Root>;
 
 /**
- * A command and its output as a step: the command, its exit code and duration, then the output with its ANSI colors,
- * following its end while it streams. Any `children` replace the default parts.
+ * A command and its output as a step: the command, its exit code and duration, its approval while it has one, then
+ * the output with its ANSI colors, following its end while it streams. Any `children` replace the default parts.
  */
 export function Terminal(props: TerminalProps) {
   return (
@@ -36,6 +38,7 @@ export function Terminal(props: TerminalProps) {
             <TerminalExit />
             <TerminalMeta />
           </TerminalTrigger>
+          <TerminalApproval />
           <TerminalContent>
             <div data-terminal-screen="" data-kind-code="">
               <div data-terminal-header="">
@@ -63,24 +66,60 @@ export const TerminalViewport = parts.Viewport;
 
 export type TerminalTitleProps = ComponentProps<typeof parts.Title>;
 
-/** The command, or the `label`, unless you pass children. */
+/** The command, or the `label`, or "Run <command>?" while the approval waits, unless you pass children. */
 export function TerminalTitle(props: TerminalTitleProps) {
-  return <parts.Title {...omit(props, "children")}>{props.children ?? ((state) => state.title)}</parts.Title>;
+  return (
+    <parts.Title {...omit(props, "children")}>
+      {props.children ??
+        ((state) => state.spans.map((piece, index) => (index % 2 ? <code>{piece}</code> : piece)))}
+    </parts.Title>
+  );
 }
 
 export type TerminalExitProps = ComponentProps<typeof parts.Exit>;
 
-/** "exit N" once there's an exit code, unless you pass children. */
+/** "Exit N" once there's an exit code other than 0, unless you pass children. */
 export function TerminalExit(props: TerminalExitProps) {
   return <parts.Exit {...omit(props, "children")}>{props.children ?? ((state) => state.text)}</parts.Exit>;
 }
 
 export type TerminalMetaProps = ComponentProps<typeof parts.Meta>;
 
-/** The duration as "N s", unless you pass children. */
+/** "Waiting for approval" while the approval waits, else the duration as "6 sec", unless you pass children. */
 export function TerminalMeta(props: TerminalMetaProps) {
+  return <parts.Meta {...omit(props, "children")}>{props.children ?? ((state) => state.text)}</parts.Meta>;
+}
+
+export type TerminalApprovalProps = ComponentProps<typeof parts.Approval>;
+
+/**
+ * A Confirmation for the command's approval while it has one: the choices whose callbacks are set while the request
+ * waits, then what was decided. Pass children to render it yourself.
+ */
+export function TerminalApproval(props: TerminalApprovalProps) {
   return (
-    <parts.Meta {...omit(props, "children")}>{props.children ?? ((state) => state.duration)}</parts.Meta>
+    <parts.Approval {...omit(props, "children")}>
+      {props.children ??
+        ((state) => (
+          <Confirmation
+            approval={state.approval}
+            label={state.label}
+            onApprove={state.onApprove}
+            onDeny={state.onDeny}
+            onAlwaysAllow={state.onAlwaysAllow}
+            reason={state.reason}
+            approveLabel={state.approveLabel}
+            alwaysLabel={state.alwaysLabel}
+            alwaysTarget={state.alwaysTarget}
+            alwaysScope={state.alwaysScope}
+            alwaysDetail={state.alwaysDetail}
+            risk={state.risk}
+            riskText={state.riskText}
+            focusFallback={state.focusFallback}
+            motion={state.motion}
+          />
+        ))}
+    </parts.Approval>
   );
 }
 

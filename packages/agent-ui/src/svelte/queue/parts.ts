@@ -11,6 +11,8 @@ export const parts = createParts(queuePrimitive, {
   "item-icon": "span",
   "item-title": "span",
   "item-description": "span",
-  "item-remove": "span",
+  "item-send": "button",
+  "item-edit": "button",
+  "item-remove": "button",
   instructions: "span",
 });
