@@ -30,8 +30,10 @@
     display: block;
   }
 
+  /* The path takes the first line once the header is too narrow for it beside the actions. */
   [data-slot="kind-diff-header"] {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem;
     min-height: var(--kind-control-height);
@@ -44,7 +46,7 @@
 
   [data-slot="kind-diff-path"] {
     display: flex;
-    flex: 1;
+    flex: 1 1 14rem;
     align-items: center;
     gap: 0.25rem;
     min-width: 0;
@@ -169,13 +171,25 @@
     user-select: none;
   }
 
-  /* The cell's text reads "added" or "removed"; the sign is what shows. */
+  /* Muted text falls under 4.5:1 on a changed line's tint, so there the numbers and sign take the text color. */
+  [data-slot="kind-diff-row"]:where([data-kind="add"], [data-kind="remove"])
+    > :is([data-slot="kind-diff-old-number"], [data-slot="kind-diff-new-number"]),
+  [data-slot="kind-diff-row"]:where([data-kind="add"], [data-kind="remove"])
+    > [data-slot="kind-diff-sign"]::before {
+    color: var(--kind-color-fg);
+  }
+
+  /* The cell's text reads "added" or "removed", clipped and clear; the sign over it is what shows. */
   [data-slot="kind-diff-sign"] {
-    font-size: 0;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    color: transparent;
     user-select: none;
 
     &::before {
-      font-size: var(--kind-code-font-size);
+      position: absolute;
+      inset: 0;
       color: var(--kind-color-muted);
     }
   }
@@ -207,7 +221,10 @@
     background-color: var(--kind-diff-removed-word);
   }
 
-  /* Hunk headers and collapsed runs span the numbers and sign too. */
+  /* Hunk headers and collapsed runs span the numbers and sign too, which are empty there. */
+  [data-slot="kind-diff-row"]:where([data-kind="hunk"], [data-kind="collapsed"]) > * {
+    grid-row: 1;
+  }
   [data-slot="kind-diff-row"]:where([data-kind="hunk"], [data-kind="collapsed"])
     > [data-slot="kind-diff-code"] {
     grid-column: 1 / -1;
@@ -215,7 +232,19 @@
     padding-inline-start: 0.75rem;
   }
 
+  /* A block, since `hidden="until-found"` hides through `content-visibility`, which an inline box ignores. */
+  [data-slot="kind-diff-collapsed-text"] {
+    display: block;
+    white-space: pre;
+  }
+
   /* Folded lines keep the row a line's height, so expanding a run never moves what's above it. */
+  [data-slot="kind-diff-row"]:where([data-kind="collapsed"]) > [data-slot="kind-diff-code"] {
+    display: flex;
+    align-items: center;
+    height: var(--kind-code-line-height);
+  }
+
   [data-slot="kind-diff-collapsed"] {
     height: var(--kind-code-line-height);
     min-height: 0;

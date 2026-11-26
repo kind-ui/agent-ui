@@ -272,6 +272,10 @@ const outsideRows = selects<DiffState, DiffApi, BaseSlotProps>({
 
 const rowAt = (state: DiffState, value: string | undefined) => state.display[Number(value)];
 
+// Only a line has numbers to show; a folded run keeps its first line's numbers for find in page's order alone.
+const lineNumber = (row: DiffRow | undefined, side: "oldLine" | "newLine") =>
+  row?.kind === "collapsed" ? undefined : row?.[side];
+
 export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffState, DiffApi, DiffSlots>({
   name: "kind-diff",
   options: {
@@ -572,17 +576,19 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
       props: { value: { kind: "string", from: "row" } },
       selects: rowSelects<CellProps>(byValue),
       // A row header only where there's a number, since an empty header names nothing.
-      role: (state, { props }) => (rowAt(state, props.value)?.oldLine === undefined ? "cell" : "rowheader"),
+      role: (state, { props }) =>
+        lineNumber(rowAt(state, props.value), "oldLine") === undefined ? "cell" : "rowheader",
       roles: ["rowheader", "cell"],
-      state: (state, { props }) => ({ text: String(rowAt(state, props.value)?.oldLine ?? "") }),
+      state: (state, { props }) => ({ text: String(lineNumber(rowAt(state, props.value), "oldLine") ?? "") }),
     }),
     "new-number": slot<CellProps, { text: string }>({
       props: { value: { kind: "string", from: "row" } },
       selects: rowSelects<CellProps>(byValue),
       // A row header only where there's a number, since an empty header names nothing.
-      role: (state, { props }) => (rowAt(state, props.value)?.newLine === undefined ? "cell" : "rowheader"),
+      role: (state, { props }) =>
+        lineNumber(rowAt(state, props.value), "newLine") === undefined ? "cell" : "rowheader",
       roles: ["rowheader", "cell"],
-      state: (state, { props }) => ({ text: String(rowAt(state, props.value)?.newLine ?? "") }),
+      state: (state, { props }) => ({ text: String(lineNumber(rowAt(state, props.value), "newLine") ?? "") }),
     }),
     // Shows a `+` or `−` (diff.css), and reads as the change in words.
     sign: slot<CellProps, { text: string }>({

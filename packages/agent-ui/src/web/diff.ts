@@ -47,8 +47,9 @@ const drawRow = (el: Element, row: DiffRow, state: DiffState) => {
   if (last?.row === row && last.oldTokens === state.oldTokens && last.newTokens === state.newTokens) return;
   drawn.set(el, { row, oldTokens: state.oldTokens, newTokens: state.newTokens });
   const [oldNumber, newNumber, sign, code] = el.children;
-  if (oldNumber) oldNumber.textContent = String(row.oldLine ?? "");
-  if (newNumber) newNumber.textContent = String(row.newLine ?? "");
+  const folded = row.kind === "collapsed";
+  if (oldNumber) oldNumber.textContent = folded ? "" : String(row.oldLine ?? "");
+  if (newNumber) newNumber.textContent = folded ? "" : String(row.newLine ?? "");
   if (sign) sign.textContent = row.kind === "add" ? "added" : row.kind === "remove" ? "removed" : "";
   if (!code) return;
   const document = el.ownerDocument;
