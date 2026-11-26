@@ -1,7 +1,8 @@
 import type { TerminalOptions } from "@kind-ui/agent-ui/core";
 import { useEffect, useState } from "react";
 import { Terminal } from "../../../../src/react/terminal.js";
-import { installRun, manyLines, testRun } from "../../shared/terminal.js";
+import { confirmationHost } from "../../shared/confirmation.js";
+import { approvalTerminals, installRun, manyLines, testRun } from "../../shared/terminal.js";
 
 type Row = TerminalOptions & { id: string; keepClipboard?: boolean };
 
@@ -56,7 +57,31 @@ const owned: Row[] = [
   { id: "empty", command: "npm run build", output: "" },
 ];
 
+function Approvals() {
+  const [{ host, approve, deny, always }] = useState(confirmationHost);
+  const [rows, setRows] = useState(approvalTerminals);
+  useEffect(() => {
+    Object.assign(window, {
+      kindHost: host,
+      kindTerminal: {
+        set: (id: string, next: Partial<TerminalOptions>) =>
+          setRows((all) =>
+            all.map((row) => (row.id === id ? { ...row, options: { ...row.options, ...next } } : row)),
+          ),
+      },
+    });
+  }, [host]);
+  return (
+    <div className="flex w-full max-w-[40rem] flex-col gap-4 p-6">
+      {rows.map(({ id, options }) => (
+        <Terminal key={id} id={id} {...options} onApprove={approve} onDeny={deny} onAlwaysAllow={always} />
+      ))}
+    </div>
+  );
+}
+
 export const cases = {
+  approval: () => <Approvals />,
   all: () => <Terminals rows={all} />,
   owned: () => <Terminals rows={owned} />,
   "stream-10": () => <Terminals rows={[{ id: "stream", command: "npm run build", output: manyLines(10) }]} />,

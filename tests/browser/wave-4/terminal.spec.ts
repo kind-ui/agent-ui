@@ -73,7 +73,7 @@ test("shows the command, its colored output, exit code and duration", async ({ p
   await open(page);
   await expect(terminal(page, "test")).toHaveAttribute("data-status", "running");
   await expect(terminal(page, "test")).toHaveAttribute("data-open", "");
-  await expect(trigger(page, "test")).toHaveText("npm test4 s");
+  await expect(trigger(page, "test")).toHaveText("npm test4 sec");
   // The title is the command, so the screen doesn't show it again.
   await expect(part(page, "test", "command")).toBeHidden();
   await expect(part(page, "test", "exit")).toBeHidden();
@@ -82,10 +82,11 @@ test("shows the command, its colored output, exit code and duration", async ({ p
   await expect(part(page, "test", "line").nth(6)).toHaveText("building 100%");
 
   await expect(terminal(page, "failed")).toHaveAttribute("data-status", "error");
-  await expect(part(page, "failed", "exit")).toHaveText("exit 1");
+  await expect(part(page, "failed", "exit")).toHaveText("Exit 1");
   await expect(part(page, "failed", "exit")).toHaveAttribute("data-exit", "failure");
   await expect(terminal(page, "install")).not.toHaveAttribute("data-open", "");
-  await expect(part(page, "install", "exit")).toHaveText("exit 0");
+  // The result is said once: a clean exit is the complete mark and the duration, without "Exit 0".
+  await expect(part(page, "install", "exit")).toBeHidden();
 
   // The cursor shows only while the command runs.
   const cursor = (id: string) =>
@@ -149,14 +150,14 @@ test("exit 0 completes and collapses, a failure stays open and names its exit co
   await set(page, "test", { exitCode: 1 });
   await expect(terminal(page, "test")).toHaveAttribute("data-status", "error");
   await expect(terminal(page, "test")).toHaveAttribute("data-open", "");
-  await expect(part(page, "test", "exit")).toHaveText("exit 1");
+  await expect(part(page, "test", "exit")).toHaveText("Exit 1");
   await expect.poll(() => announced(page)).toContain("npm test failed, exit code 1");
 
   await set(page, "test", { exitCode: undefined });
   await expect(terminal(page, "test")).toHaveAttribute("data-status", "running");
   await set(page, "test", { exitCode: 0 });
   await expect(terminal(page, "test")).not.toHaveAttribute("data-open", "");
-  await expect(part(page, "test", "exit")).toHaveText("exit 0");
+  await expect(part(page, "test", "exit")).toBeHidden();
   await expect.poll(() => announced(page)).toContain("npm test complete");
 });
 

@@ -1,5 +1,6 @@
 export {
   type TerminalApi,
+  type TerminalApprovalState,
   type TerminalCopyReason,
   type TerminalOptions,
   type TerminalPrimitive,

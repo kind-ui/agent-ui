@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `e1fc3dec` (Wave 7 redesign 2/11: marks and Confirmation)
+Last reviewed: 8aee26be
 
 ## Settled
 
@@ -41,6 +41,8 @@ Last reviewed: `e1fc3dec` (Wave 7 redesign 2/11: marks and Confirmation)
 - **A Context Bar chip's remove target stays under 44px on a coarse pointer (Design Wave 1 Batch B):** it grows to about 32×28px, since the bar is one 28px row that clips and a larger target would reach the next chip; the gap widens instead. The rule for 44px names shared controls, which a chip's remove isn't.
 
 ## Known and open (don't report again, check whether fixed)
+
+- **A Terminal that never ran toggles an empty panel** (Wave 7 layer 3): denied or expired with no output, its screen is hidden, so the chevron opens nothing; the mockup draws it open. Decide in core whether such a row opens by default or stops being a toggle.
 
 - Wave 7 layer 2: Confirmation's meta row ("Decide in 4 min", "Sending decision") appears after bind or on a press; inside a Tool, whose title is hidden, it adds a row above the choices. Server markup can't count the deadline.
 - Wave 7 layer 2: the choices stack (Always allow above Deny and Approve) only once core measures them, so a narrow server render first wraps naturally.

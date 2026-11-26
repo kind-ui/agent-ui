@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `e1fc3dec` (Wave 7 redesign 2/11: marks and Confirmation)
+Last reviewed: 8aee26be
 
 ## Settled
 
@@ -54,6 +54,8 @@ Last reviewed: `e1fc3dec` (Wave 7 redesign 2/11: marks and Confirmation)
 - **Thread Search's Escape closes its dialog** (`@ui-sdk/core/testing`, Wave 6 Task 12): as with "A picker's Escape closes its popover", Command's search is a `combobox` whose list is always shown, here inside a modal dialog, so Escape closes the dialog and focus returns to the trigger, where `checkPattern("combobox")` expects only the list to close and focus to stay. `wave-6/aria-patterns.spec.ts` accepts those two problems; the dialog check passes.
 
 ## Known and open (don't report again, check whether fixed)
+
+- **A command with backticks loses them in Terminal's Confirmation name** (`terminal.ts` `question`): the label wraps the command in backticks and Confirmation's `codeSpans` splits on the command's own, so `echo \`date\`` is named "Run echo date?". The header title is right (it uses `titleSpans`). Needs Confirmation to take pieces or an escape (Wave 7 layer 3 review).
 
 - Wave 7 layer 2: `createCountdown` counts to an ISO instant; spec §3 asks for a relative `seconds` value and for Connection Status to spread it. Layer 5 (Message, retry) adds the relative form and moves Connection Status onto it.
 - Wave 7 layer 2: `toolStatus` reads an `expired` or `cancelled` approval without an `outcome` as `running`; the host sets `outcome` today, as for a denial. Needs a spec answer.

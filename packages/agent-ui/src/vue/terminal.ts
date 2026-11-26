@@ -1,6 +1,7 @@
-import { type AnsiSpan, terminalPrimitive } from "@kind-ui/agent-ui/core";
+import { type AnsiSpan, type TerminalApprovalState, terminalPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/vue/primitive";
 import { defineComponent, h } from "vue";
+import { Confirmation } from "./confirmation.js";
 
 const parts = createParts(terminalPrimitive, {
   root: "div",
@@ -9,6 +10,7 @@ const parts = createParts(terminalPrimitive, {
   title: "span",
   exit: "span",
   meta: "span",
+  approval: "div",
   content: "div",
   command: "div",
   copy: "button",
@@ -42,21 +44,46 @@ export const TerminalCopy = parts.Copy;
 /** Scrolls the output and follows its end. Holds a `TerminalOutput`. */
 export const TerminalViewport = parts.Viewport;
 
-/** The command, or the `label`, unless you fill the default slot. */
+/** The command, or the `label`, or "Run <command>?" while the approval waits, unless you fill the default slot. */
 export const TerminalTitle = withDefault(
   parts.Title,
   "TerminalTitle",
-  (state: { title: string }) => state.title,
+  (state: { spans: readonly string[] }) =>
+    state.spans.map((piece, index) => (index % 2 ? h("code", { key: index }, piece) : piece)),
 );
 
-/** "exit N" once there's an exit code, unless you fill the default slot. */
+/** "Exit N" once there's an exit code other than 0, unless you fill the default slot. */
 export const TerminalExit = withDefault(parts.Exit, "TerminalExit", (state: { text: string }) => state.text);
 
-/** The duration as "N s", unless you fill the default slot. */
-export const TerminalMeta = withDefault(
-  parts.Meta,
-  "TerminalMeta",
-  (state: { duration: string }) => state.duration,
+/** "Waiting for approval" while the approval waits, else the duration as "6 sec", unless you fill the default slot. */
+export const TerminalMeta = withDefault(parts.Meta, "TerminalMeta", (state: { text: string }) => state.text);
+
+/**
+ * A Confirmation for the command's approval while it has one: the choices whose callbacks are set while the request
+ * waits, then what was decided. Fill the slot to render it yourself.
+ */
+// Slot state is a proxy with no keys of its own, so the Confirmation's props are read one by one.
+export const TerminalApproval = withDefault(
+  parts.Approval,
+  "TerminalApproval",
+  (state: TerminalApprovalState) =>
+    h(Confirmation, {
+      approval: state.approval,
+      label: state.label,
+      onApprove: state.onApprove,
+      onDeny: state.onDeny,
+      onAlwaysAllow: state.onAlwaysAllow,
+      reason: state.reason,
+      approveLabel: state.approveLabel,
+      alwaysLabel: state.alwaysLabel,
+      alwaysTarget: state.alwaysTarget,
+      alwaysScope: state.alwaysScope,
+      alwaysDetail: state.alwaysDetail,
+      risk: state.risk,
+      riskText: state.riskText,
+      focusFallback: state.focusFallback,
+      motion: state.motion,
+    }),
 );
 
 /**
@@ -124,6 +151,7 @@ const defaultParts = () => [
     null,
     stable(() => [h(TerminalIcon), h(TerminalTitle), h(TerminalExit), h(TerminalMeta)]),
   ),
+  h(TerminalApproval),
   h(
     TerminalContent,
     null,
@@ -142,8 +170,8 @@ const defaultParts = () => [
 ];
 
 /**
- * A command and its output as a step: the command, its exit code and duration, then the output with its ANSI colors,
- * following its end while it streams. A default slot replaces the default parts.
+ * A command and its output as a step: the command, its exit code and duration, its approval while it has one, then
+ * the output with its ANSI colors, following its end while it streams. A default slot replaces the default parts.
  */
 export const Terminal = defineComponent({
   name: "Terminal",

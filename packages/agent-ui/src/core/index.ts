@@ -552,6 +552,7 @@ export {
 } from "./task/index.js";
 export {
   type TerminalApi,
+  type TerminalApprovalState,
   type TerminalCopyReason,
   type TerminalOptions,
   type TerminalPrimitive,

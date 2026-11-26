@@ -148,6 +148,7 @@ export default {
     "wave-4/document.spec.ts",
     "wave-4/generated-image.spec.ts",
     "wave-4/file-tree.spec.ts",
+    "wave-4/terminal-approval.spec.ts",
     "wave-4/terminal.spec.ts",
     "wave-4/stack-trace.spec.ts",
     "wave-4/test-results.spec.ts",

@@ -20,6 +20,22 @@ A Tool whose `call.approval.state` is `"requested"` shows **Deny** and **Approve
 - Set `expiresAt` on the approval to show "Decide in 4 min"; report `state: "expired"` (or `"cancelled"`) when it lapses.
 - Once the approval is settled, the buttons give way to the outcome ("Approved", "Always allowed `search_docs` in this project", "Denied: <reason>", "Expired before a decision"), at the same height, so the conversation keeps what was decided.
 
+## Command approval
+
+A Terminal takes the same `approval`, `onApprove` and `onDeny` before its command runs. While it waits, its title asks "Run `npm test`?" and the approve button reads **Run**. Record the decision on `approval`, then start the command and stream its `output`; the outcome stays above the output.
+
+```tsx
+<Terminal
+  command="npm test"
+  approval={approval}
+  output={output}
+  onApprove={() => record(true)}
+  onDeny={() => record(false)}
+/>
+```
+
+Pass `onAlwaysAllow` with `alwaysTarget` ("npm test") and `alwaysScope` ("in this project") only if your app keeps an allow list, and use the same words in your settings. Pass `risk="danger"` with a `riskText` for a destructive command; it can't be always-allowed.
+
 ## Confirmation
 
 For an action that isn't a tool call (sending an email, deleting a file), render a Confirmation with an `Approval`:

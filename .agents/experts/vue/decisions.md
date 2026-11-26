@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `e1fc3dec` (Wave 7 redesign 2/11: marks and Confirmation)
+Last reviewed: 8aee26be
 
 ## Settled
 
