@@ -330,8 +330,6 @@ export const terminalPrimitive: TerminalPrimitive = definePrimitive<
       toggle: (event) => !holds(!store.get().open) && step.toggle(event),
       approvalState: approvalPart.approvalState<TerminalState>(context, {
         question: (state) => question(state.command),
-        // Focus moves to the outcome, which takes the choices' place (Wave 7 spec §8).
-        fallback: () => undefined,
       }),
       titleSpans: ({ waiting, title, command }) => spans(waiting, title, command),
       get copy() {
