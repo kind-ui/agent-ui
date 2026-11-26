@@ -1,12 +1,18 @@
+import { defineComposer } from "../../../../src/web/composer.js";
 import { defineConversation } from "../../../../src/web/conversation.js";
 import { defineInternalAvatar } from "../../../../src/web/internal/avatar.js";
 import { defineInternalToolbar } from "../../../../src/web/internal/toolbar.js";
 import { defineMarkdown } from "../../../../src/web/markdown.js";
-import { defineMessage, type KindMessageEvents } from "../../../../src/web/message.js";
+import {
+  defineMessage,
+  type KindMessageElement,
+  type KindMessageEvents,
+} from "../../../../src/web/message.js";
 import { answer } from "../../shared/markdown.js";
 import {
   author,
   authored,
+  delivery,
   outcomeError,
   outcomeText,
   regenerateOptions,
@@ -171,6 +177,69 @@ function outcomesCase(root: HTMLElement) {
   });
 }
 
+function deliveryCase(root: HTMLElement) {
+  define();
+  defineComposer();
+  const user = (id: string, text: string, label: string, state: string) => `
+    <kind-message id="${id}" aria-label="${label}" message-role="user" delivery="${state}" text="${text}" can-withdraw can-resend>
+      <kind-message-content>${text}</kind-message-content>
+      <kind-message-delivery></kind-message-delivery>
+    </kind-message>`;
+  root.innerHTML = `<div class="m-4 flex w-[36rem] flex-col gap-6">
+    <kind-message aria-label="Assistant message"><kind-message-content>${delivery.answer}</kind-message-content></kind-message>
+    ${user("steering", delivery.steering, "Steering message", "steering")}
+    ${user("queued", delivery.queued, "Queued message", "queued")}
+    ${user("not-sent", delivery.notSent, "Unsent message", "not-sent")}
+    <kind-message id="retrying" aria-label="Retrying answer" status="streaming" text="${delivery.retrying}" can-retry-now can-cancel-retry can-retry>
+      <kind-message-content>${delivery.retrying}</kind-message-content>
+      <kind-message-retrying></kind-message-retrying>
+      <kind-message-outcome></kind-message-outcome>
+    </kind-message>
+    <kind-composer>
+      <form aria-label="Message">
+        <ui-file-input>
+          <ui-file-input-dropzone>
+            <kind-composer-input>
+              <ui-token-input><ui-token-input-editor aria-label="Prompt"></ui-token-input-editor></ui-token-input>
+            </kind-composer-input>
+            <kind-composer-submit><button></button></kind-composer-submit>
+            <kind-composer-stop><button></button></kind-composer-stop>
+          </ui-file-input-dropzone>
+        </ui-file-input>
+      </form>
+    </kind-composer>
+  </div>`;
+  const retrying = root.querySelector<KindMessageElement>("#retrying");
+  if (retrying) retrying.retry = delivery.retry;
+  const deferred: { resolve(): void; reject(): void }[] = [];
+  const names = ["withdraw", "resend", "retrynow", "cancelretry", "retry"] as const;
+  for (const el of root.querySelectorAll("kind-message"))
+    for (const name of names)
+      el.addEventListener(name, (event) => {
+        const { reason, source, waitUntil } = (event as KindMessageEvents[typeof name]).detail;
+        const call = name === "retrynow" ? "retry-now" : name === "cancelretry" ? "cancel-retry" : name;
+        calls.push(`${call}:${reason}:${source}`);
+        waitUntil(new Promise<void>((resolve, reject) => deferred.push({ resolve, reject })));
+      });
+  Object.assign(window, {
+    kindDelivery: {
+      calls,
+      set: (id: string, row: { delivery?: string; retry?: KindMessageElement["retry"]; status?: string }) => {
+        const el = root.querySelector<KindMessageElement>(`#${id}`);
+        if (!el) return;
+        el.retry = row.retry;
+        for (const name of ["delivery", "status"] as const) {
+          const value = row[name];
+          if (value === undefined) el.removeAttribute(name);
+          else el.setAttribute(name, value);
+        }
+      },
+      remove: (id: string) => root.querySelector(`#${id}`)?.remove(),
+      settle: (ok: boolean) => deferred.shift()?.[ok ? "resolve" : "reject"](),
+    },
+  });
+}
+
 export const cases = {
   all: (root: HTMLElement) => {
     define();
@@ -227,6 +296,7 @@ export const cases = {
   author: authorCase(false),
   "author-clock": authorCase(true),
   outcomes: outcomesCase,
+  delivery: deliveryCase,
   options: optionsCase(false),
   refusing: optionsCase(true),
   "no-options": optionsCase(false, true),

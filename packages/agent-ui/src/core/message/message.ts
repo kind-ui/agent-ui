@@ -19,7 +19,7 @@ import { actionSource } from "../action-source.js";
 import { avatarInitials } from "../avatar.js";
 import { createCopy } from "../clipboard.js";
 import { hearComposed } from "../composed-events.js";
-import { type Countdown, createCountdown } from "../countdown.js";
+import { createCountdown } from "../countdown.js";
 import { memo } from "../memo.js";
 import {
   type MenuBaseApi,
@@ -291,8 +291,8 @@ export type MessageApi = {
   readonly retryNow: ((event?: Event) => void) | undefined;
   /** Calls `onCancelRetry`. Offered while it's set, the request is retrying and nothing is pending. */
   readonly cancelRetry: ((event?: Event) => void) | undefined;
-  /** Counts down `retry.retryAfter`. Bound by the root. */
-  retryCountdown: Countdown;
+  /** Counts down `retry.retryAfter`, and starts announcing a frame after it binds. Bound by the root. */
+  bindRoot: () => () => void;
   /** Moves focus past the message when Withdraw or Retry leaves while focused. */
   deliveryRecovery: ReturnType<typeof createFocusRecovery>;
   /** Moves focus to Retry, the toolbar or past the message when Retry now or Cancel leaves while focused. */
@@ -661,19 +661,21 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       },
     });
     let { delivery, retryAttempt } = store.get();
+    // Web hosts set `retry` and `delivery` once the element exists, so nothing is announced before the first frame.
+    let started = false;
     context.onOptions((options) => {
       const next = presentation(options);
       if (next.delivery !== delivery) {
         delivery = next.delivery;
         // A new delivery answers a withdraw or resend.
         pendingDelivery.release();
-        if (delivery === "not-sent") announce(WORDS.messageNotSent, { priority: "polite" });
+        if (started && delivery === "not-sent") announce(WORDS.messageNotSent, { priority: "polite" });
       }
       if (next.retryAttempt !== retryAttempt) {
         retryAttempt = next.retryAttempt;
         // A new attempt answers Retry now; the end of retrying answers Cancel.
         pendingRetry.release();
-        if (retryAttempt !== null && next.outcome === null)
+        if (started && retryAttempt !== null && next.outcome === null)
           announce(retryAnnouncement(retryAttempt), { priority: "polite" });
       }
     });
@@ -833,7 +835,16 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
           ? (event?: Event) => runDelivery(pendingRetry, "onCancelRetry", "cancel-retry-press", event)
           : undefined;
       },
-      retryCountdown,
+      bindRoot: () => {
+        const frame = requestAnimationFrame(() => {
+          started = true;
+        });
+        const stop = retryCountdown.bind();
+        return () => {
+          cancelAnimationFrame(frame);
+          stop();
+        };
+      },
       deliveryRecovery: createFocusRecovery({
         fallback: () => {
           const root = context.element("root");
@@ -913,7 +924,7 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
         "aria-busy": state.outcomePending ? "true" : undefined,
         "aria-describedby": state.delivery ? `${part.id}-delivery` : undefined,
       }),
-      bind: (_el, { api }) => api.retryCountdown.bind(),
+      bind: (_el, { api }) => api.bindRoot(),
     }),
     avatar: slot<BaseSlotProps, MessageAvatarState>({
       state: (state, { api }) => api.avatarState(state),
@@ -1023,7 +1034,6 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       attrs: (state) => ({
         type: "button",
         "aria-disabled": state.deliveryPending ? "true" : undefined,
-        "data-pending": state.deliveryPending ? "" : undefined,
         "data-kind-button": "",
         "data-kind-size": "sm",
       }),
@@ -1038,7 +1048,6 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       attrs: (state) => ({
         type: "button",
         "aria-disabled": state.deliveryPending ? "true" : undefined,
-        "data-pending": state.deliveryPending ? "" : undefined,
         "data-kind-button": "",
         "data-kind-size": "sm",
       }),
@@ -1069,13 +1078,12 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     "retry-now": slot<BaseSlotProps, { label: string }>({
       role: "button",
       focus: "native",
-      present: (state) => state.canRetryNow,
+      present: (state) => state.canRetryNow && retrying(state),
       state: () => ({ label: WORDS.retryNow }),
       press: ({ api }, event) => api.retryNow?.(event),
       attrs: (state) => ({
         type: "button",
         "aria-disabled": state.retryPending ? "true" : undefined,
-        "data-pending": state.retryPending ? "" : undefined,
         "data-kind-button": "secondary",
         "data-kind-size": "sm",
       }),
@@ -1084,7 +1092,7 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     "cancel-retry": slot<BaseSlotProps, { label: string }>({
       role: "button",
       focus: "native",
-      present: (state) => state.canCancelRetry,
+      present: (state) => state.canCancelRetry && retrying(state),
       state: () => ({ label: "Cancel" }),
       press: ({ api }, event) => api.cancelRetry?.(event),
       attrs: (state) => ({

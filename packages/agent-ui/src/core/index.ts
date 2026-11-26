@@ -240,7 +240,12 @@ export {
   type GuardrailNoticeState,
   guardrailNoticePrimitive,
 } from "./guardrail-notice/index.js";
-export type { IndicatorOptions, IndicatorPrimitive, IndicatorState } from "./indicator.js";
+export {
+  type IndicatorOptions,
+  type IndicatorPrimitive,
+  type IndicatorState,
+  indicatorLabel,
+} from "./indicator.js";
 export {
   type InlineCitationApi,
   type InlineCitationCarouselState,

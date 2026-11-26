@@ -1,4 +1,4 @@
-import { loaderPrimitive } from "@kind-ui/agent-ui/core";
+import { indicatorLabel, loaderPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/web";
 import type { AttributeProperties, UiElement } from "@ui-sdk/web/events";
 
@@ -14,7 +14,7 @@ export function defineLoader(): void {
         if (!el.firstElementChild) el.innerHTML = parts;
         const label = el.querySelector("kind-loader-label");
         const draw = () => {
-          const text = instance.get().label;
+          const text = indicatorLabel(instance.get());
           if (label && label.textContent !== text) label.textContent = text;
         };
         draw();

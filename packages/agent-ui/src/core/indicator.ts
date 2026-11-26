@@ -57,6 +57,12 @@ export type IndicatorPrimitive = ReturnType<
   >
 >;
 
+/** The words shown and read: the label, or "Still working · no update for 2 min" while stalled. */
+export const indicatorLabel = (state: IndicatorState): string =>
+  state.stalled
+    ? `${WORDS.stillWorking} · ${stalledText(state.stalledMinutes).replace(/^./, (first) => first.toLowerCase())}`
+    : state.label;
+
 /**
  * Everything but the name of Loader, Thinking Indicator and Typing Indicator: a polite `status` named by its
  * label, and decorative dots that flow with the `"dot-flow"` preset.
@@ -66,11 +72,6 @@ export const indicator = (defaultLabel: string) => {
     label: options.label ?? defaultLabel,
     motion: options.motion ?? "auto",
   });
-  /** The words shown and read: the label, or "Still working · no update for 2 min" while stalled. */
-  const labelOf = (state: IndicatorState) =>
-    state.stalled
-      ? `${WORDS.stillWorking} · ${stalledText(state.stalledMinutes).replace(/^./, (first) => first.toLowerCase())}`
-      : state.label;
   return {
     options: { label: "string", motion: "string", ...STALLED_OPTIONS } as const,
     state: (options: IndicatorOptions): IndicatorState => ({ ...presentation(options), ...NOT_STALLED }),
@@ -89,7 +90,7 @@ export const indicator = (defaultLabel: string) => {
       root: slot({
         role: "status",
         attrs: (state) => ({
-          "aria-label": labelOf(state),
+          "aria-label": indicatorLabel(state),
           "data-motion": state.motion,
           "data-stalled": state.stalled ? "" : undefined,
         }),
@@ -97,7 +98,7 @@ export const indicator = (defaultLabel: string) => {
       }),
       label: slot<BaseSlotProps, { label: string }>({
         attrs: (state) => ({ "data-motion": state.motion }),
-        state: (state) => ({ label: labelOf(state) }),
+        state: (state) => ({ label: indicatorLabel(state) }),
       }),
       dots: slot({
         attrs: (state) => ({ "aria-hidden": "true", "data-motion": state.motion }),

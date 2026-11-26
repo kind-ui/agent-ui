@@ -25,3 +25,13 @@ export const authored = [
 ];
 export const outcomeText = "Retry with exponential backoff, and cap the number of attempts.";
 export const outcomeError = "The model is overloaded";
+
+/** The delivery page: a steering, a queued and an unsent message, then an answer that's retrying. */
+export const delivery = {
+  answer: "I'll store the session in a signed cookie and check it on each request.",
+  steering: "Use the session table, not a cookie",
+  queued: "Then add a test for the expired session case",
+  notSent: "Also log failed refreshes",
+  retrying: "Retry with exponential backoff, and cap the number of attempts. The client should",
+  retry: { attempt: 2, maxAttempts: 5, retryAfter: 4, reason: "Rate limited" },
+};

@@ -4,12 +4,17 @@ import {
   type MessageApi,
   type MessageAvatarState,
   type MessageBranchChangeReason,
+  type MessageDeliveryDetails,
   type MessageOptions,
   type MessageOutcomeDetails,
   type MessageRegenerateContentState,
   type MessageState,
+  messageDeliveryText,
   messageOutcomeText,
   messagePrimitive,
+  messageRetryText,
+  retryReason,
+  WORDS,
 } from "@kind-ui/agent-ui/core";
 import { createParts, type UiActionDetail, wrappedButton, wrappedChild } from "@ui-sdk/web";
 import type {
@@ -29,6 +34,8 @@ type RegenerateOption = MessageRegenerateContentState["options"][number];
 
 const HEADER = `<kind-message-author></kind-message-author><kind-message-time><time></time></kind-message-time><kind-message-duration></kind-message-duration>`;
 const EDIT_ACTIONS = `<kind-message-edit-cancel><button>Cancel</button></kind-message-edit-cancel><kind-message-edit-save><button>Save</button></kind-message-edit-save>`;
+const DELIVERY = `<kind-message-delivery-text></kind-message-delivery-text><kind-message-withdraw><button></button></kind-message-withdraw><kind-message-resend><button>Retry</button></kind-message-resend>`;
+const RETRYING = `<kind-message-retrying-icon></kind-message-retrying-icon><span><kind-message-retrying-reason></kind-message-retrying-reason> <kind-message-retrying-text></kind-message-retrying-text></span><kind-message-retry-now><button></button></kind-message-retry-now><kind-message-cancel-retry><button>Cancel</button></kind-message-cancel-retry>`;
 const OUTCOME = `<kind-message-outcome-icon></kind-message-outcome-icon><kind-message-outcome-text></kind-message-outcome-text><kind-message-retry><button>Retry</button></kind-message-retry><kind-message-continue><button>Continue</button></kind-message-continue>`;
 
 // Header, outcome and text parts this element filled in. A part someone wrote into keeps what they wrote, as
@@ -77,6 +84,15 @@ const drawDetails = (el: Element, api: MessageApi, state: MessageState) => {
   for (const part of own("kind-message-header")) if (claim(part) && !part.firstChild) part.innerHTML = HEADER;
   for (const part of own("kind-message-outcome"))
     if (claim(part) && !part.firstChild) part.innerHTML = OUTCOME;
+  for (const part of own("kind-message-delivery"))
+    if (claim(part) && !part.firstChild) part.innerHTML = DELIVERY;
+  for (const part of own("kind-message-retrying"))
+    if (claim(part) && !part.firstChild) part.innerHTML = RETRYING;
+  for (const part of own("kind-message-withdraw > button")) fill(part, WORDS.withdraw);
+  for (const part of own("kind-message-retry-now > button")) fill(part, WORDS.retryNow);
+  for (const part of own("kind-message-delivery-text")) fill(part, messageDeliveryText(state.delivery));
+  for (const part of own("kind-message-retrying-reason")) fill(part, retryReason(state.retryReason));
+  for (const part of own("kind-message-retrying-text")) fill(part, messageRetryText(state));
   // An editor written without Cancel and Save gets them after it.
   if (!own("kind-message-edit-actions").length)
     own("kind-message-editor")[0]?.after(el.ownerDocument.createElement("kind-message-edit-actions"));
@@ -145,9 +161,11 @@ const drawLevel = (parent: Element, options: RegenerateOption[], first?: Regener
 };
 
 /**
- * The `can-regenerate`, `can-edit`, `can-retry` and `can-continue` attributes offer those actions. Callbacks are
- * events: `regenerate`, `edit`, `branchchange`, `messagecopy`, `retry` and `continue` (call
- * `event.detail.waitUntil(promise)` to keep Retry or Continue pending). Write each action as a wrapper around a toolbar button,
+ * The `can-regenerate`, `can-edit`, `can-retry`, `can-continue`, `can-withdraw`, `can-resend`, `can-retry-now` and
+ * `can-cancel-retry` attributes offer those actions. Callbacks are events: `regenerate`, `edit`, `branchchange`,
+ * `messagecopy`, `retry`, `continue`, `withdraw`, `resend`, `retrynow` and `cancelretry` (call
+ * `event.detail.waitUntil(promise)` to keep one pending). `retry` is a property. An empty `kind-message-delivery` or
+ * `kind-message-retrying` fills itself in. Write each action as a wrapper around a toolbar button,
  * `<kind-message-copy><ui-toolbar-button><button aria-label="Copy">`, inside a
  * `<kind-internal-toolbar><ui-toolbar aria-label="Message actions">`, and the editor as
  * `<kind-message-editor><textarea hidden></textarea></kind-message-editor>`, which gets Cancel and Save after it in a
@@ -171,15 +189,23 @@ export function defineMessage(): void {
         canEdit: "boolean",
         canRetry: "boolean",
         canContinue: "boolean",
+        canWithdraw: "boolean",
+        canResend: "boolean",
+        canRetryNow: "boolean",
+        canCancelRetry: "boolean",
       },
       // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
       options: (el) => {
-        const { canRegenerate, canEdit, canRetry, canContinue } = el as KindMessageElement;
+        const m = el as KindMessageElement;
         return {
-          ...(!canRegenerate && { onRegenerate: undefined }),
-          ...(!canEdit && { onEdit: undefined }),
-          ...(!canRetry && { onRetry: undefined }),
-          ...(!canContinue && { onContinue: undefined }),
+          ...(!m.canRegenerate && { onRegenerate: undefined }),
+          ...(!m.canEdit && { onEdit: undefined }),
+          ...(!m.canRetry && { onRetry: undefined }),
+          ...(!m.canContinue && { onContinue: undefined }),
+          ...(!m.canWithdraw && { onWithdraw: undefined }),
+          ...(!m.canResend && { onResend: undefined }),
+          ...(!m.canRetryNow && { onRetryNow: undefined }),
+          ...(!m.canCancelRetry && { onCancelRetry: undefined }),
         };
       },
       events: { onCopy: "messagecopy" },
@@ -240,6 +266,16 @@ export function defineMessage(): void {
     "outcome-text": "kind-message-outcome-text",
     retry: { tag: "kind-message-retry", target: wrappedButton, display: "contents" },
     continue: { tag: "kind-message-continue", target: wrappedButton, display: "contents" },
+    delivery: "kind-message-delivery",
+    "delivery-text": "kind-message-delivery-text",
+    withdraw: { tag: "kind-message-withdraw", target: wrappedButton, display: "contents" },
+    resend: { tag: "kind-message-resend", target: wrappedButton, display: "contents" },
+    retrying: "kind-message-retrying",
+    "retrying-icon": "kind-message-retrying-icon",
+    "retrying-reason": "kind-message-retrying-reason",
+    "retrying-text": "kind-message-retrying-text",
+    "retry-now": { tag: "kind-message-retry-now", target: wrappedButton, display: "contents" },
+    "cancel-retry": { tag: "kind-message-cancel-retry", target: wrappedButton, display: "contents" },
   });
 }
 
@@ -250,11 +286,17 @@ export type KindMessageEvents = {
   edit: UiDetailedChangeEvent<string, Parameters<NonNullable<MessageOptions["onEdit"]>>[1]>;
   retry: CustomEvent<MessageOutcomeDetails & Pick<UiActionDetail, "waitUntil">>;
   continue: CustomEvent<MessageOutcomeDetails & Pick<UiActionDetail, "waitUntil">>;
+  withdraw: CustomEvent<MessageDeliveryDetails & Pick<UiActionDetail, "waitUntil">>;
+  resend: CustomEvent<MessageDeliveryDetails & Pick<UiActionDetail, "waitUntil">>;
+  retrynow: CustomEvent<MessageDeliveryDetails & Pick<UiActionDetail, "waitUntil">>;
+  cancelretry: CustomEvent<MessageDeliveryDetails & Pick<UiActionDetail, "waitUntil">>;
 };
 
 export interface KindMessageElement
   extends UiElement<KindMessageEvents>,
-    AttributeProperties<typeof messagePrimitive, "api" | "regenerateOptions" | "author"> {
+    AttributeProperties<typeof messagePrimitive, "api" | "regenerateOptions" | "author" | "retry"> {
+  /** The retry in progress: `{ attempt, maxAttempts?, retryAfter?, reason? }`. */
+  retry?: MessageOptions["retry"];
   /** Who wrote it: `{ id, name, avatarUrl? }`. */
   author?: MessageOptions["author"];
   /**
@@ -269,6 +311,10 @@ export interface KindMessageElement
   canEdit: boolean;
   canRetry: boolean;
   canContinue: boolean;
+  canWithdraw: boolean;
+  canResend: boolean;
+  canRetryNow: boolean;
+  canCancelRetry: boolean;
   api: Pick<MessageApi, "copy">;
 }
 
@@ -300,5 +346,15 @@ declare global {
     "kind-message-outcome-text": HTMLElement;
     "kind-message-retry": HTMLElement;
     "kind-message-continue": HTMLElement;
+    "kind-message-delivery": HTMLElement;
+    "kind-message-delivery-text": HTMLElement;
+    "kind-message-withdraw": HTMLElement;
+    "kind-message-resend": HTMLElement;
+    "kind-message-retrying": HTMLElement;
+    "kind-message-retrying-icon": HTMLElement;
+    "kind-message-retrying-reason": HTMLElement;
+    "kind-message-retrying-text": HTMLElement;
+    "kind-message-retry-now": HTMLElement;
+    "kind-message-cancel-retry": HTMLElement;
   }
 }

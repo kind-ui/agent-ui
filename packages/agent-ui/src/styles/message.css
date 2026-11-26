@@ -203,6 +203,11 @@
     visibility: hidden;
   }
 
+  /* People are circles, agents rounded squares. */
+  [data-slot="kind-message-avatar"][data-author="agent"] :where([data-slot="avatar"]) {
+    border-radius: var(--kind-radius-sm);
+  }
+
   [data-slot="kind-message-avatar"]:where([data-author]) :where([data-slot="avatar"]) {
     position: relative;
     display: inline-flex;
@@ -231,7 +236,9 @@
   }
 
   [data-slot="kind-message-header"],
-  [data-slot="kind-message-outcome"] {
+  [data-slot="kind-message-outcome"],
+  [data-slot="kind-message-delivery"],
+  [data-slot="kind-message-retrying"] {
     grid-column: -2;
   }
 
@@ -285,6 +292,63 @@
 
   :where([data-slot="kind-message-outcome"][data-outcome="failed"]) [data-slot="kind-message-outcome-text"] {
     color: var(--kind-color-fg);
+  }
+
+  /* Queued on the server: the bubble steps back, muted and dashed, at its own size. */
+  [data-slot="kind-message"][data-delivery="queued"] [data-slot="kind-message-content"][data-role="user"] {
+    background-color: transparent;
+    color: var(--kind-color-muted);
+    outline: 1px dashed var(--kind-color-border);
+    outline-offset: -1px;
+  }
+
+  /* Under the bubble, end-aligned: its words, then Withdraw or Retry. */
+  [data-slot="kind-message-delivery"] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    column-gap: 0.5rem;
+    min-height: 1.75rem;
+    margin-top: 0.25rem;
+    color: var(--kind-color-muted);
+    font-size: var(--kind-text-xs);
+    line-height: var(--kind-text-xs-leading);
+    letter-spacing: var(--kind-text-xs-tracking);
+    transition: opacity var(--kind-duration-fast) var(--kind-ease-in-out);
+
+    @starting-style {
+      opacity: 0;
+    }
+
+    &[data-motion="none"] {
+      transition: none;
+    }
+  }
+
+  [data-slot="kind-message-delivery-text"][data-delivery="not-sent"] {
+    color: var(--kind-color-danger);
+  }
+
+  /* After the content, where the outcome goes, so the streamed text above never moves. */
+  [data-slot="kind-message-retrying"] {
+    --kind-status-mark-size: 14px;
+
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 1.75rem;
+    margin-top: 0.375rem;
+    color: var(--kind-color-muted);
+    font-size: var(--kind-text-sm);
+    line-height: var(--kind-text-sm-leading);
+    font-variant-numeric: tabular-nums;
+  }
+
+  [data-slot="kind-message-retrying-reason"] {
+    color: var(--kind-color-fg);
+    font-weight: var(--kind-font-weight-medium);
   }
 
   /* Web keeps parts that aren't present in the page, with `hidden`. */
