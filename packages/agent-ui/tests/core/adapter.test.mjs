@@ -209,3 +209,24 @@ test("fromUIMessages gives the chat's error to the last message", () => {
   assert.equal(messages[0].error, undefined);
   assert.equal(fromUIMessages(conversation, { status: "ready" }).at(-1).error, undefined);
 });
+
+test("toolTitles word each call by its name, from its status and input", () => {
+  const toolTitles = {
+    search: ({ status, input }) =>
+      `${status === "complete" ? "Searched" : "Searching"} for \`${input.query}\``,
+  };
+  const running = fromUIMessagePart(tool(), { ...ctx, toolTitles }).step;
+  assert.equal(running.call.title, "Searching for `weather in Paris`");
+  assert.equal(running.title, "Searching for `weather in Paris`");
+  const done = fromUIMessagePart(toolStates["output-available"], { ...ctx, toolTitles }).step;
+  assert.equal(done.call.title, "Searched for `weather in Paris`");
+  const plain = fromUIMessagePart(tool(), { ...ctx, toolTitles: { search: "Web search" } }).step;
+  assert.equal(plain.call.title, "Web search");
+  const untitled = step(tool());
+  assert.equal(untitled.call.title, undefined);
+  assert.equal(untitled.title, "search");
+  const [message] = fromUIMessages([{ id: "m1", role: "assistant", parts: [tool()] }], "ready", {
+    toolTitles: { search: "Web search" },
+  });
+  assert.equal(message.parts[0].step.call.title, "Web search");
+});

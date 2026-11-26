@@ -19,7 +19,7 @@ import {
   stalledText,
   watchStalled,
 } from "../stalled.js";
-import { nextOpen, type StepAutoOpen } from "./auto-open.js";
+import { type NextOpenInput, nextOpen, type StepAutoOpen } from "./auto-open.js";
 
 export type StepOpenChangeReason = "trigger-press" | "find-in-page" | "imperative" | "auto";
 
@@ -96,6 +96,8 @@ export type StepBaseConfig<State extends StepState = StepState, Options extends 
    * a title (`label` or the title part's text). Returning `undefined` keeps the step quiet.
    */
   announcement?: (status: StepStatus, title: string, state: State) => string | undefined;
+  /** Replaces `nextOpen`: whether the step is open after a status change. */
+  nextOpen?: (input: NextOpenInput) => boolean;
 };
 
 const OUTCOMES: Partial<Record<StepStatus, string>> = {
@@ -182,6 +184,7 @@ export const stepBase = <
   kind,
   announcement = stepAnnouncement,
   status: defaultStatus = () => "pending",
+  nextOpen: openAfter = nextOpen,
 }: StepBaseConfig<State, Options> = {}) => {
   const statusOf = (options: Options) => options.status ?? defaultStatus(options);
   const presentation = (options: Options) => ({
@@ -262,7 +265,7 @@ export const stepBase = <
         const status = statusOf(options);
         if (status === prevStatus) return;
         const { open, userToggled } = context.store.get();
-        const next = nextOpen({
+        const next = openAfter({
           status,
           prevStatus,
           open,

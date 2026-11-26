@@ -30,6 +30,7 @@ export type {
   StackFrame,
   Step,
   StepBase,
+  StepGroupItem,
   StepStatus,
   SuggestionItem,
   TaskItem,

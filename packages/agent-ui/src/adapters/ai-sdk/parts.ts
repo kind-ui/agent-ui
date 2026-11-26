@@ -6,9 +6,25 @@ import { fromSdkApproval } from "./approval.js";
 
 export type UIPart = UIMessage["parts"][number];
 
+/** What a `toolTitles` function reads to word a call. */
+export interface ToolTitleInput {
+  /** The call's input so far; partial while it streams. */
+  input: unknown;
+  status: StepStatus;
+}
+
+/**
+ * Titles in words by tool name, set once for every call: a string, or a function of the call's status and input
+ * that returns "Reading `sign-in.ts`" while it runs and "Read `sign-in.ts`" once it's done. Code is in backticks.
+ * A function that returns `""` leaves the call to Tool's own title.
+ */
+export type ToolTitles = Record<string, string | ((call: ToolTitleInput) => string)>;
+
 export interface PartContext {
   messageId: string;
   index: number;
+  /** Becomes each call's `title` and its step's `title`. */
+  toolTitles?: ToolTitles | undefined;
 }
 
 type ToolPart = ToolUIPart | DynamicToolUIPart;
@@ -27,7 +43,7 @@ const toolStatus: Record<ToolPart["state"], StepStatus> = {
   "output-denied": "cancelled",
 };
 
-function fromToolPart(part: ToolPart): Extract<Part, { type: "step" }> {
+function fromToolPart(part: ToolPart, toolTitles?: ToolTitles): Extract<Part, { type: "step" }> {
   const dynamic = part.type === "dynamic-tool";
   // A `dynamic-tool` part with `dynamic: false` is a static tool the SDK normalized; it keeps its static origin.
   const name = dynamic ? part.toolName : part.type.slice("tool-".length);
@@ -48,7 +64,11 @@ function fromToolPart(part: ToolPart): Extract<Part, { type: "step" }> {
   if (part.state === "output-denied") call.outcome = "denied";
   if (part.approval) call.approval = fromSdkApproval(part.approval);
 
-  const step: Step = { id: part.toolCallId, kind: "tool", status: toolStatus[part.state], title: name, call };
+  const status = toolStatus[part.state];
+  const entry = toolTitles && Object.hasOwn(toolTitles, name) ? toolTitles[name] : undefined;
+  const title = typeof entry === "function" ? entry({ input: call.input.value, status }) : entry;
+  if (title) call.title = title;
+  const step: Step = { id: part.toolCallId, kind: "tool", status, title: title || name, call };
   if (part.state === "output-error") step.error = { message: part.errorText };
   return { type: "step", id: part.toolCallId, step };
 }
@@ -81,7 +101,7 @@ export function fromUIMessagePart(part: UIPart, ctx: PartContext): Part | null {
     return { type: "source", id, source };
   }
   // A tool state this adapter does not know is passed through as data rather than guessed.
-  if (isToolPart(part) && Object.hasOwn(toolStatus, part.state)) return fromToolPart(part);
+  if (isToolPart(part) && Object.hasOwn(toolStatus, part.state)) return fromToolPart(part, ctx.toolTitles);
   if (type.startsWith("data-") && "data" in part) {
     return { type: "data", id, name: type.slice("data-".length), data: part.data };
   }
