@@ -446,7 +446,15 @@ export const tracePrimitive: TracePrimitive = definePrimitive<TraceOptions, Trac
           virtual.refresh();
         } else {
           const rows = placed(firstRows(shown, state.rowHeight), shown, state.rowHeight, rowCache);
-          store.set({ items, entries, running, wallClock, shown, rows, size: shown.length * state.rowHeight });
+          store.set({
+            items,
+            entries,
+            running,
+            wallClock,
+            shown,
+            rows,
+            size: shown.length * state.rowHeight,
+          });
         }
       };
       context.onOptions((next) => {

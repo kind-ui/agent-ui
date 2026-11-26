@@ -31,7 +31,14 @@ const spans: TraceSpan[] = [
         start: 1320,
         end: 3600,
         children: [
-          { id: "summarize", name: "Summarize sources", kind: "model", status: "complete", start: 1400, end: 3100 },
+          {
+            id: "summarize",
+            name: "Summarize sources",
+            kind: "model",
+            status: "complete",
+            start: 1400,
+            end: 3100,
+          },
           { id: "fetch", name: "fetch_page", kind: "tool", status: "complete", start: 3150, end: 3500 },
         ],
       },

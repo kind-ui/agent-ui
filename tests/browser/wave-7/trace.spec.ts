@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
+import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 type Fixture = {
   kindLog: { values: string[]; expanded: string[] };
@@ -119,7 +120,10 @@ test("a running span grows to now", async ({ page }) => {
   await expect(answer.locator('[data-trace-part="duration"]')).toHaveText("880 ms");
 });
 
-test("agents select, expand and collapse by id, and an unknown id changes nothing", async ({ page }) => {
+test("agents select, expand and collapse by id, and an unknown id changes nothing", async ({
+  page,
+}, testInfo) => {
+  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
   await open(page);
   await expectAgentActions(page, "Agent run", ["select", "expand", "collapse"]);
   await act(page, "expand", "researcher");
