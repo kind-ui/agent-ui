@@ -40,7 +40,7 @@ const headerRow = (document: Document) => {
 };
 
 const newRow = (document: Document, row: TraceRow) => {
-  const el = element(document, "ui-waterfall-row");
+  const el = element(document, "ui-waterfall-row", { value: row.key });
   const header = element(document, "ui-waterfall-row-header");
   if (row.branch) {
     const indicator = element(document, "ui-waterfall-indicator");
@@ -59,6 +59,9 @@ const newRow = (document: Document, row: TraceRow) => {
   el.append(header, cell, bar);
   return el;
 };
+
+// The rows each details list was last drawn from, so an equal details state rebuilds nothing.
+const drawnDetails = new WeakMap<Element, string>();
 
 const setText = (el: Element | null | undefined, text: string) => {
   if (el && el.textContent !== text) el.textContent = text;
@@ -107,8 +110,8 @@ const drawDetails = (details: Element, state: TraceState, api: TraceApi) => {
   const list = details.querySelector(":scope > dl");
   if (!list) return;
   const text = rows.map(({ term, detail }) => `${term}\u0000${detail}`).join("\u0001");
-  if (list.getAttribute("data-drawn") === text) return;
-  list.setAttribute("data-drawn", text);
+  if (drawnDetails.get(list) === text) return;
+  drawnDetails.set(list, text);
   list.replaceChildren(
     ...rows.flatMap(({ term, detail }) => [
       element(document, "dt", {}, term),

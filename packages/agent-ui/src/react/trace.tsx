@@ -157,8 +157,9 @@ export function TraceDetails({
         <TraceDetailsClose />
       </div>
       <dl>
-        {rows.map(({ term, detail }) => (
-          <Fragment key={term}>
+        {rows.map(({ term, detail }, index) => (
+          // An attribute can share a fixed row's term, so rows are keyed by place.
+          <Fragment key={index}>
             <dt>{term}</dt>
             <dd>{detail}</dd>
           </Fragment>

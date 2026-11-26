@@ -30,6 +30,7 @@ Last reviewed: `bfb9bb7` (Design Wave 1 Batch D)
 - **Reasoning restyles nested parts through variables** (`--kind-markdown-*`, `--kind-status-mark-complete`) set with one attribute selector, so a class on the content or icon part wins. Code blocks and tables in the thoughts keep their own colors.
 - **The Streaming Text caret bar sits 0.15 em past the text:** laid over the last glyph it cuts the letter; past it, a scroll container sized to `max-content` gains about 0.3 em of overflow. Width and line height never change.
 - **The uploader progress fill transitions `width`:** UI SDK Progress writes the fill's width inline, and the bar is a 4 px leaf in an `overflow: hidden` track. A `scale` fill would squash its rounded ends.
+- **A Trace bar transitions `width` and `inset-inline-start` (Wave 7 Task 10):** UI SDK Waterfall places each bar with `--waterfall-start` and `--waterfall-size` as percentages, a running span's bar grows once a second, and a `scale` bar would squash its rounded ends. Full motion only.
 - Everything in AGENTS.md "UI SDK API notes".
 - **Theme colors are `light-dark()` pairs keyed on `color-scheme`, not a `prefers-color-scheme` block:** `@theme` can't nest in a media query, and a class-based dark theme sets `color-scheme: dark` on its root. Highlighter token colors follow the same switch when passed as `light-dark()`.
 - **Inline code's radius is `calc(var(--kind-radius) / 2)` in rem, not `0.375em`:** CSS can't divide by a unit, and following `--kind-radius` (0 squares it) matters more than scaling with heading size.

@@ -76,7 +76,7 @@ Pressing a row, or Enter or Space on it, selects it and shows its details: its k
 
 ### Long Traces
 
-Only the rows in view are in the page, so a trace of thousands of spans scrolls and moves by keyboard as smoothly as a short one. Rows have a fixed height, `--kind-trace-row-height` (28px), and the viewport `--kind-trace-height` (20rem). Screen readers still hear every row's place: the Waterfall carries `aria-rowcount` and each row its `aria-rowindex`. Pass `range` as `[start, end]` in milliseconds to zoom the axis.
+Only the rows in view are in the page, so a trace of thousands of spans scrolls and moves by keyboard as smoothly as a short one. Rows have a fixed height, `--kind-trace-row-height` (28px), and the trace `--kind-trace-height` (20rem): the details take their room from the rows, so selecting a span never moves what is below the trace. Screen readers still hear every row's place: the Waterfall carries `aria-rowcount` and each row its `aria-rowindex`. Pass `range` as `[start, end]` in milliseconds to zoom the axis.
 
 ### Keyboard
 

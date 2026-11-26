@@ -117,3 +117,12 @@ test("traceTime writes milliseconds, seconds or minutes", () => {
   assert.equal(traceTime(1250), "1.25 sec");
   assert.equal(traceTime(150000), "2.5 min");
 });
+
+test("an unknown status reads as the one its times say", () => {
+  const { entries } = traceModel([
+    { id: "a", name: "A", start: 0, end: 5, status: "done" },
+    { id: "b", name: "B", start: 0, status: "toString" },
+  ]);
+  assert.equal(entries.a.status, "complete");
+  assert.equal(entries.b.status, "running");
+});

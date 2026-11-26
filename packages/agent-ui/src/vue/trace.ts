@@ -106,16 +106,13 @@ export const TraceRow = defineComponent({
           style: { top: `${row.top}px` },
         },
         stable(() => [
-          h(
-            KindWaterfallRowHeader,
-            null,
-            stable(() => [
-              row.branch
-                ? h(KindWaterfallIndicator, null, stable(chevron))
-                : h("span", { "data-trace-spacer": "" }),
-              h(TraceName, { value: row.key }),
-            ]),
-          ),
+          // Not `$stable`: the arrow follows `row.branch`, which changes when a span gains or loses children.
+          h(KindWaterfallRowHeader, null, () => [
+            row.branch
+              ? h(KindWaterfallIndicator, null, stable(chevron))
+              : h("span", { "data-trace-spacer": "" }),
+            h(TraceName, { value: row.key }),
+          ]),
           h(
             KindWaterfallCell,
             null,
@@ -205,8 +202,8 @@ export const TraceDetails = withDefault(
     h(
       "dl",
       null,
-      rows.map(({ term, detail }) =>
-        h(Fragment, { key: term }, [h("dt", null, term), h("dd", null, detail)]),
+      rows.map(({ term, detail }, index) =>
+        h(Fragment, { key: index }, [h("dt", null, term), h("dd", null, detail)]),
       ),
     ),
   ],

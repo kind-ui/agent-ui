@@ -24,6 +24,7 @@ const classes = [
   "[&_[data-slot=waterfall]]:text-[length:var(--kind-text-sm)]/5",
   "[&_[data-slot=waterfall]]:text-[var(--kind-color-fg)]",
   ...grid("waterfall-header-row"),
+  "[&_[data-slot=waterfall-header-row]]:box-border",
   "[&_[data-slot=waterfall-header-row]]:border-b",
   "[&_[data-slot=waterfall-header-row]]:border-[var(--kind-color-hairline)]",
   "[&_[data-slot=waterfall-header-row]]:bg-[var(--kind-color-surface)]",

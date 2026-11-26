@@ -6,9 +6,13 @@ export type TraceSpanKind = NonNullable<TraceSpan["kind"]>;
 
 /** A span as its row and details show it, in milliseconds from the trace's start. */
 export type TraceEntry = {
+  /** The span's `id`. */
   id: string;
+  /** The span's `name`. */
   name: string;
+  /** Its `kind`, else `"other"`. */
   kind: TraceSpanKind;
+  /** Its `status`, else `"running"` without an `end` and `"complete"` with one. */
   status: StepStatus;
   /** Milliseconds from the trace's start. */
   start: number;
@@ -37,6 +41,14 @@ const STEP_KINDS: Partial<Record<Step["kind"], TraceSpanKind>> = {
   reasoning: "model",
 };
 const KINDS: ReadonlySet<string> = new Set(["agent", "model", "tool", "other"]);
+const STATUSES: ReadonlySet<string> = new Set([
+  "pending",
+  "running",
+  "awaiting-input",
+  "complete",
+  "error",
+  "cancelled",
+]);
 
 const parse = (time: number | string | undefined) => {
   if (typeof time === "number") return Number.isFinite(time) ? time : undefined;
@@ -132,7 +144,13 @@ export function traceModel(spans: TraceSpan[], now?: number | string): TraceMode
       const finish = at(span.end);
       if (finish === undefined) running = true;
       const duration = Math.max(0, (finish ?? Math.max(end, start)) - start);
-      const status = span.status ?? (finish === undefined ? "running" : "complete");
+      // Host data is read defensively: an unknown status reads as the one its times say.
+      const status =
+        span.status && STATUSES.has(span.status)
+          ? span.status
+          : finish === undefined
+            ? "running"
+            : "complete";
       let entry = entries.get(span);
       if (!entry || entry.start !== start || entry.duration !== duration || entry.status !== status) {
         entry = {

@@ -101,11 +101,29 @@ test("a press selects a row, its details list the attributes, and Close returns 
   expect((await log(page)).values).toEqual(["search item-press", "null close-press"]);
 });
 
-test("a refused selection keeps the details closed", async ({ page }) => {
+test("a refused selection keeps the details closed, and a refused collapse keeps the span open", async ({
+  page,
+}) => {
   await open(page, "refused");
   await rowHeader(page, /^web_search/).click();
   await expect(row(page, /^web_search/)).not.toHaveAttribute("aria-selected", "true");
   await expect(details(page)).toBeHidden();
+  await row(page, /^Answer the question/).focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect.poll(async () => (await log(page)).expanded).toEqual([" list-navigation"]);
+  await expect(row(page, /^Answer the question/)).toHaveAttribute("aria-expanded", "true");
+  await expect(row(page, /^web_search/)).toBeVisible();
+});
+
+test("bars move at full motion and not under reduced motion", async ({ page }) => {
+  const duration = () =>
+    row(page, /^web_search/)
+      .locator('[data-trace-part="bar"]')
+      .evaluate((el) => getComputedStyle(el, "::before").transitionDuration);
+  await open(page);
+  expect(await duration()).not.toBe("0s");
+  await open(page, "reduced");
+  expect(await duration()).toBe("0s");
 });
 
 test("a running span grows to now", async ({ page }) => {

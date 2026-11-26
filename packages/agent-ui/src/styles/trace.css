@@ -16,6 +16,8 @@
     flex-direction: column;
     gap: 8px;
     min-width: 0;
+    /* The details take their room from the viewport, so selecting a span never moves what's below the trace. */
+    height: var(--kind-trace-height);
     font-size: var(--kind-text-sm);
     line-height: var(--kind-text-sm-leading);
     color: var(--kind-color-fg);
@@ -23,9 +25,14 @@
 
   [data-trace-part="viewport"] {
     --kind-waterfall-row-height: var(--kind-trace-row-height);
+    /* A fixed duration column, since every row is its own grid: a long duration must not shift its bar. */
+    --kind-waterfall-columns: minmax(10rem, 2fr) 5.5rem 3fr;
 
-    height: var(--kind-trace-height);
+    flex: 1;
+    min-height: 0;
     overflow: auto;
+    /* Focus scrolling keeps a row clear of the sticky header row. */
+    scroll-padding-block-start: var(--kind-trace-row-height);
     overscroll-behavior: contain;
     border: 1px solid var(--kind-color-hairline);
     border-radius: var(--kind-radius-lg);
@@ -43,8 +50,10 @@
     }
   }
 
-  :where([data-trace-part="root"]) [data-slot="waterfall-indicator"] svg {
-    transition: rotate var(--kind-duration-base) var(--kind-ease-in-out);
+  @media (prefers-reduced-motion: no-preference) {
+    :where([data-trace-part="root"][data-motion="auto"]) [data-slot="waterfall-indicator"] svg {
+      transition: rotate var(--kind-duration-base) var(--kind-ease-in-out);
+    }
   }
 
   [data-trace-spacer] {
@@ -87,6 +96,9 @@
   }
 
   [data-trace-part="duration"] {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
@@ -95,7 +107,8 @@
   [data-trace-part="bar"] {
     position: absolute;
     inset-block: 0;
-    inset-inline: 8px;
+    /* The bar cell's padding, so bars line up with the axis in the column header above. */
+    inset-inline: 0.5rem;
     pointer-events: none;
 
     &::before {
@@ -147,6 +160,9 @@
   }
 
   [data-trace-part="details"] {
+    flex: none;
+    max-height: 50%;
+    overflow: auto;
     padding: 12px;
     border: 1px solid var(--kind-color-hairline);
     border-radius: var(--kind-radius-lg);
@@ -202,6 +218,14 @@
     [data-trace-part="bar"]::before {
       forced-color-adjust: none;
       background-color: Highlight;
+    }
+    :where([data-trace-part="root"]) [data-slot="waterfall-row"][data-selected] {
+      forced-color-adjust: none;
+      background-color: SelectedItem;
+      color: SelectedItemText;
+    }
+    :where([data-slot="waterfall-row"][data-selected]) [data-trace-part="bar"]::before {
+      background-color: SelectedItemText;
     }
   }
 }

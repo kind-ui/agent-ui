@@ -27,7 +27,7 @@ export const KindWaterfall = withKindClass(
 );
 export const KindWaterfallHeaderRow = withKindClass(
   WaterfallHeaderRow,
-  `${grid} border-b border-[var(--kind-color-hairline)] bg-[var(--kind-color-surface)] text-[length:var(--kind-text-xs)] text-[var(--kind-color-muted)]`,
+  `${grid} box-border border-b border-[var(--kind-color-hairline)] bg-[var(--kind-color-surface)] text-[length:var(--kind-text-xs)] text-[var(--kind-color-muted)]`,
   "KindWaterfallHeaderRow",
 );
 export const KindWaterfallColumnHeader = withKindClass(

@@ -9,6 +9,6 @@
 
 {#snippet fallback({ name, rows }: TraceDetailsState)}<div data-trace-details-header=""
     ><p data-trace-details-title="">{name}</p><parts.DetailsClose /></div
-  ><dl>{#each rows as { term, detail } (term)}<dt>{term}</dt><dd>{detail}</dd>{/each}</dl>{/snippet}
+  ><dl>{#each rows as { term, detail }}<dt>{term}</dt><dd>{detail}</dd>{/each}</dl>{/snippet}
 
 <parts.Details {...props} children={children ?? fallback} />

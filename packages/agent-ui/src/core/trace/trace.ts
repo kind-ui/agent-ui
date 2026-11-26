@@ -116,8 +116,11 @@ export type TraceWaterfallState = {
   defaultValue: string | null;
   /** The expanded spans when the Waterfall mounted. */
   defaultExpanded: string[];
+  /** Hears a person select a span in the Waterfall, and reports it as the Trace's `value`. */
   onValueChange: (value: string | null, details: ChangeDetails<string>) => void;
+  /** Hears a person expand or collapse spans in the Waterfall, and reports them as the Trace's `expanded`. */
   onExpandedChange: (expanded: string[], details: ChangeDetails<TraceExpandedChangeReason>) => void;
+  /** Hears the keyboard move to a row, and scrolls it into view so it renders and takes focus. */
   onHighlight: (value: string, details: ListHighlightDetails) => void;
   /** The `label`. */
   "aria-label": string;
@@ -444,6 +447,8 @@ export const tracePrimitive: TracePrimitive = definePrimitive<TraceOptions, Trac
         if (viewport) {
           store.set({ items, entries, running, wallClock, shown });
           virtual.refresh();
+          // The virtualizer notifies only when a row moves, and a span that gained children keeps its place.
+          showRows();
         } else {
           const rows = placed(firstRows(shown, state.rowHeight), shown, state.rowHeight, rowCache);
           store.set({
@@ -507,27 +512,27 @@ export const tracePrimitive: TracePrimitive = definePrimitive<TraceOptions, Trac
         resync = requestAnimationFrame(syncWaterfall);
       };
 
+      // Reports a person's change, holding `syncWaterfall` back until it's read, even when the owner's callback throws.
+      const read = (report: () => boolean) => {
+        reading = true;
+        try {
+          return report();
+        } finally {
+          reading = false;
+        }
+      };
       const onValueChange = (value: string | null, details: ChangeDetails<string>) => {
         if (value === store.get().value) return;
-        reading = true;
-        const { reason, event } = details;
-        const accepted = change(
-          "value",
-          value,
-          event
-            ? { reason: reason as TraceValueChangeReason, event }
-            : { reason: reason as TraceValueChangeReason },
-        );
-        reading = false;
+        const reason = details.reason as TraceValueChangeReason;
+        const { event } = details;
+        const accepted = read(() => change("value", value, event ? { reason, event } : { reason }));
         if (!accepted) details.cancel();
         else writeBackUntaken();
       };
       const onExpandedChange = (expanded: string[], details: ChangeDetails<TraceExpandedChangeReason>) => {
         if (sameSet(expanded, store.get().expanded)) return;
-        reading = true;
         const { reason, event } = details;
-        const accepted = change("expanded", expanded, event ? { reason, event } : { reason });
-        reading = false;
+        const accepted = read(() => change("expanded", expanded, event ? { reason, event } : { reason }));
         if (!accepted) details.cancel();
         else writeBackUntaken();
       };
@@ -577,7 +582,7 @@ export const tracePrimitive: TracePrimitive = definePrimitive<TraceOptions, Trac
           name: entry.name,
           rows: [
             { term: "Kind", detail: KIND_WORDS[entry.kind] },
-            { term: "Status", detail: STATUS_WORDS[entry.status] ?? entry.status },
+            { term: "Status", detail: STATUS_WORDS[entry.status] },
             { term: "Start", detail: traceTime(entry.start, locale) },
             { term: "Duration", detail: traceTime(entry.duration, locale) },
             ...entry.attributes.map(([term, detail]) => ({ term, detail })),
