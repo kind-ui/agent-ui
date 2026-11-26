@@ -1,8 +1,11 @@
-/* Checkpoint (spec §7): a quiet divider in the conversation, with Restore at its end and a dialog that asks first. */
+/* Checkpoint (spec §7, Wave 7 §14): a quiet divider in the conversation, with Restore at its end and a dialog that
+   asks first: what to restore, and what that loses. */
 @layer components {
   [data-slot="kind-checkpoint"] {
     /* Lucide "rotate-ccw", see THIRD_PARTY_NOTICES.md. */
     --kind-checkpoint-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8'/%3E%3Cpath d='M3 3v5h5'/%3E%3C/svg%3E");
+    /* Lucide "git-compare-arrows", see THIRD_PARTY_NOTICES.md. */
+    --kind-checkpoint-compare-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='5' cy='6' r='3'/%3E%3Cpath d='M12 6h5a2 2 0 0 1 2 2v7'/%3E%3Cpath d='m15 9-3-3 3-3'/%3E%3Ccircle cx='19' cy='18' r='3'/%3E%3Cpath d='M12 18H7a2 2 0 0 1-2-2V9'/%3E%3Cpath d='m9 15 3 3-3 3'/%3E%3C/svg%3E");
 
     display: flex;
     align-items: center;
@@ -51,9 +54,19 @@
     }
   }
 
+  :where([data-slot="kind-checkpoint"]) [data-checkpoint-compare-icon] {
+    flex-shrink: 0;
+    width: var(--kind-icon-size);
+    height: var(--kind-icon-size);
+    margin-inline: -0.125rem;
+    background-color: var(--kind-control-icon-color);
+    mask: var(--kind-checkpoint-compare-icon) center / contain no-repeat;
+  }
+
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
-    :where([data-slot="kind-checkpoint"]) [data-checkpoint-trigger]::after {
+    :where([data-slot="kind-checkpoint"])
+      :is([data-checkpoint-trigger]::after, [data-checkpoint-compare-icon]) {
       forced-color-adjust: none;
       background-color: ButtonText;
     }
@@ -74,7 +87,73 @@
     }
   }
 
-  /* The dialog's answers: the error, then Cancel and Restore, in one row of one height. */
+  /* What the restore brought back, after a dot. */
+  :where([data-slot="kind-checkpoint-restored"]) [data-checkpoint-outcome-meta]:not(:empty)::before {
+    content: "·";
+    margin-inline: 2px 6px;
+  }
+
+  /* The dialog: the checkpoint's description under the title, then the scope, then what it loses. */
+  :where([data-slot="kind-checkpoint"]) [data-checkpoint-point] {
+    margin: 0;
+    color: var(--kind-color-muted);
+  }
+
+  [data-slot="kind-checkpoint-scope"] {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 12px;
+  }
+
+  :where([data-slot="kind-checkpoint"]) [data-checkpoint-scope-label] {
+    font-size: var(--kind-text-sm);
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
+    color: var(--kind-color-muted);
+  }
+
+  :where([data-slot="kind-checkpoint"]) [data-checkpoint-option] {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 32px;
+    cursor: pointer;
+  }
+
+  /* The loss sentence reads as the dialog's message; the note under it, quieter. */
+  :where([data-slot="kind-checkpoint"]) [data-checkpoint-loss] {
+    margin-top: 12px;
+
+    & [data-checkpoint-loss-text] {
+      color: var(--kind-color-fg);
+    }
+
+    & [data-checkpoint-note] {
+      display: block;
+      color: var(--kind-color-muted);
+
+      &:empty {
+        display: none;
+      }
+    }
+  }
+
+  /* Narrow, the dialog docks to the bottom as a sheet, and its answers take the width. */
+  @media (max-width: 30rem) {
+    :where([data-slot="kind-checkpoint"]) [data-slot="alert-dialog-content"] {
+      --kind-alert-dialog-margin: auto 0 0;
+      --kind-alert-dialog-width: 100%;
+      --kind-alert-dialog-radius: var(--kind-dialog-radius) var(--kind-dialog-radius) 0 0;
+      padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+    }
+
+    :where([data-slot="kind-checkpoint"]) [data-checkpoint-answers] {
+      flex-wrap: wrap;
+    }
+  }
+
+  /* The dialog's answers: Compare at the start, the error, then Cancel and Restore, in one row of one height. */
   :where([data-slot="kind-checkpoint"]) [data-checkpoint-answers] {
     display: flex;
     align-items: center;
@@ -82,6 +161,10 @@
     gap: 8px;
     min-height: var(--kind-control-height);
     margin-top: 12px;
+  }
+
+  [data-slot="kind-checkpoint-compare"] {
+    margin-inline-end: auto;
   }
 
   [data-slot="kind-checkpoint-error"] {
@@ -180,6 +263,8 @@
     [data-slot="kind-checkpoint-description"],
     [data-slot="kind-checkpoint-restore"],
     [data-slot="kind-checkpoint-restored"],
+    [data-slot="kind-checkpoint-scope"],
+    [data-slot="kind-checkpoint-compare"],
     [data-slot="kind-checkpoint-error"]
   )[hidden] {
     display: none;

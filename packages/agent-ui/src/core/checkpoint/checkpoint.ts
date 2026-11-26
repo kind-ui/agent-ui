@@ -165,8 +165,8 @@ export type CheckpointScopeState = {
   defaultValue: CheckpointScope;
   /** The radios, in order. */
   options: readonly { value: CheckpointScope; label: string }[];
-  /** The id of the "Restore" label, which names the Radio group through `aria-labelledby`. */
-  labelId: string;
+  /** "Restore", the Radio group's name and its visible label. */
+  label: string;
 };
 
 export type CheckpointApi = {
@@ -432,7 +432,7 @@ export const checkpointPrimitive: CheckpointPrimitive = definePrimitive<
         controller: scopes,
         defaultValue: scope,
         options: list.map((value) => ({ value, label: SCOPE_LABELS[value] })),
-        labelId: `${context.id}-scope-label`,
+        label: "Restore",
       }),
     );
     let scopeKey: readonly CheckpointScope[] | undefined;

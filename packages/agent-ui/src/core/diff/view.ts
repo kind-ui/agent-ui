@@ -95,7 +95,10 @@ export interface DiffViewInput {
   files: readonly DiffFile[];
   parsed: ReadonlyMap<string, DiffRows>;
   /** The highlighter's tokens for each line of each side, by path and line number. */
-  tokens: ReadonlyMap<string, { old: Readonly<Record<number, Token[]>>; new: Readonly<Record<number, Token[]>> }>;
+  tokens: ReadonlyMap<
+    string,
+    { old: Readonly<Record<number, Token[]>>; new: Readonly<Record<number, Token[]>> }
+  >;
   expanded: ReadonlySet<string>;
   full: ReadonlySet<string>;
   working: Readonly<Record<string, DiffAction>>;
@@ -132,13 +135,18 @@ const plural = (count: number, one: string, many = `${one}s`) =>
 
 /** "+4 −2", with the zero side left out. */
 export const diffCounts = (added: number, removed: number): string =>
-  [added > 0 && `+${added.toLocaleString("en-US")}`, removed > 0 && `${MINUS}${removed.toLocaleString("en-US")}`]
+  [
+    added > 0 && `+${added.toLocaleString("en-US")}`,
+    removed > 0 && `${MINUS}${removed.toLocaleString("en-US")}`,
+  ]
     .filter(Boolean)
     .join(" ");
 
 /** "4 additions, 2 deletions", with the zero side left out. */
 export const diffCountsName = (added: number, removed: number): string =>
-  [added > 0 && plural(added, "addition"), removed > 0 && plural(removed, "deletion")].filter(Boolean).join(", ");
+  [added > 0 && plural(added, "addition"), removed > 0 && plural(removed, "deletion")]
+    .filter(Boolean)
+    .join(", ");
 
 /** The last part of a path, as announcements and errors name a file. */
 export const fileName = (path: string): string => path.slice(path.lastIndexOf("/") + 1) || path;
@@ -190,11 +198,20 @@ const prefixOf = (row: DiffRow, undone: boolean) => {
 };
 
 // One view per row, kept while its row, tokens and decision hold, so an unchanged row keeps its object.
-const lineViews = new WeakMap<DiffRow, { tokens: Token[] | undefined; undone: boolean; where: string; view: DiffLineView }>();
+const lineViews = new WeakMap<
+  DiffRow,
+  { tokens: Token[] | undefined; undone: boolean; where: string; view: DiffLineView }
+>();
 
-const lineView = (row: DiffRow, tokens: Token[] | undefined, undone: boolean, where: string): DiffLineView => {
+const lineView = (
+  row: DiffRow,
+  tokens: Token[] | undefined,
+  undone: boolean,
+  where: string,
+): DiffLineView => {
   const cached = lineViews.get(row);
-  if (cached && cached.tokens === tokens && cached.undone === undone && cached.where === where) return cached.view;
+  if (cached && cached.tokens === tokens && cached.undone === undone && cached.where === where)
+    return cached.view;
   const collapsed = row.kind === "collapsed";
   const count = row.lines?.length ?? 0;
   const view: DiffLineView = {
@@ -232,7 +249,10 @@ const shallowSame = (a: unknown, b: unknown): boolean => {
 };
 
 /** `next`, with each entry `previous` already had in an equal form kept, and `previous` itself when nothing changed. */
-export function keepSame<Value>(previous: Record<string, Value>, next: Record<string, Value>): Record<string, Value> {
+export function keepSame<Value>(
+  previous: Record<string, Value>,
+  next: Record<string, Value>,
+): Record<string, Value> {
   let changed = Object.keys(previous).length !== Object.keys(next).length;
   for (const key of Object.keys(next)) {
     const old = previous[key];
@@ -299,7 +319,11 @@ export function diffView(input: DiffViewInput): DiffView {
     };
 
     hunks.forEach((hunk, index) => {
-      addRows(hunk.gap, index === 0 ? `unchanged lines before change 1` : `unchanged lines after change ${index}`, false);
+      addRows(
+        hunk.gap,
+        index === 0 ? `unchanged lines before change 1` : `unchanged lines after change ${index}`,
+        false,
+      );
       const changeUndone = changeDecision(file, index) === "undone";
       if (hunks.length > 1) {
         const key = `${path}#h${index}`;
@@ -312,8 +336,7 @@ export function diffView(input: DiffViewInput): DiffView {
           decision: changeOwn,
           working: file.decision || changeOwn ? undefined : changeWorking,
           error: errors[targetKey(path, index)] ?? "",
-          actionable:
-            canDecide && perChange && !decision && !changeOwn && !changeWorking && !fileWorking,
+          actionable: canDecide && perChange && !decision && !changeOwn && !changeWorking && !fileWorking,
         };
         push(
           key,

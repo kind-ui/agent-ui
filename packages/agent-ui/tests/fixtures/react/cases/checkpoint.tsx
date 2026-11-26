@@ -2,13 +2,13 @@ import type { CheckpointOptions } from "@kind-ui/agent-ui/core";
 import type { AgentAction } from "@ui-sdk/react/agent";
 import { useEffect, useState } from "react";
 import { Checkpoint } from "../../../../src/react/checkpoint.js";
-import { checkpointHost } from "../../shared/checkpoint.js";
+import { checkpointHost, SCOPED } from "../../shared/checkpoint.js";
 
-const { host, restore } = checkpointHost();
+const { host, restore, compare } = checkpointHost();
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 
-function Checkpoints({ motion }: { motion?: CheckpointOptions["motion"] }) {
+function Checkpoints({ motion, scoped }: { motion?: CheckpointOptions["motion"]; scoped?: boolean }) {
   const [restored, setRestored] = useState(false);
   useEffect(() => {
     Object.assign(window, { kindHost: host, kindCheckpoint: { restore: setRestored } });
@@ -22,10 +22,15 @@ function Checkpoints({ motion }: { motion?: CheckpointOptions["motion"] }) {
         onRestore={restore}
         restored={restored}
         motion={motion}
+        {...(scoped && { ...SCOPED, onCompare: compare })}
       />
       <p id="below">Below</p>
     </div>
   );
 }
 
-export const cases = { all: () => <Checkpoints />, reduced: () => <Checkpoints motion="reduced" /> };
+export const cases = {
+  all: () => <Checkpoints />,
+  reduced: () => <Checkpoints motion="reduced" />,
+  scoped: () => <Checkpoints scoped />,
+};

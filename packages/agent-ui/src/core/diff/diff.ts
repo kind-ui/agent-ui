@@ -18,19 +18,19 @@ import type { DiffFile } from "../../types/index.js";
 import { actionSource } from "../action-source.js";
 import { createCopy } from "../clipboard.js";
 import type { Highlight, Token } from "../code-block/code-block.js";
-import { type ListFocus, createListFocus } from "../list-focus.js";
+import { createListFocus, type ListFocus } from "../list-focus.js";
 import type { MotionMode } from "../motion/index.js";
 import { bindStepPanel } from "../step/base.js";
 import { WORDS } from "../words.js";
 import { type DiffRow, type DiffRows, diffRows, tokenLines } from "./rows.js";
 import {
+  changeDecision,
   type DiffAction,
   type DiffChangeView,
   type DiffFileView,
   type DiffLineView,
   type DiffSummaryView,
   type DiffTableRow,
-  changeDecision,
   diffAnnouncement,
   diffError,
   diffView,
@@ -143,7 +143,11 @@ export type DiffApi = {
   readonly expandAll: (() => void) | undefined;
   /** Copies a file's patch, and resolves with whether the clipboard write went through. */
   readonly copy: ((path: string) => Promise<boolean>) | undefined;
-  setOpen: (path: string, open: boolean, cause?: { reason?: DiffOpenReason; event?: Event | undefined }) => boolean;
+  setOpen: (
+    path: string,
+    open: boolean,
+    cause?: { reason?: DiffOpenReason; event?: Event | undefined },
+  ) => boolean;
   /** Shows a collapsed run, by its line's key. */
   expand: (key: string) => void;
   /** Shows the rest of a cut-off file. */
@@ -544,7 +548,8 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
       highlighted.set(id, status);
       const lines = sideLines(parsed.get(path), side);
       const code = lines.map((line) => line.text).join("\n");
-      if (!highlight || !file || status.busy || code === status.requested || code === status.failed || !code) return;
+      if (!highlight || !file || status.busy || code === status.requested || code === status.failed || !code)
+        return;
       status.busy = true;
       const settle = (result?: Token[]) => {
         if (destroyed) return;
@@ -659,7 +664,8 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
       recovery: createFocusRecovery({
         fallback: ({ key, el }) => {
           const slot = el.getAttribute("data-slot") ?? "";
-          if (slot.includes("change-")) return context.element("change-outcome", key) ?? context.element("change", key);
+          if (slot.includes("change-"))
+            return context.element("change-outcome", key) ?? context.element("change", key);
           if (slot.includes("file-")) {
             return context.element("file-outcome", key) ?? context.element("file-trigger", key);
           }
@@ -916,7 +922,10 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
       props: fromFile,
       selects: ownFile,
       present: (state, { key }) => (state.files[key]?.counts ?? "") !== "",
-      state: (state, { key }) => ({ text: state.files[key]?.counts ?? "", name: state.files[key]?.countsName ?? "" }),
+      state: (state, { key }) => ({
+        text: state.files[key]?.counts ?? "",
+        name: state.files[key]?.countsName ?? "",
+      }),
     }),
     "file-mark": slot<FromFile>({
       props: fromFile,
@@ -1190,7 +1199,10 @@ export const diffPrimitive: DiffPrimitive = definePrimitive<DiffOptions, DiffSta
       focus: "native",
       present: (state, { key }) => state.lines[key]?.kind === "collapsed",
       press: ({ api, key }) => api.expand(key),
-      state: (state, { key }) => ({ text: state.lines[key]?.show ?? "", where: state.lines[key]?.where ?? "" }),
+      state: (state, { key }) => ({
+        text: state.lines[key]?.show ?? "",
+        where: state.lines[key]?.where ?? "",
+      }),
       attrs: () => ({ type: "button" }),
     }),
     // The run's lines, hidden until find in page matches one, which shows the run.
@@ -1231,7 +1243,9 @@ function targetOf(path: string | undefined, change: number | undefined): DiffTar
   };
 }
 
-function outcome(view: { decision?: DiffFileView["decision"]; working?: DiffAction | undefined } | undefined) {
+function outcome(
+  view: { decision?: DiffFileView["decision"]; working?: DiffAction | undefined } | undefined,
+) {
   if (view?.decision) return { text: view.decision === "kept" ? WORDS.kept : WORDS.undone, working: false };
   if (view?.working) return { text: view.working === "keep" ? WORDS.keeping : WORDS.undoing, working: true };
   return { text: "", working: false };

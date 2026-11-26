@@ -1,13 +1,13 @@
 import type { CheckpointOptions } from "@kind-ui/agent-ui/core";
 import type { AgentAction } from "@ui-sdk/web/agent";
 import { defineCheckpoint } from "../../../../src/web/checkpoint.js";
-import { checkpointHost } from "../../shared/checkpoint.js";
+import { checkpointHost, SCOPED } from "../../shared/checkpoint.js";
 
-const { host, restore } = checkpointHost();
+const { host, restore, compare } = checkpointHost();
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 
-const checkpoints = (motion?: CheckpointOptions["motion"]) => (root: HTMLElement) => {
+const checkpoints = (motion?: CheckpointOptions["motion"], scoped?: boolean) => (root: HTMLElement) => {
   defineCheckpoint();
   const page = document.createElement("div");
   page.className = "flex w-[28rem] flex-col gap-4 p-6";
@@ -18,6 +18,11 @@ const checkpoints = (motion?: CheckpointOptions["motion"]) => (root: HTMLElement
   checkpoint.description = "Before editing auth.ts";
   checkpoint.canRestore = true;
   if (motion) checkpoint.motion = motion;
+  if (scoped) {
+    Object.assign(checkpoint, SCOPED);
+    checkpoint.canCompare = true;
+    checkpoint.addEventListener("compare", (event) => compare(event.detail.value));
+  }
   checkpoint.addEventListener("restore", (event) => event.detail.waitUntil(restore(event.detail.value)));
   page.append(above, checkpoint, below);
   root.append(page);
@@ -31,4 +36,8 @@ const checkpoints = (motion?: CheckpointOptions["motion"]) => (root: HTMLElement
   });
 };
 
-export const cases = { all: checkpoints(), reduced: checkpoints("reduced") };
+export const cases = {
+  all: checkpoints(),
+  reduced: checkpoints("reduced"),
+  scoped: checkpoints(undefined, true),
+};

@@ -6,7 +6,8 @@ const words = (row) => row.words?.map((word) => (word.changed ? `[${word.text}]`
 
 test("a patch's headers say what happened to the file", () => {
   const renamed = diffRows({
-    patch: "diff --git a/old/a.ts b/new/a.ts\nsimilarity index 90%\nrename from old/a.ts\nrename to new/a.ts\n",
+    patch:
+      "diff --git a/old/a.ts b/new/a.ts\nsimilarity index 90%\nrename from old/a.ts\nrename to new/a.ts\n",
   });
   assert.deepEqual(renamed.file, { path: "new/a.ts", oldPath: "old/a.ts", status: "renamed" });
   assert.equal(renamed.hunks.length, 0);
@@ -31,7 +32,8 @@ test("a streamed patch shows the lines of its last change so far, and keeps the 
 
 test("changed words pair by similarity, and a line rewritten past the limit isn't marked", () => {
   const { hunks } = diffRows({
-    patch: "@@ -1,3 +1,3 @@\n-const ok = compare(a, b);\n-return x;\n+let y = 1;\n+const ok = await compare(a, b);\n",
+    patch:
+      "@@ -1,3 +1,3 @@\n-const ok = compare(a, b);\n-return x;\n+let y = 1;\n+const ok = await compare(a, b);\n",
   });
   const rows = hunks[0].rows;
   assert.equal(words(rows[0]), "const ok = compare(a, b);");
