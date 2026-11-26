@@ -1,0 +1,82 @@
+/* Step Group (Wave 7 spec §5): a Step row that names a turn's work, over the host's own rows on the Step guide line.
+   Complete rows inside are quiet: their mark is a dot (status-mark.css) and their title muted. */
+@layer components {
+  [data-slot="kind-step-group"] {
+    /* The title wraps to two lines, then truncates; the mark, meta and chevron stay on its first line. */
+    & > [data-step-part="trigger"] {
+      align-items: flex-start;
+
+      & > [data-step-part="icon"],
+      &::after {
+        margin-block-start: calc((1lh - var(--kind-status-mark-size, 16px)) / 2);
+      }
+      &::after {
+        margin-block-start: calc(1lh / 2 - 5px);
+      }
+    }
+    & > [data-step-part="trigger"] > [data-step-part="title"] {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  /* The host's rows sit on the guide line, their marks under the title's. The rows' own triggers pad their marks by
+     6px, so the content sits 6px short of the title. */
+  [data-slot="kind-step-group-content"] {
+    padding-inline-start: calc(
+      var(--kind-step-indent) -
+      var(--kind-step-guide) -
+      var(--kind-step-guide-width) -
+      6px
+    );
+    color: inherit;
+
+    & > * {
+      padding-block: 0;
+    }
+    & > :first-child {
+      padding-block-start: 2px;
+    }
+    & > :last-child {
+      padding-block-end: 2px;
+    }
+
+    /* Done rows recede; what runs, waits or failed keeps full contrast (step.css). */
+    & [data-step-part="title"][data-status="complete"] {
+      color: var(--kind-color-muted);
+    }
+  }
+
+  [data-slot="kind-step-group-children"] {
+    display: block;
+    margin-inline-start: 0;
+    padding-inline-start: 0;
+    border-inline-start: 0;
+  }
+
+  /* Too few steps to group: they show flat, with no row of their own and no guide line. */
+  [data-slot="kind-step-group"][data-flat] > [data-slot="kind-step-group-content"] {
+    margin-inline-start: 0;
+    padding-inline-start: 0;
+    border-inline-start: 0;
+  }
+
+  /* Rows that arrive while the group is open rise in once; the first draw holds transitions (step.css), and rows
+     in a closed group take their first style as it opens, so nothing plays then. */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-slot="kind-step-group-content"][data-motion="auto"] > [data-slot="kind-step-group-children"] > * {
+      transition:
+        opacity var(--kind-duration-base) var(--kind-ease-out),
+        translate var(--kind-duration-base) var(--kind-ease-out);
+
+      @starting-style {
+        opacity: 0;
+        translate: 0 4px;
+      }
+    }
+  }
+}

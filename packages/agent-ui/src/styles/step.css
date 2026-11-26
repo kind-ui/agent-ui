@@ -85,6 +85,13 @@
     white-space: nowrap;
     font-weight: var(--kind-font-weight-medium);
 
+    /* Text in backticks, like a file or a command in "Read `auth.ts`". */
+    & code {
+      font-family: var(--kind-font-mono);
+      font-size: 0.95em;
+      font-weight: var(--kind-font-weight-regular);
+    }
+
     /* What's running or waiting on the person reads at full contrast; done and not started stay quiet. */
     &:is([data-status="running"], [data-status="awaiting-input"], [data-status="error"]) {
       color: var(--kind-color-fg);

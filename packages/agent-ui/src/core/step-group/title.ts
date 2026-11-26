@@ -32,18 +32,19 @@ const targetsOf = (items: readonly StepGroupItem[]) => [
 const units = (items: readonly StepGroupItem[]) =>
   targetsOf(items).length + items.filter((item) => !item.target).length;
 
-/** A kind's objects: up to two targets by name, else a count ("6 files"). */
-const objects = (items: readonly StepGroupItem[], kind: StepGroupKind): string[] => {
+/** A kind's objects: up to two targets by name, else (or when `count`) how many ("6 files"). */
+const objects = (items: readonly StepGroupItem[], kind: StepGroupKind, count: boolean): string[] => {
   const targets = targetsOf(items);
-  return items.every((item) => item.target) && targets.length <= 2
+  return !count && items.every((item) => item.target) && targets.length <= 2
     ? targets.map(code)
     : [plural(units(items), kind.one, kind.many)];
 };
 
 /**
  * What the steps did, kinds joined in first-use order, up to `maxClauses`, then "N other steps": "Read `auth.ts`,
- * `db.ts` and ran `npm test`". Steps of a kind `kinds` doesn't word count among the others, so without `kinds` it's
- * "12 steps". Targets are in backticks (`codeSpans`).
+ * `db.ts` and ran `npm test`". A kind names up to two targets, unless the sentence ends in other steps, where every
+ * kind is counted ("Read 6 files, edited 2 files and 3 other steps"). Steps of a kind `kinds` doesn't word count
+ * among the others, so without `kinds` it's "12 steps". Targets are in backticks (`codeSpans`).
  */
 export function stepGroupSentence(
   items: readonly StepGroupItem[],
@@ -57,11 +58,11 @@ export function stepGroupSentence(
   }
   const shown = [...byKind].slice(0, Math.max(1, maxClauses));
   if (shown.length === 0) return steps(items.length);
+  const others = items.length - shown.reduce((count, [, of]) => count + of.length, 0);
   const pieces = shown.flatMap(([kind, of], index) => {
-    const [first = "", ...rest] = objects(of, kind);
+    const [first = "", ...rest] = objects(of, kind, others > 0);
     return [`${index === 0 ? kind.done : lower(kind.done)} ${first}`, ...rest];
   });
-  const others = items.length - shown.reduce((count, [, of]) => count + of.length, 0);
   if (others > 0) pieces.push(plural(others, WORDS.otherStep, WORDS.otherSteps));
   return capitalize(list(pieces));
 }
@@ -94,17 +95,14 @@ export type StepGroupTitleInput = {
 
 /**
  * The group's title (Wave 7 spec §5): the live step while any runs, the work so far while one waits, the work done
- * once finished, "N steps" before anything ran.
+ * (complete and failed steps; stopped ones never did theirs) once finished, "N steps" before anything ran.
  */
 export function stepGroupTitle({ status, items, kinds, maxClauses, current }: StepGroupTitleInput): string {
-  const running = items.some((item) => item.status === "running");
-  if (status !== "awaiting-input" && (running || status === "running")) {
-    const live = stepGroupLive(items, kinds, current);
-    if (live) return live;
-  }
-  const done = items.filter((item) =>
-    status === "awaiting-input" ? isFinished(item.status) : item.status !== "pending",
-  );
+  const done = items.filter((item) => item.status === "complete" || item.status === "error");
+  const running = items.some((item) => item.status === "running") || status === "running";
+  const live =
+    running && (status !== "awaiting-input" || done.length === 0) && stepGroupLive(items, kinds, current);
+  if (live) return live;
   return done.length === 0 ? steps(items.length) : stepGroupSentence(done, kinds, maxClauses);
 }
 

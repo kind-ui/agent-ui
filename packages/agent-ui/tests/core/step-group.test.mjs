@@ -55,7 +55,7 @@ test("the title names targets, joins kinds and caps the clauses", () => {
   assert.equal(stepGroupSentence(many, kinds), "Read 6 files, edited 3 files and 3 other steps");
   assert.equal(
     stepGroupSentence(many, kinds, 3),
-    "Read 6 files, edited 3 files, ran `npm test` and 2 other steps",
+    "Read 6 files, edited 3 files, ran 1 command and 2 other steps",
   );
   assert.equal(stepGroupSentence(many), "12 steps");
 });
