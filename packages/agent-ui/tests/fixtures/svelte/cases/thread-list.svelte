@@ -2,9 +2,9 @@
   import type { AgentAction } from "@ui-sdk/svelte/agent";
   import { threadListHost } from "../../shared/thread-list.js";
 
-  export const variants = ["all", "no-confirm", "ten", "thousand"];
+  export const variants = ["all", "no-confirm", "ten", "thousand", "inbox"];
 
-  const { host, select, newThread, rename, pin, share, remove, loadMore } = threadListHost();
+  const { host, select, newThread, rename, pin, share, readChange, archive, remove, loadMore } = threadListHost();
 
   export const allow = (step: AgentAction) => !step.confirm || host.permit;
 </script>
@@ -14,12 +14,19 @@
   import { untrack } from "svelte";
   import { ThreadList } from "../../../../src/svelte/thread-list/index.js";
   import { expose } from "../../shared/expose.js";
-  import { threads as fixed, manyThreads, NOW } from "../../shared/thread-list.js";
+  import { threads as fixed, inboxThreads, manyThreads, NOW } from "../../shared/thread-list.js";
 
   let { variant }: { variant: string; params: URLSearchParams } = $props();
 
+  const inbox = untrack(() => variant === "inbox");
   const initial = untrack(() =>
-    variant === "ten" ? manyThreads(10) : variant === "thousand" ? manyThreads(1000) : fixed,
+    variant === "ten"
+      ? manyThreads(10)
+      : variant === "thousand"
+        ? manyThreads(1000)
+        : variant === "inbox"
+          ? inboxThreads
+          : fixed,
   );
   let threads = $state.raw(initial);
   let value = $state<string | null>(initial[1]?.id ?? null);
@@ -50,6 +57,9 @@
     onPinChange={pin}
     onShare={share}
     onDelete={remove}
+    groupBy={inbox ? "status" : undefined}
+    onArchive={inbox ? archive : undefined}
+    onReadChange={inbox ? readChange : undefined}
     confirmDelete={variant === "no-confirm" ? false : undefined}
     hasMore={initial.length > 100}
     onLoadMore={loadMore}

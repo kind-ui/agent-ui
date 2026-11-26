@@ -85,7 +85,7 @@ All 64 components, grouped by the job they do. The item is the React name: add `
 
 | Item | Component | Use it when |
 | --- | --- | --- |
-| `thread-list` | Thread List | You list past chats, grouped by date, with rename, pin, share and delete. |
+| `thread-list` | Thread List | You list past chats grouped by date, or background runs grouped by what they need, with rename, pin, share, archive and delete. |
 | `thread-search` | Thread Search | A person searches past chats in a dialog, or starts a new one. |
 | `sidebar` | Sidebar | The chat list sits in a resizable panel beside the chat that becomes a drawer on phones. |
 | `day-separator` | Day Separator | Messages span days and you put a Today or Yesterday heading between them. |

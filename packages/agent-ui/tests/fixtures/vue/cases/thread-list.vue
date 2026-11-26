@@ -2,7 +2,7 @@
 import type { AgentAction } from "@ui-sdk/vue/agent";
 import { threadListHost } from "../../shared/thread-list.js";
 
-export const variants = ["all", "no-confirm", "ten", "thousand"] as const;
+export const variants = ["all", "no-confirm", "ten", "thousand", "inbox"] as const;
 
 const handlers = threadListHost();
 
@@ -14,14 +14,21 @@ import type { Thread } from "@kind-ui/agent-ui";
 import { onMounted, shallowRef } from "vue";
 import { ThreadList } from "../../../../src/vue/thread-list.js";
 import { expose } from "../../shared/expose.js";
-import { threads as fixed, manyThreads, NOW } from "../../shared/thread-list.js";
+import { threads as fixed, inboxThreads, manyThreads, NOW } from "../../shared/thread-list.js";
 
 const props = defineProps<{ variant: string; params: URLSearchParams }>();
 
-const { host, select, newThread, rename, pin, share, remove, loadMore } = handlers;
+const { host, select, newThread, rename, pin, share, readChange, archive, remove, loadMore } = handlers;
 
 const initial =
-  props.variant === "ten" ? manyThreads(10) : props.variant === "thousand" ? manyThreads(1000) : fixed;
+  props.variant === "ten"
+    ? manyThreads(10)
+    : props.variant === "thousand"
+      ? manyThreads(1000)
+      : props.variant === "inbox"
+        ? inboxThreads
+        : fixed;
+const inbox = props.variant === "inbox";
 const confirmDelete = props.variant === "no-confirm" ? false : undefined;
 
 const threads = shallowRef(initial);
@@ -64,6 +71,9 @@ onMounted(() =>
       :status="loadStatus"
       :on-rename="rename"
       :on-delete="remove"
+      :group-by="inbox ? 'status' : undefined"
+      :on-archive="inbox ? archive : undefined"
+      :on-read-change="inbox ? readChange : undefined"
       @select="select"
       @new="newThread"
       @pin-change="pin"

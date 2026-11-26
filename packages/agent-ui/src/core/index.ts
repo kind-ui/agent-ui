@@ -587,7 +587,12 @@ export {
   testValue,
 } from "./test-results/index.js";
 export { thinkingIndicatorPrimitive } from "./thinking-indicator/index.js";
-export { type ThreadGroup, type ThreadGroupOptions, threadGroups } from "./thread-groups.js";
+export {
+  type ThreadGroup,
+  type ThreadGroupOptions,
+  type ThreadStatusGroupKey,
+  threadGroups,
+} from "./thread-groups.js";
 export {
   compactTimeLabel,
   type DateGroup,
@@ -651,6 +656,7 @@ export {
 export {
   type ThreadListAction,
   type ThreadListApi,
+  type ThreadListDescriptionState,
   type ThreadListDialogState,
   type ThreadListEntry,
   type ThreadListGridState,
@@ -659,6 +665,7 @@ export {
   type ThreadListMenuContentState,
   type ThreadListOptions,
   type ThreadListPrimitive,
+  type ThreadListProgressState,
   type ThreadListReason,
   type ThreadListRow,
   type ThreadListState,

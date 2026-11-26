@@ -143,6 +143,8 @@
 
 <!-- wave-7-task-18: Thread List inbox -->
 
+- `packages/agent-ui/src/styles/thread-list.css` (Thread List's Mark as read and Archive menu items): `mail` and `archive`, unchanged; `mail` and `archive` derive from Feather.
+
 <!-- wave-7-task-19: Flow Graph -->
 
 ## Lobe Icons

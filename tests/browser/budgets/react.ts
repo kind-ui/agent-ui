@@ -29,9 +29,9 @@ export const budgets = {
   // Rows are 36px in a 600px column, so as many are in view at 10 threads as at 1,000, whatever the fonts. Pinning
   // moves every row in view down one; appending to 10 threads fills the column with new rows. A row's time is one more
   // part per row: a render, a re-read and two writes (its `aria-hidden` and text) for each row a change reaches.
-  threadSelect: { writes: 5, renders: 11, notified: 16, layoutReads: 2 },
-  threadPin: { writes: 119, renders: 39, notified: 199, layoutReads: 2 },
-  threadAppend: { writes: 214, renders: 84, notified: 85, layoutReads: 2 },
+  threadSelect: { writes: 5, renders: 15, notified: 16, layoutReads: 2 },
+  threadPin: { writes: 123, renders: 45, notified: 233, layoutReads: 2 },
+  threadAppend: { writes: 242, renders: 98, notified: 99, layoutReads: 2 },
 
   // wave-6-task-11: Conversation Search
 
@@ -84,6 +84,10 @@ export const budgets = {
   activityMove: { writes: 2, renders: 2, notified: 2, layoutReads: 1 },
 
   // wave-7-task-18: Thread List inbox
+
+  // Wave 7 rows add a description and a progress part, which a row in view renders and re-reads as it changes. One
+  // thread's progress writes its bar and renders its row's parts, at 10 threads as at 1,000.
+  threadProgress: { writes: 6, renders: 10, notified: 18, layoutReads: 2 },
 
   // wave-7-task-19: Flow Graph
 };

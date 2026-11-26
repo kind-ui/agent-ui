@@ -218,19 +218,41 @@ const cases = {
 
   threadList: {
     options: {
-      threads: [{ id: "a", title: "A", href: "#a", pinned: true, status: "running", unread: true }],
+      threads: [
+        {
+          id: "a",
+          title: "A",
+          href: "#a",
+          pinned: true,
+          status: "running",
+          unread: true,
+          summary: "+12 in 2 files",
+          progress: 0.4,
+        },
+      ],
       now: "2026-11-18",
       onSelect: noop,
       onRename: noop,
+      onArchive: noop,
       onDelete: noop,
     },
     keys: {
       heading: ["heading:pinned"],
       "heading-cell": ["heading:pinned"],
       ...Object.fromEntries(
-        ["row", "link-cell", "link", "status", "unread", "time", "editor", "more-cell", "more"].map(
-          (slot) => [slot, ["a"]],
-        ),
+        [
+          "row",
+          "link-cell",
+          "link",
+          "status",
+          "unread",
+          "description",
+          "progress",
+          "time",
+          "editor",
+          "more-cell",
+          "more",
+        ].map((slot) => [slot, ["a"]]),
       ),
     },
   },

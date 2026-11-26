@@ -1,6 +1,7 @@
 export {
   type ThreadListAction,
   type ThreadListApi,
+  type ThreadListDescriptionState,
   type ThreadListDialogState,
   type ThreadListEntry,
   type ThreadListGridState,
@@ -9,6 +10,7 @@ export {
   type ThreadListMenuContentState,
   type ThreadListOptions,
   type ThreadListPrimitive,
+  type ThreadListProgressState,
   type ThreadListReason,
   type ThreadListRow,
   type ThreadListState,

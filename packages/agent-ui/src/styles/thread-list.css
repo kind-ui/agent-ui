@@ -2,16 +2,21 @@
    above and one menu and delete dialog for every row. The row menu's look and motion are `menu.css`'s. */
 @layer components {
   [data-slot="kind-thread-list"] {
-    /* Lucide "plus", "ellipsis", "pencil", "pin", "share" and "trash-2", see THIRD_PARTY_NOTICES.md. */
+    /* Lucide "plus", "ellipsis", "pencil", "pin", "share", "trash-2", "mail" and "archive", see
+       THIRD_PARTY_NOTICES.md. */
     --kind-thread-list-icon-new: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='M12 5v14'/%3E%3C/svg%3E");
     --kind-thread-list-icon-more: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='1'/%3E%3Ccircle cx='19' cy='12' r='1'/%3E%3Ccircle cx='5' cy='12' r='1'/%3E%3C/svg%3E");
     --kind-thread-list-icon-rename: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z'/%3E%3Cpath d='m15 5 4 4'/%3E%3C/svg%3E");
     --kind-thread-list-icon-pin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 17v5'/%3E%3Cpath d='M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z'/%3E%3C/svg%3E");
     --kind-thread-list-icon-share: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2v13'/%3E%3Cpath d='m16 6-4-4-4 4'/%3E%3Cpath d='M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8'/%3E%3C/svg%3E");
+    --kind-thread-list-icon-read: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7'/%3E%3Crect x='2' y='4' width='20' height='16' rx='2'/%3E%3C/svg%3E");
+    --kind-thread-list-icon-archive: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='20' height='5' x='2' y='3' rx='1'/%3E%3Cpath d='M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8'/%3E%3Cpath d='M10 12h4'/%3E%3C/svg%3E");
     --kind-thread-list-icon-delete: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 11v6'/%3E%3Cpath d='M14 11v6'/%3E%3Cpath d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6'/%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E");
     /* `--kind-list-row-height` in pixels, which the virtualizer reads as a number, so its rows and every budget hold
        whatever the fonts. */
     --kind-thread-row-height: 36px;
+    /* Every thread's row once any thread has a summary, which sits on a second line. Headings keep their height. */
+    --kind-thread-row-height-tall: 52px;
 
     display: flex;
     flex-direction: column;
@@ -50,6 +55,12 @@
     }
     &:where([data-thread-list-icon="share"]) {
       --kind-thread-list-icon: var(--kind-thread-list-icon-share);
+    }
+    &:where([data-thread-list-icon="read"]) {
+      --kind-thread-list-icon: var(--kind-thread-list-icon-read);
+    }
+    &:where([data-thread-list-icon="archive"]) {
+      --kind-thread-list-icon: var(--kind-thread-list-icon-archive);
     }
     &:where([data-thread-list-icon="delete"]) {
       --kind-thread-list-icon: var(--kind-thread-list-icon-delete);
@@ -102,6 +113,10 @@
     }
   }
 
+  :where([data-slot="kind-thread-list"][data-tall]) [data-slot="kind-thread-list-row"] {
+    height: var(--kind-thread-row-height-tall);
+  }
+
   [data-slot="kind-thread-list-row"] {
     border-radius: var(--kind-radius-md);
     transition: background-color var(--kind-duration-fast) var(--kind-ease-in-out);
@@ -126,11 +141,15 @@
     height: 100%;
   }
 
+  /* A tall row's summary wraps onto a second line under the title and its marks. */
   [data-slot="kind-thread-list-link"] {
+    position: relative;
     display: flex;
     flex: 1;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
+    align-content: center;
+    column-gap: 8px;
     min-width: 0;
     height: 100%;
     padding-inline: 10px;
@@ -207,6 +226,57 @@
     background-color: var(--kind-color-accent);
   }
 
+  [data-slot="kind-thread-list-description"] {
+    display: flex;
+    flex-basis: 100%;
+    min-width: 0;
+    font-size: var(--kind-text-xs);
+    line-height: var(--kind-text-xs-leading);
+    letter-spacing: var(--kind-text-xs-tracking);
+    font-variant-numeric: tabular-nums;
+    color: var(--kind-color-muted);
+  }
+
+  [data-thread-list-summary] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The bar shows how far a run has come; its words are for the link's description only. */
+  [data-thread-list-progress-text] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* A hairline along the row's foot, so it fits a short row as well as a tall one and moves nothing. */
+  [data-slot="kind-thread-list-progress"] {
+    position: absolute;
+    inset-inline: 10px;
+    bottom: 3px;
+    pointer-events: none;
+
+    & [data-slot="progress-track"] {
+      display: block;
+      height: 2px;
+      overflow: hidden;
+      border-radius: var(--kind-radius-full);
+      background-color: var(--kind-color-hover);
+    }
+
+    & [data-slot="progress-indicator"] {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background-color: var(--kind-color-muted);
+      transition: width var(--kind-duration-panel) var(--kind-ease-in-out);
+    }
+  }
+
   /* A text field shows its caret and its hairline, never a ring. */
   [data-slot="kind-thread-list-editor"] {
     flex: 1;
@@ -233,6 +303,21 @@
     padding-inline-end: 4px;
     opacity: 0;
     transition: opacity var(--kind-duration-fast) var(--kind-ease-in-out);
+  }
+
+  /* With a summary under the title, the time and More line up with the title, as its marks do. */
+  [data-slot="kind-thread-list-row"]:where([data-summary]) {
+    & [data-slot="kind-thread-list-time"] {
+      align-self: flex-start;
+      margin-top: calc(var(--kind-thread-row-height-tall) / 2 - var(--kind-text-xs-leading));
+    }
+    & [data-slot="kind-thread-list-more-cell"] {
+      align-items: flex-start;
+      padding-top: calc(
+        (var(--kind-thread-row-height-tall) - var(--kind-text-xs-leading) - var(--kind-control-height-sm)) /
+        2
+      );
+    }
   }
 
   :where([data-slot="kind-thread-list-row"]:is(:hover, :focus-within, [data-menu-open])) {
@@ -326,6 +411,20 @@
     }
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-slot="kind-thread-list"][data-motion="auto"])
+      [data-slot="kind-thread-list-progress"]
+      [data-slot="progress-indicator"] {
+      transition: none;
+    }
+  }
+
+  :where([data-slot="kind-thread-list"]:is([data-motion="reduced"], [data-motion="none"]))
+    [data-slot="kind-thread-list-progress"]
+    [data-slot="progress-indicator"] {
+    transition: none;
+  }
+
   /* More and the time fade at most over the reduced duration. */
   @media (prefers-reduced-motion: reduce) {
     :where([data-slot="kind-thread-list"][data-motion="auto"])
@@ -379,6 +478,8 @@
     [data-slot="kind-thread-list-link"],
     [data-slot="kind-thread-list-status"],
     [data-slot="kind-thread-list-unread"],
+    [data-slot="kind-thread-list-description"],
+    [data-slot="kind-thread-list-progress"],
     [data-slot="kind-thread-list-editor"],
     [data-slot="kind-thread-list-more-cell"],
     [data-slot="kind-thread-list-end"],
@@ -397,6 +498,10 @@
     [data-slot="kind-thread-list-unread"] {
       forced-color-adjust: none;
       background-color: Highlight;
+    }
+    [data-slot="kind-thread-list-progress"] [data-slot="progress-indicator"] {
+      forced-color-adjust: none;
+      background-color: CanvasText;
     }
     [data-slot="kind-thread-list-row"][data-current] {
       outline: 1px solid Highlight;

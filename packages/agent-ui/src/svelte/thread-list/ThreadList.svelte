@@ -1,6 +1,7 @@
 <!--
-  The threads as a navigation grid, grouped by pinned, the host's groups and date, with New chat above and one menu
-  of Rename, Pin, Share and Delete for every row. Any `children` replace the default parts.
+  The threads as a navigation grid, grouped by pinned, the host's groups and date, or by status for an inbox of
+  background runs, with New chat above and one menu of Rename, Pin, Mark as read, Share, Archive and Delete for every
+  row. Any `children` replace the default parts.
 -->
 <script lang="ts">
   import type { ComponentProps } from "svelte";

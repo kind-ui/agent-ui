@@ -2,13 +2,28 @@ import type { Thread } from "@kind-ui/agent-ui";
 import type { AgentAction } from "@ui-sdk/react/agent";
 import { useEffect, useState } from "react";
 import { ThreadList } from "../../../../src/react/thread-list.js";
-import { threads as fixed, manyThreads, NOW, threadListHost } from "../../shared/thread-list.js";
+import {
+  threads as fixed,
+  inboxThreads,
+  manyThreads,
+  NOW,
+  threadListHost,
+} from "../../shared/thread-list.js";
 
-const { host, select, newThread, rename, pin, share, remove, loadMore } = threadListHost();
+const { host, select, newThread, rename, pin, share, readChange, archive, remove, loadMore } =
+  threadListHost();
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 
-function Threads({ initial, confirmDelete }: { initial: Thread[]; confirmDelete?: boolean }) {
+function Threads({
+  initial,
+  confirmDelete,
+  inbox,
+}: {
+  initial: Thread[];
+  confirmDelete?: boolean;
+  inbox?: boolean;
+}) {
   const [threads, setThreads] = useState(initial);
   const [value, setValue] = useState<string | null>(initial[1]?.id ?? null);
   const [loadStatus, setLoadStatus] = useState<"idle" | "loading" | "error">();
@@ -32,6 +47,7 @@ function Threads({ initial, confirmDelete }: { initial: Thread[]; confirmDelete?
         onPinChange={pin}
         onShare={share}
         onDelete={remove}
+        {...(inbox && { groupBy: "status" as const, onArchive: archive, onReadChange: readChange })}
         confirmDelete={confirmDelete}
         hasMore={initial.length > 100}
         onLoadMore={loadMore}
@@ -46,4 +62,5 @@ export const cases = {
   "no-confirm": () => <Threads initial={fixed} confirmDelete={false} />,
   ten: () => <Threads initial={manyThreads(10)} />,
   thousand: () => <Threads initial={manyThreads(1000)} />,
+  inbox: () => <Threads initial={inboxThreads} inbox />,
 };

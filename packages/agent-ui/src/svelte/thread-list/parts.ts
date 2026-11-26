@@ -13,6 +13,8 @@ export const parts = createParts(threadListPrimitive, {
   link: "a",
   status: "span",
   unread: "span",
+  description: "span",
+  progress: "div",
   time: "span",
   editor: "input",
   "more-cell": "div",

@@ -264,6 +264,8 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
 
   // wave-7-task-18: Thread List inbox
 
+  { url: "/?c=thread-list&case=inbox", slots: ["kind-thread-list-status"] },
+
   // wave-7-task-19: Flow Graph
 ];
 

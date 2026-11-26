@@ -1,4 +1,7 @@
-<!-- UI SDK's `MenuContent` with Rename, Pin or Unpin, Share and Delete, each while its callback is set. -->
+<!--
+  UI SDK's `MenuContent` with Rename, Pin or Unpin, Mark as read or unread, Share, Archive and Delete, each while its
+  callback is set.
+-->
 <script lang="ts">
   import type { ThreadListMenuContentState } from "@kind-ui/agent-ui/core";
   import type { ComponentProps, Snippet } from "svelte";

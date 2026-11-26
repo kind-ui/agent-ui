@@ -96,6 +96,8 @@ const pages = [
 
   // wave-7-task-18: Thread List inbox
 
+  "thread-list&case=inbox",
+
   // wave-7-task-19: Flow Graph
 ];
 

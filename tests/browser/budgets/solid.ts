@@ -74,5 +74,7 @@ export const budgets: Partial<Budgets> = {
 
   // wave-7-task-18: Thread List inbox
 
+  threadProgress: { writes: 5, renders: 0, notified: 0, layoutReads: 2 },
+
   // wave-7-task-19: Flow Graph
 };

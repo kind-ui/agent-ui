@@ -44,3 +44,31 @@ test("an empty or null group falls back to the date group", () => {
     [["today", 2]],
   );
 });
+
+test("groupBy status puts pinned first, then Needs you, Running and Done, newest done first", () => {
+  const threads = [
+    { id: "done-old", title: "Done old", status: "complete", updatedAt: "2026-11-10T00:00:00Z" },
+    { id: "unread", title: "Unread", status: "complete", unread: true, updatedAt: "2026-11-18T00:00:00Z" },
+    { id: "queued", title: "Queued", status: "queued", group: "Work" },
+    { id: "failed", title: "Failed", status: "error" },
+    { id: "pin", title: "Pinned", status: "awaiting-input", pinned: true },
+    { id: "plain", title: "Plain", updatedAt: "2026-11-17T00:00:00Z" },
+    { id: "running", title: "Running", status: "running" },
+    { id: "waiting", title: "Waiting", status: "awaiting-input" },
+    { id: "done-new", title: "Done new", status: "complete", updatedAt: "2026-11-18T09:00:00Z" },
+  ];
+  const groups = threadGroups(threads, {
+    now: "2026-11-18",
+    groupBy: "status",
+    labels: { "needs-you": "For you" },
+  });
+  assert.deepEqual(
+    groups.map(({ key, label, threads }) => [key, label, threads.map((thread) => thread.id)]),
+    [
+      ["pinned", "Pinned", ["pin"]],
+      ["needs-you", "For you", ["failed", "waiting", "unread"]],
+      ["running", "Running", ["queued", "running"]],
+      ["done", "Done", ["done-new", "plain", "done-old"]],
+    ],
+  );
+});
