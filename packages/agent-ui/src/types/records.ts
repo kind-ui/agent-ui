@@ -41,6 +41,30 @@ export interface StepGroupItem {
   target?: string;
 }
 
+/** A decision on an edit that's already applied: kept, or undone. */
+export type DiffDecision = "kept" | "undone";
+
+/** One file a run changed, for Diff. Give a unified `patch`, or `before` and `after` to diff. */
+export interface DiffFile {
+  path: string;
+  /** The path before a rename. */
+  oldPath?: string;
+  /** Defaults to what the patch's headers say, else `"modified"`. */
+  status?: "added" | "modified" | "deleted" | "renamed";
+  /** Handed to `highlight`. */
+  language?: string;
+  /** A unified diff of this file, as `git diff` writes it. While `streaming`, only its complete changes show. */
+  patch?: string;
+  before?: string;
+  after?: string;
+  /** Whether the patch is still arriving. No file can be kept or undone until every file's patch has arrived. */
+  streaming?: boolean;
+  /** What the person decided for the whole file. */
+  decision?: DiffDecision;
+  /** What the person decided for each change (hunk), by its index in the file. */
+  changes?: ({ decision?: DiffDecision } | undefined)[];
+}
+
 /** A conversation in a list of them. */
 export interface Thread {
   id: string;

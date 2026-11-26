@@ -55,6 +55,16 @@ export const WORDS = {
   finished: "finished",
   otherStep: "other step",
   otherSteps: "other steps",
+  keep: "Keep",
+  undo: "Undo",
+  keepAll: "Keep all",
+  undoAll: "Undo all",
+  kept: "Kept",
+  undone: "Undone",
+  keeping: "Keeping…",
+  undoing: "Undoing…",
+  allReviewed: "All changes reviewed",
+  cantBeUndone: "This can't be undone.",
 } as const;
 
 /**
