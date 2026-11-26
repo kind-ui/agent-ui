@@ -115,6 +115,8 @@ import { Diff } from "./components/ui/diff.js";
 
 // wave-7-task-7: Step Group
 
+import { StepGroup } from "./components/ui/step-group.js";
+
 // wave-7-task-8: Handoff
 
 import { Handoff } from "./components/ui/handoff.js";
@@ -454,6 +456,12 @@ const items = {
   diff: <Diff file={{ path: "src/a.ts" }} before={"const a = 1;\n"} after={"const b = 1;\n"} />,
 
   // wave-7-task-7: Step Group
+
+  "step-group": (
+    <StepGroup label="Read 2 files" status="complete" defaultOpen>
+      <p>Read two files.</p>
+    </StepGroup>
+  ),
 
   // wave-7-task-8: Handoff
 

@@ -1,0 +1,102 @@
+---
+title: Step Group
+description: Fold a turn's tool calls or parallel subagents into one summary row.
+---
+
+import StepGroupExample from "../../../examples/step-group/basic";
+import StepGroupAgentsExample from "../../../examples/step-group/agents";
+
+Use a step group to sum up several steps under one row, like "Read 2 files and ran 1 command", while each step keeps its own details, approvals and output. It reads like a [Step](./step.mdx): a status mark for the whole group, its summary and how many are running, then your steps under it.
+
+<Example caption="Press Read 2 files and ran 1 command, or focus it and press Enter or Space, to hide the tool calls.">
+  <StepGroupExample />
+
+  <ExampleCode example="step-group/basic" />
+</Example>
+
+## Installation
+
+<Install name="step-group" />
+
+## Composition
+
+```text
+StepGroup
+├── StepGroupTrigger
+│   ├── StepGroupIcon
+│   ├── StepGroupTitle
+│   └── StepGroupMeta
+├── StepGroupContent
+│   └── StepGroupChildren
+└── StepGroupCancel
+```
+
+`StepGroup` renders these parts, and puts its children, your steps, in `StepGroupChildren`. The trigger is a native button that shows or hides them. `StepGroupIcon` is the group's status mark. `StepGroupTitle` shows the `label`, else the summary of `groupLabels`, and `StepGroupMeta` shows "2 running" while steps run (a step waiting its turn counts too), else the `durationSeconds`. `StepGroupCancel` renders only while the group can be stopped. To arrange the parts yourself, render them inside `StepGroupRoot`.
+
+## Usage
+
+### Steps and Their Summary
+
+Pass your steps as children, like a [Tool](./tool.mdx) or a [Subagent](./subagent.mdx) each, and describe them in `items`: one `{ id, status, group }` per step, in order, since the group can't read your rows. `groupLabels` turns each group's count into words as you'd write them mid-sentence. The title joins them in the order their groups first appear and capitalizes the first letter, so `read` and `run` below read "Read 2 files and ran 1 command". Steps in no group you labelled count as "N steps", and without `groupLabels` the title is "N steps". Pass `label` to write the title yourself, and `locale` to join the words in another language.
+
+```tsx
+<StepGroup
+  items={[
+    { id: "call_1", group: "read", status: "complete" },
+    { id: "call_2", group: "read", status: "complete" },
+    { id: "call_3", group: "run", status: "running" },
+  ]}
+  groupLabels={{
+    read: (count) => `read ${count} ${count === 1 ? "file" : "files"}`,
+    run: (count) => `ran ${count} ${count === 1 ? "command" : "commands"}`,
+  }}
+>
+  {calls.map((call) => (
+    <Tool key={call.toolCallId} call={call} />
+  ))}
+</StepGroup>
+```
+
+Each step is its own Tab stop. To make them one, wrap them in a [StepList](./step.mdx) and join each trigger to it with `StepListItem`, so the arrow keys move between them.
+
+### Status
+
+The group's status comes from its `items`: awaiting input while any step waits on a person, running while any runs or is still to start after another started, failed if any failed, cancelled if all were, else complete. Pass `status` to set it yourself. The group opens while it runs or waits for input and folds to its summary when it completes, so a failed step keeps it open. Someone opening or closing it stops that, as with a Step. Pass `open` with `onOpenChange` to control it.
+
+### Parallel Subagents
+
+Subagents running side by side are the same shape: give each item the group `agent` and label it, and the title reads "3 agents" with "2 running" beside it.
+
+<Example caption="Press Stop all to stop the two agents still running. It goes away once none runs.">
+  <StepGroupAgentsExample />
+
+  <ExampleCode example="step-group/agents" />
+</Example>
+
+### Stopping
+
+Pass `onCancel` to show **Stop all** until the group finishes. Return a promise to keep the button pending until it settles: a second press does nothing meanwhile, and a rejection makes it available again. Once your steps stop, update their statuses, and the button goes away. If it had focus, focus moves to the trigger.
+
+### Streaming
+
+New steps grow the content below the ones before, so the header and earlier steps never move. A status change morphs only the mark and the words beside it. Screen readers hear the summary and its outcome ("stopped" for a cancelled group, as on Stop all) when the group needs input, completes, fails or is cancelled, and each step still announces its own.
+
+### Motion
+
+The mark morphs between statuses and the steps grow open and shut. Under `prefers-reduced-motion`, or with `motion="reduced"`, the steps fade over 120 ms instead and nothing moves or spins, and with `motion="none"` everything changes at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/step-group/step-group.ts" name="StepGroupOptions" />
+
+<FrameworkNames name="step-group" />
+
+### Agent
+
+An agent connected with `createAgent` finds the group by its title and reads its `open` and `status`. It can run these actions, and `cancel` only while Stop all shows.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/step-group/step-group.ts" name="StepGroupAgentActions" type='Pick<StepGroupApi, "expand" | "collapse" | "cancel">' />
+
+<Caption>
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-step-group>`, props are kebab-case attributes, so `durationSeconds` is `duration-seconds`, while `items` and `groupLabels` are properties, and `onOpenChange` fires `openchange`. Stop all needs the `can-cancel` attribute and fires `stepgroupcancel`: call `event.detail.waitUntil(promise)` to keep it pending. Write the steps inside a `<kind-step-group-content>`: the element adds its trigger before it and its Stop all button after it, unless you wrote a trigger of its own.
+</Caption>

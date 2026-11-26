@@ -10,6 +10,7 @@
     "plan",
     "subagent",
     "handoff",
+    "step-group",
     "queue",
     "confirmation",
     "question",

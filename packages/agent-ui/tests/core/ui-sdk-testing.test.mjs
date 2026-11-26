@@ -332,6 +332,17 @@ const cases = {
 
   // wave-7-task-7: Step Group
 
+  stepGroup: {
+    options: {
+      items: [
+        { id: "a", status: "complete", group: "read" },
+        { id: "b", status: "running", group: "run" },
+      ],
+      groupLabels: { read: (n) => `read ${n} files`, run: (n) => `ran ${n} commands` },
+      onCancel: noop,
+    },
+  },
+
   // wave-7-task-8: Handoff
 
   handoff: {

@@ -52,6 +52,8 @@ Last reviewed: `cb3f3e12` (UI SDK 0.1.0-beta.17 upgrade)
 - **"New chat" filters like any row** (Thread Search, Wave 6 Task 3): Command exposes no way to keep a composed item through a search (its listbox `pinned` isn't a `CommandItem` prop), so New chat shows only while the search matches it, as Picker's footer actions do.
 - **Thread Search's `agent.items` isn't `closed`** (Wave 6 Task 3): the bridge would check `search`'s free text against the threads; `select` refuses an unknown id itself, as Transcript's `seek` does.
 - **Thread Search's Escape closes its dialog** (`@ui-sdk/core/testing`, Wave 6 Task 12): as with "A picker's Escape closes its popover", Command's search is a `combobox` whose list is always shown, here inside a modal dialog, so Escape closes the dialog and focus returns to the trigger, where `checkPattern("combobox")` expects only the list to close and focus to stay. `wave-6/aria-patterns.spec.ts` accepts those two problems; the dialog check passes.
+- **Step Group's per-group option is `groupLabels`, not the plan's `labels`** (Wave 7 Task 7): UI SDK's agent bridge reads a web root's `labels` as a form control's to name it, and a record there threw on every snapshot. Don't rename it back.
+- **Step Group doesn't wrap its children in a StepList** (Wave 7 Task 7): the host's steps own their triggers, so a host joins them to a StepList itself, as inside Subagent; nesting a StepList primitive in the group's own part would bind a second primitive to the host's rows.
 
 ## Known and open (don't report again, check whether fixed)
 

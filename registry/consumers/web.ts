@@ -102,6 +102,8 @@ import { defineDiff } from "./components/ui/web/diff.js";
 
 // wave-7-task-7: Step Group
 
+import { defineStepGroup } from "./components/ui/web/step-group.js";
+
 // wave-7-task-8: Handoff
 
 import { defineHandoff } from "./components/ui/web/handoff.js";
@@ -231,6 +233,8 @@ for (const define of [
   defineDiff,
 
   // wave-7-task-7: Step Group
+
+  defineStepGroup,
 
   // wave-7-task-8: Handoff
 
@@ -389,6 +393,10 @@ const items = {
   diff: `<kind-diff label="src/a.ts"></kind-diff>`,
 
   // wave-7-task-7: Step Group
+
+  "step-group": `<kind-step-group label="Read 2 files" status="complete" default-open>
+      <kind-step-group-content><p>Read two files.</p></kind-step-group-content>
+    </kind-step-group>`,
 
   // wave-7-task-8: Handoff
 

@@ -52,6 +52,7 @@ All 57 components, grouped by the job they do. The item is the React name: add `
 | `question` | Question | The agent asks a person to choose an option or write an answer before it goes on. |
 | `checkpoint` | Checkpoint | A person can restore the conversation to an earlier point, after a dialog asks first. |
 | `handoff` | Handoff | One agent passes the conversation to another agent or a person, maybe after a person approves. |
+| `step-group` | Step Group | A turn runs several tools or subagents that should fold into one summary row. |
 
 ## Developer output
 

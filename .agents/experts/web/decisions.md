@@ -83,6 +83,7 @@ Last reviewed: `cb3f3e12` (UI SDK 0.1.0-beta.17 upgrade)
 - **`kind-conversation-search`'s `open` property doesn't reflect to the `open` attribute** (Wave 6 Task 11), the same class as the Picker and `menuBase` entry.
 - **`kind-thread-search` has no moved, shadow-root or written-parts fixture case** (Wave 6 Task 3): all three, and a removal while open, were checked by hand in review; add cases with Picker's. Its uncontrolled search text isn't root state, so a move while open may lose it (not reproduced).
 - `kind-handoff`: `claim` treats a whitespace-only part as written (as `kind-message`'s does), and the fixture has no hand-written-parts or put-back case. Add both when `claim` changes for every element.
+- **A `kind-subagent` or `kind-step-group` defined before the parser reaches its children puts the page's `-content` after one of its own (Wave 7 Task 7):** the element upgrades on its start tag, `render` adds its trigger, an empty content and Stop around it, and the parsed content lands after them. Both need to adopt a content written later. Step Group also has no `web-element` (React-rendered steps) case yet, as Subagent has.
 
 ## Resolved
 

@@ -83,6 +83,8 @@ export default {
 
     // wave-7-task-7: Step Group
 
+    "step-group",
+
     // wave-7-task-8: Handoff
 
     "handoff",
@@ -276,6 +278,8 @@ export default {
     "wave-7/diff.spec.ts",
 
     // wave-7-task-7: Step Group
+
+    "wave-7/step-group.spec.ts",
 
     // wave-7-task-8: Handoff
 
