@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: 8aee26be
+Last reviewed: 9994de73
 
 ## Settled
 
@@ -24,6 +24,7 @@ Last reviewed: 8aee26be
 
 ## Known and open (don't report again, check whether fixed)
 
+- Send's menu leaves while the Composer stays; `composer-steer.spec.ts` checks a `running` change after that and passes on beta.17, so `ComposerSendMenu` passes part state straight through (Wave 7 layer 4).
 - **Passing `id` to a component's root unnames it in agent snapshots** (`@ui-sdk/svelte` keys the root by `id`, still in 0.1.0-beta.17; AGENTS.md "Svelte chat core"). It reaches components named by their root (Queue, Question, Suggestion, Feedback, Context Meter, Context Bar, File Tree, Generated Image, Selection, Thread List, Share Dialog, and since beta.17's label fallback, Message and Connection Status, which now take their Retry button's name). Every check it breaks, in the component specs and the Wave 2 to 4 agent specs, skips through `tests/browser/svelte-root-id.ts` (`rootIdGap`); delete that file and its callers together once UI SDK fixes it. Report upstream.
 - **`ComposerTriggerMenu` mounts its Trigger Menu one effect late** to work around UI SDK connecting it before the Token Input's editor exists (AGENTS.md "Svelte chat core"), still needed in 0.1.0-beta.17. Remove it once UI SDK fixes the order. Report upstream.
 
