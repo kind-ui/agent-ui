@@ -5,6 +5,8 @@ import {
   approvalLabel,
   approvalMark,
   codeSpans,
+  countdownText,
+  createCountdown,
   isActionable,
   isSettled,
   plainText,
@@ -62,4 +64,29 @@ test("backticks mark code", () => {
   assert.deepEqual(codeSpans("Run `npm test`?"), ["Run ", "npm test", "?"]);
   assert.deepEqual(codeSpans("a ` b"), ["a ` b"]);
   assert.equal(plainText("Allow `search_docs`?"), "Allow search_docs?");
+});
+
+test("a minutes countdown hands over to seconds for the last minute", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"], now: 0 });
+  const values = [];
+  let state = { left: null };
+  const context = {
+    onDestroy: () => {},
+    store: {
+      get: () => state,
+      set: (next) => {
+        state = { ...state, ...next };
+        values.push(state.left);
+      },
+      subscribe: () => () => {},
+    },
+  };
+  const at = new Date(150_000).toISOString();
+  const stop = createCountdown(context, { key: "left", at: () => at, minutes: true }).bind();
+  for (let i = 0; i < 151; i++) t.mock.timers.tick(1000);
+  stop();
+  assert.deepEqual(values.slice(0, 3), [120, 60, 59]);
+  assert.equal(values.at(-1), 0);
+  assert.equal(countdownText(40), "in 40 sec");
+  assert.equal(countdownText(0), "");
 });

@@ -36,7 +36,7 @@
     "conversationSearchPrimitive": 62500,
     "threadSearchPrimitive": 59100,
     "confirmationPrimitive": 43000,
-    "toolPrimitive": 10300,
+    "toolPrimitive": 11800,
     "stepGroupPrimitive": 11600
   }
 }

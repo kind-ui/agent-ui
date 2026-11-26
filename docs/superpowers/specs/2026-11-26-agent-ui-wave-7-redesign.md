@@ -332,7 +332,7 @@ The draft's title was a count ("Read 4 files, edited 2"), had no live step while
 - `heading?: string | ((call: { name: string; input: unknown; status: StepStatus }) => string)`: "Reading `sign-in.ts`" while running, "Read `sign-in.ts`" once complete. Code is in backticks, as in Confirmation's question.
 - `ToolCall.title?: string`, which the AI SDK adapter fills from `fromUIMessages(messages, chat, { toolTitles })`: a map by tool name to a string or the same function of `{ status, input }`, set once per tool.
 - Without either, the name in words: `search_code`, `searchCode` and `search-code` read "Search code" (`humanizeToolName`).
-- `label` keeps its 0.8 meaning: a name that replaces the title and the identifier together. The copy buttons ("Copy search_code input"), the code blocks' names and the approval question ("Run `search_code`?") keep the tool's name, since there it identifies the tool. Announcements read the title.
+- `label` keeps its 0.8 meaning: a name that replaces the title and the identifier together. The copy buttons ("Copy search_code input"), the code blocks' names and the approval question ("Allow `search_code`?") keep the tool's name, since there it identifies the tool. Announcements read the title.
 - Every docs example and showcase titles its tools in words.
 
 ## 6. Composer and Queue (change)

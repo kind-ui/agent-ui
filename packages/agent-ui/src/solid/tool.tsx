@@ -60,8 +60,8 @@ export function ToolTitle(props: ToolTitleProps) {
 export type ToolApprovalProps = ComponentProps<typeof parts.Approval>;
 
 /**
- * A Confirmation for the call's approval while it has one: Approve and Deny while `onApprove` and `onDeny` are
- * set and the request is open, then what was decided. Pass children to render it yourself.
+ * A Confirmation for the call's approval while it has one: Deny, Always allow and Approve while `onDeny`,
+ * `onAlwaysAllow` and `onApprove` are set and the request is open, then what was decided. Pass children to render it yourself.
  */
 export function ToolApproval(props: ToolApprovalProps) {
   return (
