@@ -19,6 +19,7 @@ const files = [
   { layer: "vue", extension: ".vue", lang: "vue" },
   { layer: "svelte", extension: ".svelte", lang: "svelte" },
   { layer: "solid", extension: ".solid.tsx", lang: "tsx" },
+  { layer: "web", extension: ".web.ts", lang: "ts" },
 ] as const;
 
 /**

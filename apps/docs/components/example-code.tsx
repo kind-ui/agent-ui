@@ -44,7 +44,7 @@ export function FrameworkTabs({ tabs }: { tabs: { label: string; children: React
 
 /**
  * The source of an example in every framework it's written in, read at build time from
- * `examples/<example>.tsx`, `.vue`, `.svelte` and `.solid.tsx`: `<ExampleCode example="step/basic" />`.
+ * `examples/<example>.tsx`, `.vue`, `.svelte`, `.solid.tsx` and `.web.ts`: `<ExampleCode example="step/basic" />`.
  */
 export function ExampleCode({ example }: { example: string }) {
   const tabs = exampleFiles(example).map(({ label, lang, code }) => ({

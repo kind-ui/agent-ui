@@ -175,7 +175,7 @@ test("examples import only the frameworks, the package, ui components and other 
     for (const [, specifier] of source.matchAll(/(?:\bfrom|\bimport)\s*\(?\s*["']([^"']+)["']/g)) {
       const allowed = specifier.startsWith(".")
         ? new URL(specifier, url).href.startsWith(examples.href)
-        : /^(?:react|vue|svelte|solid-js|@solidjs\/web|@kind-ui\/agent-ui(?:\/(?:core|adapters\/ai-sdk|styles\.css))?|@\/components\/ui\/.+)$/.test(
+        : /^(?:react|vue|svelte|solid-js|@solidjs\/web|ai(?:\/test)?|@ai-sdk\/(?:react|vue|svelte)|@kind-ui\/agent-ui(?:\/(?:core|adapters\/ai-sdk|styles\.css))?|@\/components\/ui\/.+)$/.test(
             specifier,
           );
       assert.ok(allowed, `${file}: ${specifier}`);

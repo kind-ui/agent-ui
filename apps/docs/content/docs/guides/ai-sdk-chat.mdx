@@ -1,89 +1,61 @@
 ---
-title: AI Chat with the AI SDK in React
-description: Build a streaming AI chat in React with the AI SDK's useChat and Agent UI's Conversation, Message, Markdown and Composer.
+title: Build an AI Chat with the AI SDK
+description: Stream an AI SDK chat into a conversation, with Markdown answers and a composer that sends and stops.
 ---
 
-To build an AI chat UI in React, keep the chat state in the AI SDK's `useChat` hook, map its messages with `fromUIMessages` from `@kind-ui/agent-ui/adapters/ai-sdk`, and render them with Agent UI's components: a [Conversation](../components/conversation.mdx) that scrolls the messages and follows the newest one, a [Message](../components/message.mdx) for each turn, [Markdown](../components/markdown.mdx) that renders the reply as it streams, and a [Composer](../components/composer.mdx) that sends the prompt and stops the answer. The page below is the whole chat, with one server route.
+To build an AI chat, keep its state in the AI SDK's chat, turn its messages into Agent UI's with `fromUIMessages`, and render them with [Conversation](../components/conversation.mdx), [Message](../components/message.mdx), [Markdown](../components/markdown.mdx) and [Composer](../components/composer.mdx).
 
-The samples use React. The same components ship for Vue, Svelte and Solid, with the same parts and props spelled the way each framework expects, so the page translates component for component: add `<name>-vue`, `<name>-svelte` or `<name>-solid` in place of each item below, as [Choose a Framework](../index.mdx#choose-a-framework) shows. `fromUIMessages` and `toApprovalResponse` don't depend on a framework, so they map the messages of the AI SDK's `@ai-sdk/vue` and `@ai-sdk/svelte` chats too.
+import Chat from "../../../examples/guides/chat";
+import Preview from "../../../examples/guides/preview";
 
-## Installation
+<Example caption="Type a prompt and press Enter, then press Stop to end the answer early. The preview answers from a scripted model in your browser.">
+  <Preview route="chat">
+    <Chat />
+  </Preview>
+
+  <ExampleCode example="guides/chat" />
+</Example>
+
+## Install the Components
 
 Set up the `@kind-ui` registry as [Get Started](../index.mdx#install-with-the-shadcn-cli) shows, then add the components and the AI SDK:
 
-```bash
-npx shadcn@latest add @kind-ui/conversation @kind-ui/message @kind-ui/markdown @kind-ui/composer
-npm install ai @ai-sdk/react
-```
+<Tabs groupId="framework" persist items={["React", "Vue", "Svelte", "Solid", "Web Components"]}>
+  <Tab value="React">
+    ```bash
+    npx shadcn@latest add @kind-ui/conversation @kind-ui/message @kind-ui/markdown @kind-ui/composer
+    npm install ai @ai-sdk/react
+    ```
+  </Tab>
+  <Tab value="Vue">
+    ```bash
+    npx shadcn@latest add @kind-ui/conversation-vue @kind-ui/message-vue @kind-ui/markdown-vue @kind-ui/composer-vue
+    npm install ai @ai-sdk/vue
+    ```
+  </Tab>
+  <Tab value="Svelte">
+    ```bash
+    npx shadcn@latest add @kind-ui/conversation-svelte @kind-ui/message-svelte @kind-ui/markdown-svelte @kind-ui/composer-svelte
+    npm install ai @ai-sdk/svelte
+    ```
+  </Tab>
+  <Tab value="Solid">
+    ```bash
+    npx shadcn@latest add @kind-ui/conversation-solid @kind-ui/message-solid @kind-ui/markdown-solid @kind-ui/composer-solid
+    npm install ai
+    ```
+  </Tab>
+  <Tab value="Web Components">
+    ```bash
+    npx shadcn@latest add @kind-ui/conversation-web @kind-ui/message-web @kind-ui/markdown-web @kind-ui/composer-web
+    npm install ai
+    ```
+  </Tab>
+</Tabs>
 
-## The Chat Page
+## Stream the Answer from a Route
 
-```tsx title="app/page.tsx"
-"use client";
-import { useChat } from "@ai-sdk/react";
-import { fromUIMessages } from "@kind-ui/agent-ui/adapters/ai-sdk";
-import { Composer, ComposerInput, ComposerStop, ComposerSubmit } from "@/components/ui/composer";
-import {
-  Conversation,
-  ConversationContent,
-  ConversationEmpty,
-  ConversationEmptyTitle,
-  ConversationJump,
-  ConversationRow,
-  ConversationViewport,
-} from "@/components/ui/conversation";
-import { Markdown } from "@/components/ui/markdown";
-import { Message, MessageContent, MessageOutcome } from "@/components/ui/message";
-
-export default function Chat() {
-  const { messages, status, error, sendMessage, stop, regenerate } = useChat();
-  const rendered = fromUIMessages(messages, { status, error });
-
-  return (
-    <main className="mx-auto flex h-dvh max-w-2xl flex-col gap-4 p-4">
-      <Conversation aria-label="Chat" messageCount={rendered.length} className="min-h-0 flex-1">
-        <ConversationViewport>
-          <ConversationContent>
-            {rendered.map((message, index) => (
-              <ConversationRow key={message.id} value={message.id} index={index}>
-                <Message
-                  aria-label={message.role === "user" ? "Your message" : "Assistant message"}
-                  messageRole={message.role}
-                  status={message.status}
-                  error={message.error?.message}
-                  onRetry={() => regenerate()}
-                >
-                  <MessageContent>
-                    {message.parts.map((part) =>
-                      part.type === "text" ? (
-                        <Markdown key={part.id} source={part.text} streaming={part.state === "streaming"} />
-                      ) : null,
-                    )}
-                  </MessageContent>
-                  <MessageOutcome />
-                </Message>
-              </ConversationRow>
-            ))}
-            <ConversationEmpty>
-              <ConversationEmptyTitle>Ask anything</ConversationEmptyTitle>
-            </ConversationEmpty>
-          </ConversationContent>
-        </ConversationViewport>
-        <ConversationJump />
-      </Conversation>
-      <Composer aria-label="Message" onSubmit={(draft) => sendMessage({ text: draft.text })} onStop={stop}>
-        <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
-        <ComposerSubmit />
-        <ComposerStop />
-      </Composer>
-    </main>
-  );
-}
-```
-
-## The Server Route
-
-The route streams the model's answer as AI SDK UI messages, which `useChat` posts to `/api/chat` by default. A model id like `"openai/gpt-5"` goes through the AI Gateway; pass any AI SDK provider's model instead.
+The chat posts its messages to `/api/chat`. Answer with the model's reply as a UI message stream. A model id like `"openai/gpt-5"` goes through the AI Gateway; any AI SDK provider's model works too.
 
 ```ts title="app/api/chat/route.ts"
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
@@ -93,23 +65,22 @@ export async function POST(request: Request) {
   const result = streamText({
     model: "openai/gpt-5",
     messages: await convertToModelMessages(messages),
+    abortSignal: request.signal,
   });
   return result.toUIMessageStreamResponse();
 }
 ```
 
-## How It Works
+It's a standard `Request` handler, so any server that takes one can serve it at that path.
 
-- **Messages:** `fromUIMessages(messages, { status, error })` turns `useChat`'s messages into Agent UI's `Message` type. The chat's `status` becomes the last message's, so the answer that's streaming is `streaming` and earlier ones are `complete`, and the chat's `error` lands on the last message.
-- **Following:** `messageCount` tells the conversation how many rows it has. While the reader is at the end, new messages and growing text stay in view; once they scroll up, it stops following and **Jump to latest** brings them back. Each row needs a stable `value` and its `index`.
-- **Streaming Markdown:** each text part renders in a `Markdown` with `streaming` set while the part is still arriving, so a half-written code fence, table or link renders cleanly, and only the blocks that changed are parsed again.
-- **Sending and stopping:** `onSubmit` gets the draft and returns `sendMessage`'s promise, so the composer stays pending until the answer finishes, and Stop takes Send's place and calls `stop`. Enter sends, and Shift+Enter starts a new line.
-- **Failures:** when the request fails, `MessageOutcome` shows the error after the content, with **Retry**, which calls `regenerate`.
-- **Empty state:** `ConversationEmpty` shows until the first message.
+## Render the Chat
 
-## Next Steps
+The code in the example above is the whole chat. React uses `useChat`, Vue and Svelte the AI SDK's `Chat`, and Solid and Web Components build a `Chat` on the AI SDK's `AbstractChat`, since it ships no package for them. Each one then renders the same way:
 
-- Show the tools the model calls, and ask before it runs one: [Tool Calls and Approvals](./tool-approvals.mdx).
-- Show the model's reasoning and its plan: [Reasoning and Agent Steps](./reasoning-and-steps.mdx).
-- Add copy, regenerate and edit buttons with `MessageToolbar` on the [Message](../components/message.mdx) page, and mentions, commands and attachments on the [Composer](../components/composer.mdx) page.
-- See every adapter function on the [AI SDK](../adapters/ai-sdk.mdx) page.
+- **Messages:** `fromUIMessages(messages, { status, error })` gives the last message the chat's status and error, and marks the earlier ones complete.
+- **Rows:** each message is a `ConversationRow` with a stable `value` and its `index`, and `messageCount` says how many there are. The conversation follows new text while the reader is at the end, and **Jump to latest** brings them back once they scroll up.
+- **Markdown:** each text part renders in a `Markdown` with `streaming` set while it arrives, so a half-written list, table or code block renders cleanly.
+- **Sending and stopping:** `onSubmit` returns the promise `sendMessage` returns, so the composer stays pending until the answer ends, and Stop takes Send's place and calls `stop`.
+- **Failures:** when the request fails, `MessageOutcome` shows the error with **Retry**, which calls `regenerate`.
+
+To show reasoning and tool calls, and ask before a tool runs, continue with [Show Tool Calls and Approvals](./tool-approvals.mdx).
