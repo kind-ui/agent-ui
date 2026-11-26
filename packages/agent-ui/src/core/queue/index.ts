@@ -1,5 +1,6 @@
 export {
   type QueueApi,
+  type QueueItemActionDetails,
   type QueueOptions,
   type QueuePrimitive,
   type QueueReorderReason,
@@ -7,6 +8,7 @@ export {
   type QueueSectionState,
   type QueueState,
   queueInstructions,
+  queueItemName,
   queuePrimitive,
   queueRows,
   queueSection,
