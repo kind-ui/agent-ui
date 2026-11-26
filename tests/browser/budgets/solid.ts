@@ -53,6 +53,9 @@ export const budgets: Partial<Budgets> = {
 
   // wave-7-task-10: Trace
 
+  traceSelect: { writes: 17, renders: 0, notified: 0, layoutReads: 2 },
+  traceExpand: { writes: 52, renders: 0, notified: 4, layoutReads: 2 },
+
   // wave-7-task-11: Run Timeline
 
   // wave-7-task-12: Job Progress

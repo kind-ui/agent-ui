@@ -781,6 +781,27 @@ export {
 
 // wave-7-task-10: Trace
 
+export {
+  type TraceApi,
+  type TraceDetailsState,
+  type TraceEntry,
+  type TraceExpandedChangeReason,
+  type TraceModel,
+  type TraceOptions,
+  type TracePrimitive,
+  type TraceRow,
+  type TraceSpanKind,
+  type TraceState,
+  type TraceValueChangeReason,
+  type TraceViewportState,
+  type TraceWaterfallState,
+  traceModel,
+  tracePrimitive,
+  traceSpans,
+  traceTime,
+  waterfallItems,
+} from "./trace/index.js";
+
 // wave-7-task-11: Run Timeline
 
 // wave-7-task-12: Job Progress

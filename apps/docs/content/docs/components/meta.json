@@ -56,6 +56,7 @@
     "loader",
     "thinking-indicator",
     "typing-indicator",
-    "streaming-text"
+    "streaming-text",
+    "trace"
   ]
 }

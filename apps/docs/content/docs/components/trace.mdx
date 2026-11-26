@@ -1,0 +1,99 @@
+---
+title: Trace
+description: Show an agent run's model calls, tool calls and subagents as bars on one time axis.
+---
+
+import TraceExample from "../../../examples/trace/basic";
+
+Use a trace when someone needs to see where a run spent its time: which tool call was slow, what a subagent did, and what ran side by side. Every span is a row with its name, its status and how long it took, and a bar placed on a time axis the rows share. Selecting a span shows its details below.
+
+<Example caption="Focus a row and press the Right and Left arrow keys to expand and collapse a span, Up and Down to move between spans, and Enter to show a span's details. Press Right again on a row to move into its duration and bar.">
+  <TraceExample />
+
+  <ExampleCode example="trace/basic" />
+</Example>
+
+## Installation
+
+<Install name="trace" />
+
+## Composition
+
+```text
+Trace
+├── TraceViewport
+│   └── TraceRow
+│       ├── TraceName
+│       │   └── TraceStatus
+│       ├── TraceDuration
+│       └── TraceBar
+└── TraceDetails
+    └── TraceDetailsClose
+```
+
+`Trace` renders UI SDK Waterfall inside `TraceViewport`, a scroller of a set height, with a header row and its time axis, and a `TraceRow` for each span in view. `TraceName` shows the span's kind as a glyph, its name and its `TraceStatus` mark; `TraceDuration` is how long it took, and `TraceBar` its bar. `TraceDetails` shows while a span is selected.
+
+## Usage
+
+### Spans
+
+Pass `spans`, each with an `id`, a `name`, a `start`, and an `end` once it has one, and the spans it started as `children`. Times are milliseconds from the trace's start, or ISO 8601 instants. A `kind` of `"agent"`, `"model"` or `"tool"` picks the glyph, and a `status` its mark; without a `status`, a span with an `end` reads as complete and one without as running. `attributes` show in the details.
+
+```tsx
+<Trace
+  label="Agent run"
+  spans={[
+    {
+      id: "run",
+      name: "Answer the question",
+      kind: "agent",
+      start: 0,
+      end: 4200,
+      children: [{ id: "search", name: "web_search", kind: "tool", start: 120, end: 460 }],
+    },
+  ]}
+  defaultExpanded={["run"]}
+/>
+```
+
+### From Steps
+
+`traceSpans(steps)` turns Steps with a `startedAt` into spans, in milliseconds from the earliest start. Children nest, and a Step without `startedAt` is left out while its timed children take its place. Tool and Terminal steps are tool spans, Subagents agent spans and Reasoning model spans.
+
+```tsx
+import { traceSpans } from "@kind-ui/agent-ui/core";
+
+<Trace spans={traceSpans(steps)} />;
+```
+
+### Running Spans
+
+A span without an `end` grows to now. Pass `now` on the spans' clock to say where now is; without it, spans timed as ISO instants grow each second, and spans timed in milliseconds end where the latest span reached. Its bar reads "running for" rather than "takes".
+
+### Selecting and Expanding
+
+Pressing a row, or Enter or Space on it, selects it and shows its details: its kind, status, start, duration and attributes. Close, or Escape inside the details, returns focus to the row. Pass `defaultValue`, or `value` with `onValueChange`, for the selected span, and `defaultExpanded`, or `expanded` with `onExpandedChange`, for the spans whose children show.
+
+### Long Traces
+
+Only the rows in view are in the page, so a trace of thousands of spans scrolls and moves by keyboard as smoothly as a short one. Rows have a fixed height, `--kind-trace-row-height` (28px), and the trace `--kind-trace-height` (20rem): the details take their room from the rows, so selecting a span never moves what is below the trace. Screen readers still hear every row's place: the Waterfall carries `aria-rowcount` and each row its `aria-rowindex`. Pass `range` as `[start, end]` in milliseconds to zoom the axis.
+
+### Keyboard
+
+The trace is one Tab stop. Up and Down move between the rows that show, Home and End go to the first and last, and Page Up and Page Down move a page. Right expands a span or moves into its cells, Left moves back and collapses it, and typing moves to the next span whose name starts with what you typed.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/trace/trace.ts" name="TraceOptions" />
+
+<FrameworkNames name="trace" />
+
+### Agent
+
+An agent connected with `createAgent` finds the trace by its `label`, "Trace" by default, and reads `value` and `expanded`. It names spans by id. `select(id)` shows a span's details, `expand(id)` shows its children and expands the spans it's in, and `collapse(id)` hides them; each returns `false` for an unknown id.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/trace/trace.ts" name="TraceAgentActions" type='Pick<TraceApi, "select" | "expand" | "collapse">' />
+
+<Caption>
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-trace>`, set `spans`, `defaultExpanded`, `expanded`, `range` and `now` as properties; the other props are kebab-case attributes. `onValueChange` is the `spanselect` event and `onExpandedChange` is `expandchange`.
+</Caption>

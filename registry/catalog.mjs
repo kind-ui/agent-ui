@@ -471,6 +471,14 @@ export const components = {
 
   // wave-7-task-10: Trace
 
+  trace: {
+    group: "ops",
+    when: "you show an agent run's model calls, tool calls and subagents on one time axis.",
+    title: "Trace",
+    description: "Spans on one time axis, nested and selectable, with the selected span's details.",
+    uses: ["internal-waterfall"],
+  },
+
   // wave-7-task-11: Run Timeline
 
   // wave-7-task-12: Job Progress
@@ -518,6 +526,10 @@ const internals = [
 
   "drawer",
   "resizable",
+
+  // wave-7-task-10: Trace's internal item
+
+  "waterfall",
 ];
 
 const layers = { react: { suffix: "", extension: ".tsx" }, web: { suffix: "-web", extension: ".ts" } };

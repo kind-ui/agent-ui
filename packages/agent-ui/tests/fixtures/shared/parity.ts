@@ -292,6 +292,14 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
 
   // wave-7-task-10: Trace
 
+  trace: [
+    { c: "trace", case: "all", interaction: press('[data-slot="kind-trace-name"][data-span="search"]') },
+    { c: "trace", case: "running" },
+  ],
+  "internal-waterfall": [
+    { c: "trace", case: "all", needs: ["trace"], interaction: press('[data-slot="waterfall-indicator"]') },
+  ],
+
   // wave-7-task-11: Run Timeline
 
   // wave-7-task-12: Job Progress

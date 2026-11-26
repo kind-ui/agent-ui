@@ -85,6 +85,8 @@ export default {
 
     // wave-7-task-10: Trace
 
+    "trace",
+
     // wave-7-task-11: Run Timeline
 
     // wave-7-task-12: Job Progress
@@ -151,6 +153,8 @@ export default {
     // wave-7-task-8: Handoff
 
     // wave-7-task-10: Trace
+
+    "waterfall",
 
     // wave-7-task-11: Run Timeline
 
@@ -267,6 +271,8 @@ export default {
     // wave-7-task-8: Handoff
 
     // wave-7-task-10: Trace
+
+    "wave-7/trace.spec.ts",
 
     // wave-7-task-11: Run Timeline
 
