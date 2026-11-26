@@ -4,7 +4,6 @@ import {
   type ChangeDetails,
   createPopup,
   css,
-  definePrimitive,
   type PopupContentProps,
   type PopupContentState,
   type PopupPartState,
@@ -23,6 +22,7 @@ import {
 import { type DialogOpenChangeReason, dialogPreset } from "@ui-sdk/core/dialog";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { actionSource } from "../action-source.js";
+import { definePrimitive } from "../define-primitive.js";
 import type { MotionMode } from "../motion/index.js";
 import { createPendingAction } from "../pending.js";
 import { holdTransitions } from "../step/base.js";

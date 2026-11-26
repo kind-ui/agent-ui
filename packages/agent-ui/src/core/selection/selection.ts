@@ -4,7 +4,6 @@ import {
   bindLayer,
   type ChangeDetails,
   createFocusRecovery,
-  definePrimitive,
   dispatch,
   type LayerDismissReason,
   position,
@@ -12,6 +11,7 @@ import {
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { SelectionActionItem } from "../../types/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import { cached } from "../memo.js";
 import type { MotionMode } from "../motion/index.js";
 

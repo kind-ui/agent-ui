@@ -5,7 +5,6 @@ import {
   createChange,
   createFocusRecovery,
   createPopup,
-  definePrimitive,
   type PopupContentProps,
   type PopupContentState,
   type PopupPreset,
@@ -23,6 +22,7 @@ import { type PopoverOpenChangeReason, popoverPreset } from "@ui-sdk/core/popove
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { createToggleGroupController, type ToggleGroupController } from "@ui-sdk/core/toggle";
 import { actionSource } from "../action-source.js";
+import { definePrimitive } from "../define-primitive.js";
 import { memo } from "../memo.js";
 import { enter, type MotionMode } from "../motion/index.js";
 import { createPendingAction } from "../pending.js";

@@ -3,7 +3,6 @@ import {
   announce,
   type ChangeDetails,
   createChange,
-  definePrimitive,
   dispatch,
   openAttrs,
   type SlotDefinition,
@@ -12,6 +11,7 @@ import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { actionSource } from "../action-source.js";
 import { createCopy } from "../clipboard.js";
 import type { Highlight } from "../code-block/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import type { MotionMode } from "../motion/index.js";
 import { createPendingAction } from "../pending.js";
 import { holdTransitions } from "../step/base.js";

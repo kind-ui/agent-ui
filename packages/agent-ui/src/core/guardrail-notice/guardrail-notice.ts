@@ -1,12 +1,6 @@
-import {
-  type ChangeDetails,
-  createChange,
-  definePrimitive,
-  hiddenAttrs,
-  openAttrs,
-  type SlotDefinition,
-} from "@ui-sdk/core";
+import { type ChangeDetails, createChange, hiddenAttrs, openAttrs, type SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
+import { definePrimitive } from "../define-primitive.js";
 import {
   type NoticeApi,
   type NoticeOptions,

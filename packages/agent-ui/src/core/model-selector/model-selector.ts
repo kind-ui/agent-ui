@@ -1,5 +1,5 @@
-import { definePrimitive } from "@ui-sdk/core";
 import type { ModelOption, PickerItem } from "../../types/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import { cached } from "../memo.js";
 import {
   type PickerBaseApi,

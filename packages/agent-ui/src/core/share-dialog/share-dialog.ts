@@ -4,7 +4,6 @@ import {
   type ChangeDetails,
   createChange,
   createPopup,
-  definePrimitive,
   dispatch,
   type PopupContentProps,
   type PopupContentState,
@@ -30,6 +29,7 @@ import {
 } from "@ui-sdk/core/segmented-control";
 import { actionSource } from "../action-source.js";
 import { createCopy } from "../clipboard.js";
+import { definePrimitive } from "../define-primitive.js";
 import { memo } from "../memo.js";
 import type { MotionMode } from "../motion/index.js";
 import { createPendingAction } from "../pending.js";

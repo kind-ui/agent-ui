@@ -1,7 +1,6 @@
 import {
   type ChangeDetails,
   createReorder,
-  definePrimitive,
   dispatch,
   hiddenAttrs,
   openAttrs,
@@ -11,6 +10,7 @@ import {
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { QueueItem } from "../../types/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import { bindLeavingRow, dropRow, type LeavingRow, leavingRows } from "../leaving.js";
 import { createListFocus, type ListFocus } from "../list-focus.js";
 import { memo } from "../memo.js";

@@ -1,15 +1,10 @@
-import {
-  type ActionDetails,
-  announce,
-  createFocusRecovery,
-  definePrimitive,
-  type SlotDefinition,
-} from "@ui-sdk/core";
+import { type ActionDetails, announce, createFocusRecovery, type SlotDefinition } from "@ui-sdk/core";
 import { createInputController, type InputController } from "@ui-sdk/core/input";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { Approval, StepStatus } from "../../types/index.js";
 import { actionSource } from "../action-source.js";
 import { approvalKey, approvalLabel, isActionable } from "../approval.js";
+import { definePrimitive } from "../define-primitive.js";
 import { memo } from "../memo.js";
 import { cancel, enter, exit, type MotionMode } from "../motion/index.js";
 import { createPendingAction } from "../pending.js";

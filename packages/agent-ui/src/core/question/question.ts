@@ -4,7 +4,6 @@ import {
   type ChangeDetails,
   createChange,
   createFocusRecovery,
-  definePrimitive,
   type SlotDefinition,
   selects,
 } from "@ui-sdk/core";
@@ -14,6 +13,7 @@ import { createRadioGroupController, type RadioGroupController } from "@ui-sdk/c
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { Answers, Question, QuestionOption } from "../../types/index.js";
 import { actionSource } from "../action-source.js";
+import { definePrimitive } from "../define-primitive.js";
 import { memo } from "../memo.js";
 import { enter, type MotionMode } from "../motion/index.js";
 import { createPendingAction } from "../pending.js";

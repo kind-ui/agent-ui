@@ -4,7 +4,6 @@ import {
   type ChangeSource,
   createFocusRecovery,
   createInlineEdit,
-  definePrimitive,
   dispatch,
   type InlineEdit,
   type InlineEditReason,
@@ -19,6 +18,7 @@ import { actionSource } from "../action-source.js";
 import { avatarInitials } from "../avatar.js";
 import { createCopy } from "../clipboard.js";
 import { hearComposed } from "../composed-events.js";
+import { definePrimitive } from "../define-primitive.js";
 import { memo } from "../memo.js";
 import {
   type MenuBaseApi,

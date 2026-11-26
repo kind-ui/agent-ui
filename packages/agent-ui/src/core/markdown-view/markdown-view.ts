@@ -1,6 +1,7 @@
-import { definePrimitive, type SlotDefinition } from "@ui-sdk/core";
+import type { SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { Highlight } from "../code-block/code-block.js";
+import { definePrimitive } from "../define-primitive.js";
 import { createMarkdownEngine, type MarkdownBlock, type MarkdownEngine } from "../markdown/index.js";
 
 export type MarkdownOptions = {

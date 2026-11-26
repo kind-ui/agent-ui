@@ -5,7 +5,6 @@ import {
   createChange,
   createFocusRecovery,
   createInputHistory,
-  definePrimitive,
   type SlotDefinition,
   type ValueStorage,
 } from "@ui-sdk/core";
@@ -21,6 +20,7 @@ import {
 } from "@ui-sdk/core/token-input";
 import type { TriggerDefinition } from "@ui-sdk/core/trigger-menu";
 import type { AttachmentsOptions } from "../attachments/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import { type FileIntake, forwardFileInputEvents } from "../file-input-events.js";
 import { memo } from "../memo.js";
 import { cancel, enter, exit, type MotionMode } from "../motion/index.js";

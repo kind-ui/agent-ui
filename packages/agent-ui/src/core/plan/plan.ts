@@ -1,6 +1,7 @@
-import { createFocusRecovery, definePrimitive, type SlotDefinition } from "@ui-sdk/core";
+import { createFocusRecovery, type SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { PlanItem } from "../../types/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import {
   fromItem,
   type ItemListApi,

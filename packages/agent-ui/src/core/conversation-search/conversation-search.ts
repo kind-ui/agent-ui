@@ -4,7 +4,6 @@ import {
   type ChangeDetails,
   createChange,
   createFocusRecovery,
-  definePrimitive,
   type FocusRecovery,
   isComposing,
   type PrimitiveContext,
@@ -14,6 +13,7 @@ import { createInputController, type InputController } from "@ui-sdk/core/input"
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { registerShortcut } from "@ui-sdk/core/shortcuts";
 import type { ConversationController } from "../conversation/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import { createMarkdownEngine, type MarkdownEngine } from "../markdown/index.js";
 import { memo } from "../memo.js";
 import type { MotionMode } from "../motion/index.js";

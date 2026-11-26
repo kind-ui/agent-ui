@@ -1,7 +1,6 @@
 import {
   type ChangeDetails,
   createChange,
-  definePrimitive,
   dispatch,
   hiddenAttrs,
   openAttrs,
@@ -11,6 +10,7 @@ import {
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { StackFrame, StepStatus } from "../../types/index.js";
 import { createCopy } from "../clipboard.js";
+import { definePrimitive } from "../define-primitive.js";
 import { createListFocus, type ListFocus } from "../list-focus.js";
 import { isLibraryFrame, parseStack } from "../stack.js";
 import { bindStepPanel, type StepApi, type StepOptions, type StepState, stepBase } from "../step/base.js";

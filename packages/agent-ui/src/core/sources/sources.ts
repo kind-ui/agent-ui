@@ -1,7 +1,6 @@
 import {
   type ChangeDetails,
   createChange,
-  definePrimitive,
   hiddenAttrs,
   openAttrs,
   type SlotDefinition,
@@ -9,6 +8,7 @@ import {
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { Source } from "../../types/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import { memo } from "../memo.js";
 import { enter, type MotionMode } from "../motion/index.js";
 import { bindStepPanel, holdTransitions } from "../step/base.js";

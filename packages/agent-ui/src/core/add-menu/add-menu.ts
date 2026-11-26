@@ -1,7 +1,8 @@
-import { type ChangeDetails, definePrimitive, dispatch, type SlotDefinition } from "@ui-sdk/core";
+import { type ChangeDetails, dispatch, type SlotDefinition } from "@ui-sdk/core";
 import type { MenuData } from "@ui-sdk/core/menu";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { MenuEntry } from "../../types/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import {
   type MenuBaseApi,
   type MenuBaseOptions,

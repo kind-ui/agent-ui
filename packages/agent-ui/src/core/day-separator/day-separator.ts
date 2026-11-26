@@ -1,5 +1,6 @@
-import { definePrimitive, pageLocale, type SlotDefinition } from "@ui-sdk/core";
+import { pageLocale, type SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
+import { definePrimitive } from "../define-primitive.js";
 import { memo } from "../memo.js";
 import { dayKey, dayLabel, todayKey } from "../time.js";
 import { everyMinute } from "../today.js";

@@ -2,7 +2,6 @@ import {
   type ChangeDetails,
   createFocusRecovery,
   createPopup,
-  definePrimitive,
   dispatch,
   type Part,
   type PopupContentProps,
@@ -21,6 +20,7 @@ import {
 import { type PopoverOpenChangeReason, popoverPreset } from "@ui-sdk/core/popover";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { ContextChip } from "../../types/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import { bindLeavingRow, createRowSlide, dropRow, type LeavingRow, leavingRows } from "../leaving.js";
 import { createListFocus, type ListFocus } from "../list-focus.js";
 import { memo } from "../memo.js";

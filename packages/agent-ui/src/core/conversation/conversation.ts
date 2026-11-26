@@ -6,7 +6,6 @@ import {
   createStickToBottom,
   createVirtualizer,
   css,
-  definePrimitive,
   type FocusRecovery,
   type SlotDefinition,
   type StickToBottom,
@@ -16,6 +15,7 @@ import {
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { actionSource } from "../action-source.js";
+import { definePrimitive } from "../define-primitive.js";
 import { enter, exit, type MotionMode, resolveMotion } from "../motion/index.js";
 import { createPendingAction } from "../pending.js";
 import { nextFollowState } from "./follow.js";

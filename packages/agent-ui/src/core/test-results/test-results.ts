@@ -1,7 +1,6 @@
 import {
   type ChangeDetails,
   createChange,
-  definePrimitive,
   isTypeaheadKey,
   type PrimitiveContext,
   type SlotDefinition,
@@ -11,6 +10,7 @@ import {
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { createTreeController, type TreeController } from "@ui-sdk/core/tree";
 import type { StepStatus, TestCase, TestSuite } from "../../types/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import { cached, memo } from "../memo.js";
 import type { MotionMode } from "../motion/index.js";
 import { type StepApi, type StepOptions, type StepState, stepAnnouncement, stepBase } from "../step/base.js";

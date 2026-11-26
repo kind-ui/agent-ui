@@ -1,5 +1,5 @@
-import { definePrimitive } from "@ui-sdk/core";
 import type { SettingsEntry } from "../../types/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import {
   type SettingsBaseApi,
   type SettingsBaseOptions,

@@ -1,13 +1,13 @@
 import {
   type ChangeDetails,
   createFocusRecovery,
-  definePrimitive,
   dispatch,
   type SlotDefinition,
   selects,
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { SuggestionItem } from "../../types/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import { memo } from "../memo.js";
 import { enter, type MotionMode } from "../motion/index.js";
 

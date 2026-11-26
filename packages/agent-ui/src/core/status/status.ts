@@ -1,6 +1,7 @@
-import { announce, definePrimitive, type SlotDefinition } from "@ui-sdk/core";
+import { announce, type SlotDefinition } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { StepStatus } from "../../types/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import type { MotionMode } from "../motion/index.js";
 
 export type StatusOptions = {

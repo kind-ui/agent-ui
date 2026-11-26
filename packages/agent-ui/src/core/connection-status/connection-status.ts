@@ -4,13 +4,13 @@ import {
   animateOut,
   announce,
   createFocusRecovery,
-  definePrimitive,
   type FocusRecovery,
   prepareAnnouncements,
   type SlotDefinition,
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { actionSource } from "../action-source.js";
+import { definePrimitive } from "../define-primitive.js";
 import type { MotionMode } from "../motion/index.js";
 import { createPendingAction } from "../pending.js";
 import { nearestTabStop } from "../tab-stop.js";

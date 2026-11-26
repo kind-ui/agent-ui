@@ -1,7 +1,6 @@
 import {
   type ChangeDetails,
   createChange,
-  definePrimitive,
   dispatch,
   type SlotDefinition,
   selects,
@@ -10,6 +9,7 @@ import {
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { createTreeController, type TreeController } from "@ui-sdk/core/tree";
 import type { FileTreeEntry } from "../../types/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import { cached, memo } from "../memo.js";
 import { enter, type MotionMode } from "../motion/index.js";
 import { holdTransitions } from "../step/base.js";

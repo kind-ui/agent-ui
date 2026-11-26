@@ -1,7 +1,6 @@
 import {
   type ChangeDetails,
   createPopup,
-  definePrimitive,
   type PopupContentProps,
   type PopupContentState,
   type PopupPreset,
@@ -18,6 +17,7 @@ import { type CarouselController, createCarouselController } from "@ui-sdk/core/
 import type { PopoverOpenChangeReason } from "@ui-sdk/core/popover";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { Source } from "../../types/index.js";
+import { definePrimitive } from "../define-primitive.js";
 import { hoverPopupPreset, withHover } from "../hover-popup.js";
 import { cached, memo } from "../memo.js";
 import type { MotionMode } from "../motion/index.js";
