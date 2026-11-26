@@ -2,7 +2,7 @@ import { type Highlight, type ToolApprovalState, toolPrimitive } from "@kind-ui/
 import { createParts } from "@ui-sdk/vue/primitive";
 import { type Component, defineComponent, h, type Slot, type VNodeChild } from "vue";
 import { CodeBlock } from "./code-block.js";
-import { Confirmation } from "./confirmation.js";
+import { Confirmation, withCode } from "./confirmation.js";
 import { Markdown } from "./markdown.js";
 
 const parts = createParts(toolPrimitive, {
@@ -40,8 +40,10 @@ export const ToolContent = parts.Content;
 export const ToolInputCopy = parts.InputCopy;
 export const ToolOutputCopy = parts.OutputCopy;
 
-/** The tool's name, or the `label`, unless you fill the slot. */
-export const ToolTitle = withDefault<{ title: string }>(parts.Title, "ToolTitle", ({ state }) => state.title);
+/** The `heading`, the `label`, the call's `title` or the tool's name as words, with code as `code`, unless you fill the slot. */
+export const ToolTitle = withDefault<{ title: string }>(parts.Title, "ToolTitle", ({ state }) =>
+  withCode(state.title),
+);
 
 /**
  * A Confirmation for the call's approval while it has one: Deny, Always allow and Approve while `onDeny`,
