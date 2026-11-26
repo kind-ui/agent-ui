@@ -1,10 +1,10 @@
 <script lang="ts">
 import type { AgentAction } from "@ui-sdk/vue/agent";
-import { checkpointHost } from "../../shared/checkpoint.js";
+import { checkpointHost, SCOPED } from "../../shared/checkpoint.js";
 
-export const variants = ["all", "reduced"] as const;
+export const variants = ["all", "reduced", "scoped"] as const;
 
-const { host, restore } = checkpointHost();
+const { host, restore, compare } = checkpointHost();
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 </script>
@@ -18,6 +18,7 @@ const props = defineProps<{ variant: string; params: URLSearchParams }>();
 
 const restored = shallowRef(false);
 const motion = props.variant === "reduced" ? "reduced" : undefined;
+const scoped = props.variant === "scoped" ? { ...SCOPED, onCompare: compare } : {};
 
 onMounted(() =>
   expose({
@@ -40,6 +41,7 @@ onMounted(() =>
       :on-restore="restore"
       :restored="restored"
       :motion="motion"
+      v-bind="scoped"
     />
     <p id="below">Below</p>
   </div>

@@ -4,6 +4,7 @@ description: Mark a point in the conversation that a person can go back to, afte
 ---
 
 import CheckpointExample from "../../../examples/checkpoint/basic";
+import CheckpointScopeExample from "../../../examples/checkpoint/scope";
 
 Use a checkpoint where the agent saved its work, like before it edits a file, so a person can undo everything after it. It's a quiet line in the conversation with **Restore checkpoint** at its end, and nothing is restored until the person agrees in the dialog.
 
@@ -26,19 +27,22 @@ Checkpoint
 ├── CheckpointLine
 ├── CheckpointRestore
 │   └── CheckpointDialog
+│       ├── CheckpointScope
+│       ├── CheckpointLoss
+│       ├── CheckpointCompare
 │       ├── CheckpointError
 │       ├── CheckpointCancel
 │       └── CheckpointConfirm
 └── CheckpointRestored
 ```
 
-`Checkpoint` renders these parts when you pass no children: a group named by its `label` and described by its `description`, then a line to the end of the row. `CheckpointRestore` holds UI SDK's Alert Dialog: its trigger is an icon button named by a tooltip, and `CheckpointDialog` is its backdrop and content, with the title, the description and the answers. `CheckpointCancel` and `CheckpointConfirm` are native buttons. `CheckpointRestored` takes Restore's place once the checkpoint is restored.
+`Checkpoint` renders these parts when you pass no children: a group named by its `label` and described by its `description`, then a line to the end of the row. `CheckpointRestore` holds UI SDK's Alert Dialog: its trigger is an icon button named by a tooltip, and `CheckpointDialog` is its backdrop and content: the title, the checkpoint's `description`, `CheckpointScope` (UI SDK's Radio group), `CheckpointLoss` (the dialog's description, so it's read as the dialog opens) and the answers. `CheckpointCompare`, `CheckpointCancel` and `CheckpointConfirm` are native buttons. `CheckpointRestored` takes Restore's place once the checkpoint is restored.
 
 ## Usage
 
 ### Restoring
 
-Pass `onRestore` to show **Restore checkpoint**. Pressing it opens the dialog, which asks "Restore this checkpoint?" and says "Changes after it will be discarded."; set `confirmTitle` and `confirmDescription` to say more about your checkpoint.
+Pass `onRestore` to show **Restore checkpoint**. Pressing it opens the dialog, which asks "Restore to this point?", repeats the `description`, and says "Changes after it will be discarded."; set `confirmTitle` and `confirmDescription` to word it yourself.
 
 ```tsx
 <Checkpoint
@@ -50,9 +54,34 @@ Pass `onRestore` to show **Restore checkpoint**. Pressing it opens the dialog, w
 
 Only the dialog's **Restore** calls `onRestore`, with `details.source` saying how it was pressed. Return a promise to keep the dialog open until it settles: **Restore** shows a running mark beside its label and the dialog is marked busy, both answers are disabled meanwhile, a second press calls nothing, and Escape waits. When it resolves, the dialog closes and focus returns to **Restore checkpoint**. A rejection keeps the dialog open with "Couldn't restore. Try again." beside the answers, and screen readers hear "Checkpoint not restored".
 
+### What to Restore
+
+Pass `scopes` to let the person choose: `"both"` reads **Code and conversation**, `"code"` **Code only** and `"conversation"` **Conversation only**, in the order you list them, starting on `defaultScope`. Pass `changes` and `laterMessages`, and the dialog's description says what the choice loses: "Undoes changes to 3 files (+12 −40) and removes 4 later messages." With `unrestorableMessages`, it adds "Code from 2 messages can't be restored." while the restore brings code back. `onRestore` gets the chosen scope as `details.scope`.
+
+<Example caption="Choose Code only, and the sentence under the choices changes before you press Restore.">
+  <CheckpointScopeExample />
+
+  <ExampleCode example="checkpoint/scope" />
+</Example>
+
+At 390 px the dialog docks to the bottom of the screen, and its radios stack.
+
+### Compare
+
+Pass `onCompare` to show **Compare** in the dialog. It calls `onCompare` and leaves the dialog open, so you can open your own view of the changes over it, such as a Diff in a dialog.
+
+```tsx
+<Checkpoint
+  description="Before “Switch to the session table”, 4 min ago."
+  scopes={["both", "code", "conversation"]}
+  onCompare={() => setComparing(true)}
+  onRestore={({ scope }) => restore("checkpoint-3", scope)}
+/>
+```
+
 ### Restored
 
-Once the host has restored the checkpoint, pass `restored`. "Restored" takes the button's place at the same height, so nothing above or below it moves, and screen readers hear "Checkpoint restored". If the button had focus, focus moves to "Restored". Setting `restored` while the dialog is open closes it.
+Once the host has restored the checkpoint, pass `restored`. "Restored" takes the button's place, naming the scope while you pass `scopes` ("Restored code and conversation · 3 files, 4 messages"), at the same height, so nothing above or below it moves, and screen readers hear "Checkpoint restored". If the button had focus, focus moves to "Restored". Setting `restored` while the dialog is open closes it.
 
 ### Keyboard
 
@@ -74,10 +103,10 @@ The dialog rises and fades in, its backdrop and the tooltip fade, and "Restored"
 
 ### Agent
 
-An agent connected with `createAgent` finds the checkpoint by its label and reads whether its dialog is open. Its `restore` opens the dialog, the same as a press, and is offered while **Restore checkpoint** shows and the dialog is closed. It never calls `onRestore`: only the dialog's **Restore** does, and an agent pressing that always needs a person to confirm, unless the host's `allow` lets it through. While `agentConfirm` is on, `restore` and every other action on the checkpoint need a person too.
+An agent connected with `createAgent` finds the checkpoint by its label and reads whether its dialog is open. Its `restore` opens the dialog, the same as a press, and is offered while **Restore checkpoint** shows and the dialog is closed. While the dialog is open, `setScope` chooses a scope by value (offered when there's a choice) and `compare` calls `onCompare`. It never calls `onRestore`: only the dialog's **Restore** does, and an agent pressing that always needs a person to confirm, unless the host's `allow` lets it through. While `agentConfirm` is on, `restore` and every other action on the checkpoint need a person too.
 
-<auto-type-table path="../../../../../packages/agent-ui/src/core/checkpoint/checkpoint.ts" name="CheckpointAgentActions" type='Pick<CheckpointApi, "restore">' />
+<auto-type-table path="../../../../../packages/agent-ui/src/core/checkpoint/checkpoint.ts" name="CheckpointAgentActions" type='Pick<CheckpointApi, "restore" | "setScope" | "compare">' />
 
 <Caption>
-  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-checkpoint>`, props are kebab-case attributes, so `confirmTitle` is `confirm-title`, and `open` is a property too. Restore needs the `can-restore` attribute, and the dialog's Restore fires `restore`: call `event.detail.waitUntil(promise)` to keep the dialog open. The element fills in its parts when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-checkpoint>`, props are kebab-case attributes, so `confirmTitle` is `confirm-title`, and `open` is a property too. `scopes` and `changes` are properties. Restore needs the `can-restore` attribute, and the dialog's Restore fires `restore` with the scope in `event.detail.value.scope`: call `event.detail.waitUntil(promise)` to keep the dialog open. Compare needs `can-compare` and fires `compare`. The element fills in its parts when it has no children.
 </Caption>

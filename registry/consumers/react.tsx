@@ -196,7 +196,14 @@ const items = {
       onSubmit={() => {}}
     />
   ),
-  checkpoint: <Checkpoint description="Before editing auth.ts" onRestore={() => {}} />,
+  checkpoint: (
+    <Checkpoint
+      description="Before editing auth.ts"
+      scopes={["both", "code"]}
+      changes={{ files: 1, additions: 4, deletions: 2 }}
+      onRestore={() => {}}
+    />
+  ),
   "model-selector": (
     <ModelSelector
       models={[{ id: "sonnet-4", name: "Sonnet 4", group: "Anthropic" }]}

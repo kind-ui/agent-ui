@@ -8,6 +8,8 @@ export const parts = createParts(checkpointPrimitive, {
   line: "span",
   restore: "div",
   restored: "span",
+  scope: "div",
+  compare: "button",
   error: "span",
   cancel: "button",
   confirm: "button",
