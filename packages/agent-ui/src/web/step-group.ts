@@ -27,8 +27,8 @@ const fill = (part: Element | null, text: string) => {
 /**
  * `<kind-step-group>` takes its steps inside a `<kind-step-group-content>`, and adds its trigger before that and
  * its Stop all button after it, unless it has a trigger of its own. `items` and `groupLabels` are properties. The
- * `can-cancel` attribute shows Stop all, which fires `stepgroupcancel`: call `event.detail.waitUntil(promise)` to
- * keep it pending.
+ * `can-cancel` attribute shows Stop all, which fires `stepgroupcancel` with `detail.reason` and `detail.source`: call
+ * `event.detail.waitUntil(promise)` to keep it pending.
  */
 export function defineStepGroup(): void {
   if (customElements.get("kind-step-group")) return;

@@ -910,11 +910,10 @@ function wireOps(wave: Element) {
   group.innerHTML = `<kind-step-group-content><kind-step-list aria-label="Agents">${agents
     .map(
       (row) =>
-        `<kind-subagent agent-name="${row.name}" status="${row.status}"><kind-step-list-item value="${row.id}"><kind-subagent-trigger><button><kind-subagent-icon></kind-subagent-icon><kind-subagent-title></kind-subagent-title><kind-subagent-meta></kind-subagent-meta></button></kind-subagent-trigger></kind-step-list-item><kind-subagent-content><p>${row.task}</p></kind-subagent-content></kind-subagent>`,
+        `<kind-subagent agent-name="${row.name}" status="${row.status}" agent-confirm="false"><kind-step-list-item value="${row.id}"><kind-subagent-trigger><button><kind-subagent-icon></kind-subagent-icon><kind-subagent-title></kind-subagent-title><kind-subagent-meta></kind-subagent-meta></button></kind-subagent-trigger></kind-step-list-item><kind-subagent-content><p>${row.task}</p></kind-subagent-content></kind-subagent>`,
     )
     .join("")}</kind-step-list></kind-step-group-content>`;
   wave.querySelector("#group")?.append(group);
-  for (const agent of group.querySelectorAll("kind-subagent")) agent.agentConfirm = false;
   group.addEventListener("stepgroupcancel", decide("group-cancel"));
   const handoff = place("handoff", "kind-handoff", {
     canApprove: true,

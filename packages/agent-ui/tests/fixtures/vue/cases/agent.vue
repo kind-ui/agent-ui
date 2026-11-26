@@ -20,7 +20,7 @@ import Shell from "./agent/Shell.vue";
 const props = defineProps<{ variant: string; params: URLSearchParams }>();
 
 const wave = computed(() =>
-  props.variant === "all" ? 1 : props.variant === "wave-7a" ? 7 : Number(props.variant.slice("wave-".length)),
+  props.variant === "all" ? 1 : props.variant === "wave-7a" ? "7a" : Number(props.variant.slice("wave-".length)),
 );
 const confirm = ref(true);
 onMounted(() => {
@@ -32,8 +32,9 @@ onMounted(() => {
 
 <template>
   <Foundation />
+  <!-- The bridge lists 100 components at most, so Wave 6 and Wave 7a each sit beside Wave 1 alone. -->
   <Shell v-if="wave === 6" :confirm="confirm" />
-  <Ops v-else-if="wave === 7" :confirm="confirm" />
+  <Ops v-else-if="wave === '7a'" :confirm="confirm" />
   <template v-else-if="wave >= 2">
     <Activity :confirm="confirm" />
     <HumanInput v-if="wave >= 3" :confirm="confirm" :wave="wave === 5 ? 5 : 3" />

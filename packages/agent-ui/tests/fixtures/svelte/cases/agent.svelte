@@ -149,7 +149,9 @@
 
   let { variant }: { variant: string; params: URLSearchParams } = $props();
 
-  const wave = $derived(variant === "all" ? 1 : Number(variant.slice("wave-".length)));
+  const wave = $derived(
+    variant === "all" ? 1 : variant === "wave-7a" ? "7a" : Number(variant.slice("wave-".length)),
+  );
 
   let confirm = $state(true);
   $effect(() => {
@@ -678,7 +680,7 @@
 
 {@render foundation()}{#if wave === 6}
   <Shell {host} {confirm} />
-{:else if variant === "wave-7a"}
+{:else if wave === "7a"}
   <Ops {host} {confirm} />
 {:else if wave >= 2}
   {@render activity()}{#if wave >= 3}{@render humanInput()}{/if}{#if wave >= 4}{@render artifacts()}{/if}{#if wave === 5}{@render composing()}{/if}

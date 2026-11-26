@@ -392,7 +392,8 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
       },
       bindRoot: () => {
         // Starts UI SDK's input tracking, which `actionSource` doesn't, so a first decision by key or pointer reports
-        // it rather than "virtual", in a Tool, Terminal or Handoff as alone. Here, since a server creates the api too.
+        // its source rather than "virtual", alone or inside a Tool, Terminal or Handoff. In `bind`, since a server
+        // creates the api too.
         sourceOf();
         const frame = requestAnimationFrame(() => {
           mounting = false;

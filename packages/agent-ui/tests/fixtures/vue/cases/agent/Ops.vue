@@ -60,9 +60,9 @@ const onSend = (id: string, details: { source: string }) =>
       <Composer
         aria-label="Steer"
         running
-        :on-submit="host.submit"
-        :on-stop="host.stop"
-        :on-steer="host.decide('composer-steer')"
+        :onSubmit="host.submit"
+        :onStop="host.stop"
+        :onSteer="host.decide('composer-steer')"
       >
         <ComposerInput aria-label="Steer prompt" />
         <ComposerAttach />
@@ -72,7 +72,7 @@ const onSend = (id: string, details: { source: string }) =>
       </Composer>
     </section>
     <section id="next" data-case="queue">
-      <Queue label="Next up" :items="queue" :on-send="onSend" />
+      <Queue label="Next up" :items="queue" :onSend="onSend" />
     </section>
     <section id="queued" data-case="message">
       <Message
@@ -80,7 +80,7 @@ const onSend = (id: string, details: { source: string }) =>
         message-role="user"
         :text="delivered.queued"
         delivery="queued"
-        :on-withdraw="host.decide('message-withdraw')"
+        :onWithdraw="host.decide('message-withdraw')"
       >
         <MessageHeader>
           <MessageDelivery />
@@ -101,13 +101,13 @@ const onSend = (id: string, details: { source: string }) =>
         output=""
         :approval="requested('run')"
         approval-reason
-        :on-approve="host.decide('terminal-approve')"
-        :on-deny="host.decide('terminal-deny')"
-        :on-always-allow="host.decide('terminal-always')"
+        :onApprove="host.decide('terminal-approve')"
+        :onDeny="host.decide('terminal-deny')"
+        :onAlwaysAllow="host.decide('terminal-always')"
       />
     </section>
     <section id="tool-retry" data-case="tool">
-      <Tool v-bind="retryRows.failed" :on-retry="host.decide('tool-retry')" />
+      <Tool v-bind="retryRows.failed" :onRetry="host.decide('tool-retry')" />
     </section>
     <section id="diff" data-case="diff">
       <Diff
@@ -115,12 +115,12 @@ const onSend = (id: string, details: { source: string }) =>
         :before="before"
         :after="after"
         :agent-confirm="confirm"
-        :on-accept="host.decide('diff-accept')"
-        :on-revert="host.decide('diff-revert')"
+        :onAccept="host.decide('diff-accept')"
+        :onRevert="host.decide('diff-revert')"
       />
     </section>
     <section id="group" data-case="step-group">
-      <StepGroup :items="agents" :group-labels="agentLabels" :on-cancel="host.decide('group-cancel')">
+      <StepGroup :items="agents" :group-labels="agentLabels" :onCancel="host.decide('group-cancel')">
         <StepList aria-label="Agents">
           <SubagentRoot
             v-for="row in agents"
@@ -151,9 +151,9 @@ const onSend = (id: string, details: { source: string }) =>
         :reason="billing.reason"
         status="pending"
         :approval="requested('billing')"
-        :on-approve="host.decide('handoff-approve')"
-        :on-deny="host.decide('handoff-deny')"
-        :on-always-allow="host.decide('handoff-always')"
+        :onApprove="host.decide('handoff-approve')"
+        :onDeny="host.decide('handoff-deny')"
+        :onAlwaysAllow="host.decide('handoff-always')"
       />
     </section>
   </div>

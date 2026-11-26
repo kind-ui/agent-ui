@@ -165,9 +165,14 @@ test("without running, Stop replaces Send only while a submission is pending", a
 
 test("Steer's menu sits before Stop, not under it", async ({ page }) => {
   await open(page);
-  const menu = await page.getByRole("button", { name: "More send options" }).boundingBox();
-  const stop = await page.getByRole("button", { name: "Stop" }).boundingBox();
-  expect((menu?.x ?? 0) + (menu?.width ?? 0)).toBeLessThanOrEqual(stop?.x ?? 0);
+  const menu = page.getByRole("button", { name: "More send options" });
+  const stop = page.getByRole("button", { name: "Stop" });
+  await expect(menu).toBeVisible();
+  await expect(stop).toBeVisible();
+  await settled(page);
+  const [menuBox, stopBox] = [await menu.boundingBox(), await stop.boundingBox()];
+  if (!menuBox || !stopBox) throw new Error("no box");
+  expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(stopBox.x);
 });
 
 test("running without onSteer: Stop takes Send's place", async ({ page }) => {
