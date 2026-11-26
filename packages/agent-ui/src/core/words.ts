@@ -19,7 +19,8 @@ export const WORDS = {
   expired: "Expired before a decision",
   cancelled: "Cancelled before a decision",
   deadlinePassed: "Expired",
-  decideIn: "Decide in",
+  decide: "Decide",
+  allowThisTool: "Allow this tool?",
 } as const;
 
 /**

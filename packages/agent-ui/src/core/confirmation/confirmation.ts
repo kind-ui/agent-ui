@@ -33,7 +33,7 @@ export interface ConfirmationDecision {
 export type ConfirmationChoice = "approve" | "always" | "deny";
 
 /**
- * Called with the decision. Return a promise to keep both choices disabled until it settles: a rejection makes them
+ * Called with the decision. Return a promise to keep the choices disabled until it settles: a rejection makes them
  * available again. `details.source` says who decided, like `"mouse"`, `"keyboard"` or `"agent"`.
  */
 export type ConfirmationCallback = (decision: ConfirmationDecision, details: ActionDetails) => unknown;
@@ -120,7 +120,7 @@ export type ConfirmationState = {
   deadline: number | null;
   /** Whether a promise a callback returned is still pending. */
   pending: boolean;
-  /** Whether a decision was sent and the host hasn't reported on it yet, so both choices stay disabled. */
+  /** Whether a decision was sent and the host hasn't reported on it yet, so the choices stay disabled. */
   sent: boolean;
   /** The choice that was pressed, while its decision is pending or sent. */
   pressed: ConfirmationChoice | undefined;
@@ -292,7 +292,7 @@ export const confirmationMeta = (state: ConfirmationState): string => {
   if (isLocked(state)) return WORDS.sending;
   if (!state.actionable || !state.expiresAt || state.deadline === null) return "";
   const left = countdownText(state.deadline);
-  return left ? `${WORDS.decideIn} ${left}` : WORDS.deadlinePassed;
+  return left ? `${WORDS.decide} ${left}` : WORDS.deadlinePassed;
 };
 
 export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
@@ -470,14 +470,22 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
           if (stacked !== store.get().stacked) store.set({ stacked });
         };
         const observer = new ResizeObserver(measure);
+        let watched: HTMLElement[] | undefined;
+        let bound = true;
+        // Watches the buttons shown now, again only when they change, so a deadline tick reads no layout.
         const observe = () => {
+          const shown = buttons();
+          if (!bound || (shown.length === watched?.length && shown.every((b, i) => b === watched?.[i])))
+            return;
+          watched = shown;
           observer.disconnect();
           observer.observe(el);
-          for (const button of buttons()) observer.observe(button);
+          for (const button of shown) observer.observe(button);
         };
         observe();
         const unsubscribe = store.subscribe(() => queueMicrotask(observe));
         return () => {
+          bound = false;
           unsubscribe();
           observer.disconnect();
         };
@@ -646,7 +654,12 @@ export const confirmationPrimitive: ConfirmationPrimitive = definePrimitive<
       focus: "tab-stop",
       present: (state) => state.outcome !== undefined && !showsChoices(state),
       state: (state) => ({ label: state.outcome ?? "", reason: state.outcomeReason }),
-      attrs: (state) => ({ tabindex: "0", "data-state": state.approvalState }),
+      // Keeps the height of choices that stacked, so the swap moves nothing below.
+      attrs: (state) => ({
+        tabindex: "0",
+        "data-state": state.approvalState,
+        "data-stacked": state.stacked ? "" : undefined,
+      }),
       bind: (el, { api }) => api.enterSwap(el),
     }),
     "outcome-icon": slot({

@@ -11,6 +11,7 @@ import { stepDuration } from "../chain-of-thought/open-steps.js";
 import { createCopy } from "../clipboard.js";
 import type { Highlight } from "../code-block/index.js";
 import { type StepApi, type StepOptions, type StepState, stepAnnouncement, stepBase } from "../step/base.js";
+import { WORDS } from "../words.js";
 import { toolCode, toolStatus, toolValue } from "./format.js";
 
 export type ToolOptions = Omit<StepOptions, "status" | "label"> &
@@ -164,7 +165,7 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
     const copyInput = createCopy(context, "inputCopied");
     const copyOutput = createCopy(context, "outputCopied");
     const approvalState = approvalPart.approvalState<ToolState>(context, {
-      question: (state) => (state.title ? `Run \`${state.title}\`?` : "Run this tool?"),
+      question: (state) => (state.title ? `Allow \`${state.title}\`?` : WORDS.allowThisTool),
     });
     return {
       ...base.api(context),

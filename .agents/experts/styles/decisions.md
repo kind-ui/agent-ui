@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `bfb9bb7` (Design Wave 1 Batch D)
+Last reviewed: `e1fc3dec` (Wave 7 redesign 2/11: marks and Confirmation)
 
 ## Settled
 
@@ -42,6 +42,8 @@ Last reviewed: `bfb9bb7` (Design Wave 1 Batch D)
 
 ## Known and open (don't report again, check whether fixed)
 
+- Wave 7 layer 2: Confirmation's meta row ("Decide in 4 min", "Sending decision") appears after bind or on a press; inside a Tool, whose title is hidden, it adds a row above the choices. Server markup can't count the deadline.
+- Wave 7 layer 2: the choices stack (Always allow above Deny and Approve) only once core measures them, so a narrow server render first wraps naturally.
 - **`KindFileInputTrigger` and `KindScrollAreaScrollToEnd` stay 32px, bordered and filled** (Design Wave 0): their adopters own the look; Wave 1 moves them onto the shared controls.
 - **Connection Status's pill narrows when the countdown ends at "Reconnecting"** (Wave 6 Task 7): the words change, so the width does; centred by `translate`, both edges move. Nothing else moves.
 - **Every one of the 128 bars transitions its `scale` on each level, clipped ones too (Task 17):** cost not profiled.

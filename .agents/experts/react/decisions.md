@@ -2,10 +2,11 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `cb3f3e12` (UI SDK 0.1.0-beta.17 upgrade)
+Last reviewed: `e1fc3dec` (Wave 7 redesign 2/11: marks and Confirmation)
 
 ## Settled
 
+- Wave 7: `withCode` (React, Vue) and `WithCode` (Svelte, Solid, private) are each layer's own helpers, like other lowercase exports; parity compares PascalCase parts only.
 - **React is the structural reference for the Vue, Svelte and Solid layers (framework layers plan, 2026-11-20):** they export the same part names and render the same default children and classes, which `scripts/tests/parity.test.mjs` and `tests/browser/parity.spec.ts` compare against React. Renaming or restructuring a React part is a change to all five layers.
 - **Effort Slider was scrapped by the user (Wave 5 Task 8, 2026-11-17):** effort is a radio submenu in Model Control, a Settings Menu (`settingsBase`). Don't propose a slider or nested popover for effort.
 - **Fixture `main` files carry no comment for the case `<script type="module">`** (Wave 4 Task 12): fixtures hold no comments; the reason is in AGENTS.md "Fixture servers".
