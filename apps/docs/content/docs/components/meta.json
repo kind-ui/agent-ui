@@ -52,6 +52,7 @@
     "run-timeline",
     "schedule-card",
     "activity-graph",
+    "flow-graph",
     "conversation",
     "message",
     "markdown",

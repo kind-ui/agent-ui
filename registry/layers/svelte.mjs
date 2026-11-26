@@ -118,6 +118,8 @@ export default {
     // wave-7-task-18: Thread List inbox
 
     // wave-7-task-19: Flow Graph
+
+    "flow-graph",
   ],
   // Internal wrapper names, without the `internal-` prefix.
   internals: [
@@ -322,5 +324,7 @@ export default {
     "wave-7/thread-list-inbox.spec.ts",
 
     // wave-7-task-19: Flow Graph
+
+    "wave-7/flow-graph.spec.ts",
   ],
 };

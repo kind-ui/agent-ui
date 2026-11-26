@@ -925,3 +925,21 @@ export {
 // wave-7-task-18: Thread List inbox
 
 // wave-7-task-19: Flow Graph
+
+export {
+  FLOW_NODE_HEIGHT,
+  FLOW_NODE_WIDTH,
+  type FlowDirection,
+  type FlowEdgeEntry,
+  type FlowGraphApi,
+  type FlowGraphOptions,
+  type FlowGraphPrimitive,
+  type FlowGraphState,
+  type FlowGraphValueChangeReason,
+  type FlowLayout,
+  type FlowLayoutOptions,
+  type FlowNodeBox,
+  type FlowNodeEntry,
+  flowGraphPrimitive,
+  flowLayout,
+} from "./flow-graph/index.js";

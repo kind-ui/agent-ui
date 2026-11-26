@@ -1,0 +1,90 @@
+---
+title: Flow Graph
+description: Show the agents, tools and people a run handed work between, as a graph to pan and zoom.
+---
+
+import FlowGraphExample from "../../../examples/flow-graph/basic";
+
+Use a flow graph beside a run to show who handed work to whom: a router passing a request to a billing agent, which calls a tool and asks a person to approve. It's read-only. The layout comes from dagre, so you pass nodes and edges and never place anything yourself.
+
+<Example caption="Drag the empty canvas or scroll to pan; pinch, or hold Ctrl or ⌘ while scrolling, to zoom. Tab to a node, move between nodes with the arrow keys, and press Enter to select one. +, − and 0 zoom while a node has focus.">
+  <FlowGraphExample />
+
+  <ExampleCode example="flow-graph/basic" />
+</Example>
+
+## Installation
+
+<Install name="flow-graph" />
+
+## Composition
+
+```text
+FlowGraph
+├── FlowGraphPane
+│   └── FlowGraphWorld
+│       ├── FlowGraphEdges
+│       └── FlowGraphNodes
+│           └── FlowGraphNode
+│               ├── FlowGraphNodeStatus
+│               ├── FlowGraphNodeLabel
+│               ├── FlowGraphNodeDetail
+│               └── FlowGraphNodeDescription
+└── FlowGraphControls
+    ├── FlowGraphZoomIn
+    ├── FlowGraphZoomOut
+    └── FlowGraphFit
+```
+
+`FlowGraph` is the frame, a group named by `label`, that takes drags, the wheel and pinches. `FlowGraphPane` fills it and turns the browser's scrolls, like find in page reaching a node's text, into pans. `FlowGraphWorld` holds everything that moves, under one transform. `FlowGraphEdges` is one SVG with a path per edge, hidden from screen readers. `FlowGraphNodes` renders a `FlowGraphNode` for each node, keyed by its `id`: a button with its status mark, its `label`, and its kind and status in words. `FlowGraphNodeDescription` is hidden text that describes the node by its edges. `FlowGraphControls` holds Zoom in, Zoom out and Fit to view. To arrange the parts yourself, pass them as children of `FlowGraph`.
+
+## Usage
+
+### Nodes and Edges
+
+Pass `nodes`, each with an `id` and a `label`, and optionally a `kind` (`"agent"`, `"tool"`, `"person"` or `"other"`), a `status` and a `description`. Pass `edges`, each with an `id`, a `from` and a `to` node id, and optionally a `label` and a `status`. An edge to a node that isn't in `nodes` is left out.
+
+```tsx
+<FlowGraph
+  label="Refund flow"
+  nodes={[
+    { id: "router", label: "Router", kind: "agent", status: "complete" },
+    { id: "billing", label: "Billing", kind: "agent", status: "running" },
+  ]}
+  edges={[{ id: "handoff", from: "router", to: "billing", label: "refund request" }]}
+/>
+```
+
+Edges run left to right; pass `direction="down"` to run them top to bottom. Every node has the same size, set in core, so the server and the browser lay a graph out the same.
+
+### Streaming Statuses
+
+Update `status` on nodes and edges as the run goes. The layout is cached by the graph's shape, its node ids and edges, so a status change lays nothing out again and no node moves. A running node shows the running status mark, a running edge turns the accent color, and a failed one the danger color; nothing else animates.
+
+### Reading the Graph
+
+Each node is named "label, kind, status", like "Billing, Agent, Running", and described by its `description` and its edges in words: "Hands off to Issue refund. Receives from Router: refund request, running." So a screen reader reads the graph without the picture.
+
+### Selecting
+
+Pressing a node, or Enter or Space while it has focus, selects it. Pass `defaultValue` to start with a node selected, or `value` with `onValueChange` to control it; `onValueChange` gets `"node-press"` or `"imperative"`.
+
+### Panning and Zooming
+
+The graph fits the frame when it first shows, and again when its shape changes until someone pans or zooms. Fit, the zoom buttons and keys, and focus moving to a node out of view ease into place at full motion; under `prefers-reduced-motion`, or with `motion="reduced"` or `"none"`, they jump. A drag, the wheel and a pinch always follow the pointer. Set the frame's height with `--kind-flow-graph-height` (20rem by default).
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/flow-graph/flow-graph.ts" name="FlowGraphOptions" />
+
+<FrameworkNames name="flow-graph" />
+
+### Agent
+
+An agent connected with `createAgent` finds the graph by its `label`, reads `value`, and can name a node by its `id` or `label`. `select(id)` selects a node, `fit()` shows the whole graph, and `zoomIn()` and `zoomOut()` zoom by a step.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/flow-graph/flow-graph.ts" name="FlowGraphAgentActions" type='Pick<FlowGraphApi, "select" | "fit" | "zoomIn" | "zoomOut">' />
+
+<Caption>
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-flow-graph>`, set `nodes` and `edges` as properties; the other props are kebab-case attributes, and `onValueChange` is the `nodeselect` event. The element fills in its pane, controls and nodes, and keeps any `<kind-flow-graph-node value="…">` you write inside its `<kind-flow-graph-nodes>`.
+</Caption>

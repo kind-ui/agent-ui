@@ -147,6 +147,8 @@
 
 <!-- wave-7-task-19: Flow Graph -->
 
+- `packages/agent-ui/src/styles/flow-graph.css` (Flow Graph's controls): `zoom-in`, `zoom-out` and `maximize`, unchanged, as CSS mask images; all derive from Feather.
+
 ## Lobe Icons
 
 - Source: https://github.com/lobehub/lobe-icons, npm `@lobehub/icons-static-svg@1.103.0`, the `anthropic`, `openai`, `microsoft-color` and `xai` icons.
