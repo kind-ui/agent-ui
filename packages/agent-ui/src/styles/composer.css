@@ -573,14 +573,20 @@
     }
   }
 
-  :where([data-slot="file-input-dropzone"]:has(> [data-slot="kind-composer-stop"]:not([hidden])))
+  /* Web wraps Stop's button in an element of its own, so these reach it as a descendant. */
+  :where([data-slot="file-input-dropzone"]:has([data-slot="kind-composer-stop"]:not([hidden])))
     > [data-slot="kind-composer-send-menu"] {
     margin-inline-start: calc(var(--kind-composer-control-height) + 0.375rem);
   }
 
   :where([data-slot="file-input-dropzone"]:has(> [data-slot="kind-composer-send-menu"]:not([hidden])))
-    > [data-slot="kind-composer-stop"] {
+    [data-slot="kind-composer-stop"] {
     justify-self: start;
+  }
+
+  /* Web's Menu element sits between the pill and its buttons. */
+  :where([data-slot="kind-composer-send-menu"]) ui-menu {
+    display: contents;
   }
 
   /* Stop beside Send: a quiet fill, since Send is the one primary. */
