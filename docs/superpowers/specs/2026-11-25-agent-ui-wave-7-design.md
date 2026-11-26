@@ -4,7 +4,6 @@
 - **Extends:** `docs/superpowers/specs/2026-11-14-agent-ui-design.md` (the base spec). Every rule there binds Wave 7: §2 "Building on UI SDK", §4.1 ownership, §5 Step base, §6 motion and agent actions, §8 accessibility, §9 distribution, and the framework layers (0.7). This document adds Wave 7's components, the changes to shipped ones, and the neutral types they share. Task 1 folds §4 and the §6 confirm list below into the base spec.
 - **Plan:** `docs/superpowers/plans/2026-11-25-agent-ui-wave-7.md`.
 - **Builds on:** UI SDK `0.1.0-beta.17` (Waterfall, Timeline, Progress, Meter, Switch, Menu, `createGridFocus`, `createViewport`, `spatialMove`, `createPopup`, `createPendingAction`'s pattern), and three OSS packages: `diff` (jsdiff, BSD-3-Clause) for Diff, `@dagrejs/dagre` (MIT) for Flow Graph's layout, and nothing else new.
-- **Test bed:** kind-ui/fx-gui, a web GUI for the fx coding agent built on Agent UI. Its spec §11 lists five Agent UI gaps it works around with stop-gaps in `components/stopgaps/`. Each Wave 7 change names the stop-gap it replaces (§9).
 
 ## 1. What Wave 7 is
 
@@ -12,7 +11,7 @@ Waves 1 to 6 cover a conversation: the turn, its steps, its output and the shell
 
 It ships in two releases:
 
-- **7a (0.9.0), "the working turn":** the four fx-gui gaps that block a coding agent today (steering, the delivery mark, Terminal approval, retrying), then a minimal Diff, Step Group and Handoff. These live inside a conversation.
+- **7a (0.9.0), "the working turn":** the four gaps that stop an agent app from showing a running turn honestly (steering, the delivery mark, Terminal approval, retrying), then a minimal Diff, Step Group and Handoff. These live inside a conversation.
 - **7b (0.10.0), "agent ops":** Trace, Run Timeline, Job Progress, Schedule Card, Agent Card, Usage Meter, Quota Notice, Activity Graph, Flow Graph, Context Meter's breakdown and Thread List's inbox. These live beside or outside a conversation.
 
 The package is at 0.8.0. Wave 7 adds 12 components (56 to 68) and changes 8.
@@ -21,7 +20,9 @@ The package is at 0.8.0. Wave 7 adds 12 components (56 to 68) and changes 8.
 
 Each merge keeps one job per component; a pattern the kit already covers becomes an option on the component that owns it (`docs/design-principles.md`, "When not to add").
 
-### 2.1 The five fx-gui gaps (ship first, in 7a)
+### 2.1 Five gaps in a running turn (ship first, in 7a)
+
+An agent app that runs real work needs five things the kit lacks: a person adds guidance while a turn runs, sees which messages joined it, approves a command where it shows, sees what an edit changes, and sees a retry rather than a stall or a failure.
 
 | Gap | Becomes | Why |
 | --- | --- | --- |
@@ -31,7 +32,7 @@ Each merge keeps one job per component; a pattern the kit already covers becomes
 | 4. A diff view | **Diff** (new, minimal, 7a). Wave 8's code review builds on it. | Decided below. |
 | 5. A retrying state | **Message** and **Tool** `retry: { attempt, maxAttempts?, retryAt?, reason? }`; **Tool** `onRetry` | A retry is a state of the turn or call, orthogonal to its status: the text so far stays, and the status stays `streaming` or `running`. |
 
-**Gap 4, decided: a minimal Diff ships in 7a, and Wave 8's code diff extends it.** An edit tool waiting for approval is unreadable without its change: Terminal's approval (gap 3) answers "run this command?", and the same question for `write_file` needs a diff, which fx-gui fakes with Code Block `lang="diff"`. So 7a ships what that approval needs and nothing more:
+**Gap 4, decided: a minimal Diff ships in 7a, and Wave 8's code diff extends it.** An edit tool waiting for approval is unreadable without its change: Terminal's approval (gap 3) answers "run this command?", and the same question for `write_file` needs a diff. Today a host can only show Code Block with `lang="diff"`, with no line numbers, word marks or per-file actions. So 7a ships what that approval needs and nothing more:
 
 - **In 7a:** one file per Diff; a unified view; old and new line numbers; `+N −M` in the header; unchanged runs past 3 lines of context collapsed behind "Show N lines" (findable); word-level marks on paired changed lines; the host's `highlight` (Code Block's); a `patch` that streams; virtualized past 400 lines; Copy; per-file Accept and Revert as host actions.
 - **Left for Wave 8:** split view, a multi-file review with a file list, hunk-level accept and revert, comments, editing, and moved-line detection. Each is an option or a part on Diff or a component that composes it, so nothing in 7a is thrown away. A split view needs its own scroll sync and keyboard model; doing it in 7a would delay the approval it serves.
@@ -308,23 +309,7 @@ Base spec §8 holds. In addition:
 
 Base spec §10 holds, with the framework layers' parity and hydration checks for every new part. Per component: core unit tests only for pure helpers (`aggregateStatus`, `countdownText`, `traceSpans`, the diff row model, quantile levels, the dagre layout cache); one browser spec per component (in `tests/browser/wave-7/`) with an `expectAgentActions` snapshot, the keyboard path and axe in light and dark; budgets for Diff (streaming a hunk among 40 and 2,000 lines), Trace (selecting and expanding among 50 and 5,000 spans) and Activity Graph (moving between days). Fixtures use fixed ISO dates, `now` passed in and `timeZone: "UTC"`.
 
-## 9. fx-gui stop-gaps each change replaces
-
-| Change | fx-gui today | Replaced by |
-| --- | --- | --- |
-| Composer `running`, `onSteer` | `components/stopgaps/steer-keys.tsx`: catches Enter and ⌘Enter in `onKeyDownCapture` on a wrapper; no Send button while a turn runs | Send beside Stop, both modes by key and pointer |
-| Queue `onSend` | Queue items whose "send now" is a host button outside the row | Send now on the item |
-| Message `delivery`, `onWithdraw` | `components/stopgaps/delivery-mark.tsx`: the text "Steered" or "Queued" beside the Message | The header mark and Withdraw |
-| Terminal `approval` | A Confirmation stacked above the Terminal in the Tool row | One Terminal: command, approval, then output |
-| Confirmation `onAlwaysAllow` | "Always allow in this thread" as a host button beside Confirmation | The third choice |
-| Diff | `components/stopgaps/diff-view.tsx`: Code Block `lang="diff"` over `createTwoFilesPatch` | Diff with line numbers, word marks, collapsed context, Accept and Revert |
-| Message and Tool `retry` | `components/stopgaps/retrying.tsx`: a Notice under the streaming Message, "Retrying (attempt n)…" | The retry line and its countdown |
-| Step Group | Chain of Thought folding a finished turn's tool calls into "Read 4 files, edited 2, ran 1 command", losing each Tool's details | Step Group over the real Tool rows |
-| Context Meter `breakdown` | Context Meter without a breakdown | The breakdown in its details |
-| Quota Notice | A Notice "Retries exhausted" / limit text written by hand | Quota Notice where the provider reports limits |
-| Trace, Run Timeline, Job Progress, Schedule Card, Agent Card, Usage Meter, Activity Graph, Thread List inbox, Handoff, Flow Graph | Nothing: fx-gui leaves these out today (no subagents in `libfx/browser`, no background runs in the browser) | Adopted when fx-gui gains the Mac app's runs; tested in the kit's fixtures until then |
-
-## 10. Open questions
+## 9. Open questions
 
 Answered by the coordinator on 2026-11-25 and flagged for the user's review in Task 1's PR. A changed answer rewrites this spec and the plan's affected tasks before any component task starts.
 
