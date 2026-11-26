@@ -87,9 +87,16 @@ const models = [
   { id: "grok-4.7", name: "Grok 4.7", group: "xAI", icon: <XAILogo /> },
 ];
 
+// Each tool's title while it runs and once it's done.
+const titles: Record<string, [string, string]> = {
+  run_tests: ["Running the retry tests", "Ran the retry tests"],
+  deploy: ["Deploying `fix-retry`", "Deployed `fix-retry`"],
+};
+
 const call = (id: string, name: string, input: unknown, output: unknown, done: boolean): ToolCall => ({
   toolCallId: id,
   name,
+  title: titles[name]?.[done ? 1 : 0],
   dynamic: false,
   input: { state: "ready", value: input },
   ...(done && { output: { state: "available", value: output } }),

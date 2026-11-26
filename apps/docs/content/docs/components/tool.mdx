@@ -5,9 +5,9 @@ description: Show a tool call from its streamed input to its output or error.
 
 import ToolExample from "../../../examples/tool/basic";
 
-Use a tool for each tool call the model makes. Its header shows the tool's name and status, and its content holds the input, then the output or the error.
+Use a tool for each tool call the model makes. Its header says what the call does, like "Read `sign-in.ts`", and its status, and its content holds the input, then the output or the error.
 
-<Example caption="Press search_docs, or focus it and press Enter or Space, to see what the search returned. Approve or deny delete_branch to see its outcome.">
+<Example caption="Press the search, or focus it and press Enter or Space, to see what it returned. Approve or deny deleting the branch to see its outcome.">
   <ToolExample />
 
   <ExampleCode example="tool/basic" />
@@ -34,7 +34,7 @@ Tool
 └── ToolApproval
 ```
 
-`Tool` renders these parts when you pass no children; any children you pass replace them. The trigger is a native button that shows or hides the content. `ToolTitle` shows the tool's name and `ToolMeta` how long the call took, like "2 s", once you pass `durationSeconds`; `ToolInput` and `ToolOutput` the values as a [Code Block](./code-block.mdx) or [Markdown](./markdown.mdx), and `ToolError` the error. `ToolApproval` renders a [Confirmation](./confirmation.mdx) while the call has an approval, after the content, so it shows while the tool is closed. Each takes its own children instead.
+`Tool` renders these parts when you pass no children; any children you pass replace them. The trigger is a native button that shows or hides the content. `ToolTitle` shows the title and `ToolMeta` how long the call took, like "2 s", once you pass `durationSeconds`; `ToolInput` and `ToolOutput` the values as a [Code Block](./code-block.mdx) or [Markdown](./markdown.mdx), and `ToolError` the error. `ToolApproval` renders a [Confirmation](./confirmation.mdx) while the call has an approval, after the content, so it shows while the tool is closed. Each takes its own children instead.
 
 ## Usage
 
@@ -45,6 +45,19 @@ Pass the call as `call` and update it as the host does. With the [AI SDK](../ada
 ```tsx
 <Tool key={step.id} call={step.call} error={step.error} />
 ```
+
+### Titles
+
+The title says what the call does, in words. Pass `heading`, a string or a function of the call's `status`, `input` and `name`, so it follows the call: "Reading `sign-in.ts`", then "Read `sign-in.ts`". Text in backticks shows as code. Without it, the tool shows the call's `title`, which the [AI SDK adapter](../adapters/ai-sdk.mdx)'s `toolTitles` sets once per tool name, else the name in words, so `search_code` reads "Search code". The copy buttons, code blocks and the approval keep the tool's name, which identifies it.
+
+```tsx
+<Tool
+  call={call}
+  heading={({ status, input }) => `${status === "complete" ? "Read" : "Reading"} \`${input.path}\``}
+/>
+```
+
+### Status
 
 The status comes from the call. An error outcome is `error`, a denied or cancelled one is `cancelled`, an approval that's waiting is `awaiting-input`, final output is `complete`, and anything else is `running`. Pass `status` to set it yourself.
 
@@ -74,7 +87,7 @@ When the status is `error`, the content shows `error.message`, or "The tool fail
 
 ### Opening and Closing
 
-A tool opens while it runs or waits for approval, closes into its header when it completes, and stays open when it fails. Once someone opens or closes it, it stays as they left it. Screen readers hear the tool's name and its outcome, like "search_docs complete", when it needs input, completes, fails or is cancelled, and "search_docs denied" when its approval is denied. The confirmation announces the decision itself, like "Approved", and "Decision not sent" when it fails.
+A tool opens while it runs or waits for approval, closes into its header when it completes, and stays open when it fails. Once someone opens or closes it, it stays as they left it. Screen readers hear the title and its outcome, like "Search docs complete", when it needs input, completes, fails or is cancelled, and "Search docs denied" when its approval is denied. The confirmation announces the decision itself, like "Approved", and "Decision not sent" when it fails.
 
 ### Motion
 

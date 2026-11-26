@@ -18,13 +18,24 @@ addToolApprovalResponse(toApprovalResponse(approval, { approved: true }));
 
 `fromUIMessages` gives the last message the chat's status and error, and marks earlier ones complete. Each tool call becomes a step with a status. A part type the components don't have becomes a `data` part named after its type, so nothing is dropped.
 
+Pass `toolTitles` to give each tool a title in words, once per tool name: a string, or a function of the call's `status` and `input`. It becomes each call's `title`, so a [Tool](../components/tool.mdx) shows "Read `sign-in.ts`" rather than `read_file`.
+
+```ts
+const rendered = fromUIMessages(messages, { status, error }, {
+  toolTitles: {
+    read_file: ({ status, input }) => `${status === "complete" ? "Read" : "Reading"} \`${input.path}\``,
+    search_docs: "Searched the docs",
+  },
+});
+```
+
 For whole chats built on the adapter, see the guides: [AI Chat with the AI SDK in React](../guides/ai-sdk-chat.mdx), [Tool Calls and Approvals](../guides/tool-approvals.mdx) and [Reasoning and Agent Steps](../guides/reasoning-and-steps.mdx).
 
 ## API Reference
 
 | Export | Maps |
 | --- | --- |
-| `fromUIMessages(messages, { status, error }?)` | `UIMessage[]` to `Message[]` |
-| `fromUIMessagePart(part, { messageId, index })` | One part; `null` only for `step-start` |
+| `fromUIMessages(messages, { status, error }?, { toolTitles }?)` | `UIMessage[]` to `Message[]` |
+| `fromUIMessagePart(part, { messageId, index, toolTitles })` | One part; `null` only for `step-start` |
 | `fromChatStatus(status)` | `submitted`, `streaming`, `ready` and `error` to a message status |
 | `toApprovalResponse(approval, decision)` | The argument for `addToolApprovalResponse` |

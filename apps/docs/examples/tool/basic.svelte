@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fromUIMessagePart } from "@kind-ui/agent-ui/adapters/ai-sdk";
+  import { fromUIMessagePart, type ToolTitles } from "@kind-ui/agent-ui/adapters/ai-sdk";
   import { Tool } from "@/components/ui/svelte/tool/index.js";
 
   const parts = [
@@ -32,6 +32,14 @@
     },
   ] as const;
 
+  // Titles in words, set once per tool name: a function follows the call's status.
+  const toolTitles: ToolTitles = {
+    search_docs: ({ input }) => `Searched the docs for “${(input as { query: string }).query}”`,
+    run_tests: ({ status }) => (status === "complete" ? "Ran the client tests" : "Running the client tests"),
+    delete_branch: ({ input }) => `Delete the \`${(input as { branch: string }).branch}\` branch`,
+    fetch_url: "Check the status page",
+  };
+
   // How long each finished call took, which the host knows from its own timing.
   const durations: Record<string, number> = { call_1: 1.2, call_4: 30 };
 
@@ -43,7 +51,7 @@
         part.state === "approval-requested" && approved !== undefined
           ? { ...part, state: "approval-responded" as const, approval: { id: part.approval.id, approved } }
           : part;
-      const mapped = fromUIMessagePart(answered, { messageId: "message_1", index });
+      const mapped = fromUIMessagePart(answered, { messageId: "message_1", index, toolTitles });
       return mapped?.type === "step" && mapped.step.kind === "tool"
         ? [{ step: mapped.step, duration: durations[part.toolCallId] }]
         : [];
