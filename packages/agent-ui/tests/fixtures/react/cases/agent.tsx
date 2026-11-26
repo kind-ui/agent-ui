@@ -14,6 +14,7 @@ import {
   ComposerAttachments,
   ComposerInput,
   ComposerRestored,
+  ComposerSteerMenu,
   ComposerStop,
   ComposerSubmit,
   ComposerTriggerMenu,
@@ -35,11 +36,13 @@ import {
 } from "../../../../src/react/conversation.js";
 import { ConversationSearch } from "../../../../src/react/conversation-search.js";
 import { DaySeparator } from "../../../../src/react/day-separator.js";
+import { Diff } from "../../../../src/react/diff.js";
 import { Dictation } from "../../../../src/react/dictation.js";
 import { Document } from "../../../../src/react/document.js";
 import { Feedback } from "../../../../src/react/feedback.js";
 import { FileTree } from "../../../../src/react/file-tree.js";
 import { GeneratedImage } from "../../../../src/react/generated-image.js";
+import { Handoff } from "../../../../src/react/handoff.js";
 import { GuardrailNotice } from "../../../../src/react/guardrail-notice.js";
 import { InlineCitation } from "../../../../src/react/inline-citation.js";
 import { KindToolbar, KindToolbarButton } from "../../../../src/react/internal/toolbar.js";
@@ -55,11 +58,13 @@ import {
   MessageBranchPrevious,
   MessageContent,
   MessageCopy,
+  MessageDelivery,
   MessageEdit,
   MessageEditor,
   MessageHeader,
   MessageOutcome,
   MessageRegenerate,
+  MessageRetrying,
   MessageToolbar,
 } from "../../../../src/react/message.js";
 import { ModelControl } from "../../../../src/react/model-control.js";
@@ -93,8 +98,17 @@ import {
   StepTitle,
   StepTrigger,
 } from "../../../../src/react/step.js";
+import { StepGroup } from "../../../../src/react/step-group.js";
 import { StreamingText } from "../../../../src/react/streaming-text.js";
-import { Subagent } from "../../../../src/react/subagent.js";
+import {
+  Subagent,
+  SubagentContent,
+  SubagentIcon,
+  SubagentMeta,
+  SubagentRoot,
+  SubagentTitle,
+  SubagentTrigger,
+} from "../../../../src/react/subagent.js";
 import { Suggestion } from "../../../../src/react/suggestion.js";
 import { Task } from "../../../../src/react/task.js";
 import { Terminal } from "../../../../src/react/terminal.js";
@@ -129,14 +143,24 @@ import {
 } from "../../shared/agent.js";
 import { learnMoreHref, modes } from "../../shared/approval-mode.js";
 import { commands, mentions } from "../../shared/composer.js";
+import { steerQueue } from "../../shared/composer-steer.js";
 import { contextChips } from "../../shared/context-bar.js";
 import { context } from "../../shared/context-meter.js";
 import { dictationHost } from "../../shared/dictation.js";
+import { after, before } from "../../shared/diff.js";
 import { downloads, readme } from "../../shared/document.js";
 import { entries } from "../../shared/file-tree.js";
 import { lighthouse, size } from "../../shared/generated-image.js";
+import { handoffs } from "../../shared/handoff.js";
 import { answer } from "../../shared/markdown.js";
-import { author, outcomeError, outcomeText, regenerateOptions } from "../../shared/message.js";
+import {
+  author,
+  delivered,
+  outcomeError,
+  outcomeText,
+  regenerateOptions,
+  retrying,
+} from "../../shared/message.js";
 import {
   levels as controlLevels,
   models as controlModels,
@@ -149,11 +173,13 @@ import { deployQuestions } from "../../shared/question.js";
 import { initialValues, settings } from "../../shared/settings-menu.js";
 import { shareLink } from "../../shared/share-dialog.js";
 import { sources } from "../../shared/sources.js";
+import { agentLabels, agents } from "../../shared/step-group.js";
 import { typeErrorStack } from "../../shared/stack-trace.js";
 import { suggestions } from "../../shared/suggestion.js";
 import { installRun } from "../../shared/terminal.js";
 import { suites } from "../../shared/test-results.js";
 import { NOW, threads } from "../../shared/thread-list.js";
+import { retryRows } from "../../shared/tool-retry.js";
 import { standup } from "../../shared/transcript.js";
 import { uploads } from "../../shared/uploader.js";
 
@@ -881,13 +907,127 @@ function Shell({ confirm }: { confirm: boolean }) {
   );
 }
 
-function Confirmable({ wave }: { wave: 2 | 3 | 4 | 5 | 6 }) {
+const billing = handoffs.billing as (typeof handoffs)[string];
+const requested = (approvalId: string) => ({ approvalId, generation: 1, state: "requested" as const });
+
+function Ops({ confirm }: { confirm: boolean }) {
+  const [queue, setQueue] = useState<readonly QueueItem[]>(steerQueue);
+  return (
+    <div className="flex w-[40rem] flex-col gap-8 p-6">
+      <section id="steer" data-case="composer-steer">
+        <Composer
+          aria-label="Steer"
+          running
+          onSubmit={host.submit}
+          onStop={host.stop}
+          onSteer={host.decide("composer-steer")}
+        >
+          <ComposerInput aria-label="Steer prompt" />
+          <ComposerAttach />
+          <ComposerSubmit />
+          <ComposerSteerMenu />
+          <ComposerStop />
+        </Composer>
+      </section>
+      <section id="next" data-case="queue">
+        <Queue
+          label="Next up"
+          items={queue}
+          onSend={(id, details) =>
+            host
+              .decide("queue-send")(details)
+              .then(() => setQueue((items) => items.filter((item) => item.id !== id)))
+          }
+        />
+      </section>
+      <section id="queued" data-case="message">
+        <Message
+          aria-label="Queued message"
+          messageRole="user"
+          text={delivered.queued}
+          delivery="queued"
+          onWithdraw={host.decide("message-withdraw")}
+        >
+          <MessageHeader>
+            <MessageDelivery />
+          </MessageHeader>
+          <MessageContent>{delivered.queued}</MessageContent>
+        </Message>
+      </section>
+      <section id="retrying" data-case="message">
+        <Message aria-label="Retrying answer" status="streaming" text={delivered.answer} retry={retrying}>
+          <MessageContent>{delivered.answer}</MessageContent>
+          <MessageRetrying />
+          <MessageOutcome />
+        </Message>
+      </section>
+      <section id="run" data-case="terminal">
+        <Terminal
+          command="npm test"
+          output=""
+          approval={requested("run")}
+          approvalReason
+          onApprove={host.decide("terminal-approve")}
+          onDeny={host.decide("terminal-deny")}
+          onAlwaysAllow={host.decide("terminal-always")}
+        />
+      </section>
+      <section id="tool-retry" data-case="tool">
+        <Tool {...retryRows.failed} onRetry={host.decide("tool-retry")} />
+      </section>
+      <section id="diff" data-case="diff">
+        <Diff
+          file={{ path: "src/values.ts", language: "ts" }}
+          before={before}
+          after={after}
+          agentConfirm={confirm}
+          onAccept={host.decide("diff-accept")}
+          onRevert={host.decide("diff-revert")}
+        />
+      </section>
+      <section id="group" data-case="step-group">
+        <StepGroup items={agents} groupLabels={agentLabels} onCancel={host.decide("group-cancel")}>
+          <StepList aria-label="Agents">
+            {agents.map((row) => (
+              <SubagentRoot key={row.id} agentName={row.name} status={row.status} agentConfirm={false}>
+                <StepListItem value={row.id} render={<SubagentTrigger />}>
+                  <SubagentIcon />
+                  <SubagentTitle />
+                  <SubagentMeta />
+                </StepListItem>
+                <SubagentContent>
+                  <p>{row.task}</p>
+                </SubagentContent>
+              </SubagentRoot>
+            ))}
+          </StepList>
+        </StepGroup>
+      </section>
+      <section id="handoff" data-case="handoff">
+        <Handoff
+          from={billing.from}
+          to={billing.to}
+          reason={billing.reason}
+          status="pending"
+          approval={requested("billing")}
+          onApprove={host.decide("handoff-approve")}
+          onDeny={host.decide("handoff-deny")}
+          onAlwaysAllow={host.decide("handoff-always")}
+        />
+      </section>
+    </div>
+  );
+}
+
+function Confirmable({ wave }: { wave: Wave }) {
   const [confirm, setConfirm] = useState(true);
   useEffect(() => {
     host.confirm = setConfirm;
   }, []);
-  // The bridge lists 100 components at most, which the Wave 5 page nearly fills, so Wave 6 sits beside Wave 1 alone.
+  // The bridge lists 100 components at most, which the Wave 5 page nearly fills, so Wave 6 and Wave 7a each sit
+  // beside Wave 1 alone.
   if (wave === 6) return <Shell confirm={confirm} />;
+  if (wave === "7a") return <Ops confirm={confirm} />;
   return (
     <>
       <Activity confirm={confirm} />
@@ -898,7 +1038,9 @@ function Confirmable({ wave }: { wave: 2 | 3 | 4 | 5 | 6 }) {
   );
 }
 
-function Page({ wave }: { wave: 2 | 3 | 4 | 5 | 6 }) {
+type Wave = 2 | 3 | 4 | 5 | 6 | "7a";
+
+function Page({ wave }: { wave: Wave }) {
   return (
     <>
       <Foundation />
@@ -914,4 +1056,5 @@ export const cases = {
   "wave-4": () => <Page wave={4} />,
   "wave-5": () => <Page wave={5} />,
   "wave-6": () => <Page wave={6} />,
+  "wave-7a": () => <Page wave="7a" />,
 };

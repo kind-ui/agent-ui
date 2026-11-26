@@ -1,5 +1,6 @@
 import {
   type StepApi,
+  type StepGroupCancelDetails,
   type StepGroupOptions,
   type StepGroupState,
   type StepOpenChangeReason,
@@ -92,7 +93,7 @@ export function defineStepGroup(): void {
 
 export type KindStepGroupEvents = {
   openchange: UiChangeEvent<boolean, StepOpenChangeReason>;
-  stepgroupcancel: CustomEvent<Pick<UiActionDetail, "waitUntil">>;
+  stepgroupcancel: CustomEvent<StepGroupCancelDetails & Pick<UiActionDetail, "waitUntil">>;
 };
 
 export interface KindStepGroupElement

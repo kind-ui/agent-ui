@@ -811,6 +811,7 @@ export {
 
 export {
   type StepGroupApi,
+  type StepGroupCancelDetails,
   type StepGroupItem,
   type StepGroupOptions,
   type StepGroupPrimitive,

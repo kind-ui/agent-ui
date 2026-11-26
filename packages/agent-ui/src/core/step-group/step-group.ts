@@ -1,6 +1,13 @@
-import { createFocusRecovery, definePrimitive, type SlotDefinition, toLocale } from "@ui-sdk/core";
+import {
+  type ActionDetails,
+  createFocusRecovery,
+  definePrimitive,
+  type SlotDefinition,
+  toLocale,
+} from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { StepStatus } from "../../types/index.js";
+import { actionSource } from "../action-source.js";
 import { aggregateStatus } from "../aggregate.js";
 import { stepDuration } from "../chain-of-thought/open-steps.js";
 import { createPendingAction } from "../pending.js";
@@ -13,6 +20,9 @@ export type StepGroupItem = {
   /** Which entry of `groupLabels` counts the step, like `"read"` or `"agent"`. */
   group?: string;
 };
+
+/** How Stop all was called, and who called it, like `"mouse"`, `"keyboard"` or `"agent"`. */
+export type StepGroupCancelDetails = ActionDetails & { reason: "cancel-press" | "imperative" };
 
 export type StepGroupOptions = StepOptions & {
   /**
@@ -33,7 +43,7 @@ export type StepGroupOptions = StepOptions & {
    * Called to stop every step. Shows "Stop all" while set and the group hasn't finished. Return a promise to keep
    * it pending until it settles: a rejection makes it available again.
    */
-  onCancel?: () => unknown;
+  onCancel?: (details: StepGroupCancelDetails) => unknown;
 };
 
 export type StepGroupState = StepState & {
@@ -49,7 +59,7 @@ export type StepGroupState = StepState & {
 
 export type StepGroupApi = StepApi & {
   /** Calls `onCancel`. Offered only while it's set, the group hasn't finished, and no cancel is pending. */
-  readonly cancel: (() => void) | undefined;
+  readonly cancel: ((event?: Event) => void) | undefined;
   /** Moves focus to the trigger when Stop all leaves while focused. Called by the cancel slot. */
   cancelRecovery: ReturnType<typeof createFocusRecovery>;
 };
@@ -149,9 +159,11 @@ export const stepGroupPrimitive: StepGroupPrimitive = definePrimitive<
   api: (context) => {
     const { store } = context;
     const pendingCancel = createPendingAction(context, { state: "pending" });
-    const cancel = () => {
+    const cancel = (event?: Event) => {
       const { onCancel } = context.options();
-      if (onCancel) pendingCancel.run(onCancel);
+      const reason: StepGroupCancelDetails["reason"] = event ? "cancel-press" : "imperative";
+      const details = { reason, source: actionSource(event, reason) };
+      if (onCancel) pendingCancel.run(() => onCancel(details));
     };
     return {
       ...base.api(context),
@@ -182,7 +194,7 @@ export const stepGroupPrimitive: StepGroupPrimitive = definePrimitive<
         role: "button",
         focus: "native",
         present: cancellable,
-        press: ({ api }) => api.cancel?.(),
+        press: ({ api }, event) => api.cancel?.(event),
         state: (state) => ({ pending: state.pending }),
         attrs: (state) => ({
           type: "button",

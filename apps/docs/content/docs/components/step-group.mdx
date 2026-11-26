@@ -75,7 +75,7 @@ Subagents running side by side are the same shape: give each item the group `age
 
 ### Stopping
 
-Pass `onCancel` to show **Stop all** until the group finishes. Return a promise to keep the button pending until it settles: a second press does nothing meanwhile, and a rejection makes it available again. Once your steps stop, update their statuses, and the button goes away. If it had focus, focus moves to the trigger.
+Pass `onCancel` to show **Stop all** until the group finishes. It gets `details.source`, like `"keyboard"` or `"agent"`. Return a promise to keep the button pending until it settles: a second press does nothing meanwhile, and a rejection makes it available again. Once your steps stop, update their statuses, and the button goes away. If it had focus, focus moves to the trigger.
 
 ### Streaming
 
