@@ -18,6 +18,7 @@ npm install @kind-ui/agent-ui @ui-sdk/core
 | --- | --- |
 | `@kind-ui/agent-ui` | Neutral types and type guards |
 | `@kind-ui/agent-ui/core` | Public primitive definitions, the markdown engine, the motion helper |
+| `@kind-ui/agent-ui/core/flow-graph` | Flow Graph's primitive and its dagre layout, apart so `./core` doesn't carry dagre |
 | `@kind-ui/agent-ui/adapters/ai-sdk` | AI SDK `UIMessage` mapping (`ai` is an optional peer) |
 | `@kind-ui/agent-ui/styles.css` | Tailwind v4 source registration and theme tokens |
 

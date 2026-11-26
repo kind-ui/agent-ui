@@ -1,6 +1,6 @@
 {
   ".": 265,
-  "./core": 274600,
+  "./core": 267000,
   "./core/flow-graph": 33500,
   "./adapters/ai-sdk": 1345,
   "imports": {
