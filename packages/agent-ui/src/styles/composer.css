@@ -561,7 +561,13 @@
     gap: 0.125rem;
   }
 
-  :where([data-slot="file-input-dropzone"]:has(> [data-slot="kind-composer-stop"]:not([hidden])))
+  /* Web's Stop sits in a `kind-composer-stop` wrapper. */
+  :where(
+      [data-slot="file-input-dropzone"]:has(
+        > [data-slot="kind-composer-stop"]:not([hidden]),
+        > * > [data-slot="kind-composer-stop"]:not([hidden])
+      )
+    )
     > [data-slot="kind-composer-steer-menu"] {
     margin-inline-end: calc(var(--kind-composer-control-height) + 0.375rem);
   }

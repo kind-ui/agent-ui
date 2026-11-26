@@ -2,7 +2,7 @@
 import type { AgentAction } from "@ui-sdk/vue/agent";
 import { host } from "./agent/host.js";
 
-export const variants = ["all", "wave-2", "wave-3", "wave-4", "wave-5", "wave-6"] as const;
+export const variants = ["all", "wave-2", "wave-3", "wave-4", "wave-5", "wave-6", "wave-7a"] as const;
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 </script>
@@ -14,11 +14,14 @@ import Artifacts from "./agent/Artifacts.vue";
 import Composing from "./agent/Composing.vue";
 import Foundation from "./agent/Foundation.vue";
 import HumanInput from "./agent/HumanInput.vue";
+import Ops from "./agent/Ops.vue";
 import Shell from "./agent/Shell.vue";
 
 const props = defineProps<{ variant: string; params: URLSearchParams }>();
 
-const wave = computed(() => (props.variant === "all" ? 1 : Number(props.variant.slice("wave-".length))));
+const wave = computed(() =>
+  props.variant === "all" ? 1 : props.variant === "wave-7a" ? 7 : Number(props.variant.slice("wave-".length)),
+);
 const confirm = ref(true);
 onMounted(() => {
   host.confirm = (on) => {
@@ -30,6 +33,7 @@ onMounted(() => {
 <template>
   <Foundation />
   <Shell v-if="wave === 6" :confirm="confirm" />
+  <Ops v-else-if="wave === 7" :confirm="confirm" />
   <template v-else-if="wave >= 2">
     <Activity :confirm="confirm" />
     <HumanInput v-if="wave >= 3" :confirm="confirm" :wave="wave === 5 ? 5 : 3" />

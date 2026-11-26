@@ -2,7 +2,7 @@ import type { Answers, QueueItem, SettingsValues } from "@kind-ui/agent-ui";
 import { type AttachmentItem, createConversationController, type UploadItem } from "@kind-ui/agent-ui/core";
 import type { JSX } from "@solidjs/web";
 import type { AgentAction } from "@ui-sdk/solid/agent";
-import { createSignal, For, onSettled, Show } from "solid-js";
+import { createSignal, For, Match, onSettled, Show, Switch } from "solid-js";
 import { Action } from "../../../../src/solid/action.js";
 import { AddMenu } from "../../../../src/solid/add-menu.js";
 import { ApprovalMode } from "../../../../src/solid/approval-mode.js";
@@ -15,6 +15,7 @@ import {
   ComposerAttachments,
   ComposerInput,
   ComposerRestored,
+  ComposerSteerMenu,
   ComposerStop,
   ComposerSubmit,
   ComposerTriggerMenu,
@@ -37,11 +38,13 @@ import {
 import { ConversationSearch } from "../../../../src/solid/conversation-search.js";
 import { DaySeparator } from "../../../../src/solid/day-separator.js";
 import { Dictation } from "../../../../src/solid/dictation.js";
+import { Diff } from "../../../../src/solid/diff.js";
 import { Document } from "../../../../src/solid/document.js";
 import { Feedback } from "../../../../src/solid/feedback.js";
 import { FileTree } from "../../../../src/solid/file-tree.js";
 import { GeneratedImage } from "../../../../src/solid/generated-image.js";
 import { GuardrailNotice } from "../../../../src/solid/guardrail-notice.js";
+import { Handoff } from "../../../../src/solid/handoff.js";
 import { InlineCitation } from "../../../../src/solid/inline-citation.js";
 import { KindToolbar, KindToolbarButton } from "../../../../src/solid/internal/toolbar.js";
 import { Loader } from "../../../../src/solid/loader.js";
@@ -56,11 +59,13 @@ import {
   MessageBranchPrevious,
   MessageContent,
   MessageCopy,
+  MessageDelivery,
   MessageEdit,
   MessageEditor,
   MessageHeader,
   MessageOutcome,
   MessageRegenerate,
+  MessageRetrying,
   MessageToolbar,
 } from "../../../../src/solid/message.js";
 import { ModelControl } from "../../../../src/solid/model-control.js";
@@ -94,8 +99,17 @@ import {
   StepTitle,
   StepTrigger,
 } from "../../../../src/solid/step.js";
+import { StepGroup } from "../../../../src/solid/step-group.js";
 import { StreamingText } from "../../../../src/solid/streaming-text.js";
-import { Subagent } from "../../../../src/solid/subagent.js";
+import {
+  Subagent,
+  SubagentContent,
+  SubagentIcon,
+  SubagentMeta,
+  SubagentRoot,
+  SubagentTitle,
+  SubagentTrigger,
+} from "../../../../src/solid/subagent.js";
 import { Suggestion } from "../../../../src/solid/suggestion.js";
 import { Task } from "../../../../src/solid/task.js";
 import { Terminal } from "../../../../src/solid/terminal.js";
@@ -130,15 +144,25 @@ import {
 } from "../../shared/agent.js";
 import { learnMoreHref, modes } from "../../shared/approval-mode.js";
 import { commands, mentions } from "../../shared/composer.js";
+import { steerQueue } from "../../shared/composer-steer.js";
 import { contextChips } from "../../shared/context-bar.js";
 import { context } from "../../shared/context-meter.js";
 import { dictationHost } from "../../shared/dictation.js";
+import { after, before } from "../../shared/diff.js";
 import { downloads, readme } from "../../shared/document.js";
 import { expose } from "../../shared/expose.js";
 import { entries } from "../../shared/file-tree.js";
 import { lighthouse, size } from "../../shared/generated-image.js";
+import { handoffs } from "../../shared/handoff.js";
 import { answer } from "../../shared/markdown.js";
-import { author, outcomeError, outcomeText, regenerateOptions } from "../../shared/message.js";
+import {
+  author,
+  delivered,
+  outcomeError,
+  outcomeText,
+  regenerateOptions,
+  retrying,
+} from "../../shared/message.js";
 import {
   levels as controlLevels,
   models as controlModels,
@@ -152,10 +176,12 @@ import { initialValues, settings } from "../../shared/settings-menu.js";
 import { shareLink } from "../../shared/share-dialog.js";
 import { sources } from "../../shared/sources.js";
 import { typeErrorStack } from "../../shared/stack-trace.js";
+import { agentLabels, agents } from "../../shared/step-group.js";
 import { suggestions } from "../../shared/suggestion.js";
 import { installRun } from "../../shared/terminal.js";
 import { suites } from "../../shared/test-results.js";
 import { NOW, threads } from "../../shared/thread-list.js";
+import { retryRows } from "../../shared/tool-retry.js";
 import { standup } from "../../shared/transcript.js";
 import { uploads } from "../../shared/uploader.js";
 
@@ -888,26 +914,159 @@ function Shell(props: { confirm: boolean }) {
   );
 }
 
-function Confirmable(props: { wave: 2 | 3 | 4 | 5 | 6 }) {
-  const [confirm, setConfirm] = createSignal(true);
-  host.confirm = (on) => setConfirm(on);
+const billing = handoffs.billing as (typeof handoffs)[string];
+const requested = (approvalId: string) => ({ approvalId, generation: 1, state: "requested" as const });
+
+function Ops(props: { confirm: boolean }) {
+  const [queue, setQueue] = createSignal<readonly QueueItem[]>(steerQueue);
+  const failed = retryRows.failed;
   return (
-    <Show when={props.wave !== 6} fallback={<Shell confirm={confirm()} />}>
-      <Activity confirm={confirm()} />
-      <Show when={props.wave >= 3}>
-        <HumanInput confirm={confirm()} wave={props.wave === 5 ? 5 : 3} />
-      </Show>
-      <Show when={props.wave >= 4}>
-        <Artifacts />
-      </Show>
-      <Show when={props.wave === 5}>
-        <Composing confirm={confirm()} />
-      </Show>
-    </Show>
+    <div class="flex w-[40rem] flex-col gap-8 p-6">
+      <section id="steer" data-case="composer-steer">
+        <Composer
+          aria-label="Steer"
+          running
+          onSubmit={host.submit}
+          onStop={host.stop}
+          onSteer={host.decide("composer-steer")}
+        >
+          <ComposerInput aria-label="Steer prompt" />
+          <ComposerAttach />
+          <ComposerSubmit />
+          <ComposerSteerMenu />
+          <ComposerStop />
+        </Composer>
+      </section>
+      <section id="next" data-case="queue">
+        <Queue
+          label="Next up"
+          items={queue()}
+          onSend={(id, details) =>
+            host
+              .decide("queue-send")(details)
+              .then(() => setQueue((items) => items.filter((item) => item.id !== id)))
+          }
+        />
+      </section>
+      <section id="queued" data-case="message">
+        <Message
+          aria-label="Queued message"
+          messageRole="user"
+          text={delivered.queued}
+          delivery="queued"
+          onWithdraw={host.decide("message-withdraw")}
+        >
+          <MessageHeader>
+            <MessageDelivery />
+          </MessageHeader>
+          <MessageContent>{delivered.queued}</MessageContent>
+        </Message>
+      </section>
+      <section id="retrying" data-case="message">
+        <Message aria-label="Retrying answer" status="streaming" text={delivered.answer} retry={retrying}>
+          <MessageContent>{delivered.answer}</MessageContent>
+          <MessageRetrying />
+          <MessageOutcome />
+        </Message>
+      </section>
+      <section id="run" data-case="terminal">
+        <Terminal
+          command="npm test"
+          output=""
+          approval={requested("run")}
+          approvalReason
+          onApprove={host.decide("terminal-approve")}
+          onDeny={host.decide("terminal-deny")}
+          onAlwaysAllow={host.decide("terminal-always")}
+        />
+      </section>
+      <section id="tool-retry" data-case="tool">
+        <Tool
+          call={failed.call}
+          error={failed.error}
+          defaultOpen={failed.defaultOpen}
+          onRetry={host.decide("tool-retry")}
+        />
+      </section>
+      <section id="diff" data-case="diff">
+        <Diff
+          file={{ path: "src/values.ts", language: "ts" }}
+          before={before}
+          after={after}
+          agentConfirm={props.confirm}
+          onAccept={host.decide("diff-accept")}
+          onRevert={host.decide("diff-revert")}
+        />
+      </section>
+      <section id="group" data-case="step-group">
+        <StepGroup items={agents} groupLabels={agentLabels} onCancel={host.decide("group-cancel")}>
+          <StepList aria-label="Agents">
+            <For each={agents}>
+              {(row) => (
+                <SubagentRoot agentName={row.name} status={row.status} agentConfirm={false}>
+                  <StepListItem value={row.id} render={SubagentTrigger}>
+                    <SubagentIcon />
+                    <SubagentTitle />
+                    <SubagentMeta />
+                  </StepListItem>
+                  <SubagentContent>
+                    <p>{row.task}</p>
+                  </SubagentContent>
+                </SubagentRoot>
+              )}
+            </For>
+          </StepList>
+        </StepGroup>
+      </section>
+      <section id="handoff" data-case="handoff">
+        <Handoff
+          from={billing.from}
+          to={billing.to}
+          reason={billing.reason}
+          status="pending"
+          approval={requested("billing")}
+          onApprove={host.decide("handoff-approve")}
+          onDeny={host.decide("handoff-deny")}
+          onAlwaysAllow={host.decide("handoff-always")}
+        />
+      </section>
+    </div>
   );
 }
 
-function Page(props: { wave: 2 | 3 | 4 | 5 | 6 }) {
+type Wave = 2 | 3 | 4 | 5 | 6 | "7a";
+
+function Confirmable(props: { wave: Wave }) {
+  const [confirm, setConfirm] = createSignal(true);
+  host.confirm = (on) => setConfirm(on);
+  // The bridge lists 100 components at most, which the Wave 5 page nearly fills, so Wave 6 and Wave 7a each sit
+  // beside Wave 1 alone.
+  const wave = () => (typeof props.wave === "number" ? props.wave : 0);
+  return (
+    <Switch>
+      <Match when={props.wave === 6}>
+        <Shell confirm={confirm()} />
+      </Match>
+      <Match when={props.wave === "7a"}>
+        <Ops confirm={confirm()} />
+      </Match>
+      <Match when>
+        <Activity confirm={confirm()} />
+        <Show when={wave() >= 3}>
+          <HumanInput confirm={confirm()} wave={wave() === 5 ? 5 : 3} />
+        </Show>
+        <Show when={wave() >= 4}>
+          <Artifacts />
+        </Show>
+        <Show when={wave() === 5}>
+          <Composing confirm={confirm()} />
+        </Show>
+      </Match>
+    </Switch>
+  );
+}
+
+function Page(props: { wave: Wave }) {
   return (
     <>
       <Foundation />
@@ -923,4 +1082,5 @@ export const cases = {
   "wave-4": () => <Page wave={4} />,
   "wave-5": () => <Page wave={5} />,
   "wave-6": () => <Page wave={6} />,
+  "wave-7a": () => <Page wave="7a" />,
 };

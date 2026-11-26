@@ -15,11 +15,13 @@ import { defineConversation, type KindConversationElement } from "../../../../sr
 import { defineConversationSearch } from "../../../../src/web/conversation-search.js";
 import { defineDaySeparator } from "../../../../src/web/day-separator.js";
 import { defineDictation } from "../../../../src/web/dictation.js";
+import { defineDiff } from "../../../../src/web/diff.js";
 import { defineDocument } from "../../../../src/web/document.js";
 import { defineFeedback } from "../../../../src/web/feedback.js";
 import { defineFileTree } from "../../../../src/web/file-tree.js";
 import { defineGeneratedImage } from "../../../../src/web/generated-image.js";
 import { defineGuardrailNotice } from "../../../../src/web/guardrail-notice.js";
+import { defineHandoff } from "../../../../src/web/handoff.js";
 import { defineInlineCitation } from "../../../../src/web/inline-citation.js";
 import { defineInternalMenu } from "../../../../src/web/internal/menu.js";
 import { defineInternalToolbar } from "../../../../src/web/internal/toolbar.js";
@@ -43,6 +45,7 @@ import { defineSources } from "../../../../src/web/sources.js";
 import { defineStackTrace } from "../../../../src/web/stack-trace.js";
 import { defineStatus } from "../../../../src/web/status.js";
 import { defineStep, defineStepList } from "../../../../src/web/step.js";
+import { defineStepGroup } from "../../../../src/web/step-group.js";
 import { defineStreamingText } from "../../../../src/web/streaming-text.js";
 import { defineSubagent } from "../../../../src/web/subagent.js";
 import { defineSuggestion } from "../../../../src/web/suggestion.js";
@@ -79,14 +82,24 @@ import {
 } from "../../shared/agent.js";
 import { learnMoreHref, modes } from "../../shared/approval-mode.js";
 import { commands, mentions } from "../../shared/composer.js";
+import { steerQueue } from "../../shared/composer-steer.js";
 import { contextChips } from "../../shared/context-bar.js";
 import { context } from "../../shared/context-meter.js";
 import { dictationHost } from "../../shared/dictation.js";
+import { after, before } from "../../shared/diff.js";
 import { downloads, readme } from "../../shared/document.js";
 import { entries } from "../../shared/file-tree.js";
 import { lighthouse, size } from "../../shared/generated-image.js";
+import { handoffs } from "../../shared/handoff.js";
 import { answer } from "../../shared/markdown.js";
-import { author, outcomeError, outcomeText, regenerateOptions } from "../../shared/message.js";
+import {
+  author,
+  delivered,
+  outcomeError,
+  outcomeText,
+  regenerateOptions,
+  retrying,
+} from "../../shared/message.js";
 import {
   levels as controlLevels,
   models as controlModels,
@@ -100,10 +113,12 @@ import { initialValues, settings } from "../../shared/settings-menu.js";
 import { shareLink } from "../../shared/share-dialog.js";
 import { sources } from "../../shared/sources.js";
 import { typeErrorStack } from "../../shared/stack-trace.js";
+import { agentLabels, agents } from "../../shared/step-group.js";
 import { suggestions } from "../../shared/suggestion.js";
 import { installRun } from "../../shared/terminal.js";
 import { suites } from "../../shared/test-results.js";
 import { NOW, threads } from "../../shared/thread-list.js";
+import { retryRows } from "../../shared/tool-retry.js";
 import { standup } from "../../shared/transcript.js";
 import { uploads } from "../../shared/uploader.js";
 
@@ -797,6 +812,128 @@ function wireShell(wave: Element) {
   confirmable.push(share);
 }
 
+const ops = `
+  <div class="flex w-[40rem] flex-col gap-8 p-6">
+    <section id="steer" data-case="composer-steer">
+      <kind-composer running can-stop can-steer>
+        <form aria-label="Steer">
+          <ui-file-input>
+            <ui-file-input-dropzone>
+              <kind-composer-input>
+                <ui-token-input><ui-token-input-editor aria-label="Steer prompt"></ui-token-input-editor></ui-token-input>
+              </kind-composer-input>
+              <ui-file-input-trigger><button type="button" aria-label="Attach files"></button></ui-file-input-trigger>
+              <kind-composer-submit><button></button></kind-composer-submit>
+              <kind-composer-steer-menu></kind-composer-steer-menu>
+              <kind-composer-stop><button></button></kind-composer-stop>
+            </ui-file-input-dropzone>
+          </ui-file-input>
+        </form>
+      </kind-composer>
+    </section>
+    <section id="next" data-case="queue"></section>
+    <section id="queued" data-case="message">
+      <kind-message aria-label="Queued message" message-role="user" text="${delivered.queued}" delivery="queued"
+        can-withdraw>
+        <kind-message-header><kind-message-delivery></kind-message-delivery></kind-message-header>
+        <kind-message-content>${delivered.queued}</kind-message-content>
+      </kind-message>
+    </section>
+    <section id="retrying" data-case="message">
+      <kind-message aria-label="Retrying answer" status="streaming" text="${delivered.answer}">
+        <kind-message-content>${delivered.answer}</kind-message-content>
+        <kind-message-retrying></kind-message-retrying>
+        <kind-message-outcome></kind-message-outcome>
+      </kind-message>
+    </section>
+    <section id="run" data-case="terminal"></section>
+    <section id="tool-retry" data-case="tool"></section>
+    <section id="diff" data-case="diff"></section>
+    <section id="group" data-case="step-group"></section>
+    <section id="handoff" data-case="handoff"></section>
+  </div>`;
+
+const requested = (approvalId: string) => ({ approvalId, generation: 1, state: "requested" as const });
+const billing = handoffs.billing as (typeof handoffs)[string];
+
+function wireOps(wave: Element) {
+  const place = <Tag extends keyof HTMLElementTagNameMap>(id: string, tag: Tag, props: object) => {
+    const el = Object.assign(document.createElement(tag), props);
+    wave.querySelector(`#${id}`)?.append(el);
+    return el;
+  };
+  const steer = wave.querySelector("#steer kind-composer") as KindComposerElement;
+  steer.addEventListener("composersubmit", ({ detail }) => detail.waitUntil(host.submit(detail.value)));
+  steer.addEventListener("stop", host.stop);
+  steer.addEventListener("steer", decide("composer-steer"));
+  const queue = place("next", "kind-queue", { label: "Next up", items: steerQueue, canSend: true });
+  queue.addEventListener("queuesend", ({ detail }) =>
+    detail.waitUntil(
+      host
+        .decide("queue-send")(detail)
+        .then(() => (queue.items = queue.items?.filter((item) => item.id !== detail.value))),
+    ),
+  );
+  (wave.querySelector("#queued kind-message") as HTMLElementTagNameMap["kind-message"]).addEventListener(
+    "withdraw",
+    decide("message-withdraw"),
+  );
+  (wave.querySelector("#retrying kind-message") as HTMLElementTagNameMap["kind-message"]).retry = retrying;
+  const terminal = place("run", "kind-terminal", {
+    command: "npm test",
+    approvalReason: true,
+    canApprove: true,
+    canDeny: true,
+    canAlwaysAllow: true,
+  });
+  terminal.addEventListener("approve", decide("terminal-approve"));
+  terminal.addEventListener("deny", decide("terminal-deny"));
+  terminal.addEventListener("alwaysallow", decide("terminal-always"));
+  Object.assign(terminal, { approval: requested("run"), output: "" });
+  const tool = place("tool-retry", "kind-tool", { ...retryRows.failed, canRetry: true });
+  tool.addEventListener("toolretry", decide("tool-retry"));
+  const diff = place("diff", "kind-diff", {
+    file: { path: "src/values.ts", language: "ts" },
+    before,
+    after,
+    canAccept: true,
+    canRevert: true,
+  });
+  diff.addEventListener("diffaccept", decide("diff-accept"));
+  diff.addEventListener("diffrevert", decide("diff-revert"));
+  // The steps are written before the group joins the page, which then adds its trigger and Stop all around them.
+  const group = Object.assign(document.createElement("kind-step-group"), {
+    items: agents,
+    groupLabels: agentLabels,
+    canCancel: true,
+  });
+  group.innerHTML = `<kind-step-group-content><kind-step-list aria-label="Agents">${agents
+    .map(
+      (row) =>
+        `<kind-subagent agent-name="${row.name}" status="${row.status}"><kind-step-list-item value="${row.id}"><kind-subagent-trigger><button><kind-subagent-icon></kind-subagent-icon><kind-subagent-title></kind-subagent-title><kind-subagent-meta></kind-subagent-meta></button></kind-subagent-trigger></kind-step-list-item><kind-subagent-content><p>${row.task}</p></kind-subagent-content></kind-subagent>`,
+    )
+    .join("")}</kind-step-list></kind-step-group-content>`;
+  wave.querySelector("#group")?.append(group);
+  for (const agent of group.querySelectorAll("kind-subagent")) agent.agentConfirm = false;
+  group.addEventListener("stepgroupcancel", decide("group-cancel"));
+  const handoff = place("handoff", "kind-handoff", {
+    canApprove: true,
+    canDeny: true,
+    canAlwaysAllow: true,
+  });
+  handoff.addEventListener("approve", decide("handoff-approve"));
+  handoff.addEventListener("deny", decide("handoff-deny"));
+  handoff.addEventListener("alwaysallow", decide("handoff-always"));
+  Object.assign(handoff, {
+    from: billing.from,
+    to: billing.to,
+    reason: billing.reason,
+    status: "pending",
+    approval: requested("billing"),
+  });
+  confirmable.push(diff);
+}
+
 function waveFour(root: HTMLElement) {
   waveThree(root);
   defineSources();
@@ -850,5 +987,19 @@ export const cases = {
     defineConversationSearch();
     root.insertAdjacentHTML("beforeend", shell);
     wireShell(root.lastElementChild as Element);
+  },
+  // Beside Wave 1 alone, as Wave 6 is: the bridge lists 100 components at most.
+  "wave-7a": (root: HTMLElement) => {
+    foundation(root);
+    defineQueue();
+    defineTerminal();
+    defineTool();
+    defineDiff();
+    defineSubagent();
+    defineStepList();
+    defineStepGroup();
+    defineHandoff();
+    root.insertAdjacentHTML("beforeend", ops);
+    wireOps(root.lastElementChild as Element);
   },
 };

@@ -125,6 +125,8 @@ export function defineDiff(): void {
     root: {
       tag: "kind-diff",
       kinds: { canAccept: "boolean", canRevert: "boolean" },
+      // Without it, setting `agentConfirm = false` reads as a missing attribute and leaves the default on.
+      defaults: { agentConfirm: true },
       // Without an attribute its callback is left out; with it, `@ui-sdk/web` fills it in with an event.
       options: (el) => {
         const { canAccept, canRevert } = el as KindDiffElement;

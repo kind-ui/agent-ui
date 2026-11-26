@@ -207,8 +207,14 @@ test("action callbacks hear source agent", async ({ page }) => {
 
 test("send refuses an unknown item", async ({ page }) => {
   await open(page);
-  const result = await act(page, next.component, next.label, "send", ["nope"]);
-  expect(!result.ok || (result as { steps?: { result?: unknown }[] }).steps?.[0]?.result === false).toBe(true);
+  const result: { ok: boolean; steps?: { result?: unknown }[] } = await act(
+    page,
+    next.component,
+    next.label,
+    "send",
+    ["nope"],
+  );
+  expect(!result.ok || result.steps?.[0]?.result === false).toBe(true);
   expect((await host(page)).calls).toEqual([]);
 });
 

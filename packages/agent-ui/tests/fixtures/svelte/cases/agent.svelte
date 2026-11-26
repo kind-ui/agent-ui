@@ -4,7 +4,7 @@
   import { dictationHost } from "../../shared/dictation.js";
   import { expose } from "../../shared/expose.js";
 
-  export const variants = ["all", "wave-2", "wave-3", "wave-4", "wave-5", "wave-6"];
+  export const variants = ["all", "wave-2", "wave-3", "wave-4", "wave-5", "wave-6", "wave-7a"];
 
   const drafts = agentDrafts();
   const host = agentHost();
@@ -18,6 +18,7 @@
   import type { Answers, QueueItem, SettingsValues } from "@kind-ui/agent-ui";
   import type { AttachmentItem, UploadItem } from "@kind-ui/agent-ui/core";
   import { Action } from "../../../../src/svelte/action/index.js";
+  import Ops from "./agent/Ops.svelte";
   import Shell from "./agent/Shell.svelte";
   import { AddMenu } from "../../../../src/svelte/add-menu/index.js";
   import { ApprovalMode } from "../../../../src/svelte/approval-mode/index.js";
@@ -677,6 +678,8 @@
 
 {@render foundation()}{#if wave === 6}
   <Shell {host} {confirm} />
+{:else if variant === "wave-7a"}
+  <Ops {host} {confirm} />
 {:else if wave >= 2}
   {@render activity()}{#if wave >= 3}{@render humanInput()}{/if}{#if wave >= 4}{@render artifacts()}{/if}{#if wave === 5}{@render composing()}{/if}
 {/if}

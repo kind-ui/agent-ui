@@ -285,6 +285,11 @@ export default {
 
     "wave-7/handoff.spec.ts",
 
+    // Wave 7a conformance (Task 9)
+
+    "wave-7/agent.spec.ts",
+    "wave-7/aria-patterns.spec.ts",
+
     // wave-7-task-10: Trace
 
     // wave-7-task-11: Run Timeline
