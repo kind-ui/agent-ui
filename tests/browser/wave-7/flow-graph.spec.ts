@@ -9,8 +9,9 @@ type Fixture = { kindHost: FlowGraphHost; agent: { act(input: unknown): Promise<
 const frame = (page: Page) => page.getByRole("group", { name: "Refund flow" });
 const node = (page: Page, name: string) => frame(page).getByRole("button", { name: new RegExp(`^${name},`) });
 const world = (page: Page) => page.locator('[data-flow-graph-part="world"]');
+// The zoom the graph is at or easing to.
 const zoom = (page: Page) =>
-  world(page).evaluate((el) => new DOMMatrixReadOnly(getComputedStyle(el).transform).a);
+  world(page).evaluate((el) => Number(/scale\(([\d.]+)\)/.exec(el.style.transform)?.[1] ?? 1));
 const changes = (page: Page) => page.evaluate(() => (window as unknown as Fixture).kindHost.changes);
 const focusedName = (page: Page) => page.evaluate(() => document.activeElement?.getAttribute("aria-label"));
 const load = async (page: Page, name = "all") => {

@@ -15,6 +15,7 @@ import {
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import type { FlowEdge, FlowNode, StepStatus } from "../../types/index.js";
 import { createListFocus, type ListFocus } from "../list-focus.js";
+import { cached } from "../memo.js";
 import { type MotionMode, resolvedMotion } from "../motion/index.js";
 import { DURATION } from "../motion/tokens.js";
 import { type FlowDirection, type FlowLayout, flowLayout } from "./layout.js";
@@ -203,7 +204,7 @@ const sameEntry = (a: FlowNodeEntry, b: FlowNodeEntry) =>
 
 // An unchanged node keeps its entry, even as a new object, so only a changed node's parts render again.
 let previous = new Map<string, FlowNodeEntry>();
-const entriesOf = (nodes: readonly FlowNode[], edges: readonly FlowEdge[]) => {
+const buildEntries = (nodes: readonly FlowNode[], edges: readonly FlowEdge[]) => {
   const labels = new Map(nodes.map((node) => [node.id, node.label]));
   const next = new Map<string, FlowNodeEntry>();
   const byId: Record<string, FlowNodeEntry> = {};
@@ -219,28 +220,35 @@ const entriesOf = (nodes: readonly FlowNode[], edges: readonly FlowEdge[]) => {
   return byId;
 };
 
-let lastPaths: FlowEdgeEntry[] = [];
-const pathsOf = (edges: readonly FlowEdge[], layout: FlowLayout) => {
+const buildPaths = (edges: readonly FlowEdge[], layout: FlowLayout) => {
   const paths: FlowEdgeEntry[] = [];
   for (const edge of edges) {
     const d = layout.edges[edge.id];
     if (d) paths.push({ id: edge.id, d, status: statusOf(edge.status) });
   }
-  const same =
-    paths.length === lastPaths.length &&
-    paths.every(
-      (p, i) => p.id === lastPaths[i]?.id && p.d === lastPaths[i]?.d && p.status === lastPaths[i]?.status,
-    );
-  if (!same) lastPaths = paths;
-  return lastPaths;
+  return paths;
 };
 
-let lastIds: string[] = [];
-const idsOf = (layout: FlowLayout) => {
-  const ids = Object.keys(layout.nodes);
-  if (ids.length !== lastIds.length || ids.some((id, i) => id !== lastIds[i])) lastIds = ids;
-  return lastIds;
-};
+// Cached by the objects they're built from, since Svelte and Solid run `sync` on every store write and a new
+// object each time would write again. A `WeakMap` per input, not one slot, so graphs side by side don't evict each
+// other's values.
+const entryCache = new WeakMap<
+  readonly FlowNode[],
+  WeakMap<readonly FlowEdge[], Record<string, FlowNodeEntry>>
+>();
+const pathCache = new WeakMap<readonly FlowEdge[], WeakMap<FlowLayout, FlowEdgeEntry[]>>();
+const idCache = new WeakMap<FlowLayout, string[]>();
+const twice = <A extends object, B extends object, V>(
+  cache: WeakMap<A, WeakMap<B, V>>,
+  a: A,
+  b: B,
+  build: (a: A, b: B) => V,
+): V =>
+  cached(
+    cached(cache, a, () => new WeakMap<B, V>()),
+    b,
+    () => build(a, b),
+  );
 
 const presentation = ({
   nodes = noNodes,
@@ -256,9 +264,9 @@ const presentation = ({
   });
   return {
     nodes,
-    ids: idsOf(layout),
-    entries: entriesOf(nodes, edges),
-    paths: pathsOf(edges, layout),
+    ids: cached(idCache, layout, () => Object.keys(layout.nodes)),
+    entries: twice(entryCache, nodes, edges, buildEntries),
+    paths: twice(pathCache, edges, layout, buildPaths),
     layout,
     label: label || "Flow",
     motion,
@@ -333,13 +341,15 @@ export const flowGraphPrimitive: FlowGraphPrimitive = definePrimitive<
     const { store } = context;
     const change = createChange(context);
     let moved = false;
+    // The graph's own fits, as it first shows and when its shape changes, jump rather than ease.
+    let placing = false;
     let settle: ReturnType<typeof setTimeout> | undefined;
     const viewport = createViewport<FlowGraphState>(context, {
       key: "viewport",
       surface: () => context.element("root"),
       set: (value, { reason }) => {
         if (MOVED.has(reason)) moved = true;
-        const easing = EASED.has(reason) && resolvedMotion(store.get().motion) === "full";
+        const easing = !placing && EASED.has(reason) && resolvedMotion(store.get().motion) === "full";
         clearTimeout(settle);
         if (easing) settle = setTimeout(() => store.set({ easing: false }), DURATION.base * 1000);
         store.set({ viewport: value, easing });
@@ -348,6 +358,11 @@ export const flowGraphPrimitive: FlowGraphPrimitive = definePrimitive<
     });
     context.onDestroy(() => clearTimeout(settle));
     const { layout: first } = store.get();
+    const place = () => {
+      placing = true;
+      fit();
+      placing = false;
+    };
     const fit = (event?: Event) => {
       const { width, height } = store.get().layout;
       return viewport.fit({ left: 0, top: 0, right: width, bottom: height }, FIT, {
@@ -387,13 +402,13 @@ export const flowGraphPrimitive: FlowGraphPrimitive = definePrimitive<
         let shown = first;
         const frame = requestAnimationFrame(() => {
           shown = store.get().layout;
-          fit();
+          place();
         });
         const unsubscribe = store.subscribe(() => {
           const { layout } = store.get();
           if (layout === shown) return;
           shown = layout;
-          if (!moved) fit();
+          if (!moved) place();
         });
         return () => {
           cancelAnimationFrame(frame);
@@ -531,6 +546,19 @@ export const flowGraphPrimitive: FlowGraphPrimitive = definePrimitive<
       on: {
         keydown: (event, { el, api }) => {
           if (el) api.roving.keydown(event as KeyboardEvent, el);
+        },
+        // The pane pans only when the browser scrolls to a node, which it doesn't always do on focus.
+        focus: (event, { api, key, store }) => {
+          const box = store.get().layout.nodes[key];
+          if (box) {
+            const rect = {
+              left: box.left,
+              top: box.top,
+              right: box.left + box.width,
+              bottom: box.top + box.height,
+            };
+            api.viewport.reveal(rect, { padding: 16 }, { reason: "focus-in", event });
+          }
         },
       },
       bind: (el, part) => {
