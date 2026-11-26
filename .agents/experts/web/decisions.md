@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: `cb3f3e12` (UI SDK 0.1.0-beta.17 upgrade)
+Last reviewed: 9994de73
 
 ## Settled
 
@@ -29,6 +29,8 @@ Last reviewed: `cb3f3e12` (UI SDK 0.1.0-beta.17 upgrade)
 
 ## Known and open (don't report again, check whether fixed)
 
+- A Steer button a framework fills after the composer drew is already owned, so `draw` writes the label over the host's text (Wave 7 layer 4).
+- `kind-composer` with steering has no `written`, `moved` or `shadow` fixture case, and a `kind-queue` moved into or out of a `kind-composer` in the same tick keeps its old dock until the composer's `running` changes (Wave 7 layer 4).
 - **Switching a filled `kind-suggestion`'s `layout` rebuilds its chips and drops focus** (Design Wave 1 A): the two layouts usually sit in separate elements; move the items with `moveBefore` if a host switches one in place. In a shadow root, Escape on Save or Enter on Cancel leaves focus on `<body>`, as UI SDK's `keepFocus` reads the document's active element (report upstream beside focus recovery).
 - **Only Settings Menu pins the pointer-open highlight fix** (Design Wave 0): Add Menu, Approval Mode, Model Control and Message's regenerate menu share `menuBase` and passed a probe, but have no test of their own.
 - **Dictation's web `draw` runs on every level (Wave 5 Task 11):** cheap and guarded; no `written` or `moved` fixture case yet.

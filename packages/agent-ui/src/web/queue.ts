@@ -1,5 +1,6 @@
 import {
   type QueueApi,
+  type QueueItemActionDetails,
   type QueueOptions,
   type QueueSection,
   type QueueState,
@@ -8,7 +9,7 @@ import {
   queueRows,
   queueSection,
 } from "@kind-ui/agent-ui/core";
-import { createParts, wrappedButton } from "@ui-sdk/web";
+import { createParts, type UiActionDetail, wrappedButton } from "@ui-sdk/web";
 import type {
   AttributeProperties,
   UiDetailedChangeEvent,
@@ -23,7 +24,7 @@ const SECTIONS: QueueSection[] = ["pending", "complete"];
 const section = (value: QueueSection) =>
   `<kind-queue-section value="${value}"><kind-queue-section-trigger><button><span data-title></span><span data-count></span></button></kind-queue-section-trigger><kind-queue-section-content><kind-queue-list></kind-queue-list></kind-queue-section-content></kind-queue-section>`;
 const DEFAULT_PARTS = `${SECTIONS.map(section).join("")}<kind-queue-instructions></kind-queue-instructions>`;
-const ITEM_PARTS = `<kind-queue-item-icon></kind-queue-item-icon><span data-text><kind-queue-item-title></kind-queue-item-title><kind-queue-item-description></kind-queue-item-description></span><kind-queue-item-remove></kind-queue-item-remove>`;
+const ITEM_PARTS = `<kind-queue-item-icon></kind-queue-item-icon><span data-text><kind-queue-item-title></kind-queue-item-title><kind-queue-item-description></kind-queue-item-description></span><span data-queue-actions><kind-queue-item-send><button></button></kind-queue-item-send><kind-queue-item-edit><button></button></kind-queue-item-edit><kind-queue-item-remove><button></button></kind-queue-item-remove></span>`;
 
 const write = (el: Element | null, text: string) => {
   if (el && el.textContent !== text) el.textContent = text;
@@ -61,19 +62,26 @@ function drawList(list: Movable, items: QueueItem[], drawn: WeakMap<Element, Que
 
 /**
  * `<kind-queue label="…">` fills in its Queued and Completed sections and renders a `kind-queue-item` for each
- * entry of its `items` property. The `can-reorder` and `can-remove` attributes let people move and remove items,
- * firing `reorder` (with `event.detail.index`) and `remove`, each with the item's id as `event.detail.value`.
+ * entry of its `items` property. The `can-reorder`, `can-remove`, `can-send` and `can-edit` attributes let people
+ * move, remove, send now and edit items, firing `reorder` (with `event.detail.index`), `remove`, `send` and `edit`,
+ * each with the item's id as `event.detail.value`. `send` and `edit` listeners may call
+ * `event.detail.waitUntil(promise)`. Inside a `kind-composer`, it docks to the composer's top edge.
  */
 export function defineQueue(): void {
   if (customElements.get("kind-queue")) return;
   createParts(queuePrimitive, {
     root: {
       tag: "kind-queue",
-      kinds: { canReorder: "boolean", canRemove: "boolean" },
+      kinds: { canReorder: "boolean", canRemove: "boolean", canSend: "boolean", canEdit: "boolean" },
       // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
       options: (el) => {
-        const { canReorder, canRemove } = el as KindQueueElement;
-        return { ...(!canReorder && { onReorder: undefined }), ...(!canRemove && { onRemove: undefined }) };
+        const { canReorder, canRemove, canSend, canEdit } = el as KindQueueElement;
+        return {
+          ...(!canReorder && { onReorder: undefined }),
+          ...(!canRemove && { onRemove: undefined }),
+          ...(!canSend && { onSend: undefined }),
+          ...(!canEdit && { onEdit: undefined }),
+        };
       },
       state: {
         openSections: {
@@ -121,7 +129,9 @@ export function defineQueue(): void {
     "item-icon": "kind-queue-item-icon",
     "item-title": "kind-queue-item-title",
     "item-description": "kind-queue-item-description",
-    "item-remove": "kind-queue-item-remove",
+    "item-send": { tag: "kind-queue-item-send", target: wrappedButton, display: "contents" },
+    "item-edit": { tag: "kind-queue-item-edit", target: wrappedButton, display: "contents" },
+    "item-remove": { tag: "kind-queue-item-remove", target: wrappedButton, display: "contents" },
     instructions: "kind-queue-instructions",
   });
 }
@@ -129,6 +139,8 @@ export function defineQueue(): void {
 export type KindQueueEvents = {
   reorder: UiDetailedChangeEvent<string, Parameters<NonNullable<QueueOptions["onReorder"]>>[1]>;
   remove: UiDetailedChangeEvent<string, Parameters<NonNullable<QueueOptions["onRemove"]>>[1]>;
+  send: CustomEvent<{ value: string } & QueueItemActionDetails & Pick<UiActionDetail, "waitUntil">>;
+  edit: CustomEvent<{ value: string } & QueueItemActionDetails & Pick<UiActionDetail, "waitUntil">>;
 };
 
 export interface KindQueueElement
@@ -136,6 +148,10 @@ export interface KindQueueElement
     AttributeProperties<typeof queuePrimitive, "api" | "items" | "openSections"> {
   canReorder: boolean;
   canRemove: boolean;
+  /** Whether queued items show Send now, firing `send`. */
+  canSend: boolean;
+  /** Whether queued items show Edit, firing `edit`. */
+  canEdit: boolean;
   items?: QueueOptions["items"];
   openSections: QueueSection[];
   api: Pick<QueueApi, "getItems" | "getOpenSections" | "setOpenSections" | "toggleSection">;
@@ -152,6 +168,8 @@ declare global {
     "kind-queue-item-icon": HTMLElement;
     "kind-queue-item-title": HTMLElement;
     "kind-queue-item-description": HTMLElement;
+    "kind-queue-item-send": HTMLElement;
+    "kind-queue-item-edit": HTMLElement;
     "kind-queue-item-remove": HTMLElement;
     "kind-queue-instructions": HTMLElement;
   }

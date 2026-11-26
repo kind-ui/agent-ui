@@ -56,7 +56,7 @@ Each has a copy button, shown once there's a value while the pointer is over its
 
 ### Approvals and Errors
 
-While the call has an approval, the tool shows a [Confirmation](./confirmation.mdx) named after it, like "Run search_docs?". Pass `onApprove` and `onDeny` to offer **Approve** and **Deny**; each is called with the approval's `approvalId` and `generation`, and `approvalReason` adds a box for the reason Deny sends. `toApprovalResponse` comes from the [AI SDK adapter](../adapters/ai-sdk.mdx). Without them, it shows where the approval stands, like "Waiting for approval". Once the decision is recorded, the outcome stays, like "Approved". When a choice goes away with focus, focus moves to the tool's trigger.
+While the call has an approval, the tool shows a [Confirmation](./confirmation.mdx) named after it, like "Run search_docs?". Pass `onDeny`, `onAlwaysAllow` and `onApprove` to offer **Deny**, **Always allow** and **Approve**, with Confirmation's `alwaysTarget`, `alwaysScope`, `alwaysDetail`, `risk` and `riskText`; each is called with the approval's `approvalId` and `generation`, and `approvalReason` adds a box for the reason Deny sends. `toApprovalResponse` comes from the [AI SDK adapter](../adapters/ai-sdk.mdx). Without them, it shows where the approval stands, like "Waiting for approval". Once the decision is recorded, the outcome stays, like "Approved". When a choice goes away with focus, focus moves to the outcome in its place.
 
 ```tsx
 <Tool

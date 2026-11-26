@@ -29,18 +29,22 @@
     --kind-terminal-header-line: var(--kind-text-md-leading);
     align-items: flex-start;
 
-    & > :is([data-step-part="icon"], [data-step-part="meta"], [data-slot="kind-terminal-exit"]) {
+    & > :where([data-step-part="icon"], [data-step-part="meta"], [data-slot="kind-terminal-exit"]) {
       line-height: var(--kind-terminal-header-line);
     }
-    & > [data-step-part="icon"] {
+    & > :where([data-step-part="icon"]) {
       margin-block-start: calc((var(--kind-terminal-header-line) - var(--kind-status-mark-size, 16px)) / 2);
     }
     &::after {
       margin-block-start: calc((var(--kind-terminal-header-line) - 6px) / 2);
     }
-    /* It can't close while its approval waits. */
-    &[aria-disabled="true"] {
-      cursor: default;
+    /* It can't close while its approval waits, so it doesn't answer a pointer. */
+    &:where([aria-disabled="true"]) {
+      &:hover,
+      &:active {
+        background-color: transparent;
+        color: var(--kind-color-muted);
+      }
     }
   }
 
@@ -104,16 +108,18 @@
     --kind-status-mark-complete: transparent;
     --kind-color-on-status: var(--kind-color-muted);
 
-    &:not([data-status="complete"]) {
+    &:where(:not([data-status="complete"])) {
       display: none;
     }
   }
 
   /* No screen while a command that waits on its approval, or never ran, has printed nothing. */
-  [data-terminal-screen]:not(
-    :has(
-      [data-slot="kind-terminal-viewport"]:not([hidden]),
-      [data-slot="kind-terminal-command"]:not([hidden])
+  [data-terminal-screen]:where(
+    :not(
+      :has(
+        [data-slot="kind-terminal-viewport"]:not([hidden]),
+        [data-slot="kind-terminal-command"]:not([hidden])
+      )
     )
   ) {
     display: none;

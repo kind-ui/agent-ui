@@ -13,7 +13,7 @@ export type TextSourceLink = {
 };
 
 /** Elements that take text another component produces, like a Composer's root taking dictated text. */
-const targets = new Map<Element, { insert: Insert; running: () => boolean }>();
+const targets = new Map<Element, { insert: Insert; running: () => boolean; accepts: () => boolean }>();
 /** Elements that hand text back to the target around them, like a Queue docked in a Composer. */
 const sources = new Map<Element, TextSourceLink>();
 
@@ -29,8 +29,13 @@ const targetAround = (el: Element | undefined) => {
  * Makes `el` take text through `insert`, which returns whether it did, and docks the sources inside it. Call the
  * returned `update` when `running` changes; `cleanup` undocks them.
  */
-export const bindTextTarget = (el: Element, insert: Insert, running: () => boolean = () => false) => {
-  const target = { insert, running };
+export const bindTextTarget = (
+  el: Element,
+  insert: Insert,
+  running: () => boolean = () => false,
+  accepts: () => boolean = () => true,
+) => {
+  const target = { insert, running, accepts };
   targets.set(el, target);
   const inside = () =>
     [...sources].filter(([source]) => el.contains(source) && targetAround(source) === target);
@@ -56,7 +61,8 @@ export const insertText = (
 
 /**
  * Hands `text` to the nearest target around `el`, else to the first target inside the nearest ancestor that holds
- * one, like the Composer beside a Conversation whose message gives its text back. Returns whether one took it.
+ * one, like the Composer beside a Conversation whose message gives its text back. Climbs through `parentNode`, so a
+ * shadow root holding both counts. Returns whether one took it.
  */
 export const insertTextNearby = (
   el: Element | undefined,
@@ -66,12 +72,14 @@ export const insertTextNearby = (
 ): boolean => {
   const around = targetAround(el);
   if (around) return around.insert(text, source, reason);
-  for (let node = el?.parentElement; node; node = node.parentElement) {
-    for (const [target, { insert }] of targets)
-      if (node.contains(target)) return insert(text, source, reason);
+  for (let node: Node | null | undefined = el?.parentNode; node; node = node.parentNode) {
+    for (const [target, { insert }] of targets) if (node.contains(target)) return insert(text, source, reason);
   }
   return false;
 };
+
+/** Whether a target around `el` would take text now, so a source can keep its item until one does. */
+export const canInsertText = (el: Element | undefined): boolean => targetAround(el)?.accepts() ?? false;
 
 /** Registers `el` as a source and docks it in the target around it, if any. Returns a cleanup. */
 export const bindTextSource = (el: Element, link: TextSourceLink): (() => void) => {
@@ -87,6 +95,7 @@ export const bindTextSource = (el: Element, link: TextSourceLink): (() => void) 
 /** Takes back the last item of the first source docked inside `el`. Returns whether there was one. */
 export const takeBackText = (el: Element, source: ChangeSource): boolean => {
   const target = targets.get(el);
+  if (!target) return false;
   for (const [node, link] of sources) {
     if (el.contains(node) && targetAround(node) === target) return link.takeBack(source);
   }

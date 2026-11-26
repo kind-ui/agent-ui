@@ -17,7 +17,7 @@ All 56 components, grouped by the job they do. The item is the React name: add `
 | `markdown` | Markdown | You render model text, streamed or finished; it repairs half-written blocks as they arrive. |
 | `code-block` | Code Block | You show code outside Markdown, or need its copy, wrap or a highlight function. |
 | `markdown-table` | Markdown Table | You show a table outside Markdown that has to scroll sideways and copy. |
-| `composer` | Composer | A person writes the prompt: send and stop, mentions, commands, attachments and saved drafts. |
+| `composer` | Composer | A person writes the prompt: send and stop, steering a running turn, mentions, commands, attachments and saved drafts. |
 | `attachments` | Attachments | You list attached files on their own, outside the Composer, which already shows them. |
 | `uploader` | Uploader | Files upload with progress, and a person can cancel or retry each one. |
 
@@ -47,7 +47,7 @@ All 56 components, grouped by the job they do. The item is the React name: add `
 | `task` | Task | An agent works through a list of steps and you count how many are done. |
 | `plan` | Plan | The agent proposes steps a person can Accept, with a progress bar. |
 | `subagent` | Subagent | A subagent runs its own steps, can be stopped, and returns a result. |
-| `queue` | Queue | Prompts wait their turn, and a person can reorder or clear them. |
+| `queue` | Queue | Prompts wait their turn, and a person can reorder, send now, edit or clear them; inside a Composer it docks to its top edge. |
 | `confirmation` | Confirmation | An action that isn't a tool call needs a person to approve or deny it. |
 | `question` | Question | The agent asks a person to choose an option or write an answer before it goes on. |
 | `checkpoint` | Checkpoint | A person can restore the conversation to an earlier point, after a dialog asks first. |
