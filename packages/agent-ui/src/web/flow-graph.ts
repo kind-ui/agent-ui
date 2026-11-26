@@ -4,7 +4,7 @@ import {
   type FlowGraphState,
   type FlowGraphValueChangeReason,
   flowGraphPrimitive,
-} from "@kind-ui/agent-ui/core";
+} from "@kind-ui/agent-ui/core/flow-graph";
 import { createParts, wrappedButton, wrappedChild } from "@ui-sdk/web";
 import type { AttributeProperties, UiChangeEvent, UiElement, UiPartElement } from "@ui-sdk/web/events";
 

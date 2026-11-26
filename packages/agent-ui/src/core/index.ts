@@ -926,20 +926,17 @@ export {
 
 // wave-7-task-19: Flow Graph
 
-export {
-  FLOW_NODE_HEIGHT,
-  FLOW_NODE_WIDTH,
-  type FlowDirection,
-  type FlowEdgeEntry,
-  type FlowGraphApi,
-  type FlowGraphOptions,
-  type FlowGraphPrimitive,
-  type FlowGraphState,
-  type FlowGraphValueChangeReason,
-  type FlowLayout,
-  type FlowLayoutOptions,
-  type FlowNodeBox,
-  type FlowNodeEntry,
-  flowGraphPrimitive,
-  flowLayout,
+// Flow Graph's runtime is `@kind-ui/agent-ui/core/flow-graph`, so dagre stays out of this entry.
+export type {
+  FlowDirection,
+  FlowEdgeEntry,
+  FlowGraphApi,
+  FlowGraphOptions,
+  FlowGraphPrimitive,
+  FlowGraphState,
+  FlowGraphValueChangeReason,
+  FlowLayout,
+  FlowLayoutOptions,
+  FlowNodeBox,
+  FlowNodeEntry,
 } from "./flow-graph/index.js";

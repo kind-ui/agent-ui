@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { flowLayout } from "@kind-ui/agent-ui/core";
+import { flowLayout } from "@kind-ui/agent-ui/core/flow-graph";
 
 const size = { direction: "right", nodeWidth: 176, nodeHeight: 52 };
 const nodes = [

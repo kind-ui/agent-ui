@@ -1,4 +1,4 @@
-import { flowGraphPrimitive } from "@kind-ui/agent-ui/core";
+import { flowGraphPrimitive } from "@kind-ui/agent-ui/core/flow-graph";
 import type { ComponentProps } from "@solidjs/web";
 import { createParts } from "@ui-sdk/solid/primitive";
 import { For, omit } from "solid-js";

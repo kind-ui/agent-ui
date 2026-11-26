@@ -1,6 +1,6 @@
 "use client";
 
-import { flowGraphPrimitive } from "@kind-ui/agent-ui/core";
+import { flowGraphPrimitive } from "@kind-ui/agent-ui/core/flow-graph";
 import { createParts } from "@ui-sdk/react/primitive";
 import type { ComponentProps } from "react";
 

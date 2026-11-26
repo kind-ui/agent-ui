@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import * as core from "@kind-ui/agent-ui/core";
+import * as flowGraph from "@kind-ui/agent-ui/core/flow-graph";
 import { manifests } from "../../../registry/layers/index.mjs";
 
 /** The tab labels of every layer; `<ExampleCode>` and `<Install>` share them, so one choice switches both. */
@@ -56,7 +57,7 @@ export function installCommands(name: string) {
 type Schema = Record<string, unknown>;
 
 const optionsOf = (name: string): Schema => {
-  for (const each of Object.values(core)) {
+  for (const each of [...Object.values(core), ...Object.values(flowGraph)]) {
     if (typeof each === "function" && each.name === `kind-${name}` && "options" in each) {
       return (each.options ?? {}) as Schema;
     }

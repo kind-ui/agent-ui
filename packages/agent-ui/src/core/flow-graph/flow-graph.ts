@@ -547,10 +547,13 @@ export const flowGraphPrimitive: FlowGraphPrimitive = definePrimitive<
         keydown: (event, { el, api }) => {
           if (el) api.roving.keydown(event as KeyboardEvent, el);
         },
-        // The pane pans only when the browser scrolls to a node, which it doesn't always do on focus.
+        // A node out of view makes the browser scroll the pane as it takes focus, which the pane turns into a pan, but
+        // not always. Revealing a frame later, once that pan has landed, adds only what's still missing; revealing at
+        // once would pan twice, since the browser scrolls toward where the node was.
         focus: (event, { api, key, store }) => {
-          const box = store.get().layout.nodes[key];
-          if (box) {
+          requestAnimationFrame(() => {
+            const box = store.get().layout.nodes[key];
+            if (!box) return;
             const rect = {
               left: box.left,
               top: box.top,
@@ -558,7 +561,7 @@ export const flowGraphPrimitive: FlowGraphPrimitive = definePrimitive<
               bottom: box.top + box.height,
             };
             api.viewport.reveal(rect, { padding: 16 }, { reason: "focus-in", event });
-          }
+          });
         },
       },
       bind: (el, part) => {

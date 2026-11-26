@@ -53,6 +53,10 @@
       "types": "./dist/core/index.d.ts",
       "default": "./dist/core/index.js"
     },
+    "./core/flow-graph": {
+      "types": "./dist/core/flow-graph/index.d.ts",
+      "default": "./dist/core/flow-graph/index.js"
+    },
     "./adapters/ai-sdk": {
       "types": "./dist/adapters/ai-sdk/index.d.ts",
       "default": "./dist/adapters/ai-sdk/index.js"

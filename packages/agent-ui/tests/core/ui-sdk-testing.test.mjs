@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import * as core from "@kind-ui/agent-ui/core";
+import * as coreEntry from "@kind-ui/agent-ui/core";
+import * as flowGraph from "@kind-ui/agent-ui/core/flow-graph";
 import { checkServer } from "@ui-sdk/core/testing";
 
 // UI SDK's `checkServer` over every component primitive: creating it and rendering each part reads no browser
 // global, clock, randomness or option, so server markup and hydration agree. `checkPattern` and `checkDirection`
 // need a DOM, so they run in `tests/browser/wave-5/aria-patterns.spec.ts`.
 
+const core = { ...coreEntry, ...flowGraph };
 const noop = () => {};
 const step = { status: "running", label: "Search the docs" };
 const source = { id: "s1", title: "Docs", url: "https://example.com/docs", snippet: "A page" };

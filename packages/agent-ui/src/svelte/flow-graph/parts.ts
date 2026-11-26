@@ -1,4 +1,4 @@
-import { flowGraphPrimitive } from "@kind-ui/agent-ui/core";
+import { flowGraphPrimitive } from "@kind-ui/agent-ui/core/flow-graph";
 import { createParts } from "@ui-sdk/svelte/primitive";
 
 export const parts = createParts(flowGraphPrimitive, {

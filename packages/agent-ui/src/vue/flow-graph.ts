@@ -1,4 +1,5 @@
-import { type FlowEdgeEntry, flowGraphPrimitive } from "@kind-ui/agent-ui/core";
+import type { FlowEdgeEntry } from "@kind-ui/agent-ui/core";
+import { flowGraphPrimitive } from "@kind-ui/agent-ui/core/flow-graph";
 import { createParts } from "@ui-sdk/vue/primitive";
 import { type Component, defineComponent, h, type Slot, type VNode } from "vue";
 

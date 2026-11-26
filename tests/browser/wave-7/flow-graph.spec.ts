@@ -96,9 +96,13 @@ test("focus brings a node out of view into view", async ({ page }) => {
   for (let i = 0; i < 6; i++) await page.keyboard.press("+");
   await expect.poll(() => zoom(page)).toBeGreaterThan(2);
   const inView = (name: string) =>
-    node(page, name).evaluate((el) => {
+    node(page, name).evaluate(async (el) => {
+      const root = el.closest('[data-flow-graph-part="root"]') as Element;
+      // Where the pan ends, not a frame of it passing through the view.
+      const world = root.querySelector('[data-flow-graph-part="world"]') as Element;
+      await Promise.all(world.getAnimations().map((animation) => animation.finished.catch(() => {})));
       const box = el.getBoundingClientRect();
-      const bounds = (el.closest('[data-flow-graph-part="root"]') as Element).getBoundingClientRect();
+      const bounds = root.getBoundingClientRect();
       // A pixel's slack for rounding at this zoom.
       return (
         box.left >= bounds.left - 1 &&

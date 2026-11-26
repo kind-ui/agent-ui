@@ -15,6 +15,11 @@ export default defineConfig({
   plugins: [vue(), tailwindcss(), identityPlugin("vue"), ssrPlugin()],
   // A file written during a run would otherwise reload open pages and destroy the context a test evaluates in.
   server: { hmr: false },
-  resolve: { alias: { "@kind-ui/agent-ui/core": here("../../../src/core/index.ts") } },
+  resolve: {
+    alias: {
+      "@kind-ui/agent-ui/core/flow-graph": here("../../../src/core/flow-graph/index.ts"),
+      "@kind-ui/agent-ui/core": here("../../../src/core/index.ts"),
+    },
+  },
   optimizeDeps: { include: ["vue", "@ui-sdk/core", ...optimizedEntries("vue")] },
 });

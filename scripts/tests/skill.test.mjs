@@ -48,6 +48,7 @@ const exportedNames = (path) => {
 const entries = {
   "@kind-ui/agent-ui": "packages/agent-ui/src/index.ts",
   "@kind-ui/agent-ui/core": "packages/agent-ui/src/core/index.ts",
+  "@kind-ui/agent-ui/core/flow-graph": "packages/agent-ui/src/core/flow-graph/index.ts",
   "@kind-ui/agent-ui/adapters/ai-sdk": "packages/agent-ui/src/adapters/ai-sdk/index.ts",
 };
 
