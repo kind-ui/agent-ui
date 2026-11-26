@@ -145,6 +145,8 @@ import { QuotaNotice } from "./components/ui/quota-notice.js";
 
 // wave-7-task-17: Activity Graph
 
+import { ActivityGraph } from "./components/ui/activity-graph.js";
+
 // wave-7-task-18: Thread List inbox
 
 // wave-7-task-19: Flow Graph
@@ -509,6 +511,8 @@ const items = {
   "quota-notice": <QuotaNotice used={800} limit={1000} period="this month" />,
 
   // wave-7-task-17: Activity Graph
+
+  "activity-graph": <ActivityGraph days={[{ date: "2026-11-18", count: 3 }]} now="2026-11-18" />,
 
   // wave-7-task-18: Thread List inbox
 

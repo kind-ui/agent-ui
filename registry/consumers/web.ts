@@ -132,6 +132,8 @@ import { defineQuotaNotice } from "./components/ui/web/quota-notice.js";
 
 // wave-7-task-17: Activity Graph
 
+import { defineActivityGraph } from "./components/ui/web/activity-graph.js";
+
 // wave-7-task-18: Thread List inbox
 
 // wave-7-task-19: Flow Graph
@@ -271,6 +273,8 @@ for (const define of [
   defineQuotaNotice,
 
   // wave-7-task-17: Activity Graph
+
+  defineActivityGraph,
 
   // wave-7-task-18: Thread List inbox
 
@@ -441,6 +445,8 @@ const items = {
   "quota-notice": `<kind-quota-notice used="800" limit="1000" period="this month"></kind-quota-notice>`,
 
   // wave-7-task-17: Activity Graph
+
+  "activity-graph": `<kind-activity-graph now="2026-11-18"></kind-activity-graph>`,
 
   // wave-7-task-18: Thread List inbox
 

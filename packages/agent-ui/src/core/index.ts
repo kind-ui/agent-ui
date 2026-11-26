@@ -893,6 +893,28 @@ export {
 
 // wave-7-task-17: Activity Graph
 
+export {
+  type ActivityCell,
+  type ActivityGraphApi,
+  type ActivityGraphCellProps,
+  type ActivityGraphDay,
+  type ActivityGraphGridState,
+  type ActivityGraphLabelState,
+  type ActivityGraphLegendState,
+  type ActivityGraphModel,
+  type ActivityGraphMonthsState,
+  type ActivityGraphOptions,
+  type ActivityGraphPrimitive,
+  type ActivityGraphSelectReason,
+  type ActivityGraphState,
+  type ActivityGraphSummaryState,
+  type ActivityWeek,
+  type ActivityWeeksOptions,
+  activityGraphPrimitive,
+  activityLevels,
+  activityWeeks,
+} from "./activity-graph/index.js";
+
 // wave-7-task-18: Thread List inbox
 
 // wave-7-task-19: Flow Graph

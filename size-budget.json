@@ -1,6 +1,6 @@
 {
   ".": 265,
-  "./core": 269600,
+  "./core": 273600,
   "./adapters/ai-sdk": 1345,
   "imports": {
     "stepBase": 5500,
@@ -41,6 +41,7 @@
     "scheduleCardPrimitive": 9500,
     "agentCardPrimitive": 5500,
     "usageMeterPrimitive": 47500,
-    "quotaNoticePrimitive": 43000
+    "quotaNoticePrimitive": 43000,
+    "activityGraphPrimitive": 11000
   }
 }

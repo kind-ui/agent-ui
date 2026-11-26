@@ -112,6 +112,8 @@ export default {
 
     // wave-7-task-17: Activity Graph
 
+    "activity-graph",
+
     // wave-7-task-18: Thread List inbox
 
     // wave-7-task-19: Flow Graph
@@ -311,6 +313,8 @@ export default {
     "wave-7/quota-notice.spec.ts",
 
     // wave-7-task-17: Activity Graph
+
+    "wave-7/activity-graph.spec.ts",
 
     // wave-7-task-18: Thread List inbox
 
