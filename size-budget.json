@@ -35,9 +35,9 @@
     "shareDialogPrimitive": 42000,
     "conversationSearchPrimitive": 62500,
     "threadSearchPrimitive": 59100,
-    "confirmationPrimitive": 43200,
+    "confirmationPrimitive": 43300,
     "toolPrimitive": 11800,
-    "stepGroupPrimitive": 11600,
+    "stepGroupPrimitive": 11700,
     "diffPrimitive": 28800,
     "checkpointPrimitive": 42000
   }

@@ -61,7 +61,7 @@ const page =
 const quota = (root: HTMLElement) => {
   defineNotice();
   const container = document.createElement("div");
-  container.className = "flex w-[36rem] flex-col gap-3 p-6";
+  container.className = "flex w-full max-w-[36rem] flex-col gap-3 p-6";
   for (const item of quotaNotices()) {
     const notice = document.createElement("kind-notice");
     notice.id = `notice-${item.id}`;

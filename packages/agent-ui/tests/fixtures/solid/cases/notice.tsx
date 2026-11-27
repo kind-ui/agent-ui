@@ -62,7 +62,7 @@ function Page(props: { motion?: MotionMode; fallback?: boolean }) {
 
 function Quota() {
   return (
-    <div class="flex w-[36rem] flex-col gap-3 p-6">
+    <div class="flex w-full max-w-[36rem] flex-col gap-3 p-6">
       <For each={quotaNotices()} keyed={(item) => item.id}>
         {(item) => (
           <Notice

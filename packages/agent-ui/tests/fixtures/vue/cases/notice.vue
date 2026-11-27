@@ -45,7 +45,7 @@ onMounted(() =>
 </script>
 
 <template>
-  <div v-if="variant === 'quota'" class="flex w-[36rem] flex-col gap-3 p-6">
+  <div v-if="variant === 'quota'" class="flex w-full max-w-[36rem] flex-col gap-3 p-6">
     <Notice
       v-for="item in quota"
       :id="`notice-${item.id}`"

@@ -31,7 +31,7 @@
 </script>
 
 {#if variant === "quota"}
-  <div class="flex w-[36rem] flex-col gap-3 p-6">
+  <div class="flex w-full max-w-[36rem] flex-col gap-3 p-6">
     {#each quotaNotices() as item (item.id)}
       <Notice
         id={`notice-${item.id}`}

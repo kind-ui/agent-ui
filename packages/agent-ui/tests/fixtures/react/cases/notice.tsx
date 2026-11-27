@@ -55,7 +55,7 @@ function Page({ motion, fallback }: { motion?: MotionMode; fallback?: boolean })
 
 function Quota() {
   return (
-    <div className="flex w-[36rem] flex-col gap-3 p-6">
+    <div className="flex w-full max-w-[36rem] flex-col gap-3 p-6">
       {quotaNotices().map((item) => (
         <Notice
           key={item.id}
