@@ -31,6 +31,7 @@ const consumers: Record<string, string> = {
   "plan/plan.ts": "kind-plan-outcome-icon",
   "test-results/test-results.ts": "kind-test-results-item-status",
   "dictation-button/dictation-button.ts": "kind-dictation-status-icon",
+  "diff/diff.ts": "kind-diff-file-mark",
 
   // Wave 6 markers (AGENTS.md "Wave 6 shared-file markers"): each task adds its consumers right below its own line.
 
@@ -96,6 +97,7 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
   },
   { url: "/?c=stack-trace&case=all", slots: ["kind-stack-trace-icon"] },
   { url: "/?c=terminal&case=all", slots: ["kind-terminal-icon"] },
+  { url: "/?c=diff&case=all", slots: ["kind-diff-summary-mark", "kind-diff-file-mark"] },
   {
     url: "/?c=checkpoint&case=all",
     slots: ["kind-checkpoint-restored"],
