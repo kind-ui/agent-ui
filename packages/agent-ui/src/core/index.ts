@@ -680,6 +680,7 @@ export {
 // wave-6-task-2: Thread List
 
 export {
+  foldLabel,
   type ThreadListAction,
   type ThreadListApi,
   type ThreadListDialogState,

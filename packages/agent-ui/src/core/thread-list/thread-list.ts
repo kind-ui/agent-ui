@@ -296,6 +296,8 @@ export type ThreadListApi = {
   summaryState: (state: ThreadListState, id: string) => ThreadListSummaryState;
   /** Called by a row: measures it while it has a second line, which may wrap. */
   measureRow: (el: HTMLElement, id: string) => () => void;
+  /** Called by Unarchive. */
+  pressUnarchive: (id: string, event?: Event) => void;
   /** Called by the fold button: shows the next page of "Done", or folds it again once all show. */
   toggleDone: (event?: Event) => void;
   /** Called by the viewport slot: connects the virtualizer. */
@@ -338,7 +340,7 @@ type ThreadListSlots = {
   viewport: Slot;
   grid: Slot<BaseSlotProps, ThreadListGridState>;
   heading: Slot<RowProps>;
-  "heading-cell": Slot<RowProps, { label: string }>;
+  "heading-cell": Slot<RowProps, { label: string; count: string }>;
   row: Slot<RowProps>;
   "link-cell": Slot<RowProps>;
   link: Slot<RowProps, ThreadListLinkState>;
@@ -669,6 +671,9 @@ const rowAttrs = (state: ThreadListState, value: string) => {
     style: css({ "--kind-thread-row-start": start === undefined ? undefined : `${start}px` }),
   };
 };
+
+/** The fold row's words: "12 more done", or "Show less" once all of "Done" shows. */
+export const foldLabel = (count: number) => (count > 0 ? `${count} ${WORDS.moreDone}` : "Show less");
 
 const markOf = (state: ThreadListState, id: string) => {
   const thread = threadOf(state, id);
@@ -1228,6 +1233,9 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         };
       },
       toggleDone,
+      pressUnarchive: (id, event) => {
+        if (store.get().canUnarchive) move(id, "onUnarchive", actionSource(event, "unarchive-press"));
+      },
       bindViewport: (el) => {
         viewport = el;
         const style = getComputedStyle(el);
@@ -1463,6 +1471,8 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         const unread = threadOf(state, props.value)?.unread && mark?.status !== "complete";
         return {
           "aria-label": mark && (unread ? `${mark.label}, unread` : mark.label),
+          // The second line's lead says the same in words.
+          "aria-hidden": summaryOf(threadOf(state, props.value), state.groupBy).lead ? "true" : undefined,
           "data-status-mark": "",
           "data-status": mark?.status,
         };
@@ -1554,7 +1564,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       props: { value: "string" },
       selects: ownRow(1),
       present: (state) => state.canUnarchive,
-      press: ({ api, props }) => void api.unarchive?.(props.value),
+      press: ({ api, props }, event) => api.pressUnarchive(props.value, event),
       state: () => ({ label: WORDS.unarchive }),
       attrs: (state, { props, api }) => ({
         type: "button",
@@ -1599,7 +1609,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       state: (state, { props }) => {
         const entry = state.entries[props.value];
         const count = entry?.type === "fold" ? entry.count : 0;
-        return { label: count > 0 ? `${count} ${WORDS.moreDone}` : "Show less" };
+        return { label: foldLabel(count) };
       },
       attrs: (state, { props, api }) => {
         const entry = state.entries[props.value];

@@ -1,14 +1,33 @@
 import type { Thread } from "@kind-ui/agent-ui";
 import type { AgentAction } from "@ui-sdk/web/agent";
 import { defineThreadList } from "../../../../src/web/thread-list.js";
-import { threads as fixed, manyThreads, NOW, threadListHost } from "../../shared/thread-list.js";
+import {
+  archivedThreads,
+  doneThreads,
+  threads as fixed,
+  INBOX_NOW,
+  inboxThreads,
+  manyThreads,
+  NOW,
+  threadListHost,
+} from "../../shared/thread-list.js";
 
-const { host, select, newThread, rename, pin, share, remove, loadMore } = threadListHost();
+const { host, select, newThread, rename, pin, share, remove, loadMore, archive } = threadListHost();
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 
 const threadList =
-  ({ initial, confirmDelete }: { initial: Thread[]; confirmDelete?: boolean }) =>
+  ({
+    initial,
+    confirmDelete,
+    inbox,
+    view,
+  }: {
+    initial: Thread[];
+    confirmDelete?: boolean;
+    inbox?: boolean;
+    view?: "archived";
+  }) =>
   (root: HTMLElement) => {
     defineThreadList();
     const container = document.createElement("div");
@@ -16,9 +35,11 @@ const threadList =
     const list = document.createElement("kind-thread-list");
     list.id = "threads";
     list.threads = initial;
-    list.value = initial[1]?.id ?? null;
-    list.now = NOW;
+    list.value = inbox ? null : (initial[1]?.id ?? null);
+    list.now = inbox ? INBOX_NOW : NOW;
     list.timeZone = "UTC";
+    if (inbox) list.groupBy = "status";
+    if (view) list.view = view;
     if (confirmDelete !== undefined) list.confirmDelete = confirmDelete;
     list.hasMore = initial.length > 100;
     Object.assign(list, {
@@ -27,6 +48,8 @@ const threadList =
       canRename: true,
       canPin: true,
       canShare: true,
+      canArchive: !!inbox,
+      canUnarchive: !!inbox,
       canDelete: true,
       canLoadMore: true,
     });
@@ -52,6 +75,11 @@ const threadList =
       waitUntil(remove(value, details));
     });
     list.addEventListener("loadmore", (event) => loadMore(event.detail));
+    for (const type of ["threadarchive", "threadunarchive"] as const)
+      list.addEventListener(type, (event) => {
+        const { value, waitUntil, ...details } = event.detail;
+        waitUntil(archive(value, details));
+      });
     container.append(list);
     root.append(container);
     Object.assign(window, {
@@ -76,4 +104,7 @@ export const cases = {
   "no-confirm": threadList({ initial: fixed, confirmDelete: false }),
   ten: threadList({ initial: manyThreads(10) }),
   thousand: threadList({ initial: manyThreads(1000) }),
+  inbox: threadList({ initial: inboxThreads, inbox: true }),
+  "nothing-waiting": threadList({ initial: doneThreads, inbox: true }),
+  archived: threadList({ initial: archivedThreads, inbox: true, view: "archived" }),
 };

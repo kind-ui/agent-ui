@@ -1,4 +1,5 @@
 export {
+  foldLabel,
   type ThreadListAction,
   type ThreadListApi,
   type ThreadListDialogState,

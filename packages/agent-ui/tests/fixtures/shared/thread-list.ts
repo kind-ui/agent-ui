@@ -17,6 +17,105 @@ export const threads: Thread[] = [
   { id: "t6", title: "Plan the offsite", updatedAt: "2026-11-14T12:00:00Z", href: "#t6", status: "error" },
 ];
 
+/** The inbox of background runs, grouped by status, at `INBOX_NOW`. */
+export const INBOX_NOW = "2026-11-27T12:00:00Z";
+const ago = (minutes: number) => new Date(Date.parse(INBOX_NOW) - minutes * 60_000).toISOString();
+
+const doneRuns = (count: number, from = 0): Thread[] =>
+  Array.from({ length: count }, (_, index) => ({
+    id: `d${from + index}`,
+    title: `Finished run ${from + index + 1}`,
+    status: "complete",
+    updatedAt: ago(180 + (from + index) * 60),
+    summary: "Opened a pull request",
+    href: `#d${from + index}`,
+  }));
+
+export const inboxThreads: Thread[] = [
+  {
+    id: "r1",
+    title: "Migrate auth to sessions",
+    status: "awaiting-approval",
+    waitingSince: ago(12),
+    updatedAt: ago(30),
+    summary: "Run `rm -rf dist`?",
+    href: "#r1",
+  },
+  {
+    id: "r2",
+    title: "Fix flaky checkout test",
+    status: "awaiting-input",
+    waitingSince: ago(8),
+    updatedAt: ago(20),
+    summary: "Which payment provider?",
+    href: "#r2",
+  },
+  {
+    id: "r3",
+    title: "Upgrade to React 20",
+    status: "error",
+    unread: true,
+    waitingSince: ago(2),
+    updatedAt: ago(2),
+    summary: "3 tests failing",
+    href: "#r3",
+  },
+  {
+    id: "r4",
+    title: "Write release notes",
+    status: "running",
+    updatedAt: ago(4),
+    summary: "Reading `CHANGELOG.md`",
+    href: "#r4",
+  },
+  {
+    id: "r5",
+    title: "Add dark mode to settings",
+    status: "running",
+    updatedAt: ago(11),
+    summary: "Editing `theme.css` · +48 −6",
+    href: "#r5",
+  },
+  { id: "r6", title: "Bump dependencies", status: "queued", href: "#r6" },
+  {
+    id: "r7",
+    title: "Refactor the router",
+    status: "complete",
+    unread: true,
+    updatedAt: ago(60),
+    summary: "+120 −8 in 4 files · PR #412",
+    href: "#r7",
+  },
+  ...doneRuns(12),
+];
+
+/** Nothing waiting and nothing running: only "Done". */
+export const doneThreads: Thread[] = [
+  {
+    id: "r7",
+    title: "Refactor the router",
+    status: "complete",
+    updatedAt: ago(60),
+    summary: "+120 −8 in 4 files · PR #412",
+    href: "#r7",
+  },
+  ...doneRuns(13),
+];
+
+export const archivedThreads: Thread[] = [
+  { ...doneThreads[0], archived: true } as Thread,
+  {
+    id: "r8",
+    title: "Spike: edge runtime",
+    status: "complete",
+    archived: true,
+    updatedAt: "2026-11-18T09:00:00Z",
+    summary: "Stopped after 4 min",
+    href: "#r8",
+  },
+  ...inboxThreads.slice(0, 2),
+];
+
 /** `count` threads a minute apart, newest first, all today, then yesterday, then earlier. */
 export const manyThreads = (count: number, from = 0): Thread[] =>
   Array.from({ length: count }, (_, index) => {
@@ -35,7 +134,8 @@ export function threadListHost() {
   const calls: { name: string; id?: string; pinned?: boolean; reason?: string; source?: string }[] = [];
   const renames: Deferred[] = [];
   const deletes: Deferred[] = [];
-  const host = { calls, renames, deletes, route: false, permit: false };
+  const archives: Deferred[] = [];
+  const host = { calls, renames, deletes, archives, route: false, permit: false };
   const record = (
     name: string,
     id?: string,
@@ -65,5 +165,7 @@ export function threadListHost() {
     remove: (id: string, details: { source: string }) =>
       new Promise<void>((resolve, reject) => deletes.push({ id, source: details.source, resolve, reject })),
     loadMore: (details: { reason: string }) => record("loadMore", undefined, details),
+    archive: (id: string, details: { source: string }) =>
+      new Promise<void>((resolve, reject) => archives.push({ id, source: details.source, resolve, reject })),
   };
 }

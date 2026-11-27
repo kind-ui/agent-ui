@@ -1,17 +1,23 @@
-/* Thread List (spec §7): the threads as a navigation grid in groups, a row per thread at a fixed height, with New chat
-   above and one menu and delete dialog for every row. The row menu's look and motion are `menu.css`'s. */
+/* Thread List (spec §7, Wave 7 spec §13): the threads as a navigation grid in groups, a row per thread, with New chat
+   above and one menu and delete dialog for every row. A row with a second line is measured, since it may wrap. The row
+   menu's look and motion are `menu.css`'s. */
 @layer components {
   [data-slot="kind-thread-list"] {
-    /* Lucide "plus", "ellipsis", "pencil", "pin", "share" and "trash-2", see THIRD_PARTY_NOTICES.md. */
+    /* Lucide "plus", "ellipsis", "pencil", "pin", "share", "archive", "trash-2" and "chevron-right", see
+       THIRD_PARTY_NOTICES.md. */
     --kind-thread-list-icon-new: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='M12 5v14'/%3E%3C/svg%3E");
     --kind-thread-list-icon-more: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='1'/%3E%3Ccircle cx='19' cy='12' r='1'/%3E%3Ccircle cx='5' cy='12' r='1'/%3E%3C/svg%3E");
     --kind-thread-list-icon-rename: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z'/%3E%3Cpath d='m15 5 4 4'/%3E%3C/svg%3E");
     --kind-thread-list-icon-pin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 17v5'/%3E%3Cpath d='M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z'/%3E%3C/svg%3E");
     --kind-thread-list-icon-share: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2v13'/%3E%3Cpath d='m16 6-4-4-4 4'/%3E%3Cpath d='M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8'/%3E%3C/svg%3E");
+    --kind-thread-list-icon-archive: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='20' height='5' x='2' y='3' rx='1'/%3E%3Cpath d='M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8'/%3E%3Cpath d='M10 12h4'/%3E%3C/svg%3E");
+    --kind-thread-list-icon-fold: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E");
     --kind-thread-list-icon-delete: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 11v6'/%3E%3Cpath d='M14 11v6'/%3E%3Cpath d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6'/%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E");
     /* `--kind-list-row-height` in pixels, which the virtualizer reads as a number, so its rows and every budget hold
        whatever the fonts. */
     --kind-thread-row-height: 36px;
+    /* A row with a second line, before it's measured, and at least. */
+    --kind-thread-row-height-tall: 52px;
 
     display: flex;
     flex-direction: column;
@@ -51,6 +57,12 @@
     &:where([data-thread-list-icon="share"]) {
       --kind-thread-list-icon: var(--kind-thread-list-icon-share);
     }
+    &:where([data-thread-list-icon="archive"]) {
+      --kind-thread-list-icon: var(--kind-thread-list-icon-archive);
+    }
+    &:where([data-thread-list-icon="fold"]) {
+      --kind-thread-list-icon: var(--kind-thread-list-icon-fold);
+    }
     &:where([data-thread-list-icon="delete"]) {
       --kind-thread-list-icon: var(--kind-thread-list-icon-delete);
     }
@@ -74,13 +86,25 @@
     height: var(--kind-thread-list-size);
   }
 
-  :is([data-slot="kind-thread-list-heading"], [data-slot="kind-thread-list-row"]) {
+  /* Rows that move between groups slide to their new place. */
+  :is(
+    [data-slot="kind-thread-list-heading"],
+    [data-slot="kind-thread-list-row"],
+    [data-slot="kind-thread-list-fold-row"]
+  ) {
     position: absolute;
     inset-inline: 0;
     top: var(--kind-thread-row-start, 0);
     display: flex;
     align-items: center;
     height: var(--kind-thread-row-height);
+    transition: top var(--kind-duration-base) var(--kind-ease-in-out);
+  }
+
+  [data-slot="kind-thread-list-row"][data-tall] {
+    align-items: stretch;
+    height: auto;
+    min-height: var(--kind-thread-row-height-tall);
   }
 
   [data-slot="kind-thread-list-heading-cell"] {
@@ -102,9 +126,69 @@
     }
   }
 
+  [data-thread-list-count] {
+    margin-inline-start: 2px;
+    font-weight: var(--kind-font-weight-regular);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* "Nothing is waiting on you.", where "Needs you" and "Running" would be. */
+  [data-slot="kind-thread-list-empty"] {
+    margin: 12px 0 8px;
+    padding-inline: 10px;
+    font-size: var(--kind-text-sm);
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
+    color: var(--kind-color-muted);
+  }
+
+  [data-slot="kind-thread-list-fold-cell"] {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    height: 100%;
+  }
+
+  /* A quiet disclosure: its chevron turns once a page shows. */
+  [data-slot="kind-thread-list-fold"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+    padding-inline: 6px 10px;
+    border: 0;
+    border-radius: var(--kind-radius-md);
+    background: none;
+    color: var(--kind-color-muted);
+    font: inherit;
+    font-size: var(--kind-text-sm);
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
+    cursor: pointer;
+    outline: none;
+    transition: color var(--kind-duration-fast) var(--kind-ease-in-out);
+
+    &:hover {
+      color: var(--kind-color-fg);
+    }
+    &:focus-visible {
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
+    }
+    & [data-thread-list-icon] {
+      --kind-icon-size: 14px;
+      transition: rotate var(--kind-duration-fast) var(--kind-ease-in-out);
+    }
+    &[aria-expanded="true"] [data-thread-list-icon] {
+      rotate: 90deg;
+    }
+  }
+
   [data-slot="kind-thread-list-row"] {
     border-radius: var(--kind-radius-md);
-    transition: background-color var(--kind-duration-fast) var(--kind-ease-in-out);
+    transition:
+      background-color var(--kind-duration-fast) var(--kind-ease-in-out),
+      top var(--kind-duration-base) var(--kind-ease-in-out);
 
     &:hover {
       background-color: var(--kind-color-hover);
@@ -126,11 +210,14 @@
     height: 100%;
   }
 
+  /* The title and its mark, then the second line under them. */
   [data-slot="kind-thread-list-link"] {
     display: flex;
     flex: 1;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
+    align-content: center;
+    column-gap: 8px;
     min-width: 0;
     height: 100%;
     padding-inline: 10px;
@@ -170,6 +257,50 @@
     font-weight: var(--kind-font-weight-semibold);
   }
 
+  /* What the run waits on or how it ended, then its summary: muted, wrapping once on a narrow screen. */
+  [data-slot="kind-thread-list-summary"] {
+    flex-basis: 100%;
+    min-width: 0;
+    overflow: hidden;
+    font-size: var(--kind-text-sm);
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
+    font-variant-numeric: tabular-nums;
+    color: var(--kind-color-muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    & code {
+      font-family: var(--kind-font-mono);
+      font-size: 0.95em;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    [data-slot="kind-thread-list-summary"] {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  [data-slot="kind-thread-list-row"][data-tall] {
+    & [data-slot="kind-thread-list-link"] {
+      padding-block: 7px;
+    }
+    /* The time, More and Unarchive line up with the title. */
+    & [data-slot="kind-thread-list-time"] {
+      align-self: flex-start;
+      margin-top: calc(7px + (var(--kind-text-md-leading) - var(--kind-text-xs-leading)) / 2);
+    }
+    & [data-slot="kind-thread-list-more-cell"] {
+      align-items: flex-start;
+      padding-top: calc(7px + (var(--kind-text-md-leading) - var(--kind-control-height-sm)) / 2);
+    }
+  }
+
   /* How long ago, at the row's end, as wide as More at least, which takes its place. */
   [data-slot="kind-thread-list-time"] {
     flex-shrink: 0;
@@ -186,12 +317,13 @@
     transition: opacity var(--kind-duration-fast) var(--kind-ease-in-out);
   }
 
-  /* Muted, so the accent in this column is only ever the unread dot. */
+  /* Muted, so the accent in this column is only ever the unread dot. Grouped by status, the mark is the row's one
+     signal and keeps its colors. */
   [data-slot="kind-thread-list-status"] {
     --kind-status-mark-size: 14px;
     flex-shrink: 0;
 
-    &[data-status="running"] {
+    &[data-status="running"]:where(:not([data-group-by="status"] *)) {
       border-color: color-mix(in oklab, var(--kind-color-muted) 25%, var(--kind-color-surface));
       &::before {
         border-top-color: var(--kind-color-muted);
@@ -242,6 +374,12 @@
     &:has(> [data-slot="kind-thread-list-more-cell"]:not([hidden])) [data-slot="kind-thread-list-time"] {
       opacity: 0;
     }
+  }
+
+  /* Unarchive is a word, not an icon, in More's place. */
+  [data-slot="kind-thread-list-unarchive"] {
+    color: var(--kind-color-fg);
+    font-weight: var(--kind-font-weight-medium);
   }
 
   /* Touch screens have no hover to show it, so More stands in for the time. */
@@ -365,12 +503,37 @@
     :is(
       [data-slot="alert-dialog-content"],
       [data-slot="alert-dialog-backdrop"],
+      [data-slot="kind-thread-list-heading"],
       [data-slot="kind-thread-list-row"],
+      [data-slot="kind-thread-list-fold-row"],
+      [data-slot="kind-thread-list-fold"],
+      [data-slot="kind-thread-list-fold"] [data-thread-list-icon],
       [data-slot="kind-thread-list-more-cell"],
       [data-slot="kind-thread-list-time"],
       [data-thread-list-title]
     ) {
     transition: none;
+  }
+
+  /* Rows don't slide under reduced motion; they take their place at once. */
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-slot="kind-thread-list"][data-motion="auto"])
+      :is(
+        [data-slot="kind-thread-list-heading"],
+        [data-slot="kind-thread-list-row"],
+        [data-slot="kind-thread-list-fold-row"]
+      ) {
+      transition-property: background-color;
+    }
+  }
+
+  :where([data-slot="kind-thread-list"][data-motion="reduced"])
+    :is(
+      [data-slot="kind-thread-list-heading"],
+      [data-slot="kind-thread-list-row"],
+      [data-slot="kind-thread-list-fold-row"]
+    ) {
+    transition-property: background-color;
   }
 
   /* Web Components keep parts that aren't present in the page, hidden. */
@@ -379,8 +542,12 @@
     [data-slot="kind-thread-list-link"],
     [data-slot="kind-thread-list-status"],
     [data-slot="kind-thread-list-unread"],
+    [data-slot="kind-thread-list-summary"],
     [data-slot="kind-thread-list-editor"],
     [data-slot="kind-thread-list-more-cell"],
+    [data-slot="kind-thread-list-more"],
+    [data-slot="kind-thread-list-unarchive"],
+    [data-slot="kind-thread-list-empty"],
     [data-slot="kind-thread-list-end"],
     [data-slot="kind-thread-list-retry"],
     [data-slot="kind-thread-list-dialog-error"]

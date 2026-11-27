@@ -1,4 +1,5 @@
 import {
+  foldLabel,
   type ThreadListApi,
   type ThreadListEntry,
   type ThreadListLoadReason,
@@ -6,8 +7,10 @@ import {
   type ThreadListOptions,
   type ThreadListReason,
   type ThreadListState,
+  type ThreadListSummaryState,
   type ThreadListTimeState,
   threadListPrimitive,
+  WORDS,
 } from "@kind-ui/agent-ui/core";
 import type { ActionDetails, ChangeDetails } from "@ui-sdk/core";
 import type { AlertDialogOpenChangeReason } from "@ui-sdk/core/alert-dialog";
@@ -22,7 +25,7 @@ import type {
 import { defineInternalAlertDialog } from "./internal/alert-dialog.js";
 import { defineInternalMenu, menuElement as element, placeMenuChild as place } from "./internal/menu.js";
 
-const DEFAULT_PARTS = `<kind-thread-list-new><button><span data-thread-list-icon="new" aria-hidden="true"></span>New chat</button></kind-thread-list-new><kind-thread-list-viewport><kind-thread-list-grid><div></div></kind-thread-list-grid><kind-thread-list-end></kind-thread-list-end></kind-thread-list-viewport><kind-thread-list-menu><kind-internal-menu><ui-menu><kind-thread-list-menu-content><ui-menu-content align="end" side-offset="4" data-agent-hidden></ui-menu-content></kind-thread-list-menu-content></ui-menu></kind-internal-menu></kind-thread-list-menu><kind-thread-list-dialog><kind-internal-alert-dialog><ui-alert-dialog><ui-alert-dialog-backdrop hidden></ui-alert-dialog-backdrop><ui-alert-dialog-content hidden><ui-alert-dialog-title></ui-alert-dialog-title><ui-alert-dialog-description></ui-alert-dialog-description><div data-thread-list-answers><kind-thread-list-dialog-error>Couldn't delete. Try again.</kind-thread-list-dialog-error><kind-thread-list-dialog-cancel><button>Cancel</button></kind-thread-list-dialog-cancel><kind-thread-list-dialog-delete><button>Delete</button></kind-thread-list-dialog-delete></div></ui-alert-dialog-content></ui-alert-dialog></kind-internal-alert-dialog></kind-thread-list-dialog>`;
+const DEFAULT_PARTS = `<kind-thread-list-new><button><span data-thread-list-icon="new" aria-hidden="true"></span>New chat</button></kind-thread-list-new><kind-thread-list-empty></kind-thread-list-empty><kind-thread-list-viewport><kind-thread-list-grid><div></div></kind-thread-list-grid><kind-thread-list-end></kind-thread-list-end></kind-thread-list-viewport><kind-thread-list-menu><kind-internal-menu><ui-menu><kind-thread-list-menu-content><ui-menu-content align="end" side-offset="4" data-agent-hidden></ui-menu-content></kind-thread-list-menu-content></ui-menu></kind-internal-menu></kind-thread-list-menu><kind-thread-list-dialog><kind-internal-alert-dialog><ui-alert-dialog><ui-alert-dialog-backdrop hidden></ui-alert-dialog-backdrop><ui-alert-dialog-content hidden><ui-alert-dialog-title></ui-alert-dialog-title><ui-alert-dialog-description></ui-alert-dialog-description><div data-thread-list-answers><kind-thread-list-dialog-error>Couldn't delete. Try again.</kind-thread-list-dialog-error><kind-thread-list-dialog-cancel><button>Cancel</button></kind-thread-list-dialog-cancel><kind-thread-list-dialog-delete><button>Delete</button></kind-thread-list-dialog-delete></div></ui-alert-dialog-content></ui-alert-dialog></kind-internal-alert-dialog></kind-thread-list-dialog>`;
 
 // Parts this element wrote into. A part someone wrote into keeps what they wrote, as React's children do. Kept across
 // instances, because UI SDK rebuilds one when the element returns to the page.
@@ -75,9 +78,36 @@ const newHeading = (document: Document, key: string) => {
   return heading;
 };
 
+const newFold = (document: Document, key: string) => {
+  const button = element(document, "button");
+  const fold = element(document, "kind-thread-list-fold", { value: key });
+  fold.append(button);
+  const cell = element(document, "kind-thread-list-fold-cell", { value: key });
+  cell.append(fold);
+  const row = element(document, "kind-thread-list-fold-row", { value: key });
+  row.append(cell);
+  return row;
+};
+
 // Each row's time element and the state it was last drawn from.
 const rowTimes = new WeakMap<Element, Element>();
 const drawnTimes = new WeakMap<Element, ThreadListTimeState>();
+const rowSummaries = new WeakMap<Element, Element>();
+const drawnSummaries = new WeakMap<Element, ThreadListSummaryState>();
+
+/** "Approval · Run `rm -rf dist`?": the lead, then the summary with its code. */
+const drawSummary = (row: Element, summary: ThreadListSummaryState) => {
+  const target = rowSummaries.get(row);
+  if (!target || drawnSummaries.get(target) === summary) return;
+  drawnSummaries.set(target, summary);
+  const document = target.ownerDocument;
+  const { lead, pieces } = summary;
+  target.replaceChildren(
+    lead,
+    lead && pieces.length ? " · " : "",
+    ...pieces.map((piece, index) => (index % 2 ? element(document, "code", {}, piece) : piece)),
+  );
+};
 
 const drawTime = (row: Element, time: ThreadListTimeState) => {
   const target = rowTimes.get(row);
@@ -93,6 +123,8 @@ const newRow = (document: Document, id: string) => {
     element(document, "kind-thread-list-status", { value: id }),
     element(document, "kind-thread-list-unread", { value: id }),
   );
+  const summary = element(document, "kind-thread-list-summary", { value: id });
+  anchor.append(summary);
   const link = element(document, "kind-thread-list-link", { value: id });
   link.append(anchor);
   const cell = element(document, "kind-thread-list-link-cell", { value: id });
@@ -105,27 +137,47 @@ const newRow = (document: Document, id: string) => {
   button.append(element(document, "span", { "data-thread-list-icon": "more", "aria-hidden": "true" }));
   const more = element(document, "kind-thread-list-more", { value: id });
   more.append(button);
+  const unarchive = element(document, "kind-thread-list-unarchive", { value: id });
+  unarchive.append(element(document, "button"));
   const moreCell = element(document, "kind-thread-list-more-cell", { value: id });
-  moreCell.append(more);
+  moreCell.append(more, unarchive);
   const row = element(document, "kind-thread-list-row", { value: id });
   row.append(cell, moreCell);
   rowTimes.set(row, time);
+  rowSummaries.set(row, summary);
   return row;
 };
 
 // The entry each row was last drawn from, so a redraw writes only rows that changed.
 const drawnEntries = new WeakMap<Element, ThreadListEntry>();
 
-/** Writes a row's label or title, as text so no title is parsed as markup. */
+/** Writes a row's label, count or title, as text so no title is parsed as markup. */
 const drawEntry = (row: Element, entry: ThreadListEntry) => {
   if (drawnEntries.get(row) === entry) return;
   drawnEntries.set(row, entry);
-  const text =
-    entry.type === "heading"
-      ? row.querySelector(":scope > kind-thread-list-heading-cell")
-      : row.querySelector("[data-thread-list-title]");
-  const value = entry.type === "heading" ? entry.label : entry.thread.title;
-  if (text && text.textContent !== value) text.textContent = value;
+  if (entry.type === "heading") {
+    const cell = row.querySelector(":scope > kind-thread-list-heading-cell");
+    if (!cell) return;
+    const count = entry.count === undefined ? "" : String(entry.count);
+    if (cell.textContent === (count ? `${entry.label} ${count}` : entry.label)) return;
+    cell.replaceChildren(
+      entry.label,
+      ...(count ? [" ", element(cell.ownerDocument, "span", { "data-thread-list-count": "" }, count)] : []),
+    );
+    return;
+  }
+  if (entry.type === "fold") {
+    const button = row.querySelector("kind-thread-list-fold > button");
+    const label = foldLabel(entry.count);
+    if (!button || button.textContent === label) return;
+    button.replaceChildren(
+      element(row.ownerDocument, "span", { "data-thread-list-icon": "fold", "aria-hidden": "true" }),
+      label,
+    );
+    return;
+  }
+  const text = row.querySelector("[data-thread-list-title]");
+  if (text && text.textContent !== entry.thread.title) text.textContent = entry.thread.title;
 };
 
 // Each grid's row elements by key, so drawing reads no attributes.
@@ -149,11 +201,21 @@ const drawRows = (grid: Element, state: ThreadListState, api: ThreadListApi) => 
     if (!entry) continue;
     let row = rows.get(item.key);
     if (!row) {
-      row = entry.type === "heading" ? newHeading(document, item.key) : newRow(document, item.key);
+      row =
+        entry.type === "heading"
+          ? newHeading(document, item.key)
+          : entry.type === "fold"
+            ? newFold(document, item.key)
+            : newRow(document, item.key);
       rows.set(item.key, row);
     }
     drawEntry(row, entry);
-    if (entry.type === "thread") drawTime(row, api.timeState(state, item.key));
+    if (entry.type === "thread") {
+      drawTime(row, api.timeState(state, item.key));
+      drawSummary(row, api.summaryState(state, item.key));
+      const unarchive = row.querySelector("kind-thread-list-unarchive > button");
+      if (unarchive && !unarchive.firstChild) unarchive.textContent = WORDS.unarchive;
+    }
     place(grid, row, previous ? previous.nextElementSibling : grid.firstElementChild);
     previous = row;
   }
@@ -216,8 +278,10 @@ type DialogElement = Element & { controller?: unknown; dismissible?: boolean };
  * `threads` (and `groupLabels`) as properties. Callbacks are events, each offered by its attribute: `can-select`
  * (`threadselect`, cancel it to route without following the link), `can-new` (`threadnew`), `can-rename`
  * (`threadrename`, with the title as `detail.title`), `can-pin` (`pinchange`), `can-share` (`threadshare`),
- * `can-delete` (`threaddelete`) and `can-load-more` (`loadmore`). Call `event.detail.waitUntil(promise)` on
- * `threadrename` and `threaddelete` to lock renaming, or keep the dialog open, until it settles.
+ * `can-archive` (`threadarchive`), `can-unarchive` (`threadunarchive`), `can-delete` (`threaddelete`) and
+ * `can-load-more` (`loadmore`). Call `event.detail.waitUntil(promise)` on `threadrename` and `threaddelete` to lock
+ * renaming, or keep the dialog open, until it settles, and on `threadarchive` and `threadunarchive` to bring the
+ * thread back if it rejects.
  */
 export function defineThreadList(): void {
   if (customElements.get("kind-thread-list")) return;
@@ -234,19 +298,32 @@ export function defineThreadList(): void {
         canRename: "boolean",
         canPin: "boolean",
         canShare: "boolean",
+        canArchive: "boolean",
+        canUnarchive: "boolean",
         canDelete: "boolean",
         canLoadMore: "boolean",
       },
       // Without the attribute the callback is left out; with it, `@ui-sdk/web` fills it in with an event.
       options: (el) => {
-        const { canSelect, canNew, canRename, canPin, canShare, canDelete, canLoadMore } =
-          el as KindThreadListElement;
+        const {
+          canSelect,
+          canNew,
+          canRename,
+          canPin,
+          canShare,
+          canArchive,
+          canUnarchive,
+          canDelete,
+          canLoadMore,
+        } = el as KindThreadListElement;
         return {
           ...(!canSelect && { onSelect: undefined }),
           ...(!canNew && { onNew: undefined }),
           ...(!canRename && { onRename: undefined }),
           ...(!canPin && { onPinChange: undefined }),
           ...(!canShare && { onShare: undefined }),
+          ...(!canArchive && { onArchive: undefined }),
+          ...(!canUnarchive && { onUnarchive: undefined }),
           ...(!canDelete && { onDelete: undefined }),
           ...(!canLoadMore && { onLoadMore: undefined }),
         };
@@ -258,6 +335,8 @@ export function defineThreadList(): void {
         onRename: "threadrename",
         onPinChange: "pinchange",
         onShare: "threadshare",
+        onArchive: "threadarchive",
+        onUnarchive: "threadunarchive",
         onDelete: "threaddelete",
         onLoadMore: "loadmore",
       },
@@ -298,12 +377,14 @@ export function defineThreadList(): void {
           fill(el.querySelector("kind-thread-list-dialog ui-alert-dialog-title"), title);
           fill(el.querySelector("kind-thread-list-dialog ui-alert-dialog-description"), description);
           drawEnd(el.querySelector("kind-thread-list-end"), state.loadStatus);
+          fill(el.querySelector("kind-thread-list-empty"), WORDS.nothingWaiting);
         };
         draw();
         return instance.subscribe(draw);
       },
     },
     new: { tag: "kind-thread-list-new", target: wrappedButton, display: "contents" },
+    empty: "kind-thread-list-empty",
     viewport: "kind-thread-list-viewport",
     // A native `div`, so the grid is a block as tall as its rows.
     grid: { tag: "kind-thread-list-grid", target: wrappedChild("div"), display: "contents" },
@@ -314,10 +395,15 @@ export function defineThreadList(): void {
     link: { tag: "kind-thread-list-link", target: wrappedChild("a"), display: "contents" },
     status: "kind-thread-list-status",
     unread: "kind-thread-list-unread",
+    summary: "kind-thread-list-summary",
     time: "kind-thread-list-time",
     editor: { tag: "kind-thread-list-editor", target: wrappedChild("input"), display: "contents" },
     "more-cell": "kind-thread-list-more-cell",
     more: { tag: "kind-thread-list-more", target: wrappedButton, display: "contents" },
+    unarchive: { tag: "kind-thread-list-unarchive", target: wrappedButton, display: "contents" },
+    "fold-row": "kind-thread-list-fold-row",
+    "fold-cell": "kind-thread-list-fold-cell",
+    fold: { tag: "kind-thread-list-fold", target: wrappedButton, display: "contents" },
     menu: "kind-thread-list-menu",
     "menu-content": { tag: "kind-thread-list-menu-content", display: "contents" },
     dialog: { tag: "kind-thread-list-dialog", display: "contents" },
@@ -337,6 +423,8 @@ export type KindThreadListEvents = {
   >;
   pinchange: UiDetailedChangeEvent<string, ChangeDetails<ThreadListReason> & { pinned: boolean }>;
   threadshare: UiChangeEvent<string, ThreadListReason>;
+  threadarchive: CustomEvent<{ value: string } & ActionDetails & Pick<UiActionDetail, "waitUntil">>;
+  threadunarchive: CustomEvent<{ value: string } & ActionDetails & Pick<UiActionDetail, "waitUntil">>;
   threaddelete: CustomEvent<{ value: string } & ActionDetails & Pick<UiActionDetail, "waitUntil">>;
   loadmore: CustomEvent<{ reason: ThreadListLoadReason }>;
   openchange: UiChangeEvent<boolean, MenuOpenChangeReason | AlertDialogOpenChangeReason>;
@@ -357,6 +445,10 @@ export interface KindThreadListElement
   canPin: boolean;
   /** Offers Share, which fires `threadshare`. */
   canShare: boolean;
+  /** Offers Archive, which fires `threadarchive`. */
+  canArchive: boolean;
+  /** Offers Unarchive in `view="archived"`, which fires `threadunarchive`. */
+  canUnarchive: boolean;
   /** Offers Delete, which fires `threaddelete`. */
   canDelete: boolean;
   /** Whether nearing the end and Retry fire `loadmore`. */
@@ -376,6 +468,12 @@ declare global {
     "kind-thread-list-link": HTMLElement;
     "kind-thread-list-status": HTMLElement;
     "kind-thread-list-unread": HTMLElement;
+    "kind-thread-list-summary": HTMLElement;
+    "kind-thread-list-unarchive": HTMLElement;
+    "kind-thread-list-fold-row": HTMLElement;
+    "kind-thread-list-fold-cell": HTMLElement;
+    "kind-thread-list-fold": HTMLElement;
+    "kind-thread-list-empty": HTMLElement;
     "kind-thread-list-time": HTMLElement;
     "kind-thread-list-editor": HTMLElement;
     "kind-thread-list-more-cell": HTMLElement;
