@@ -35,9 +35,11 @@ import {
 } from "../menu-base.js";
 import { createPendingAction } from "../pending.js";
 import { holdTransitions } from "../step/base.js";
-import { type ThreadGroupOptions, threadGroups } from "../thread-groups.js";
+import { statusGroup, type ThreadGroupOptions, threadGroups } from "../thread-groups.js";
+import { threadMark } from "../thread-mark.js";
 import { compactTimeLabel, type RelativeTimeOptions, todayKey } from "../time.js";
 import { everyMinute } from "../today.js";
+import { codeSpans, plainText, WORDS } from "../words.js";
 
 /** `"item-press"`: a person pressed the link or a menu item. `"imperative"`: an `api` call, like an agent's. */
 export type ThreadListReason = "item-press" | "imperative";
@@ -46,7 +48,7 @@ export type ThreadListReason = "item-press" | "imperative";
 export type ThreadListLoadReason = "end-reached" | "retry-press";
 
 /** What a row's menu offers, by value. */
-export type ThreadListAction = "rename" | "pin" | "share" | "delete";
+export type ThreadListAction = "rename" | "pin" | "share" | "archive" | "delete";
 
 export type ThreadListOptions = Pick<MenuBaseOptions, "presentation" | "motion"> & {
   /**
@@ -75,6 +77,16 @@ export type ThreadListOptions = Pick<MenuBaseOptions, "presentation" | "motion">
   onPinChange?: (id: string, details: ChangeDetails<ThreadListReason> & { pinned: boolean }) => void;
   /** Called by Share. */
   onShare?: (id: string, details: ChangeDetails<ThreadListReason>) => void;
+  /**
+   * Called by Archive, which moves the thread out of the list at once. The host sets its `archived`; a rejection
+   * brings it back and announces "<title> was restored".
+   */
+  onArchive?: (id: string, details: ActionDetails) => unknown;
+  /**
+   * Called by Unarchive, which takes the time's place in `view: "archived"` and moves the thread out at once. A
+   * rejection brings it back, as Archive's does.
+   */
+  onUnarchive?: (id: string, details: ActionDetails) => unknown;
   /**
    * Called by the dialog's Delete, or by Delete when `confirmDelete` is off. Return a promise to keep the dialog
    * open until it settles: a rejection keeps it open with an error.
@@ -108,14 +120,31 @@ export type ThreadListOptions = Pick<MenuBaseOptions, "presentation" | "motion">
   locale?: string;
   /** The IANA time zone that decides a thread's day. Defaults to UTC. */
   timeZone?: string;
-  /** Replaces the fixed groups' words ("Pinned", "Today", "Previous 7 days"), by key. */
+  /**
+   * How the threads group: `"date"` by the host's `group`, then by day; `"status"` by what each run needs from the
+   * person, for an inbox of background runs: "Needs you" (waiting on an approval or an answer, or failed and unseen,
+   * oldest waiting first), "Running" (newest first, queued last) and "Done" (newest first, folded behind "N more
+   * done"). Pinned threads come first either way.
+   * @default "date"
+   */
+  groupBy?: "date" | "status";
+  /**
+   * Which threads to list: `"active"` leaves archived threads out; `"archived"` lists only them, newest first.
+   * @default "active"
+   */
+  view?: "active" | "archived";
+  /** Replaces the fixed groups' words ("Pinned", "Today", "Previous 7 days", "Needs you"), by key. */
   groupLabels?: ThreadGroupOptions["labels"];
 };
 
-/** A row of the grid: a group's heading, or a thread. */
+/**
+ * A row of the grid: a group's heading, with its count when grouped by status; a thread; or the row that unfolds
+ * "Done", with how many threads it holds back (0 once all show) and whether it has shown any.
+ */
 export type ThreadListRow =
-  | { type: "heading"; key: string; label: string }
-  | { type: "thread"; key: string; thread: Thread };
+  | { type: "heading"; key: string; label: string; count?: number | undefined }
+  | { type: "thread"; key: string; thread: Thread }
+  | { type: "fold"; key: string; count: number; expanded: boolean };
 
 /** A row and where it sits, kept as one object while both stay the same. */
 export type ThreadListEntry = ThreadListRow & { index: number };
@@ -164,6 +193,18 @@ export type ThreadListState = MenuBaseState & {
   canPin: boolean;
   canShare: boolean;
   canDelete: boolean;
+  canArchive: boolean;
+  canUnarchive: boolean;
+  /** The `groupBy` option. */
+  groupBy: "date" | "status";
+  /** The `view` option. */
+  view: "active" | "archived";
+  /** How many pages of "Done" show past its newest thread. */
+  donePages: number;
+  /** Threads Archive or Unarchive moved out, until the host's threads say so or the call fails. */
+  moving: readonly string[];
+  /** Grouped by status, with nothing waiting on the person and nothing running. */
+  empty: boolean;
   /** The `confirmDelete` option. */
   confirmDelete: boolean;
   /** The `hasMore` option. */
@@ -181,6 +222,12 @@ export type ThreadListTimeState = { label: string };
 
 /** What the link hands render functions: its thread's id and title. */
 export type ThreadListLinkState = { value: string; title: string };
+
+/**
+ * What a row's second line hands render functions: what it waits on or how it ended when grouped by status
+ * ("Approval", "Question", "Failed", "Queued"), and its `summary` split on backticks, odd pieces being code.
+ */
+export type ThreadListSummaryState = { lead: string; pieces: string[] };
 
 /** What the menu content slot hands render functions: the open thread and what its menu offers. */
 export type ThreadListMenuContentState = {
@@ -222,6 +269,12 @@ export type ThreadListApi = {
   readonly pin: ((id: string, pinned?: boolean) => boolean) | undefined;
   /** Calls `onShare`. Offered while it's set. */
   readonly share: ((id: string) => boolean) | undefined;
+  /** Archives a thread through `onArchive`. Offered while it's set, outside `view: "archived"`. */
+  readonly archive: ((id: string) => boolean) | undefined;
+  /** Unarchives a thread through `onUnarchive`. Offered while it's set, in `view: "archived"`. */
+  readonly unarchive: ((id: string) => boolean) | undefined;
+  /** Shows the next page of "Done". Offered while it holds threads back. */
+  readonly showMoreDone: (() => void) | undefined;
   /**
    * Opens the delete dialog for a thread, whose Delete calls `onDelete`, or calls it at once with `confirmDelete` off.
    * Offered while `onDelete` is set and no delete is pending.
@@ -239,6 +292,12 @@ export type ThreadListApi = {
   bindClock: () => () => void;
   /** A row's time slot state, memoized per thread. */
   timeState: (state: ThreadListState, id: string) => ThreadListTimeState;
+  /** A row's second line, memoized per thread. */
+  summaryState: (state: ThreadListState, id: string) => ThreadListSummaryState;
+  /** Called by a row: measures it while it has a second line, which may wrap. */
+  measureRow: (el: HTMLElement, id: string) => () => void;
+  /** Called by the fold button: shows the next page of "Done", or folds it again once all show. */
+  toggleDone: (event?: Event) => void;
   /** Called by the viewport slot: connects the virtualizer. */
   bindViewport: (el: HTMLElement) => () => void;
   /** Called by the link and More: joins the grid at the row its thread sits in now. */
@@ -285,10 +344,16 @@ type ThreadListSlots = {
   link: Slot<RowProps, ThreadListLinkState>;
   status: Slot<RowProps>;
   unread: Slot<RowProps>;
+  summary: Slot<RowProps, ThreadListSummaryState>;
   time: Slot<RowProps, ThreadListTimeState>;
   editor: Slot<RowProps>;
   "more-cell": Slot<RowProps>;
   more: Slot<RowProps>;
+  unarchive: Slot<RowProps, { label: string }>;
+  "fold-row": Slot<RowProps>;
+  "fold-cell": Slot<RowProps>;
+  fold: Slot<RowProps, { label: string }>;
+  empty: Slot<BaseSlotProps, { text: string }>;
   menu: Slot<BaseSlotProps, MenuPartState>;
   "menu-content": Slot<BaseSlotProps, ThreadListMenuContentState>;
   dialog: Slot<BaseSlotProps, ThreadListDialogState>;
@@ -305,20 +370,97 @@ export type ThreadListPrimitive = ReturnType<
 >;
 
 const NO_THREADS: Thread[] = [];
-// The rows' height before the viewport binds and reads `--kind-thread-row-height`.
+const NO_IDS: string[] = [];
+// The rows' heights before the viewport binds and reads `--kind-thread-row-height` and `-tall`. A row with a second
+// line is measured, since it may wrap.
 const ROW_HEIGHT = 36;
-const STATUS_LABELS: Record<NonNullable<Thread["status"]>, string> = {
-  running: "Running",
-  "awaiting-input": "Needs input",
+const TALL_ROW_HEIGHT = 52;
+// "Done" shows its newest thread and unread ones, then a page at a time.
+const DONE_SHOWN = 1;
+const DONE_PAGE = 10;
+const FOLD_KEY = "fold:done";
+const LEADS: Partial<Record<NonNullable<Thread["status"]>, string>> = {
+  "awaiting-approval": "Approval",
+  "awaiting-input": "Question",
   error: "Failed",
+  queued: WORDS.queued,
 };
 
-/** The threads as grid rows: each group's heading, then its threads. */
-export const threadListRows = (threads: readonly Thread[], options: ThreadGroupOptions): ThreadListRow[] =>
-  threadGroups(threads, options).flatMap((group): ThreadListRow[] => [
-    { type: "heading", key: `heading:${group.key}`, label: group.label },
-    ...group.threads.map((thread) => ({ type: "thread" as const, key: thread.id, thread })),
-  ]);
+export type ThreadListRowsOptions = ThreadGroupOptions & {
+  /** The `view` option. */
+  view?: "active" | "archived" | undefined;
+  /** How many pages of "Done" show past its newest thread. */
+  donePages?: number | undefined;
+};
+
+const newestFirst = (a: Thread, b: Thread) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? "");
+
+/**
+ * The threads as grid rows: each group's heading, then its threads. Grouped by status, "Done" shows its newest and
+ * unread threads and `donePages` pages more, then a fold row. `view: "archived"` lists only archived threads, in one
+ * "Archived" group.
+ */
+export const threadListRows = (
+  threads: readonly Thread[],
+  options: ThreadListRowsOptions,
+): ThreadListRow[] => {
+  if (options.view === "archived") {
+    const archived = threads.filter((thread) => thread.archived).sort(newestFirst);
+    if (!archived.length) return [];
+    return [
+      { type: "heading", key: "heading:archived", label: "Archived" },
+      ...archived.map((thread) => ({ type: "thread" as const, key: thread.id, thread })),
+    ];
+  }
+  const status = options.groupBy === "status";
+  return threadGroups(
+    threads.filter((thread) => !thread.archived),
+    options,
+  ).flatMap((group): ThreadListRow[] => {
+    const heading: ThreadListRow = {
+      type: "heading",
+      key: `heading:${group.key}`,
+      label: group.label,
+      count: status ? group.threads.length : undefined,
+    };
+    let shown = group.threads;
+    let fold: ThreadListRow[] = [];
+    if (status && group.key === "done" && group.threads.length > DONE_SHOWN) {
+      const limit = DONE_SHOWN + (options.donePages ?? 0) * DONE_PAGE;
+      shown = group.threads.filter((thread, index) => index < limit || thread.unread);
+      fold = [
+        {
+          type: "fold",
+          key: FOLD_KEY,
+          count: group.threads.length - shown.length,
+          expanded: (options.donePages ?? 0) > 0,
+        },
+      ];
+    }
+    return [
+      heading,
+      ...shown.map((thread) => ({ type: "thread" as const, key: thread.id, thread })),
+      ...fold,
+    ];
+  });
+};
+
+/** A thread's second line, from its status when grouped by status, and its `summary`. */
+const summaryOf = (
+  thread: Thread | undefined,
+  groupBy: ThreadListState["groupBy"],
+): ThreadListSummaryState => ({
+  lead: (groupBy === "status" && thread?.status && LEADS[thread.status]) || "",
+  pieces: thread?.summary ? codeSpans(thread.summary) : [],
+});
+
+const hasSummary = (thread: Thread | undefined, groupBy: ThreadListState["groupBy"]) => {
+  const { lead, pieces } = summaryOf(thread, groupBy);
+  return !!lead || pieces.length > 0;
+};
+
+const isTall = (row: ThreadListRow | undefined, groupBy: ThreadListState["groupBy"]) =>
+  row?.type === "thread" && hasSummary(row.thread, groupBy);
 
 // Equal entries keep their objects, so a cell hears only about its own row.
 const entriesOf = (
@@ -331,18 +473,37 @@ const entriesOf = (
     const same =
       before?.index === index &&
       (row.type === "heading"
-        ? before.type === "heading" && before.label === row.label
-        : before.type === "thread" && before.thread === row.thread);
+        ? before.type === "heading" && before.label === row.label && before.count === row.count
+        : row.type === "fold"
+          ? before.type === "fold" && before.count === row.count && before.expanded === row.expanded
+          : before.type === "thread" && before.thread === row.thread);
     entries[row.key] = same ? before : { ...row, index };
   });
   return entries;
 };
 
+const heightOf = (row: ThreadListRow | undefined, groupBy: ThreadListState["groupBy"]) =>
+  isTall(row, groupBy) ? TALL_ROW_HEIGHT : ROW_HEIGHT;
+
 // The first screenful of rows, before the viewport binds and the virtualizer measures, so server markup shows them.
-const firstVisible = (rows: readonly ThreadListRow[]): VirtualItem[] =>
-  rows
-    .slice(0, 20)
-    .map((row, index) => ({ index, key: row.key, start: index * ROW_HEIGHT, size: ROW_HEIGHT }));
+const firstVisible = (rows: readonly ThreadListRow[], groupBy: ThreadListState["groupBy"]): VirtualItem[] => {
+  let start = 0;
+  return rows.slice(0, 20).map((row, index) => {
+    const size = heightOf(row, groupBy);
+    const item = { index, key: row.key, start, size };
+    start += size;
+    return item;
+  });
+};
+
+const sizeOf = (rows: readonly ThreadListRow[], groupBy: ThreadListState["groupBy"]) =>
+  rows.reduce((size, row) => size + heightOf(row, groupBy), 0);
+
+/** Grouped by status, whether nothing waits on the person and nothing runs. */
+const isEmpty = (threads: readonly Thread[], options: ThreadListOptions) =>
+  options.groupBy === "status" &&
+  options.view !== "archived" &&
+  !threads.some((thread) => !thread.archived && statusGroup(thread) !== "done");
 
 const startsOf = (visible: readonly VirtualItem[]) =>
   Object.fromEntries(visible.map((item) => [item.key, item.start]));
@@ -354,24 +515,31 @@ const can = (options: ThreadListOptions) => ({
   canPin: options.onPinChange !== undefined,
   canShare: options.onShare !== undefined,
   canDelete: options.onDelete !== undefined,
+  canArchive: options.onArchive !== undefined && options.view !== "archived",
+  canUnarchive: options.onUnarchive !== undefined && options.view === "archived",
 });
 
-type Abilities = Pick<ThreadListState, "canRename" | "canPin" | "canShare" | "canDelete">;
+type Abilities = Pick<ThreadListState, "canRename" | "canPin" | "canShare" | "canArchive" | "canDelete">;
 
 const menuActions = (abilities: Abilities, pinned: boolean) => [
   ...(abilities.canRename ? [{ value: "rename" as const, label: "Rename" }] : []),
   ...(abilities.canPin ? [{ value: "pin" as const, label: pinned ? "Unpin" : "Pin" }] : []),
   ...(abilities.canShare ? [{ value: "share" as const, label: "Share" }] : []),
+  ...(abilities.canArchive ? [{ value: "archive" as const, label: "Archive" }] : []),
   ...(abilities.canDelete ? [{ value: "delete" as const, label: "Delete" }] : []),
 ];
 
-const hasMenu = (abilities: Abilities) =>
-  abilities.canRename || abilities.canPin || abilities.canShare || abilities.canDelete;
+// The archived view offers Unarchive in More's place, and no menu.
+const hasMenu = (state: Abilities & Pick<ThreadListState, "view">) =>
+  state.view !== "archived" &&
+  (state.canRename || state.canPin || state.canShare || state.canArchive || state.canDelete);
+
+const hasSecondCell = (state: ThreadListState) => hasMenu(state) || state.canUnarchive;
 
 // One array per set of actions, since `menuBase` asks for one array per input.
 const menuData = new Map<string, MenuData>();
 const toData = (options: ThreadListOptions): MenuData => {
-  const actions = menuActions(can(options), false);
+  const actions = options.view === "archived" ? [] : menuActions(can(options), false);
   const key = actions.map((action) => action.value).join();
   let data = menuData.get(key);
   if (!data) {
@@ -388,7 +556,7 @@ const base = menuBase<ThreadListOptions>({
   kind: "thread-list",
   label: "Chats",
   toData,
-  canOpen: (options) => hasMenu(can(options)),
+  canOpen: (options) => hasMenu({ ...can(options), view: options.view ?? "active" }),
   onAction: (value, { event, source }, context) => actionsByContext.get(context)?.(value, source, event),
 });
 
@@ -397,6 +565,7 @@ const groupOptions = (options: ThreadListOptions): ThreadGroupOptions => ({
   locale: options.locale,
   timeZone: options.timeZone,
   labels: options.groupLabels,
+  groupBy: options.groupBy,
 });
 
 // Reads `options` rather than spreading it: on Web Components, `@ui-sdk/web` fills in the callbacks on read.
@@ -406,6 +575,8 @@ const presentation = (options: ThreadListOptions) => ({
   hasMore: options.hasMore ?? false,
   loadStatus: options.status ?? "idle",
   canLoadMore: options.onLoadMore !== undefined,
+  groupBy: options.groupBy ?? "date",
+  view: options.view ?? "active",
 });
 
 const threadOf = (state: ThreadListState, id: string | null) => {
@@ -437,6 +608,9 @@ const ownRow = (column?: number) =>
     deletePending: [],
     deleteFailed: [],
     deleteOpen: [],
+    donePages: [],
+    moving: [],
+    empty: [],
   });
 
 const threadIn = (entry: ThreadListEntry | undefined) =>
@@ -467,6 +641,9 @@ const ownTime = selects<ThreadListState, ThreadListApi, RowProps>({
   deletePending: [],
   deleteFailed: [],
   deleteOpen: [],
+  donePages: [],
+  moving: [],
+  empty: [],
 });
 
 const outsideRows = selects<ThreadListState, ThreadListApi, BaseSlotProps>({
@@ -481,6 +658,8 @@ const outsideRows = selects<ThreadListState, ThreadListApi, BaseSlotProps>({
   value: [],
   menuOpenFor: [],
   renaming: [],
+  donePages: [],
+  moving: [],
 });
 
 const rowAttrs = (state: ThreadListState, value: string) => {
@@ -490,6 +669,14 @@ const rowAttrs = (state: ThreadListState, value: string) => {
     style: css({ "--kind-thread-row-start": start === undefined ? undefined : `${start}px` }),
   };
 };
+
+const markOf = (state: ThreadListState, id: string) => {
+  const thread = threadOf(state, id);
+  return thread && threadMark(thread, { unreadOnly: state.groupBy === "status" });
+};
+
+// A thread id may hold spaces, which `aria-describedby` reads as a list.
+const timeId = (id: string, value: string) => `${id}-time-${encodeURIComponent(value)}`;
 
 const cellOf = (state: ThreadListState, id: string, col: number) => ({
   row: state.entries[id]?.index ?? -1,
@@ -514,6 +701,8 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
     onRename: "action",
     onPinChange: "callback",
     onShare: "callback",
+    onArchive: "action",
+    onUnarchive: "action",
     onDelete: "action",
     confirmDelete: "boolean",
     hasMore: "boolean",
@@ -522,11 +711,15 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
     now: "string",
     locale: "string",
     timeZone: "string",
+    groupBy: "string",
+    view: "string",
     groupLabels: "value",
   },
   state: (options) => {
-    const rows = threadListRows(options.threads ?? NO_THREADS, groupOptions(options));
-    const visible = firstVisible(rows);
+    const threads = options.threads ?? NO_THREADS;
+    const groupBy = options.groupBy ?? "date";
+    const rows = threadListRows(threads, { ...groupOptions(options), view: options.view });
+    const visible = firstVisible(rows, groupBy);
     return {
       ...base.state(options),
       ...presentation(options),
@@ -536,7 +729,10 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       entries: entriesOf(rows, {}),
       visible,
       starts: startsOf(visible),
-      size: rows.length * ROW_HEIGHT,
+      size: sizeOf(rows, groupBy),
+      donePages: 0,
+      moving: NO_IDS,
+      empty: isEmpty(threads, options),
       active: null,
       focused: null,
       menuFor: null,
@@ -559,6 +755,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
     const deletePending = createPendingAction(context, { state: "deletePending" });
     const typeahead = createTypeahead();
     let rowHeight = ROW_HEIGHT;
+    let tallHeight = TALL_ROW_HEIGHT;
     let clock: string | undefined;
     // Each row's time by thread id, with what it was read from.
     const times = new Map<
@@ -581,16 +778,35 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         locale: string | undefined,
         timeZone: string | undefined,
         labels: ThreadGroupOptions["labels"],
-      ) => threadListRows(threads, { now, locale, timeZone, labels }),
+        groupBy: ThreadGroupOptions["groupBy"],
+        view: ThreadListOptions["view"],
+        donePages: number,
+        moving: readonly string[],
+      ) =>
+        threadListRows(moving.length ? threads.filter((thread) => !moving.includes(thread.id)) : threads, {
+          now,
+          locale,
+          timeZone,
+          labels,
+          groupBy,
+          view,
+          donePages,
+        }),
     );
+    // Each row's second line by thread id, with what it was read from.
+    const summaries = new Map<
+      string,
+      { state: ThreadListSummaryState; from: Thread | undefined; groupBy: ThreadListState["groupBy"] }
+    >();
 
-    const cols = () => (hasMenu(store.get()) ? 2 : 1);
+    const cols = () => (hasSecondCell(store.get()) ? 2 : 1);
     const keyAt = (row: number) => store.get().rows[row]?.key;
     const isThread = (row: number) => store.get().rows[row]?.type === "thread";
+    const isFold = (row: number) => store.get().rows[row]?.type === "fold";
 
     const virtual = createVirtualizer({
       count: () => store.get().rows.length,
-      estimate: () => rowHeight,
+      estimate: (index) => (isTall(store.get().rows[index], store.get().groupBy) ? tallHeight : rowHeight),
       key: (index) => keyAt(index) ?? String(index),
       keep: () => {
         const { active, entries, renaming, menuOpenFor } = store.get();
@@ -622,8 +838,9 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       key: "active",
       rows: () => store.get().rows.length,
       cols,
-      pageSize: () => Math.max(1, Math.floor((viewport?.clientHeight ?? 0) / rowHeight)),
-      disabled: (cell) => !isThread(cell.row),
+      pageSize: () => Math.max(1, Math.floor((viewport?.clientHeight ?? 0) / tallHeight)),
+      // The fold row has its button and nothing beside it.
+      disabled: (cell) => !isThread(cell.row) && !(isFold(cell.row) && cell.col === 0),
       reveal: (cell) => virtual.scrollToIndex(cell.row),
       onMove: (cell) => store.set({ focused: `${keyAt(cell.row)}:${cell.col}` }),
     });
@@ -648,14 +865,39 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         store.set({ active: { row, col }, focused: `${keyAt(row)}:${col}` });
     };
 
-    // `value` reaches state here rather than through `sync`, since a synced key that changes renders every React part.
-    context.onOptions((options) => {
-      const value = options.value ?? null;
-      if (value !== store.get().value) store.set({ value });
-      readTime(options);
-      const { rows: before, entries } = store.get();
+    const showRows = (options = context.options()) => {
+      const { rows: before, entries, groupBy, donePages } = store.get();
+      let { moving } = store.get();
+      const threads = options.threads ?? NO_THREADS;
+      // A thread Archive or Unarchive moved out stays out until the host's threads agree, or it's gone.
+      if (moving.length) {
+        const archived = options.view === "archived";
+        const settled = moving.filter((id) => {
+          const thread = threads.find((each) => each.id === id);
+          return thread !== undefined && !!thread.archived === archived;
+        });
+        if (settled.length !== moving.length) {
+          moving = settled.length ? settled : NO_IDS;
+          store.set({ moving });
+        }
+      }
       const { now, locale, timeZone, labels } = groupOptions(options);
-      const rows = rowsOf(options.threads ?? NO_THREADS, now, locale, timeZone, labels);
+      const rows = rowsOf(
+        threads,
+        now,
+        locale,
+        timeZone,
+        labels,
+        options.groupBy,
+        options.view,
+        donePages,
+        moving,
+      );
+      const empty = isEmpty(
+        moving.length ? threads.filter((thread) => !moving.includes(thread.id)) : threads,
+        options,
+      );
+      if (empty !== store.get().empty) store.set({ empty });
       if (rows.length !== before.length) atEnd = false;
       loadAtEnd(options);
       if (rows === before) return;
@@ -664,9 +906,17 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       settleActive();
       if (viewport) virtual.refresh();
       else {
-        const visible = firstVisible(rows);
-        store.set({ visible, starts: startsOf(visible), size: rows.length * ROW_HEIGHT });
+        const visible = firstVisible(rows, groupBy);
+        store.set({ visible, starts: startsOf(visible), size: sizeOf(rows, groupBy) });
       }
+    };
+
+    // `value` reaches state here rather than through `sync`, since a synced key that changes renders every React part.
+    context.onOptions((options) => {
+      const value = options.value ?? null;
+      if (value !== store.get().value) store.set({ value });
+      readTime(options);
+      showRows(options);
     });
 
     const known = (id: string) => threadOf(store.get(), id) !== undefined;
@@ -735,6 +985,37 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
     const share = (id: string, event?: Event) =>
       known(id) && !dispatch(context, "onShare", id, details(event));
 
+    // Moves the thread out at once; a rejection brings it back and says so.
+    const move = (id: string, callback: "onArchive" | "onUnarchive", source: ChangeSource) => {
+      const run = context.options()[callback];
+      const thread = threadOf(store.get(), id);
+      if (!run || !thread) return false;
+      store.set({ moving: [...store.get().moving, id] });
+      showRows();
+      let result: unknown;
+      try {
+        result = run(id, { source });
+      } catch (error) {
+        result = Promise.reject(error);
+      }
+      void Promise.resolve(result).catch(() => {
+        const { moving } = store.get();
+        if (!moving.includes(id)) return;
+        const rest = moving.filter((each) => each !== id);
+        store.set({ moving: rest.length ? rest : NO_IDS });
+        showRows();
+        announce(`${plainText(thread.title)} ${WORDS.wasRestored}`, { priority: "polite" });
+      });
+      return true;
+    };
+
+    const toggleDone = () => {
+      const fold = store.get().entries[FOLD_KEY];
+      if (fold?.type !== "fold") return;
+      store.set({ donePages: fold.count > 0 ? store.get().donePages + 1 : 0 });
+      showRows();
+    };
+
     // Rename and Delete wait for the menu to hand focus back, so the editor or the dialog takes it from there.
     let afterClose: (() => void) | undefined;
     let opener: HTMLElement | null = null;
@@ -745,6 +1026,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       else if (action === "delete") afterClose = () => requestDelete(id, source);
       else if (action === "pin") pin(id, undefined, event);
       else if (action === "share") share(id, event);
+      else if (action === "archive") move(id, "onArchive", source);
     });
     let frame = 0;
     context.onDestroy(() => {
@@ -800,12 +1082,13 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       }),
     );
     const abilities = memo(
-      (canRename: boolean, canPin: boolean, canShare: boolean, canDelete: boolean): Abilities => ({
-        canRename,
-        canPin,
-        canShare,
-        canDelete,
-      }),
+      (
+        canRename: boolean,
+        canPin: boolean,
+        canShare: boolean,
+        canArchive: boolean,
+        canDelete: boolean,
+      ): Abilities => ({ canRename, canPin, canShare, canArchive, canDelete }),
     );
     const dialogState = memo(
       (dismissible: boolean, id: string | null, thread: Thread | undefined): ThreadListDialogState => ({
@@ -849,6 +1132,20 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       get share() {
         return store.get().canShare ? (id: string) => share(id) : undefined;
       },
+      get archive() {
+        return store.get().canArchive
+          ? (id: string) => move(id, "onArchive", actionSource(undefined, "imperative"))
+          : undefined;
+      },
+      get unarchive() {
+        return store.get().canUnarchive
+          ? (id: string) => move(id, "onUnarchive", actionSource(undefined, "imperative"))
+          : undefined;
+      },
+      get showMoreDone() {
+        const fold = store.get().entries[FOLD_KEY];
+        return fold?.type === "fold" && fold.count > 0 ? toggleDone : undefined;
+      },
       get delete() {
         const { canDelete, deletePending } = store.get();
         if (!canDelete || deletePending) return undefined;
@@ -880,21 +1177,63 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         };
       },
       timeState: (state, id) => {
-        const from = threadOf(state, id)?.updatedAt;
+        const thread = threadOf(state, id);
+        // Grouped by status, a thread waiting on the person reads how long it has waited.
+        const status = state.groupBy === "status";
+        const from =
+          status && thread && statusGroup(thread) === "needs-you"
+            ? (thread.waitingSince ?? thread.updatedAt)
+            : thread?.updatedAt;
         const found = times.get(id);
         if (found && found.from === from && found.time === state.time) return found.state;
         const next = {
-          state: { label: from === undefined ? "" : compactTimeLabel(from, state.time) },
+          state: {
+            label:
+              from === undefined
+                ? ""
+                : compactTimeLabel(from, { ...state.time, width: status ? "short" : "narrow" }),
+          },
           from,
           time: state.time,
         };
         times.set(id, next);
         return next.state;
       },
+      summaryState: (state, id) => {
+        const thread = threadOf(state, id);
+        const found = summaries.get(id);
+        if (found && found.from === thread && found.groupBy === state.groupBy) return found.state;
+        const next = { state: summaryOf(thread, state.groupBy), from: thread, groupBy: state.groupBy };
+        summaries.set(id, next);
+        return next.state;
+      },
+      // A search of rows by id, as Transcript's segments: a row's index changes while its element stays.
+      measureRow: (el, id) => {
+        let index: number | undefined;
+        let unmeasure: (() => void) | undefined;
+        const follow = () => {
+          const { entries, groupBy } = store.get();
+          const entry = entries[id];
+          const next = entry && isTall(entry, groupBy) ? entry.index : undefined;
+          if (next === index) return;
+          unmeasure?.();
+          index = next;
+          unmeasure = index === undefined ? undefined : virtual.measure(index, el);
+        };
+        follow();
+        const unsubscribe = store.subscribe(follow);
+        return () => {
+          unsubscribe();
+          unmeasure?.();
+        };
+      },
+      toggleDone,
       bindViewport: (el) => {
         viewport = el;
-        rowHeight =
-          Number.parseFloat(getComputedStyle(el).getPropertyValue("--kind-thread-row-height")) || ROW_HEIGHT;
+        const style = getComputedStyle(el);
+        rowHeight = Number.parseFloat(style.getPropertyValue("--kind-thread-row-height")) || ROW_HEIGHT;
+        tallHeight =
+          Number.parseFloat(style.getPropertyValue("--kind-thread-row-height-tall")) || TALL_ROW_HEIGHT;
         const disconnect = virtual.connect(el);
         showVisible();
         return () => {
@@ -986,7 +1325,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       menuContentState: (state) =>
         menuContentState(
           threadOf(state, state.menuFor),
-          abilities(state.canRename, state.canPin, state.canShare, state.canDelete),
+          abilities(state.canRename, state.canPin, state.canShare, state.canArchive, state.canDelete),
         ),
       dialogState: (state) =>
         dialogState(!state.deletePending, state.deleting, threadOf(state, state.deleting)),
@@ -996,7 +1335,12 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
     root: slot({
       role: "navigation",
       selects: outsideRows,
-      attrs: (state) => ({ "aria-label": state.label, "data-motion": state.motion }),
+      attrs: (state) => ({
+        "aria-label": state.label,
+        "data-motion": state.motion,
+        "data-group-by": state.groupBy,
+        "data-view": state.view,
+      }),
       bind: (_el, { api }) => api.bindClock(),
     }),
     new: slot({
@@ -1029,7 +1373,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       attrs: (state) => ({
         "aria-label": state.label,
         "aria-rowcount": String(state.rows.length),
-        "aria-colcount": String(hasMenu(state) ? 2 : 1),
+        "aria-colcount": String(hasSecondCell(state) ? 2 : 1),
         style: css({ "--kind-thread-list-size": `${state.size}px` }),
       }),
     }),
@@ -1039,16 +1383,17 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       selects: ownRow(),
       attrs: (state, { props }) => rowAttrs(state, props.value),
     }),
-    "heading-cell": slot<RowProps, { label: string }>({
+    "heading-cell": slot<RowProps, { label: string; count: string }>({
       role: "rowheader",
       props: { value: "string" },
       selects: ownRow(),
       state: (state, { props }) => {
         const entry = state.entries[props.value];
-        return { label: entry?.type === "heading" ? entry.label : "" };
+        if (entry?.type !== "heading") return { label: "", count: "" };
+        return { label: entry.label, count: entry.count === undefined ? "" : String(entry.count) };
       },
       attrs: (state, { props }) => ({
-        "aria-colspan": hasMenu(state) ? "2" : undefined,
+        "aria-colspan": hasSecondCell(state) ? "2" : undefined,
         "data-group": props.value.slice("heading:".length),
       }),
     }),
@@ -1062,9 +1407,17 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         "data-menu-open": state.menuOpenFor === props.value ? "" : undefined,
         "data-renaming": state.renaming === props.value ? "" : undefined,
         "data-unread": threadOf(state, props.value)?.unread ? "" : undefined,
+        "data-tall": isTall(state.entries[props.value], state.groupBy) ? "" : undefined,
       }),
       // Rows mount as the list scrolls, and a web row's parts get their attributes after it's styled.
-      bind: (el) => holdTransitions(el),
+      bind: (el, { api, props }) => {
+        const release = holdTransitions(el);
+        const unmeasure = api.measureRow(el, props.value);
+        return () => {
+          release();
+          unmeasure();
+        };
+      },
     }),
     "link-cell": slot<RowProps>({
       role: "gridcell",
@@ -1077,9 +1430,11 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       selects: ownRow(0),
       present: (state, { props }) => state.renaming !== props.value,
       state: (state, { props }) => ({ value: props.value, title: threadOf(state, props.value)?.title ?? "" }),
-      attrs: (state, { props, api }) => ({
+      attrs: (state, { props, api, id }) => ({
         href: threadOf(state, props.value)?.href,
         "aria-current": state.value === props.value ? "page" : undefined,
+        // Grouped by status, the time is how long it has waited or run, which joins the row's name.
+        "aria-describedby": state.groupBy === "status" ? timeId(id, props.value) : undefined,
         tabindex: api.grid.tabIndex(state, cellOf(state, props.value, 0)),
       }),
       on: {
@@ -1097,34 +1452,45 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         };
       },
     }),
-    // The status needs words, so its mark is an image named by it.
+    // One mark per row, the most urgent; the status needs words, so the mark is an image named by it.
     status: slot<RowProps>({
       role: "img",
       props: { value: "string" },
       selects: ownRow(0),
-      present: (state, { props }) => threadOf(state, props.value)?.status !== undefined,
+      present: (state, { props }) => markOf(state, props.value) !== undefined,
       attrs: (state, { props }) => {
-        const status = threadOf(state, props.value)?.status;
+        const mark = markOf(state, props.value);
+        const unread = threadOf(state, props.value)?.unread && mark?.status !== "complete";
         return {
-          "aria-label": status && STATUS_LABELS[status],
+          "aria-label": mark && (unread ? `${mark.label}, unread` : mark.label),
           "data-status-mark": "",
-          "data-status": status,
+          "data-status": mark?.status,
         };
       },
     }),
+    // Only when no status mark shows, so a row holds one mark.
     unread: slot<RowProps>({
       role: "img",
       props: { value: "string" },
       selects: ownRow(0),
-      present: (state, { props }) => threadOf(state, props.value)?.unread === true,
+      present: (state, { props }) =>
+        threadOf(state, props.value)?.unread === true && markOf(state, props.value) === undefined,
       attrs: () => ({ "aria-label": "Unread" }),
     }),
-    // Hidden from assistive technology: the row's date group says when, and the link's name stays its title.
+    // Under the title: what the run waits on or how it ended, then its summary. In the link, so it joins its name.
+    summary: slot<RowProps, ThreadListSummaryState>({
+      props: { value: "string" },
+      selects: ownRow(0),
+      present: (state, { props }) => hasSummary(threadOf(state, props.value), state.groupBy),
+      state: (state, { api, props }) => api.summaryState(state, props.value),
+    }),
+    // Hidden from assistive technology: the row's date group says when, and the link's name stays its title. Grouped
+    // by status, the link takes it as its description.
     time: slot<RowProps, ThreadListTimeState>({
       props: { value: "string" },
       selects: ownTime,
       state: (state, { api, props }) => api.timeState(state, props.value),
-      attrs: () => ({ "aria-hidden": "true" }),
+      attrs: (_state, { props, id }) => ({ id: timeId(id, props.value), "aria-hidden": "true" }),
     }),
     editor: slot<RowProps>({
       props: { value: "string" },
@@ -1151,7 +1517,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       focus: { none: "Its link or More button takes focus." },
       props: { value: "string" },
       selects: ownRow(1),
-      present: hasMenu,
+      present: hasSecondCell,
     }),
     // Its own button rather than UI SDK's `MenuTrigger`, which opens on the arrows the grid moves with.
     more: slot<RowProps>({
@@ -1180,6 +1546,79 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
           unbindRecovery();
         };
       },
+    }),
+    // In More's place in `view: "archived"`, over the time, as More is.
+    unarchive: slot<RowProps, { label: string }>({
+      role: "button",
+      focus: "native",
+      props: { value: "string" },
+      selects: ownRow(1),
+      present: (state) => state.canUnarchive,
+      press: ({ api, props }) => void api.unarchive?.(props.value),
+      state: () => ({ label: WORDS.unarchive }),
+      attrs: (state, { props, api }) => ({
+        type: "button",
+        "aria-label": `${WORDS.unarchive} ${threadOf(state, props.value)?.title ?? "chat"}`,
+        "data-kind-button": "",
+        "data-kind-size": "sm",
+        tabindex: api.grid.tabIndex(state, cellOf(state, props.value, 1)),
+      }),
+      on: {
+        keydown: (event, { api }) => void api.grid.keydown(event as KeyboardEvent),
+        focus: (_event, { api, props }) => api.focusCell(props.value, 1),
+      },
+      bind: (el, part) => {
+        const unbindCell = part.api.bindCell(el, part, 1);
+        const unbindRecovery = part.api.recovery.more.bind(el, part);
+        return () => {
+          unbindCell();
+          unbindRecovery();
+        };
+      },
+    }),
+    // The row after "Done"'s threads that shows a page more, then folds them again (Wave 7 spec §13).
+    "fold-row": slot<RowProps>({
+      role: "row",
+      props: { value: "string" },
+      selects: ownRow(),
+      attrs: (state, { props }) => rowAttrs(state, props.value),
+    }),
+    "fold-cell": slot<RowProps>({
+      role: "gridcell",
+      focus: { none: "Its button takes focus." },
+      props: { value: "string" },
+      selects: ownRow(0),
+      attrs: (state) => ({ "aria-colspan": hasSecondCell(state) ? "2" : undefined }),
+    }),
+    fold: slot<RowProps, { label: string }>({
+      role: "button",
+      focus: "native",
+      props: { value: "string" },
+      selects: ownRow(0),
+      press: ({ api }, event) => api.toggleDone(event),
+      state: (state, { props }) => {
+        const entry = state.entries[props.value];
+        const count = entry?.type === "fold" ? entry.count : 0;
+        return { label: count > 0 ? `${count} ${WORDS.moreDone}` : "Show less" };
+      },
+      attrs: (state, { props, api }) => {
+        const entry = state.entries[props.value];
+        return {
+          type: "button",
+          "aria-expanded": entry?.type === "fold" && entry.expanded ? "true" : "false",
+          tabindex: api.grid.tabIndex(state, cellOf(state, props.value, 0)),
+        };
+      },
+      on: {
+        keydown: (event, { api }) => void api.grid.keydown(event as KeyboardEvent),
+        focus: (_event, { api, props }) => api.focusCell(props.value, 0),
+      },
+      bind: (el, part) => part.api.bindCell(el, part, 0),
+    }),
+    // Grouped by status, above the rows when nothing waits on the person and nothing runs.
+    empty: slot<BaseSlotProps, { text: string }>({
+      present: (state) => state.empty,
+      state: () => ({ text: WORDS.nothingWaiting }),
     }),
     // Holds UI SDK Menu, whose choices reach `menuBase` (web: through `hearComposed`).
     menu: slot<BaseSlotProps, MenuPartState>({
@@ -1252,7 +1691,17 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
     }),
   }),
   agent: {
-    actions: ["select", "newThread", "rename", "pin", "share", "delete"],
+    actions: [
+      "select",
+      "newThread",
+      "rename",
+      "pin",
+      "share",
+      "archive",
+      "unarchive",
+      "showMoreDone",
+      "delete",
+    ],
     items: (api) => api.threadItems(),
     closed: true,
   },

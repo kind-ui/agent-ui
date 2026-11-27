@@ -184,11 +184,15 @@ export function durationLabel(seconds: number | undefined, localeTag?: string): 
 }
 
 /**
- * How long ago, in a list row's few characters: "now", "5m", "2h", "3d", then the date ("Nov 2", with the year when
- * it isn't `now`'s). With a day for `now` rather than an instant, today reads as the time of day. Without `now`, the
- * date, as server markup shows it. Empty for a string that isn't a date.
+ * How long ago, in a list row's few characters: "now", "5m", "2h", "3d" ("5 min", "2 hr", "3 days" with `width:
+ * "short"`), then the date ("Nov 2", with the year when it isn't `now`'s). With a day for `now` rather than an
+ * instant, today reads as the time of day. Without `now`, the date, as server markup shows it. Empty for a string
+ * that isn't a date.
  */
-export function compactTimeLabel(iso: string, options: RelativeTimeOptions = {}): string {
+export function compactTimeLabel(
+  iso: string,
+  options: RelativeTimeOptions & { width?: "narrow" | "short" | undefined } = {},
+): string {
   const found = daysAgo(iso, options.now, options.timeZone);
   if (!found) return "";
   const tag = locale(options.locale);
@@ -197,8 +201,9 @@ export function compactTimeLabel(iso: string, options: RelativeTimeOptions = {})
   if (date && now) {
     const minutes = Math.floor((now.getTime() - date.getTime()) / 60_000);
     if (minutes < 1) return relative(tag).format(0, "second");
-    if (minutes < 60) return unit(tag, "minute", minutes, "narrow");
-    if (minutes < 24 * 60) return unit(tag, "hour", Math.floor(minutes / 60), "narrow");
+    const width = options.width ?? "narrow";
+    if (minutes < 60) return unit(tag, "minute", minutes, width);
+    if (minutes < 24 * 60) return unit(tag, "hour", Math.floor(minutes / 60), width);
   }
   const { day, today, ago } = found;
   if (ago !== undefined && ago <= 0) {
@@ -207,7 +212,7 @@ export function compactTimeLabel(iso: string, options: RelativeTimeOptions = {})
       .format(date)
       .replace(THIN_SPACES, " ");
   }
-  if (ago !== undefined && ago < 7) return unit(tag, "day", ago, "narrow");
+  if (ago !== undefined && ago < 7) return unit(tag, "day", ago, options.width ?? "narrow");
   const format: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
   if (today !== undefined && today.slice(0, 4) !== day.slice(0, 4)) format.year = "numeric";
   return formatDate(day, tag, format);

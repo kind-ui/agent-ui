@@ -82,6 +82,11 @@ export const WORDS = {
   timesTheCost: "times the cost",
   sameCost: "the same cost",
   costNote: "Cost per request, relative to the default model.",
+  needsYou: "Needs you",
+  nothingWaiting: "Nothing is waiting on you.",
+  moreDone: "more done",
+  unarchive: "Unarchive",
+  wasRestored: "was restored",
 } as const;
 
 /**

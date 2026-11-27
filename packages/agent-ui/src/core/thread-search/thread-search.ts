@@ -22,6 +22,7 @@ import {
   pickerBase,
 } from "../picker/base.js";
 import { threadGroups } from "../thread-groups.js";
+import { type ThreadMark, threadMark } from "../thread-mark.js";
 import { type DateGroupKey, dateGroup, dayKey, todayKey } from "../time.js";
 
 /** `"item-press"`: a person chose a row. `"imperative"`: an `api` call, like an agent's `select` or `newThread`. */
@@ -98,7 +99,7 @@ export type ThreadSearchState = PickerBaseState & {
 };
 
 /** What a row's `icon` holds: the thread's status and its words, for a status mark. */
-export type ThreadSearchIcon = { status: NonNullable<Thread["status"]>; label: string };
+export type ThreadSearchIcon = ThreadMark;
 
 /** Picker's api, where `select` chooses a thread and `search` types into the field, with `newThread`. */
 export type ThreadSearchApi = PickerBaseApi & {
@@ -124,12 +125,6 @@ const RECENT = 20;
 const NEW = "new";
 const noThreads: Thread[] = [];
 
-const STATUS: Record<ThreadSearchIcon["status"], string> = {
-  running: "Running",
-  "awaiting-input": "Needs input",
-  error: "Failed",
-};
-
 type Grouping = {
   now: string;
   locale: string | undefined;
@@ -144,6 +139,11 @@ const groupingOf = ({ now, locale, timeZone, groupLabels }: ThreadSearchOptions)
   groupLabels,
 });
 
+const iconOf = (thread: Thread): { icon?: ThreadMark } => {
+  const icon = threadMark(thread);
+  return icon ? { icon } : {};
+};
+
 const itemOf = (
   thread: Thread,
   group: string | undefined,
@@ -154,7 +154,7 @@ const itemOf = (
   ...(thread.snippet ? { description: thread.snippet } : {}),
   ...(meta ? { meta } : {}),
   ...(group === undefined ? {} : { group }),
-  ...(thread.status ? { icon: { status: thread.status, label: STATUS[thread.status] } } : {}),
+  ...iconOf(thread),
 });
 
 const dateOf = (thread: Thread, grouping: Grouping) =>

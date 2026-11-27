@@ -258,20 +258,29 @@ const cases = {
 
   threadList: {
     options: {
-      threads: [{ id: "a", title: "A", href: "#a", pinned: true, status: "running", unread: true }],
+      threads: [
+        { id: "a", title: "A", href: "#a", pinned: true, status: "running", summary: "Reading `a.ts`" },
+        { id: "b", title: "B", status: "complete", updatedAt: "2026-11-18T08:00:00Z" },
+        { id: "c", title: "C", status: "complete", updatedAt: "2026-11-17T08:00:00Z" },
+      ],
       now: "2026-11-18",
+      groupBy: "status",
       onSelect: noop,
       onRename: noop,
       onDelete: noop,
     },
     keys: {
-      heading: ["heading:pinned"],
-      "heading-cell": ["heading:pinned"],
+      heading: ["heading:pinned", "heading:done"],
+      "heading-cell": ["heading:pinned", "heading:done"],
       ...Object.fromEntries(
-        ["row", "link-cell", "link", "status", "unread", "time", "editor", "more-cell", "more"].map(
+        ["row", "link-cell", "link", "status", "summary", "time", "editor", "more-cell", "more"].map(
           (slot) => [slot, ["a"]],
         ),
       ),
+      // Present only without a status mark, and in `view: "archived"`.
+      unread: ["b"],
+      unarchive: ["b"],
+      ...Object.fromEntries(["fold-row", "fold-cell", "fold"].map((slot) => [slot, ["fold:done"]])),
     },
   },
 

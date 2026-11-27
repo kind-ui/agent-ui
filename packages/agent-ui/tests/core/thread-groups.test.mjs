@@ -44,3 +44,25 @@ test("an empty or null group falls back to the date group", () => {
     [["today", 2]],
   );
 });
+
+test("groupBy status: needs you oldest waiting first, running newest first with queued last, done newest first", () => {
+  const threads = [
+    { id: "done-old", title: "a", status: "complete", updatedAt: "2026-11-20T10:00:00Z" },
+    { id: "approval", title: "b", status: "awaiting-approval", waitingSince: "2026-11-27T10:05:00Z" },
+    { id: "queued", title: "c", status: "queued" },
+    { id: "question", title: "d", status: "awaiting-input", waitingSince: "2026-11-27T10:00:00Z" },
+    { id: "failed-seen", title: "e", status: "error", updatedAt: "2026-11-27T09:00:00Z" },
+    { id: "failed", title: "f", status: "error", unread: true, updatedAt: "2026-11-27T10:10:00Z" },
+    { id: "running", title: "g", status: "running", updatedAt: "2026-11-27T10:00:00Z" },
+    { id: "running-new", title: "h", status: "running", updatedAt: "2026-11-27T10:20:00Z" },
+  ];
+  const groups = threadGroups(threads, { now: "2026-11-27", groupBy: "status" });
+  assert.deepEqual(
+    groups.map((group) => [group.label, group.threads.map((thread) => thread.id)]),
+    [
+      ["Needs you", ["question", "approval", "failed"]],
+      ["Running", ["running-new", "running", "queued"]],
+      ["Done", ["failed-seen", "done-old"]],
+    ],
+  );
+});

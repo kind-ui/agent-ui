@@ -76,8 +76,17 @@ export interface Thread {
   group?: string;
   /** The thread's own URL, so its row is a real link. */
   href?: string;
-  /** Work still going on in the background. */
-  status?: "running" | "awaiting-input" | "error";
+  /**
+   * Where the thread's run is: `"queued"` before it starts, `"running"`, waiting on the person for an approval
+   * (`"awaiting-approval"`) or an answer (`"awaiting-input"`), `"error"` once it failed, or `"complete"`.
+   */
+  status?: "queued" | "running" | "awaiting-approval" | "awaiting-input" | "error" | "complete";
+  /** ISO 8601: when it started waiting on the person. Orders "Needs you", oldest first. */
+  waitingSince?: string;
+  /** The row's second line: "+120 −8 in 4 files", the latest step while running, or what it waits on. */
+  summary?: string;
+  /** Whether it's archived: listed only in Thread List's `view: "archived"`. */
+  archived?: boolean;
   unread?: boolean;
   /** The text that matched a search. */
   snippet?: string;
