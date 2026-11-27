@@ -46,6 +46,7 @@ export default {
     "plan",
     "subagent",
     "queue",
+    "step-group",
 
     "sources",
     "inline-citation",
@@ -144,6 +145,7 @@ export default {
     "wave-2/plan.spec.ts",
     "wave-2/subagent.spec.ts",
     "wave-2/queue.spec.ts",
+    "wave-2/step-group.spec.ts",
 
     "wave-4/sources.spec.ts",
     "wave-4/inline-citation.spec.ts",

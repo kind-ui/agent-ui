@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { approvalLabel, toolStatus, toolValue } from "@kind-ui/agent-ui/core";
+import { approvalLabel, humanizeToolName, toolStatus, toolValue } from "@kind-ui/agent-ui/core";
 
 const call = (fields) => ({
   toolCallId: "t1",
@@ -76,4 +76,11 @@ test("approval labels", () => {
   assert.equal(approvalLabel(approval("responded", { decision: { approved: false } })), "Denied");
   assert.equal(approvalLabel(approval("auto", { decision: { approved: false } })), "Denied automatically");
   assert.equal(approvalLabel(approval("auto", { decision: { approved: true } })), "Approved automatically");
+});
+
+test("a tool's name reads as words when nothing titles it", () => {
+  assert.equal(humanizeToolName("search_code"), "Search code");
+  assert.equal(humanizeToolName("createReminder"), "Create reminder");
+  assert.equal(humanizeToolName("github.list-issues"), "Github list issues");
+  assert.equal(humanizeToolName("URL"), "Url");
 });

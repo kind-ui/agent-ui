@@ -1,6 +1,6 @@
 ---
 name: agent-ui
-description: Builds AI chat and agent interfaces with Agent UI (@kind-ui/agent-ui) in React, Vue, Svelte, Solid or Web Components. Covers choosing from its 56 components (conversation, message, composer and its controls, tool calls, approvals, reasoning, plans, developer output, thread list and sidebar), installing them from the @kind-ui shadcn registry, composing a chat, mapping AI SDK UIMessages with its adapter, exposing the page to agents with createAgent, asking a person before risky actions, and theming with its tokens. Use whenever a project has @kind-ui/agent-ui or @kind-ui components installed, or the user wants an AI chat, agent or tool-approval UI.
+description: Builds AI chat and agent interfaces with Agent UI (@kind-ui/agent-ui) in React, Vue, Svelte, Solid or Web Components. Covers choosing from its 57 components (conversation, message, composer and its controls, tool calls, approvals, reasoning, plans, developer output, thread list and sidebar), installing them from the @kind-ui shadcn registry, composing a chat, mapping AI SDK UIMessages with its adapter, exposing the page to agents with createAgent, asking a person before risky actions, and theming with its tokens. Use whenever a project has @kind-ui/agent-ui or @kind-ui components installed, or the user wants an AI chat, agent or tool-approval UI.
 ---
 
 # Build with Agent UI

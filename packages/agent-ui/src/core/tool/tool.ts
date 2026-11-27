@@ -12,7 +12,19 @@ import { createCopy } from "../clipboard.js";
 import type { Highlight } from "../code-block/index.js";
 import { type StepApi, type StepOptions, type StepState, stepAnnouncement, stepBase } from "../step/base.js";
 import { WORDS } from "../words.js";
-import { toolCode, toolStatus, toolValue } from "./format.js";
+import { humanizeToolName, toolCode, toolStatus, toolValue } from "./format.js";
+
+/** What a `heading` function reads to word a call. */
+export type ToolHeadingInput = {
+  /** The tool's name, like `read_file`. */
+  name: string;
+  /** The call's input so far; partial while it streams. */
+  input: unknown;
+  status: StepStatus;
+};
+
+/** A call's title in words, from its status: "Reading `sign-in.ts`" while running, "Read `sign-in.ts`" when done. */
+export type ToolHeading = (call: ToolHeadingInput) => string;
 
 export type ToolOptions = Omit<StepOptions, "status" | "label"> &
   ApprovalPartOptions & {
@@ -21,8 +33,14 @@ export type ToolOptions = Omit<StepOptions, "status" | "label"> &
     /** Defaults to the call's: `error`, `cancelled`, `awaiting-input`, `complete` or `running`, as `toolStatus` reads it. */
     status?: StepStatus;
     /**
-     * Replaces the title, which is the tool's name, and names the tool in announcements and in its copy buttons and
-     * code blocks ("<label> input"), so keep it a name.
+     * The title, in words, or a function of the call's status and input that words it, so it follows the call:
+     * "Reading `sign-in.ts`", then "Read `sign-in.ts`". Code is in backticks. Defaults to the call's `title`, else
+     * its name as words ("Search code"). Copy buttons, code blocks and the approval keep the tool's name.
+     */
+    heading?: string | ToolHeading;
+    /**
+     * Replaces the title and the tool's name in announcements, copy buttons, code blocks ("<label> input") and the
+     * approval, so keep it a name. For a title in words, use `heading`.
      */
     label?: string;
     /** What went wrong, shown while the status is `error`. Without it, the tool shows "The tool failed." */
@@ -36,8 +54,10 @@ export type ToolApprovalState = ApprovalPartState;
 
 export type ToolState = StepState &
   ApprovalState & {
-    /** The `label`, else the tool's name. */
+    /** The `heading`, else the `label`, else the call's `title`, else its name as words. Code is in backticks. */
     title: string;
+    /** The `label`, else the tool's name, which copy buttons, code blocks and the approval use. */
+    name: string;
     /** The input code block's name, like "search_docs input", or "Input" without a title. */
     inputLabel: string;
     /** The output code block's name, like "search_docs output", or "Output" without a title. */
@@ -114,17 +134,25 @@ const base = stepBase<ToolState, ToolApi, ToolOptions>({
   status: (options) => (options.call ? toolStatus(options.call) : "pending"),
 });
 
+const statusOf = (options: ToolOptions) =>
+  options.status ?? (options.call ? toolStatus(options.call) : "pending");
+
 // Reads options by name, since on Web Components `@ui-sdk/web` fills in the callbacks on read.
 const presentation = (options: ToolOptions) => {
-  const { call, label, error, highlight } = options;
+  const { call, label, heading, error, highlight } = options;
   const output = call && hasOutput(call) ? toolValue(call.output.value) : undefined;
-  const title = label ?? call?.name ?? "";
+  const name = label ?? call?.name ?? "";
+  const worded =
+    typeof heading === "function"
+      ? call && heading({ name: call.name, input: call.input.value, status: statusOf(options) })
+      : heading;
   return {
     ...approvalPart.presentation(call?.approval, options),
-    title,
+    title: worded || label || call?.title || (call ? humanizeToolName(call.name) : ""),
+    name,
     // Named by the tool, so agents and screen readers can tell one tool's input from another's.
-    inputLabel: title ? `${title} input` : "Input",
-    outputLabel: title ? `${title} output` : "Output",
+    inputLabel: name ? `${name} input` : "Input",
+    outputLabel: name ? `${name} output` : "Output",
     input: call?.input.value === undefined ? "" : toolCode(call.input.value),
     inputStreaming: call?.input.state === "streaming",
     output: output?.kind,
@@ -149,6 +177,7 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
   options: {
     ...base.options,
     call: "value",
+    heading: "value",
     error: "value",
     highlight: "value",
     ...approvalPart.options,
@@ -165,7 +194,7 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
     const copyInput = createCopy(context, "inputCopied");
     const copyOutput = createCopy(context, "outputCopied");
     const approvalState = approvalPart.approvalState<ToolState>(context, {
-      question: (state) => (state.title ? `Allow \`${state.title}\`?` : WORDS.allowThisTool),
+      question: (state) => (state.name ? `Allow \`${state.name}\`?` : WORDS.allowThisTool),
     });
     return {
       ...base.api(context),
@@ -213,7 +242,7 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
         role: "button",
         focus: "native",
         press: ({ api }) => void api.copyInput?.(),
-        attrs: (state) => copyAttrs(state.title ? state.inputLabel : "input", state.inputCopied),
+        attrs: (state) => copyAttrs(state.name ? state.inputLabel : "input", state.inputCopied),
       }),
       output: slot<
         BaseSlotProps,
@@ -242,7 +271,7 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
         role: "button",
         focus: "native",
         press: ({ api }) => void api.copyOutput?.(),
-        attrs: (state) => copyAttrs(state.title ? state.outputLabel : "output", state.outputCopied),
+        attrs: (state) => copyAttrs(state.name ? state.outputLabel : "output", state.outputCopied),
       }),
       error: slot<BaseSlotProps, { message: string }>({
         present: (state) => state.status === "error",

@@ -47,3 +47,17 @@ export const toolValue = (
   typeof value === "string" && value !== ""
     ? { kind: "markdown", text: value }
     : { kind: "code", code: toolCode(value) };
+
+/**
+ * A tool's name as words, for a title when the host gives none: `search_code`, `searchCode` and `search-code` read
+ * "Search code".
+ */
+export const humanizeToolName = (name: string): string => {
+  const words = name
+    .replace(/([a-z\d])([A-Z])/g, "$1 $2")
+    .split(/[\s_.\-:/]+/)
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+};

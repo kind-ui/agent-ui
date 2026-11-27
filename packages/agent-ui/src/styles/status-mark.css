@@ -147,6 +147,25 @@
     }
   }
 
+  /* Inside a Step Group, complete rows are quiet (Wave 7 spec §2.2): a muted dot where the check was, so the column
+     stays aligned without a check on every row. */
+  [data-quiet-complete] [data-step-part="icon"][data-status-mark][data-status="complete"] {
+    border-color: transparent;
+    background-color: transparent;
+    &::before {
+      inset: 0;
+      width: 6px;
+      height: 6px;
+      margin: auto;
+      background-color: var(--kind-color-muted);
+      opacity: 0.7;
+      transform: none;
+    }
+    &::after {
+      opacity: 0;
+    }
+  }
+
   /* Reduced motion: the fill and glyph fade over 120 ms and nothing scales or spins (spec §6). */
   @media (prefers-reduced-motion: reduce) {
     [data-status-mark][data-status] {
@@ -205,6 +224,12 @@
         border-top-color: CanvasText;
       }
       &[data-status="awaiting-input"]::before {
+        background-color: CanvasText;
+      }
+    }
+    [data-quiet-complete] [data-step-part="icon"][data-status-mark][data-status="complete"] {
+      border-color: Canvas;
+      &::before {
         background-color: CanvasText;
       }
     }

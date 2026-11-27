@@ -4,7 +4,7 @@ import { toolPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/react/primitive";
 import type { ComponentProps } from "react";
 import { CodeBlock } from "./code-block.js";
-import { Confirmation } from "./confirmation.js";
+import { Confirmation, withCode } from "./confirmation.js";
 import { Markdown } from "./markdown.js";
 
 const parts = createParts(toolPrimitive, {
@@ -40,8 +40,8 @@ export const ToolOutputCopy = parts.OutputCopy;
 
 export type ToolTitleProps = ComponentProps<typeof parts.Title>;
 
-/** The tool's name, or the `label`, unless you pass children. */
-export function ToolTitle({ children = ({ title }) => title, ...props }: ToolTitleProps) {
+/** The `heading`, the `label`, the call's `title` or the tool's name as words, with code as `code`, unless you pass children. */
+export function ToolTitle({ children = ({ title }) => withCode(title), ...props }: ToolTitleProps) {
   return <parts.Title {...props}>{children}</parts.Title>;
 }
 

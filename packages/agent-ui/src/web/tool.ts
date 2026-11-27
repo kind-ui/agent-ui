@@ -1,4 +1,5 @@
 import {
+  codeSpans,
   type StepOpenChangeReason,
   stepDuration,
   type ToolApi,
@@ -34,6 +35,24 @@ const fill = (part: Element | null, text: string) => {
   if (part.textContent !== text) part.textContent = text;
 };
 
+const titles = new WeakMap<Element, string>();
+
+// The title, with its backticks as `code` elements.
+const fillTitle = (part: Element | null, text: string) => {
+  if (!part || !(owned.has(part) || !part.textContent)) return;
+  owned.add(part);
+  if (titles.get(part) === text) return;
+  titles.set(part, text);
+  part.replaceChildren(
+    ...codeSpans(text).map((piece, index) => {
+      if (!(index % 2)) return piece;
+      const code = part.ownerDocument.createElement("code");
+      code.textContent = piece;
+      return code;
+    }),
+  );
+};
+
 const fillParts = (part: Element | null, html: string) => {
   if (part && !part.firstElementChild) {
     part.innerHTML = html;
@@ -58,7 +77,7 @@ const write = <Target extends object, Key extends keyof Target>(
 
 /**
  * `<kind-tool>` fills in its trigger and content when it has no children, and an empty `<kind-tool-input>` or
- * `<kind-tool-output>` with its heading, copy button and code block. Set `call` as a property. It writes its title
+ * `<kind-tool-output>` with its heading, copy button and code block. Set `call` and `heading` as properties. It writes its title
  * and error into those parts while they're empty, and its values into the code blocks and Markdown view. While `call`
  * has an approval, an empty `<kind-tool-approval>` gets a `kind-confirmation`, which offers Deny with the `can-deny`
  * attribute, Always allow with `can-always-allow` and Approve with `can-approve`, which fire `deny`, `alwaysallow` and
@@ -88,7 +107,7 @@ export function defineTool(): void {
         const draw = () => {
           const state = instance.get() as ToolState;
           const { highlight } = state;
-          fill(el.querySelector("kind-tool-title"), state.title);
+          fillTitle(el.querySelector("kind-tool-title"), state.title);
           fill(el.querySelector("kind-tool-meta"), stepDuration(state.durationSeconds));
           // Filled only once there's an approval, so a tool without one holds no Confirmation.
           const approval =
@@ -171,9 +190,11 @@ export type KindToolEvents = {
 export interface KindToolElement
   extends UiElement<KindToolEvents>,
     ApprovalAttributes,
-    AttributeProperties<typeof toolPrimitive, "api" | "open" | "call" | "error" | "highlight"> {
+    AttributeProperties<typeof toolPrimitive, "api" | "open" | "call" | "heading" | "error" | "highlight"> {
   open: boolean;
   call?: ToolOptions["call"];
+  /** A string or a function of the call's status and input; a property. */
+  heading?: ToolOptions["heading"];
   error?: ToolOptions["error"];
   highlight?: ToolOptions["highlight"];
   api: Pick<ToolApi, "isOpen" | "setOpen" | "expand" | "collapse" | "toggle">;

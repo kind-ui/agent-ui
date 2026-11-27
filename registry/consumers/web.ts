@@ -38,6 +38,7 @@ import { defineSources } from "./components/ui/web/sources.js";
 import { defineStackTrace } from "./components/ui/web/stack-trace.js";
 import { defineStatus } from "./components/ui/web/status.js";
 import { defineStep } from "./components/ui/web/step.js";
+import { defineStepGroup } from "./components/ui/web/step-group.js";
 import { defineStreamingText } from "./components/ui/web/streaming-text.js";
 import { defineSubagent } from "./components/ui/web/subagent.js";
 import { defineSuggestion } from "./components/ui/web/suggestion.js";
@@ -96,6 +97,7 @@ for (const define of [
   defineChainOfThought,
   defineTask,
   definePlan,
+  defineStepGroup,
   defineSubagent,
   defineQueue,
   defineConfirmation,
@@ -190,6 +192,9 @@ const items = {
   "chain-of-thought": `<kind-chain-of-thought label="Researching flights" status="complete" default-open></kind-chain-of-thought>`,
   task: `<kind-task label="Migrating the users table" default-open></kind-task>`,
   plan: `<kind-plan label="Migration plan" default-open></kind-plan>`,
+  "step-group": `<kind-step-group label="Read 3 files" default-open>
+      <kind-step-group-content><kind-step-group-children><p>Read three files.</p></kind-step-group-children></kind-step-group-content>
+    </kind-step-group>`,
   subagent: `<kind-subagent agent-name="Code reviewer" status="complete" result="No issues found." default-open>
       <kind-subagent-content><p>Read two files.</p></kind-subagent-content>
     </kind-subagent>`,
@@ -336,6 +341,13 @@ Object.assign(main.querySelector("kind-suggestion") as HTMLElement, {
 });
 Object.assign(main.querySelector("kind-chain-of-thought") as HTMLElement, {
   steps: [{ id: "search", status: "complete", title: "Search flights", durationSeconds: 3 }],
+});
+Object.assign(main.querySelector("kind-step-group") as HTMLElement, {
+  items: [
+    { id: "a", status: "complete" },
+    { id: "b", status: "complete" },
+    { id: "c", status: "complete" },
+  ],
 });
 Object.assign(main.querySelector("kind-task") as HTMLElement, {
   items: [{ id: "schema", status: "complete", title: "Read the schema", files: ["db/schema.sql"] }],

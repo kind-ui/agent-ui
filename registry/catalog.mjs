@@ -44,6 +44,13 @@ export const components = {
     description: "A summary of the steps an agent took, which opens into each step's details.",
     uses: [],
   },
+  "step-group": {
+    group: "steps",
+    when: "a turn's tool calls, commands or agents fold under one line that names the work and its status.",
+    title: "Step Group",
+    description: "One line that names a turn's work, with its status in words, over the host's own steps.",
+    uses: [],
+  },
   task: {
     group: "steps",
     when: "an agent works through a list of steps and you count how many are done.",

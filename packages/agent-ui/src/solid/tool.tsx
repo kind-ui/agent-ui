@@ -1,7 +1,7 @@
-import { toolPrimitive } from "@kind-ui/agent-ui/core";
+import { codeSpans, toolPrimitive } from "@kind-ui/agent-ui/core";
 import type { ComponentProps } from "@solidjs/web";
 import { createParts } from "@ui-sdk/solid/primitive";
-import { omit, Show } from "solid-js";
+import { For, omit, Show } from "solid-js";
 import { CodeBlock } from "./code-block.js";
 import { Confirmation } from "./confirmation.js";
 import { Markdown } from "./markdown.js";
@@ -37,13 +37,22 @@ export const ToolContent = parts.Content;
 export const ToolInputCopy = parts.InputCopy;
 export const ToolOutputCopy = parts.OutputCopy;
 
+// Text with its backticks as `code`.
+function Code(props: { text: string }) {
+  return (
+    <For each={codeSpans(props.text)} keyed={false}>
+      {(piece, index) => (index % 2 ? <code>{piece()}</code> : <>{piece()}</>)}
+    </For>
+  );
+}
+
 export type ToolTitleProps = ComponentProps<typeof parts.Title>;
 
-/** The tool's name, or the `label`, unless you pass children. */
+/** The `heading`, the `label`, the call's `title` or the tool's name as words, with code as `code`, unless you pass children. */
 export function ToolTitle(props: ToolTitleProps) {
   return (
     <parts.Title {...omit(props, "children")}>
-      {props.children ?? ((state: { title: string }) => state.title)}
+      {props.children ?? ((state: { title: string }) => <Code text={state.title} />)}
     </parts.Title>
   );
 }

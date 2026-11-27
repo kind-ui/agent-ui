@@ -45,6 +45,7 @@ export default {
     "task",
     "plan",
     "subagent",
+    "step-group",
     "queue",
 
     "sources",
@@ -144,6 +145,7 @@ export default {
     "wave-2/task.spec.ts",
     "wave-2/plan.spec.ts",
     "wave-2/subagent.spec.ts",
+    "wave-2/step-group.spec.ts",
     "wave-2/queue.spec.ts",
 
     "wave-4/sources.spec.ts",

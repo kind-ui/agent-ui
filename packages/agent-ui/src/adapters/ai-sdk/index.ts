@@ -3,12 +3,12 @@
 /** @ts-ignore `ai` is an optional peer; without it these types are `any`. Kept in the emitted `.d.ts`. */
 import type { ChatStatus, UIMessage } from "ai";
 import type { Message, Part } from "../../types/index.js";
-import { fromUIMessagePart } from "./parts.js";
+import { fromUIMessagePart, type ToolTitles } from "./parts.js";
 import { fromChatStatus } from "./status.js";
 
 export type { ApprovalDecision, ApprovalResponse } from "./approval.js";
 export { toApprovalResponse } from "./approval.js";
-export type { PartContext } from "./parts.js";
+export type { PartContext, ToolTitleInput, ToolTitles } from "./parts.js";
 export { fromUIMessagePart } from "./parts.js";
 export { fromChatStatus } from "./status.js";
 
@@ -20,17 +20,27 @@ export interface UIChatState {
   error?: { message: string } | undefined;
 }
 
+/** Options for `fromUIMessages`. */
+export interface FromUIMessagesOptions {
+  /** Titles in words by tool name, which become each call's `title`, so Tool shows "Read `sign-in.ts`", not `read_file`. */
+  toolTitles?: ToolTitles;
+}
+
 /**
  * Maps AI SDK UI messages to neutral messages. The chat's `status` describes the in-flight turn, so it applies to
  * the last message, as does its `error`; every earlier message is `"complete"`. Takes the `status` alone too.
  */
-export function fromUIMessages(messages: readonly UIMessage[], chat?: ChatStatus | UIChatState): Message[] {
+export function fromUIMessages(
+  messages: readonly UIMessage[],
+  chat?: ChatStatus | UIChatState,
+  { toolTitles }: FromUIMessagesOptions = {},
+): Message[] {
   const { status, error } =
     typeof chat === "object" && chat !== null ? chat : { status: chat, error: undefined };
   const last = messages.length - 1;
   return messages.map((message, messageIndex) => {
     const parts: Part[] = message.parts.flatMap(
-      (part, index) => fromUIMessagePart(part, { messageId: message.id, index }) ?? [],
+      (part, index) => fromUIMessagePart(part, { messageId: message.id, index, toolTitles }) ?? [],
     );
     const neutral: Message = {
       id: message.id,

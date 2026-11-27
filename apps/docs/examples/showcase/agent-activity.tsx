@@ -20,9 +20,18 @@ const DONE = PLAN + 12;
 const stage = (tick: number, start: number, end: number): "pending" | "running" | "complete" =>
   tick < start ? "pending" : tick < end ? "running" : "complete";
 
+// Each tool's title while it runs and once it's done.
+const titles: Record<string, [string, string]> = {
+  search_code: ["Searching for `retry(`", "Searched for `retry(`"],
+  delete_branch: ["Deleting the `old-retry` branch", "Deleted the `old-retry` branch"],
+  edit_file: ["Editing `src/retry.ts`", "Edited `src/retry.ts`"],
+  run_tests: ["Running the retry tests", "Ran the retry tests"],
+};
+
 const call = (id: string, name: string, input: unknown, output: unknown, done: boolean): ToolCall => ({
   toolCallId: id,
   name,
+  title: titles[name]?.[done ? 1 : 0],
   dynamic: false,
   input: { state: "ready", value: input },
   ...(done && { output: { state: "available", value: output } }),

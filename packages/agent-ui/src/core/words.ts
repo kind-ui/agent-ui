@@ -50,6 +50,11 @@ export const WORDS = {
   noUpdateFor: "No update for",
   stillWorking: "Still working",
   workingAgain: "Working again",
+  stoppedAfter: "Stopped after",
+  waitingCount: "waiting",
+  finished: "finished",
+  otherStep: "other step",
+  otherSteps: "other steps",
 } as const;
 
 /**

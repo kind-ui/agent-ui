@@ -189,7 +189,7 @@ test("one snapshot lists every Wave 1, 2 and 3 component, each Wave 3 one by nam
       'kind-suggestion "Suggestions": pick',
     ].filter((line) => !skipped.some((component) => line.startsWith(`${component} `))),
   );
-  expect(await actionsOf(page, "kind-tool", "delete_file")).toEqual([
+  expect(await actionsOf(page, "kind-tool", "Delete file")).toEqual([
     "collapse",
     "copyInput",
     "expand",

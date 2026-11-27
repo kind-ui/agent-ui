@@ -165,6 +165,19 @@ const cases = {
   status: { options: { status: "running", label: "Working" } },
   stepList: { options: {}, keys: { item: ["a"] } },
   step: { options: step },
+  stepGroup: {
+    options: {
+      items: [
+        { id: "a", status: "complete", kind: "read", target: "a.ts" },
+        { id: "b", status: "running", kind: "run", target: "npm test" },
+        { id: "c", status: "pending", kind: "run", target: "npm run lint" },
+      ],
+      kinds: {
+        read: { live: "Reading", done: "Read", one: "file", many: "files" },
+        run: { live: "Running", done: "Ran", one: "command", many: "commands" },
+      },
+    },
+  },
   streamingText: { options: { text: "Hello", caret: true }, keys: { chunk: ["0"] } },
   subagent: { options: { ...step, agentName: "Researcher", result: "Found it", onCancel: noop } },
   suggestion: {

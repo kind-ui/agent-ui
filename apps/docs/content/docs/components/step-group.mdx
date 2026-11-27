@@ -1,0 +1,91 @@
+---
+title: Step Group
+description: Fold a turn's work under one line that names it and says its status in words.
+---
+
+import StepGroupExample from "../../../examples/step-group/basic";
+import StepGroupAgentsExample from "../../../examples/step-group/agents";
+
+Use a step group when one turn runs many steps, like tool calls, commands or agents. Its line names the work: the step that's running while it runs, like "Running `npm test`" with "1 of 3", and what was done once it's finished, like "Read `sign-in.ts`, `session.ts` and ran `npm test`". It opens to your own rows.
+
+<Example caption="Press Finish a step to move the turn along. When the last step finishes, the group folds a second later and names the work.">
+  <StepGroupExample />
+
+  <ExampleCode example="step-group/basic" />
+</Example>
+
+## Installation
+
+<Install name="step-group" />
+
+## Composition
+
+```text
+StepGroup
+├── StepGroupTrigger
+│   ├── StepGroupIcon
+│   ├── StepGroupTitle
+│   └── StepGroupMeta
+└── StepGroupContent
+    └── StepGroupChildren
+```
+
+`StepGroup` renders these parts and puts its children, your rows, in `StepGroupChildren`. The trigger is a native button named by the title and the meta, like "Read auth.ts and ran npm test, 1 failed, 41 sec". `StepGroupIcon` is the group's status mark. To arrange the parts yourself, render them inside `StepGroupRoot`.
+
+## Usage
+
+### Items and Kinds
+
+The group can't read your rows, so pass what they are as `items`: each step's `id`, `status`, and optionally its `kind` and `target`. Pass `kinds` to say how each kind reads, live and done, with its noun: `{ read: { live: "Reading", done: "Read", one: "file", many: "files" } }`. The title joins kinds in the order they were first used and names up to two targets each, so "Read `sign-in.ts`, `session.ts` and ran `npm test`"; past `maxClauses` kinds (2 by default) it counts instead, like "Read 6 files, edited 2 files and 3 other steps". Without `kinds`, it reads "12 steps". Pass `current` to word the running step yourself, or `label` to replace the title.
+
+Each row says its own status, so a row is a [Tool](./tool.mdx), [Terminal](./terminal.mdx) or [Subagent](./subagent.mdx), titled in words. Wrap them in a [StepList](./step.mdx) to make them one Tab stop. Complete rows are quiet: their mark is a dot, not a check, and only running, waiting, failed and stopped rows are marked.
+
+### Status
+
+The group takes its most urgent step's status: waiting, then failed, then running, then not started, then stopped, then complete. Pass `status` to set it yourself, like `error` when the turn itself failed. The meta says it in words:
+
+| While | Meta |
+| --- | --- |
+| Running | "3 of 5" |
+| Waiting, open | "1 waiting" |
+| Waiting, folded | "Waiting for approval" |
+| Done | the duration, like "41 sec", from `durationSeconds` |
+| Done with a failure | "1 failed · 41 sec" |
+| Stopped | "Stopped after 41 sec" |
+| Failed | "Failed after 12 sec" |
+
+### Parallel Agents
+
+When several steps of one kind have no target, like agents, the group counts them: "Running 3 agents" with "1 of 3", then "Ran 3 agents". Agents that finish together are announced together, like "3 agents finished, 1 failed".
+
+<Example caption="Three agents at work. The group counts them; the running one is marked, and the one that finished is a quiet dot.">
+  <StepGroupAgentsExample />
+
+  <ExampleCode example="step-group/agents" />
+</Example>
+
+### Opening and Closing
+
+A group opens while it runs, and by itself whenever a step waits for a person, even after someone closed it, so it never hides an approval. About a second after it finishes it folds, once, unless someone opened or closed it, and never while focus or a text selection is inside it. Find in page opens it too. Pass `open` with `onOpenChange` to control it.
+
+With fewer than `minItems` items (3 by default), there's no group line: the rows show flat, since grouping two rows hides more than it saves.
+
+### Motion
+
+The group opens and closes like a [Step](./step.mdx), and a row that arrives while it's open rises in once; nothing plays when it opens. Under `prefers-reduced-motion`, or with `motion="reduced"`, the content fades over 120 ms instead, and with `motion="none"` everything changes at once.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/step-group/step-group.ts" name="StepGroupOptions" />
+
+<FrameworkNames name="step-group" />
+
+### Agent
+
+An agent connected with `createAgent` finds the group by its title and reads its `open` and `status`. It can run these actions, and press the trigger like a person would.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/step-group/step-group.ts" name="StepGroupAgentActions" type='Pick<StepGroupApi, "expand" | "collapse">' />
+
+<Caption>
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-step-group>`, `items` and `kinds` are properties, and `onOpenChange` fires `openchange`. Write the rows inside a `<kind-step-group-content>` holding a `<kind-step-group-children>`: the element adds its trigger before it, unless you wrote one.
+</Caption>

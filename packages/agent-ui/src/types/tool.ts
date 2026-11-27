@@ -1,6 +1,8 @@
 export interface ToolCall {
   toolCallId: string;
   name: string;
+  /** The call in words, like "Read `sign-in.ts`", shown in place of its name. */
+  title?: string;
   dynamic: boolean;
   input: { state: "streaming" | "ready"; value: unknown };
   /** Present once there is output; `0`, `false`, `""` and `null` are valid values. */

@@ -615,8 +615,11 @@ export {
   todayKey,
 } from "./time.js";
 export {
+  humanizeToolName,
   type ToolApi,
   type ToolApprovalState,
+  type ToolHeading,
+  type ToolHeadingInput,
   type ToolOptions,
   type ToolPrimitive,
   type ToolState,
@@ -759,6 +762,7 @@ export {
 
 // wave-6-task-11: Conversation Search
 
+export { aggregateStatus } from "./aggregate.js";
 export {
   type ConversationSearchApi,
   type ConversationSearchInputState,
@@ -773,7 +777,6 @@ export {
   findMatches,
   searchText,
 } from "./conversation-search/index.js";
-
 export { type Countdown, type CountdownOptions, countdownText, createCountdown } from "./countdown.js";
 export { failedAfterText, retryAnnouncement, retryReason, retryText } from "./retry.js";
 export {
@@ -784,4 +787,20 @@ export {
   stalledText,
   watchStalled,
 } from "./stalled.js";
+export {
+  type StepGroupApi,
+  type StepGroupKind,
+  type StepGroupKinds,
+  type StepGroupMetaInput,
+  type StepGroupOptions,
+  type StepGroupPrimitive,
+  type StepGroupState,
+  type StepGroupTitleInput,
+  stepGroupFinished,
+  stepGroupLive,
+  stepGroupMeta,
+  stepGroupPrimitive,
+  stepGroupSentence,
+  stepGroupTitle,
+} from "./step-group/index.js";
 export { codeSpans, plainText, WORDS } from "./words.js";

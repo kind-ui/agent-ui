@@ -90,6 +90,7 @@ export default function Chat() {
 }
 ```
 
+- `fromUIMessages(messages, { status, error }, { toolTitles })`: `toolTitles` maps a tool name to a title in words, a string or `({ status, input }) => string`, which becomes each call's `title`.
 - `fromUIMessages(messages, { status, error })` gives the last message the chat's status (`submitted`, `streaming`, `complete` or `error`) and its error, and marks earlier messages `complete`.
 - `sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses` sends the chat back once every waiting tool call has a decision, so an approved tool runs and the model goes on.
 - `onSubmit` returns `sendMessage`'s promise, so the composer stays pending, and Stop shows, until the answer ends.

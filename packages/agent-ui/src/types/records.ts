@@ -1,3 +1,5 @@
+import type { StepStatus } from "./step.js";
+
 export interface Source {
   id: string;
   title: string;
@@ -27,6 +29,16 @@ export interface RetryState {
   retryAfter?: number;
   /** What went wrong, in words, like "Rate limited". Leads the line. */
   reason?: string;
+}
+
+/** One of the steps a Step Group holds, which core can't read from the host's rows. */
+export interface StepGroupItem {
+  id: string;
+  status: StepStatus;
+  /** Which entry of the group's `kinds` words the step, like `"read"` or `"agent"`. */
+  kind?: string;
+  /** What the step acts on, like a file or a command. Shown as code in the group's title. */
+  target?: string;
 }
 
 /** A conversation in a list of them. */
