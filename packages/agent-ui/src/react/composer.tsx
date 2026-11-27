@@ -2,6 +2,7 @@
 
 import { type ComposerTriggerItem, composerPrimitive } from "@kind-ui/agent-ui/core";
 import { FileInput, FileInputDropzone, FileInputTrigger } from "@ui-sdk/react/file-input";
+import { MenuTrigger } from "@ui-sdk/react/menu";
 import { createParts } from "@ui-sdk/react/primitive";
 import {
   type Token,
@@ -10,8 +11,9 @@ import {
   TokenInputToken,
   TokenInputTokenRemove,
 } from "@ui-sdk/react/token-input";
-import type { ComponentProps, ReactNode } from "react";
+import { type ComponentProps, Fragment, type ReactNode } from "react";
 import { Attachments, type AttachmentsProps } from "./attachments.js";
+import { KindMenu, KindMenuContent, KindMenuItem, KindMenuSeparator } from "./internal/menu.js";
 import {
   KindTriggerMenu,
   KindTriggerMenuContent,
@@ -26,6 +28,9 @@ const parts = createParts(composerPrimitive, {
   "trigger-menu": "div",
   attachments: "div",
   submit: "button",
+  steer: "button",
+  "send-menu": "div",
+  "send-menu-trigger": "span",
   stop: "button",
   restored: "div",
   discard: "button",
@@ -123,7 +128,9 @@ export const ComposerDiscard = parts.Discard;
 export function ComposerRestored({ children, ...props }: ComponentProps<typeof parts.Restored>) {
   return (
     <parts.Restored {...props}>
-      {children ?? (
+      {children !== undefined ? (
+        children
+      ) : (
         <>
           <span>Draft restored</span>
           <ComposerDiscard>Discard</ComposerDiscard>
@@ -133,7 +140,79 @@ export function ComposerRestored({ children, ...props }: ComponentProps<typeof p
   );
 }
 
-/** Sends the draft. Hidden while Stop shows. */
+/** Sends the draft. Hidden while a turn runs or Stop shows. */
 export const ComposerSubmit = parts.Submit;
-/** Shown in Send's place while a submission is pending, when the composer has `onStop`. */
+/**
+ * Shown in Send's place while a submission is pending or a turn is `running`, when the composer has `onStop`. Quiet
+ * while Send shows beside it.
+ */
 export const ComposerStop = parts.Stop;
+
+export type ComposerSteerProps = ComponentProps<typeof parts.Steer>;
+
+/** Send while a turn runs: "Steer" or "Queue" by `steerMode`, unless you pass children. */
+export function ComposerSteer({ children, ...props }: ComposerSteerProps) {
+  return <parts.Steer {...props}>{children !== undefined ? children : ({ label }) => label}</parts.Steer>;
+}
+
+export type ComposerSendMenuTriggerProps = ComponentProps<typeof MenuTrigger>;
+
+/** Opens Send's menu: UI SDK's `MenuTrigger`, a chevron unless you pass children. */
+export function ComposerSendMenuTrigger({ children, ...props }: ComposerSendMenuTriggerProps) {
+  return (
+    <parts.SendMenuTrigger>
+      {(trigger) => (
+        // Hidden from agents, which use the composer's `steer`, `queue` and `stopAndSend`.
+        <MenuTrigger {...trigger} data-agent-hidden="" {...props}>
+          {children !== undefined ? children : <span data-composer-chevron="" aria-hidden="true" />}
+        </MenuTrigger>
+      )}
+    </parts.SendMenuTrigger>
+  );
+}
+
+export type ComposerSendMenuProps = Omit<ComponentProps<typeof parts.SendMenu>, "children"> & {
+  children?: ReactNode;
+};
+
+/**
+ * Send and its menu while a turn runs, shown once there's text when the composer has `onSteer`: Steer or Queue, and
+ * a chevron offering Steer now, Queue for later and Stop and send, each with its keys. Put it beside `ComposerStop`.
+ */
+export function ComposerSendMenu({ children, ...props }: ComposerSendMenuProps) {
+  return (
+    <parts.SendMenu {...props}>
+      {({ items, controller, open, onOpenChange, onAction }) => (
+        <KindMenu controller={controller} open={open} onOpenChange={onOpenChange} onAction={onAction}>
+          {children !== undefined ? (
+            children
+          ) : (
+            <>
+              <ComposerSteer />
+              <ComposerSendMenuTrigger />
+              <KindMenuContent align="end" side="top" sideOffset={8} data-composer-send-menu="">
+                {items.map((item) => (
+                  <Fragment key={item.value}>
+                    {item.value === "stop-and-send" ? <KindMenuSeparator /> : null}
+                    <KindMenuItem
+                      value={item.value}
+                      label={item.label}
+                      data-current={item.checked ? "" : undefined}
+                    >
+                      <span data-composer-check="" aria-hidden="true" />
+                      <span data-composer-send-text="">
+                        <span data-composer-send-label="">{item.label}</span>
+                        <span data-composer-send-description="">{item.description}</span>
+                      </span>
+                      {item.shortcut ? <kbd data-composer-send-keys="">{item.shortcut}</kbd> : null}
+                    </KindMenuItem>
+                  </Fragment>
+                ))}
+              </KindMenuContent>
+            </>
+          )}
+        </KindMenu>
+      )}
+    </parts.SendMenu>
+  );
+}

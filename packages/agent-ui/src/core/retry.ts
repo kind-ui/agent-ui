@@ -12,7 +12,7 @@ export function retryText(
 ): string {
   const when = countdownText(seconds, locale);
   const of = retry.maxAttempts ? ` of ${retry.maxAttempts}` : "";
-  return `${WORDS.retrying}${when ? ` in ${when}` : ""}, ${WORDS.attempt} ${retry.attempt}${of}`;
+  return `${WORDS.retrying}${when ? ` ${when}` : ""}, ${WORDS.attempt} ${retry.attempt}${of}`;
 }
 
 /** The reason that leads the line, as a sentence: "Rate limited.". Empty without one. */

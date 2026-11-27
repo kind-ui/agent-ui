@@ -24,14 +24,14 @@ const row = (each: StepGroupRow) => {
   if (each.kind === "agent") {
     const el = document.createElement("kind-subagent");
     Object.assign(el, { agentName: each.title, status: each.status, autoOpen: "never" });
-    el.innerHTML = `<kind-step-list-item value="${each.id}"><kind-subagent-trigger><button><kind-subagent-icon></kind-subagent-icon><kind-subagent-title></kind-subagent-title><kind-subagent-meta></kind-subagent-meta></button></kind-subagent-trigger></kind-step-list-item>`;
+    el.innerHTML = `<kind-step-list-item value="${each.id}"><kind-subagent-trigger><button><kind-subagent-icon></kind-subagent-icon><kind-subagent-title></kind-subagent-title><kind-subagent-meta></kind-subagent-meta></button></kind-subagent-trigger></kind-step-list-item><kind-subagent-content><p>Details</p></kind-subagent-content>`;
     return el;
   }
   const el = document.createElement("kind-tool");
   Object.assign(el, { call: callOf(each), status: each.status, heading: each.title, autoOpen: "never" });
   el.canApprove = true;
   el.canDeny = true;
-  el.innerHTML = `<kind-step-list-item value="${each.id}"><kind-tool-trigger><button><kind-tool-icon></kind-tool-icon><kind-tool-title></kind-tool-title><kind-tool-meta></kind-tool-meta></button></kind-tool-trigger></kind-step-list-item><kind-tool-approval></kind-tool-approval>`;
+  el.innerHTML = `<kind-step-list-item value="${each.id}"><kind-tool-trigger><button><kind-tool-icon></kind-tool-icon><kind-tool-title></kind-tool-title><kind-tool-meta></kind-tool-meta></button></kind-tool-trigger></kind-step-list-item><kind-tool-content><p>Details</p></kind-tool-content><kind-tool-approval></kind-tool-approval>`;
   return el;
 };
 

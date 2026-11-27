@@ -8,6 +8,7 @@ export const parts = createParts(terminalPrimitive, {
   title: "span",
   exit: "span",
   meta: "span",
+  approval: "div",
   content: "div",
   command: "div",
   copy: "button",

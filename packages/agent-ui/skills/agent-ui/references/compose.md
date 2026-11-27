@@ -127,6 +127,8 @@ export function renderPart(part: Part, decide: Decide) {
 ```
 
 - The Tool reads its status from `call`: `running`, `awaiting-input` while it waits, `complete`, `error`, or `cancelled` once denied. It opens while it runs and closes into its header when it completes.
+- Title each Tool in words, never its snake_case name: `heading` takes a string or `({ status, input }) => …` ("Reading `sign-in.ts`", then "Read `sign-in.ts`"), or set `toolTitles` once on the adapter. Without either, `search_code` reads "Search code".
+- A turn with many steps goes in a `StepGroup`: pass `items` (`{ id, status, kind, target }` per row) and `kinds` (`{ read: { live: "Reading", done: "Read", one: "file", many: "files" } }`), and the rows as children. It names the live step while running and the work once done, and opens by itself when a step waits.
 - `onApprove` and `onDeny` are what show the buttons. `approvalReason` makes a person's first Deny open a reason box, which `onDeny` gets.
 - With the AI SDK, `decide` is `addToolApprovalResponse(toApprovalResponse(approval, decision))`; see [ai-sdk.md](ai-sdk.md).
 - Reasoning parts go in a `Reasoning` (`status` from the part's state, `text`), a plan tool in a `Plan` (`items`); see [ai-sdk.md](ai-sdk.md#reasoning-plans-and-other-parts).

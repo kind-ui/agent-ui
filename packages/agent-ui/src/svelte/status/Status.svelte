@@ -4,7 +4,9 @@
 -->
 <script lang="ts">
   import type { ComponentProps } from "svelte";
-  import { parts, StatusLabel, StatusStalled } from "./index.js";
+  import { parts } from "./parts.js";
+  import StatusLabel from "./StatusLabel.svelte";
+  import StatusStalled from "./StatusStalled.svelte";
 
   let { children, ...props }: ComponentProps<typeof parts.Root> = $props();
 </script>

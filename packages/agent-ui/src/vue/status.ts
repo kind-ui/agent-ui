@@ -27,7 +27,7 @@ export const StatusStalled = defineComponent({
     return () =>
       h(parts.Stalled, attrs, { ...slots, default: ({ state }: { state: { text: string } }) => state.text });
   },
-});
+}) as unknown as typeof parts.Stalled;
 
 /**
  * A run status badge: its mark, label and, while stalled, "No update for 5 min". A default slot, `StatusIcon`,

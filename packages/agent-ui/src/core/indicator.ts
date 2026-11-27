@@ -25,7 +25,7 @@ export type IndicatorOptions = StalledOptions & {
 };
 
 export type IndicatorState = StalledState & {
-  /** The label, or "Still working · no update for 2 min" while stalled. */
+  /** The `label` option, or the default. `indicatorLabel` gives the words shown, stalled or not. */
   label: string;
   motion: MotionMode;
 };
@@ -91,6 +91,8 @@ export const indicator = (defaultLabel: string) => {
         role: "status",
         attrs: (state) => ({
           "aria-label": indicatorLabel(state),
+          // Stalled words change each minute; they're announced once, as stalling starts, instead.
+          "aria-live": state.stalled ? "off" : undefined,
           "data-motion": state.motion,
           "data-stalled": state.stalled ? "" : undefined,
         }),

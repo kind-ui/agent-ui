@@ -29,6 +29,12 @@ test("a running row reads its own meta until nothing arrives for stalledAfter, t
   await expect(page.locator("#stalled").getByRole("button")).toHaveAccessibleName(
     /^Searching the docs\s*3 min\s*No update for 2 min$/,
   );
+  // The stalled words sit where the meta's own did, and the row keeps its height.
+  const [running, stalledBox] = await Promise.all([
+    page.locator("#running").getByRole("button").boundingBox(),
+    page.locator("#stalled").getByRole("button").boundingBox(),
+  ]);
+  expect(stalledBox?.height).toBe(running?.height);
   await expect(page.locator("#status")).toHaveText("Deploying to stagingNo update for 5 min");
   await expect(page.getByRole("status", { name: "Still working · no update for 2 min" })).toBeVisible();
   // Mounted stalled, so nothing was announced.

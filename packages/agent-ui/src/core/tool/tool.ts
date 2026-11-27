@@ -11,6 +11,7 @@ import { stepDuration } from "../chain-of-thought/open-steps.js";
 import { createCopy } from "../clipboard.js";
 import type { Highlight } from "../code-block/index.js";
 import { type StepApi, type StepOptions, type StepState, stepAnnouncement, stepBase } from "../step/base.js";
+import { WORDS } from "../words.js";
 import { humanizeToolName, toolCode, toolStatus, toolValue } from "./format.js";
 
 /** What a `heading` function reads to word a call. */
@@ -193,7 +194,7 @@ export const toolPrimitive: ToolPrimitive = definePrimitive<ToolOptions, ToolSta
     const copyInput = createCopy(context, "inputCopied");
     const copyOutput = createCopy(context, "outputCopied");
     const approvalState = approvalPart.approvalState<ToolState>(context, {
-      question: (state) => (state.name ? `Run \`${state.name}\`?` : "Run this tool?"),
+      question: (state) => (state.name ? `Allow \`${state.name}\`?` : WORDS.allowThisTool),
     });
     return {
       ...base.api(context),

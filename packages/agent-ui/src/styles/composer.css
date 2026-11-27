@@ -1,7 +1,10 @@
 /* Composer (spec §7), shared by both render layers. */
 @layer components {
   [data-slot="kind-composer"] {
-    /* Lucide "arrow-up", "paperclip", "at-sign", "square-slash" and "x", see THIRD_PARTY_NOTICES.md. */
+    /* Lucide "arrow-up", "paperclip", "at-sign", "square-slash", "x", "chevron-down" and "check", see
+       THIRD_PARTY_NOTICES.md. */
+    --kind-composer-chevron-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    --kind-composer-check-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
     --kind-composer-send-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 7-7 7 7'/%3E%3Cpath d='M12 19V5'/%3E%3C/svg%3E");
     --kind-composer-attach-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551'/%3E%3C/svg%3E");
     --kind-composer-mention-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8'/%3E%3C/svg%3E");
@@ -37,6 +40,7 @@
       display: grid;
       grid-template-columns: auto minmax(0, 1fr) auto;
       grid-template-areas:
+        "queue queue queue"
         "context context context"
         "attachments attachments attachments"
         "input input input"
@@ -549,6 +553,205 @@
 
   [data-slot="kind-composer-restored"][data-motion="none"] {
     transition: none;
+  }
+
+  /* While a turn runs and there's text, Send (Steer or Queue, with its chevron) takes the end of the actions row and
+     Stop, now quiet, sits just before it. Both share Send's cell, so nothing else in the row moves. */
+  [data-slot="kind-composer-send-menu"] {
+    grid-area: send;
+    justify-self: end;
+    align-self: end;
+    display: inline-flex;
+    height: var(--kind-composer-control-height);
+    border-radius: var(--kind-radius-full);
+    background-color: var(--kind-color-primary);
+    color: var(--kind-color-primary-fg);
+    transition: opacity var(--kind-duration-base) var(--kind-ease-enter);
+
+    @starting-style {
+      opacity: 0;
+    }
+  }
+
+  /* Web wraps Stop's button in an element of its own, so these reach it as a descendant. */
+  :where([data-slot="file-input-dropzone"]:has([data-slot="kind-composer-stop"]:not([hidden])))
+    > [data-slot="kind-composer-send-menu"] {
+    margin-inline-start: calc(var(--kind-composer-control-height) + 0.375rem);
+  }
+
+  :where([data-slot="file-input-dropzone"]:has(> [data-slot="kind-composer-send-menu"]:not([hidden])))
+    [data-slot="kind-composer-stop"] {
+    justify-self: start;
+  }
+
+  /* Web's Menu element sits between the pill and its buttons. */
+  :where([data-slot="kind-composer-send-menu"]) ui-menu {
+    display: contents;
+  }
+
+  /* Stop beside Send: a quiet fill, since Send is the one primary. */
+  [data-slot="kind-composer-stop"][data-quiet] {
+    background-color: var(--kind-color-hover);
+    color: var(--kind-color-fg);
+
+    &:hover {
+      background-color: var(--kind-color-pressed);
+    }
+  }
+
+  :where([data-slot="kind-composer-send-menu"])
+    :is([data-slot="kind-composer-steer"], [data-slot="menu-trigger"]) {
+    display: inline-grid;
+    place-items: center;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    transition: background-color var(--kind-duration-fast) var(--kind-ease-in-out);
+
+    &:hover:not([aria-disabled="true"], [data-disabled]) {
+      background-color: var(--kind-color-primary-hover);
+    }
+    &:focus-visible {
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
+    }
+  }
+
+  [data-slot="kind-composer-steer"] {
+    padding-inline: 0.875rem 0.75rem;
+    border-start-start-radius: var(--kind-radius-full);
+    border-end-start-radius: var(--kind-radius-full);
+    font-size: var(--kind-text-md);
+    font-weight: var(--kind-font-weight-medium);
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
+
+    &[data-pending] {
+      cursor: wait;
+      opacity: 0.7;
+    }
+  }
+
+  /* The chevron, behind a hairline in Send's own ink. */
+  :where([data-slot="kind-composer-send-menu"]) [data-slot="menu-trigger"] {
+    position: relative;
+    width: 2rem;
+    border-start-end-radius: var(--kind-radius-full);
+    border-end-end-radius: var(--kind-radius-full);
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset-block: 0.5rem;
+      inset-inline-start: 0;
+      width: 1px;
+      background-color: color-mix(in oklab, currentColor 25%, transparent);
+    }
+  }
+
+  [data-composer-chevron] {
+    width: 1rem;
+    height: 1rem;
+    background-color: currentColor;
+    mask: var(--kind-composer-chevron-icon) center / contain no-repeat;
+  }
+
+  /* Send's menu: each way to send is its words over what it does, with its keys at the end. */
+  [data-composer-send-menu] {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: max-content;
+    max-width: min(22rem, calc(100vw - 2rem));
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  [data-composer-check] {
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    background-color: currentColor;
+    mask: var(--kind-composer-check-icon) center / contain no-repeat;
+    visibility: hidden;
+
+    :where([data-current]) > & {
+      visibility: visible;
+    }
+  }
+
+  [data-composer-send-text] {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  [data-composer-send-label] {
+    font-size: var(--kind-text-md);
+    font-weight: var(--kind-font-weight-medium);
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
+    color: var(--kind-color-fg);
+  }
+
+  [data-composer-send-description] {
+    font-size: var(--kind-text-xs);
+    line-height: var(--kind-text-xs-leading);
+    letter-spacing: var(--kind-text-xs-tracking);
+    color: var(--kind-color-muted);
+  }
+
+  [data-composer-send-keys] {
+    flex-shrink: 0;
+    margin-inline-start: 1.5rem;
+    font-family: inherit;
+    font-size: var(--kind-text-xs);
+    line-height: var(--kind-text-xs-leading);
+    letter-spacing: var(--kind-text-xs-tracking);
+    font-variant-numeric: tabular-nums;
+    color: var(--kind-color-muted);
+    white-space: nowrap;
+  }
+
+  @media (forced-colors: active) {
+    [data-composer-chevron],
+    [data-composer-check] {
+      forced-color-adjust: none;
+      background-color: ButtonText;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot="kind-composer-send-menu"][data-motion="auto"] {
+      transition-duration: var(--kind-duration-reduced);
+    }
+  }
+
+  [data-slot="kind-composer-send-menu"][data-motion="reduced"] {
+    transition-duration: var(--kind-duration-reduced);
+  }
+
+  [data-slot="kind-composer-send-menu"][data-motion="none"] {
+    transition: none;
+  }
+
+  /* A Queue inside the composer docks to its top edge, part of the same box, above a hairline. Its spacing sits
+     inside it, so its expand and collapse take the whole of it. */
+  :where([data-slot="file-input-dropzone"]) > [data-slot="kind-queue"] {
+    grid-area: queue;
+  }
+
+  :where([data-slot="file-input-dropzone"] > [data-slot="kind-queue"]) > [data-section="pending"] {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.375rem;
+    border-bottom: 1px solid var(--kind-color-hairline);
   }
 
   /* Web keeps parts that aren't present in the page, with `hidden`. */

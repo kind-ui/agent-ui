@@ -5,6 +5,7 @@ description: Let people write to the agent, with mentions, commands and files.
 
 import ComposerExample from "../../../examples/composer/basic";
 import FullComposerExample from "../../../examples/composer/full";
+import SteerExample from "../../../examples/composer/steer";
 
 Use a composer where someone writes a prompt. It holds the text, the mentions and commands typed into it, and the attached files, and sends them together as one draft.
 
@@ -29,10 +30,13 @@ Composer
 ├── ComposerRestored
 │   └── ComposerDiscard
 ├── ComposerSubmit
-└── ComposerStop
+├── ComposerStop
+└── ComposerSendMenu
+    ├── ComposerSteer
+    └── ComposerSendMenuTrigger
 ```
 
-The composer renders a form, and everything inside it takes dropped files. `ComposerAttachments` shows the attached files as [Attachments](./attachments.mdx), and stays empty until there are some. `ComposerInput` is the prompt, and `ComposerTriggerMenu` inside it shows the suggestions. `ComposerAttach` opens the file picker. `ComposerRestored` says when a saved draft came back, with `ComposerDiscard` inside it, and shows nothing otherwise. `ComposerSubmit` and `ComposerStop` are Send and Stop, which take turns in the same place. Name the composer and its input with `aria-label`.
+The composer renders a form, and everything inside it takes dropped files. `ComposerAttachments` shows the attached files as [Attachments](./attachments.mdx), and stays empty until there are some. `ComposerInput` is the prompt, and `ComposerTriggerMenu` inside it shows the suggestions. `ComposerAttach` opens the file picker. `ComposerRestored` says when a saved draft came back, with `ComposerDiscard` inside it, and shows nothing otherwise. `ComposerSubmit` and `ComposerStop` are Send and Stop, which take turns in the same place. `ComposerSendMenu` is Send while a turn runs: `ComposerSteer` and the chevron, `ComposerSendMenuTrigger`, that opens the other ways to send. Name the composer and its input with `aria-label`.
 
 ## Usage
 
@@ -56,6 +60,28 @@ To own the draft, pass `value` and `onValueChange`. Cancel the change's `details
 ### Stop
 
 Pass `onStop` to show Stop in Send's place while a submission is pending, so someone can end the agent's reply. Settle the `onSubmit` promise once it stops, and Send comes back. When the button that had focus leaves, focus moves to the one that took its place.
+
+### While a Turn Runs
+
+Pass `running` while the agent works, and Stop shows, named "Stop generating". Enter never starts a new turn then. Pass `onSteer` too, and once there's text, Send shows beside Stop, which turns quiet. Send reads **Steer**: it delivers the draft at the agent's next step. Its chevron opens **Queue for later**, which sends after the turn, and **Stop and send**, which ends the turn and sends the draft as a new one.
+
+<Example caption="Type while the turn runs, then press Enter to steer or Alt+Enter to queue. Press Alt+Up in the empty prompt to take back the last queued message.">
+  <SteerExample />
+
+  <ExampleCode example="composer/steer" />
+</Example>
+
+`onSteer` gets the draft and `details.mode`: `steer`, `queue` or `stop-and-send`. Add a queued draft to your [Queue](./queue.mdx), and for `stop-and-send`, stop the turn and send the draft as a new one. A promise you return locks sending, as `onSubmit`'s does: resolving clears what was sent and keeps anything typed since. Screen readers hear "Steer sent", "Queued" or "Stopped and sent". Stopping never sends a queued message; those wait for the person.
+
+Enter sends in `steerMode`, Alt+Enter in the other mode, and Shift+Ctrl+Enter or Shift+Cmd+Enter stops and sends. To make Send queue instead, pass `steerMode="queue"`:
+
+```tsx
+<Composer aria-label="Message" running={running} onStop={stop} onSteer={send} steerMode="queue">
+```
+
+Pass `stopAndSend={false}` to leave Stop and send out of the menu. It's on by default when `onStop` and `onSteer` are both set.
+
+A Queue inside the composer docks to its top edge, with **Send now**, **Edit** and **Remove** on each row. Edit and Alt+Up give the text back to the prompt, on its own line, with the reason `queue-edit`.
 
 ### Mentions and Commands
 
@@ -122,10 +148,10 @@ The composer measures its own width, not the screen's, so give it one when it si
 
 ### Agent
 
-An agent connected with `createAgent` reads the composer's `value`, and whether it's pending. It can run these actions, `stop` only while Stop shows, and `discardDraft` only while **Draft restored** shows. While `agentConfirm` is on, every one of them waits for a person to confirm, unless the host's `allow` lets it through:
+An agent connected with `createAgent` reads the composer's `value`, and whether it's pending. It can run these actions, `stop` only while Stop shows, `steer`, `queue` and `stopAndSend` only while Send shows beside it, and `discardDraft` only while **Draft restored** shows. While `agentConfirm` is on, every one of them waits for a person to confirm, unless the host's `allow` lets it through:
 
-<auto-type-table path="../../../../../packages/agent-ui/src/core/composer/composer.ts" name="ComposerAgentActions" type='Pick<ComposerApi, "setValue" | "insertToken" | "removeAttachment" | "submit" | "stop" | "discardDraft">' />
+<auto-type-table path="../../../../../packages/agent-ui/src/core/composer/composer.ts" name="ComposerAgentActions" type='Pick<ComposerApi, "setValue" | "insertToken" | "removeAttachment" | "submit" | "steer" | "queue" | "stopAndSend" | "stop" | "discardDraft">' />
 
 <Caption>
-  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-composer>`, each prop is a kebab-case attribute, so `submitOn` is `submit-on` and `draftKey` is `draft-key`, and `value`, `defaultValue`, `mentions`, `commands` and `history` are properties, as is `draftStorage`. Each callback is a lowercase event, so `onValueChange` fires `valuechange`, but `onSubmit` fires `composersubmit`, whose listeners call `event.detail.waitUntil(promise)`, and Stop shows with the `can-stop` attribute and fires `stop`.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-composer>`, each prop is a kebab-case attribute, so `submitOn` is `submit-on` and `draftKey` is `draft-key`, and `value`, `defaultValue`, `mentions`, `commands` and `history` are properties, as is `draftStorage`. Each callback is a lowercase event, so `onValueChange` fires `valuechange`, but `onSubmit` fires `composersubmit`, whose listeners call `event.detail.waitUntil(promise)`, and Stop shows with the `can-stop` attribute and fires `stop`. Send shows beside Stop with the `can-steer` attribute, and `onSteer` fires `composersteer`, with the mode in `detail.mode`.
 </Caption>
