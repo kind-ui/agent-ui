@@ -1,5 +1,5 @@
 import { h } from "vue";
-import { StepGroup } from "../components/ui/step-group.js";
+import { StepGroup } from "../components/ui/vue/step-group.js";
 
 export default () =>
   h(
