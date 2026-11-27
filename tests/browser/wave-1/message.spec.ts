@@ -3,7 +3,6 @@ import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { allowClipboard, readClipboard } from "../clipboard.js";
 import { isWebElements, layerOf } from "../layer.js";
-import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 type Fixture = {
   kindMessage: { calls: string[]; source: string; append(chunk: string): void; finish(): void };
@@ -429,8 +428,7 @@ test.describe("an answer that stops or fails", () => {
     await expect(page.getByRole("textbox", { name: "Reply" })).toBeFocused();
   });
 
-  test("agents retry a failed answer and continue a stopped one", async ({ page }, testInfo) => {
-    test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
+  test("agents retry a failed answer and continue a stopped one", async ({ page }) => {
     await openOutcomes(page);
     await expectAgentActions(page, "Earlier answer", ["copy", "retry"]);
     await status(page, "stopped", "aborted");

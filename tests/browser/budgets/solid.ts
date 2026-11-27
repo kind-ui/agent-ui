@@ -26,7 +26,9 @@ export const budgets: Partial<Budgets> = {
 
   // Thread List: pinning moves every row in view (29 writes at 10 threads, 48 at 1,000, where the column is full);
   // appending writes only the new rows in view (24 at 10, 1 at 1,000). No row renders again, nor is any part notified.
-  threadSelect: { writes: 4, renders: 0, notified: 0, layoutReads: 0 },
+  // The first change rebuilds the rows `state` built and measures the viewport (2 reads), as React's does: since
+  // UI SDK 0.1.0-beta.18, Solid no longer hands the primitive its unchanged options as it mounts.
+  threadSelect: { writes: 4, renders: 0, notified: 0, layoutReads: 2 },
   threadPin: { writes: 48, renders: 0, notified: 0, layoutReads: 2 },
   threadAppend: { writes: 24, renders: 0, notified: 0, layoutReads: 2 },
 

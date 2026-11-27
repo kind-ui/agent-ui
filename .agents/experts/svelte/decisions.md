@@ -17,15 +17,12 @@ Last reviewed: `cb3f3e12` (UI SDK 0.1.0-beta.17 upgrade)
 - **Picker-based components share Picker's parts through `setPickerConfig`, and values core owns are bound to a setter that keeps nothing** (Task Svelte-3, AGENTS.md "Svelte composer controls").
 - **Virtualized rows loop over indexes or ids, not row objects** (Task Svelte-6): a row that stays in view keeps its props when the virtualizer's `rows` change.
 - **Every Svelte file, fixtures included, follows the sibling whitespace rule** (Task Svelte-8): text matches React's exactly but where a `@ui-sdk/svelte` template adds the space (below).
-- **No component works around the root `id` gap** (Task Svelte-8): a component passes a host's `id` to its root part as React does, and every check the gap breaks skips through `tests/browser/svelte-root-id.ts` (below).
 - **Svelte-only spec skips and comparisons land in the track's PR** (Task Svelte-8, as Svelte-2, 5 and 6 did, by the coordinator's call): each is gated to the Svelte layer, so D10's shared-file rule doesn't apply to them.
 - **The agent pages mirror React's** (Task Svelte-8): `cases/agent.svelte` (`all`, `wave-2` … `wave-6`, Wave 6 in `cases/agent/Shell.svelte`), with the same ids, components and callbacks.
 - Everything in AGENTS.md "UI SDK API notes".
 
 ## Known and open (don't report again, check whether fixed)
 
-- **Passing `id` to a component's root unnames it in agent snapshots** (`@ui-sdk/svelte` keys the root by `id`, still in 0.1.0-beta.17; AGENTS.md "Svelte chat core"). It reaches components named by their root (Queue, Question, Suggestion, Feedback, Context Meter, Context Bar, File Tree, Generated Image, Selection, Thread List, Share Dialog, and since beta.17's label fallback, Message and Connection Status, which now take their Retry button's name). Every check it breaks, in the component specs and the Wave 2 to 4 agent specs, skips through `tests/browser/svelte-root-id.ts` (`rootIdGap`); delete that file and its callers together once UI SDK fixes it. Report upstream.
-- **`ComposerTriggerMenu` mounts its Trigger Menu one effect late** to work around UI SDK connecting it before the Token Input's editor exists (AGENTS.md "Svelte chat core"), still needed in 0.1.0-beta.17. Remove it once UI SDK fixes the order. Report upstream.
 
 - **UI SDK Slider renders its hidden form input after its root, not inside it as React's does** (`@ui-sdk/svelte` 0.1.0-beta.1 to beta.17, `slider/slider.svelte`). `internal-slider` isn't listed in the Svelte manifest until UI SDK matches React; no component composes it. Report upstream.
 - **Wrappers join the manifest with the first component that composes them** (Task Svelte-1): by Task Svelte-7 every wrapper but `slider` (above) is listed. Their exports match React's.

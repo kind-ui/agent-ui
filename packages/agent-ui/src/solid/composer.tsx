@@ -9,7 +9,7 @@ import {
   TokenInputToken,
   TokenInputTokenRemove,
 } from "@ui-sdk/solid/token-input";
-import { createSignal, For, omit, onFlush, onSettled, Show } from "solid-js";
+import { For, omit, Show } from "solid-js";
 import { Attachments, type AttachmentsProps } from "./attachments.js";
 import {
   KindTriggerMenu,
@@ -76,36 +76,28 @@ export function ComposerInput(props: ComposerInputProps) {
 
 /** Suggests `mentions` after `@` and `commands` after `/`; choosing one inserts a token. */
 export function ComposerTriggerMenu(props: ComponentProps<typeof KindTriggerMenuContent>) {
-  // Trigger Menu writes its editor attributes as it connects, only if the editor's element is attached by then, and
-  // UI SDK attaches the editor as it settles. Created once that flush has applied, the menu writes them at rest.
-  const [settled, setSettled] = createSignal(false);
-  onSettled(() => {
-    onFlush(() => setSettled(true));
-  });
   return (
     <parts.TriggerMenu>
       {(state) => (
-        <Show when={settled()}>
-          <KindTriggerMenu triggers={state.triggers}>
-            <KindTriggerMenuContent {...props}>
-              <KindTriggerMenuEmpty>No matches</KindTriggerMenuEmpty>
-              <KindTriggerMenuList>
-                {(list) => (
-                  <For each={list.items as ComposerTriggerItem[]} keyed={(item) => item.value}>
-                    {(item) => (
-                      <KindTriggerMenuItem value={item().value} label={item().label}>
-                        <span>{item().label}</span>
-                        <Show when={item().description}>
-                          <span data-description="">{item().description}</span>
-                        </Show>
-                      </KindTriggerMenuItem>
-                    )}
-                  </For>
-                )}
-              </KindTriggerMenuList>
-            </KindTriggerMenuContent>
-          </KindTriggerMenu>
-        </Show>
+        <KindTriggerMenu triggers={state.triggers}>
+          <KindTriggerMenuContent {...props}>
+            <KindTriggerMenuEmpty>No matches</KindTriggerMenuEmpty>
+            <KindTriggerMenuList>
+              {(list) => (
+                <For each={list.items as ComposerTriggerItem[]} keyed={(item) => item.value}>
+                  {(item) => (
+                    <KindTriggerMenuItem value={item().value} label={item().label}>
+                      <span>{item().label}</span>
+                      <Show when={item().description}>
+                        <span data-description="">{item().description}</span>
+                      </Show>
+                    </KindTriggerMenuItem>
+                  )}
+                </For>
+              )}
+            </KindTriggerMenuList>
+          </KindTriggerMenuContent>
+        </KindTriggerMenu>
       )}
     </parts.TriggerMenu>
   );

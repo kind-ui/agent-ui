@@ -2,7 +2,6 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { isWebElements } from "../layer.js";
-import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 type Fixture = {
   kindHost: { actions: unknown[][]; dismissals: unknown[][] };
@@ -152,8 +151,7 @@ test("the toolbar follows the selection when the page scrolls", async ({ page })
     .toBe(Math.round(before - 100));
 });
 
-test("agents run an action and dismiss the toolbar while it shows", async ({ page }, testInfo) => {
-  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
+test("agents run an action and dismiss the toolbar while it shows", async ({ page }) => {
   await open(page);
   await selectWithKeyboard(page);
   // `press` is the bridge's own action for a component that holds a button (here, the toolbar's).
@@ -226,8 +224,7 @@ test("an action's description is its button's title", async ({ page }) => {
   await expect(button(page, "Ask")).not.toHaveAttribute("title");
 });
 
-test("without onAction the buttons are disabled and agents can't run one", async ({ page }, testInfo) => {
-  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
+test("without onAction the buttons are disabled and agents can't run one", async ({ page }) => {
   await open(page, "static");
   await selectWithKeyboard(page);
   for (const name of ["Ask", "Quote", "Copy"]) await expect(button(page, name)).toBeDisabled();
