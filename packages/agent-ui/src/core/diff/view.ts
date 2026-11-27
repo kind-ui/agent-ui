@@ -28,6 +28,8 @@ export interface DiffFileView {
   decision: DiffDecision | undefined;
   /** What's being sent for the file, until the host reports a decision. */
   working: DiffAction | undefined;
+  /** "Kept", "Undone", "Keeping…" or "Undoing…"; empty while undecided. */
+  outcome: string;
   /** "Couldn't undo `auth.ts`" after a call for the file failed. */
   error: string;
   /** Whether Keep and Undo show for the file. */
@@ -45,6 +47,7 @@ export interface DiffChangeView {
   title: string;
   decision: DiffDecision | undefined;
   working: DiffAction | undefined;
+  outcome: string;
   error: string;
   actionable: boolean;
 }
@@ -65,7 +68,7 @@ export interface DiffLineView {
   undone: boolean;
   /** A collapsed run's "Show 12 lines". */
   show: string;
-  /** Where a collapsed run is, in hidden words: ", unchanged lines after change 2". */
+  /** Where a collapsed run is, for its name: "unchanged lines after change 2". */
   where: string;
   /** A collapsed run's lines, hidden until find in page matches one. */
   hiddenText: string;
@@ -80,6 +83,8 @@ export interface DiffTableRow {
 export interface DiffSummaryView {
   /** "4 files changed", "Editing 2 files" or "All changes reviewed". */
   title: string;
+  added: number;
+  removed: number;
   counts: string;
   countsName: string;
   /** "2 of 4 reviewed" or "3 kept, 1 undone"; empty until something is decided. */
@@ -170,6 +175,12 @@ export const diffError = (action: DiffAction, path?: string, change?: number): s
   return change === undefined ? `${verb} \`${fileName(path)}\`` : `${verb} change ${change + 1}`;
 };
 
+const outcomeText = (decision: DiffDecision | undefined, working: DiffAction | undefined) => {
+  if (decision) return decision === "kept" ? WORDS.kept : WORDS.undone;
+  if (working) return working === "keep" ? WORDS.keeping : WORDS.undoing;
+  return "";
+};
+
 /** Whether a file is decided: by its own decision, or every change of it. */
 export const fileDecision = (file: DiffFile, changeCount: number): DiffDecision | undefined => {
   if (file.decision) return file.decision;
@@ -224,7 +235,7 @@ const lineView = (
     prefix: collapsed ? "" : prefixOf(row, undone),
     undone,
     show: collapsed ? `Show ${plural(count, "line")}` : "",
-    where: collapsed ? `, ${where}` : "",
+    where: collapsed ? where : "",
     hiddenText: collapsed ? (row.lines ?? []).map((line) => line.text).join("\n") : "",
   };
   lineViews.set(row, { tokens, undone, where, view });
@@ -329,12 +340,14 @@ export function diffView(input: DiffViewInput): DiffView {
         const key = `${path}#h${index}`;
         const changeWorking = working[targetKey(path, index)] ?? fileWorking;
         const changeOwn = file.decision ? undefined : file.changes?.[index]?.decision;
+        const shownWorking = file.decision || changeOwn ? undefined : changeWorking;
         changes[key] = {
           path,
           index,
           title: `Change ${index + 1} of ${hunks.length} · line ${hunk.line}`,
           decision: changeOwn,
-          working: file.decision || changeOwn ? undefined : changeWorking,
+          working: shownWorking,
+          outcome: outcomeText(changeOwn, shownWorking),
           error: errors[targetKey(path, index)] ?? "",
           actionable: canDecide && perChange && !decision && !changeOwn && !changeWorking && !fileWorking,
         };
@@ -376,6 +389,7 @@ export function diffView(input: DiffViewInput): DiffView {
       changeCount: hunks.length,
       decision,
       working: decision ? undefined : fileWorking,
+      outcome: outcomeText(decision, decision ? undefined : fileWorking),
       error: errors[path] ?? "",
       actionable: canDecide && !decision && !fileWorking,
       digits: String(maxLine).length,
@@ -399,6 +413,8 @@ export function diffView(input: DiffViewInput): DiffView {
         : allReviewed
           ? WORDS.allReviewed
           : `${plural(count, "file")} changed`,
+      added,
+      removed,
       counts: streaming || allReviewed ? "" : diffCounts(added, removed),
       countsName: streaming || allReviewed ? "" : diffCountsName(added, removed),
       progress: allReviewed

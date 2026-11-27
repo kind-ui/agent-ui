@@ -12,6 +12,7 @@ import { defineContextBar } from "./components/ui/web/context-bar.js";
 import { defineContextMeter } from "./components/ui/web/context-meter.js";
 import { defineConversation } from "./components/ui/web/conversation.js";
 import { defineDictation } from "./components/ui/web/dictation.js";
+import { defineDiff } from "./components/ui/web/diff.js";
 import { defineDocument } from "./components/ui/web/document.js";
 import { defineFeedback } from "./components/ui/web/feedback.js";
 import { defineFileTree } from "./components/ui/web/file-tree.js";
@@ -114,6 +115,7 @@ for (const define of [
   defineInlineCitation,
   defineDocument,
   defineGeneratedImage,
+  defineDiff,
   defineFileTree,
   defineTerminal,
   defineStackTrace,
@@ -192,6 +194,7 @@ const items = {
   "chain-of-thought": `<kind-chain-of-thought label="Researching flights" status="complete" default-open></kind-chain-of-thought>`,
   task: `<kind-task label="Migrating the users table" default-open></kind-task>`,
   plan: `<kind-plan label="Migration plan" default-open></kind-plan>`,
+  diff: `<kind-diff></kind-diff>`,
   "step-group": `<kind-step-group label="Read 3 files" default-open>
       <kind-step-group-content><kind-step-group-children><p>Read three files.</p></kind-step-group-children></kind-step-group-content>
     </kind-step-group>`,
@@ -341,6 +344,9 @@ Object.assign(main.querySelector("kind-suggestion") as HTMLElement, {
 });
 Object.assign(main.querySelector("kind-chain-of-thought") as HTMLElement, {
   steps: [{ id: "search", status: "complete", title: "Search flights", durationSeconds: 3 }],
+});
+Object.assign(main.querySelector("kind-diff") as HTMLElement, {
+  files: [{ path: "src/app.ts", before: "const a = 1;\n", after: "const a = 2;\n" }],
 });
 Object.assign(main.querySelector("kind-step-group") as HTMLElement, {
   items: [

@@ -187,6 +187,14 @@ export const components = {
       "An image the agent is making, from progress and a blurred preview to the image, which opens full size.",
     uses: [],
   },
+  diff: {
+    group: "output",
+    when: "a person reviews what an agent changed and keeps or undoes it, by file or by change.",
+    title: "Diff",
+    description:
+      "One file's changes or a run's, with Keep and Undo for each file and change, and Keep all and Undo all.",
+    uses: [],
+  },
   "file-tree": {
     group: "output",
     when: "you show the files a change touched, with lines added and removed.",
