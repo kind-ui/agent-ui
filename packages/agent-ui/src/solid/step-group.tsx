@@ -48,7 +48,7 @@ export const StepGroupChildren = parts.Children;
 function Code(props: { text: string }) {
   return (
     <For each={codeSpans(props.text)} keyed={false}>
-      {(piece, index) => (index % 2 ? <code>{piece()}</code> : piece())}
+      {(piece, index) => (index % 2 ? <code>{piece()}</code> : <>{piece()}</>)}
     </For>
   );
 }

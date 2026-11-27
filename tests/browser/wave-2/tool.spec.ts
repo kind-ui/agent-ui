@@ -47,7 +47,7 @@ const open = async (page: Page) => {
     }).observe(document, { childList: true, subtree: true });
   });
   await page.goto("/?c=tool&case=all");
-  await expect(trigger(page, "search")).toHaveText("search_docs");
+  await expect(trigger(page, "search")).toHaveText("Search docs");
 };
 
 test("shows the input as partial while it streams, then as ready", async ({ page }) => {
@@ -66,12 +66,12 @@ test("shows the input as partial while it streams, then as ready", async ({ page
 
 test("output of 0 shows 0, and agents can copy it", async ({ page }) => {
   await open(page);
-  await expectAgentActions(page, "search_docs", ["collapse", "copyInput", "expand", "press"]);
+  await expectAgentActions(page, "Search docs", ["collapse", "copyInput", "expand", "press"]);
   await setCall(page, "search", { output: { state: "preliminary", value: 0 } });
   await expect(part(page, "search", "output")).toHaveAttribute("data-state", "preliminary");
   await expect(part(page, "search", "output").getByText("Preliminary")).toBeVisible();
   await expect(part(page, "search", "output").locator("code")).toHaveText("0");
-  await expectAgentActions(page, "search_docs", ["collapse", "copyInput", "copyOutput", "expand", "press"]);
+  await expectAgentActions(page, "Search docs", ["collapse", "copyInput", "copyOutput", "expand", "press"]);
 });
 
 test("collapses into a compact summary when complete, and shows text output as markdown", async ({
@@ -147,7 +147,7 @@ test("an error shows its message and is announced once", async ({ page }) => {
   await setCall(page, "search", { outcome: "error" });
   await expect(tool(page, "search")).toHaveAttribute("data-open", "");
   await expect(part(page, "search", "error")).toHaveText("The tool failed.");
-  await expect.poll(() => announced(page)).toEqual(["search_docs failed"]);
+  await expect.poll(() => announced(page)).toEqual(["Search docs failed"]);
 });
 
 test("a denial is announced apart from a cancellation", async ({ page }) => {
@@ -157,9 +157,9 @@ test("a denial is announced apart from a cancellation", async ({ page }) => {
   await expect.poll(() => announced(page)).toEqual(["Denied"]);
   await setCall(page, "approve", { outcome: "denied" });
   await expect(tool(page, "approve")).toHaveAttribute("data-status", "cancelled");
-  await expect.poll(() => announced(page)).toEqual(["Denied", "delete_file denied"]);
+  await expect.poll(() => announced(page)).toEqual(["Denied", "Delete file denied"]);
   await setCall(page, "run", { outcome: "cancelled" });
-  await expect.poll(() => announced(page)).toEqual(["Denied", "delete_file denied", "run_tests cancelled"]);
+  await expect.poll(() => announced(page)).toEqual(["Denied", "Delete file denied", "Run tests cancelled"]);
 });
 
 test("a host status and label replace the call's", async ({ page }) => {
@@ -173,7 +173,7 @@ test("with no input yet, there's nothing to copy", async ({ page }) => {
   await open(page);
   await setCall(page, "search", { input: { state: "streaming", value: undefined } });
   await expect(part(page, "search", "input-copy")).toBeHidden();
-  await expectAgentActions(page, "search_docs", ["collapse", "expand", "press"]);
+  await expectAgentActions(page, "Search docs", ["collapse", "expand", "press"]);
 });
 
 test("without onApprove or onDeny, an approval request shows as status", async ({ page }) => {
