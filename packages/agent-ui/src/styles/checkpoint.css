@@ -65,8 +65,8 @@
 
   /* Forced colors replace a background, which is all a mask draws. */
   @media (forced-colors: active) {
-    :where([data-slot="kind-checkpoint"])
-      :is([data-checkpoint-trigger]::after, [data-checkpoint-compare-icon]) {
+    :where([data-slot="kind-checkpoint"]) [data-checkpoint-trigger]::after,
+    :where([data-slot="kind-checkpoint"]) [data-checkpoint-compare-icon] {
       forced-color-adjust: none;
       background-color: ButtonText;
     }
