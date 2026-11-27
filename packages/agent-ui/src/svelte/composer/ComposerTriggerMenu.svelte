@@ -12,33 +12,23 @@
   import { parts } from "./parts.js";
 
   let props: ComponentProps<typeof KindTriggerMenuContent> = $props();
-
-  // UI SDK Svelte connects a Trigger Menu to its Token Input's editor before the editor's element binds, so the
-  // editor's `aria-autocomplete` and `aria-haspopup` would wait for its first change. Mounted once the editor is in
-  // the page, the menu writes them at once, as React's does. It renders nothing while closed.
-  let mounted = $state(false);
-  $effect(() => {
-    mounted = true;
-  });
 </script>
 
 <parts.TriggerMenu>
   {#snippet children({ triggers })}
-    {#if mounted}
-      <KindTriggerMenu {triggers}>
-        <KindTriggerMenuContent {...props}>
-          <KindTriggerMenuEmpty>No matches</KindTriggerMenuEmpty
-          ><KindTriggerMenuList>
-            {#snippet children(state)}
-              {#each state.items as ComposerTriggerItem[] as item (item.value)}
-                <KindTriggerMenuItem value={item.value} label={item.label}>
-                  <span>{item.label}</span>{#if item.description}<span data-description="">{item.description}</span>{/if}
-                </KindTriggerMenuItem>
-              {/each}
-            {/snippet}
-          </KindTriggerMenuList>
-        </KindTriggerMenuContent>
-      </KindTriggerMenu>
-    {/if}
+    <KindTriggerMenu {triggers}>
+      <KindTriggerMenuContent {...props}>
+        <KindTriggerMenuEmpty>No matches</KindTriggerMenuEmpty
+        ><KindTriggerMenuList>
+          {#snippet children(state)}
+            {#each state.items as ComposerTriggerItem[] as item (item.value)}
+              <KindTriggerMenuItem value={item.value} label={item.label}>
+                <span>{item.label}</span>{#if item.description}<span data-description="">{item.description}</span>{/if}
+              </KindTriggerMenuItem>
+            {/each}
+          {/snippet}
+        </KindTriggerMenuList>
+      </KindTriggerMenuContent>
+    </KindTriggerMenu>
   {/snippet}
 </parts.TriggerMenu>

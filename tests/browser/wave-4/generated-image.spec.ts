@@ -2,7 +2,6 @@ import { readFileSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, type Route, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
-import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 type Fixture = {
   kindHost: {
@@ -171,8 +170,7 @@ test("the preview sharpens as progress rises and nothing loops while generating"
   ).toBe("none");
 });
 
-test("agents open, close and download once the image is loaded", async ({ page }, testInfo) => {
-  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
+test("agents open, close and download once the image is loaded", async ({ page }) => {
   await open(page);
   // UI SDK's bridge offers its generic `press` to every component that opens.
   await expectAgentActions(page, "A lighthouse at dusk", ["open", "download", "press"]);

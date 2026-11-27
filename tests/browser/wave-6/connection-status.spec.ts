@@ -3,7 +3,6 @@ import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { isWebElements } from "../layer.js";
 import { watchAnimations } from "../leaving.js";
-import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 type ConnectionState = "online" | "connecting" | "reconnecting" | "offline";
 type Fixture = {
@@ -248,8 +247,7 @@ test("web keeps the words written into its parts and adds only the parts it lack
   await expect(pill(page).getByRole("button")).toHaveCount(1);
 });
 
-test("agents retry", async ({ page }, testInfo) => {
-  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
+test("agents retry", async ({ page }) => {
   await open(page, "offline");
   await expectAgentActions(page, "Offline", ["retry"]);
 });

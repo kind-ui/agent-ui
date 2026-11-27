@@ -2,7 +2,6 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 import { isWebElements } from "../layer.js";
-import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 type Call = { type: string; id: string; index?: number; reason: string; source: string };
 
@@ -179,7 +178,7 @@ test("the host removing the item being moved cancels the move and moves focus on
   expect(await calls(page)).toEqual([]);
 });
 
-test("without onReorder and onRemove, nothing can be picked up or removed", async ({ page }, testInfo) => {
+test("without onReorder and onRemove, nothing can be picked up or removed", async ({ page }) => {
   await open(page, "readonly");
   await expect(pending(page)).not.toHaveAttribute("aria-roledescription");
   await row(page, "Write the migration").focus();
@@ -188,7 +187,7 @@ test("without onReorder and onRemove, nothing can be picked up or removed", asyn
   await page.keyboard.press("Delete");
   await expect(row(page, "Write the migration")).toBeVisible();
   await expect(queue(page).locator('[data-slot="kind-queue-item-remove"]').first()).toBeHidden();
-  if (!rootIdGap(testInfo)) await expectAgentActions(page, "Queue", []);
+  await expectAgentActions(page, "Queue", []);
 });
 
 test("completed items can't be picked up", async ({ page }) => {
@@ -319,8 +318,7 @@ test("an item already asked to be removed is asked again only once the host pass
   await expect(queue(page).locator('[data-slot="kind-queue-item"]')).toHaveCount(3);
 });
 
-test("agents can reorder and remove items", async ({ page }, testInfo) => {
-  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
+test("agents can reorder and remove items", async ({ page }) => {
   await open(page);
   await expectAgentActions(page, "Queue", ["remove", "reorder"]);
   const result = await page.evaluate(() =>

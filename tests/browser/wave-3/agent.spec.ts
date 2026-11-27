@@ -14,7 +14,6 @@ import {
 } from "../agent-conformance.js";
 import { allowClipboard } from "../clipboard.js";
 import { isWebElements } from "../layer.js";
-import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 const open = async (page: Page) => {
   await page.goto("/?c=agent&case=wave-3");
@@ -34,13 +33,6 @@ const suggestion = { component: "kind-suggestion", label: "Suggestions", id: "su
 const feedback = { component: "kind-feedback", label: "Feedback", id: "feedback" };
 const notice = { component: "kind-notice", label: "Rate limited", id: "notice" };
 const guardrail = { component: "kind-guardrail-notice", label: "Model output withheld", id: "guardrail" };
-
-const rootNamed = [question.component, context.component, suggestion.component];
-const gapped = ({ target, action }: Conformance) =>
-  target === question ||
-  target === suggestion ||
-  (target === context && action === "open") ||
-  (target === feedback && action === "submitComment");
 
 const wave3 = [
   confirmation,
@@ -152,8 +144,7 @@ test.beforeEach(({ context, browserName }) => allowClipboard(context, browserNam
 
 test("one snapshot lists every Wave 1, 2 and 3 component, each Wave 3 one by name with its actions", async ({
   page,
-}, testInfo) => {
-  const skipped = rootIdGap(testInfo) ? rootNamed : [];
+}) => {
   await open(page);
   const entries = await snapshot(page);
   for (const component of [
@@ -171,24 +162,21 @@ test("one snapshot lists every Wave 1, 2 and 3 component, each Wave 3 one by nam
 
   const listed = entries
     .filter((item) => wave3.some((target) => target.component === item.component))
-    .filter((item) => !skipped.includes(item.component))
     .map((item) => `${item.component} "${item.label}": ${[...item.actions].sort().join(" ")}`)
     .sort();
-  expect(listed).toEqual(
-    [
-      'kind-checkpoint "Checkpoint": press restore',
-      'kind-confirmation "Run delete_file?": approve deny',
-      'kind-confirmation "Run the migration?": approve deny',
-      'kind-context-meter "Context": open press',
-      'kind-feedback "Feedback": press rate',
-      'kind-guardrail-notice "Model output withheld": collapse dismiss expand press',
-      'kind-model-selector "Model, GPT-5": open setValue',
-      'kind-notice "Rate limited": dismiss',
-      'kind-question "Deploy questions": select setText skip',
-      'kind-reasoning-effort "Reasoning effort": setValue',
-      'kind-suggestion "Suggestions": pick',
-    ].filter((line) => !skipped.some((component) => line.startsWith(`${component} `))),
-  );
+  expect(listed).toEqual([
+    'kind-checkpoint "Checkpoint": press restore',
+    'kind-confirmation "Run delete_file?": approve deny',
+    'kind-confirmation "Run the migration?": approve deny',
+    'kind-context-meter "Context": open press',
+    'kind-feedback "Feedback": press rate',
+    'kind-guardrail-notice "Model output withheld": collapse dismiss expand press',
+    'kind-model-selector "Model, GPT-5": open setValue',
+    'kind-notice "Rate limited": dismiss',
+    'kind-question "Deploy questions": select setText skip',
+    'kind-reasoning-effort "Reasoning effort": setValue',
+    'kind-suggestion "Suggestions": pick',
+  ]);
   expect(await actionsOf(page, "kind-tool", "delete_file")).toEqual([
     "collapse",
     "copyInput",
@@ -201,8 +189,7 @@ for (const item of conformance) {
   const { target, action } = item;
   test(`${target.component} "${target.label}".${action} leaves the page as a person's input does`, ({
     page,
-  }, testInfo) => {
-    test.skip(rootIdGap(testInfo) && gapped(item), ROOT_ID_GAP);
+  }) => {
     return expectSameAsPerson(page, open, item);
   });
 }
@@ -212,53 +199,45 @@ const state = async (page: Page, { component, label }: (typeof wave3)[number], k
 
 test("change callbacks hear source agent, and a cancelled change leaves the state alone", async ({
   page,
-}, testInfo) => {
-  const gap = rootIdGap(testInfo);
+}) => {
   await open(page);
   await setHost(page, { refuse: true });
-  if (!gap) await act(page, question.component, question.label, "select", ["env", "prod"]);
+  await act(page, question.component, question.label, "select", ["env", "prod"]);
   await act(page, model.component, model.label, "setValue", ["sonnet-4"]);
   await act(page, effort.component, effort.label, "setValue", ["high"]);
-  if (!gap) await act(page, context.component, context.label, "open");
+  await act(page, context.component, context.label, "open");
   await act(page, feedback.component, feedback.label, "rate", ["up"]);
   await act(page, guardrail.component, guardrail.label, "expand");
   await act(page, checkpoint.component, checkpoint.label, "restore");
   expect((await host(page)).changes).toEqual(
-    ["question", "model", "effort", "context", "feedback", "guardrail", "checkpoint"]
-      .filter((name) => !gap || (name !== "question" && name !== "context"))
-      .map((name) => `${name}:agent`),
+    ["question", "model", "effort", "context", "feedback", "guardrail", "checkpoint"].map(
+      (name) => `${name}:agent`,
+    ),
   );
   await settled(page);
-  if (!gap) expect(await state(page, question, "value")).toEqual({});
+  expect(await state(page, question, "value")).toEqual({});
   await expect(radio("question", /Production/)(page)).not.toBeChecked();
   expect(await state(page, model, "value")).toBe("gpt-5");
   expect(await state(page, effort, "value")).toBe("medium");
-  if (!gap) expect(await state(page, context, "open")).toBe(false);
+  expect(await state(page, context, "open")).toBe(false);
   expect(await state(page, feedback, "rating")).toBe(null);
   expect(await state(page, guardrail, "open")).toBe(false);
   expect(await state(page, checkpoint, "open")).toBe(false);
   await expect(page.getByRole("alertdialog")).toHaveCount(0);
 });
 
-test("action callbacks hear source agent", async ({ page }, testInfo) => {
-  const gap = rootIdGap(testInfo);
+test("action callbacks hear source agent", async ({ page }) => {
   await open(page);
   await act(page, confirmation.component, confirmation.label, "approve");
   await act(page, toolApproval.component, toolApproval.label, "deny");
-  if (!gap) {
-    await act(page, question.component, question.label, "select", ["env", "staging"]);
-    await act(page, question.component, question.label, "submit");
-    await act(page, suggestion.component, suggestion.label, "pick", ["a"]);
-  }
+  await act(page, question.component, question.label, "select", ["env", "staging"]);
+  await act(page, question.component, question.label, "submit");
+  await act(page, suggestion.component, suggestion.label, "pick", ["a"]);
   await act(page, feedback.component, feedback.label, "rate", ["down"]);
-  if (!gap) await act(page, feedback.component, feedback.label, "submitComment", ["Too long"]);
+  await act(page, feedback.component, feedback.label, "submitComment", ["Too long"]);
   await expect
     .poll(async () => (await host(page)).sources)
-    .toEqual(
-      gap
-        ? ["approve:agent", "deny:agent"]
-        : ["approve:agent", "deny:agent", "submit:agent", "pick:agent", "comment:agent"],
-    );
+    .toEqual(["approve:agent", "deny:agent", "submit:agent", "pick:agent", "comment:agent"]);
 });
 
 /** Roots of a component that ask for a person. */
@@ -267,21 +246,20 @@ const marked = (page: Page, component: string) =>
 
 test("approve, deny, restore and submit need a person; only Confirmation keeps asking without agentConfirm", async ({
   page,
-}, testInfo) => {
-  const gap = rootIdGap(testInfo);
+}) => {
   await open(page);
-  if (!gap) await act(page, question.component, question.label, "select", ["env", "staging"]);
+  await act(page, question.component, question.label, "select", ["env", "staging"]);
   await setHost(page, { permit: false });
   const refused = async () => {
     const results = [
       await act(page, confirmation.component, confirmation.label, "approve"),
       await act(page, toolApproval.component, toolApproval.label, "deny"),
-      gap ? undefined : await act(page, question.component, question.label, "submit"),
+      await act(page, question.component, question.label, "submit"),
       await act(page, checkpoint.component, checkpoint.label, "restore"),
     ];
     return results.map((result) => result?.ok);
   };
-  expect(await refused()).toEqual([false, false, gap ? undefined : false, false]);
+  expect(await refused()).toEqual([false, false, false, false]);
   expect((await host(page)).calls).toEqual([]);
   expect(await state(page, checkpoint, "open")).toBe(false);
 
@@ -289,8 +267,8 @@ test("approve, deny, restore and submit need a person; only Confirmation keeps a
   await expect(marked(page, "kind-question")).toHaveCount(0);
   await expect(marked(page, "kind-checkpoint")).toHaveCount(0);
   await expect(marked(page, "kind-confirmation")).toHaveCount(2);
-  expect(await refused()).toEqual([false, false, gap ? undefined : true, true]);
-  expect((await host(page)).calls).toEqual(gap ? [] : ["submit"]);
+  expect(await refused()).toEqual([false, false, true, true]);
+  expect((await host(page)).calls).toEqual(["submit"]);
   await expect.poll(() => state(page, checkpoint, "open")).toBe(true);
 });
 

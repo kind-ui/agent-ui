@@ -147,12 +147,8 @@ test("@ and / open the Trigger Menu; choosing inserts a token, Escape closes it"
   await expect(page.getByRole("listbox")).toBeHidden();
 });
 
-// A Trigger Menu that connects before its editor attaches writes these only once the editor changes, so every layer
-// checks them after the first keystroke.
-test("the first keystroke gives the editor its Trigger Menu attributes", async ({ page }) => {
+test("the editor has its Trigger Menu attributes at rest", async ({ page }) => {
   const editor = await open(page);
-  await editor.click();
-  await page.keyboard.type("a");
   await expect(editor).toHaveAttribute("aria-autocomplete", "list");
   await expect(editor).toHaveAttribute("aria-haspopup", "listbox");
 });
