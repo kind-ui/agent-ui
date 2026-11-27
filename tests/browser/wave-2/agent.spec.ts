@@ -181,7 +181,7 @@ test("each tool names its own code blocks and copy buttons", async ({ page }) =>
   for (const [name, title] of [
     ["search_docs", "Search docs"],
     ["read_file", "Read file"],
-  ])
+  ] as const)
     await trigger(page, { ...tool, id: name, trigger: new RegExp(`^${title}`) }).click();
   expect(
     (await snapshot(page))
