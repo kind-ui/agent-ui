@@ -26,7 +26,7 @@ const act = (page: Page, ref: string, action: string) =>
 
 const open = async (page: Page, name = "all") => {
   await page.goto(`/?c=subagent&case=${name}`);
-  await expect(page.getByRole("button", { name: "read_file" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Read file" })).toBeVisible();
 };
 
 test("shows the subagent's status mark, name, status and nested steps", async ({ page }) => {
@@ -45,9 +45,9 @@ test("shows the subagent's status mark, name, status and nested steps", async ({
 
 test("nested steps keep their own single Tab stop", async ({ page }) => {
   await open(page);
-  await page.getByRole("button", { name: "read_file" }).focus();
+  await page.getByRole("button", { name: "Read file" }).focus();
   await page.keyboard.press("ArrowDown");
-  await expect(page.getByRole("button", { name: "grep" })).toBeFocused();
+  await expect(page.getByRole("button", { name: "Grep" })).toBeFocused();
   await expect(page.locator('#subagent [data-step-part="list"] [tabindex="0"]')).toHaveCount(1);
 });
 
@@ -99,7 +99,7 @@ test("nested steps streaming in don't move the header", async ({ page }) => {
     part(page, "subagent", "trigger").evaluate((el) => el.getBoundingClientRect().toJSON());
   const before = await header();
   await page.evaluate(() => (window as unknown as Fixture).kindSubagent.append("run_tests"));
-  await expect(page.getByRole("button", { name: "run_tests" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Run tests" })).toBeVisible();
   expect(await header()).toEqual(before);
 });
 
