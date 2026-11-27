@@ -132,6 +132,13 @@
   /* Warning words, like "No update for 2 min": the warning hue at text contrast. */
   --kind-color-warning-text: light-dark(oklch(0.53 0.14 55), oklch(0.82 0.13 70));
   --kind-color-danger: light-dark(oklch(0.55 0.21 27), oklch(0.7 0.18 25));
+  /* Categories, like the slices of a breakdown: never a status color, so a slice never reads as a warning. */
+  --kind-category-1: light-dark(oklch(0.6 0.14 255), oklch(0.7 0.13 255));
+  --kind-category-2: light-dark(oklch(0.66 0.11 190), oklch(0.74 0.11 190));
+  --kind-category-3: light-dark(oklch(0.64 0.13 300), oklch(0.72 0.12 300));
+  --kind-category-4: light-dark(oklch(0.7 0.1 85), oklch(0.78 0.1 85));
+  --kind-category-5: light-dark(oklch(0.64 0.13 350), oklch(0.72 0.12 350));
+  --kind-category-6: light-dark(oklch(0.58 0.04 250), oklch(0.7 0.04 250));
   /* A status color's tint, as `color-mix(in oklab, <status> var(--kind-tint-fill), transparent)`. */
   --kind-tint-fill: 12%;
   --kind-tint-border: 30%;

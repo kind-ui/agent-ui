@@ -45,3 +45,18 @@ export function selectionHost() {
     changes.push({ component, value, reason: details.reason });
   return { host: { changes }, record };
 }
+
+/** Models with a relative cost at the end of each row (Wave 7 spec §15). */
+export const costModels: ModelOption[] = [
+  { id: "claude-opus-5.5", name: "Claude Opus 5.5", group: "Anthropic", cost: "3×" },
+  { id: "claude-sonnet-5.5", name: "Claude Sonnet 5.5", group: "Anthropic", cost: "1×" },
+  {
+    id: "claude-haiku-5.5",
+    name: "Claude Haiku 5.5",
+    group: "Anthropic",
+    description: "Fast, for small edits",
+    cost: "0.3×",
+  },
+  { id: "gpt-6.2-sol", name: "GPT-6.2 Sol", group: "OpenAI", cost: "1×" },
+  { id: "gpt-6-luna", name: "GPT-6 Luna", group: "OpenAI", cost: "Free" },
+];

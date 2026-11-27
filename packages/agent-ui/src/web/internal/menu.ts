@@ -26,7 +26,15 @@ export const placeMenuChild = (parent: Movable, child: Element, before: Element 
 };
 
 /** A data row's icon, label and description. An `icon` is an image URL, or an element that is copied. */
-export type MenuItemContent = { label: string; description?: string | undefined; icon?: unknown };
+export type MenuItemContent = {
+  label: string;
+  description?: string | undefined;
+  icon?: unknown;
+  /** Trailing text, like a model's cost. */
+  meta?: string | undefined;
+  /** What screen readers hear in place of `meta`. */
+  metaLabel?: string | undefined;
+};
 
 // What each row was last drawn from, so an update that keeps it leaves its nodes alone.
 const drawnContent = new WeakMap<Element, MenuItemContent>();
@@ -37,8 +45,21 @@ const drawnContent = new WeakMap<Element, MenuItemContent>();
  */
 export const drawMenuItemContent = (target: Element, row: MenuItemContent, extra: Node[] = []): void => {
   const last = drawnContent.get(target);
-  if (last?.label === row.label && last.description === row.description && last.icon === row.icon) return;
-  drawnContent.set(target, { label: row.label, description: row.description, icon: row.icon });
+  if (
+    last?.label === row.label &&
+    last.description === row.description &&
+    last.icon === row.icon &&
+    last.meta === row.meta &&
+    last.metaLabel === row.metaLabel
+  )
+    return;
+  drawnContent.set(target, {
+    label: row.label,
+    description: row.description,
+    icon: row.icon,
+    meta: row.meta,
+    metaLabel: row.metaLabel,
+  });
   const document = target.ownerDocument;
   const text = menuElement(document, "span", { "data-menu-text": "" });
   text.append(menuElement(document, "span", {}, row.label));
@@ -47,7 +68,20 @@ export const drawMenuItemContent = (target: Element, row: MenuItemContent, extra
   const icon = row.icon === undefined ? [] : [menuElement(document, "ui-menu-item-icon")];
   if (typeof row.icon === "string") icon[0]?.append(menuElement(document, "img", { alt: "", src: row.icon }));
   else if (row.icon instanceof Element) icon[0]?.append(row.icon.cloneNode(true));
-  target.replaceChildren(...icon, text, ...extra);
+  const meta = row.meta
+    ? [
+        menuElement(
+          document,
+          "span",
+          row.metaLabel ? { "data-menu-meta": "", "aria-hidden": "true" } : { "data-menu-meta": "" },
+          row.meta,
+        ),
+        ...(row.metaLabel
+          ? [menuElement(document, "span", { "data-menu-meta-label": "" }, row.metaLabel)]
+          : []),
+      ]
+    : [];
+  target.replaceChildren(...icon, text, ...meta, ...extra);
 };
 
 // A Kind menu's own trigger, inside its `[data-menu-part=trigger]`, takes its look from the component's stylesheet.

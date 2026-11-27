@@ -70,10 +70,17 @@ export type KindMenuItemContentProps = {
   icon?: unknown;
   label: string;
   description?: string | undefined;
+  /** Trailing text, like a model's cost. */
+  meta?: string | undefined;
+  /** What screen readers hear in place of `meta`. */
+  metaLabel?: string | undefined;
 };
 
-/** A data row's icon and text, the label over an optional description, as menus built on `menuBase` draw them. */
-export function KindMenuItemContent({ icon, label, description }: KindMenuItemContentProps) {
+/**
+ * A data row's icon and text, the label over an optional description, then its trailing `meta`, as menus built on
+ * `menuBase` draw them.
+ */
+export function KindMenuItemContent({ icon, label, description, meta, metaLabel }: KindMenuItemContentProps) {
   return (
     <>
       {icon !== undefined ? (
@@ -85,6 +92,12 @@ export function KindMenuItemContent({ icon, label, description }: KindMenuItemCo
         <span>{label}</span>
         {description ? <span data-menu-description="">{description}</span> : null}
       </span>
+      {meta ? (
+        <span data-menu-meta="" aria-hidden={metaLabel ? "true" : undefined}>
+          {meta}
+        </span>
+      ) : null}
+      {meta && metaLabel ? <span data-menu-meta-label="">{metaLabel}</span> : null}
     </>
   );
 }

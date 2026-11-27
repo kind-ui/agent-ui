@@ -28,7 +28,7 @@
     display: contents;
   }
 
-  :where([data-slot="kind-context-meter"]) [data-slot="meter"] {
+  :where([data-slot="kind-context-meter"] [data-slot="kind-context-meter-value"]) [data-slot="meter"] {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -37,7 +37,7 @@
 
   /* The ring is the track's `::before`, the level's glyph its `::after`, so the glyph sits inside the ring without
      taking room of its own. */
-  :where([data-slot="kind-context-meter"]) [data-slot="meter-track"] {
+  :where([data-slot="kind-context-meter"] [data-slot="kind-context-meter-value"]) [data-slot="meter-track"] {
     position: relative;
     flex-shrink: 0;
     width: 16px;
@@ -60,24 +60,30 @@
     }
   }
 
-  :where([data-slot="kind-context-meter"][data-level="high"]) [data-slot="meter-track"]::after {
+  :where([data-slot="kind-context-meter"][data-level="high"] [data-slot="kind-context-meter-value"])
+    [data-slot="meter-track"]::after {
     background-color: var(--kind-context-color);
     mask: var(--kind-context-glyph) center / 12px no-repeat;
   }
 
   /* Full fills the ring's middle, so it reads apart from high without color. */
-  :where([data-slot="kind-context-meter"][data-level="full"]) [data-slot="meter-track"]::after {
+  :where([data-slot="kind-context-meter"][data-level="full"] [data-slot="kind-context-meter-value"])
+    [data-slot="meter-track"]::after {
     inset: 4px;
     background-color: var(--kind-context-color);
   }
 
   /* Forced colors replace a background, which is all a mask draws, and drop the ring's gradient. */
   @media (forced-colors: active) {
-    :where([data-slot="kind-context-meter"]) [data-slot="meter-track"]::before {
+    :where([data-slot="kind-context-meter"] [data-slot="kind-context-meter-value"])
+      [data-slot="meter-track"]::before {
       forced-color-adjust: none;
       background: conic-gradient(ButtonText var(--meter-value), GrayText 0);
     }
-    :where([data-slot="kind-context-meter"]:is([data-level="high"], [data-level="full"]))
+    :where(
+        [data-slot="kind-context-meter"]:is([data-level="high"], [data-level="full"])
+          [data-slot="kind-context-meter-value"]
+      )
       [data-slot="meter-track"]::after {
       forced-color-adjust: none;
       background-color: ButtonText;
@@ -85,35 +91,268 @@
   }
 
   /* As wide as "100 %", the widest a locale writes it, so a new value never moves what's beside the meter. */
-  :where([data-slot="kind-context-meter"]) [data-slot="meter-value"] {
+  :where([data-slot="kind-context-meter"] [data-slot="kind-context-meter-value"]) [data-slot="meter-value"] {
     min-width: calc(4ch + 1em);
     font-variant-numeric: tabular-nums;
   }
 
+  /* The limit the ring shows from 80% used, before its percentage. */
+  [data-context-meter-caption] {
+    color: var(--kind-color-fg);
+  }
+
+  /* The details: how full and Compact on the first rows, then the bar, the breakdown, the counts and the limits. In
+     the page with `layout="inline"`, the root holds them itself. */
+  [data-slot="kind-context-meter-content"],
+  [data-slot="kind-context-meter"][data-layout="inline"] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
+    align-content: start;
+    font-size: var(--kind-text-sm);
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
+    color: var(--kind-color-fg);
+  }
+
   [data-slot="kind-context-meter-content"] {
     z-index: 50;
-    width: 15rem;
+    width: 20rem;
     max-width: calc(100vw - 16px);
-    padding: 12px;
-    font-size: var(--kind-text-xs);
-    line-height: 1rem;
+    box-sizing: border-box;
+    padding: 14px;
     outline: none;
     transform-origin: var(--transform-origin);
   }
 
+  [data-slot="kind-context-meter"][data-layout="inline"] {
+    width: 100%;
+  }
+
+  /* Every part spans the details but the title, the description and Compact. Named by slot too, since a web part
+     that targets a native child is a `display: contents` wrapper. */
+  :where([data-slot="kind-context-meter-content"], [data-slot="kind-context-meter"][data-layout="inline"])
+    > *,
+  :where(
+    [data-slot="kind-context-meter-bar"],
+    [data-slot="kind-context-meter-breakdown"],
+    [data-slot="kind-context-meter-rows"],
+    [data-slot="kind-context-meter-limits"]
+  ) {
+    grid-column: 1 / -1;
+  }
+
   [data-slot="kind-context-meter-title"] {
     display: block;
+    grid-column: 1;
     margin: 0;
-    font-size: var(--kind-text-sm);
-    font-weight: 600;
-    line-height: 1.25rem;
+    font-size: var(--kind-text-md);
+    font-weight: var(--kind-font-weight-semibold);
+    line-height: var(--kind-text-md-leading);
+
+    /* Words beside the share, so the level is never color alone. */
+    & [data-context-meter-level] {
+      font-weight: 500;
+    }
+    &:is([data-level="high"], [data-level="full"]) [data-context-meter-level] {
+      color: var(--kind-color-warning-text);
+    }
+  }
+
+  [data-slot="kind-context-meter-compact"],
+  [data-slot="kind-context-meter-compacting"] {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+    align-self: start;
+  }
+
+  [data-slot="kind-context-meter-compacting"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: var(--kind-control-height-sm);
+    color: var(--kind-color-muted);
   }
 
   [data-slot="kind-context-meter-description"] {
     display: block;
+    grid-column: 1;
     margin: 0;
     color: var(--kind-color-muted);
     font-variant-numeric: tabular-nums;
+  }
+
+  /* One stacked bar of the breakdown, its rest the track, with a tick where the conversation compacts. */
+  [data-slot="kind-context-meter-bar"] {
+    position: relative;
+    display: flex;
+    gap: 2px;
+    height: 6px;
+    margin-top: 12px;
+    border-radius: var(--kind-radius-full);
+    background-color: var(--kind-color-hover);
+
+    &[data-compact-at]::after {
+      content: "";
+      position: absolute;
+      inset-block: -3px;
+      inset-inline-start: var(--kind-context-meter-compact-at);
+      width: 1.5px;
+      translate: -50%;
+      background-color: var(--kind-color-muted);
+    }
+  }
+
+  [data-context-meter-segment] {
+    height: 100%;
+    border-radius: 2px;
+    background-color: var(--kind-context-meter-color);
+    transition: opacity var(--kind-duration-fast) var(--kind-ease-out);
+  }
+
+  :where([data-context-meter-segment], [data-slot="kind-context-meter-breakdown"] > li) {
+    &[data-color="1"] {
+      --kind-context-meter-color: var(--kind-category-1);
+    }
+    &[data-color="2"] {
+      --kind-context-meter-color: var(--kind-category-2);
+    }
+    &[data-color="3"] {
+      --kind-context-meter-color: var(--kind-category-3);
+    }
+    &[data-color="4"] {
+      --kind-context-meter-color: var(--kind-category-4);
+    }
+    &[data-color="5"] {
+      --kind-context-meter-color: var(--kind-category-5);
+    }
+    &[data-color="6"] {
+      --kind-context-meter-color: var(--kind-category-6);
+    }
+  }
+
+  /* Hovering a row brings its slice forward. */
+  @media (hover: hover) {
+    :where([data-slot="kind-context-meter-content"], [data-slot="kind-context-meter"])
+      :is(
+        :has([data-slot="kind-context-meter-breakdown"] > li[data-color="1"]:hover)
+          [data-context-meter-segment]:not([data-color="1"]),
+        :has([data-slot="kind-context-meter-breakdown"] > li[data-color="2"]:hover)
+          [data-context-meter-segment]:not([data-color="2"]),
+        :has([data-slot="kind-context-meter-breakdown"] > li[data-color="3"]:hover)
+          [data-context-meter-segment]:not([data-color="3"]),
+        :has([data-slot="kind-context-meter-breakdown"] > li[data-color="4"]:hover)
+          [data-context-meter-segment]:not([data-color="4"]),
+        :has([data-slot="kind-context-meter-breakdown"] > li[data-color="5"]:hover)
+          [data-context-meter-segment]:not([data-color="5"]),
+        :has([data-slot="kind-context-meter-breakdown"] > li[data-color="6"]:hover)
+          [data-context-meter-segment]:not([data-color="6"])
+      ) {
+      opacity: 0.35;
+    }
+  }
+
+  [data-slot="kind-context-meter-breakdown"] {
+    display: grid;
+    gap: 6px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+
+    & > li {
+      display: grid;
+      grid-template-columns: 10px minmax(0, 1fr) auto 4ch;
+      align-items: center;
+      column-gap: 10px;
+    }
+    /* Free space is hollow: what's left, not a slice. */
+    & [data-context-meter-swatch] {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      background-color: var(--kind-context-meter-color, transparent);
+    }
+    & > li[data-color="0"] [data-context-meter-swatch] {
+      box-shadow: inset 0 0 0 1px var(--kind-color-border);
+    }
+    & :is([data-context-meter-tokens], [data-context-meter-share]) {
+      text-align: end;
+      font-variant-numeric: tabular-nums;
+    }
+    & [data-context-meter-share] {
+      color: var(--kind-color-muted);
+    }
+  }
+
+  @media (max-width: 359px) {
+    [data-slot="kind-context-meter-breakdown"] > li {
+      grid-template-columns: 10px minmax(0, 1fr) auto;
+    }
+    [data-context-meter-share] {
+      display: none;
+    }
+  }
+
+  /* Each limit: its name and share used over a thin bar, then its reset and pace. */
+  [data-slot="kind-context-meter-limits"] {
+    display: grid;
+    gap: 14px;
+    margin-top: 14px;
+    padding-top: 14px;
+    box-shadow: 0 -1px 0 var(--kind-color-hairline);
+
+    & [data-slot="meter"] {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      row-gap: 6px;
+      align-items: baseline;
+    }
+    & [data-slot="meter-label"] {
+      font-weight: 500;
+    }
+    & [data-slot="meter-value"] {
+      font-variant-numeric: tabular-nums;
+    }
+    & [data-slot="meter-track"] {
+      position: relative;
+      grid-column: 1 / -1;
+      height: 4px;
+      border-radius: var(--kind-radius-full);
+      background-color: var(--kind-color-hover);
+    }
+    & [data-slot="meter-indicator"] {
+      position: absolute;
+      inset-block: 0;
+      border-radius: inherit;
+      background-color: var(--kind-color-muted);
+    }
+    & [data-slot="meter"][data-level="high"] [data-slot="meter-indicator"] {
+      background-color: var(--kind-color-warning);
+    }
+    /* How far through its window it is: past the tick, it's ahead of pace. */
+    & [data-slot="meter-track"][data-pace]::after {
+      content: "";
+      position: absolute;
+      inset-block: -3px;
+      inset-inline-start: var(--kind-limit-pace);
+      width: 1.5px;
+      translate: -50%;
+      background-color: var(--kind-color-fg);
+    }
+    & [data-context-meter-detail] {
+      grid-column: 1 / -1;
+      color: var(--kind-color-muted);
+      font-size: var(--kind-text-xs);
+      line-height: 1rem;
+    }
+  }
+
+  /* In the page, the limits stand alone, without the details' divider. */
+  :where([data-slot="kind-context-meter"][data-layout="inline"]:not([data-summary]))
+    [data-slot="kind-context-meter-limits"] {
+    margin-top: 0;
+    padding-top: 0;
+    box-shadow: none;
   }
 
   [data-slot="kind-context-meter-rows"] {
@@ -138,7 +377,8 @@
   /* Motion: the ring sweeps to a new value and the details scale in, as every shared popup does. Reduced motion
      only fades, in 120 ms; `none` doesn't animate. */
   @media (prefers-reduced-motion: reduce) {
-    :where([data-slot="kind-context-meter"][data-motion="auto"]) [data-slot="meter"] {
+    :where([data-slot="kind-context-meter"][data-motion="auto"] [data-slot="kind-context-meter-value"])
+      [data-slot="meter"] {
       transition: none;
     }
     :where([data-slot="kind-context-meter"][data-motion="auto"]) [data-slot="kind-context-meter-content"] {
@@ -152,7 +392,8 @@
     }
   }
 
-  :where([data-slot="kind-context-meter"][data-motion="reduced"]) [data-slot="meter"] {
+  :where([data-slot="kind-context-meter"][data-motion="reduced"] [data-slot="kind-context-meter-value"])
+    [data-slot="meter"] {
     transition: none;
   }
   :where([data-slot="kind-context-meter"][data-motion="reduced"]) [data-slot="kind-context-meter-content"] {
@@ -174,7 +415,38 @@
     transition: none;
   }
 
-  :where([data-slot="kind-context-meter-content"], [data-slot="kind-context-meter-rows"])[hidden] {
+  /* Share bars grow once as the details open; reduced motion fades them, `none` doesn't animate. */
+  @starting-style {
+    :where([data-slot="kind-context-meter-content"]:not([data-motion="none"])) [data-context-meter-segment],
+    :where([data-slot="kind-context-meter-content"]:not([data-motion="none"])) [data-slot="meter-indicator"] {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :where([data-slot="kind-context-meter-content"]:not([data-motion="none"], [data-motion="reduced"]))
+      :is([data-context-meter-segment], [data-slot="meter-indicator"]) {
+      transform-origin: left;
+      transition:
+        scale var(--kind-duration-panel) var(--kind-ease-enter),
+        opacity var(--kind-duration-reduced) var(--kind-ease-out);
+    }
+    @starting-style {
+      :where([data-slot="kind-context-meter-content"]:not([data-motion="none"], [data-motion="reduced"]))
+        :is([data-context-meter-segment], [data-slot="meter-indicator"]) {
+        scale: 0 1;
+      }
+    }
+  }
+
+  :where(
+    [data-slot="kind-context-meter-content"],
+    [data-slot="kind-context-meter-rows"],
+    [data-slot="kind-context-meter-compact"],
+    [data-slot="kind-context-meter-compacting"],
+    [data-slot="kind-context-meter-bar"],
+    [data-slot="kind-context-meter-breakdown"],
+    [data-slot="kind-context-meter-limits"]
+  )[hidden] {
     display: none;
   }
 }

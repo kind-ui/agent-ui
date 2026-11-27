@@ -107,6 +107,7 @@ declare global {
     "kind-thread-search-viewport": HTMLElement;
     "kind-thread-search-command": HTMLElement;
     "kind-thread-search-item": HTMLElement;
+    "kind-thread-search-note": HTMLElement;
     "kind-thread-search-shortcut": HTMLElement;
     "kind-thread-search-hints": HTMLElement;
     "kind-thread-search-status": HTMLElement;

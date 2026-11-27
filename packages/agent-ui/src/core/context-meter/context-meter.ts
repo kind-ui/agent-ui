@@ -239,7 +239,7 @@ type ContextMeterSlots = {
   trigger: Slot<PopupTriggerProps & BaseSlotProps, PopupTriggerState>;
   value: Slot<BaseSlotProps, ContextMeterValueState>;
   content: Slot<PopupContentProps & BaseSlotProps, PopupContentState>;
-  title: Slot<BaseSlotProps, { label: string }>;
+  title: Slot<BaseSlotProps, { label: string; fullText: string; levelText: string }>;
   description: Slot<BaseSlotProps, { countText: string }>;
   rows: Slot<BaseSlotProps, { rows: ContextRow[] }>;
   viewport: Slot;
@@ -523,6 +523,8 @@ export const contextMeterPrimitive: ContextMeterPrimitive = definePrimitive<
         attrs: (state) => ({
           "aria-label": state.label,
           "data-level": state.level,
+          "data-layout": state.layout,
+          "data-summary": state.total > 0 ? "" : undefined,
           "data-motion": state.motion,
         }),
         bind: (el, { store }) => {
@@ -560,8 +562,10 @@ export const contextMeterPrimitive: ContextMeterPrimitive = definePrimitive<
       }),
       // The full-screen element the content sits in while it presents as a sheet: render it around the content then.
       viewport: popupViewport(slot),
+      // Without a context window, as for a settings page's limits alone, there's no summary.
       title: slot({
         ...popupTitle(slot),
+        present: (state) => state.total > 0,
         state: (state) => ({ label: state.label, fullText: state.fullText, levelText: state.levelText }),
         attrs: (state, part) => ({
           ...popupTitle(slot).attrs?.(state, part),
@@ -570,6 +574,7 @@ export const contextMeterPrimitive: ContextMeterPrimitive = definePrimitive<
       }),
       description: slot({
         ...popupDescription(slot),
+        present: (state) => state.total > 0,
         state: (state, { api }) => ({ countText: api.countText(state) }),
       }),
       rows: slot<BaseSlotProps, { rows: ContextRow[] }>({
@@ -579,7 +584,7 @@ export const contextMeterPrimitive: ContextMeterPrimitive = definePrimitive<
       compact: slot({
         role: "button",
         focus: "native",
-        present: (state) => state.canCompact && !state.compacting,
+        present: (state) => state.canCompact && !state.compacting && state.total > 0,
         press: ({ api }, event) => api.pressCompact(event),
         attrs: () => ({ type: "button", "data-kind-button": "", "data-kind-size": "sm" }),
       }),
