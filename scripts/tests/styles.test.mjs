@@ -38,7 +38,7 @@ test("theme tokens are declared under @theme default", () => {
   const theme = statements.find(({ prelude }) => /^@theme\s+default$/.test(prelude));
   assert.ok(theme, "no @theme default block");
   const colors =
-    "fg muted surface hover selected current bubble scrim border ring focus shadow accent accent-hover on-accent on-status on-warning success warning danger".split(
+    "fg muted surface hover selected current bubble scrim border ring focus shadow accent accent-hover on-accent on-status on-warning success warning warning-text danger".split(
       " ",
     );
   for (const token of [...colors.map((name) => `--kind-color-${name}`), "--kind-radius", "--kind-font-mono"])
@@ -117,7 +117,7 @@ test("marks and focus rings reach 3:1, and muted and accent text 4.5:1, on every
           contrast(on(mark), under) >= 3,
           `${mode} ${mark} on ${fill}: ${contrast(on(mark), under).toFixed(2)}`,
         );
-      for (const text of ["muted", "accent"])
+      for (const text of ["muted", "accent", "warning-text"])
         assert.ok(
           contrast(on(text), under) >= 4.5,
           `${mode} ${text} text on ${fill}: ${contrast(on(text), under).toFixed(2)}`,

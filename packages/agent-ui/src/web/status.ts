@@ -1,4 +1,4 @@
-import { statusPrimitive } from "@kind-ui/agent-ui/core";
+import { stalledText, statusPrimitive } from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/web";
 import type { AttributeProperties, UiElement } from "@ui-sdk/web/events";
 
@@ -7,8 +7,8 @@ import type { AttributeProperties, UiElement } from "@ui-sdk/web/events";
 const owned = new WeakSet<Element>();
 
 /**
- * `<kind-status status="…">` fills in its mark and label when it has no children, and writes the label into an empty
- * `<kind-status-label>`.
+ * `<kind-status status="…">` fills in its mark, label and stalled words when it has no children, and writes the label
+ * into an empty `<kind-status-label>` and "No update for 5 min" into an empty `<kind-status-stalled>`.
  */
 export function defineStatus(): void {
   if (customElements.get("kind-status")) return;
@@ -17,13 +17,17 @@ export function defineStatus(): void {
       tag: "kind-status",
       render: (el, instance) => {
         if (!el.firstElementChild)
-          el.innerHTML = "<kind-status-icon></kind-status-icon><kind-status-label></kind-status-label>";
+          el.innerHTML =
+            "<kind-status-icon></kind-status-icon><kind-status-label></kind-status-label><kind-status-stalled></kind-status-stalled>";
+        const fill = (part: Element | null, text: string) => {
+          if (!part || (!owned.has(part) && part.textContent)) return;
+          owned.add(part);
+          if (part.textContent !== text) part.textContent = text;
+        };
         const draw = () => {
-          const label = el.querySelector("kind-status-label");
-          if (!label || (!owned.has(label) && label.textContent)) return;
-          owned.add(label);
-          const text = instance.get().label;
-          if (label.textContent !== text) label.textContent = text;
+          const { label, stalledMinutes } = instance.get();
+          fill(el.querySelector("kind-status-label"), label);
+          fill(el.querySelector("kind-status-stalled"), stalledText(stalledMinutes));
         };
         draw();
         const unsubscribe = instance.subscribe(draw);
@@ -40,6 +44,7 @@ export function defineStatus(): void {
     },
     icon: "kind-status-icon",
     label: "kind-status-label",
+    stalled: "kind-status-stalled",
   });
 }
 
@@ -52,5 +57,6 @@ declare global {
     "kind-status": KindStatusElement;
     "kind-status-icon": HTMLElement;
     "kind-status-label": HTMLElement;
+    "kind-status-stalled": HTMLElement;
   }
 }

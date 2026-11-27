@@ -18,6 +18,7 @@ export type {
   QuestionOption,
   QueueItem,
   RegenerateOption,
+  RetryState,
   Role,
   SelectionActionItem,
   SettingsChoice,

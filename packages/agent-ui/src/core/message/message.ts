@@ -14,11 +14,12 @@ import {
 } from "@ui-sdk/core";
 import type { MenuData } from "@ui-sdk/core/menu";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
-import type { MessageAuthor, MessageStatus, RegenerateOption, Role } from "../../types/index.js";
+import type { MessageAuthor, MessageStatus, RegenerateOption, RetryState, Role } from "../../types/index.js";
 import { actionSource } from "../action-source.js";
 import { avatarInitials } from "../avatar.js";
 import { createCopy } from "../clipboard.js";
 import { hearComposed } from "../composed-events.js";
+import { createCountdown } from "../countdown.js";
 import { memo } from "../memo.js";
 import {
   type MenuBaseApi,
@@ -30,9 +31,12 @@ import {
 } from "../menu-base.js";
 import { enter, type MotionMode } from "../motion/index.js";
 import { createPendingAction } from "../pending.js";
+import { failedAfterText, retryAnnouncement, retryReason, retryText } from "../retry.js";
 import { nearestTabStop } from "../tab-stop.js";
+import { textTargetNearby } from "../text-target.js";
 import { durationLabel, timeLabel, todayKey } from "../time.js";
 import { everyMinute } from "../today.js";
+import { WORDS } from "../words.js";
 
 /** The branch switcher's text: `"2 of 3"` for the second of three. */
 export const branchLabel = (index: number, count: number): string => `${index + 1} of ${count}`;
@@ -57,6 +61,16 @@ export type MessageOutcome = "stopped" | "failed";
 /** What Retry and Continue pass their callbacks. */
 export type MessageOutcomeDetails = {
   reason: "retry-press" | "continue-press" | "imperative";
+  /** Who pressed it, like `"mouse"`, `"keyboard"` or `"agent"`. */
+  source: ChangeSource;
+};
+
+/** Where a user message is on its way to the agent. Absent once delivered. */
+export type MessageDelivery = "queued" | "steering" | "not-sent";
+
+/** What Withdraw, Retry on "Not sent", Retry now and Cancel pass their callbacks. */
+export type MessageDeliveryDetails = {
+  reason: "withdraw-press" | "resend-press" | "retry-now-press" | "cancel-retry-press" | "imperative";
   /** Who pressed it, like `"mouse"`, `"keyboard"` or `"agent"`. */
   source: ChangeSource;
 };
@@ -154,6 +168,29 @@ export type MessageOptions = {
    */
   onContinue?: (details: MessageOutcomeDetails) => unknown;
   /**
+   * A user message that isn't with the agent yet: `"queued"` waits on the server (the bubble turns muted and dashed),
+   * `"steering"` was sent into the running turn and not yet read, `"not-sent"` failed to send. The footer says so,
+   * and is the message's accessible description. Leave it out once delivered.
+   */
+  delivery?: MessageDelivery;
+  /**
+   * Called to take back a queued or steering message. Shows Withdraw while set. Once the call resolves, the text goes
+   * back to the nearest Composer and you remove the message; until `delivery` changes, Withdraw stays locked.
+   */
+  onWithdraw?: (details: MessageDeliveryDetails) => unknown;
+  /** Called to send a message again after `"not-sent"`. Shows Retry beside "Not sent" while set. */
+  onResend?: (details: MessageDeliveryDetails) => unknown;
+  /**
+   * The request is being retried: "Rate limited. Retrying in 4 sec, attempt 2 of 5" shows after the content, counting
+   * down `retryAfter` from when you pass it. Keep the status `submitted` or `streaming`; set it to `error` with `retry`
+   * still set when the attempts run out, and the outcome reads "Failed after 5 attempts".
+   */
+  retry?: RetryState;
+  /** Called to try again without waiting. Shows Retry now while retrying; locked until `retry.attempt` changes. */
+  onRetryNow?: (details: MessageDeliveryDetails) => unknown;
+  /** Called to stop retrying. Shows Cancel while retrying. */
+  onCancelRetry?: (details: MessageDeliveryDetails) => unknown;
+  /**
    * `"auto"` follows `prefers-reduced-motion`.
    * @default "auto"
    */
@@ -197,6 +234,30 @@ export type MessageState = MenuBaseState & {
   canContinue: boolean;
   /** Whether a promise `onRetry` or `onContinue` returned is still pending. */
   outcomePending: boolean;
+  /** The `delivery` option, on a user message. */
+  delivery: MessageDelivery | undefined;
+  /** Whether `onWithdraw` is set. */
+  canWithdraw: boolean;
+  /** Whether `onResend` is set. */
+  canResend: boolean;
+  /** Whether a withdraw or resend is pending, or resolved and waiting for `delivery` to change. */
+  deliveryPending: boolean;
+  /** `retry.attempt`, or `null` while not retrying. */
+  retryAttempt: number | null;
+  /** `retry.maxAttempts`. */
+  retryMaxAttempts: number | undefined;
+  /** `retry.retryAfter`. */
+  retryAfter: number | undefined;
+  /** `retry.reason`. */
+  retryReason: string | undefined;
+  /** Whole seconds until the next attempt, once the root binds; `null` while nothing counts. Live. */
+  retrySeconds: number | null;
+  /** Whether `onRetryNow` is set. */
+  canRetryNow: boolean;
+  /** Whether `onCancelRetry` is set. */
+  canCancelRetry: boolean;
+  /** Whether Retry now or Cancel is pending, or resolved and waiting for the attempt to change. */
+  retryPending: boolean;
   /** `"message"` while the text is being edited, else `null`. */
   editing: string | null;
   copied: boolean;
@@ -219,6 +280,23 @@ export type MessageApi = {
   readonly retry: ((event?: Event) => void) | undefined;
   /** Calls `onContinue`. Offered while it's set, the message stopped and nothing is pending. */
   readonly continue: ((event?: Event) => void) | undefined;
+  /**
+   * Calls `onWithdraw`, then gives the text back to the nearest Composer. Offered while it's set, the message is
+   * queued or steering, and nothing is pending.
+   */
+  readonly withdraw: ((event?: Event) => void) | undefined;
+  /** Calls `onResend`. Offered while it's set, the message wasn't sent and nothing is pending. */
+  readonly resend: ((event?: Event) => void) | undefined;
+  /** Calls `onRetryNow`. Offered while it's set, the request is retrying and nothing is pending. */
+  readonly retryNow: ((event?: Event) => void) | undefined;
+  /** Calls `onCancelRetry`. Offered while it's set, the request is retrying and nothing is pending. */
+  readonly cancelRetry: ((event?: Event) => void) | undefined;
+  /** Counts down `retry.retryAfter`, and starts announcing a frame after it binds. Bound by the root. */
+  bindRoot: () => () => void;
+  /** Moves focus past the message when Withdraw or Retry leaves while focused. */
+  deliveryRecovery: ReturnType<typeof createFocusRecovery>;
+  /** Moves focus to Retry, the toolbar or past the message when Retry now or Cancel leaves while focused. */
+  retryRecovery: ReturnType<typeof createFocusRecovery>;
   /**
    * Plays the toolbar's or the outcome's entrance when the message settles while mounted, not when it mounts
    * settled.
@@ -304,7 +382,10 @@ export type MessagePrimitive = ReturnType<
       | "outcome"
       | "outcome-icon"
       | "retry"
-      | "continue",
+      | "continue"
+      | "delivery"
+      | "retrying"
+      | "retrying-icon",
       MessageSlot
     > & {
       avatar: MessageSlot<MessageAvatarState>;
@@ -312,6 +393,13 @@ export type MessagePrimitive = ReturnType<
       time: MessageSlot<MessageTimeState>;
       duration: MessageSlot<{ label: string }>;
       "outcome-text": MessageSlot<{ text: string }>;
+      "delivery-text": MessageSlot<{ text: string }>;
+      withdraw: MessageSlot<{ label: string }>;
+      resend: MessageSlot<{ label: string }>;
+      "retrying-reason": MessageSlot<{ reason: string }>;
+      "retrying-text": MessageSlot<{ text: string }>;
+      "retry-now": MessageSlot<{ label: string }>;
+      "cancel-retry": MessageSlot<{ label: string }>;
       "branch-label": MessageSlot<{ label: string }>;
       regenerate: MessageSlot<MessageRegenerateState>;
       "regenerate-content": MessageSlot<MessageRegenerateContentState>;
@@ -329,9 +417,56 @@ const ANNOUNCEMENTS: Record<MessageOutcome, string> = {
   stopped: "Response stopped",
   failed: "Response failed",
 };
-/** The outcome's words: "Stopped", or the `error` option's words. Empty while there's no outcome. */
-export const messageOutcomeText = (state: Pick<MessageState, "outcome" | "errorText">): string =>
-  state.outcome === "stopped" ? "Stopped" : state.outcome === "failed" ? state.errorText : "";
+/**
+ * The outcome's words: "Stopped", "Failed after 5 attempts" while `retry` is still set, or the `error` option's
+ * words. Empty while there's no outcome.
+ */
+export const messageOutcomeText = (
+  state: Pick<MessageState, "outcome" | "errorText"> & Partial<Pick<MessageState, "retryAttempt">>,
+): string =>
+  state.outcome === "stopped"
+    ? "Stopped"
+    : state.outcome !== "failed"
+      ? ""
+      : state.retryAttempt != null
+        ? failedAfterText(state.retryAttempt)
+        : state.errorText;
+
+const DELIVERY_TEXT: Record<MessageDelivery, string> = {
+  queued: WORDS.queuedNotSent,
+  steering: WORDS.steering,
+  "not-sent": WORDS.messageNotSent,
+};
+/** The footer's words: "Queued, not sent", "Steering…" or "Not sent". Empty once delivered. */
+export const messageDeliveryText = (delivery: MessageDelivery | undefined): string =>
+  delivery ? DELIVERY_TEXT[delivery] : "";
+const DELIVERY_DESCRIPTION: Record<MessageDelivery, string> = {
+  ...DELIVERY_TEXT,
+  steering: WORDS.steeringDescription,
+};
+const DELIVERIES: ReadonlySet<string> = new Set(Object.keys(DELIVERY_TEXT));
+const withdrawable = (state: MessageState) =>
+  state.canWithdraw && (state.delivery === "queued" || state.delivery === "steering");
+const retrying = (state: MessageState) => state.retryAttempt !== null && state.outcome === null;
+
+const firstCount = (seconds: number | undefined): number | null =>
+  seconds === undefined || !(seconds > 0)
+    ? null
+    : seconds >= 60
+      ? Math.floor(seconds / 60) * 60
+      : Math.ceil(seconds);
+
+/** The retry line's words after its reason, ticking with the countdown. */
+export const messageRetryText = (
+  state: Pick<MessageState, "retryAttempt" | "retryMaxAttempts" | "retrySeconds" | "locale">,
+): string =>
+  state.retryAttempt === null
+    ? ""
+    : retryText(
+        { attempt: state.retryAttempt, maxAttempts: state.retryMaxAttempts },
+        state.retrySeconds,
+        state.locale,
+      );
 const NO_AVATAR: MessageAvatarState = { name: "", initials: "", src: undefined };
 
 const hasHeader = (state: MessageState) =>
@@ -427,6 +562,18 @@ const presentation = (options: MessageOptions) => {
     errorText: options.error || "Something went wrong",
     canRetry: options.onRetry !== undefined,
     canContinue: options.onContinue !== undefined,
+    // A web `delivery` attribute can hold any string.
+    delivery:
+      role === "user" && options.delivery && DELIVERIES.has(options.delivery) ? options.delivery : undefined,
+    canWithdraw: options.onWithdraw !== undefined,
+    canResend: options.onResend !== undefined,
+    // Flat, so a host passing a new `retry` object each render with the same fields changes nothing.
+    retryAttempt: options.retry ? options.retry.attempt : null,
+    retryMaxAttempts: options.retry?.maxAttempts,
+    retryAfter: options.retry?.retryAfter,
+    retryReason: options.retry?.reason || undefined,
+    canRetryNow: options.onRetryNow !== undefined,
+    canCancelRetry: options.onCancelRetry !== undefined,
     role,
     status: options.status ?? "complete",
     branchIndex: options.branchIndex ?? 0,
@@ -462,6 +609,12 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     error: "string",
     onRetry: "action",
     onContinue: "action",
+    delivery: "string",
+    onWithdraw: "action",
+    onResend: "action",
+    retry: "value",
+    onRetryNow: "action",
+    onCancelRetry: "action",
     motion: "string",
   },
   state: (options: MessageOptions): MessageState => ({
@@ -469,10 +622,15 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     ...presentation(options),
     now: options.now || undefined,
     outcomePending: false,
+    deliveryPending: false,
+    retryPending: false,
+    // What the countdown shows first, so server markup and hydration agree before the root binds and counts.
+    retrySeconds: firstCount(options.retry?.retryAfter),
     editing: null,
     copied: false,
   }),
   sync: (options) => ({ ...menu.sync(options), ...presentation(options) }),
+  live: ["retrySeconds"],
   controlled: ["branchIndex", "branchCount", "status", "outcome"],
   api: (context): MessageApi => {
     const { store } = context;
@@ -493,6 +651,68 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     const today = (options: MessageOptions) =>
       options.now || (clock ? todayKey(options.timeZone || undefined) : undefined);
     const pendingOutcome = createPendingAction(context, { state: "outcomePending" });
+    const pendingDelivery = createPendingAction(context, { state: "deliveryPending" });
+    const pendingRetry = createPendingAction(context, { state: "retryPending" });
+    // Counted from when the host passes `retryAfter`, so a wrong device clock doesn't skew it.
+    let counting = "";
+    let retryAt: string | undefined;
+    const retryCountdown = createCountdown(context, {
+      key: "retrySeconds",
+      minutes: true,
+      at: () => {
+        const { retryAttempt, retryAfter } = store.get();
+        const key = retryAttempt === null ? "" : `${retryAttempt}:${retryAfter}`;
+        if (key !== counting) {
+          counting = key;
+          retryAt =
+            key && retryAfter !== undefined
+              ? new Date(Date.now() + retryAfter * 1000).toISOString()
+              : undefined;
+        }
+        return retryAt;
+      },
+    });
+    let { delivery, retryAttempt } = store.get();
+    // Web hosts set `retry` and `delivery` once the element exists, so nothing is announced before the first frame.
+    let started = false;
+    context.onOptions((options) => {
+      const next = presentation(options);
+      if (next.delivery !== delivery) {
+        delivery = next.delivery;
+        // A new delivery answers a withdraw or resend.
+        pendingDelivery.release();
+        if (started && delivery === "not-sent") announce(WORDS.messageNotSent, { priority: "polite" });
+      }
+      if (next.retryAttempt !== retryAttempt) {
+        retryAttempt = next.retryAttempt;
+        // A new attempt answers Retry now; the end of retrying answers Cancel.
+        pendingRetry.release();
+        if (started && retryAttempt !== null && next.outcome === null)
+          announce(retryAnnouncement(retryAttempt), { priority: "polite" });
+      }
+    });
+    const runDelivery = (
+      pending: typeof pendingDelivery,
+      name: "onWithdraw" | "onResend" | "onRetryNow" | "onCancelRetry",
+      press: MessageDeliveryDetails["reason"],
+      event?: Event,
+      resolved?: (source: ChangeSource) => void,
+    ) => {
+      const call = context.options()[name];
+      if (!call) return;
+      const reason = event ? press : "imperative";
+      const source = actionSource(event, reason);
+      // `resolved` runs as the host's promise resolves, even when the host removed the message on the way, since the
+      // pending action's own result is stale once the instance is destroyed.
+      const run = () => Promise.resolve(call({ reason, source })).then(() => resolved?.(source));
+      // A call that went through stays locked until the host answers it with new options.
+      void pending.run(run)?.then((result) => {
+        if (result !== "done") return;
+        store.set(
+          name === "onWithdraw" || name === "onResend" ? { deliveryPending: true } : { retryPending: true },
+        );
+      });
+    };
     let status = store.get().status;
     context.onOptions((options) => {
       const next = options.status ?? "complete";
@@ -505,7 +725,13 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       pendingOutcome.release();
       const outcome = outcomeOf(next);
       // Only for a response this instance saw being written, so a page of earlier messages is quiet.
-      if (outcome && streamed) announce(ANNOUNCEMENTS[outcome], { priority: "polite" });
+      if (outcome && streamed)
+        announce(
+          outcome === "failed" && options.retry
+            ? failedAfterText(options.retry.attempt)
+            : ANNOUNCEMENTS[outcome],
+          { priority: "polite" },
+        );
     });
     const runOutcome = (
       name: "onRetry" | "onContinue",
@@ -594,6 +820,65 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
           ? (event?: Event) => runOutcome("onContinue", "continue-press", event)
           : undefined;
       },
+      get withdraw() {
+        const state = store.get();
+        return withdrawable(state) && !state.deliveryPending
+          ? (event?: Event) => {
+              // Read now, while the message is in the page: the host may remove it as the call resolves.
+              const insert = textTargetNearby(context.element("root"));
+              const value = text();
+              runDelivery(pendingDelivery, "onWithdraw", "withdraw-press", event, (source) =>
+                insert?.(value, source, "queue-edit"),
+              );
+            }
+          : undefined;
+      },
+      get resend() {
+        const { canResend, delivery, deliveryPending } = store.get();
+        return canResend && delivery === "not-sent" && !deliveryPending
+          ? (event?: Event) => runDelivery(pendingDelivery, "onResend", "resend-press", event)
+          : undefined;
+      },
+      get retryNow() {
+        const state = store.get();
+        return state.canRetryNow && retrying(state) && !state.retryPending
+          ? (event?: Event) => runDelivery(pendingRetry, "onRetryNow", "retry-now-press", event)
+          : undefined;
+      },
+      get cancelRetry() {
+        const state = store.get();
+        return state.canCancelRetry && retrying(state) && !state.retryPending
+          ? (event?: Event) => runDelivery(pendingRetry, "onCancelRetry", "cancel-retry-press", event)
+          : undefined;
+      },
+      bindRoot: () => {
+        const frame = requestAnimationFrame(() => {
+          started = true;
+        });
+        const stop = retryCountdown.bind();
+        return () => {
+          cancelAnimationFrame(frame);
+          stop();
+        };
+      },
+      deliveryRecovery: createFocusRecovery({
+        fallback: () => {
+          const root = context.element("root");
+          return root?.isConnected ? nearestTabStop(root) : undefined;
+        },
+      }),
+      // Exhausted, Retry takes their place; recovered, the toolbar.
+      retryRecovery: createFocusRecovery({
+        fallback: () => {
+          const retry = context.element("retry")?.matches(":not([hidden])")
+            ? context.element("retry")
+            : undefined;
+          const button = retry?.matches("button") ? retry : retry?.querySelector<HTMLElement>("button");
+          const toolbar = context.element("toolbar")?.querySelector<HTMLElement>("button:not([disabled])");
+          const root = context.element("root");
+          return button ?? toolbar ?? (root?.isConnected ? nearestTabStop(root) : undefined);
+        },
+      }),
       readClock: () => {
         clock = true;
         const read = () => {
@@ -651,8 +936,11 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
         "data-status": state.status,
         "data-editing": state.editing === null ? undefined : "",
         "data-continued": state.continued ? "" : undefined,
+        "data-delivery": state.delivery,
         "aria-busy": state.outcomePending ? "true" : undefined,
+        "aria-description": state.delivery && DELIVERY_DESCRIPTION[state.delivery],
       }),
+      bind: (_el, { api }) => api.bindRoot(),
     }),
     avatar: slot<BaseSlotProps, MessageAvatarState>({
       state: (state, { api }) => api.avatarState(state),
@@ -661,7 +949,7 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
         "data-role": state.role,
         "data-continued": state.continued ? "" : undefined,
         "aria-hidden": state.author ? "true" : undefined,
-        "data-author": state.author ? "" : undefined,
+        "data-author": state.author ? (state.author.kind ?? "") : undefined,
       }),
     }),
     header: slot({
@@ -743,6 +1031,93 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     }),
     "outcome-text": slot<BaseSlotProps, { text: string }>({
       state: (state) => ({ text: messageOutcomeText(state) }),
+    }),
+    // Under the user's bubble while it isn't with the agent yet: its words, then Withdraw or Retry.
+    delivery: slot({
+      present: (state) => state.delivery !== undefined,
+      attrs: (state) => ({ "data-delivery": state.delivery, "data-motion": state.motion }),
+    }),
+    "delivery-text": slot<BaseSlotProps, { text: string }>({
+      state: (state) => ({ text: messageDeliveryText(state.delivery) }),
+      attrs: (state) => ({ "data-delivery": state.delivery }),
+    }),
+    withdraw: slot<BaseSlotProps, { label: string }>({
+      role: "button",
+      focus: "native",
+      present: withdrawable,
+      state: () => ({ label: WORDS.withdraw }),
+      press: ({ api }, event) => api.withdraw?.(event),
+      attrs: (state) => ({
+        type: "button",
+        "aria-disabled": state.deliveryPending ? "true" : undefined,
+        "data-kind-button": "",
+        "data-kind-size": "sm",
+      }),
+      bind: (el, part) => part.api.deliveryRecovery.bind(el, part),
+    }),
+    resend: slot<BaseSlotProps, { label: string }>({
+      role: "button",
+      focus: "native",
+      present: (state) => state.canResend && state.delivery === "not-sent",
+      state: () => ({ label: "Retry" }),
+      press: ({ api }, event) => api.resend?.(event),
+      attrs: (state) => ({
+        type: "button",
+        "aria-disabled": state.deliveryPending ? "true" : undefined,
+        "data-kind-button": "",
+        "data-kind-size": "sm",
+      }),
+      bind: (el, part) => part.api.deliveryRecovery.bind(el, part),
+    }),
+    // Where the outcome goes, so the streamed text above stays put. A status whose countdown is never read out: each
+    // attempt is announced once instead.
+    retrying: slot({
+      role: "status",
+      present: retrying,
+      attrs: (state) => ({ "aria-live": "off", "data-motion": state.motion }),
+    }),
+    "retrying-icon": slot({
+      attrs: (state) => ({
+        "aria-hidden": "true",
+        "data-status-mark": "",
+        "data-status": "running",
+        "data-motion": state.motion,
+      }),
+    }),
+    "retrying-reason": slot<BaseSlotProps, { reason: string }>({
+      present: (state) => state.retryReason !== undefined,
+      state: (state) => ({ reason: retryReason(state.retryReason) }),
+    }),
+    "retrying-text": slot<BaseSlotProps, { text: string }>({
+      state: (state) => ({ text: messageRetryText(state) }),
+    }),
+    "retry-now": slot<BaseSlotProps, { label: string }>({
+      role: "button",
+      focus: "native",
+      present: (state) => state.canRetryNow && retrying(state),
+      state: () => ({ label: WORDS.retryNow }),
+      press: ({ api }, event) => api.retryNow?.(event),
+      attrs: (state) => ({
+        type: "button",
+        "aria-disabled": state.retryPending ? "true" : undefined,
+        "data-kind-button": "secondary",
+        "data-kind-size": "sm",
+      }),
+      bind: (el, part) => part.api.retryRecovery.bind(el, part),
+    }),
+    "cancel-retry": slot<BaseSlotProps, { label: string }>({
+      role: "button",
+      focus: "native",
+      present: (state) => state.canCancelRetry && retrying(state),
+      state: () => ({ label: "Cancel" }),
+      press: ({ api }, event) => api.cancelRetry?.(event),
+      attrs: (state) => ({
+        type: "button",
+        "aria-disabled": state.retryPending ? "true" : undefined,
+        "data-kind-button": "",
+        "data-kind-size": "sm",
+      }),
+      bind: (el, part) => part.api.retryRecovery.bind(el, part),
     }),
     retry: slot({
       role: "button",
@@ -854,7 +1229,18 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     }),
   }),
   agent: {
-    actions: ["copy", "regenerate", "edit", "setBranch", "retry", "continue"],
+    actions: [
+      "copy",
+      "regenerate",
+      "edit",
+      "setBranch",
+      "retry",
+      "continue",
+      "withdraw",
+      "resend",
+      "retryNow",
+      "cancelRetry",
+    ],
     items: (api) =>
       menuItems(api.regenerateMenu.getItems()).filter((item) => item.value !== MESSAGE_TRY_AGAIN),
     closed: true,

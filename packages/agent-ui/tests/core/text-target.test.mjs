@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { bindTextSource, bindTextTarget, insertText, takeBackText } from "../../dist/core/text-target.js";
+import {
+  bindTextSource,
+  bindTextTarget,
+  insertText,
+  insertTextNearby,
+  takeBackText,
+} from "../../dist/core/text-target.js";
 
 const node = (parentElement) => ({
   parentElement,
@@ -54,4 +60,18 @@ test("a source docks in the target around it whichever binds first, follows runn
   unlink();
   assert.deepEqual(docked, [true, false, null, null]);
   assert.deepEqual(taken, ["keyboard"]);
+});
+
+test("insertTextNearby falls back to the first target inside the nearest ancestor that holds one", () => {
+  const tree = (parentNode) => ({ ...node(parentNode), parentNode });
+  const page = tree(null);
+  const conversation = tree(page);
+  const message = tree(conversation);
+  const composer = tree(page);
+  const got = [];
+  const target = bindTextTarget(composer, (text, _source, reason) => got.push([text, reason]) > 0);
+  assert.equal(insertTextNearby(message, "use the table", "mouse", "queue-edit"), true);
+  target.cleanup();
+  assert.equal(insertTextNearby(message, "again", "mouse", "queue-edit"), false);
+  assert.deepEqual(got, [["use the table", "queue-edit"]]);
 });

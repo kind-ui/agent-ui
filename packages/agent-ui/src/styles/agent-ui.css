@@ -127,6 +127,8 @@
   --kind-color-on-warning: light-dark(oklch(0.21 0.006 286), oklch(0.18 0.006 286));
   --kind-color-success: light-dark(oklch(0.6 0.15 155), oklch(0.74 0.15 155));
   --kind-color-warning: light-dark(oklch(0.62 0.16 60), oklch(0.8 0.14 70));
+  /* Warning words, like "No update for 2 min": the warning hue at text contrast. */
+  --kind-color-warning-text: light-dark(oklch(0.53 0.14 55), oklch(0.82 0.13 70));
   --kind-color-danger: light-dark(oklch(0.55 0.21 27), oklch(0.7 0.18 25));
   /* A status color's tint, as `color-mix(in oklab, <status> var(--kind-tint-fill), transparent)`. */
   --kind-tint-fill: 12%;

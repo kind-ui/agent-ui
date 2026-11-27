@@ -240,7 +240,12 @@ export {
   type GuardrailNoticeState,
   guardrailNoticePrimitive,
 } from "./guardrail-notice/index.js";
-export type { IndicatorOptions, IndicatorPrimitive, IndicatorState } from "./indicator.js";
+export {
+  type IndicatorOptions,
+  type IndicatorPrimitive,
+  type IndicatorState,
+  indicatorLabel,
+} from "./indicator.js";
 export {
   type InlineCitationApi,
   type InlineCitationCarouselState,
@@ -300,6 +305,8 @@ export {
   type MessageApi,
   type MessageAvatarState,
   type MessageBranchChangeReason,
+  type MessageDelivery,
+  type MessageDeliveryDetails,
   type MessageOptions,
   type MessageOutcome,
   type MessageOutcomeDetails,
@@ -310,8 +317,10 @@ export {
   type MessageRegenerateState,
   type MessageState,
   type MessageTimeState,
+  messageDeliveryText,
   messageOutcomeText,
   messagePrimitive,
+  messageRetryText,
 } from "./message/index.js";
 export {
   MODEL_CONTROL_EFFORT,
@@ -766,4 +775,13 @@ export {
 } from "./conversation-search/index.js";
 
 export { type Countdown, type CountdownOptions, countdownText, createCountdown } from "./countdown.js";
+export { failedAfterText, retryAnnouncement, retryReason, retryText } from "./retry.js";
+export {
+  NOT_STALLED,
+  type StalledOptions,
+  type StalledState,
+  stalledFor,
+  stalledText,
+  watchStalled,
+} from "./stalled.js";
 export { codeSpans, plainText, WORDS } from "./words.js";

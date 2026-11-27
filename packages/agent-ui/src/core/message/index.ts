@@ -4,6 +4,8 @@ export {
   type MessageApi,
   type MessageAvatarState,
   type MessageBranchChangeReason,
+  type MessageDelivery,
+  type MessageDeliveryDetails,
   type MessageOptions,
   type MessageOutcome,
   type MessageOutcomeDetails,
@@ -14,6 +16,8 @@ export {
   type MessageRegenerateState,
   type MessageState,
   type MessageTimeState,
+  messageDeliveryText,
   messageOutcomeText,
   messagePrimitive,
+  messageRetryText,
 } from "./message.js";

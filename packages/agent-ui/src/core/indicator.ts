@@ -1,8 +1,17 @@
-import type { definePrimitive, SlotDefinition, SlotFactory } from "@ui-sdk/core";
+import type { definePrimitive, PrimitiveContext, SlotDefinition, SlotFactory } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
 import { cancel, enter, flow, type MotionMode, onReducedMotionChange } from "./motion/index.js";
+import {
+  NOT_STALLED,
+  STALLED_OPTIONS,
+  type StalledOptions,
+  type StalledState,
+  stalledText,
+  watchStalled,
+} from "./stalled.js";
+import { WORDS } from "./words.js";
 
-export type IndicatorOptions = {
+export type IndicatorOptions = StalledOptions & {
   /**
    * Names the status, and screen readers read it again when it changes. Loader and Thinking Indicator also show
    * it; it defaults to "Loading…", "Thinking…" or "Typing".
@@ -15,9 +24,16 @@ export type IndicatorOptions = {
   motion?: MotionMode;
 };
 
-export type IndicatorState = { label: string; motion: MotionMode };
+export type IndicatorState = StalledState & {
+  /** The `label` option, or the default. `indicatorLabel` gives the words shown, stalled or not. */
+  label: string;
+  motion: MotionMode;
+};
 
-type IndicatorApi = Record<never, never>;
+type IndicatorApi = {
+  /** Follows `lastActivityAt`. Bound by the root. */
+  bindStalled: () => () => void;
+};
 
 type IndicatorSlot<Public extends object = Record<never, never>> = SlotDefinition<
   IndicatorState,
@@ -41,28 +57,50 @@ export type IndicatorPrimitive = ReturnType<
   >
 >;
 
+/** The words shown and read: the label, or "Still working · no update for 2 min" while stalled. */
+export const indicatorLabel = (state: IndicatorState): string =>
+  state.stalled
+    ? `${WORDS.stillWorking} · ${stalledText(state.stalledMinutes).replace(/^./, (first) => first.toLowerCase())}`
+    : state.label;
+
 /**
  * Everything but the name of Loader, Thinking Indicator and Typing Indicator: a polite `status` named by its
  * label, and decorative dots that flow with the `"dot-flow"` preset.
  */
 export const indicator = (defaultLabel: string) => {
-  const presentation = (options: IndicatorOptions): IndicatorState => ({
+  const presentation = (options: IndicatorOptions) => ({
     label: options.label ?? defaultLabel,
     motion: options.motion ?? "auto",
   });
   return {
-    options: { label: "string", motion: "string" } as const,
-    state: presentation,
+    options: { label: "string", motion: "string", ...STALLED_OPTIONS } as const,
+    state: (options: IndicatorOptions): IndicatorState => ({ ...presentation(options), ...NOT_STALLED }),
     sync: presentation,
-    api: (): IndicatorApi => ({}),
+    api: (context: PrimitiveContext<IndicatorOptions, IndicatorState, string>): IndicatorApi => {
+      const stalledInput = (options: IndicatorOptions) => ({
+        running: true,
+        lastActivityAt: options.lastActivityAt,
+        stalledAfter: options.stalledAfter,
+      });
+      const stalled = watchStalled(context.store, () => stalledInput(context.options()));
+      context.onOptions((options) => stalled.check(stalledInput(options)));
+      return { bindStalled: stalled.bind };
+    },
     slots: (slot: SlotFactory<IndicatorState, IndicatorApi>) => ({
       root: slot({
         role: "status",
-        attrs: (state) => ({ "aria-label": state.label, "data-motion": state.motion }),
+        attrs: (state) => ({
+          "aria-label": indicatorLabel(state),
+          // Stalled words change each minute; they're announced once, as stalling starts, instead.
+          "aria-live": state.stalled ? "off" : undefined,
+          "data-motion": state.motion,
+          "data-stalled": state.stalled ? "" : undefined,
+        }),
+        bind: (_el, { api }) => api.bindStalled(),
       }),
       label: slot<BaseSlotProps, { label: string }>({
         attrs: (state) => ({ "data-motion": state.motion }),
-        state: (state) => ({ label: state.label }),
+        state: (state) => ({ label: indicatorLabel(state) }),
       }),
       dots: slot({
         attrs: (state) => ({ "aria-hidden": "true", "data-motion": state.motion }),

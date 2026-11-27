@@ -1,7 +1,8 @@
 import type { MessageStatus } from "@kind-ui/agent-ui";
-import type { MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
+import type { MessageOptions, MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
 import type { JSX } from "@solidjs/web";
-import { createSignal, For, flush, onSettled } from "solid-js";
+import { createSignal, For, flush, onSettled, Show } from "solid-js";
+import { Composer, ComposerInput, ComposerStop, ComposerSubmit } from "../../../../src/solid/composer.js";
 import {
   Conversation,
   ConversationContent,
@@ -22,6 +23,7 @@ import {
   MessageBranchPrevious,
   MessageContent,
   MessageCopy,
+  MessageDelivery,
   MessageDuration,
   MessageEdit,
   MessageEditor,
@@ -29,6 +31,7 @@ import {
   MessageOutcome,
   MessageRegenerate,
   MessageRegenerateContent,
+  MessageRetrying,
   MessageTime,
   MessageToolbar,
 } from "../../../../src/solid/message.js";
@@ -37,6 +40,7 @@ import { answer } from "../../shared/markdown.js";
 import {
   author,
   authored,
+  delivery,
   outcomeError,
   outcomeText,
   regenerateOptions,
@@ -323,6 +327,87 @@ function Outcomes() {
   );
 }
 
+type DeliveryRow = Partial<Pick<MessageOptions, "delivery" | "retry" | "status">>;
+
+function Delivery() {
+  const [rows, setRows] = createSignal<Record<string, DeliveryRow>>({
+    steering: { delivery: "steering" },
+    queued: { delivery: "queued" },
+    "not-sent": { delivery: "not-sent" },
+    retrying: { status: "streaming", retry: delivery.retry },
+  });
+  const [gone, setGone] = createSignal<string[]>([]);
+  const deferred: Deferred[] = [];
+  onSettled(() =>
+    expose({
+      kindDelivery: {
+        calls,
+        set: (id: string, row: DeliveryRow) => {
+          setRows((current) => ({ ...current, [id]: row }));
+          flush();
+        },
+        remove: (id: string) => {
+          setGone((current) => [...current, id]);
+          flush();
+        },
+        settle: (ok: boolean) => deferred.shift()?.[ok ? "resolve" : "reject"](),
+      },
+    }),
+  );
+  const wait = (name: string) => (details: { reason: string; source: string }) => {
+    calls.push(`${name}:${details.reason}:${details.source}`);
+    return new Promise<void>((resolve, reject) => deferred.push({ resolve, reject }));
+  };
+  const user = (id: string, text: string, label: string) => (
+    <Show when={!gone().includes(id)}>
+      <Message
+        id={id}
+        aria-label={label}
+        messageRole="user"
+        text={text}
+        onWithdraw={wait("withdraw")}
+        onResend={wait("resend")}
+        delivery={rows()[id]?.delivery}
+        retry={rows()[id]?.retry}
+        status={rows()[id]?.status}
+      >
+        <MessageContent>{text}</MessageContent>
+        <MessageDelivery />
+      </Message>
+    </Show>
+  );
+  return (
+    <div class="m-4 flex w-[36rem] flex-col gap-6">
+      <Message aria-label="Assistant message">
+        <MessageContent>{delivery.answer}</MessageContent>
+      </Message>
+      {user("steering", delivery.steering, "Steering message")}
+      {user("queued", delivery.queued, "Queued message")}
+      {user("not-sent", delivery.notSent, "Unsent message")}
+      <Message
+        id="retrying"
+        aria-label="Retrying answer"
+        text={delivery.retrying}
+        onRetryNow={wait("retry-now")}
+        onCancelRetry={wait("cancel-retry")}
+        onRetry={wait("retry")}
+        delivery={rows().retrying?.delivery}
+        retry={rows().retrying?.retry}
+        status={rows().retrying?.status}
+      >
+        <MessageContent>{delivery.retrying}</MessageContent>
+        <MessageRetrying />
+        <MessageOutcome />
+      </Message>
+      <Composer aria-label="Message" onSubmit={() => {}}>
+        <ComposerInput aria-label="Prompt" />
+        <ComposerSubmit />
+        <ComposerStop />
+      </Composer>
+    </div>
+  );
+}
+
 export const cases = {
   all: () => (
     <div class="m-4 flex w-[36rem] flex-col gap-6">
@@ -349,6 +434,7 @@ export const cases = {
   author: () => <Authored />,
   "author-clock": () => <Authored clock />,
   outcomes: () => <Outcomes />,
+  delivery: () => <Delivery />,
   "custom-rows": () => (
     <div class="m-4 w-[36rem]">
       <WithOptions custom />

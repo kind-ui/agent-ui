@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: 9994de73
+Last reviewed: 2d09eea1
 
 ## Settled
 
@@ -83,6 +83,7 @@ Last reviewed: 9994de73
 - **A Retry or Continue pending when a `kind-message` is moved comes back pressable (Wave 6 Task 9):** `outcomePending` isn't carried to the rebuilt instance, as with Plan's Accept and Subagent's Stop.
 - **`kind-conversation-search`'s `open` property doesn't reflect to the `open` attribute** (Wave 6 Task 11), the same class as the Picker and `menuBase` entry.
 - **`kind-thread-search` has no moved, shadow-root or written-parts fixture case** (Wave 6 Task 3): all three, and a removal while open, were checked by hand in review; add cases with Picker's. Its uncontrolled search text isn't root state, so a move while open may lose it (not reproduced).
+- With two composers under the same nearest ancestor, `textTargetNearby` picks the one registered first, not the nearer one (layer 5).
 
 ## Resolved
 

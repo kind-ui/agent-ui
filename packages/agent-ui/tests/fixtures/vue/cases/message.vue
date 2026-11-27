@@ -8,14 +8,16 @@ export const variants = [
   "author",
   "author-clock",
   "outcomes",
+  "delivery",
   "custom-rows",
 ] as const;
 </script>
 
 <script setup lang="ts">
 import type { MessageStatus } from "@kind-ui/agent-ui";
-import type { MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
+import type { MessageOptions, MessageRegenerateDetails } from "@kind-ui/agent-ui/core";
 import { computed, onMounted, ref, shallowRef } from "vue";
+import { Composer, ComposerInput, ComposerStop, ComposerSubmit } from "../../../../src/vue/composer.js";
 import {
   Conversation,
   ConversationContent,
@@ -36,6 +38,7 @@ import {
   MessageBranchPrevious,
   MessageContent,
   MessageCopy,
+  MessageDelivery,
   MessageDuration,
   MessageEdit,
   MessageEditor,
@@ -43,6 +46,7 @@ import {
   MessageOutcome,
   MessageRegenerate,
   MessageRegenerateContent,
+  MessageRetrying,
   MessageTime,
   MessageToolbar,
 } from "../../../../src/vue/message.js";
@@ -51,6 +55,7 @@ import { answer } from "../../shared/markdown.js";
 import {
   author,
   authored,
+  delivery,
   outcomeError,
   outcomeText,
   regenerateOptions,
@@ -124,6 +129,22 @@ const outcomeRows = [
   { id: "earlier", label: "Earlier answer", props: { onRetry: wait("retry") } },
 ];
 
+type DeliveryRow = Partial<Pick<MessageOptions, "delivery" | "retry" | "status">>;
+const deliveryRows = ref<Record<string, DeliveryRow>>({
+  steering: { delivery: "steering" },
+  queued: { delivery: "queued" },
+  "not-sent": { delivery: "not-sent" },
+  retrying: { status: "streaming", retry: delivery.retry },
+});
+const gone = ref<string[]>([]);
+const userRows = computed(() =>
+  [
+    { id: "steering", text: delivery.steering, label: "Steering message" },
+    { id: "queued", text: delivery.queued, label: "Queued message" },
+    { id: "not-sent", text: delivery.notSent, label: "Unsent message" },
+  ].filter((row) => !gone.value.includes(row.id)),
+);
+
 const withOptions = ["options", "refusing", "custom-rows"].includes(props.variant);
 
 onMounted(() => {
@@ -146,6 +167,16 @@ onMounted(() => {
         calls,
         status: (id: string, value: MessageStatus) =>
           flush(() => (statuses.value = { ...statuses.value, [id]: value })),
+        settle: (ok: boolean) => deferred.shift()?.[ok ? "resolve" : "reject"](),
+      },
+    });
+  if (props.variant === "delivery")
+    expose({
+      kindDelivery: {
+        calls,
+        set: (id: string, row: DeliveryRow) =>
+          flush(() => (deliveryRows.value = { ...deliveryRows.value, [id]: row })),
+        remove: (id: string) => flush(() => (gone.value = [...gone.value, id])),
         settle: (ok: boolean) => deferred.shift()?.[ok ? "resolve" : "reject"](),
       },
     });
@@ -292,5 +323,42 @@ onMounted(() => {
       <MessageOutcome />
     </Message>
     <input aria-label="Reply" class="w-full" />
+  </div>
+  <div v-else-if="variant === 'delivery'" class="m-4 flex w-[36rem] flex-col gap-6">
+    <Message aria-label="Assistant message">
+      <MessageContent>{{ delivery.answer }}</MessageContent>
+    </Message>
+    <Message
+      v-for="row in userRows"
+      :id="row.id"
+      :key="row.id"
+      :aria-label="row.label"
+      message-role="user"
+      :text="row.text"
+      :on-withdraw="wait('withdraw')"
+      :on-resend="wait('resend')"
+      v-bind="deliveryRows[row.id]"
+    >
+      <MessageContent>{{ row.text }}</MessageContent>
+      <MessageDelivery />
+    </Message>
+    <Message
+      id="retrying"
+      aria-label="Retrying answer"
+      :text="delivery.retrying"
+      :on-retry-now="wait('retry-now')"
+      :on-cancel-retry="wait('cancel-retry')"
+      :on-retry="wait('retry')"
+      v-bind="deliveryRows.retrying"
+    >
+      <MessageContent>{{ delivery.retrying }}</MessageContent>
+      <MessageRetrying />
+      <MessageOutcome />
+    </Message>
+    <Composer aria-label="Message" :on-submit="() => {}">
+      <ComposerInput aria-label="Prompt" />
+      <ComposerSubmit />
+      <ComposerStop />
+    </Composer>
   </div>
 </template>

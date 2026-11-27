@@ -14,6 +14,19 @@ export interface MessageAuthor {
   name: string;
   /** An image of the author. Without one, the avatar shows the name's initials. */
   avatarUrl?: string;
+  /** People's avatars are circles, agents' rounded squares. */
+  kind?: "agent" | "person";
+}
+
+/** A retry in progress. The status under it stays `"submitted"` or `"streaming"`. */
+export interface RetryState {
+  /** Counts from 1 for the first retry. */
+  attempt: number;
+  maxAttempts?: number;
+  /** Seconds until the next attempt, as the server reported it, counted from when the host passes it. */
+  retryAfter?: number;
+  /** What went wrong, in words, like "Rate limited". Leads the line. */
+  reason?: string;
 }
 
 /** A conversation in a list of them. */

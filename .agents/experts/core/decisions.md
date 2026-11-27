@@ -2,7 +2,7 @@
 
 What is already decided, and what is known and open. The expert never re-raises a **Settled** item as a finding.
 
-Last reviewed: 9994de73
+Last reviewed: 2d09eea1
 
 ## Settled
 
@@ -53,6 +53,7 @@ Last reviewed: 9994de73
 - **"New chat" filters like any row** (Thread Search, Wave 6 Task 3): Command exposes no way to keep a composed item through a search (its listbox `pinned` isn't a `CommandItem` prop), so New chat shows only while the search matches it, as Picker's footer actions do.
 - **Thread Search's `agent.items` isn't `closed`** (Wave 6 Task 3): the bridge would check `search`'s free text against the threads; `select` refuses an unknown id itself, as Transcript's `seek` does.
 - **Thread Search's Escape closes its dialog** (`@ui-sdk/core/testing`, Wave 6 Task 12): as with "A picker's Escape closes its popover", Command's search is a `combobox` whose list is always shown, here inside a modal dialog, so Escape closes the dialog and focus returns to the trigger, where `checkPattern("combobox")` expects only the list to close and focus to stay. `wave-6/aria-patterns.spec.ts` accepts those two problems; the dialog check passes.
+- Message's `delivery`, `retryAttempt` and the stalled keys stay out of `controlled`: UI SDK warns when a controlled key becomes `undefined`, and delivery and retry end by being left out (layer 5).
 
 ## Known and open (don't report again, check whether fixed)
 
@@ -119,6 +120,8 @@ Last reviewed: 9994de73
 
 - **A Test Results count's name changes as a run streams** (Design Wave 1 Batch D): each count is a toggle button named by its text ("2 passed"), which the ARIA pattern asks to keep fixed. Needs a screen reader check, or a fixed name with the number as a description.
 - **File Tree reads `tones` and `letters` with the host's `change` unchecked** (`file-tree.ts`): a value like `"constructor"` writes a function's text into `data-kind-badge`. Predates Batch D for `letters`.
+- An agent's snapshot doesn't show a message's `delivery` or retry, or a step's `stalled`, since none is in `controlled` (layer 5).
+- A remounted Message counts `retryAfter` again from the full value, since the deadline is per instance (layer 5).
 
 ## Resolved
 

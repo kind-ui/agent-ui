@@ -1,6 +1,6 @@
 import type { ChangeSource } from "@ui-sdk/core";
 
-/** `"dictation"` adds text after a space; `"queue-edit"` takes back a queued message, after a line break. */
+/** `"dictation"` adds text after a space; `"queue-edit"` takes back a queued or withdrawn message, after a line break. */
 export type TextInsertReason = "dictation" | "queue-edit";
 
 type Insert = (text: string, source: ChangeSource, reason: TextInsertReason) => boolean;
@@ -13,7 +13,7 @@ export type TextSourceLink = {
 };
 
 /** Elements that take text another component produces, like a Composer's root taking dictated text. */
-const targets = new WeakMap<Element, { insert: Insert; running: () => boolean; accepts: () => boolean }>();
+const targets = new Map<Element, { insert: Insert; running: () => boolean; accepts: () => boolean }>();
 /** Elements that hand text back to the target around them, like a Queue docked in a Composer. */
 const sources = new Map<Element, TextSourceLink>();
 
@@ -58,6 +58,28 @@ export const insertText = (
   source: ChangeSource,
   reason: TextInsertReason = "dictation",
 ): boolean => targetAround(el)?.insert(text, source, reason) ?? false;
+
+/**
+ * The nearest target around `el`, else the first target inside the nearest ancestor that holds one, like the Composer
+ * beside a Conversation whose message gives its text back. Climbs through `parentNode`, so a shadow root holding both
+ * counts. Read it while `el` is in the page; the returned `insert` works after `el` leaves.
+ */
+export const textTargetNearby = (el: Element | undefined): Insert | undefined => {
+  const around = targetAround(el);
+  if (around) return around.insert;
+  for (let node: Node | null | undefined = el?.parentNode; node; node = node.parentNode) {
+    for (const [target, { insert }] of targets) if (node.contains(target)) return insert;
+  }
+  return undefined;
+};
+
+/** Hands `text` to `textTargetNearby(el)`, and returns whether one took it. */
+export const insertTextNearby = (
+  el: Element | undefined,
+  text: string,
+  source: ChangeSource,
+  reason: TextInsertReason,
+): boolean => textTargetNearby(el)?.(text, source, reason) ?? false;
 
 /** Whether a target around `el` would take text now, so a source can keep its item until one does. */
 export const canInsertText = (el: Element | undefined): boolean => targetAround(el)?.accepts() ?? false;

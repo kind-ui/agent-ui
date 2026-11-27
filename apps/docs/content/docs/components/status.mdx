@@ -22,10 +22,11 @@ Use a status badge beside a run, a job or a tool call to show whether it's waiti
 ```text
 Status
 ├── StatusIcon
-└── StatusLabel
+├── StatusLabel
+└── StatusStalled
 ```
 
-`Status` renders both parts when you pass no children; any children you pass replace them. `StatusIcon` draws the mark and is hidden from screen readers, and `StatusLabel` shows the label, or its own children.
+`Status` renders its parts when you pass no children; any children you pass replace them. `StatusIcon` draws the mark and is hidden from screen readers, `StatusLabel` shows the label, or its own children, and `StatusStalled` shows only while stalled.
 
 ## Usage
 
@@ -34,6 +35,10 @@ Status
 Set `status` as the work moves along: `pending`, `running`, `awaiting-input`, `complete`, `error` or `cancelled`. The label follows it: "Pending", "Running", "Needs input", "Complete", "Failed" or "Cancelled". Pass `label` for your own words, like "Deployed".
 
 A new label can change the badge's width, so put it at the end of a row, where nothing comes after it. Its height stays the same for every status.
+
+### Stalled
+
+Pass `lastActivityAt` while the status is `running`, and once nothing arrives for `stalledAfter` seconds, 120 by default, `StatusStalled` adds "No update for 5 min" after the label, in warning words. See [Step](./step.mdx#stalled).
 
 ### Announcements
 

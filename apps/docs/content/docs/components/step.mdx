@@ -4,6 +4,7 @@ description: Show what the agent did, one collapsible step at a time.
 ---
 
 import StepExample from "../../../examples/step/basic";
+import StepStalledExample from "../../../examples/step/stalled";
 
 Use a step for each thing the agent does, like reading a file or running a command. Its icon shows the status, and its panel holds the details.
 
@@ -38,6 +39,18 @@ The trigger renders a native button that shows or hides the content. Put a durat
 Set `status` as the work moves along: `pending`, `running`, `awaiting-input`, `complete`, `error` or `cancelled`. A step opens on its own while it's running or waiting for input, and closes when it completes. Once someone opens or closes it, it stays that way. Pass `autoOpen="never"` to leave every step closed until someone opens it.
 
 When a step completes, fails, is cancelled or needs input, it tells screen readers politely. The content stays in the page while it's closed, so the browser's find in page still reaches it.
+
+### Stalled
+
+Is it still working, or has it hung? Pass `lastActivityAt`, an ISO 8601 date-time, whenever an update arrives. Once a running step has had none for `stalledAfter` seconds, 120 by default, its meta reads "No update for 2 min" in warning words, updated each minute. The mark keeps running, since the work hasn't stopped. It's announced once as it starts, and "Working again" once an update arrives. Every Step-based component takes the same options, and so do [Status](./status.mdx) and the [Thinking Indicator](./thinking-indicator.mdx). Put a Stop of your own beside it if the person should be able to end the work.
+
+<Example caption="The last update came three minutes ago, so each one says how long nothing has arrived.">
+  <StepStalledExample />
+
+  <ExampleCode example="step/stalled" />
+</Example>
+
+The browser's clock decides, so server markup is never stalled.
 
 ### A List of Steps
 

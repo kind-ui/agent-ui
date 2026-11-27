@@ -54,8 +54,8 @@ import {
  * back an earlier prompt. `"picker"`, `"drop"`, `"paste"`, `"reset"`: File Input attached files.
  * `"remove-press"`: an attachment was removed. `"submit"`: a resolved submission cleared the draft.
  * `"restore"`: the draft saved under `draftKey` came back. `"discard-press"`: Discard emptied it.
- * `"dictation"`: a Dictation inside the composer added its text. `"queue-edit"`: a docked Queue's Edit, or Alt+Up,
- * gave back a queued message. `"imperative"`: an `api` call without an event.
+ * `"dictation"`: a Dictation inside the composer added its text. `"queue-edit"`: a docked Queue's Edit, Alt+Up or a
+ * Message's Withdraw gave back a message that wasn't sent. `"imperative"`: an `api` call without an event.
  */
 export type ComposerValueChangeReason =
   | "input-change"
