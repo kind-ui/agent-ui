@@ -54,7 +54,7 @@ export function ContextMeterValue({
   children = ({ label, caption, ...meter }) => (
     <Meter {...meter} aria-label={label} data-agent-hidden="">
       <MeterTrack />
-      {caption ? <span data-context-meter-caption="">{caption}</span> : null}
+      {caption ? <span data-context-meter-caption="">{`${caption} `}</span> : null}
       <MeterValue />
     </Meter>
   ),

@@ -63,9 +63,16 @@ export type KindMenuItemContentProps = {
   icon?: unknown;
   label: string;
   description?: string | undefined;
+  /** Trailing text, like a model's cost. */
+  meta?: string | undefined;
+  /** What screen readers hear in place of `meta`. */
+  metaLabel?: string | undefined;
 };
 
-/** A data row's icon and text, the label over an optional description, as menus built on `menuBase` draw them. */
+/**
+ * A data row's icon and text, the label over an optional description, then its trailing `meta`, as menus built on
+ * `menuBase` draw them.
+ */
 export function KindMenuItemContent(props: KindMenuItemContentProps) {
   const icon = createMemo(() => props.icon);
   return (
@@ -81,6 +88,14 @@ export function KindMenuItemContent(props: KindMenuItemContentProps) {
           <span data-menu-description="">{props.description}</span>
         </Show>
       </span>
+      <Show when={props.meta}>
+        <span data-menu-meta="" aria-hidden={props.metaLabel ? "true" : undefined}>
+          {props.meta}
+        </span>
+        <Show when={props.metaLabel}>
+          <span data-menu-meta-label="">{props.metaLabel}</span>
+        </Show>
+      </Show>
     </>
   );
 }

@@ -1,5 +1,5 @@
 <script module lang="ts">
-  export const variants = ["all", "refusing"];
+  export const variants = ["all", "refusing", "cost"];
 </script>
 
 <script lang="ts">
@@ -9,6 +9,7 @@
   import { ModelControl } from "../../../../src/svelte/model-control/index.js";
   import { expose } from "../../shared/expose.js";
   import { controlHost, levels, modelActions, models, settings } from "../../shared/model-control.js";
+  import { costModels } from "../../shared/model-selector.js";
 
   let { variant }: { variant: string; params: URLSearchParams } = $props();
 
@@ -16,26 +17,32 @@
   expose({ kindHost: host });
 </script>
 
-<div class="p-6">
-  <ModelControl
-    id="control"
-    {models}
-    {levels}
-    {settings}
-    defaultModel="opus"
-    defaultEffort="medium"
-    defaultValues={{ fast: false, context: "1m" }}
-    onModelChange={(value: string, details: ChangeDetails<string>) => {
-      record("model")(value, details);
-      if (variant === "refusing") details.cancel();
-    }}
-    onEffortChange={(value: string, details: ChangeDetails<string>) => {
-      record("effort")(value, details);
-      if (variant === "refusing") details.cancel();
-    }}
-    onValuesChange={(values: SettingsValues, details: SettingsMenuChangeDetails) =>
-      record(details.id)(values[details.id], details)}
-    actions={modelActions}
-    onAction={record("action")}
-  />
-</div>
+{#if variant === "cost"}
+  <div class="p-6">
+    <ModelControl id="control" models={costModels} defaultModel="claude-sonnet-5.5" defaultOpen />
+  </div>
+{:else}
+  <div class="p-6">
+    <ModelControl
+      id="control"
+      {models}
+      {levels}
+      {settings}
+      defaultModel="opus"
+      defaultEffort="medium"
+      defaultValues={{ fast: false, context: "1m" }}
+      onModelChange={(value: string, details: ChangeDetails<string>) => {
+        record("model")(value, details);
+        if (variant === "refusing") details.cancel();
+      }}
+      onEffortChange={(value: string, details: ChangeDetails<string>) => {
+        record("effort")(value, details);
+        if (variant === "refusing") details.cancel();
+      }}
+      onValuesChange={(values: SettingsValues, details: SettingsMenuChangeDetails) =>
+        record(details.id)(values[details.id], details)}
+      actions={modelActions}
+      onAction={record("action")}
+    />
+  </div>
+{/if}

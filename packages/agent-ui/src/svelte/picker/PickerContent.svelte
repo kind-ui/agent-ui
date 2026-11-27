@@ -1,7 +1,8 @@
-<!-- The popover: the search field and the list, unless you pass children. Focus moves to the search field. -->
+<!-- The popover: the search field, the list and its note, unless you pass children. Focus moves to the search field. -->
 <script lang="ts">
   import type { ComponentProps } from "svelte";
   import PickerList from "./PickerList.svelte";
+  import PickerNote from "./PickerNote.svelte";
   import { type PickerParts, pickerConfig } from "./parts.js";
 
   type ContentProps = ComponentProps<PickerParts["Content"]>;
@@ -21,7 +22,7 @@
     {/if}
   {/snippet}
   {#snippet children(state: Parameters<NonNullable<ContentProps["children"]>>[0])}
-    {#if content}{@render content(state)}{:else}<PickerList />{/if}
+    {#if content}{@render content(state)}{:else}<PickerList /><PickerNote />{/if}
   {/snippet}
 </parts.Content>
 

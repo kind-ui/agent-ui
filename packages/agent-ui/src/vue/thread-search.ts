@@ -22,6 +22,7 @@ const parts = createParts(primitive, {
   viewport: "div",
   command: "div",
   item: "span",
+  note: "p",
   shortcut: "kbd",
   hints: "div",
   status: "span",

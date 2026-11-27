@@ -176,9 +176,9 @@ export function defineContextMeter(): void {
           if (captionText && !caption)
             meter
               ?.querySelector("ui-meter-value")
-              ?.before(element("span", { "data-context-meter-caption": "" }, captionText));
-          else if (caption && caption.textContent !== captionText) {
-            if (captionText) caption.textContent = captionText;
+              ?.before(element("span", { "data-context-meter-caption": "" }, `${captionText} `));
+          else if (caption && caption.textContent !== `${captionText} `) {
+            if (captionText) caption.textContent = `${captionText} `;
             else caption.remove();
           }
           const compacting = el.querySelector("kind-context-meter-compacting");

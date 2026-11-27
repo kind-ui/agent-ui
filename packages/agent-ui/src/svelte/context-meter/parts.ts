@@ -9,4 +9,11 @@ export const parts = createParts(contextMeterPrimitive, {
   title: "h2",
   description: "p",
   rows: "dl",
+  viewport: "div",
+  compact: "button",
+  compacting: "span",
+  "compacting-icon": "span",
+  bar: "div",
+  breakdown: "ul",
+  limits: "div",
 });

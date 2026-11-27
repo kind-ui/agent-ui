@@ -159,6 +159,13 @@ import { ModelControl } from "@/components/ui/model-control";
 
 Below 28rem the Model Control and Approval Mode buttons show only their icon. Dictation hands its text to the composer itself. `createSpeechDictation()` from `@kind-ui/agent-ui/core` is a source over the browser's speech recognition. The full example is the Composer page's "Controls and narrow screens".
 
+## Context and usage limits
+
+- `ContextMeter` beside the composer: `used` and `total` for the window, `breakdown` (slices that don't overlap) for what fills it, `compactAt` and `onCompact` for **Compact**, and `limits` (`UsageLimit[]`, each with `resetsAt` and `windowStartedAt` for its pace). From 80% the ring shows the fullest limit. `layout="inline"` puts the same details on a settings page.
+- After compacting, mark the point in the transcript with a Status: `<Status status="complete" label="Compacted the conversation · 64k → 12k tokens" />`.
+- Near a limit, a `warning` Notice that leads with what's left (`label="12 requests left"`), `resetsAt` and `onDismiss`; key it by level so a dismissed warning comes back at the next one. At the limit, an `error` Notice naming the limit, with "New runs pause until then." and the ways out in `actions` (Continue at reset, Switch to another model, Use credits, the main one last); an error has no Dismiss unless `dismissible`.
+- Put each model's relative `cost` (`"1×"`, `"3×"`, `"Free"`) on its `ModelOption`; Model Selector and Model Control show it in the row with a `costNote` under the list.
+
 ## The sidebar shell
 
 A chat app: chats in a resizable Sidebar that turns into a drawer on phones, with search and a thread list, and the chat beside them.

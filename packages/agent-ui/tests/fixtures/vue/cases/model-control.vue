@@ -1,5 +1,5 @@
 <script lang="ts">
-export const variants = ["all", "refusing"] as const;
+export const variants = ["cost", "all", "refusing"] as const;
 </script>
 
 <script setup lang="ts">
@@ -7,6 +7,7 @@ import { onMounted } from "vue";
 import { ModelControl } from "../../../../src/vue/model-control.js";
 import { expose } from "../../shared/expose.js";
 import { controlHost, levels, modelActions, models, settings } from "../../shared/model-control.js";
+import { costModels } from "../../shared/model-selector.js";
 
 const props = defineProps<{ variant: string; params: URLSearchParams }>();
 
@@ -32,7 +33,10 @@ onMounted(() => expose({ kindHost: host }));
 </script>
 
 <template>
-  <div class="p-6">
+  <div v-if="variant === 'cost'" class="p-6">
+    <ModelControl id="control" :models="costModels" default-model="claude-sonnet-5.5" default-open />
+  </div>
+  <div v-else class="p-6">
     <ModelControl
       id="control"
       :models="models"

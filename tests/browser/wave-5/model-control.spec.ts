@@ -154,3 +154,15 @@ for (const colorScheme of ["light", "dark"] as const) {
     expect(violations).toEqual([]);
   });
 }
+
+test("a model's cost sits at the end of its row, read in words, with the unit explained once below", async ({
+  page,
+}) => {
+  await page.goto("/?c=model-control&case=cost");
+  const opus = page.getByRole("menuitemradio", { name: /^Claude Opus 5\.5/ });
+  await expect(opus).toHaveAccessibleName(/^Claude Opus 5\.5 ?, 3 times the cost$/);
+  await expect(opus.locator("[data-menu-meta]")).toHaveText("3×");
+  await expect(page.locator("[data-menu-note]")).toHaveText(
+    "Cost per request, relative to the default model.",
+  );
+});

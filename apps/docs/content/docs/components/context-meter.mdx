@@ -1,9 +1,12 @@
 ---
 title: Context Meter
-description: Show how much of the model's context window a conversation uses, with its token counts and cost a hover away.
+description: Show how much of the model's context window a conversation uses, what fills it, and how much of the plan's limits is left.
 ---
 
 import ContextMeterExample from "../../../examples/context-meter/basic";
+import ContextMeterBreakdownExample from "../../../examples/context-meter/breakdown";
+import ContextMeterInlineExample from "../../../examples/context-meter/inline";
+import ContextMeterLimitsExample from "../../../examples/context-meter/limits";
 
 Use a context meter beside the composer, so a person can see when a conversation is about to run out of room. It's a small ring and a percentage, and its details list the tokens by kind and what the conversation has cost.
 
@@ -25,11 +28,16 @@ ContextMeter
 │   └── ContextMeterValue
 └── ContextMeterContent
     ├── ContextMeterTitle
+    ├── ContextMeterCompact
+    ├── ContextMeterCompacting
     ├── ContextMeterDescription
-    └── ContextMeterRows
+    ├── ContextMeterBar
+    ├── ContextMeterBreakdown
+    ├── ContextMeterRows
+    └── ContextMeterLimits
 ```
 
-`ContextMeter` renders these parts when you pass no children: a group named by its `label`. `ContextMeterTrigger` is a button that opens the details, and `ContextMeterValue` holds UI SDK's Meter, drawn as a ring with the percentage beside it. `ContextMeterContent` is the popover with the details: `ContextMeterTitle` names it, `ContextMeterDescription` reads the tokens used, and `ContextMeterRows` lists each count and the cost.
+`ContextMeter` renders these parts when you pass no children: a group named by its `label`. `ContextMeterTrigger` is a button that opens the details, and `ContextMeterValue` holds UI SDK's Meter, drawn as a ring with the percentage beside it. `ContextMeterContent` is the popover with the details: `ContextMeterTitle` names it ("57% full"), `ContextMeterCompact` is the **Compact** button and `ContextMeterCompacting` takes its place while compacting, `ContextMeterDescription` reads the tokens used, `ContextMeterBar` and `ContextMeterBreakdown` show what fills the window, `ContextMeterRows` lists each count and the cost, and `ContextMeterLimits` lists the plan's limits. Each part shows only when its option is set.
 
 ## Usage
 
@@ -49,15 +57,63 @@ Pass `usage` with any of `input`, `output`, `reasoning` and `cached`, and `cost`
 <ContextMeter used={57_600} total={128_000} usage={{ input: 40_000, cached: 20_000 }} cost={0.42} currency="EUR" />
 ```
 
+### Breakdown and Compact
+
+Pass `breakdown`, a list of slices with an `id`, a `label` and a `value` in tokens, to show what fills the window: a stacked bar, then a row per slice with its tokens and share, then **Free space**. Slices mustn't overlap, so cached and reasoning counts go in `usage`, not here. Slices take their colors from a category palette in order, never a status color. A slice of 0 keeps its row, so the details keep their height.
+
+Pass `compactAt`, from 0 to 1, to mark where the conversation compacts on the bar; from 80% full the description adds it ("72,900 of 128,000 tokens · compacts at 80%"). Pass `onCompact` to show **Compact**. While the promise it returns is pending, or while you pass `compacting` (as when the agent compacts on its own), "Compacting" and a running mark take its place. A rejection announces "Couldn't compact".
+
+<Example caption="Open the details and press Compact: Compacting shows until the conversation is compacted, then the breakdown shrinks.">
+  <ContextMeterBreakdownExample />
+
+  <ExampleCode example="context-meter/breakdown" />
+</Example>
+
+The bar is one image, named by the whole breakdown as a sentence ("57% full: Messages 41,200, Files 18,100, Tools 9,800, System 3,800, Free space 55,100"), and the rows are a labelled list.
+
+### Limits
+
+Pass `limits` for the plan's usage windows, like a 5-hour and a weekly limit. Each has an `id`, a `label`, `used` and `total` (in `unit`: `"requests"` by default, `"tokens"`, `"credits"` or `"currency"` with its `currency`), and optionally `resetsAt`. Each limit is a row with a bar and when it resets ("Resets 5:00 PM, in 2 hr"); with `windowStartedAt` too, it says whether usage is "Ahead of pace" or "On pace". From 80% used a row leads with "Running low". Resets read in `timeZone`, else the page's, and update once a minute.
+
+Once a limit reaches 80%, the ring shows the fullest such limit instead of the context, with its label before the percentage, and the button is named by it ("Weekly limit, 84% used"), so a near cap isn't hidden behind a quiet context ring.
+
+<Example caption="The weekly limit is past 80%, so the ring shows it. Open the details to see each limit, its reset and its pace.">
+  <ContextMeterLimitsExample />
+
+  <ExampleCode example="context-meter/limits" />
+</Example>
+
+Each limit is a UI SDK Meter, which screen readers hear as "62% used, resets 5:00 PM".
+
+### Inline
+
+Pass `layout="inline"` to put the details in the page without the ring, as on a settings page. Each limit adds its amount ("124 of 200 requests", "$20.50 of $50.00"). Without `total`, the summary is left out and only the limits show.
+
+<Example caption="A settings page's usage: each limit with its amount, reset and pace, in the page.">
+  <ContextMeterInlineExample />
+
+  <ExampleCode example="context-meter/inline" />
+</Example>
+
+### Where It Compacted
+
+To show where a conversation compacted, add a Status row to the transcript at that point. It's a recipe, not a part:
+
+```tsx
+import { Status } from "@/components/ui/status";
+
+<Status status="complete" label="Compacted the conversation · 64k → 12k tokens" />
+```
+
 ### Opening
 
 The details open when the pointer rests on the meter for 600 ms, when keyboard focus rests on it as long, and when it's pressed, by pointer, Enter or Space. They close on Escape, a press outside or focus leaving the meter, and a press on the meter closes them unless resting the pointer opened them. Details the pointer opened also close 300 ms after it leaves both the meter and the details. Opening them by pointer or keyboard leaves focus on the meter, since they hold nothing to press.
 
-Pass `open` and `onOpenChange` to control them, or `defaultOpen` to start with them open. `onOpenChange` gets UI SDK Popover's reason, like `trigger-hover`, `trigger-press` or `escape-key`, or `trigger-focus` when keyboard focus opened them.
+On small touch screens the details present as a sheet; pass `presentation` as `"popover"` or `"sheet"` to choose one. Pass `open` and `onOpenChange` to control them, or `defaultOpen` to start with them open. `onOpenChange` gets UI SDK Popover's reason, like `trigger-hover`, `trigger-press` or `escape-key`, or `trigger-focus` when keyboard focus opened them.
 
 ### Motion
 
-The ring sweeps to a new value, and the details rise and fade in. Under `prefers-reduced-motion`, or with `motion="reduced"`, the ring moves at once and the details only fade, over 120 ms, and with `motion="none"` nothing animates.
+The ring sweeps to a new value, the details rise and fade in, and the breakdown's and limits' bars grow once as they open. Under `prefers-reduced-motion`, or with `motion="reduced"`, the ring moves at once and the details only fade, over 120 ms, and with `motion="none"` nothing animates.
 
 ## API Reference
 
@@ -67,10 +123,10 @@ The ring sweeps to a new value, and the details rise and fade in. Under `prefers
 
 ### Agent
 
-An agent connected with `createAgent` finds the meter by its label and reads whether its details are open. `open` is offered while they're closed and `close` while they're open; both report `details.source` as `"agent"` to `onOpenChange`. Like any component with a button, it also has UI SDK's generic `press`.
+An agent connected with `createAgent` finds the meter by its label and reads whether its details are open. `open` is offered while they're closed and `close` while they're open; both report `details.source` as `"agent"` to `onOpenChange`. `compact` does what **Compact** does, offered while `onCompact` is set and nothing is compacting. Like any component with a button, it also has UI SDK's generic `press`.
 
-<auto-type-table path="../../../../../packages/agent-ui/src/core/context-meter/context-meter.ts" name="ContextMeterAgentActions" type='Pick<ContextMeterApi, "open" | "close">' />
+<auto-type-table path="../../../../../packages/agent-ui/src/core/context-meter/context-meter.ts" name="ContextMeterAgentActions" type='Pick<ContextMeterApi, "open" | "close" | "compact">' />
 
 <Caption>
-  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-context-meter>`, props are kebab-case attributes, `usage` is a property, and `open` is a property too; `onOpenChange` is the `openchange` event. The element fills in its parts when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-context-meter>`, props are kebab-case attributes, `usage`, `breakdown` and `limits` are properties, and `open` is a property too; `onOpenChange` is the `openchange` event. The `can-compact` attribute shows Compact, which fires `compact`. The element fills in its parts when it has no children.
 </Caption>

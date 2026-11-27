@@ -4,6 +4,7 @@ description: Let people pick the model that answers, from a searchable list grou
 ---
 
 import ModelSelectorExample from "../../../examples/model-selector/basic";
+import ModelSelectorCostExample from "../../../examples/model-selector/cost";
 import ModelSelectorGroupsExample from "../../../examples/model-selector/groups";
 
 Use a model selector in a prompt's toolbar when people can choose which model answers. It's a [Picker](./picker.mdx) for models: a button that shows the chosen model and opens a search field over the list, grouped by provider. Place [Reasoning Effort](./reasoning-effort.mdx) beside it when the model can think harder. To pick the model and its effort from one button, use [Model Control](./model-control.mdx).
@@ -66,6 +67,18 @@ const models = [
 
 Icons render at 16px. A monochrome SVG drawn with `currentColor` takes the text color, so it reads in light and dark. Icons are decorative and hidden from assistive technology, so the model's name stays its label. The package ships no logos; you pass your own.
 
+### Cost
+
+Give a model a `cost` to show what it costs at the end of its row, in tabular figures: a short string you write, like `"1×"`, `"3×"`, `"Free"` or `"$0.40"`. The button never shows it. While any model has a cost, a line under the list says what it means: "Cost per request, relative to the default model." Pass `costNote` to write your own, or `""` to hide it.
+
+<Example caption="Press Model to see each model's cost at the end of its row, and the note under the list.">
+  <ModelSelectorCostExample />
+
+  <ExampleCode example="model-selector/cost" />
+</Example>
+
+Screen readers hear the cost after the model's name: "Claude Opus 5.5, 3 times the cost" for `"3×"`, ", the same cost" for `"1×"`, and the cost as written otherwise. Pass `costName`, a function that takes the cost and returns what's heard after the name, to say it another way.
+
 ### Actions
 
 Pass `actions`, each with an `id` and a `label`, for footer rows after the models, like **More models**. They show on the first page, and the arrow keys reach them like any row: Up Arrow from the first model wraps to the last action. Pressing one calls `onAction` with its `id` and closes the list; cancel it with `details.cancel()` to keep the list open. Without `onAction`, the actions can't run.
@@ -127,5 +140,5 @@ An agent connected with `createAgent` finds the model selector by its label and 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/model-selector/model-selector.ts" name="ModelSelectorAgentActions" type='Pick<ModelSelectorApi, "open" | "close" | "setValue" | "run">' />
 
 <Caption>
-  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-model-selector can-run>`, set `models`, `actions` and `value` as properties, and listen for `modelchange`, with the model's `id` as `event.detail.value`, `modelaction`, with the action's `id`, and `openchange`. A model's `icon` is an image URL or an Element, which the element copies into its row and the button. The element fills in its button and list when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-model-selector can-run>`, set `models`, `actions`, `value` and `costName` as properties and `cost-note` as an attribute, and listen for `modelchange`, with the model's `id` as `event.detail.value`, `modelaction`, with the action's `id`, and `openchange`. A model's `icon` is an image URL or an Element, which the element copies into its row and the button. The element fills in its button and list when it has no children.
 </Caption>

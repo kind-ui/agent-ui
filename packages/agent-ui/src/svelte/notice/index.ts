@@ -6,6 +6,7 @@ export const parts = createParts(noticePrimitive, {
   icon: "span",
   title: "p",
   description: "div",
+  reset: "p",
   actions: "div",
   dismiss: "button",
 });
@@ -17,4 +18,5 @@ export const NoticeIcon = parts.Icon;
 export const NoticeDescription = parts.Description;
 export const NoticeActions = parts.Actions;
 export const NoticeDismiss = parts.Dismiss;
+export { default as NoticeReset } from "./NoticeReset.svelte";
 export { default as NoticeTitle } from "./NoticeTitle.svelte";

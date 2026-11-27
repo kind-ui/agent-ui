@@ -4,8 +4,9 @@ description: Tell a person something about the conversation in a calm callout, w
 ---
 
 import NoticeExample from "../../../examples/notice/basic";
+import NoticeLimitsExample from "../../../examples/notice/limits";
 
-Use a notice for something worth reading that isn't a message, like a rate limit, a lost connection or a finished setup. Its mark and colors say whether it's information, a success, a warning or an error.
+Use a notice for something worth reading that isn't a message, like a usage limit, a lost connection or a finished setup. Its mark and colors say whether it's information, a success, a warning or an error.
 
 <Example caption="Press Dismiss on Rate limited: focus moves on to Retry, the notice fades out, then it's removed.">
   <NoticeExample />
@@ -23,12 +24,13 @@ Use a notice for something worth reading that isn't a message, like a rate limit
 Notice
 ├── NoticeIcon
 ├── NoticeTitle
+├── NoticeReset
 ├── NoticeDescription
 ├── NoticeActions
 └── NoticeDismiss
 ```
 
-`Notice` renders these parts: a note named by its `label`. `NoticeIcon` is the status mark, named **Info**, **Success**, **Warning** or **Error**, so the variant has words as well as a color. `NoticeTitle` shows the `label`, `NoticeDescription` holds the notice's `children`, `NoticeActions` holds its `actions`, and `NoticeDismiss` is the **Dismiss** button. To arrange the parts yourself, render them inside `NoticeRoot`.
+`Notice` renders these parts: a note named by its `label`. `NoticeIcon` is the status mark, named **Info**, **Success**, **Warning** or **Error**, so the variant has words as well as a color. `NoticeTitle` shows the `label`, `NoticeReset` says when a limit resets, `NoticeDescription` holds the notice's `children`, `NoticeActions` holds its `actions`, and `NoticeDismiss` is the **Dismiss** button. To arrange the parts yourself, render them inside `NoticeRoot`.
 
 ## Usage
 
@@ -44,7 +46,7 @@ Pass `variant` as `"info"` (the default), `"success"`, `"warning"` or `"error"`.
 
 ### Dismiss
 
-Pass `onDismiss` to show **Dismiss**. Pressing it moves focus out of the notice first, to the element `focusFallback` returns, else to the next element Tab reaches after the notice (the last one before it when nothing follows). Then the notice fades out, and `onDismiss` is called: remove the notice then. Return a promise to keep it until the promise settles; a rejection brings the notice back.
+Pass `onDismiss` to show **Dismiss**. An `"error"` notice doesn't show it unless you pass `dismissible`, since a limit the person has hit can't be waved away; pass `dismissible={false}` to hide it on any notice. Pressing it moves focus out of the notice first, to the element `focusFallback` returns, else to the next element Tab reaches after the notice (the last one before it when nothing follows). Then the notice fades out, and `onDismiss` is called: remove the notice then. Return a promise to keep it until the promise settles; a rejection brings the notice back.
 
 ```tsx
 const [shown, setShown] = useState(true);
@@ -58,9 +60,42 @@ const [shown, setShown] = useState(true);
 
 A notice you remove without **Dismiss** leaves at once, like any other content you stop rendering.
 
+### Reset Line
+
+Pass `resetsAt`, an ISO 8601 date, to say when a limit resets, under the title: "Resets Tuesday at 9:00 AM." Under an hour it counts down in minutes ("Resets in 42 min."), or at `"error"` says when the person can go on ("You can send messages again in 42 min."), and once the time comes it reads "Your limit has reset." or "You can send messages again." The line reads in the page's time zone, and server markup shows the date alone.
+
+### Usage Limits
+
+A notice is how a chat says the plan's limits are close or reached. Near the limit, use a `"warning"` that leads with what's left, says when it resets, offers a way to get more and can be dismissed. At the limit, use an `"error"` that names the limit, says plainly what stops, and offers every way to keep going, the main one last; it has no **Dismiss**.
+
+<Example caption="Press Dismiss on 12 requests left to set the warning aside. The weekly limit can't be dismissed: it counts down to its reset and offers three ways to go on.">
+  <NoticeLimitsExample />
+
+  <ExampleCode example="notice/limits" />
+</Example>
+
+Once a person dismisses a warning, keep it dismissed until the situation gets worse. Key the notice by its level and remember the key that was dismissed, so a new level brings it back:
+
+```tsx
+const level = left <= 5 ? "5-left" : "12-left";
+const [dismissed, setDismissed] = useState<string | null>(null);
+
+{dismissed !== level ? (
+  <Notice
+    key={level}
+    variant="warning"
+    label={`${left} requests left`}
+    resetsAt={resetsAt}
+    onDismiss={() => setDismissed(level)}
+  />
+) : null}
+```
+
+When the warning becomes an error at the limit, keep the same notice and change its `variant`: its mark changes in place and its `label` is announced.
+
 ### Announcements
 
-A notice that's on the page as it loads is read with the page and isn't announced. One you add later rises in and its `label` is announced, once, as is a change of `variant`. Editing its text isn't announced.
+A notice that's on the page as it loads is read with the page and isn't announced. One you add later rises in and its `label` is announced, once, as is a change of `variant`. An `"error"` notice added later takes `role="alert"` instead, which reads it. Editing its text isn't announced.
 
 ### Motion
 
@@ -79,5 +114,5 @@ An agent connected with `createAgent` finds the notice by its label. `dismiss()`
 <auto-type-table path="../../../../../packages/agent-ui/src/core/notice/base.ts" name="NoticeAgentActions" type='Pick<NoticeApi, "dismiss">' />
 
 <Caption>
-  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-notice>`, props are kebab-case attributes and `focusFallback` is a property. Write the text inside a `<kind-notice-description>` and buttons inside a `<kind-notice-actions>`; the element adds its mark, title and Dismiss. The `can-dismiss` attribute shows Dismiss, which fires `dismiss` once the notice has faded: remove it then, or call `event.detail.waitUntil(promise)`.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-notice>`, props are kebab-case attributes, like `resets-at`, and `focusFallback` is a property. Write the text inside a `<kind-notice-description>` and buttons inside a `<kind-notice-actions>`; the element adds its mark, title and Dismiss. The `can-dismiss` attribute shows Dismiss, which fires `dismiss` once the notice has faded: remove it then, or call `event.detail.waitUntil(promise)`.
 </Caption>

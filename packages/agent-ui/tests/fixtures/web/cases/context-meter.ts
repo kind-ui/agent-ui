@@ -31,9 +31,9 @@ const page =
     // Before the element connects, so it draws the parts its options need.
     if (extra.layout) meter.setAttribute("layout", extra.layout);
     Object.assign(meter, { ...extra, layout: extra.layout });
-    meter.canCompact = true;
+    meter.canCompact = Object.keys(extra).length > 0 && !("onCompact" in extra);
     meter.addEventListener("compact", (event) =>
-      (event as CustomEvent).detail.waitUntil(compact({ source: (event as CustomEvent).detail.source })),
+      (event as CustomEvent).detail.waitUntil(compact((event as CustomEvent).detail.value)),
     );
     meter.addEventListener("openchange", (event) => record(event.detail.value, event.detail));
     const beside = Object.assign(document.createElement("span"), { id: "beside", textContent: "Beside" });

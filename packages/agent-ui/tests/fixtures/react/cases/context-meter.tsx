@@ -31,8 +31,7 @@ function Page({
           onOpenChange={record}
           motion={motion}
           locale={locale}
-          onCompact={compact}
-          {...extra}
+          {...(extra && { onCompact: compact, ...extra })}
         />
         <span id="beside">Beside</span>
       </div>

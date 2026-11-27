@@ -9,6 +9,7 @@ export const parts = createParts(threadSearchPrimitive, {
   viewport: "div",
   command: "div",
   item: "span",
+  note: "p",
   shortcut: "kbd",
   hints: "div",
   status: "span",

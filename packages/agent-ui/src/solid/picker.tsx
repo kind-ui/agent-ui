@@ -33,6 +33,7 @@ const parts = createParts(pickerPrimitive, {
   viewport: "div",
   command: "div",
   item: "span",
+  note: "p",
 });
 
 /**
@@ -78,7 +79,10 @@ export type PickerRowItemProps = Omit<ComponentProps<typeof KindCommandItem>, ke
 export type PickerItemProps = ComponentProps<typeof parts.Item>;
 
 /** The parts a picker renders through: Picker's, or those of a component that spreads `pickerBase`. */
-export type PickerParts = Pick<typeof parts, "Trigger" | "Content" | "Viewport" | "Command" | "Item">;
+export type PickerParts = Pick<
+  typeof parts,
+  "Trigger" | "Content" | "Viewport" | "Command" | "Item" | "Note"
+>;
 
 type Render = (props: Record<string, unknown>, state: { presentation?: string }) => JSX.Element;
 
@@ -128,7 +132,12 @@ export function pickerParts(
         {...omit(props, "children", "render")}
         render={render as PickerContentProps["render"]}
       >
-        {props.children ?? <List />}
+        {props.children ?? (
+          <>
+            <List />
+            <Note />
+          </>
+        )}
       </parts.Content>
     );
   }
@@ -213,7 +222,12 @@ export function pickerParts(
         </Show>
       </span>
       <Show when={state.row.meta}>
-        <span data-picker-meta="">{state.row.meta}</span>
+        <span data-picker-meta="" aria-hidden={state.row.metaLabel ? "true" : undefined}>
+          {state.row.meta}
+        </span>
+        <Show when={state.row.metaLabel}>
+          <span data-picker-meta-label="">{state.row.metaLabel}</span>
+        </Show>
       </Show>
       {draw.trailing?.(state.row)}
       <span data-picker-mark="" />
@@ -222,6 +236,15 @@ export function pickerParts(
 
   function Item(props: PickerItemProps) {
     return <parts.Item {...omit(props, "children")}>{props.children ?? itemContent}</parts.Item>;
+  }
+
+  /** A line under the list, like what a model's cost means. Rendered only with one. */
+  function Note(props: ComponentProps<typeof parts.Note>) {
+    return (
+      <parts.Note {...omit(props, "children")}>
+        {props.children ?? ((state: { note: string }) => state.note)}
+      </parts.Note>
+    );
   }
 
   const iconOfRow = (row: PickerRow) => {
@@ -236,7 +259,7 @@ export function pickerParts(
     </>
   );
 
-  return { Trigger, Content, List, SectionRows, RowItem, Item, Default };
+  return { Trigger, Content, List, SectionRows, RowItem, Item, Note, Default };
 }
 
 const picker = pickerParts(parts);

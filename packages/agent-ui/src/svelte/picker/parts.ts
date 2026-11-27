@@ -9,10 +9,14 @@ export const parts = createParts(pickerPrimitive, {
   viewport: "div",
   command: "div",
   item: "span",
+  note: "p",
 });
 
 /** The parts a picker renders through: Picker's, or those of a component that spreads `pickerBase`. */
-export type PickerParts = Pick<typeof parts, "Trigger" | "Content" | "Viewport" | "Command" | "Item">;
+export type PickerParts = Pick<
+  typeof parts,
+  "Trigger" | "Content" | "Viewport" | "Command" | "Item" | "Note"
+>;
 
 /**
  * How a picker draws its parts, which its root hands the parts inside it. `icon` draws a row's icon (an image URL
