@@ -158,6 +158,7 @@ export default {
     "wave-4/action.spec.ts",
 
     "wave-6/thread-list.spec.ts",
+    "wave-6/thread-list-inbox.spec.ts",
     "wave-6/thread-search.spec.ts",
     "wave-6/sidebar.spec.ts",
     "wave-6/day-separator.spec.ts",

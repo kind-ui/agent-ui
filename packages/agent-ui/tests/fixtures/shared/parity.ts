@@ -273,6 +273,9 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
   "thread-list": [
     { c: "thread-list", case: "all", interaction: press('[data-slot="kind-thread-list-more"]') },
     { c: "thread-list", case: "ten" },
+    { c: "thread-list", case: "inbox", interaction: press('[data-slot="kind-thread-list-fold"]') },
+    { c: "thread-list", case: "nothing-waiting" },
+    { c: "thread-list", case: "archived" },
   ],
   "thread-search": [
     { c: "thread-search", case: "all", interaction: press('[data-slot="kind-thread-search-trigger"]') },
