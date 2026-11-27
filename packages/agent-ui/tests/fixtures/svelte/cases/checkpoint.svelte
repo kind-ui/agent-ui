@@ -28,6 +28,6 @@
     onRestore={restore}
     {restored}
     motion={variant === "reduced" ? "reduced" : undefined}
-    {...variant === "scoped" && { ...SCOPED, onCompare: compare }}
+    {...(variant === "scoped" ? { ...SCOPED, onCompare: compare } : {})}
   /><p id="below">Below</p>
 </div>
