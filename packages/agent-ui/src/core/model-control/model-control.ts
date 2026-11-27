@@ -15,6 +15,7 @@ import type {
   SettingsEntry,
   SettingsOption,
 } from "../../types/index.js";
+import { costNoteOf, costName as defaultCostName } from "../cost.js";
 import { cached, memo } from "../memo.js";
 import type { MenuTriggerState } from "../menu-base.js";
 import {
@@ -106,6 +107,16 @@ export type ModelControlOptions = SettingsBaseOptions & {
    * @default "Effort"
    */
   effortLabel?: string;
+  /**
+   * A line after the models that says what their `cost` means. Empty hides it.
+   * @default "Cost per request, relative to the default model." while any model has a `cost`
+   */
+  costNote?: string;
+  /**
+   * What screen readers hear after a model's name for its `cost`, in place of the cost as shown.
+   * @default ", 3 times the cost" for "3×", ", the same cost" for "1×", else ", " and the cost
+   */
+  costName?: (cost: string) => string;
 };
 
 export type ModelControlState = SettingsBaseState & {
@@ -123,6 +134,10 @@ export type ModelControlState = SettingsBaseState & {
   modelLabel: string;
   /** The `effortLabel`, else "Effort". */
   effortLabel: string;
+  /** The line after the models, or empty. */
+  costNote: string;
+  /** The `costName`, else the default. */
+  costName: (cost: string) => string;
 };
 
 /** What the trigger shows beside UI SDK `MenuTrigger`'s props: the model, and every effort label in one cell. */
@@ -209,16 +224,23 @@ export function modelEffort(
   );
 }
 
-const modelOptions = new WeakMap<ModelOption<unknown>[], SettingsOption<unknown>[]>();
-const toModelOptions = (models: ModelOption<unknown>[]) =>
-  cached(modelOptions, models, () =>
-    models.map(({ id, name, icon, group, disabled }) => ({
-      value: id,
-      label: name,
-      ...(icon !== undefined && { icon }),
-      ...(group !== undefined && { group }),
-      ...(disabled && { disabled }),
-    })),
+const modelOptions = new WeakMap<
+  (cost: string) => string,
+  WeakMap<ModelOption<unknown>[], SettingsOption<unknown>[]>
+>();
+const toModelOptions = (models: ModelOption<unknown>[], costName: (cost: string) => string) =>
+  cached(
+    cached(modelOptions, costName, () => new WeakMap()),
+    models,
+    () =>
+      models.map(({ id, name, icon, group, disabled, cost }) => ({
+        value: id,
+        label: name,
+        ...(icon !== undefined && { icon }),
+        ...(group !== undefined && { group }),
+        ...(disabled && { disabled }),
+        ...(cost && { meta: cost, metaLabel: costName(cost) }),
+      })),
   );
 
 const ids = new WeakMap<ModelOption<unknown>[], Map<string, ModelOption<unknown>>>();
@@ -269,13 +291,25 @@ const own = (options: ModelControlOptions) => ({
   actions: typeof options.onAction === "function" ? (options.actions ?? NO_ACTIONS) : NO_ACTIONS,
   modelLabel: options.modelLabel || "Model",
   effortLabel: options.effortLabel || "Effort",
+  costNote: costNoteOf(options.costNote, options.models ?? NO_MODELS),
+  costName: options.costName ?? defaultCostName,
 });
 
 type Context = PrimitiveContext<ModelControlOptions, ModelControlState, string>;
 
 type RowsInput = Pick<
   ModelControlState,
-  "entries" | "values" | "models" | "model" | "levels" | "effort" | "actions" | "modelLabel" | "effortLabel"
+  | "entries"
+  | "values"
+  | "models"
+  | "model"
+  | "levels"
+  | "effort"
+  | "actions"
+  | "modelLabel"
+  | "effortLabel"
+  | "costNote"
+  | "costName"
 >;
 
 /** The rows: Model and Effort, in the menu itself, then the host's choices and toggles. */
@@ -293,9 +327,10 @@ const modelControlRows = (input: RowsInput): SettingsMenuRow[] => {
       {
         id: MODEL_CONTROL_MODEL,
         label: input.modelLabel,
-        options: toModelOptions(input.models),
+        options: toModelOptions(input.models, input.costName),
         actions,
         inline: true,
+        note: input.costNote,
       },
       input.model,
     ),
@@ -344,6 +379,8 @@ const base = settingsBase<ModelControlOptions>({
         actions: PickerAction<unknown>[],
         modelLabel: string,
         effortLabel: string,
+        costNote: string,
+        costName: (cost: string) => string,
       ) =>
         modelControlRows({
           entries,
@@ -355,6 +392,8 @@ const base = settingsBase<ModelControlOptions>({
           actions,
           modelLabel,
           effortLabel,
+          costNote,
+          costName,
         }),
     );
     return (state) => {
@@ -369,6 +408,8 @@ const base = settingsBase<ModelControlOptions>({
         own.actions,
         own.modelLabel,
         own.effortLabel,
+        own.costNote,
+        own.costName,
       );
     };
   },
@@ -424,6 +465,8 @@ export const modelControlPrimitive: ModelControlPrimitive = definePrimitive<
     onAction: "callback",
     modelLabel: "string",
     effortLabel: "string",
+    costNote: "string",
+    costName: "value",
   },
   state: (options) => {
     const shown = own(options);

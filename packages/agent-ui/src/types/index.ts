@@ -45,6 +45,8 @@ export type {
   TokenUsage,
   TranscriptSegment,
   TranscriptWord,
+  UsageLimit,
+  UsageSlice,
 } from "./records.js";
 export type { Step, StepBase, StepStatus } from "./step.js";
 export type { Approval, ToolCall } from "./tool.js";

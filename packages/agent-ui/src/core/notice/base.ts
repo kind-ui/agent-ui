@@ -6,9 +6,12 @@ import {
   type SlotFactory,
 } from "@ui-sdk/core";
 import type { BaseSlotProps } from "@ui-sdk/core/renderer";
+import { createCountdown } from "../countdown.js";
 import { bindLeavingRow } from "../leaving.js";
 import { enter, type MotionMode } from "../motion/index.js";
+import { leftText, localTimeZone, resetWhen } from "../reset.js";
 import { nearestTabStop } from "../tab-stop.js";
+import { WORDS } from "../words.js";
 
 export type NoticeVariant = "info" | "success" | "warning" | "error";
 
@@ -24,10 +27,20 @@ export type NoticeOptions = {
    */
   label?: string;
   /**
-   * Called once Dismiss has faded the notice out: remove the notice then. Shows Dismiss while set. Return a promise
-   * to wait for it: a rejection brings the notice back.
+   * Called once Dismiss has faded the notice out: remove the notice then. Shows Dismiss while set and `dismissible`.
+   * Return a promise to wait for it: a rejection brings the notice back.
    */
   onDismiss?: () => unknown;
+  /**
+   * Whether Dismiss shows while `onDismiss` is set. A notice at a limit (`"error"`) can't be dismissed by default.
+   * @default true, unless `variant` is `"error"`
+   */
+  dismissible?: boolean;
+  /**
+   * ISO 8601: when a limit resets. Shows a reset line ("Resets Tuesday at 9:00 AM."); under an hour it counts down in
+   * minutes ("You can send messages again in 42 min." at `"error"`) and says when it's over.
+   */
+  resetsAt?: string;
   /**
    * Where focus goes when Dismiss is pressed. Defaults to the next element Tab reaches after the notice, else the
    * last one before it.
@@ -46,8 +59,16 @@ export type NoticeState = {
   variant: NoticeVariant;
   /** The title, or empty. */
   label: string;
-  /** Whether `onDismiss` is set. */
+  /** Whether `onDismiss` is set and the notice is `dismissible`. */
   canDismiss: boolean;
+  /** The `resetsAt` option. */
+  resetsAt: string | undefined;
+  /** Seconds until `resetsAt`, counted once the notice is in the page; `null` before that or without one. */
+  resetSeconds: number | null;
+  /** The page's time zone, read once the notice is in the page. Null on the server. */
+  timeZone: string | null;
+  /** Whether it's an alert: an `"error"` notice added after the page loaded. */
+  alert: boolean;
   /** True from Dismiss until the host removes the notice, or `onDismiss` rejects. */
   dismissing: boolean;
   /** The `motion` option. */
@@ -59,6 +80,8 @@ export type NoticeApi = {
   readonly dismiss: (() => void) | undefined;
   /** Plays the entrance and the announcement of a notice added after the page loaded, and the exit. Called by the root slot. */
   bindRoot: (el: HTMLElement, part: { key: string; props: unknown }) => () => void;
+  /** The reset line, like "Resets Tuesday at 9:00 AM.", or empty. */
+  resetText: (state: NoticeState) => string;
 };
 
 export type NoticeBaseConfig<Options extends NoticeOptions> = {
@@ -68,6 +91,8 @@ export type NoticeBaseConfig<Options extends NoticeOptions> = {
   label?: (options: Options) => string;
   /** Whether the announcement interrupts what a screen reader is saying. Else it waits. */
   urgent?: (options: Options) => boolean;
+  /** Whether an `"error"` notice added after the page loaded takes `role="alert"`, in place of its announcement. */
+  alertOnError?: boolean;
 };
 
 const VARIANTS: Record<NoticeVariant, { mark: string; name: string }> = {
@@ -105,6 +130,7 @@ export const noticeBase = <
   variant: defaultVariant = "info",
   label: defaultLabel = () => "",
   urgent = () => false,
+  alertOnError = false,
 }: NoticeBaseConfig<Options> = {}) => {
   const variantOf = (options: Options): NoticeVariant =>
     // Web attributes are untyped: an unknown variant reads as the default.
@@ -113,7 +139,8 @@ export const noticeBase = <
   const presentation = (options: Options) => ({
     variant: variantOf(options),
     label: labelOf(options),
-    canDismiss: options.onDismiss !== undefined,
+    canDismiss: options.onDismiss !== undefined && (options.dismissible ?? variantOf(options) !== "error"),
+    resetsAt: options.resetsAt,
     motion: options.motion ?? "auto",
   });
   return {
@@ -121,10 +148,19 @@ export const noticeBase = <
       variant: "string",
       label: "string",
       onDismiss: "action",
+      dismissible: "boolean",
+      resetsAt: "string",
       focusFallback: "value",
       motion: "string",
     } as const,
-    state: (options: Options): NoticeState => ({ ...presentation(options), dismissing: false }),
+    live: ["resetSeconds"] as "resetSeconds"[],
+    state: (options: Options): NoticeState => ({
+      ...presentation(options),
+      dismissing: false,
+      resetSeconds: null,
+      timeZone: null,
+      alert: false,
+    }),
     // Typed on `State`, so a component's own `sync` can spread it.
     sync: (options: Options) => presentation(options) as Partial<State>,
     api: (context: PrimitiveContext<Options, NoticeState, string>): NoticeApi => {
@@ -149,6 +185,11 @@ export const noticeBase = <
           context.options().focusFallback?.() ?? (lost.el.isConnected ? nearestTabStop(lost.el) : undefined),
       });
       const dismiss = () => store.set({ dismissing: true });
+      const countdown = createCountdown(context, {
+        key: "resetSeconds",
+        at: () => store.get().resetsAt,
+        minutes: true,
+      });
 
       return {
         get dismiss() {
@@ -160,11 +201,16 @@ export const noticeBase = <
           // A notice on the page as it loads is read with the page; one added later comes in and is announced.
           const added = !seen.has(el) && !pageLoading(el.ownerDocument);
           if (added) void enter(el, "fade-up", { motion: store.get().motion });
+          store.set({ timeZone: localTimeZone() ?? null });
+          const stopCountdown = countdown.bind();
           // A frame later, since web hosts can only set the label once the element exists.
           const frame = requestAnimationFrame(() => {
             shown = true;
             seen.add(el);
-            if (added) announceLabel(context.options());
+            if (!added) return;
+            // An error added later is an alert, which reads itself.
+            if (alertOnError && store.get().variant === "error") store.set({ alert: true });
+            else announceLabel(context.options());
           });
           let bound = true;
           const unbind = bindLeavingRow(el, {
@@ -183,14 +229,29 @@ export const noticeBase = <
           return () => {
             bound = false;
             cancelAnimationFrame(frame);
+            stopCountdown();
             unbind();
           };
+        },
+        resetText: (state) => {
+          const { resetsAt, resetSeconds: seconds, variant, timeZone } = state;
+          if (!resetsAt || Number.isNaN(Date.parse(resetsAt))) return "";
+          const error = variant === "error";
+          if (seconds === 0) return error ? `${WORDS.sendAgain}.` : WORDS.limitReset;
+          if (seconds !== null && seconds < 3600) {
+            const left = leftText(seconds * 1000);
+            return error ? `${WORDS.sendAgain} in ${left}.` : `${WORDS.resets} in ${left}.`;
+          }
+          // The countdown says how far off the reset is, so the words follow it without a clock of their own.
+          const now = seconds === null ? undefined : Date.parse(resetsAt) - seconds * 1000;
+          return `${WORDS.resets} ${resetWhen(resetsAt, { now, timeZone: timeZone ?? undefined, style: "long" })}.`;
         },
       };
     },
     slots: (slot: SlotFactory<State, Api>) => ({
       root: slot({
-        role: "note",
+        role: (state) => (state.alert ? "alert" : "note"),
+        roles: ["alert", "note"],
         attrs: (state, part) => ({
           "aria-labelledby": state.label ? `${part.id}-title` : undefined,
           "data-notice-part": "root",
@@ -216,6 +277,11 @@ export const noticeBase = <
         attrs: (_state, part) => ({ id: `${part.id}-title`, "data-notice-part": "title" }),
       }),
       description: slot({ attrs: () => ({ "data-notice-part": "description" }) }),
+      reset: slot<BaseSlotProps, { text: string }>({
+        present: (state) => state.resetsAt !== undefined && !Number.isNaN(Date.parse(state.resetsAt)),
+        state: (state, { api }) => ({ text: api.resetText(state) }),
+        attrs: () => ({ "data-notice-part": "reset" }),
+      }),
       actions: slot({ attrs: () => ({ "data-notice-part": "actions" }) }),
       dismiss: slot({
         role: "button",

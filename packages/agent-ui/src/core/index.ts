@@ -145,17 +145,24 @@ export {
   fitChips,
 } from "./context-bar/index.js";
 export {
+  type ContextBreakdown,
   type ContextLevel,
+  type ContextLimitRow,
   type ContextMeterApi,
+  type ContextMeterBarState,
   type ContextMeterOpenChangeReason,
   type ContextMeterOptions,
   type ContextMeterPrimitive,
   type ContextMeterState,
   type ContextMeterValueState,
   type ContextRow,
+  type ContextSlice,
+  contextBreakdown,
+  contextLimits,
   contextMeterPrimitive,
   contextRows,
   contextValueText,
+  limitAmount,
 } from "./context-meter/index.js";
 export {
   type ConversationApi,
@@ -781,6 +788,7 @@ export {
   findMatches,
   searchText,
 } from "./conversation-search/index.js";
+export { costName } from "./cost.js";
 export { type Countdown, type CountdownOptions, countdownText, createCountdown } from "./countdown.js";
 export {
   type DiffAction,
@@ -805,6 +813,7 @@ export {
   diffPrimitive,
   diffRows,
 } from "./diff/index.js";
+export { leftText, type ResetOptions, type ResetStyle, resetWhen } from "./reset.js";
 export { failedAfterText, retryAnnouncement, retryReason, retryText } from "./retry.js";
 export {
   NOT_STALLED,

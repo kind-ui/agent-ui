@@ -31,6 +31,8 @@ export type PickerRow = {
   description: string | undefined;
   /** Its trailing text. */
   meta: string | undefined;
+  /** What screen readers hear in place of `meta`: render `meta` hidden from them and this visually hidden after it. */
+  metaLabel: string | undefined;
   /** Passed through untouched, for the render layer to draw. */
   icon: unknown;
   /** Whether choosing it opens a page. */
@@ -81,6 +83,7 @@ const itemRow = (item: PickerItem<unknown>, chosen: string | null, check: boolea
     label: item.label,
     description: item.description,
     meta: item.meta,
+    metaLabel: item.meta === undefined ? undefined : item.metaLabel,
     icon: item.icon,
     opens,
     option: option(itemKey(item.value), item.label, {
@@ -98,6 +101,7 @@ const actionRow = (action: PickerAction<unknown>): PickerRow => ({
   label: action.label,
   description: action.description,
   meta: undefined,
+  metaLabel: undefined,
   icon: action.icon,
   opens: false,
   option: option(actionKey(action.id), action.label, {
@@ -111,6 +115,7 @@ const backRow = (page: string, label: string): PickerRow => ({
   label,
   description: undefined,
   meta: undefined,
+  metaLabel: undefined,
   icon: undefined,
   opens: false,
   option: option(backKey(page), label),
