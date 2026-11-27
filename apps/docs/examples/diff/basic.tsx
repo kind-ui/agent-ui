@@ -65,7 +65,7 @@ export default function DiffExample() {
       <Diff
         className="w-full"
         files={files}
-        defaultOpen={[changes[0].path]}
+        defaultOpen={changes.slice(0, 1).map((file) => file.path)}
         onKeep={decide("kept")}
         onUndo={decide("undone")}
       />

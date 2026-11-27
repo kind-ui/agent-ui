@@ -1,6 +1,6 @@
 ---
 name: agent-ui
-description: Builds AI chat and agent interfaces with Agent UI (@kind-ui/agent-ui) in React, Vue, Svelte, Solid or Web Components. Covers choosing from its 56 components (conversation, message, composer and its controls, tool calls, approvals, reasoning, plans, developer output, thread list and sidebar), installing them from the @kind-ui shadcn registry, composing a chat, mapping AI SDK UIMessages with its adapter, exposing the page to agents with createAgent, asking a person before risky actions, and theming with its tokens. Use whenever a project has @kind-ui/agent-ui or @kind-ui components installed, or the user wants an AI chat, agent or tool-approval UI.
+description: Builds AI chat and agent interfaces with Agent UI (@kind-ui/agent-ui) in React, Vue, Svelte, Solid or Web Components. Covers choosing from its 58 components (conversation, message, composer and its controls, tool calls, approvals, reasoning, plans, developer output, thread list and sidebar), installing them from the @kind-ui shadcn registry, composing a chat, mapping AI SDK UIMessages with its adapter, exposing the page to agents with createAgent, asking a person before risky actions, and theming with its tokens. Use whenever a project has @kind-ui/agent-ui or @kind-ui components installed, or the user wants an AI chat, agent or tool-approval UI.
 ---
 
 # Build with Agent UI
@@ -17,7 +17,7 @@ Agent UI is the parts of an AI interface: a conversation, messages, streaming Ma
 
 ## Pick what you need
 
-1. **Choose components:** [references/components.md](references/components.md) lists all 56 by job, with when to use each.
+1. **Choose components:** [references/components.md](references/components.md) lists all 58 by job, with when to use each.
 2. **Install them:** [references/install.md](references/install.md): the framework layer, `components.json`, `npx shadcn@latest add @kind-ui/<name>` and version floors.
 3. **Compose the interface:** [references/compose.md](references/compose.md): a chat with a composer, tool calls with approval, the composer's controls and the sidebar shell.
 4. **Connect the AI SDK:** [references/ai-sdk.md](references/ai-sdk.md): `fromUIMessages`, parts, tool states and streaming.

@@ -33,7 +33,7 @@ import { enter, type MotionMode } from "../motion/index.js";
 import { createPendingAction } from "../pending.js";
 import { failedAfterText, retryAnnouncement, retryReason, retryText } from "../retry.js";
 import { nearestTabStop } from "../tab-stop.js";
-import { insertTextNearby } from "../text-target.js";
+import { textTargetNearby } from "../text-target.js";
 import { durationLabel, timeLabel, todayKey } from "../time.js";
 import { everyMinute } from "../today.js";
 import { WORDS } from "../words.js";
@@ -440,10 +440,21 @@ const DELIVERY_TEXT: Record<MessageDelivery, string> = {
 /** The footer's words: "Queued, not sent", "Steering…" or "Not sent". Empty once delivered. */
 export const messageDeliveryText = (delivery: MessageDelivery | undefined): string =>
   delivery ? DELIVERY_TEXT[delivery] : "";
+const DELIVERY_DESCRIPTION: Record<MessageDelivery, string> = {
+  ...DELIVERY_TEXT,
+  steering: WORDS.steeringDescription,
+};
 const DELIVERIES: ReadonlySet<string> = new Set(Object.keys(DELIVERY_TEXT));
 const withdrawable = (state: MessageState) =>
   state.canWithdraw && (state.delivery === "queued" || state.delivery === "steering");
 const retrying = (state: MessageState) => state.retryAttempt !== null && state.outcome === null;
+
+const firstCount = (seconds: number | undefined): number | null =>
+  seconds === undefined || !(seconds > 0)
+    ? null
+    : seconds >= 60
+      ? Math.floor(seconds / 60) * 60
+      : Math.ceil(seconds);
 
 /** The retry line's words after its reason, ticking with the countdown. */
 export const messageRetryText = (
@@ -613,7 +624,8 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     outcomePending: false,
     deliveryPending: false,
     retryPending: false,
-    retrySeconds: null,
+    // What the countdown shows first, so server markup and hydration agree before the root binds and counts.
+    retrySeconds: firstCount(options.retry?.retryAfter),
     editing: null,
     copied: false,
   }),
@@ -684,22 +696,22 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       name: "onWithdraw" | "onResend" | "onRetryNow" | "onCancelRetry",
       press: MessageDeliveryDetails["reason"],
       event?: Event,
-      then?: (source: ChangeSource) => void,
+      resolved?: (source: ChangeSource) => void,
     ) => {
       const call = context.options()[name];
       if (!call) return;
       const reason = event ? press : "imperative";
       const source = actionSource(event, reason);
+      // `resolved` runs as the host's promise resolves, even when the host removed the message on the way, since the
+      // pending action's own result is stale once the instance is destroyed.
+      const run = () => Promise.resolve(call({ reason, source })).then(() => resolved?.(source));
       // A call that went through stays locked until the host answers it with new options.
-      void pending
-        .run(() => call({ reason, source }))
-        ?.then((result) => {
-          if (result !== "done") return;
-          store.set(
-            name === "onWithdraw" || name === "onResend" ? { deliveryPending: true } : { retryPending: true },
-          );
-          then?.(source);
-        });
+      void pending.run(run)?.then((result) => {
+        if (result !== "done") return;
+        store.set(
+          name === "onWithdraw" || name === "onResend" ? { deliveryPending: true } : { retryPending: true },
+        );
+      });
     };
     let status = store.get().status;
     context.onOptions((options) => {
@@ -811,10 +823,14 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
       get withdraw() {
         const state = store.get();
         return withdrawable(state) && !state.deliveryPending
-          ? (event?: Event) =>
+          ? (event?: Event) => {
+              // Read now, while the message is in the page: the host may remove it as the call resolves.
+              const insert = textTargetNearby(context.element("root"));
+              const value = text();
               runDelivery(pendingDelivery, "onWithdraw", "withdraw-press", event, (source) =>
-                insertTextNearby(context.element("root"), text(), source, "queue-edit"),
-              )
+                insert?.(value, source, "queue-edit"),
+              );
+            }
           : undefined;
       },
       get resend() {
@@ -915,14 +931,14 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
   slots: (slot) => ({
     root: slot({
       role: "article",
-      attrs: (state, part) => ({
+      attrs: (state) => ({
         "data-role": state.role,
         "data-status": state.status,
         "data-editing": state.editing === null ? undefined : "",
         "data-continued": state.continued ? "" : undefined,
         "data-delivery": state.delivery,
         "aria-busy": state.outcomePending ? "true" : undefined,
-        "aria-describedby": state.delivery ? `${part.id}-delivery` : undefined,
+        "aria-description": state.delivery && DELIVERY_DESCRIPTION[state.delivery],
       }),
       bind: (_el, { api }) => api.bindRoot(),
     }),
@@ -1023,7 +1039,7 @@ export const messagePrimitive: MessagePrimitive = definePrimitive({
     }),
     "delivery-text": slot<BaseSlotProps, { text: string }>({
       state: (state) => ({ text: messageDeliveryText(state.delivery) }),
-      attrs: (state, part) => ({ id: `${part.id}-delivery`, "data-delivery": state.delivery }),
+      attrs: (state) => ({ "data-delivery": state.delivery }),
     }),
     withdraw: slot<BaseSlotProps, { label: string }>({
       role: "button",

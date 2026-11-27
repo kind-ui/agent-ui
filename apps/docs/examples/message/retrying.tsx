@@ -1,6 +1,6 @@
 "use client";
 import type { MessageStatus, RetryState } from "@kind-ui/agent-ui";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Message, MessageContent, MessageOutcome, MessageRetrying } from "@/components/ui/message";
 
 const text = "Retry with exponential backoff, and cap the number of attempts. The client should";
@@ -10,17 +10,17 @@ export default function MessageRetryingExample() {
   const [status, setStatus] = useState<MessageStatus>("streaming");
   const [retry, setRetry] = useState<RetryState | undefined>(first);
 
-  const next = () => {
-    if (!retry) return;
-    if (retry.attempt === retry.maxAttempts) setStatus("error");
-    else setRetry({ ...retry, attempt: retry.attempt + 1 });
-  };
+  // The attempt after `current` fails, until the last one does.
+  const next = useCallback((current: RetryState) => {
+    if (current.attempt === current.maxAttempts) setStatus("error");
+    else setRetry({ ...current, attempt: current.attempt + 1 });
+  }, []);
   // Each attempt fails here, once its countdown ends.
   useEffect(() => {
     if (status !== "streaming" || !retry) return;
-    const timer = setTimeout(next, (retry.retryAfter ?? 0) * 1000);
+    const timer = setTimeout(() => next(retry), (retry.retryAfter ?? 0) * 1000);
     return () => clearTimeout(timer);
-  });
+  }, [status, retry, next]);
 
   return (
     <div className="w-full max-w-xl">
@@ -29,7 +29,7 @@ export default function MessageRetryingExample() {
         status={status}
         text={text}
         retry={retry}
-        onRetryNow={next}
+        onRetryNow={() => retry && next(retry)}
         onCancelRetry={() => {
           setRetry(undefined);
           setStatus("aborted");

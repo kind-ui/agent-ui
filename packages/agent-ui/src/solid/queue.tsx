@@ -13,7 +13,9 @@ const parts = createParts(queuePrimitive, {
   "item-icon": "span",
   "item-title": "span",
   "item-description": "span",
-  "item-remove": "span",
+  "item-send": "button",
+  "item-edit": "button",
+  "item-remove": "button",
   instructions: "span",
 });
 
@@ -30,6 +32,11 @@ export function Queue(props: QueueProps) {
 export const QueueSection = parts.Section;
 export const QueueSectionContent = parts.SectionContent;
 export const QueueItemIcon = parts.ItemIcon;
+/** Sends a queued item now, shown while `onSend` is set. Named "Send now"; an arrow unless you pass children. */
+export const QueueItemSend = parts.ItemSend;
+/** Gives a queued item back to the Composer it's docked in, shown while `onEdit` is set. A pencil unless you pass children. */
+export const QueueItemEdit = parts.ItemEdit;
+/** Removes an item, shown while `onRemove` is set. An ✕ unless you pass children. */
 export const QueueItemRemove = parts.ItemRemove;
 
 export type QueueSectionTriggerProps = ComponentProps<typeof parts.SectionTrigger>;
@@ -67,7 +74,10 @@ export function QueueList(props: QueueListProps) {
 
 export type QueueItemProps = ComponentProps<typeof parts.Item>;
 
-/** The item whose `id` is `value`. Without children, it shows the item's mark, title, description and remove button. */
+/**
+ * The item whose `id` is `value`. Without children, it shows the item's mark, title and description, then Send now,
+ * Edit and Remove.
+ */
 export function QueueItem(props: QueueItemProps) {
   return <parts.Item {...omit(props, "children")}>{props.children ?? <DefaultItemParts />}</parts.Item>;
 }
@@ -113,7 +123,11 @@ function DefaultItemParts() {
         <QueueItemTitle />
         <QueueItemDescription />
       </span>
-      <QueueItemRemove />
+      <span data-queue-actions="">
+        <QueueItemSend />
+        <QueueItemEdit />
+        <QueueItemRemove />
+      </span>
     </>
   );
 }

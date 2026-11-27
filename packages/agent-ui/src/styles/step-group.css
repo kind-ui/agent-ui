@@ -22,6 +22,10 @@
       white-space: normal;
       overflow-wrap: anywhere;
     }
+    & > [data-step-part="trigger"] > [data-step-part="meta"] {
+      font-size: var(--kind-text-sm);
+      line-height: var(--kind-text-md-leading);
+    }
   }
 
   /* The host's rows sit on the guide line, their marks under the title's. The rows' own triggers pad their marks by
@@ -43,6 +47,11 @@
     }
     & > :last-child {
       padding-block-end: 2px;
+    }
+
+    /* A turn's rows read as sentences, at the text's own weight. */
+    & [data-step-part="title"] {
+      font-weight: var(--kind-font-weight-regular);
     }
 
     /* Done rows recede; what runs, waits or failed keeps full contrast (step.css). */

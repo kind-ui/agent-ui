@@ -1,0 +1,132 @@
+---
+title: Diff
+description: Show what an agent changed, one file or a whole run, and keep or undo it by file or by change.
+---
+
+import DiffExample from "../../../examples/diff/basic";
+import DiffSingleExample from "../../../examples/diff/single";
+import DiffStreamingExample from "../../../examples/diff/streaming";
+
+Use a diff when an agent has edited files and the person decides what stays. The edits are already applied: **Keep** leaves an edit as it is, and **Undo** reverts it. With several files, a summary sits above them with **Keep all** and **Undo all**.
+
+<Example caption="Hover a file or a change, or focus it, to show its Keep and Undo. Press Undo all to see it ask first. Each decision shows Keeping… for a moment, then Kept or Undone in the buttons' place.">
+  <DiffExample />
+
+  <ExampleCode example="diff/basic" />
+</Example>
+
+## Installation
+
+<Install name="diff" />
+
+## Composition
+
+```text
+Diff
+├── DiffSummary
+│   ├── DiffSummaryTitle
+│   ├── DiffSummaryCounts
+│   ├── DiffSummaryProgress
+│   ├── DiffSummaryOutcome
+│   ├── DiffSummaryMark
+│   ├── DiffSummaryActions
+│   │   ├── DiffUndoAllQuestion
+│   │   ├── DiffUndoAll
+│   │   ├── DiffKeepAll
+│   │   ├── DiffUndoAllCancel
+│   │   └── DiffUndoAllConfirm
+│   └── DiffSummaryError
+└── DiffList
+    └── DiffFile
+        ├── DiffFileTrigger
+        │   ├── DiffFilePath
+        │   ├── DiffFileOldPath
+        │   ├── DiffFileStatus
+        │   ├── DiffFileCounts
+        │   └── DiffFileMark
+        ├── DiffFileActions
+        │   ├── DiffFileError
+        │   ├── DiffFileUndo
+        │   ├── DiffFileKeep
+        │   └── DiffFileOutcome
+        └── DiffFileContent
+            ├── DiffFileNote
+            └── DiffViewport
+                ├── DiffTable
+                │   ├── DiffHead
+                │   │   └── DiffColumn
+                │   ├── DiffChange
+                │   │   └── DiffChangeTitle
+                │   └── DiffLine
+                │       ├── DiffOldNumber
+                │       ├── DiffNewNumber
+                │       ├── DiffSign
+                │       └── DiffCode
+                │           ├── DiffCollapsed
+                │           └── DiffCollapsedText
+                └── DiffShowAll
+```
+
+`Diff` renders all of these. The root is a region named "Changes", or by the path of a one-file diff. Each file's trigger is a native button that opens its lines, named by the path, its status and its counts, like "src/lib/auth/session.ts Added 38 additions". The lines are a table with column headers for screen readers; added and removed lines are `ins` and `del`, with hidden words before them. Line numbers and signs are drawn from attributes, so copying lines copies only code.
+
+## Usage
+
+### Files
+
+Pass `files`, one `DiffFile` each. Give each a unified `patch`, as `git diff` writes it, or `before` and `after`, which the diff compares itself. A patch's headers fill in the file's `status` and a rename's `oldPath`; you can pass them yourself too. A file row says Added, Deleted or Renamed (a modified file says nothing), and a rename shows "from" its old path. Counts read like `+4 −2`, leaving out a side that's zero. Long paths lose their start, so the file name stays.
+
+Runs of more than 6 unchanged lines keep 3 on each side and fold into **Show N lines**, which opens them in place. Find in page opens them too. A file past 2,000 rows stops there with **Show full diff**. A binary file says "Binary file, not shown", and a rename without changes says "Renamed, no changes".
+
+Pass `highlight`, the same function [Code Block](./code-block.mdx) takes, to color each side; lines show plain until it resolves. Changed words inside a line that reads as an edit of another get a stronger tint.
+
+### One File
+
+With one file there's no summary: the file's row is the header, and it starts open.
+
+<Example caption="One file's change, with the changed words marked.">
+  <DiffSingleExample />
+
+  <ExampleCode example="diff/single" />
+</Example>
+
+### Keep and Undo
+
+Pass `onKeep` and `onUndo` to offer Keep and Undo. Each gets the target and `details`: `{ path, change }` for one change of a file with several, `{ path }` for a file, and `{}` for every undecided file. `details.reason` is `"keep-press"`, `"undo-press"`, `"shortcut"` or `"imperative"`, and `details.source` says who acted.
+
+Return a promise, and the target shows **Keeping…** or **Undoing…** until it settles. Once it resolves, the target stays locked until you report the outcome in `files`: set a file's `decision` to `"kept"` or `"undone"`, or a change's in `changes`, by its index. Replacing the file's patch unlocks it too. If the promise rejects, the row says "Couldn't undo `auth.ts`" and its buttons stay.
+
+A decided file or change shows **Kept** or **Undone** in its buttons' place, taking focus if a pressed button had it. An undone change stays where it is, dimmed. The summary counts the files reviewed, "2 of 4 reviewed", and once every file is decided says "All changes reviewed" with "3 kept, 1 undone"; Keep all and Undo all leave, and focus moves to that line. Outcomes are announced once, like "Kept session.ts".
+
+**Undo all** asks first, in place: "Undo all 4 files? This can't be undone." with **Cancel** and **Undo all**. Cancel takes focus. Pass `perChange={false}` when you can only apply whole files, and `keepLabel` and `undoLabel` to rename the buttons.
+
+With a mouse, a row's Keep and Undo show while you hover or focus it, in space that's always kept, so nothing moves. On touch screens and in a narrow diff they always show, as icon buttons named by the path, like "Keep src/app.ts".
+
+### Streaming
+
+Set a file's `streaming` while its patch arrives and pass the whole patch on each update; only its last change is read again. The summary says "Editing 2 files", the row shows a running mark in place of its counts, and nothing can be kept or undone until every file's patch has arrived. An open file follows its end while it streams.
+
+<Example caption="A new file streams in, then settles with its counts.">
+  <DiffStreamingExample />
+
+  <ExampleCode example="diff/streaming" />
+</Example>
+
+### Keyboard
+
+File rows are one Tab stop: Up and Down arrow keys move between them, Home and End jump to the first and last, and Enter or Space opens and closes one. A row's Undo and Keep follow it in Tab order. On a focused row or change, K keeps and U undoes. Each open file's lines scroll from the keyboard once you Tab to them. Pass `open` with `onOpenChange` to control which files are open.
+
+## API Reference
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/diff/diff.ts" name="DiffOptions" />
+
+<FrameworkNames name="diff" />
+
+### Agent
+
+An agent connected with `createAgent` finds the diff by its name and can run these actions; files are listed by path. While `onUndo` is set, every action needs a person to confirm it, unless `agentConfirm` is `false`.
+
+<auto-type-table path="../../../../../packages/agent-ui/src/core/diff/diff.ts" name="DiffAgentActions" type='Pick<DiffApi, "keep" | "undo" | "open" | "expandAll" | "copy">' />
+
+<Caption>
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-diff>`, `files` is a property; the `can-keep` and `can-undo` attributes offer Keep and Undo, which fire `keep` and `undo` with the target as `detail.value` (call `event.detail.waitUntil(promise)` to show Keeping… until it settles), and `onOpenChange` fires `openchange`.
+</Caption>

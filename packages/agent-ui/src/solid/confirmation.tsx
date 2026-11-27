@@ -1,7 +1,7 @@
 import { codeSpans, confirmationPrimitive, WORDS } from "@kind-ui/agent-ui/core";
 import type { ComponentProps, JSX } from "@solidjs/web";
 import { createParts } from "@ui-sdk/solid/primitive";
-import { For, omit, Show } from "solid-js";
+import { omit, Show } from "solid-js";
 import { KindTextarea } from "./internal/textarea.js";
 
 const parts = createParts(confirmationPrimitive, {
@@ -38,11 +38,7 @@ export const ConfirmationRiskIcon = parts.RiskIcon;
 
 // Text with its backticks as `code`.
 function Code(props: { text: string }) {
-  return (
-    <For each={codeSpans(props.text)} keyed={false}>
-      {(piece, index) => (index % 2 ? <code>{piece()}</code> : piece())}
-    </For>
-  );
+  return <>{codeSpans(props.text).map((piece, index) => (index % 2 ? <code>{piece}</code> : piece))}</>;
 }
 
 export type ConfirmationTitleProps = ComponentProps<typeof parts.Title>;

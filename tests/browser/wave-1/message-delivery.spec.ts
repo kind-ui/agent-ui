@@ -48,7 +48,7 @@ test("the footer says where each message is, describes it, and offers Withdraw o
   await expect(part(page, "queued", "delivery")).toHaveText(/^Queued, not sent\s*Withdraw$/, shown);
   await expect(part(page, "not-sent", "delivery")).toHaveText(/^Not sent\s*Retry$/, shown);
   await expect(page.getByRole("article", { name: "Steering message" })).toHaveAccessibleDescription(
-    "Steering…",
+    "Steering, not yet read",
   );
   await expect(page.locator("#queued")).toHaveAttribute("data-delivery", "queued");
   // Withdraw meets the 24px target.
@@ -78,12 +78,24 @@ test("Withdraw locks, then gives the text back to the composer once it resolves"
   await settle(page, false);
   await expect(part(page, "queued", "withdraw")).not.toHaveAttribute("aria-disabled");
   await expect(editor).toHaveText("Use the session table, not a cookie");
+
+  // A host that removes the message as its call resolves still gets the text back.
+  await part(page, "queued", "withdraw").click();
+  await page.evaluate(() => {
+    const host = (window as unknown as Fixture).kindDelivery;
+    host.settle(true);
+    host.remove("queued");
+  });
+  await expect(page.locator("#queued")).toBeHidden();
+  await expect(editor).toHaveText(
+    /Use the session table, not a cookie\s*Then add a test for the expired session case/,
+  );
 });
 
 test("delivered, the footer is gone and nothing says it was steered", async ({ page }) => {
   await set(page, "steering", {});
   await expect(part(page, "steering", "delivery")).toBeHidden();
-  await expect(page.locator("#steering")).not.toHaveAttribute("aria-describedby");
+  await expect(page.locator("#steering")).not.toHaveAttribute("aria-description");
   await set(page, "queued", { delivery: "not-sent" });
   await expect(part(page, "queued", "delivery")).toHaveText(/^Not sent\s*Retry$/, shown);
   await expect.poll(() => announced(page)).toContain("Not sent");

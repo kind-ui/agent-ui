@@ -1,6 +1,7 @@
 import type { ComponentProps } from "svelte";
 import { parts } from "./parts.js";
 import Terminal from "./Terminal.svelte";
+import TerminalApproval from "./TerminalApproval.svelte";
 import TerminalCommand from "./TerminalCommand.svelte";
 import TerminalExit from "./TerminalExit.svelte";
 import TerminalJump from "./TerminalJump.svelte";
@@ -18,6 +19,7 @@ export const TerminalViewport = parts.Viewport;
 
 export {
   Terminal,
+  TerminalApproval,
   TerminalCommand,
   TerminalExit,
   TerminalJump,
@@ -30,6 +32,7 @@ export type TerminalProps = ComponentProps<typeof Terminal>;
 export type TerminalTitleProps = ComponentProps<typeof TerminalTitle>;
 export type TerminalExitProps = ComponentProps<typeof TerminalExit>;
 export type TerminalMetaProps = ComponentProps<typeof TerminalMeta>;
+export type TerminalApprovalProps = ComponentProps<typeof TerminalApproval>;
 export type TerminalCommandProps = ComponentProps<typeof TerminalCommand>;
 export type TerminalOutputProps = ComponentProps<typeof TerminalOutput>;
 export type TerminalLineProps = ComponentProps<typeof TerminalLine>;
