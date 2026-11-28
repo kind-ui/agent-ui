@@ -14,6 +14,8 @@ export const budgets = {
   terminalLine: { writes: 8, renders: 8, notified: 5, layoutReads: 37 },
   // The fixture's segments fit on one line and their header has a set height, so how many are in view doesn't depend
   // on the platform's fonts.
+  // A streamed line adds its row and renders its file's parts, whatever the file's length.
+  diffStream: { writes: 1, renders: 21, notified: 21, layoutReads: 18 },
   transcriptWord: { writes: 3, renders: 3, notified: 3, layoutReads: 4 },
   transcriptSegment: { writes: 32, renders: 32, notified: 35, layoutReads: 9 },
   transcriptSearch: { writes: 72, renders: 201, notified: 140, layoutReads: 2 },

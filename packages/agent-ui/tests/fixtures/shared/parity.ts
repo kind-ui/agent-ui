@@ -253,6 +253,11 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
     { c: "stalled", case: "all" },
   ],
   "streaming-text": [indicators],
+  diff: [
+    { c: "diff", case: "all", interaction: press('#ready [data-slot="kind-diff-undo-all"]') },
+    { c: "diff", case: "live", interaction: press('[data-slot="kind-diff-collapsed"]') },
+    { c: "diff", case: "single" },
+  ],
   "step-group": [
     { c: "step-group", case: "all", interaction: press('#done [data-slot="kind-step-group-trigger"]') },
     { c: "step-group", case: "live" },

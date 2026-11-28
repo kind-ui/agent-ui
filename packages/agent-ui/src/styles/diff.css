@@ -1,0 +1,661 @@
+/* Diff (Wave 7 spec §4): a summary over a list of file rows, each opening to a table of old number, new number,
+   sign and code. Keep and Undo show on a row's hover or focus, in a column whose width is kept, so nothing moves. */
+@layer components {
+  [data-slot="kind-diff"] {
+    --kind-diff-max-height: 32rem;
+    --kind-diff-actions-width: 8.5rem;
+    --kind-diff-added: color-mix(in oklab, var(--kind-color-success) 14%, transparent);
+    --kind-diff-removed: color-mix(in oklab, var(--kind-color-danger) 12%, transparent);
+    --kind-diff-added-word: color-mix(in oklab, var(--kind-color-success) 34%, transparent);
+    --kind-diff-removed-word: color-mix(in oklab, var(--kind-color-danger) 30%, transparent);
+    --kind-diff-added-text: light-dark(oklch(0.5 0.13 155), oklch(0.78 0.14 155));
+    --kind-diff-removed-text: light-dark(oklch(0.52 0.19 27), oklch(0.76 0.15 25));
+    /* Lucide "undo-2" and "chevrons-up-down", see THIRD_PARTY_NOTICES.md. */
+    --kind-diff-undo-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 14 4 9l5-5'/%3E%3Cpath d='M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11'/%3E%3C/svg%3E");
+    --kind-diff-expand-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 15 5 5 5-5'/%3E%3Cpath d='m7 9 5-5 5 5'/%3E%3C/svg%3E");
+
+    container: kind-diff / inline-size;
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    border-radius: var(--kind-radius-lg);
+    background-color: var(--kind-color-surface);
+    box-shadow: 0 0 0 1px var(--kind-color-hairline);
+    font-size: var(--kind-text-sm);
+    line-height: var(--kind-text-sm-leading);
+    letter-spacing: var(--kind-text-sm-tracking);
+    color: var(--kind-color-fg);
+  }
+
+  /* Custom elements on Web Components are inline until styled. */
+  :is(
+    [data-slot="kind-diff-summary-actions"],
+    [data-slot="kind-diff-list"],
+    [data-slot="kind-diff-file"],
+    [data-slot="kind-diff-file-content"],
+    [data-slot="kind-diff-file-note"],
+    [data-slot="kind-diff-viewport"],
+    [data-slot="kind-diff-table"],
+    [data-slot="kind-diff-summary-progress"],
+    [data-slot="kind-diff-summary-outcome"],
+    [data-slot="kind-diff-summary-error"]
+  ) {
+    display: block;
+  }
+
+  [data-diff-hidden] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* Summary: the title, its counts and the review progress, then Undo all and Keep all at the end. */
+  [data-slot="kind-diff-summary"] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    min-height: 3rem;
+    padding: 0.5rem 0.5rem 0.5rem 0.875rem;
+    border-block-end: 1px solid var(--kind-color-hairline);
+  }
+
+  [data-diff-heading] {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.5rem;
+    min-width: 0;
+  }
+
+  [data-slot="kind-diff-summary-title"] {
+    font-size: var(--kind-text-md);
+    line-height: var(--kind-text-md-leading);
+    letter-spacing: var(--kind-text-md-tracking);
+    font-weight: 600;
+  }
+
+  :is([data-slot="kind-diff-summary-progress"], [data-slot="kind-diff-summary-outcome"]) {
+    flex-basis: 100%;
+    border-radius: var(--kind-radius-sm);
+
+    &:focus-visible {
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset);
+    }
+    font-size: var(--kind-text-xs);
+    line-height: var(--kind-text-xs-leading);
+    color: var(--kind-color-muted);
+  }
+
+  :is([data-slot="kind-diff-summary-counts"], [data-slot="kind-diff-file-counts"]) {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  [data-diff-added] {
+    color: var(--kind-diff-added-text);
+  }
+  [data-diff-removed] {
+    color: var(--kind-diff-removed-text);
+  }
+
+  [data-slot="kind-diff-summary-mark"] {
+    margin-inline-end: 0.375rem;
+  }
+
+  [data-slot="kind-diff-summary-actions"] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.25rem;
+  }
+
+  [data-slot="kind-diff-undo-all-question"] {
+    margin-inline-end: 0.5rem;
+  }
+  [data-diff-warning] {
+    color: var(--kind-color-muted);
+  }
+
+  :is(
+    [data-slot="kind-diff-summary-error"],
+    [data-slot="kind-diff-file-error"],
+    [data-slot="kind-diff-change-error"]
+  ) {
+    color: var(--kind-color-danger);
+    font-size: var(--kind-text-xs);
+    line-height: var(--kind-text-xs-leading);
+  }
+  [data-slot="kind-diff-summary-error"] {
+    flex-basis: 100%;
+  }
+
+  /* File rows: the trigger fills the row, and the actions sit over its end, before the chevron. */
+  [data-slot="kind-diff-file"] {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+
+    & + & {
+      border-block-start: 1px solid var(--kind-color-hairline);
+    }
+  }
+
+  [data-slot="kind-diff-file-trigger"] {
+    grid-row: 1;
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    min-height: var(--kind-list-row-height);
+    padding: 0.5rem 2.25rem 0.5rem 0.75rem;
+    border: 0;
+    background: none;
+    font: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    text-align: start;
+    cursor: default;
+
+    &:hover,
+    &[data-open] {
+      background-color: var(--kind-color-hover);
+    }
+    &:focus-visible {
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
+    }
+
+    /* The chevron: right while closed, down while open. */
+    &::after {
+      content: "";
+      position: absolute;
+      inset-inline-end: 0.875rem;
+      top: calc(var(--kind-list-row-height) / 2 - 4px);
+      width: 6px;
+      height: 6px;
+      border-right: 1.5px solid var(--kind-color-muted);
+      border-bottom: 1.5px solid var(--kind-color-muted);
+      transform: rotate(-45deg);
+      transition: transform var(--kind-duration-base) var(--kind-ease-enter);
+    }
+    &[data-open]::after {
+      transform: translateY(-2px) rotate(45deg);
+    }
+    &:dir(rtl)::after {
+      transform: rotate(135deg);
+    }
+  }
+
+  /* Descendants, since on Web Components a button part sits in a `display: contents` wrapper. */
+  [data-slot="kind-diff-file"]:has(> [data-slot="kind-diff-file-actions"])
+    [data-slot="kind-diff-file-trigger"] {
+    padding-inline-end: calc(var(--kind-diff-actions-width) + 2.5rem);
+  }
+
+  [data-diff-name] {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  /* Long paths lose their start, so the file name stays. */
+  :is([data-slot="kind-diff-file-path"], [data-slot="kind-diff-file-old-path"]) {
+    overflow: hidden;
+    /* Right to left, so the ellipsis takes the start; `end` is then the left edge, where a path starts. */
+    direction: rtl;
+    text-align: end;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--kind-font-mono);
+    font-size: var(--kind-code-font-size);
+
+    & > bdi {
+      direction: ltr;
+    }
+  }
+  [data-slot="kind-diff-file-old-path"] {
+    font-size: var(--kind-text-xs);
+    line-height: var(--kind-text-xs-leading);
+    color: var(--kind-color-muted);
+  }
+
+  [data-slot="kind-diff-file-status"] {
+    flex-shrink: 0;
+    font-size: var(--kind-text-xs);
+    color: var(--kind-color-muted);
+  }
+
+  [data-slot="kind-diff-file-actions"] {
+    grid-row: 1;
+    grid-column: 2;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.25rem;
+    width: var(--kind-diff-actions-width);
+    margin-inline-end: 2.25rem;
+    pointer-events: none;
+
+    & > * {
+      pointer-events: auto;
+    }
+  }
+
+  /* With a pointer that hovers, a row's Keep and Undo show on its hover or focus; their space is always kept. */
+  @media (hover: hover) {
+    :is([data-slot="kind-diff-file"], [data-slot="kind-diff-change"])
+      :is(
+        [data-slot="kind-diff-file-undo"],
+        [data-slot="kind-diff-file-keep"],
+        [data-slot="kind-diff-change-undo"],
+        [data-slot="kind-diff-change-keep"]
+      ) {
+      opacity: 0;
+    }
+    [data-slot="kind-diff-file"]:is(
+        :has([data-slot="kind-diff-file-trigger"]:is(:hover, :focus-visible)),
+        :has(> [data-slot="kind-diff-file-actions"]:is(:hover, :focus-within))
+      )
+      > [data-slot="kind-diff-file-actions"]
+      :is([data-slot="kind-diff-file-undo"], [data-slot="kind-diff-file-keep"]),
+    [data-slot="kind-diff-change"]:is(:hover, :focus-within)
+      :is([data-slot="kind-diff-change-undo"], [data-slot="kind-diff-change-keep"]) {
+      opacity: 1;
+    }
+  }
+
+  :is([data-slot="kind-diff-file-outcome"], [data-slot="kind-diff-change-outcome"]) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: var(--kind-control-height-sm);
+    padding-inline: 0.5rem;
+    border-radius: var(--kind-radius-sm);
+    white-space: nowrap;
+    color: var(--kind-color-muted);
+
+    &:focus-visible {
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
+    }
+
+    /* A check or an arrow back before the words, so an outcome never looks like the button it replaced. */
+    &:is([data-state="kept"], [data-state="undone"])::before {
+      content: "";
+      flex-shrink: 0;
+      width: var(--kind-icon-size-sm);
+      height: var(--kind-icon-size-sm);
+      background-color: currentColor;
+      mask: var(--kind-icon-check) center / contain no-repeat;
+    }
+    &[data-state="undone"]::before {
+      mask-image: var(--kind-diff-undo-icon);
+    }
+  }
+
+  :is(
+    [data-slot="kind-diff-file-undo"],
+    [data-slot="kind-diff-file-keep"],
+    [data-slot="kind-diff-change-undo"],
+    [data-slot="kind-diff-change-keep"]
+  )::before {
+    content: "";
+    display: none;
+    width: var(--kind-icon-size);
+    height: var(--kind-icon-size);
+    background-color: currentColor;
+    mask: var(--kind-icon-check) center / contain no-repeat;
+  }
+  [data-diff-icon="undo"]::before {
+    mask-image: var(--kind-diff-undo-icon);
+  }
+
+  /* A file's lines. */
+  [data-slot="kind-diff-file-content"] {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    height: var(--kind-step-content-height);
+    overflow: hidden;
+    border-block-start: 1px solid var(--kind-color-hairline);
+    transition: opacity var(--kind-duration-base) var(--kind-ease-in-out);
+
+    &:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-slot="kind-diff-file-content"][data-motion="auto"] {
+      transition:
+        height var(--kind-duration-panel) var(--kind-ease-enter),
+        opacity var(--kind-duration-base) var(--kind-ease-in-out);
+
+      &:is([data-starting-style], [data-ending-style]) {
+        height: 0;
+      }
+    }
+  }
+  [data-slot="kind-diff-file-content"][data-motion="reduced"] {
+    transition-duration: var(--kind-duration-reduced);
+  }
+  [data-slot="kind-diff-file-content"][data-motion="none"] {
+    transition: none;
+  }
+
+  [data-slot="kind-diff-file-note"] {
+    padding: 0.75rem 0.875rem;
+    color: var(--kind-color-muted);
+    background-color: var(--kind-code-surface);
+  }
+
+  [data-slot="kind-diff-viewport"] {
+    max-height: var(--kind-diff-max-height);
+    overflow: auto;
+    overscroll-behavior: contain;
+    background-color: var(--kind-code-surface);
+    scrollbar-width: thin;
+    scrollbar-color: var(--kind-color-border) transparent;
+
+    &:focus-visible {
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
+    }
+  }
+
+  [data-slot="kind-diff-table"] {
+    display: grid;
+    grid-template-columns:
+      calc(var(--kind-diff-digits, 1) * 1ch + 1.25rem) calc(var(--kind-diff-digits, 1) * 1ch + 0.75rem)
+      1.5rem minmax(max-content, 1fr);
+    min-width: 100%;
+    width: max-content;
+    font-family: var(--kind-font-mono);
+    font-size: var(--kind-code-font-size);
+    line-height: var(--kind-code-line-height);
+  }
+
+  :is([data-slot="kind-diff-head"], [data-slot="kind-diff-line"], [data-slot="kind-diff-change"]) {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+  }
+
+  [data-slot="kind-diff-head"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  [data-slot="kind-diff-line"] {
+    &:where([data-kind="add"]) {
+      background-color: var(--kind-diff-added);
+    }
+    &:where([data-kind="remove"]) {
+      background-color: var(--kind-diff-removed);
+    }
+    /* An undone change stays where it is, dimmed. */
+    &[data-undone] > * {
+      opacity: 0.45;
+    }
+    &[data-motion="auto"] > * {
+      transition: opacity var(--kind-duration-base) var(--kind-ease-in-out);
+    }
+    &[data-motion="none"] > * {
+      transition: none;
+    }
+  }
+
+  /* Numbers and signs are drawn from attributes, so a copy holds only code. */
+  :is([data-slot="kind-diff-old-number"], [data-slot="kind-diff-new-number"]) {
+    padding-inline-end: 0.75rem;
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+    color: var(--kind-color-muted);
+    user-select: none;
+
+    &::before {
+      content: attr(data-line);
+    }
+  }
+  [data-slot="kind-diff-old-number"] {
+    padding-inline-start: 0.5rem;
+  }
+  [data-slot="kind-diff-sign"] {
+    user-select: none;
+    color: var(--kind-color-muted);
+
+    &::before {
+      content: attr(data-sign) / "";
+    }
+  }
+  /* Muted text falls under 4.5:1 on a changed line's tint, so there the numbers and sign take the text color. */
+  [data-slot="kind-diff-line"]:where([data-kind="add"], [data-kind="remove"])
+    > :is(
+      [data-slot="kind-diff-old-number"],
+      [data-slot="kind-diff-new-number"],
+      [data-slot="kind-diff-sign"]
+    ) {
+    color: var(--kind-color-fg);
+  }
+
+  [data-slot="kind-diff-code"] {
+    padding-inline-end: 0.875rem;
+    white-space: pre;
+
+    & :where(ins, del) {
+      text-decoration: none;
+    }
+    & :where([data-diff-changed]) {
+      border-radius: 2px;
+      background-color: var(--kind-diff-added-word);
+    }
+    & :where([data-italic]) {
+      font-style: italic;
+    }
+    & :where([data-bold]) {
+      font-weight: 700;
+    }
+  }
+  [data-slot="kind-diff-line"]:where([data-kind="remove"]) :where([data-diff-changed]) {
+    background-color: var(--kind-diff-removed-word);
+  }
+
+  /* A change's header and a collapsed run span every column. */
+  [data-slot="kind-diff-change"] {
+    font-family: var(--kind-font-sans, inherit);
+    font-size: var(--kind-text-xs);
+    color: var(--kind-color-muted);
+    background-color: var(--kind-color-hover);
+    border-block: 1px solid var(--kind-color-hairline);
+
+    &:first-of-type {
+      border-block-start: 0;
+    }
+  }
+  [data-slot="kind-diff-change-title"] {
+    position: sticky;
+    inset-inline-start: 0;
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: 2.25rem;
+    max-width: 100cqi;
+    padding-inline: 0.875rem 0.375rem;
+  }
+  [data-diff-change-text] {
+    flex: 1 1 auto;
+  }
+  [data-slot="kind-diff-change"][data-decision="undone"] [data-diff-change-text] {
+    opacity: 0.45;
+  }
+
+  [data-slot="kind-diff-line"]:where([data-kind="collapsed"]) {
+    color: var(--kind-color-muted);
+    background-color: var(--kind-color-hover);
+
+    &
+      > :is(
+        [data-slot="kind-diff-old-number"],
+        [data-slot="kind-diff-new-number"],
+        [data-slot="kind-diff-sign"]
+      ) {
+      display: none;
+    }
+    & > [data-slot="kind-diff-code"] {
+      position: sticky;
+      inset-inline-start: 0;
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      max-width: 100cqi;
+      height: var(--kind-control-height-sm);
+    }
+  }
+
+  [data-slot="kind-diff-collapsed"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 100%;
+    padding-inline: 0.875rem;
+    border: 0;
+    background: none;
+    font-family: var(--kind-font-sans, inherit);
+    font-size: var(--kind-text-xs);
+    color: inherit;
+
+    &::before {
+      content: "";
+      width: var(--kind-icon-size-sm);
+      height: var(--kind-icon-size-sm);
+      background-color: currentColor;
+      mask: var(--kind-diff-expand-icon) center / contain no-repeat;
+    }
+    &:hover {
+      color: var(--kind-color-fg);
+    }
+    &:focus-visible {
+      outline: var(--kind-focus-ring);
+      outline-offset: var(--kind-focus-offset-inset);
+    }
+  }
+
+  /* A block, since `hidden="until-found"` hides through `content-visibility`, which an inline box ignores. */
+  [data-slot="kind-diff-collapsed-text"] {
+    display: block;
+    white-space: pre;
+  }
+
+  [data-slot="kind-diff-show-all"] {
+    position: sticky;
+    inset-inline-start: 0;
+    margin: 0.25rem 0.5rem;
+  }
+
+  /* Forced colors replace a background, which is all a mask draws. */
+  @media (forced-colors: active) {
+    :is([data-slot="kind-diff-file-outcome"], [data-slot="kind-diff-change-outcome"])::before,
+    [data-slot="kind-diff-collapsed"]::before,
+    [data-diff-icon]::before {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+    }
+  }
+
+  /* Touch screens and narrow containers: Keep and Undo always show, as icon buttons named by the path. */
+  @media (hover: none) {
+    :is([data-slot="kind-diff-file"], [data-slot="kind-diff-change"])
+      :is(
+        [data-slot="kind-diff-file-undo"],
+        [data-slot="kind-diff-file-keep"],
+        [data-slot="kind-diff-change-undo"],
+        [data-slot="kind-diff-change-keep"]
+      ) {
+      opacity: 1;
+    }
+  }
+  @container kind-diff (width < 32rem) {
+    [data-slot="kind-diff"] {
+      --kind-diff-actions-width: 5.75rem;
+    }
+    [data-slot="kind-diff-summary-actions"] {
+      flex-basis: 100%;
+
+      &
+        > :is(
+          [data-slot="kind-diff-undo-all"],
+          [data-slot="kind-diff-keep-all"],
+          [data-slot="kind-diff-undo-all-cancel"],
+          [data-slot="kind-diff-undo-all-confirm"]
+        ) {
+        flex: 1 1 0;
+      }
+    }
+    [data-slot="kind-diff-undo-all-question"] {
+      flex-basis: 100%;
+    }
+    :is([data-slot="kind-diff-file"], [data-slot="kind-diff-change"])
+      :is(
+        [data-slot="kind-diff-file-undo"],
+        [data-slot="kind-diff-file-keep"],
+        [data-slot="kind-diff-change-undo"],
+        [data-slot="kind-diff-change-keep"]
+      ) {
+      width: var(--kind-control-height-sm);
+      padding: 0;
+      justify-content: center;
+      font-size: 0;
+      opacity: 1;
+
+      &::before {
+        display: block;
+      }
+    }
+    [data-slot="kind-diff-file-status"] {
+      display: none;
+    }
+    [data-slot="kind-diff-table"] {
+      grid-template-columns: 0 calc(var(--kind-diff-digits, 1) * 1ch + 1rem) 1.25rem minmax(max-content, 1fr);
+    }
+    [data-slot="kind-diff-old-number"] {
+      visibility: hidden;
+      padding: 0;
+    }
+    [data-slot="kind-diff-new-number"] {
+      padding-inline-start: 0.5rem;
+    }
+  }
+
+  /* 44 px targets under a coarse pointer, drawn at their size. */
+  @media (pointer: coarse) {
+    :is(
+        [data-slot="kind-diff-file-undo"],
+        [data-slot="kind-diff-file-keep"],
+        [data-slot="kind-diff-change-undo"],
+        [data-slot="kind-diff-change-keep"],
+        [data-slot="kind-diff-collapsed"]
+      ) {
+      position: relative;
+
+      &::after {
+        content: "";
+        position: absolute;
+        inset: 50% auto auto 50%;
+        width: var(--kind-hit-area);
+        height: var(--kind-hit-area);
+        translate: -50% -50%;
+      }
+    }
+  }
+}

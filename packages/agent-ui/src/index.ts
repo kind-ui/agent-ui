@@ -3,6 +3,8 @@ export type {
   Approval,
   ApprovalModeOption,
   ContextChip,
+  DiffDecision,
+  DiffFile,
   EffortLevel,
   FileTreeEntry,
   MenuEntry,

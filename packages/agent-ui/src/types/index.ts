@@ -13,6 +13,8 @@ export type {
   Answers,
   ApprovalModeOption,
   ContextChip,
+  DiffDecision,
+  DiffFile,
   EffortLevel,
   FileTreeEntry,
   MenuEntry,

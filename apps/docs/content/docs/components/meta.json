@@ -25,6 +25,7 @@
     "inline-citation",
     "document",
     "generated-image",
+    "diff",
     "file-tree",
     "terminal",
     "stack-trace",
