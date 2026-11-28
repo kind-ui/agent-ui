@@ -258,7 +258,10 @@ test("each limit is a meter with its share used and reset in words", async ({ pa
   const limits = page.locator('[data-slot="kind-context-meter-limits"] [role="meter"]');
   await expect(limits).toHaveCount(2);
   await expect(limits.first()).toHaveAccessibleName("5-hour limit");
-  await expect(limits.first()).toHaveAttribute("aria-valuetext", /^62% used, resets (\d+:00 [AP]M, in \d hr|[A-Z][a-z]{2} \d+:00 [AP]M)$/);
+  await expect(limits.first()).toHaveAttribute(
+    "aria-valuetext",
+    /^62% used, resets (\d+:00 [AP]M, in \d hr|[A-Z][a-z]{2} \d+:00 [AP]M)$/,
+  );
   await expect(limits.nth(1)).toHaveAttribute("data-level", "normal");
 });
 
