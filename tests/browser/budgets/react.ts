@@ -28,10 +28,11 @@ export const budgets = {
 
   // Rows are 36px in a 600px column, so as many are in view at 10 threads as at 1,000, whatever the fonts. Pinning
   // moves every row in view down one; appending to 10 threads fills the column with new rows. A row's time is one more
-  // part per row: a render, a re-read and two writes (its `aria-hidden` and text) for each row a change reaches.
-  threadSelect: { writes: 5, renders: 11, notified: 16, layoutReads: 2 },
-  threadPin: { writes: 119, renders: 39, notified: 199, layoutReads: 2 },
-  threadAppend: { writes: 214, renders: 84, notified: 85, layoutReads: 2 },
+  // part per row: a render, a re-read and two writes (its `aria-hidden` and text) for each row a change reaches. The
+  // second line and Unarchive are two more, rendered with the link and More even while absent.
+  threadSelect: { writes: 5, renders: 13, notified: 16, layoutReads: 2 },
+  threadPin: { writes: 125, renders: 43, notified: 233, layoutReads: 2 },
+  threadAppend: { writes: 249, renders: 98, notified: 99, layoutReads: 2 },
 
   // wave-6-task-11: Conversation Search
 

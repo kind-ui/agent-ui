@@ -206,7 +206,7 @@ export function ThreadListLink(props: ThreadListLinkProps) {
                   {summary.lead}
                   {summary.lead && summary.pieces.length > 0 ? " · " : ""}
                   <For each={summary.pieces} keyed={false}>
-                    {(piece, index) => (index % 2 ? <code>{piece()}</code> : piece())}
+                    {(piece, index) => (index % 2 ? <code>{piece()}</code> : <>{piece()}</>)}
                   </For>
                 </>
               )}

@@ -589,7 +589,8 @@ const threadOf = (state: ThreadListState, id: string | null) => {
 const byValue = ({ props }: { props: Cell }) => [props.value];
 
 // A row's parts hear only about their own entry, place and marks, so a change reaches only the rows it changed.
-const ownRow = (column?: number) =>
+// With `marks: false`, a part that shows neither the current row, an open menu nor renaming skips those too.
+const ownRow = (column?: number, { marks = true } = {}) =>
   selects<ThreadListState, ThreadListApi, RowProps>({
     time: [],
     rows: [],
@@ -600,10 +601,10 @@ const ownRow = (column?: number) =>
     active: [],
     focused: ({ props }) =>
       column === undefined ? [`${props.value}:0`, `${props.value}:1`] : [`${props.value}:${column}`],
-    value: byValue,
+    value: marks ? byValue : [],
     menuFor: [],
-    menuOpenFor: byValue,
-    renaming: byValue,
+    menuOpenFor: marks ? byValue : [],
+    renaming: marks ? byValue : [],
     open: [],
     renamePending: [],
     deleting: [],
@@ -1490,7 +1491,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
     // Under the title: what the run waits on or how it ended, then its summary. In the link, so it joins its name.
     summary: slot<RowProps, ThreadListSummaryState>({
       props: { value: "string" },
-      selects: ownRow(0),
+      selects: ownTime,
       present: (state, { props }) => hasSummary(threadOf(state, props.value), state.groupBy),
       state: (state, { api, props }) => api.summaryState(state, props.value),
     }),
@@ -1562,7 +1563,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
       role: "button",
       focus: "native",
       props: { value: "string" },
-      selects: ownRow(1),
+      selects: ownRow(1, { marks: false }),
       present: (state) => state.canUnarchive,
       press: ({ api, props }, event) => api.pressUnarchive(props.value, event),
       state: () => ({ label: WORDS.unarchive }),
