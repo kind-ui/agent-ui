@@ -26,7 +26,7 @@ type Target = { component: string; label: string; id: string; trigger: RegExp };
 
 const targets: Target[] = [
   { component: "kind-reasoning", label: "Thought for 3 s", id: "reasoning", trigger: /^Thought for 3 s/ },
-  { component: "kind-tool", label: "search_docs", id: "search_docs", trigger: /^search_docs/ },
+  { component: "kind-tool", label: "Search docs", id: "search_docs", trigger: /^Search docs/ },
   { component: "kind-chain-of-thought", label: "Researching retries", id: "chain", trigger: /^Researching/ },
   { component: "kind-task", label: "Patching the client", id: "task", trigger: /^Patching the client/ },
   { component: "kind-plan", label: "Retry plan", id: "plan", trigger: /^Retry plan/ },
@@ -150,8 +150,8 @@ test("one snapshot lists every Wave 1 and Wave 2 component, named where it has a
   expect(actions("kind-status", "Deploying")).toEqual([]);
   expect(named("kind-reasoning")).toEqual(["Thought for 3 s"]);
   expect(actions("kind-reasoning", "Thought for 3 s")).toEqual(["collapse", "expand", "press"]);
-  expect(named("kind-tool")).toEqual(["read_file", "search_docs"]);
-  expect(actions("kind-tool", "search_docs")).toEqual([
+  expect(named("kind-tool")).toEqual(["Read file", "Search docs"]);
+  expect(actions("kind-tool", "Search docs")).toEqual([
     "collapse",
     "copyInput",
     "copyOutput",
@@ -178,8 +178,11 @@ test("one snapshot lists every Wave 1 and Wave 2 component, named where it has a
 
 test("each tool names its own code blocks and copy buttons", async ({ page }) => {
   await open(page);
-  for (const name of ["search_docs", "read_file"])
-    await trigger(page, { ...tool, id: name, trigger: new RegExp(`^${name}`) }).click();
+  for (const [name, title] of [
+    ["search_docs", "Search docs"],
+    ["read_file", "Read file"],
+  ] as const)
+    await trigger(page, { ...tool, id: name, trigger: new RegExp(`^${title}`) }).click();
   expect(
     (await snapshot(page))
       .filter((item) => item.component === "kind-code-block" && item.label !== "Code")
