@@ -43,7 +43,6 @@ const cost = (root: HTMLElement) => {
   control.id = "control";
   control.models = costModels;
   control.defaultModel = "claude-sonnet-5.5";
-  control.defaultOpen = true;
   wrapper.append(control);
   root.append(wrapper);
 };

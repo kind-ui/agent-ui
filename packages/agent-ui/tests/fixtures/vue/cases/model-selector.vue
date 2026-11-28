@@ -68,7 +68,7 @@ onMounted(() => expose({ kindHost: host }));
 
 <template>
   <div v-if="variant === 'cost'" class="p-6">
-    <ModelSelector id="model" :models="costModels" default-value="claude-sonnet-5.5" default-open />
+    <ModelSelector id="model" :models="costModels" default-value="claude-sonnet-5.5" />
   </div>
   <div v-else-if="variant === 'composer'" class="p-4">
     <Composer aria-label="Message" :on-submit="ignore">

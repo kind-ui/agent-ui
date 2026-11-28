@@ -37,7 +37,7 @@ function Page(props: { refusing?: boolean }) {
 export const cases = {
   cost: () => (
     <div class="p-6">
-      <ModelControl id="control" models={costModels} defaultModel="claude-sonnet-5.5" defaultOpen />
+      <ModelControl id="control" models={costModels} defaultModel="claude-sonnet-5.5" />
     </div>
   ),
   all: () => <Page />,

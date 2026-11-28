@@ -138,7 +138,6 @@ const cost = (root: HTMLElement) => {
   selector.id = "model";
   selector.models = costModels;
   selector.defaultValue = "claude-sonnet-5.5";
-  selector.defaultOpen = true;
   wrapper.append(selector);
   root.append(wrapper);
 };

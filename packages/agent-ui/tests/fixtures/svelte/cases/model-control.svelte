@@ -19,7 +19,7 @@
 
 {#if variant === "cost"}
   <div class="p-6">
-    <ModelControl id="control" models={costModels} defaultModel="claude-sonnet-5.5" defaultOpen />
+    <ModelControl id="control" models={costModels} defaultModel="claude-sonnet-5.5" />
   </div>
 {:else}
   <div class="p-6">

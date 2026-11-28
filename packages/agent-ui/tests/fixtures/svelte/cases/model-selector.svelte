@@ -31,7 +31,7 @@
 
 {#if variant === "cost"}
   <div class="p-6">
-    <ModelSelector id="model" models={costModels} defaultValue="claude-sonnet-5.5" defaultOpen />
+    <ModelSelector id="model" models={costModels} defaultValue="claude-sonnet-5.5" />
   </div>
 {:else if variant === "composer"}
   <div class="p-4">

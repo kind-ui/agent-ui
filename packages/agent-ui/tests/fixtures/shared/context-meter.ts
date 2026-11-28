@@ -72,16 +72,15 @@ const noCounts = { usage: undefined, cost: undefined };
 
 /** Each page's options past the ring: the breakdown, the limits, inline, compacting. */
 export const meterCases = {
-  breakdown: { ...noCounts, used: 72_900, breakdown, compactAt: 0.8, defaultOpen: true },
-  limits: { ...noCounts, used: 72_900, breakdown, compactAt: 0.8, limits: limits(), defaultOpen: true },
-  "near-cap": { ...noCounts, used: 72_900, breakdown, limits: limits(82), defaultOpen: true },
+  breakdown: { ...noCounts, used: 72_900, breakdown, compactAt: 0.8 },
+  limits: { ...noCounts, used: 72_900, breakdown, compactAt: 0.8, limits: limits() },
+  "near-cap": { ...noCounts, used: 72_900, breakdown, limits: limits(82) },
   compacting: {
     ...noCounts,
     used: 110_100,
     breakdown: fillingUp,
     compactAt: 0.8,
     compacting: true,
-    defaultOpen: true,
   },
   // A settings page's limits alone: no context window, so no summary.
   inline: {

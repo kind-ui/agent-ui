@@ -379,6 +379,7 @@ test("a model's cost sits at the end of its row, read in words, with the unit ex
   page,
 }) => {
   await page.goto("/?c=model-selector&case=cost");
+  await page.locator('[data-slot="kind-model-selector-trigger"]').click();
   const opus = page.getByRole("option", { name: /^Claude Opus 5\.5/ });
   await expect(opus).toHaveAccessibleName(/^Claude Opus 5\.5 ?, 3 times the cost$/);
   await expect(page.getByRole("option", { name: /^GPT-6 Luna/ })).toHaveAccessibleName(

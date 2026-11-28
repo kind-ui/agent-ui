@@ -34,7 +34,7 @@ onMounted(() => expose({ kindHost: host }));
 
 <template>
   <div v-if="variant === 'cost'" class="p-6">
-    <ModelControl id="control" :models="costModels" default-model="claude-sonnet-5.5" default-open />
+    <ModelControl id="control" :models="costModels" default-model="claude-sonnet-5.5" />
   </div>
   <div v-else class="p-6">
     <ModelControl

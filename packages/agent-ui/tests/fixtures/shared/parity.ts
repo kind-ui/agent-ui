@@ -108,9 +108,13 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
     { c: "context-meter", case: "all", interaction: press('[data-slot="kind-context-meter-trigger"]') },
     { c: "context-meter", case: "high" },
     { c: "context-meter", case: "german" },
-    { c: "context-meter", case: "limits" },
-    { c: "context-meter", case: "near-cap" },
-    { c: "context-meter", case: "compacting" },
+    { c: "context-meter", case: "limits", interaction: press('[data-slot="kind-context-meter-trigger"]') },
+    { c: "context-meter", case: "near-cap", interaction: press('[data-slot="kind-context-meter-trigger"]') },
+    {
+      c: "context-meter",
+      case: "compacting",
+      interaction: press('[data-slot="kind-context-meter-trigger"]'),
+    },
     { c: "context-meter", case: "inline" },
   ],
   conversation: [
@@ -203,14 +207,14 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
   ],
   "model-control": [
     { c: "model-control", case: "all", interaction: openMenu },
-    { c: "model-control", case: "cost" },
+    { c: "model-control", case: "cost", interaction: openMenu },
   ],
   "model-selector": [
     modelSelector,
     { c: "model-selector", case: "groups", interaction: press('[data-slot="kind-model-selector-trigger"]') },
     { c: "model-selector", case: "logos" },
     { c: "model-selector", case: "composer", needs: ["composer"] },
-    { c: "model-selector", case: "cost" },
+    { c: "model-selector", case: "cost", interaction: press('[data-slot="kind-model-selector-trigger"]') },
   ],
   notice: [
     { c: "notice", case: "all" },

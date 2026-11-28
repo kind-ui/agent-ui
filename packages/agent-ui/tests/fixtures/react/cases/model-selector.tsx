@@ -131,7 +131,7 @@ function InComposer() {
 function Cost() {
   return (
     <div className="p-6">
-      <ModelSelector id="model" models={costModels} defaultValue="claude-sonnet-5.5" defaultOpen />
+      <ModelSelector id="model" models={costModels} defaultValue="claude-sonnet-5.5" />
     </div>
   );
 }
