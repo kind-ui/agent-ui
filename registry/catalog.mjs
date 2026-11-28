@@ -394,9 +394,10 @@ export const components = {
 
   "thread-list": {
     group: "shell",
-    when: "you list past chats, grouped by date, with rename, pin, share and delete.",
+    when: "you list past chats by date, or background runs by what needs the person, with rename, pin, share, archive and delete.",
     title: "Thread List",
-    description: "Threads grouped by date, with one menu to rename, pin, share and delete.",
+    description:
+      "Threads grouped by date, or runs by Needs you, Running and Done, with one menu to rename, pin, share, archive and delete.",
     uses: ["internal-menu", "internal-alert-dialog"],
   },
 

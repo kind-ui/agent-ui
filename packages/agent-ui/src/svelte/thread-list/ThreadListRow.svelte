@@ -1,6 +1,6 @@
 <!--
   A thread's row, by its id: its link, which also opens the row's menu on a right-click or Shift+F10, how long ago it
-  changed, and its More button, which takes the time's place on hover and focus.
+  changed, and its More button, or Unarchive in the archived view, which takes the time's place on hover and focus.
 -->
 <script lang="ts">
   import type { ThreadListLinkState, ThreadListTimeState } from "@kind-ui/agent-ui/core";
@@ -28,6 +28,9 @@
   ><parts.MoreCell value={props.value}>
     <parts.More value={props.value} data-kind-icon-button="" data-kind-size="sm">
       <span data-thread-list-icon="more" aria-hidden="true"></span>
-    </parts.More>
+    </parts.More
+    ><parts.Unarchive value={props.value}>
+      {#snippet children({ label }: { label: string })}{label}{/snippet}
+    </parts.Unarchive>
   </parts.MoreCell>
 </parts.Row>

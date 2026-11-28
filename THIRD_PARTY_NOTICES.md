@@ -73,7 +73,7 @@
 
 <!-- wave-6-task-2: Thread List -->
 
-  - `packages/agent-ui/src/styles/thread-list.css` (Thread List: New chat, More and the row menu's items): `plus`, `ellipsis`, `pencil`, `pin`, `share` and `trash-2`, unchanged; `plus`, `ellipsis` (`more-horizontal`), `share` and `trash-2` derive from Feather.
+  - `packages/agent-ui/src/styles/thread-list.css` (Thread List: New chat, More, the row menu's items and the "more done" row): `plus`, `ellipsis`, `pencil`, `pin`, `share`, `archive`, `trash-2` and `chevron-right`, unchanged; `plus`, `ellipsis` (`more-horizontal`), `share`, `archive`, `trash-2` and `chevron-right` derive from Feather.
 
 <!-- wave-6-task-3: Thread Search -->
 

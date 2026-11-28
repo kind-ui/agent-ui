@@ -5,6 +5,7 @@ import {
   type ThreadListLinkState,
   type ThreadListMenuContentState,
   type ThreadListState,
+  type ThreadListSummaryState,
   type ThreadListTimeState,
   threadListPrimitive,
 } from "@kind-ui/agent-ui/core";
@@ -49,10 +50,16 @@ const parts = createParts(primitive, {
   link: "a",
   status: "span",
   unread: "span",
+  summary: "span",
   time: "span",
   editor: "input",
   "more-cell": "div",
   more: "button",
+  unarchive: "button",
+  "fold-row": "div",
+  "fold-cell": "div",
+  fold: "button",
+  empty: "p",
   menu: "div",
   "menu-content": "div",
   dialog: "div",
@@ -91,7 +98,20 @@ export const ThreadListNew = withDefault("ThreadListNew", parts.New, () => [
   "New chat",
 ]);
 
-/** A group's heading, by its row key. A Vue component updates only when its props change, as React's `memo` does. */
+/** "Nothing is waiting on you." when grouped by status with nothing waiting or running, unless you pass a slot. */
+export const ThreadListEmpty = withDefault(
+  "ThreadListEmpty",
+  parts.Empty,
+  ({ state }: { state: { text: string } }) => state.text,
+);
+
+const heading = ({ state }: { state: { label: string; count: string } }) =>
+  state.count ? [state.label, " ", h("span", { "data-thread-list-count": "" }, state.count)] : state.label;
+
+/**
+ * A group's heading, by its row key, with its count when grouped by status. A Vue component updates only when its
+ * props change, as React's `memo` does.
+ */
 export const ThreadListHeading = defineComponent({
   name: "ThreadListHeading",
   inheritAttrs: false,
@@ -99,12 +119,7 @@ export const ThreadListHeading = defineComponent({
   slots: Object as SlotsType<{ render?: Record<string, unknown> }>,
   setup(props, { attrs, slots }) {
     return () => {
-      const cell = () =>
-        h(
-          parts.HeadingCell,
-          { value: props.value },
-          stable(({ state }: { state: { label: string } }) => state.label),
-        );
+      const cell = () => h(parts.HeadingCell, { value: props.value }, stable(heading));
       // A host's `#render` slot may change, so the heading renders again with it.
       return h(
         parts.Heading,
@@ -115,7 +130,42 @@ export const ThreadListHeading = defineComponent({
   },
 });
 
-/** A thread's link: its title, then its status and unread marks, unless you pass a slot. */
+const fold = ({ state }: { state: { label: string } }) => [
+  h("span", { "data-thread-list-icon": "fold", "aria-hidden": "true" }),
+  state.label,
+];
+
+/**
+ * The row after "Done"'s threads: "12 more done", which shows a page more, then "Show less". A Vue component updates
+ * only when its props change, as React's `memo` does.
+ */
+export const ThreadListFold = defineComponent({
+  name: "ThreadListFold",
+  inheritAttrs: false,
+  props: { value: { type: String, required: true } },
+  setup(props, { attrs }) {
+    return () =>
+      h(
+        parts.FoldRow,
+        { ...attrs, value: props.value },
+        stable(() =>
+          h(
+            parts.FoldCell,
+            { value: props.value },
+            stable(() => h(parts.Fold, { value: props.value }, stable(fold))),
+          ),
+        ),
+      );
+  },
+});
+
+const summary = ({ state }: { state: ThreadListSummaryState }) => {
+  const pieces = state.pieces.map((piece, index) => (index % 2 ? h("code", piece) : piece));
+  if (!state.lead) return pieces;
+  return pieces.length > 0 ? [state.lead, " · ", ...pieces] : state.lead;
+};
+
+/** A thread's link: its title and its one mark, then its second line, unless you pass a slot. */
 export const ThreadListLink = withDefault(
   "ThreadListLink",
   parts.Link,
@@ -123,15 +173,17 @@ export const ThreadListLink = withDefault(
     h("span", { "data-thread-list-title": "" }, state.title),
     h(parts.Status, { value: state.value }),
     h(parts.Unread, { value: state.value }),
+    h(parts.Summary, { value: state.value }, stable(summary)),
   ],
 );
 
 const ellipsis = () => h("span", { "data-thread-list-icon": "more", "aria-hidden": "true" });
 const time = ({ state }: { state: ThreadListTimeState }) => state.label;
+const unarchive = ({ state }: { state: { label: string } }) => state.label;
 
 /**
  * A thread's row, by its id: its link, which also opens the row's menu on a right-click or Shift+F10, how long ago it
- * changed, and its More button, which takes the time's place on hover and focus. The default slot, given
+ * changed, and its More button, or Unarchive in the archived view, which takes the time's place on hover and focus. The default slot, given
  * `{ state: { value, title } }`, replaces what the link shows. A Vue component updates only when its props change,
  * as React's `memo` does; a slot passed from a render function counts as a change, so leave it out of rows you
  * render in bulk, or mark it `$stable`.
@@ -174,9 +226,10 @@ export const ThreadListRow = defineComponent({
           h(
             parts.MoreCell,
             { value },
-            stable(() =>
+            stable(() => [
               h(parts.More, { value, "data-kind-icon-button": "", "data-kind-size": "sm" }, stable(ellipsis)),
-            ),
+              h(parts.Unarchive, { value }, stable(unarchive)),
+            ]),
           ),
         ]),
       );
@@ -185,13 +238,17 @@ export const ThreadListRow = defineComponent({
 });
 
 const rows = ({ state }: { state: ThreadListGridState }) =>
-  state.visible.map((item) =>
-    state.rows[item.index]?.type === "heading"
-      ? h(ThreadListHeading, { key: item.key, value: item.key })
-      : h(ThreadListRow, { key: item.key, value: item.key }),
-  );
+  state.visible.map((item) => {
+    const type = state.rows[item.index]?.type;
+    if (type === "heading") return h(ThreadListHeading, { key: item.key, value: item.key });
+    if (type === "fold") return h(ThreadListFold, { key: item.key, value: item.key });
+    return h(ThreadListRow, { key: item.key, value: item.key });
+  });
 
-/** A `ThreadListHeading` or `ThreadListRow` for each row in view, unless you pass a slot, which gets `{ state }`. */
+/**
+ * A `ThreadListHeading`, `ThreadListRow` or `ThreadListFold` for each row in view, unless you pass a slot, which gets
+ * `{ state }`.
+ */
 export const ThreadListGrid = withDefault("ThreadListGrid", parts.Grid, rows);
 
 const items = (state: ThreadListMenuContentState) =>
@@ -330,6 +387,7 @@ export const ThreadListEnd = withDefault(
 
 const defaultParts = () => [
   h(ThreadListNew),
+  h(ThreadListEmpty),
   h(
     ThreadListViewport,
     null,
@@ -340,7 +398,8 @@ const defaultParts = () => [
 ];
 
 /**
- * The threads as a navigation grid, grouped by pinned, the host's groups and date, with New chat above and one menu
- * of Rename, Pin, Share and Delete for every row. A default slot replaces the default parts.
+ * The threads as a navigation grid, grouped by pinned, the host's groups and date, or by what each run needs from the
+ * person with `groupBy="status"`, with New chat above and one menu of Rename, Pin, Share, Archive and Delete for every
+ * row. A default slot replaces the default parts.
  */
 export const ThreadList = withDefault("ThreadList", parts.Root, defaultParts);

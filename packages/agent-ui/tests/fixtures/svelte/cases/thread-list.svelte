@@ -2,9 +2,9 @@
   import type { AgentAction } from "@ui-sdk/svelte/agent";
   import { threadListHost } from "../../shared/thread-list.js";
 
-  export const variants = ["all", "no-confirm", "ten", "thousand"];
+  export const variants = ["all", "no-confirm", "ten", "thousand", "inbox", "nothing-waiting", "archived"];
 
-  const { host, select, newThread, rename, pin, share, remove, loadMore } = threadListHost();
+  const { host, select, newThread, rename, pin, share, remove, loadMore, archive } = threadListHost();
 
   export const allow = (step: AgentAction) => !step.confirm || host.permit;
 </script>
@@ -14,15 +14,34 @@
   import { untrack } from "svelte";
   import { ThreadList } from "../../../../src/svelte/thread-list/index.js";
   import { expose } from "../../shared/expose.js";
-  import { threads as fixed, manyThreads, NOW } from "../../shared/thread-list.js";
+  import {
+    archivedThreads,
+    doneThreads,
+    threads as fixed,
+    INBOX_NOW,
+    inboxThreads,
+    manyThreads,
+    NOW,
+  } from "../../shared/thread-list.js";
 
   let { variant }: { variant: string; params: URLSearchParams } = $props();
 
+  const inbox = untrack(() => ["inbox", "nothing-waiting", "archived"].includes(variant));
   const initial = untrack(() =>
-    variant === "ten" ? manyThreads(10) : variant === "thousand" ? manyThreads(1000) : fixed,
+    variant === "ten"
+      ? manyThreads(10)
+      : variant === "thousand"
+        ? manyThreads(1000)
+        : variant === "inbox"
+          ? inboxThreads
+          : variant === "nothing-waiting"
+            ? doneThreads
+            : variant === "archived"
+              ? archivedThreads
+              : fixed,
   );
   let threads = $state.raw(initial);
-  let value = $state<string | null>(initial[1]?.id ?? null);
+  let value = $state<string | null>(inbox ? null : (initial[1]?.id ?? null));
   let status = $state<"idle" | "loading" | "error">();
 
   expose({
@@ -42,8 +61,12 @@
     id="threads"
     {threads}
     {value}
-    now={NOW}
+    now={inbox ? INBOX_NOW : NOW}
     timeZone="UTC"
+    groupBy={inbox ? "status" : undefined}
+    view={variant === "archived" ? "archived" : undefined}
+    onArchive={inbox ? archive : undefined}
+    onUnarchive={inbox ? archive : undefined}
     onSelect={select}
     onNew={newThread}
     onRename={rename}

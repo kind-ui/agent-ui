@@ -2,7 +2,15 @@
 import type { AgentAction } from "@ui-sdk/vue/agent";
 import { threadListHost } from "../../shared/thread-list.js";
 
-export const variants = ["all", "no-confirm", "ten", "thousand"] as const;
+export const variants = [
+  "all",
+  "no-confirm",
+  "ten",
+  "thousand",
+  "inbox",
+  "nothing-waiting",
+  "archived",
+] as const;
 
 const handlers = threadListHost();
 
@@ -14,18 +22,34 @@ import type { Thread } from "@kind-ui/agent-ui";
 import { onMounted, shallowRef } from "vue";
 import { ThreadList } from "../../../../src/vue/thread-list.js";
 import { expose } from "../../shared/expose.js";
-import { threads as fixed, manyThreads, NOW } from "../../shared/thread-list.js";
+import {
+  archivedThreads,
+  doneThreads,
+  threads as fixed,
+  INBOX_NOW,
+  inboxThreads,
+  manyThreads,
+  NOW,
+} from "../../shared/thread-list.js";
 
 const props = defineProps<{ variant: string; params: URLSearchParams }>();
 
-const { host, select, newThread, rename, pin, share, remove, loadMore } = handlers;
+const { host, select, newThread, rename, pin, share, remove, loadMore, archive } = handlers;
 
-const initial =
-  props.variant === "ten" ? manyThreads(10) : props.variant === "thousand" ? manyThreads(1000) : fixed;
+const sets: Record<string, () => Thread[]> = {
+  ten: () => manyThreads(10),
+  thousand: () => manyThreads(1000),
+  inbox: () => inboxThreads,
+  "nothing-waiting": () => doneThreads,
+  archived: () => archivedThreads,
+};
+const initial = sets[props.variant]?.() ?? fixed;
+const inbox = ["inbox", "nothing-waiting", "archived"].includes(props.variant);
+const view = props.variant === "archived" ? "archived" : undefined;
 const confirmDelete = props.variant === "no-confirm" ? false : undefined;
 
 const threads = shallowRef(initial);
-const value = shallowRef<string | null>(initial[1]?.id ?? null);
+const value = shallowRef<string | null>(inbox ? null : (initial[1]?.id ?? null));
 const loadStatus = shallowRef<"idle" | "loading" | "error">();
 
 type Update<T> = T | ((previous: T) => T);
@@ -57,8 +81,12 @@ onMounted(() =>
       id="threads"
       :threads="threads"
       :value="value"
-      :now="NOW"
+      :now="inbox ? INBOX_NOW : NOW"
       time-zone="UTC"
+      :group-by="inbox ? 'status' : undefined"
+      :view="view"
+      :on-archive="inbox ? archive : undefined"
+      :on-unarchive="inbox ? archive : undefined"
       :confirm-delete="confirmDelete"
       :has-more="initial.length > 100"
       :status="loadStatus"

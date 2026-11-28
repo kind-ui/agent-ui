@@ -5,12 +5,13 @@ import {
   type ThreadListLinkState,
   type ThreadListMenuContentState,
   type ThreadListState,
+  type ThreadListSummaryState,
   type ThreadListTimeState,
   threadListPrimitive,
 } from "@kind-ui/agent-ui/core";
 import type { ComponentProps, JSX } from "@solidjs/web";
 import { createParts } from "@ui-sdk/solid/primitive";
-import { For, omit, Show } from "solid-js";
+import { For, Match, omit, Show, Switch } from "solid-js";
 import {
   KindAlertDialog,
   KindAlertDialogBackdrop,
@@ -32,10 +33,16 @@ const parts = createParts(threadListPrimitive, {
   link: "a",
   status: "span",
   unread: "span",
+  summary: "span",
   time: "span",
   editor: "input",
   "more-cell": "div",
   more: "button",
+  unarchive: "button",
+  "fold-row": "div",
+  "fold-cell": "div",
+  fold: "button",
+  empty: "p",
   menu: "div",
   "menu-content": "div",
   dialog: "div",
@@ -49,8 +56,9 @@ const parts = createParts(threadListPrimitive, {
 export type ThreadListProps = ComponentProps<typeof parts.Root>;
 
 /**
- * The threads as a navigation grid, grouped by pinned, the host's groups and date, with New chat above and one menu
- * of Rename, Pin, Share and Delete for every row. Any `children` replace the default parts.
+ * The threads as a navigation grid, grouped by pinned, the host's groups and date, or by what each run needs from the
+ * person with `groupBy="status"`, with New chat above and one menu of Rename, Pin, Share, Archive and Delete for every
+ * row. Any `children` replace the default parts.
  */
 export function ThreadList(props: ThreadListProps) {
   return <parts.Root {...omit(props, "children")}>{props.children ?? <DefaultParts />}</parts.Root>;
@@ -72,12 +80,23 @@ export function ThreadListNew(props: ThreadListNewProps) {
   );
 }
 
+export type ThreadListEmptyProps = ComponentProps<typeof parts.Empty>;
+
+/** "Nothing is waiting on you." when grouped by status with nothing waiting or running, unless you pass children. */
+export function ThreadListEmpty(props: ThreadListEmptyProps) {
+  return (
+    <parts.Empty {...omit(props, "children")}>
+      {props.children ?? ((state: { text: string }) => state.text)}
+    </parts.Empty>
+  );
+}
+
 /** Scrolls the rows, of which it renders only those in view. Holds a `ThreadListGrid` and a `ThreadListEnd`. */
 export const ThreadListViewport = parts.Viewport;
 
 export type ThreadListGridProps = ComponentProps<typeof parts.Grid>;
 
-/** A `ThreadListHeading` or `ThreadListRow` for each row in view, unless you pass children. */
+/** A `ThreadListHeading`, `ThreadListRow` or `ThreadListFold` for each row in view, unless you pass children. */
 export function ThreadListGrid(props: ThreadListGridProps) {
   return (
     <parts.Grid {...omit(props, "children")}>
@@ -86,12 +105,14 @@ export function ThreadListGrid(props: ThreadListGridProps) {
           // Keyed by row key, so a row keeps its element as it scrolls or moves.
           <For each={state.visible} keyed={(item) => item.key}>
             {(item) => (
-              <Show
-                when={state.rows[item().index]?.type === "heading"}
-                fallback={<ThreadListRow value={item().key} />}
-              >
-                <ThreadListHeading value={item().key} />
-              </Show>
+              <Switch fallback={<ThreadListRow value={item().key} />}>
+                <Match when={state.rows[item().index]?.type === "heading"}>
+                  <ThreadListHeading value={item().key} />
+                </Match>
+                <Match when={state.rows[item().index]?.type === "fold"}>
+                  <ThreadListFold value={item().key} />
+                </Match>
+              </Switch>
             )}
           </For>
         ))}
@@ -101,12 +122,42 @@ export function ThreadListGrid(props: ThreadListGridProps) {
 
 export type ThreadListHeadingProps = ComponentProps<typeof parts.Heading>;
 
-/** A group's heading, by its row key. */
+/** A group's heading, by its row key, with its count when grouped by status. */
 export function ThreadListHeading(props: ThreadListHeadingProps) {
   return (
     <parts.Heading {...props}>
-      <parts.HeadingCell value={props.value}>{(state: { label: string }) => state.label}</parts.HeadingCell>
+      <parts.HeadingCell value={props.value}>
+        {(state: { label: string; count: string }) => (
+          <>
+            {state.label}
+            <Show when={state.count}>
+              {" "}
+              <span data-thread-list-count="">{state.count}</span>
+            </Show>
+          </>
+        )}
+      </parts.HeadingCell>
     </parts.Heading>
+  );
+}
+
+export type ThreadListFoldProps = ComponentProps<typeof parts.FoldRow>;
+
+/** The row after "Done"'s threads: "12 more done", which shows a page more, then "Show less". */
+export function ThreadListFold(props: ThreadListFoldProps) {
+  return (
+    <parts.FoldRow {...props}>
+      <parts.FoldCell value={props.value}>
+        <parts.Fold value={props.value}>
+          {(state: { label: string }) => (
+            <>
+              <span data-thread-list-icon="fold" aria-hidden="true" />
+              {state.label}
+            </>
+          )}
+        </parts.Fold>
+      </parts.FoldCell>
+    </parts.FoldRow>
   );
 }
 
@@ -117,7 +168,7 @@ export type ThreadListRowProps = Omit<ComponentProps<typeof parts.Row>, "childre
 
 /**
  * A thread's row, by its id: its link, which also opens the row's menu on a right-click or Shift+F10, how long ago it
- * changed, and its More button, which takes the time's place on hover and focus.
+ * changed, and its More button, or Unarchive in the archived view, which takes the time's place on hover and focus.
  */
 export function ThreadListRow(props: ThreadListRowProps) {
   return (
@@ -131,6 +182,7 @@ export function ThreadListRow(props: ThreadListRowProps) {
         <parts.More value={props.value} data-kind-icon-button="" data-kind-size="sm">
           <span data-thread-list-icon="more" aria-hidden="true" />
         </parts.More>
+        <parts.Unarchive value={props.value}>{(state: { label: string }) => state.label}</parts.Unarchive>
       </parts.MoreCell>
     </parts.Row>
   );
@@ -138,7 +190,7 @@ export function ThreadListRow(props: ThreadListRowProps) {
 
 export type ThreadListLinkProps = ComponentProps<typeof parts.Link>;
 
-/** A thread's link: its title, then its status and unread marks, unless you pass children. */
+/** A thread's link: its title and its one mark, then its second line, unless you pass children. */
 export function ThreadListLink(props: ThreadListLinkProps) {
   return (
     <parts.Link {...omit(props, "children")}>
@@ -148,6 +200,17 @@ export function ThreadListLink(props: ThreadListLinkProps) {
             <span data-thread-list-title="">{state.title}</span>
             <parts.Status value={state.value} />
             <parts.Unread value={state.value} />
+            <parts.Summary value={state.value}>
+              {(summary: ThreadListSummaryState) => (
+                <>
+                  {summary.lead}
+                  {summary.lead && summary.pieces.length > 0 ? " · " : ""}
+                  <For each={summary.pieces} keyed={false}>
+                    {(piece, index) => (index % 2 ? <code>{piece()}</code> : piece())}
+                  </For>
+                </>
+              )}
+            </parts.Summary>
           </>
         ))}
     </parts.Link>
@@ -299,6 +362,7 @@ function DefaultParts() {
   return (
     <>
       <ThreadListNew />
+      <ThreadListEmpty />
       <ThreadListViewport>
         <ThreadListGrid />
         <ThreadListEnd />

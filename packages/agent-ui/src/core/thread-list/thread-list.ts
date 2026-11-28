@@ -1212,7 +1212,7 @@ export const threadListPrimitive: ThreadListPrimitive = definePrimitive<
         summaries.set(id, next);
         return next.state;
       },
-      // A search of rows by id, as Transcript's segments: a row's index changes while its element stays.
+      // By id, as Transcript measures its segments: a row's index changes while its element stays.
       measureRow: (el, id) => {
         let index: number | undefined;
         let unmeasure: (() => void) | undefined;

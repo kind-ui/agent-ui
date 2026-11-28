@@ -1,11 +1,13 @@
 <!--
-  The threads as a navigation grid, grouped by pinned, the host's groups and date, with New chat above and one menu
-  of Rename, Pin, Share and Delete for every row. Any `children` replace the default parts.
+  The threads as a navigation grid, grouped by pinned, the host's groups and date, or by what each run needs from the
+  person with `groupBy="status"`, with New chat above and one menu of Rename, Pin, Share, Archive and Delete for every
+  row. Any `children` replace the default parts.
 -->
 <script lang="ts">
   import type { ComponentProps } from "svelte";
   import { parts } from "./parts.js";
   import ThreadListDialog from "./ThreadListDialog.svelte";
+  import ThreadListEmpty from "./ThreadListEmpty.svelte";
   import ThreadListEnd from "./ThreadListEnd.svelte";
   import ThreadListGrid from "./ThreadListGrid.svelte";
   import ThreadListMenu from "./ThreadListMenu.svelte";
@@ -20,6 +22,7 @@
   {#snippet children(state: Parameters<NonNullable<RootProps["children"]>>[0])}
     {#if content}{@render content(state)}{:else}
       <ThreadListNew
+      /><ThreadListEmpty
       /><parts.Viewport>
         <ThreadListGrid
         /><ThreadListEnd />

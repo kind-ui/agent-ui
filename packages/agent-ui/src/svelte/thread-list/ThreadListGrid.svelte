@@ -1,11 +1,12 @@
 <!--
-  A `ThreadListHeading` or `ThreadListRow` for each row in view, unless you pass children. The each block is keyed by
+  A `ThreadListHeading`, `ThreadListRow` or `ThreadListFold` for each row in view, unless you pass children. The each block is keyed by
   row, so rows that didn't change aren't rendered again.
 -->
 <script lang="ts">
   import type { ThreadListGridState } from "@kind-ui/agent-ui/core";
   import type { ComponentProps, Snippet } from "svelte";
   import { parts } from "./parts.js";
+  import ThreadListFold from "./ThreadListFold.svelte";
   import ThreadListHeading from "./ThreadListHeading.svelte";
   import ThreadListRow from "./ThreadListRow.svelte";
 
@@ -23,6 +24,8 @@
       {#each state.visible as item (item.key)}
         {#if state.rows[item.index]?.type === "heading"}
           <ThreadListHeading value={String(item.key)} />
+        {:else if state.rows[item.index]?.type === "fold"}
+          <ThreadListFold value={String(item.key)} />
         {:else}
           <ThreadListRow value={String(item.key)} />
         {/if}

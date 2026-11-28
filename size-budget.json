@@ -28,13 +28,13 @@
     "modelControlPrimitive": 9500,
     "contextBarPrimitive": 84600,
     "dictationButtonPrimitive": 8000,
-    "threadListPrimitive": 23000,
+    "threadListPrimitive": 26600,
     "sidebarPrimitive": 11000,
     "daySeparatorPrimitive": 5500,
     "connectionStatusPrimitive": 7500,
     "shareDialogPrimitive": 42000,
     "conversationSearchPrimitive": 62500,
-    "threadSearchPrimitive": 59100,
+    "threadSearchPrimitive": 60300,
     "checkpointPrimitive": 42000
   }
 }

@@ -213,8 +213,9 @@ export function Shell({ threads, current, now, onOpen, onNew, children }: {
 }
 ```
 
-- `Thread` is `{ id, title, updatedAt?, href?, pinned?, group?, status?, unread? }`. Thread List groups by date (pinned first) and needs `now` (an ISO date) so server markup groups as the browser does. `details.cancel()` in `onSelect` stops the row's link so you can route yourself.
-- Rename, Pin, Share and Delete appear in each row's menu as you pass `onRename`, `onPinChange`, `onShare` and `onDelete`.
+- `Thread` is `{ id, title, updatedAt?, href?, pinned?, group?, status?, unread?, summary?, waitingSince?, archived? }`. Thread List groups by date (pinned first) and needs `now` (an ISO date) so server markup groups as the browser does. `details.cancel()` in `onSelect` stops the row's link so you can route yourself.
+- For background runs, `groupBy="status"` groups by "Needs you" (`awaiting-approval`, `awaiting-input`, unread `error`, oldest `waitingSince` first), "Running" and "Done" (folded behind "N more done"), with `summary` as each row's second line. Mark a run read when it's opened, so a seen failure leaves "Needs you".
+- Rename, Pin, Share, Archive and Delete appear in each row's menu as you pass `onRename`, `onPinChange`, `onShare`, `onArchive` and `onDelete`. Archive hides the row at once; set the thread's `archived`, or reject to bring it back. `view="archived"` with `onUnarchive` lists archived threads.
 - Inside the inset, add `DaySeparator` between days, `ConnectionStatus` over the Conversation and `ConversationSearch` above it. The Sidebar page's "chat shell" example has them all.
 
 ## What to show while waiting
