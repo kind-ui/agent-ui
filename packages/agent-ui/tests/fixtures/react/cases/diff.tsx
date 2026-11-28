@@ -1,5 +1,5 @@
 import type { DiffFile } from "@kind-ui/agent-ui";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Diff } from "../../../../src/react/diff.js";
 import { bigPatch, createDiffHost, files, frames, run, streamedSession } from "../../shared/diff.js";
 import { expose } from "../../shared/expose.js";
@@ -25,18 +25,18 @@ function Frames() {
 
 function Live({ initial, open }: { initial: DiffFile[]; open?: string[] }) {
   const [list, setList] = useState(initial);
-  const host = useMemo(() => {
+  // One host per mount, exposed from an effect, so StrictMode's second render doesn't swap it for another.
+  const [host] = useState(() => {
     let current = initial;
-    const made = createDiffHost(
+    return createDiffHost(
       () => current,
       (next) => {
         current = next;
         setList(next);
       },
     );
-    expose({ kindDiff: made.handle });
-    return made;
-  }, [initial]);
+  });
+  useEffect(() => expose({ kindDiff: host.handle }), [host]);
   return (
     <div className="flex w-[48rem] max-w-full flex-col gap-4 p-6">
       <button type="button">Before</button>
@@ -56,7 +56,7 @@ function Live({ initial, open }: { initial: DiffFile[]; open?: string[] }) {
 function Budget({ params }: { params: URLSearchParams }) {
   const count = Number(params.get("lines") ?? 10);
   const [extra, setExtra] = useState(0);
-  expose({ kindDiffStream: () => setExtra((n) => n + 1) });
+  useEffect(() => expose({ kindDiffStream: () => setExtra((n) => n + 1) }), []);
   const file = useMemo(() => bigPatch(count, extra), [count, extra]);
   return (
     <div className="w-[48rem] p-6">
