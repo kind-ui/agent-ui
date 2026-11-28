@@ -65,7 +65,12 @@ function Choices(props: { row: ChoiceRow }) {
           <KindMenuItemIndicator keepMounted>
             <span data-menu-check="" aria-hidden="true" />
           </KindMenuItemIndicator>
-          <KindMenuItemContent icon={option().icon} label={option().label} />
+          <KindMenuItemContent
+            icon={option().icon}
+            label={option().label}
+            meta={option().meta}
+            metaLabel={option().metaLabel}
+          />
         </KindMenuRadioItem>
       )}
     </For>
@@ -100,6 +105,13 @@ function Choices(props: { row: ChoiceRow }) {
           </KindMenuItem>
         )}
       </For>
+      <Show when={props.row.note}>
+        <KindMenuSeparator />
+        {/* Each row's name says its cost in words, so the note is for the eye. */}
+        <span data-menu-note="" aria-hidden="true">
+          {props.row.note}
+        </span>
+      </Show>
     </>
   );
 }

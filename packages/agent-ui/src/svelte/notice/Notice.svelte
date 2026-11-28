@@ -1,10 +1,11 @@
 <!--
-  A calm callout: its mark, its `label` as the title, `children` as its text, then `actions` and Dismiss while
-  `onDismiss` is set. To arrange the parts yourself, use `NoticeRoot`.
+  A calm callout: its mark, its `label` as the title, the reset line with `resetsAt`, `children` as its text, then
+  `actions` and Dismiss while `onDismiss` is set and it's `dismissible`. To arrange the parts yourself, use
+  `NoticeRoot`.
 -->
 <script lang="ts">
   import type { ComponentProps, Snippet } from "svelte";
-  import { NoticeActions, NoticeDescription, NoticeDismiss, NoticeIcon, NoticeTitle, parts } from "./index.js";
+  import { NoticeActions, NoticeDescription, NoticeDismiss, NoticeIcon, NoticeReset, NoticeTitle, parts } from "./index.js";
 
   // `Omit` would drop the options: part props carry an index signature for attributes.
   type RootProps = ComponentProps<typeof parts.Root>;
@@ -24,6 +25,7 @@
 <parts.Root {...props}>
   <NoticeIcon
   /><NoticeTitle
+  /><NoticeReset
   /><NoticeDescription>{@render children?.()}</NoticeDescription
   ><NoticeActions>{@render actions?.()}</NoticeActions
   ><NoticeDismiss />

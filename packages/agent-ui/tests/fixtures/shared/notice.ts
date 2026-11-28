@@ -47,6 +47,57 @@ export const added: NoticeData = {
   dismissible: true,
 };
 
+const MINUTE = 60_000;
+// Whole minutes from now, so the words don't change while a test runs.
+const minutes = (count: number) => new Date((Math.floor(Date.now() / MINUTE) + count) * MINUTE).toISOString();
+
+/** The limit recipe: near it, at it, under an hour from its reset, and paying past it. */
+export type QuotaNotice = {
+  id: string;
+  variant: NoticeVariant;
+  label: string;
+  text?: string;
+  resetsAt?: string;
+  actions: string[];
+  dismissible: boolean;
+};
+
+export const quotaNotices = (): QuotaNotice[] => [
+  {
+    id: "near",
+    variant: "warning",
+    label: "12 requests left",
+    resetsAt: minutes(9 * 24 * 60),
+    actions: ["Upgrade"],
+    dismissible: true,
+  },
+  {
+    id: "at",
+    variant: "error",
+    label: "You've reached your weekly limit",
+    text: "New runs pause until then.",
+    resetsAt: minutes(4 * 24 * 60),
+    actions: ["Continue at reset", "Switch to Claude Haiku 5.5", "Use credits"],
+    dismissible: false,
+  },
+  {
+    id: "soon",
+    variant: "error",
+    label: "You've reached your 5-hour limit",
+    resetsAt: minutes(42),
+    actions: ["Use credits"],
+    dismissible: false,
+  },
+  {
+    id: "paying",
+    variant: "info",
+    label: "Now using credits",
+    text: "$3.20 this month. Your weekly limit resets Tuesday.",
+    actions: ["Manage"],
+    dismissible: true,
+  },
+];
+
 export const guardrails = {
   blocking: {
     label: "Model output withheld",

@@ -108,7 +108,7 @@ export const components = {
     when: "a person picks the model from a searchable list grouped by provider.",
     title: "Model Selector",
     description:
-      "A button that opens a searchable list of models grouped by provider, with their logos and footer actions.",
+      "A button that opens a searchable list of models grouped by provider, with their logos, costs and footer actions.",
     uses: ["picker"],
   },
   "reasoning-effort": {
@@ -128,10 +128,10 @@ export const components = {
   },
   "context-meter": {
     group: "composer",
-    when: "you show how full the context window is, with token counts and cost.",
+    when: "you show how full the context window is, what fills it, and how much of the plan's usage limits is left.",
     title: "Context Meter",
     description:
-      "How full the context window is, as a ring and a percentage, with token counts and cost in a popover.",
+      "How full the context window is, as a ring and a percentage, with a breakdown, Compact, token counts, cost and usage limits in a popover or in the page.",
     uses: [],
   },
   feedback: {
@@ -143,7 +143,7 @@ export const components = {
   },
   notice: {
     group: "indicators",
-    when: "you show a calm info, success, warning or error callout, optionally dismissible.",
+    when: "you show a calm info, success, warning or error callout, optionally dismissible, like a usage limit with its reset.",
     title: "Notice",
     description:
       "A calm callout for info, success, a warning or an error, with optional actions and Dismiss.",

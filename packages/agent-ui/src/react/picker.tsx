@@ -31,6 +31,7 @@ const parts = createParts(pickerPrimitive, {
   viewport: "div",
   command: "div",
   item: "span",
+  note: "p",
 });
 
 /** An item, whose `icon` is an image URL or an element such as an inline `svg`. */
@@ -74,7 +75,10 @@ export type PickerRowItemProps = Omit<ComponentProps<typeof KindCommandItem>, ke
 export type PickerItemProps = ComponentProps<typeof parts.Item>;
 
 /** The parts a picker renders through: Picker's, or those of a component that spreads `pickerBase`. */
-export type PickerParts = Pick<typeof parts, "Trigger" | "Content" | "Viewport" | "Command" | "Item">;
+export type PickerParts = Pick<
+  typeof parts,
+  "Trigger" | "Content" | "Viewport" | "Command" | "Item" | "Note"
+>;
 
 /**
  * The trigger, popover, list and rows of a picker, rendered through `parts`, for Model Selector and the other
@@ -193,7 +197,12 @@ export function pickerParts(
             </span>
           ) : null}
         </span>
-        {row.meta ? <span data-picker-meta="">{row.meta}</span> : null}
+        {row.meta ? (
+          <span data-picker-meta="" aria-hidden={row.metaLabel ? "true" : undefined}>
+            {row.meta}
+          </span>
+        ) : null}
+        {row.meta && row.metaLabel ? <span data-picker-meta-label="">{row.metaLabel}</span> : null}
         {trailing?.(row)}
         <span data-picker-mark="" />
       </>
@@ -208,8 +217,18 @@ export function pickerParts(
     return drawn == null ? null : <KindCommandItemIcon>{drawn}</KindCommandItemIcon>;
   };
 
+  /** A line under the list, like what a model's cost means. Rendered only with one. */
+  function Note({ children = ({ note }) => note, ...props }: ComponentProps<typeof parts.Note>) {
+    return <parts.Note {...props}>{children}</parts.Note>;
+  }
+
   // Shared, so an update doesn't render the default parts' wrappers again.
-  const DEFAULT_LIST = <List />;
+  const DEFAULT_LIST = (
+    <>
+      <List />
+      <Note />
+    </>
+  );
   const Default = (
     <>
       <Trigger />
@@ -217,7 +236,7 @@ export function pickerParts(
     </>
   );
 
-  const named = { Trigger, Content, List, SectionRows, RowItem, Item };
+  const named = { Trigger, Content, List, SectionRows, RowItem, Item, Note };
   for (const [part, component] of Object.entries(named))
     (component as { displayName?: string }).displayName = `${name}${part}`;
   return { ...named, Default };

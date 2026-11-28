@@ -1,6 +1,11 @@
 export { default as ContextMeter } from "./ContextMeter.svelte";
+export { default as ContextMeterBar } from "./ContextMeterBar.svelte";
+export { default as ContextMeterBreakdown } from "./ContextMeterBreakdown.svelte";
+export { default as ContextMeterCompact } from "./ContextMeterCompact.svelte";
+export { default as ContextMeterCompacting } from "./ContextMeterCompacting.svelte";
 export { default as ContextMeterContent } from "./ContextMeterContent.svelte";
 export { default as ContextMeterDescription } from "./ContextMeterDescription.svelte";
+export { default as ContextMeterLimits } from "./ContextMeterLimits.svelte";
 export { default as ContextMeterRows } from "./ContextMeterRows.svelte";
 export { default as ContextMeterTitle } from "./ContextMeterTitle.svelte";
 export { default as ContextMeterTrigger } from "./ContextMeterTrigger.svelte";

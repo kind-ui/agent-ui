@@ -5,7 +5,12 @@ import { isWebElements } from "../layer.js";
 import { ROOT_ID_GAP, rootIdGap } from "../svelte-root-id.js";
 
 type Fixture = {
-  kindHost: { changes: { open: boolean; reason: string; source: string }[]; setUsed(used: number): void };
+  kindHost: {
+    changes: { open: boolean; reason: string; source: string }[];
+    compacts: string[];
+    settleCompact(): void;
+    setUsed(used: number): void;
+  };
   agent: { act(input: unknown): Promise<unknown> };
 };
 
@@ -13,7 +18,7 @@ const VALUE = "57,600 of 128,000 tokens, 45%";
 
 const meter = (page: Page) => page.getByRole("group", { name: "Context" });
 const trigger = (page: Page) => meter(page).locator('[data-slot="kind-context-meter-trigger"]');
-const details = (page: Page) => page.getByRole("dialog", { name: "Context" });
+const details = (page: Page) => page.getByRole("dialog", { name: /% full/ });
 const changes = (page: Page) => page.evaluate(() => (window as unknown as Fixture).kindHost.changes);
 const setUsed = (page: Page, used: number) =>
   page.evaluate((value) => (window as unknown as Fixture).kindHost.setUsed(value), used);
@@ -194,3 +199,100 @@ for (const colorScheme of ["light", "dark"] as const) {
     }
   });
 }
+
+test("the breakdown is one image named as a sentence, with a row per slice and Free space last", async ({
+  page,
+}) => {
+  await open(page, "breakdown");
+  await trigger(page).click();
+  await expect(details(page)).toHaveAccessibleName("57% full");
+  await expect(
+    page.getByRole("img", { name: /^57% full: Messages 41,200, Files 18,100/ }),
+  ).toHaveAccessibleName(
+    "57% full: Messages 41,200, Files 18,100, Tools 9,800, System 3,800, Free space 55,100",
+  );
+  const rows = page.locator('[data-slot="kind-context-meter-breakdown"] > li');
+  await expect(rows).toHaveText([
+    "Messages41,20032%",
+    "Files18,10014%",
+    "Tools9,8008%",
+    "System3,8003%",
+    "Free space55,10043%",
+  ]);
+  // Category colors, never a status color.
+  const colors = await page
+    .locator("[data-context-meter-segment]")
+    .evaluateAll((segments) => segments.map((el) => getComputedStyle(el).backgroundColor));
+  expect(new Set(colors).size).toBe(4);
+});
+
+test("Compact calls onCompact and shows Compacting until it settles; an agent can compact too", async ({
+  page,
+}, testInfo) => {
+  test.skip(rootIdGap(testInfo), ROOT_ID_GAP);
+  await open(page, "breakdown");
+  await trigger(page).click();
+  await page.getByRole("button", { name: "Compact" }).click();
+  await expect(page.locator('[data-slot="kind-context-meter-compacting"]')).toHaveText("Compacting");
+  await expect(page.getByRole("button", { name: "Compact" })).toHaveCount(0);
+  await page.evaluate(() => (window as unknown as Fixture).kindHost.settleCompact());
+  await expect(page.getByRole("button", { name: "Compact" })).toBeVisible();
+  expect(await act(page, "compact")).toContain('"ok":true');
+  expect(await page.evaluate(() => (window as unknown as Fixture).kindHost.compacts)).toEqual([
+    "mouse",
+    "agent",
+  ]);
+});
+
+test("from 80% the level has words and the description says where it compacts", async ({ page }) => {
+  await open(page, "compacting");
+  await trigger(page).click();
+  await expect(details(page)).toHaveAccessibleName("86% full · Filling up");
+  await expect(details(page)).toHaveAccessibleDescription("110,100 of 128,000 tokens · compacts at 80%");
+  await expect(page.locator('[data-slot="kind-context-meter-compacting"]')).toBeVisible();
+});
+
+test("each limit is a meter with its share used and reset in words", async ({ page }) => {
+  await open(page, "limits");
+  await trigger(page).click();
+  const limits = page.locator('[data-slot="kind-context-meter-limits"] [role="meter"]');
+  await expect(limits).toHaveCount(2);
+  await expect(limits.first()).toHaveAccessibleName("5-hour limit");
+  await expect(limits.first()).toHaveAttribute(
+    "aria-valuetext",
+    /^62% used, resets (\d+:00 [AP]M, in \d hr|[A-Z][a-z]{2} \d+:00 [AP]M)$/,
+  );
+  await expect(limits.nth(1)).toHaveAttribute("data-level", "normal");
+});
+
+test("from 80% the ring shows the fullest limit and says Running low", async ({ page }) => {
+  await open(page, "near-cap");
+  await trigger(page).click();
+  await expect(meter(page)).toHaveAttribute("data-level", "high");
+  await expect(trigger(page)).toHaveText("Weekly limit 82%");
+  await expect(trigger(page)).toHaveAccessibleName("Weekly limit, 82% used");
+  const weekly = page.locator('[data-slot="kind-context-meter-limits"] [role="meter"]').nth(1);
+  await expect(weekly).toHaveAttribute("data-level", "high");
+  await expect(weekly.locator("[data-context-meter-detail]")).toHaveText(/^Running low · Resets /);
+});
+
+test("inline, the limits sit in the page without a ring", async ({ page }) => {
+  await page.goto("/?c=context-meter&case=inline");
+  await expect(meter(page)).toHaveAttribute("data-layout", "inline");
+  await expect(trigger(page)).toHaveCount(0);
+  const limits = meter(page).locator('[role="meter"]');
+  await expect(limits).toHaveCount(3);
+  await expect(limits.nth(2).locator("[data-context-meter-detail]")).toHaveText(
+    /^\$20\.50 of \$50\.00 · Resets /,
+  );
+});
+
+test("axe reports no violations with a breakdown and limits", async ({ page }) => {
+  for (const name of ["limits", "near-cap", "inline"]) {
+    await page.goto(`/?c=context-meter&case=${name}`);
+    await expect(meter(page)).toBeVisible();
+    if (name !== "inline") await trigger(page).click();
+    await settled(page);
+    expect((await new AxeBuilder({ page }).include("#context").analyze()).violations).toEqual([]);
+  }
+});

@@ -41,6 +41,33 @@
     &:dir(rtl) [data-menu-chevron] {
       scale: -1 1;
     }
+    /* A row's trailing text, like a model's cost, and its words for screen readers kept out of sight. */
+    & [data-menu-meta] {
+      flex-shrink: 0;
+      margin-inline-start: auto;
+      padding-inline-start: 12px;
+      color: var(--kind-color-muted);
+      font-size: var(--kind-text-xs);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    & [data-menu-meta-label] {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    /* A line after a choice's rows, like what a model's cost means. */
+    & [data-menu-note] {
+      display: block;
+      max-width: 18rem;
+      padding: 4px 10px 6px;
+      color: var(--kind-color-muted);
+      font-size: var(--kind-text-xs);
+      line-height: 1rem;
+    }
     & [data-menu-check] {
       width: 14px;
       height: 14px;

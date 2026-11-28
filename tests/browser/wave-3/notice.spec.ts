@@ -229,3 +229,28 @@ for (const colorScheme of ["light", "dark"] as const) {
     expect(violations).toEqual([]);
   });
 }
+
+test("the limit recipe: a reset line, ways out, and no Dismiss at the limit", async ({ page }) => {
+  await page.goto("/?c=notice&case=quota");
+  await expect(notice(page, "12 requests left")).toBeVisible();
+  const reset = (name: string) => notice(page, name).locator('[data-notice-part="reset"]');
+  await expect(reset("12 requests left")).toHaveText(/^Resets [A-Z][a-z]{2} \d+\.$/);
+  await expect(dismissButton(page, "12 requests left")).toBeVisible();
+  await expect(reset("You've reached your weekly limit")).toHaveText(
+    /^Resets [A-Z][a-z]+day at \d+:\d\d [AP]M\.$/,
+  );
+  await expect(dismissButton(page, "You've reached your weekly limit")).toHaveCount(0);
+  await expect(notice(page, "You've reached your weekly limit").getByRole("button")).toHaveText([
+    "Continue at reset",
+    "Switch to Claude Haiku 5.5",
+    "Use credits",
+  ]);
+  await expect(reset("You've reached your 5-hour limit")).toHaveText(
+    /^You can send messages again in (41|42) min\.$/,
+  );
+  await expect(dismissButton(page, "You've reached your 5-hour limit")).toHaveCount(0);
+  await expect(dismissButton(page, "Now using credits")).toBeVisible();
+  expect((await new AxeBuilder({ page }).include('[data-notice-part="root"]').analyze()).violations).toEqual(
+    [],
+  );
+});

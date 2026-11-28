@@ -25,7 +25,10 @@
             >{#each state.description as segment, index (index)}{#if segment.match}<mark>{segment.text}</mark
                 >{:else}{segment.text}{/if}{/each}</span
           >{/if}</span
-      >{#if state.row.meta}<span data-picker-meta="">{state.row.meta}</span>{/if}{@render trailing?.(
+      >{#if state.row.meta}<span data-picker-meta="" aria-hidden={state.row.metaLabel ? "true" : undefined}
+          >{state.row.meta}</span
+        >{/if}{#if state.row.meta && state.row.metaLabel}<span data-picker-meta-label="">{state.row.metaLabel}</span
+        >{/if}{@render trailing?.(
         state.row,
       )}<span data-picker-mark=""></span>{/if}
   {/snippet}

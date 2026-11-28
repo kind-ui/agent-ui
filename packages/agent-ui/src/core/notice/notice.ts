@@ -20,6 +20,7 @@ export type NoticePrimitive = ReturnType<
       icon: Slot;
       title: Slot<{ label: string }>;
       description: Slot;
+      reset: Slot<{ text: string }>;
       actions: Slot;
       dismiss: Slot;
     }
@@ -28,5 +29,5 @@ export type NoticePrimitive = ReturnType<
 
 export const noticePrimitive: NoticePrimitive = definePrimitive({
   name: "kind-notice",
-  ...noticeBase(),
+  ...noticeBase({ alertOnError: true }),
 });

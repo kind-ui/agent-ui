@@ -1,5 +1,14 @@
 <script lang="ts">
-export const variants = ["all", "plain", "groups", "logos", "composer", "reduced", "refusing"] as const;
+export const variants = [
+  "cost",
+  "all",
+  "plain",
+  "groups",
+  "logos",
+  "composer",
+  "reduced",
+  "refusing",
+] as const;
 </script>
 
 <script setup lang="ts">
@@ -14,7 +23,14 @@ import { Composer, ComposerInput, ComposerSubmit } from "../../../../src/vue/com
 import { ReasoningEffort } from "../../../../src/vue/reasoning-effort.js";
 import { expose } from "../../shared/expose.js";
 import { controls } from "../../shared/full-composer.js";
-import { iconModels, levels, modelActions, models, selectionHost } from "../../shared/model-selector.js";
+import {
+  costModels,
+  iconModels,
+  levels,
+  modelActions,
+  models,
+  selectionHost,
+} from "../../shared/model-selector.js";
 
 const props = defineProps<{ variant: string; params: URLSearchParams }>();
 
@@ -51,7 +67,10 @@ onMounted(() => expose({ kindHost: host }));
 </script>
 
 <template>
-  <div v-if="variant === 'composer'" class="p-4">
+  <div v-if="variant === 'cost'" class="p-6">
+    <ModelSelector id="model" :models="costModels" default-value="claude-sonnet-5.5" />
+  </div>
+  <div v-else-if="variant === 'composer'" class="p-4">
     <Composer aria-label="Message" :on-submit="ignore">
       <ComposerInput aria-label="Prompt" placeholder="Ask anything" />
       <div :style="controls">

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { ModelControl } from "../../../../src/react/model-control.js";
 import { controlHost, levels, modelActions, models, settings } from "../../shared/model-control.js";
+import { costModels } from "../../shared/model-selector.js";
 
 const { host, record } = controlHost();
 
@@ -35,6 +36,11 @@ function Page({ refusing }: { refusing?: boolean }) {
 }
 
 export const cases = {
+  cost: () => (
+    <div className="p-6">
+      <ModelControl id="control" models={costModels} defaultModel="claude-sonnet-5.5" />
+    </div>
+  ),
   all: () => <Page />,
   refusing: () => <Page refusing />,
 };

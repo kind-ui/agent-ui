@@ -150,6 +150,8 @@ export interface ModelOption<Icon = string> {
    * a model without effort levels.
    */
   efforts?: string[];
+  /** A short relative cost the host writes, like "1×", "3×", "Free" or "$0.40", shown at the end of the model's row. */
+  cost?: string;
 }
 
 export interface SuggestionItem {
@@ -164,6 +166,30 @@ export interface TokenUsage {
   output?: number;
   reasoning?: number;
   cached?: number;
+}
+
+/** What part of a context window holds, like messages or files, in tokens. Slices don't overlap. */
+export interface UsageSlice {
+  id: string;
+  label: string;
+  value: number;
+}
+
+/** A usage limit over a window of time, like a 5-hour or a weekly limit. */
+export interface UsageLimit {
+  id: string;
+  /** Names it, like "5-hour limit" or "Weekly limit". */
+  label: string;
+  used: number;
+  total: number;
+  /** What `used` and `total` count. Defaults to `"requests"`. */
+  unit?: "tokens" | "requests" | "credits" | "currency";
+  /** The ISO 4217 code of a `"currency"` limit. Defaults to `"USD"`. */
+  currency?: string;
+  /** ISO 8601: when the window resets. */
+  resetsAt?: string;
+  /** ISO 8601: when the window started. With `resetsAt`, gives the pace. */
+  windowStartedAt?: string;
 }
 
 /** A file or folder in a file tree. */
@@ -223,6 +249,8 @@ export interface PickerItem<Icon = unknown> {
   description?: string;
   /** Trailing text, like a branch's ahead and behind counts. */
   meta?: string;
+  /** What screen readers hear in place of `meta`, after the label, like ", 3 times the cost". */
+  metaLabel?: string;
   icon?: Icon;
   /** More words the search matches. */
   keywords?: string[];
@@ -267,6 +295,10 @@ export interface SettingsOption<Icon = unknown> {
   group?: string;
   /** Shown dimmed: it can be focused but not chosen. Defaults to `false`. */
   disabled?: boolean;
+  /** Trailing text, like a model's cost. */
+  meta?: string;
+  /** What screen readers hear in place of `meta`, after the label, like ", 3 times the cost". */
+  metaLabel?: string;
 }
 
 /** A setting with one value of several, chosen in a submenu of its own. */

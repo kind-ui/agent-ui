@@ -8,7 +8,14 @@ import {
 } from "../../../../src/react/model-selector.js";
 import { ReasoningEffort } from "../../../../src/react/reasoning-effort.js";
 import { controls } from "../../shared/full-composer.js";
-import { iconModels, levels, modelActions, models, selectionHost } from "../../shared/model-selector.js";
+import {
+  costModels,
+  iconModels,
+  levels,
+  modelActions,
+  models,
+  selectionHost,
+} from "../../shared/model-selector.js";
 
 const { host, record } = selectionHost();
 
@@ -121,7 +128,16 @@ function InComposer() {
   );
 }
 
+function Cost() {
+  return (
+    <div className="p-6">
+      <ModelSelector id="model" models={costModels} defaultValue="claude-sonnet-5.5" />
+    </div>
+  );
+}
+
 export const cases = {
+  cost: () => <Cost />,
   all: () => <Toolbar />,
   plain: () => <Toolbar plain />,
   groups: () => <Toolbar pages="groups" />,

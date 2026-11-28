@@ -43,6 +43,8 @@ export type {
   ToolCall,
   TranscriptSegment,
   TranscriptWord,
+  UsageLimit,
+  UsageSlice,
 } from "./types/index.js";
 export {
   hasOutput,

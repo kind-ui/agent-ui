@@ -50,14 +50,23 @@
     <KindMenuItem value={action.value} label={action.label} data-menu-inset={row.inline ? "" : undefined}>
       <KindMenuItemContent icon={action.icon as Icon} label={action.label} />
     </KindMenuItem>
-  {/each}
+  {/each}{#if row.note}<KindMenuSeparator
+    /><!-- Each row's name says its cost in words, so the note is for the eye. --><span
+      data-menu-note=""
+      aria-hidden="true">{row.note}</span
+    >{/if}
 {/snippet}
 
 {#snippet radios(options: ChoiceRow["groups"][number]["options"])}
   {#each options as option (option.value)}
     <KindMenuRadioItem value={option.value} label={option.label} disabled={option.disabled ?? false}>
       <KindMenuItemIndicator keepMounted><span data-menu-check="" aria-hidden="true"></span></KindMenuItemIndicator
-      ><KindMenuItemContent icon={option.icon as Icon} label={option.label} />
+      ><KindMenuItemContent
+        icon={option.icon as Icon}
+        label={option.label}
+        meta={option.meta}
+        metaLabel={option.metaLabel}
+      />
     </KindMenuRadioItem>
   {/each}
 {/snippet}

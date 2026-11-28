@@ -1,5 +1,6 @@
 import { definePrimitive } from "@ui-sdk/core";
 import type { ModelOption, PickerItem } from "../../types/index.js";
+import { costNoteOf, costName as defaultCostName } from "../cost.js";
 import { cached } from "../memo.js";
 import {
   type PickerBaseApi,
@@ -42,6 +43,16 @@ export type ModelSelectorOptions = Omit<PickerBaseOptions, "label" | "placeholde
    * @default "No models found"
    */
   emptyText?: string;
+  /**
+   * A line under the list that says what the models' `cost` means. Empty hides it.
+   * @default "Cost per request, relative to the default model." while any model has a `cost`
+   */
+  costNote?: string;
+  /**
+   * What screen readers hear after a model's name for its `cost`, in place of the cost as shown.
+   * @default ", 3 times the cost" for "3×", ", the same cost" for "1×", else ", " and the cost
+   */
+  costName?: (cost: string) => string;
 };
 
 export type ModelSelectorState = PickerBaseState;
@@ -59,23 +70,26 @@ const noModels: ModelOption<unknown>[] = [];
 const groupValue = (group: string) => `group:${group}`;
 
 const itemOf = (
-  { id, name, group, description, icon, disabled }: ModelOption<unknown>,
+  { id, name, group, description, icon, disabled, cost }: ModelOption<unknown>,
   flat: boolean,
+  costName: (cost: string) => string,
 ): PickerItem<unknown> => ({
   value: id,
   label: name,
   ...(description === undefined ? {} : { description }),
+  ...(cost ? { meta: cost, metaLabel: costName(cost) } : {}),
   ...(icon === undefined ? {} : { icon }),
   ...(disabled === undefined ? {} : { disabled }),
   // A search for the provider finds its models.
   ...(flat && group !== undefined ? { group, keywords: [group] } : {}),
 });
 
-const flat = new WeakMap<ModelOption<unknown>[], PickerItem<unknown>[]>();
-const grouped = new WeakMap<ModelOption<unknown>[], PickerItem<unknown>[]>();
+type Cache = WeakMap<ModelOption<unknown>[], PickerItem<unknown>[]>;
+const flat = new WeakMap<(cost: string) => string, Cache>();
+const grouped = new WeakMap<(cost: string) => string, Cache>();
 
 /** Each group as a row that opens a page of its models; models without a group stay on the first page. */
-const groupItems = (models: ModelOption<unknown>[]) => {
+const groupItems = (models: ModelOption<unknown>[], costName: (cost: string) => string) => {
   const items: PickerItem<unknown>[] = [];
   const groups = new Map<
     string,
@@ -83,7 +97,7 @@ const groupItems = (models: ModelOption<unknown>[]) => {
   >();
   for (const model of models) {
     if (model.group === undefined) {
-      items.push(itemOf(model, false));
+      items.push(itemOf(model, false, costName));
       continue;
     }
     let row = groups.get(model.group);
@@ -93,18 +107,30 @@ const groupItems = (models: ModelOption<unknown>[]) => {
       items.push(row);
     }
     row.icon ??= model.icon;
-    row.items.push(itemOf(model, false));
+    row.items.push(itemOf(model, false, costName));
     // Command searches only the open page, so a provider row is found by its models' names.
     row.keywords.push(model.name, ...(model.description ? [model.description] : []));
   }
   return items;
 };
 
-/** The models as picker items, kept while the host keeps its `models` array. */
-const toItems = (models: ModelOption<unknown>[], pages: "flat" | "groups") =>
+/** The models as picker items, kept while the host keeps its `models` array and `costName`. */
+const toItems = (
+  models: ModelOption<unknown>[],
+  pages: "flat" | "groups",
+  costName: (cost: string) => string,
+) =>
   pages === "groups"
-    ? cached(grouped, models, groupItems)
-    : cached(flat, models, (all) => all.map((model) => itemOf(model, true)));
+    ? cached(
+        cached(grouped, costName, () => new WeakMap()),
+        models,
+        (all) => groupItems(all, costName),
+      )
+    : cached(
+        cached(flat, costName, () => new WeakMap()),
+        models,
+        (all) => all.map((model) => itemOf(model, true, costName)),
+      );
 
 const base = pickerBase<ModelSelectorOptions>({
   kind: "model-selector",
@@ -112,7 +138,9 @@ const base = pickerBase<ModelSelectorOptions>({
   placeholder: "Search models…",
   emptyText: "No models found",
   sharedTrigger: true,
-  toItems: (options) => toItems(options.models ?? noModels, options.pages ?? "flat"),
+  toItems: (options) =>
+    toItems(options.models ?? noModels, options.pages ?? "flat", options.costName ?? defaultCostName),
+  note: (options) => costNoteOf(options.costNote, options.models ?? noModels),
 });
 
 /**
@@ -126,7 +154,7 @@ export const modelSelectorPrimitive: ModelSelectorPrimitive = definePrimitive<
   ModelSelectorSlots
 >({
   name: "kind-model-selector",
-  options: { ...base.options, models: "value", pages: "string" },
+  options: { ...base.options, models: "value", pages: "string", costNote: "string", costName: "value" },
   state: base.state,
   sync: base.sync,
   controlled: base.controlled,

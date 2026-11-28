@@ -41,6 +41,7 @@ const parts = createParts(primitive, {
   viewport: "div",
   command: "div",
   item: "span",
+  note: "p",
 });
 
 /** An item, whose `icon` is an image URL or a node such as an inline `svg`. */
@@ -58,7 +59,10 @@ const iconOf = (icon: unknown) =>
   typeof icon === "string" ? h("img", { src: icon, alt: "" }) : (icon as VNode | undefined);
 
 /** The parts a picker renders through: Picker's, or those of a component that spreads `pickerBase`. */
-export type PickerParts = Pick<typeof parts, "Trigger" | "Content" | "Viewport" | "Command" | "Item">;
+export type PickerParts = Pick<
+  typeof parts,
+  "Trigger" | "Content" | "Viewport" | "Command" | "Item" | "Note"
+>;
 
 /**
  * The trigger, popover, list and rows of a picker, rendered through `parts`, for Model Selector and the other
@@ -198,10 +202,30 @@ export function pickerParts<P extends PickerParts>(
                     )
                   : null,
               ]),
-              row.meta ? h("span", { "data-picker-meta": "" }, row.meta) : null,
+              row.meta
+                ? h(
+                    "span",
+                    { "data-picker-meta": "", "aria-hidden": row.metaLabel ? "true" : undefined },
+                    row.meta,
+                  )
+                : null,
+              row.meta && row.metaLabel ? h("span", { "data-picker-meta-label": "" }, row.metaLabel) : null,
               trailing?.(row),
               h("span", { "data-picker-mark": "" }),
             ]),
+        });
+    },
+  });
+
+  /** A line under the list, like what a model's cost means. Rendered only with one. */
+  const Note = defineComponent({
+    name: `${name}Note`,
+    inheritAttrs: false,
+    setup(_, { attrs, slots }) {
+      return () =>
+        h(Part.Note, attrs, {
+          ...slots,
+          default: slots.default ?? (({ state }: { state: { note: string } }) => state.note),
         });
     },
   });
@@ -215,7 +239,7 @@ export function pickerParts<P extends PickerParts>(
           Part.Content,
           { initialFocus: "input", sideOffset: 6, align: "start", ...attrs },
           {
-            default: slots.default ?? (() => h(List)),
+            default: slots.default ?? (() => [h(List), h(Note)]),
             // A sheet sits in a full-screen viewport, which renders only while the content presents as one.
             render: (scope: {
               props: Record<string, unknown>;
@@ -239,6 +263,7 @@ export function pickerParts<P extends PickerParts>(
     SectionRows,
     RowItem,
     Item: Item as unknown as P["Item"],
+    Note: Note as unknown as P["Note"],
     Default,
   };
 }

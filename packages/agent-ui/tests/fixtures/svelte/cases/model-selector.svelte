@@ -1,5 +1,5 @@
 <script module lang="ts">
-  export const variants = ["all", "plain", "groups", "logos", "composer", "reduced", "refusing"];
+  export const variants = ["all", "plain", "groups", "logos", "composer", "reduced", "refusing", "cost"];
 </script>
 
 <script lang="ts">
@@ -13,7 +13,7 @@
   import { Composer, ComposerInput, ComposerSubmit } from "../../../../src/svelte/composer/index.js";
   import { ReasoningEffort } from "../../../../src/svelte/reasoning-effort/index.js";
   import { expose } from "../../shared/expose.js";
-  import { iconModels, levels, modelActions, models, selectionHost } from "../../shared/model-selector.js";
+  import { costModels, iconModels, levels, modelActions, models, selectionHost } from "../../shared/model-selector.js";
 
   let { variant }: { variant: string; params: URLSearchParams } = $props();
 
@@ -29,7 +29,11 @@
   const logoModels = iconModels(logo);
 </script>
 
-{#if variant === "composer"}
+{#if variant === "cost"}
+  <div class="p-6">
+    <ModelSelector id="model" models={costModels} defaultValue="claude-sonnet-5.5" />
+  </div>
+{:else if variant === "composer"}
   <div class="p-4">
     <Composer aria-label="Message" onSubmit={() => undefined}>
       <ComposerInput aria-label="Prompt" placeholder="Ask anything"

@@ -2,6 +2,7 @@ import { onSettled } from "solid-js";
 import { ModelControl } from "../../../../src/solid/model-control.js";
 import { expose } from "../../shared/expose.js";
 import { controlHost, levels, modelActions, models, settings } from "../../shared/model-control.js";
+import { costModels } from "../../shared/model-selector.js";
 
 const { host, record } = controlHost();
 
@@ -34,6 +35,11 @@ function Page(props: { refusing?: boolean }) {
 }
 
 export const cases = {
+  cost: () => (
+    <div class="p-6">
+      <ModelControl id="control" models={costModels} defaultModel="claude-sonnet-5.5" />
+    </div>
+  ),
   all: () => <Page />,
   refusing: () => <Page refusing />,
 };

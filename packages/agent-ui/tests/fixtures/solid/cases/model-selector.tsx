@@ -9,7 +9,14 @@ import {
 } from "../../../../src/solid/model-selector.js";
 import { ReasoningEffort } from "../../../../src/solid/reasoning-effort.js";
 import { expose } from "../../shared/expose.js";
-import { iconModels, levels, modelActions, models, selectionHost } from "../../shared/model-selector.js";
+import {
+  costModels,
+  iconModels,
+  levels,
+  modelActions,
+  models,
+  selectionHost,
+} from "../../shared/model-selector.js";
 
 const { host, record } = selectionHost();
 
@@ -119,6 +126,11 @@ function InComposer() {
 }
 
 export const cases = {
+  cost: () => (
+    <div class="p-6">
+      <ModelSelector id="model" models={costModels} defaultValue="claude-sonnet-5.5" />
+    </div>
+  ),
   all: () => <Toolbar />,
   plain: () => <Toolbar plain />,
   groups: () => <Toolbar pages="groups" />,

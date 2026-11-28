@@ -1,4 +1,7 @@
-<!-- UI SDK's Meter: a ring and the percentage, unless you pass children, a snippet that gets the Meter's props. -->
+<!--
+  UI SDK's Meter: a ring and the percentage, after the limit it shows from 80% used, unless you pass children, a
+  snippet that gets the Meter's props.
+-->
 <script lang="ts">
   import type { ContextMeterValueState } from "@kind-ui/agent-ui/core";
   import { Meter, MeterTrack, MeterValue } from "@ui-sdk/svelte/meter";
@@ -22,7 +25,7 @@
         data-agent-hidden=""
       >
         <MeterTrack
-        /><MeterValue />
+        />{#if meter.caption}<span data-context-meter-caption="">{`${meter.caption} `}</span>{/if}<MeterValue />
       </Meter>
     {/if}
   {/snippet}

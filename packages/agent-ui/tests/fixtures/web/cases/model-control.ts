@@ -1,5 +1,6 @@
 import { defineModelControl } from "../../../../src/web/model-control.js";
 import { controlHost, levels, modelActions, models, settings } from "../../shared/model-control.js";
+import { costModels } from "../../shared/model-selector.js";
 
 const { host, record } = controlHost();
 
@@ -35,4 +36,15 @@ const page =
     Object.assign(window, { kindHost: host });
   };
 
-export const cases = { all: page(), refusing: page({ refusing: true }) };
+const cost = (root: HTMLElement) => {
+  defineModelControl();
+  const wrapper = Object.assign(document.createElement("div"), { className: "p-6" });
+  const control = document.createElement("kind-model-control");
+  control.id = "control";
+  control.models = costModels;
+  control.defaultModel = "claude-sonnet-5.5";
+  wrapper.append(control);
+  root.append(wrapper);
+};
+
+export const cases = { cost, all: page(), refusing: page({ refusing: true }) };

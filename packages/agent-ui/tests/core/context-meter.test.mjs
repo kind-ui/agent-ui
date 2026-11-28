@@ -80,3 +80,67 @@ test("open is offered while closed and close while open", () => {
     [false, "imperative"],
   ]);
 });
+
+test("the breakdown keeps empty rows, ends with Free space and names the bar as a sentence", async () => {
+  const { contextBreakdown } = await import("@kind-ui/agent-ui/core");
+  const { slices, label } = contextBreakdown(
+    [
+      { id: "messages", label: "Messages", value: 41200 },
+      { id: "tools", label: "Tools", value: 0 },
+      { id: "tiny", label: "System", value: 10 },
+    ],
+    41210,
+    128000,
+    "32% full",
+    "en-US",
+  );
+  assert.deepEqual(
+    slices.map((slice) => [slice.label, slice.width, slice.color]),
+    [
+      ["Messages", "32.1875%", 1],
+      ["Tools", "0%", 2],
+      ["System", "1%", 3],
+      ["Free space", "", 0],
+    ],
+  );
+  assert.equal(label, "32% full: Messages 41,200, Tools 0, System 10, Free space 86,790");
+});
+
+test("a limit from 80% runs low, reads its reset in words and its pace", async () => {
+  const { contextLimits } = await import("@kind-ui/agent-ui/core");
+  const now = Date.parse("2026-11-27T14:00:00Z");
+  const [today, weekly] = contextLimits(
+    [
+      {
+        id: "5h",
+        label: "5-hour limit",
+        used: 620,
+        total: 1000,
+        resetsAt: "2026-11-27T17:00:00Z",
+        windowStartedAt: "2026-11-27T12:00:00Z",
+      },
+      { id: "week", label: "Weekly limit", used: 82, total: 100, resetsAt: "2026-12-01T09:00:00Z" },
+    ],
+    { now, locale: "en-US", timeZone: "UTC" },
+  );
+  assert.equal(today.detail, "Resets 5:00 PM, in 3 hr · Ahead of pace");
+  assert.equal(today.valueText, "62% used, resets 5:00 PM, in 3 hr");
+  assert.equal(weekly.low, true);
+  assert.equal(weekly.detail, "Running low · Resets Tue 9:00 AM");
+});
+
+test("the ring follows the fullest limit from 80% and is named by it", () => {
+  const meter = contextMeterPrimitive({
+    used: 10,
+    total: 100,
+    limits: [
+      { id: "5h", label: "5-hour limit", used: 85, total: 100 },
+      { id: "week", label: "Weekly limit", used: 90, total: 100 },
+    ],
+  });
+  const state = meter.get();
+  assert.equal(state.ringLimit, "week");
+  assert.equal(state.level, "high");
+  assert.equal(state.contextLevel, "normal");
+  assert.equal(meter.api.valueText(state), "Weekly limit, 90% used");
+});

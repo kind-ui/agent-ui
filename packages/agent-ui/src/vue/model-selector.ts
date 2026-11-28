@@ -20,6 +20,7 @@ const parts = createParts(primitive, {
   viewport: "div",
   command: "div",
   item: "span",
+  note: "p",
 });
 
 const picker = pickerParts(parts, "ModelSelector");

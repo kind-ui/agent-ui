@@ -119,7 +119,9 @@ const drawChoices = (document: Document, content: Element, row: SettingsMenuChoi
   }
   if (radios.value !== (row.value ?? null)) radios.value = row.value ?? null;
   let after: Element | null = radios;
-  let separator = content.querySelector(":scope > ui-menu-separator:not([data-section-end])");
+  let separator = content.querySelector(
+    ":scope > ui-menu-separator:not([data-section-end], [data-menu-note-separator])",
+  );
   if (row.actions.length && !row.inline) {
     separator ??= element(document, "ui-menu-separator");
     after = next(content, separator, after);
@@ -132,6 +134,19 @@ const drawChoices = (document: Document, content: Element, row: SettingsMenuChoi
     item.toggleAttribute("data-menu-inset", row.inline);
     drawMenuItemContent(item, action);
     after = next(content, item, after);
+  }
+  let note = content.querySelector(":scope > [data-menu-note]");
+  let noteSeparator = content.querySelector(":scope > ui-menu-separator[data-menu-note-separator]");
+  if (row.note) {
+    noteSeparator ??= element(document, "ui-menu-separator", { "data-menu-note-separator": "" });
+    after = next(content, noteSeparator, after);
+    // Each row's name says its cost in words, so the note is for the eye.
+    note ??= element(document, "span", { "data-menu-note": "", "aria-hidden": "true" });
+    if (note.textContent !== row.note) note.textContent = row.note;
+    next(content, note, after);
+  } else {
+    note?.remove();
+    noteSeparator?.remove();
   }
   for (const el of [...items.values(), ...groups.values()]) el.remove();
 };

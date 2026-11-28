@@ -14,6 +14,7 @@ const parts = createParts(noticePrimitive, {
   icon: "span",
   title: "p",
   description: "div",
+  reset: "p",
   actions: "div",
   dismiss: "button",
 });
@@ -38,9 +39,23 @@ export const NoticeTitle = defineComponent({
   },
 }) as unknown as typeof parts.Title;
 
+/** When the limit resets, like "Resets Tuesday at 9:00 AM.", unless you fill the default slot. Rendered only with `resets-at`. */
+export const NoticeReset = defineComponent({
+  name: "NoticeReset",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () =>
+      h(parts.Reset, attrs, {
+        ...slots,
+        default: slots.default ?? (({ state }: { state: { text: string } }) => state.text),
+      });
+  },
+}) as unknown as typeof parts.Reset;
+
 /**
- * A calm callout: its mark, its `label` as the title, the default slot as its text, then the `#actions` slot and
- * Dismiss while `on-dismiss` is set. To arrange the parts yourself, use `NoticeRoot`.
+ * A calm callout: its mark, its `label` as the title, the reset line with `resets-at`, the default slot as its text,
+ * then the `#actions` slot and Dismiss while `on-dismiss` is set and it's `dismissible`. To arrange the parts
+ * yourself, use `NoticeRoot`.
  */
 export const Notice = defineComponent({
   name: "Notice",
@@ -53,6 +68,7 @@ export const Notice = defineComponent({
         default: () => [
           h(NoticeIcon),
           h(NoticeTitle),
+          h(NoticeReset),
           h(NoticeDescription, null, () => slots.default?.()),
           h(NoticeActions, null, () => slots.actions?.()),
           h(NoticeDismiss),

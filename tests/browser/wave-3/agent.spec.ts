@@ -39,7 +39,8 @@ const rootNamed = [question.component, context.component, suggestion.component];
 const gapped = ({ target, action }: Conformance) =>
   target === question ||
   target === suggestion ||
-  (target === context && action === "open") ||
+  // Open, the details' title ("45% full") names a Svelte meter whose root the gap leaves unnamed.
+  target === context ||
   (target === feedback && action === "submitComment");
 
 const wave3 = [

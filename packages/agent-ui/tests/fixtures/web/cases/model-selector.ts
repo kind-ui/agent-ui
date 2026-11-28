@@ -3,7 +3,14 @@ import { defineComposer } from "../../../../src/web/composer.js";
 import { defineModelSelector } from "../../../../src/web/model-selector.js";
 import { defineReasoningEffort } from "../../../../src/web/reasoning-effort.js";
 import { controls } from "../../shared/full-composer.js";
-import { iconModels, levels, modelActions, models, selectionHost } from "../../shared/model-selector.js";
+import {
+  costModels,
+  iconModels,
+  levels,
+  modelActions,
+  models,
+  selectionHost,
+} from "../../shared/model-selector.js";
 
 const { host, record } = selectionHost();
 
@@ -124,7 +131,19 @@ const inComposer = (root: HTMLElement) => {
   row.append(model, effort);
 };
 
+const cost = (root: HTMLElement) => {
+  defineModelSelector();
+  const wrapper = Object.assign(document.createElement("div"), { className: "p-6" });
+  const selector = document.createElement("kind-model-selector");
+  selector.id = "model";
+  selector.models = costModels;
+  selector.defaultValue = "claude-sonnet-5.5";
+  wrapper.append(selector);
+  root.append(wrapper);
+};
+
 export const cases = {
+  cost,
   all: toolbar(),
   plain: toolbar({ plain: true }),
   groups: toolbar({ pages: "groups" }),

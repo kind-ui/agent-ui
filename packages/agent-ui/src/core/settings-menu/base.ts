@@ -93,6 +93,8 @@ export type SettingsMenuChoiceRow = {
   groups: SettingsMenuOptionGroup[];
   /** Items after the options, behind a separator. */
   actions: SettingsMenuAction[];
+  /** A line after the options and actions, behind a separator, like what a model's cost means. */
+  note: string | undefined;
   /** The chosen option's `value`, or `undefined` while none is. */
   value: string | undefined;
 };
@@ -217,6 +219,7 @@ export const settingsChoiceRow = (
     actions?: SettingsMenuAction[];
     /** Whether the options sit in the menu itself. @default false */
     inline?: boolean;
+    note?: string | undefined;
   },
   value: unknown,
 ): SettingsMenuChoiceRow => ({
@@ -228,6 +231,7 @@ export const settingsChoiceRow = (
   options: setting.options,
   groups: setting.inline ? labelledGroups(setting.options, setting.label) : settingsGroups(setting.options),
   actions: setting.actions ?? NO_ACTIONS,
+  note: setting.note || undefined,
   value: setting.options.some((option) => option.value === value && !option.disabled)
     ? (value as string)
     : undefined,

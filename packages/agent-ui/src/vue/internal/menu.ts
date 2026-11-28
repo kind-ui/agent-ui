@@ -68,9 +68,16 @@ export type KindMenuItemContentProps = {
   icon?: unknown;
   label: string;
   description?: string | undefined;
+  /** Trailing text, like a model's cost. */
+  meta?: string | undefined;
+  /** What screen readers hear in place of `meta`. */
+  metaLabel?: string | undefined;
 };
 
-/** A data row's icon and text, the label over an optional description, as menus built on `menuBase` draw them. */
+/**
+ * A data row's icon and text, the label over an optional description, then its trailing `meta`, as menus built on
+ * `menuBase` draw them.
+ */
 export const KindMenuItemContent: FunctionalComponent<KindMenuItemContentProps> = (props) => [
   props.icon !== undefined
     ? h(KindMenuItemIcon, null, {
@@ -82,8 +89,12 @@ export const KindMenuItemContent: FunctionalComponent<KindMenuItemContentProps> 
     h("span", props.label),
     props.description ? h("span", { "data-menu-description": "" }, props.description) : null,
   ]),
+  props.meta
+    ? h("span", { "data-menu-meta": "", "aria-hidden": props.metaLabel ? "true" : undefined }, props.meta)
+    : null,
+  props.meta && props.metaLabel ? h("span", { "data-menu-meta-label": "" }, props.metaLabel) : null,
 ];
-KindMenuItemContent.props = ["icon", "label", "description"];
+KindMenuItemContent.props = ["icon", "label", "description", "meta", "metaLabel"];
 
 // `@ui-sdk/vue` hands a part's state as a proxy that tracks each key read and has no keys of its own, so a spread
 // copies nothing: these read what `menuBase`'s parts hand UI SDK Menu key by key.

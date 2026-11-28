@@ -27,7 +27,7 @@ All 58 components, grouped by the job they do. The item is the React name: add `
 | --- | --- | --- |
 | `model-selector` | Model Selector | A person picks the model from a searchable list grouped by provider. |
 | `reasoning-effort` | Reasoning Effort | A person picks how hard the model thinks, from a few levels. |
-| `context-meter` | Context Meter | You show how full the context window is, with token counts and cost. |
+| `context-meter` | Context Meter | You show how full the context window is, what fills it, and how much of the plan's usage limits is left. |
 | `picker` | Picker | A person chooses from a long, searchable list that doesn't fit a menu. |
 | `add-menu` | Add Menu | A plus button adds files, folders, tools or anything else to the prompt. |
 | `settings-menu` | Settings Menu | A few on and off toggles and choices sit behind one composer button. |
@@ -73,7 +73,7 @@ All 58 components, grouped by the job they do. The item is the React name: add `
 | Item | Component | Use it when |
 | --- | --- | --- |
 | `status` | Status | You show where a run stands as a mark and a word. |
-| `notice` | Notice | You show a calm info, success, warning or error callout, optionally dismissible. |
+| `notice` | Notice | You show a calm info, success, warning or error callout, optionally dismissible, like a usage limit with its reset. |
 | `guardrail-notice` | Guardrail Notice | A guardrail blocked or filtered content and you say why. |
 | `loader` | Loader | Something loads and you need one labeled loading indicator. |
 | `thinking-indicator` | Thinking Indicator | The agent is thinking and nothing has streamed yet. |

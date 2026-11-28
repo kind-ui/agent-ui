@@ -374,3 +374,20 @@ for (const fixture of ["all", "logos"] as const)
       expect((await new AxeBuilder({ page }).include("#root").analyze()).violations).toEqual([]);
     });
   }
+
+test("a model's cost sits at the end of its row, read in words, with the unit explained once below", async ({
+  page,
+}) => {
+  await page.goto("/?c=model-selector&case=cost");
+  await page.locator('[data-slot="kind-model-selector-trigger"]').click();
+  const opus = page.getByRole("option", { name: /^Claude Opus 5\.5/ });
+  await expect(opus).toHaveAccessibleName(/^Claude Opus 5\.5 ?, 3 times the cost$/);
+  await expect(page.getByRole("option", { name: /^GPT-6 Luna/ })).toHaveAccessibleName(
+    /^GPT-6 Luna ?, Free$/,
+  );
+  await expect(opus.locator("[data-picker-meta]")).toHaveText("3×");
+  await expect(page.locator('[data-picker-part="note"]')).toHaveText(
+    "Cost per request, relative to the default model.",
+  );
+  await expect(page.locator('[data-slot="kind-model-selector-trigger"]')).not.toContainText("×");
+});

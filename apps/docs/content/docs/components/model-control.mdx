@@ -53,6 +53,20 @@ The Model Control doesn't send anything. When your app sends a request, `modelEf
 
 The button keeps its width when the effort changes, since every level's label shares one place and only the chosen one shows. It's named by the `label`, the model and the effort, like "Model, Claude Opus 5.5, Medium effort", or "Model, Claude Opus 5.5" without an effort. `modelLabel` and `effortLabel` head the two sections, "Model" and "Effort" by default; models with a `group` are listed under their group's label instead. `effortLabel` also ends the button's name in lowercase.
 
+### Cost
+
+Give a model a `cost`, like `"1×"`, `"3×"` or `"Free"`, to show it at the end of the model's row in the Model submenu. The button never shows it. While any model has a cost, a line after the models says what it means, "Cost per request, relative to the default model."; pass `costNote` to write your own, or `""` to hide it. Screen readers hear the cost after the model's name, like ", 3 times the cost"; pass `costName` to say it another way.
+
+```tsx
+const models = [
+  { id: "claude-sonnet-5.5", name: "Claude Sonnet 5.5", cost: "1×" },
+  { id: "claude-opus-5.5", name: "Claude Opus 5.5", cost: "3×" },
+  { id: "mai-code-2-flash", name: "MAI Code 2 Flash", cost: "Free" },
+];
+
+<ModelControl models={models} model={model} onModelChange={setModel} levels={levels} />
+```
+
 ### Actions
 
 Pass `actions` and `onAction` to add items after the models, like **More models**. They show only while `onAction` is set. Choosing one closes the menu, and `onAction` gets its `id` with the reason `item-press`; call `details.cancel()` to keep the menu open.
@@ -86,5 +100,5 @@ An agent connected with `createAgent` finds the model control by its name, like 
 <auto-type-table path="../../../../../packages/agent-ui/src/core/model-control/model-control.ts" name="ModelControlAgentActions" type='Pick<ModelControlApi, "open" | "close" | "toggle" | "setValue" | "setModel" | "setEffort" | "run">' />
 
 <Caption>
-  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-model-control>`, set `models`, `levels`, `actions`, `settings`, `defaultModel` and `defaultValues` as properties; `model`, `effort` and `values` are live properties. Set `default-effort`, `label`, `model-label`, `effort-label` and `presentation` as attributes, and listen for `modelchange`, `effortchange`, `valueschange`, with the setting as `event.detail.id`, and `openchange`. Add the `can-run` attribute to listen for `modelaction`. A model's `icon` is an image URL or an Element. The element fills in its button and menu when it has no children.
+  Runs in React, Vue, Svelte, Solid and Web Components. On `<kind-model-control>`, set `models`, `levels`, `actions`, `settings`, `defaultModel`, `defaultValues` and `costName` as properties; `model`, `effort` and `values` are live properties. Set `default-effort`, `label`, `model-label`, `effort-label`, `cost-note` and `presentation` as attributes, and listen for `modelchange`, `effortchange`, `valueschange`, with the setting as `event.detail.id`, and `openchange`. Add the `can-run` attribute to listen for `modelaction`. A model's `icon` is an image URL or an Element. The element fills in its button and menu when it has no children.
 </Caption>

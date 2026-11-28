@@ -59,7 +59,12 @@ function choices(row: ChoiceRow) {
               h(KindMenuItemIndicator, { keepMounted: true }, () =>
                 h("span", { "data-menu-check": "", "aria-hidden": "true" }),
               ),
-              h(KindMenuItemContent, { icon: option.icon, label: option.label }),
+              h(KindMenuItemContent, {
+                icon: option.icon,
+                label: option.label,
+                meta: option.meta,
+                metaLabel: option.metaLabel,
+              }),
             ],
           ),
         );
@@ -86,6 +91,10 @@ function choices(row: ChoiceRow) {
         () => h(KindMenuItemContent, { icon: action.icon, label: action.label }),
       ),
     ),
+    // Each row's name says its cost in words, so the note is for the eye.
+    ...(row.note
+      ? [h(KindMenuSeparator), h("span", { "data-menu-note": "", "aria-hidden": "true" }, row.note)]
+      : []),
   ];
 }
 

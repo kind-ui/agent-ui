@@ -23,6 +23,7 @@ const consumers: Record<string, string> = {
   "chain-of-thought/chain-of-thought.ts": "kind-chain-of-thought-item-icon",
   "status/status.ts": "kind-status-icon",
   "confirmation/confirmation.ts": "kind-confirmation-outcome-icon",
+  "context-meter/context-meter.ts": "kind-context-meter-compacting-icon",
   "feedback/feedback.ts": "kind-feedback-comment-status-icon",
   "notice/base.ts": "kind-notice-icon",
   "question/question.ts": "kind-question-summary-icon",
@@ -178,6 +179,12 @@ const pages: { url: string; slots: string[]; show?: (page: Page) => Promise<unkn
   // wave-6-task-9: Message author, time and outcomes
 
   { url: "/?c=message&case=outcomes", slots: ["kind-message-outcome-icon"] },
+
+  {
+    url: "/?c=context-meter&case=compacting",
+    slots: ["kind-context-meter-compacting-icon"],
+    show: (page) => page.locator('[data-slot="kind-context-meter-trigger"]').click(),
+  },
 
   // wave-6-task-10: Conversation states
 

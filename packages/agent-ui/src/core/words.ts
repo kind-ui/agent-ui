@@ -65,6 +65,23 @@ export const WORDS = {
   undoing: "Undoing…",
   allReviewed: "All changes reviewed",
   cantBeUndone: "This can't be undone.",
+  percentFull: "% full",
+  fillingUp: "Filling up",
+  almostFull: "Almost full",
+  compact: "Compact",
+  compacting: "Compacting",
+  compactsAt: "compacts at",
+  freeSpace: "Free space",
+  runningLow: "Running low",
+  aheadOfPace: "Ahead of pace",
+  onPace: "On pace",
+  resets: "Resets",
+  used: "used",
+  sendAgain: "You can send messages again",
+  limitReset: "Your limit has reset.",
+  timesTheCost: "times the cost",
+  sameCost: "the same cost",
+  costNote: "Cost per request, relative to the default model.",
 } as const;
 
 /**

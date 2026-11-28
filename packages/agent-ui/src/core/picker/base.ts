@@ -181,6 +181,8 @@ export type PickerBaseState = PopupState & {
   disabled: boolean;
   /** The `motion` option. */
   motion: MotionMode;
+  /** A line under the list, like what a model's cost means, from the component's `note`; empty renders none. */
+  note: string;
   /** What the search field holds on the current page. */
   query: string;
   /** The open pages, by the `value` of the item that opened each, from the first. Empty on the first page. */
@@ -293,6 +295,7 @@ export type PickerBaseSlots<State extends PickerBaseState, Api extends PickerBas
   viewport: Slot<State, Api>;
   command: Slot<State, Api, BaseSlotProps, PickerCommandState>;
   item: Slot<State, Api, BaseSlotProps & { value?: string }, PickerItemState>;
+  note: Slot<State, Api, BaseSlotProps, { note: string }>;
 };
 
 export type PickerBaseConfig<Options extends PickerBaseOptions> = {
@@ -351,6 +354,8 @@ export type PickerBaseConfig<Options extends PickerBaseOptions> = {
     actions: PickerAction<unknown>[],
     query: string,
   ) => { items: PickerItem<unknown>[]; actions: PickerAction<unknown>[]; matched: boolean };
+  /** A line under the list, read whenever the options change; empty renders none. */
+  note?: (options: Options) => string;
   /** The footer rows and what running one calls, in place of the `actions` and `onAction` options. */
   actions?: {
     /** The footer rows, read whenever the options change. */
@@ -408,6 +413,7 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
       statusText: statusText(options),
       disabled: options.disabled ?? false,
       motion: options.motion ?? "auto",
+      note: config.note?.(options) ?? "",
     };
   };
   const leafOf = (state: PickerBaseState, value: string | null) =>
@@ -788,6 +794,11 @@ export const pickerBase = <Options extends PickerBaseOptions>(config: PickerBase
               "data-opens": item?.row.opens ? "" : undefined,
             };
           },
+        }),
+        note: slot<BaseSlotProps, { note: string }>({
+          present: (state) => state.note !== "",
+          state: (state) => ({ note: state.note }),
+          attrs: () => ({ "data-picker-part": "note" }),
         }),
       };
     },

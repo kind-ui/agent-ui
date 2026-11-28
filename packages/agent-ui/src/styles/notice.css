@@ -51,6 +51,7 @@
   }
 
   [data-notice-part="title"],
+  [data-notice-part="reset"],
   [data-notice-part="description"],
   [data-notice-part="actions"] {
     grid-column: 2;
@@ -58,6 +59,16 @@
 
   [data-notice-part="title"] {
     font-weight: var(--kind-font-weight-semibold);
+  }
+
+  /* When the limit resets, in the description's voice, before the host's own text. */
+  [data-notice-part="reset"] {
+    margin: 0;
+    color: var(--kind-color-muted);
+
+    &[hidden] {
+      display: none;
+    }
   }
 
   [data-notice-part="description"] {

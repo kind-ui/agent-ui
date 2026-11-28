@@ -60,7 +60,12 @@ function Choices({ row }: { row: ChoiceRow }) {
               <KindMenuItemIndicator keepMounted>
                 <span data-menu-check="" aria-hidden="true" />
               </KindMenuItemIndicator>
-              <KindMenuItemContent icon={option.icon} label={option.label} />
+              <KindMenuItemContent
+                icon={option.icon}
+                label={option.label}
+                meta={option.meta}
+                metaLabel={option.metaLabel}
+              />
             </KindMenuRadioItem>
           ));
           // A labelled group sits inside the one radio group, which UI SDK keys by the setting's `id`.
@@ -86,6 +91,15 @@ function Choices({ row }: { row: ChoiceRow }) {
           <KindMenuItemContent icon={action.icon} label={action.label} />
         </KindMenuItem>
       ))}
+      {row.note ? (
+        <>
+          <KindMenuSeparator />
+          {/* Each row's name says its cost in words, so the note is for the eye. */}
+          <span data-menu-note="" aria-hidden="true">
+            {row.note}
+          </span>
+        </>
+      ) : null}
     </>
   );
 }

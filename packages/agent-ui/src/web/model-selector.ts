@@ -65,5 +65,6 @@ declare global {
     "kind-model-selector-viewport": HTMLElement;
     "kind-model-selector-command": HTMLElement;
     "kind-model-selector-item": HTMLElement;
+    "kind-model-selector-note": HTMLElement;
   }
 }

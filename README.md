@@ -232,7 +232,7 @@ const rendered = fromUIMessages(messages, { status, error });
 | [Model Selector](https://kindui.dev/docs/agent-ui/components/model-selector/) | Pick the model that answers, from a button that opens a searchable list grouped by provider. |
 | [Reasoning Effort](https://kindui.dev/docs/agent-ui/components/reasoning-effort/) | Choose how hard the model thinks, from a row of levels. |
 | [Suggestion](https://kindui.dev/docs/agent-ui/components/suggestion/) | Prompts a person can send in one press. |
-| [Context Meter](https://kindui.dev/docs/agent-ui/components/context-meter/) | How full the context window is, with token counts and cost. |
+| [Context Meter](https://kindui.dev/docs/agent-ui/components/context-meter/) | How full the context window is, what fills it, and how much of the plan's usage limits is left. |
 | [Feedback](https://kindui.dev/docs/agent-ui/components/feedback/) | Rate a response and optionally leave a comment. |
 | [Notice](https://kindui.dev/docs/agent-ui/components/notice/) | A calm callout for info, success, a warning or an error. |
 | [Guardrail Notice](https://kindui.dev/docs/agent-ui/components/guardrail-notice/) | Shows that a guardrail blocked or filtered content, with the policy reason. |

@@ -17,7 +17,7 @@ import type { AttributeProperties, UiChangeEvent, UiElement } from "@ui-sdk/web/
 import { defineInternalCommand } from "./internal/command.js";
 
 const defaultParts = (tag: string) =>
-  `<${tag}-trigger><button></button></${tag}-trigger><${tag}-content hidden><${tag}-command><kind-internal-command><ui-command><ui-command-input><input data-agent-hidden></ui-command-input><ui-command-empty></ui-command-empty><ui-command-list></ui-command-list></ui-command></kind-internal-command></${tag}-command></${tag}-content>`;
+  `<${tag}-trigger><button></button></${tag}-trigger><${tag}-content hidden><${tag}-command><kind-internal-command><ui-command><ui-command-input><input data-agent-hidden></ui-command-input><ui-command-empty></ui-command-empty><ui-command-list></ui-command-list></ui-command></kind-internal-command></${tag}-command><${tag}-note></${tag}-note></${tag}-content>`;
 
 type PickerIcon = string | Element;
 
@@ -95,7 +95,19 @@ const drawItem = (
     part.replaceChildren(
       ...(iconEl ? [iconEl] : []),
       text,
-      ...(row.meta ? [element(document, "span", { "data-picker-meta": "" }, row.meta)] : []),
+      ...(row.meta
+        ? [
+            element(
+              document,
+              "span",
+              row.metaLabel ? { "data-picker-meta": "", "aria-hidden": "true" } : { "data-picker-meta": "" },
+              row.meta,
+            ),
+          ]
+        : []),
+      ...(row.meta && row.metaLabel
+        ? [element(document, "span", { "data-picker-meta-label": "" }, row.metaLabel)]
+        : []),
       ...(trailing?.(document, row) ?? []),
       element(document, "span", { "data-picker-mark": "" }),
     );
@@ -233,7 +245,7 @@ export function pickerElements<P extends Primitive>(
   events: Record<string, string>,
   config: PickerElementsConfig<P> = {},
 ): { root: RootOptions<P> } & Record<
-  "trigger" | "content" | "viewport" | "command" | "item",
+  "trigger" | "content" | "viewport" | "command" | "item" | "note",
   string | PartOptions<P>
 > {
   const can = config.can ?? { canRun: "onAction" };
@@ -326,6 +338,11 @@ export function pickerElements<P extends Primitive>(
             const list = command.querySelector("ui-command-list");
             if (list) drawList(list, commandState.pages, `${tag}-item`);
           }
+          const note = el.querySelector(`${tag}-note`);
+          if (note && (owned.has(note) || !note.firstChild)) {
+            owned.add(note);
+            if (note.textContent !== state.note) note.textContent = state.note;
+          }
           for (const part of el.querySelectorAll(`${tag}-command ${tag}-item`)) {
             // An item written empty fills itself in, as React's bare `PickerItem` does.
             if (!owned.has(part) && part.firstChild) continue;
@@ -344,6 +361,7 @@ export function pickerElements<P extends Primitive>(
     viewport: `${tag}-viewport`,
     command: { tag: `${tag}-command`, display: "contents" },
     item: `${tag}-item`,
+    note: `${tag}-note`,
   };
 }
 
@@ -404,5 +422,6 @@ declare global {
     "kind-picker-viewport": HTMLElement;
     "kind-picker-command": HTMLElement;
     "kind-picker-item": HTMLElement;
+    "kind-picker-note": HTMLElement;
   }
 }
