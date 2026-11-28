@@ -121,7 +121,9 @@ test("a failed Undo says so beside the row's buttons, which stay", async ({ page
   await page.goto("/?c=diff&case=live");
   await page.getByRole("button", { name: `Undo ${SESSION}` }).click();
   await host(page, (handle) => handle.reject());
-  await expect(page.locator('[data-slot="kind-diff-file-error"]')).toHaveText("Couldn't undo session.ts");
+  await expect(page.locator('[data-slot="kind-diff-file-error"]:not([hidden])')).toHaveText(
+    "Couldn't undo session.ts",
+  );
   await expect(page.getByRole("button", { name: `Undo ${SESSION}` })).toBeAttached();
 });
 
