@@ -38,6 +38,7 @@
     "confirmationPrimitive": 43200,
     "toolPrimitive": 11800,
     "stepGroupPrimitive": 11600,
-    "diffPrimitive": 28800
+    "diffPrimitive": 28800,
+    "checkpointPrimitive": 42000
   }
 }

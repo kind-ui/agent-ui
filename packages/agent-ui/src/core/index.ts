@@ -72,9 +72,13 @@ export {
 } from "./chain-of-thought/index.js";
 export {
   type CheckpointApi,
+  type CheckpointChanges,
   type CheckpointDialogState,
   type CheckpointOptions,
   type CheckpointPrimitive,
+  type CheckpointRestoreDetails,
+  type CheckpointScope,
+  type CheckpointScopeState,
   type CheckpointState,
   checkpointPrimitive,
 } from "./checkpoint/index.js";

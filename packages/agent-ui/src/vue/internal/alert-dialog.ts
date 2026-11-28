@@ -17,7 +17,7 @@ export const KindAlertDialogBackdrop = withKindClass(
 );
 export const KindAlertDialogContent = withKindClass(
   AlertDialogContent,
-  "fixed inset-0 z-50 m-auto flex h-fit max-h-[calc(100dvh-2rem)] w-[min(26rem,calc(100%-2rem))] flex-col gap-2 overflow-y-auto rounded-[var(--kind-dialog-radius)] bg-[var(--kind-color-raised)] p-6 text-[length:var(--kind-text-md)]/5 text-[var(--kind-color-fg)] shadow-[var(--kind-shadow-dialog)] outline-hidden",
+  "fixed inset-0 z-50 m-[var(--kind-alert-dialog-margin,auto)] flex h-fit max-h-[calc(100dvh-2rem)] w-[var(--kind-alert-dialog-width,min(26rem,calc(100%-2rem)))] flex-col gap-2 overflow-y-auto rounded-[var(--kind-alert-dialog-radius,var(--kind-dialog-radius))] bg-[var(--kind-color-raised)] p-6 text-[length:var(--kind-text-md)]/5 text-[var(--kind-color-fg)] shadow-[var(--kind-shadow-dialog)] outline-hidden",
   "KindAlertDialogContent",
 );
 export const KindAlertDialogTitle = withKindClass(

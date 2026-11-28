@@ -1,5 +1,10 @@
-import { type CheckpointDialogState, checkpointPrimitive } from "@kind-ui/agent-ui/core";
+import {
+  type CheckpointDialogState,
+  type CheckpointScopeState,
+  checkpointPrimitive,
+} from "@kind-ui/agent-ui/core";
 import { createParts } from "@ui-sdk/vue/primitive";
+import type { RadioGroupController } from "@ui-sdk/vue/radio";
 import { defineComponent, Fragment, h, type VNode } from "vue";
 import {
   KindAlertDialog,
@@ -9,6 +14,7 @@ import {
   KindAlertDialogTitle,
   KindAlertDialogTrigger,
 } from "./internal/alert-dialog.js";
+import { KindRadio, KindRadioGroup, KindRadioIndicator } from "./internal/radio.js";
 import { KindTooltip, KindTooltipContent, KindTooltipTrigger } from "./internal/tooltip.js";
 
 const parts = createParts(checkpointPrimitive, {
@@ -18,6 +24,8 @@ const parts = createParts(checkpointPrimitive, {
   line: "span",
   restore: "div",
   restored: "span",
+  scope: "div",
+  compare: "button",
   error: "span",
   cancel: "button",
   confirm: "button",
@@ -110,13 +118,15 @@ export const CheckpointRestore = defineComponent({
             busy: state.busy,
             initialFocus: state.initialFocus,
             title: state.title,
+            point: state.point,
             description: state.description,
+            note: state.note,
           };
           if (slots.default) return slots.default({ state: dialog });
-          const { controller, dismissible, busy, initialFocus, title, description } = dialog;
+          const { controller, dismissible, ...rest } = dialog;
           return h(KindAlertDialog, { controller, dismissible }, () => [
             restoreTrigger(),
-            h(CheckpointDialog, { busy, initialFocus, title, description }),
+            h(CheckpointDialog, rest),
           ]);
         },
       });
@@ -125,17 +135,23 @@ export const CheckpointRestore = defineComponent({
 
 const answers = () =>
   h("div", { "data-checkpoint-answers": "" }, [
+    h(CheckpointCompare),
     h(CheckpointError),
     h(CheckpointCancel),
     h(CheckpointConfirm),
   ]);
 
-/** The dialog's backdrop and content: its title, description and answers, unless you pass a default slot. */
+/**
+ * The dialog's backdrop and content: its title, the checkpoint's description, the scope, the loss sentence as its
+ * description, and the answers, unless you pass a default slot, which replaces the scope and the answers.
+ */
 export const CheckpointDialog = defineComponent({
   name: "CheckpointDialog",
   props: {
     title: { type: String, required: true },
+    point: { type: String, required: true },
     description: { type: String, required: true },
+    note: { type: String, required: true },
     initialFocus: { type: String, required: true },
     busy: { type: Boolean, default: undefined },
   },
@@ -148,15 +164,92 @@ export const CheckpointDialog = defineComponent({
           { initialFocus: props.initialFocus, "aria-busy": props.busy || undefined },
           () => [
             h(KindAlertDialogTitle, null, () => props.title),
-            h(KindAlertDialogDescription, null, () => props.description),
-            slots.default ? slots.default() : answers(),
+            props.point ? h("p", { "data-checkpoint-point": "" }, props.point) : null,
+            ...(slots.default
+              ? [slots.default()]
+              : [
+                  h(CheckpointScope),
+                  h(CheckpointLoss, { description: props.description, note: props.note }),
+                  answers(),
+                ]),
           ],
         ),
       ]);
   },
 });
 
-/** "Restored" with a check, in Restore's place once the host restores the checkpoint, unless you pass a default slot. */
+/** The loss sentence, then the note, as the dialog's description, so both are read as it opens. */
+export const CheckpointLoss = defineComponent({
+  name: "CheckpointLoss",
+  props: {
+    description: { type: String, required: true },
+    note: { type: String, required: true },
+  },
+  setup(props) {
+    return () =>
+      h(KindAlertDialogDescription, { "data-checkpoint-loss": "" }, () => [
+        h("span", { "data-checkpoint-loss-text": "" }, props.description),
+        h("span", { "data-checkpoint-note": "" }, props.note),
+      ]);
+  },
+});
+
+/**
+ * "Restore" and a radio per scope, unless you pass a default slot, which gets the Radio group's props as `state`.
+ * Rendered only while the host offers more than one scope.
+ */
+export const CheckpointScope = defineComponent({
+  name: "CheckpointScope",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () =>
+      h(parts.Scope, attrs, {
+        ...slots,
+        default:
+          slots.default ??
+          (({ state }: Scope<CheckpointScopeState>) => [
+            h("span", { "aria-hidden": "true", "data-checkpoint-scope-label": "" }, state.label),
+            h(
+              KindRadioGroup,
+              {
+                // Vue's Radio group takes a string controller, not the scope union core's is typed with.
+                controller: state.controller as RadioGroupController,
+                defaultValue: state.defaultValue,
+                "aria-label": state.label,
+                "data-agent-hidden": "",
+              },
+              () =>
+                state.options.map((option) =>
+                  h("label", { key: option.value, "data-checkpoint-option": "" }, [
+                    h(KindRadio, { value: option.value }, () => h(KindRadioIndicator)),
+                    option.label,
+                  ]),
+                ),
+            ),
+          ]),
+      });
+  },
+});
+
+/** Calls `onCompare`. Reads "Compare" with its icon unless you pass a default slot. Rendered only with `onCompare`. */
+export const CheckpointCompare = defineComponent({
+  name: "CheckpointCompare",
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () =>
+      h(parts.Compare, attrs, {
+        ...slots,
+        default:
+          slots.default ??
+          (() => [h("span", { "data-checkpoint-compare-icon": "", "aria-hidden": "true" }), "Compare"]),
+      });
+  },
+});
+
+/**
+ * "Restored code and conversation" with a check and what it brought back, in Restore's place once the host restores
+ * the checkpoint, unless you pass a default slot.
+ */
 export const CheckpointRestored = defineComponent({
   name: "CheckpointRestored",
   inheritAttrs: false,
@@ -166,9 +259,10 @@ export const CheckpointRestored = defineComponent({
         ...slots,
         default:
           slots.default ??
-          (() => [
+          (({ state }: Scope<{ outcome: string; meta: string }>) => [
             h("span", { "aria-hidden": "true", "data-status-mark": "", "data-status": "complete" }),
-            "Restored",
+            state.outcome,
+            state.meta ? h("span", { "data-checkpoint-outcome-meta": "" }, state.meta) : null,
           ]),
       });
   },

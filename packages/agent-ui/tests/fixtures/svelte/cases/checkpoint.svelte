@@ -1,10 +1,10 @@
 <script module lang="ts">
   import type { AgentAction } from "@ui-sdk/svelte/agent";
-  import { checkpointHost } from "../../shared/checkpoint.js";
+  import { checkpointHost, SCOPED } from "../../shared/checkpoint.js";
 
-  export const variants = ["all", "reduced"];
+  export const variants = ["all", "reduced", "scoped"];
 
-  const { host, restore } = checkpointHost();
+  const { host, restore, compare } = checkpointHost();
 
   export const allow = (step: AgentAction) => !step.confirm || host.permit;
 </script>
@@ -28,5 +28,6 @@
     onRestore={restore}
     {restored}
     motion={variant === "reduced" ? "reduced" : undefined}
+    {...(variant === "scoped" ? { ...SCOPED, onCompare: compare } : {})}
   /><p id="below">Below</p>
 </div>

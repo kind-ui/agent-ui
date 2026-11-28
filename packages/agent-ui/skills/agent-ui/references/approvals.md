@@ -66,7 +66,7 @@ Run the action only after `onApprove`, on your server if it matters. A new reque
 | --- | --- | --- |
 | Plan | to start a proposed plan | `onAccept`, then `accepted` once recorded |
 | Question | answers the agent needs before it goes on | `questions`, `onSubmit`, `onSkip`, then `submitted` |
-| Checkpoint | to restore the chat to an earlier point | `onRestore`, then `restored` |
+| Checkpoint | to restore the code, the conversation or both to an earlier point | `onRestore` (its `details.scope`), then `restored`; `scopes`, `changes` and `laterMessages` for what's lost |
 | Subagent | to stop a subagent | `onCancel` |
 | Approval Mode | how much the agent may do without asking | `modes` (mark the risky one `danger: true`), `value`, `onValueChange` |
 

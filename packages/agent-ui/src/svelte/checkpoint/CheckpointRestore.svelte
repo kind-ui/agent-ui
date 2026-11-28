@@ -13,7 +13,7 @@
   let { children, ...props }: ComponentProps<typeof parts.Restore> = $props();
 </script>
 
-{#snippet fallback({ controller, dismissible, title, description, initialFocus, busy }: CheckpointDialogState)}
+{#snippet fallback({ controller, dismissible, title, point, description, note, initialFocus, busy }: CheckpointDialogState)}
   <KindAlertDialog {controller} {dismissible}>
     <KindTooltip type="label">
       <KindTooltipTrigger data-checkpoint-trigger="" data-kind-icon-button="">
@@ -21,7 +21,7 @@
       </KindTooltipTrigger
       ><KindTooltipContent>Restore checkpoint</KindTooltipContent>
     </KindTooltip
-    ><CheckpointDialog {title} {description} {initialFocus} {busy} />
+    ><CheckpointDialog {title} {point} {description} {note} {initialFocus} {busy} />
   </KindAlertDialog>
 {/snippet}
 

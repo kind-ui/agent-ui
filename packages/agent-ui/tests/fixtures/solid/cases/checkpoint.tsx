@@ -2,14 +2,14 @@ import type { CheckpointOptions } from "@kind-ui/agent-ui/core";
 import type { AgentAction } from "@ui-sdk/solid/agent";
 import { createSignal, onSettled } from "solid-js";
 import { Checkpoint } from "../../../../src/solid/checkpoint.js";
-import { checkpointHost } from "../../shared/checkpoint.js";
+import { checkpointHost, SCOPED } from "../../shared/checkpoint.js";
 import { expose } from "../../shared/expose.js";
 
-const { host, restore } = checkpointHost();
+const { host, restore, compare } = checkpointHost();
 
 export const allow = (step: AgentAction) => !step.confirm || host.permit;
 
-function Checkpoints(props: { motion?: CheckpointOptions["motion"] }) {
+function Checkpoints(props: { motion?: CheckpointOptions["motion"]; scoped?: boolean }) {
   const [restored, setRestored] = createSignal(false);
   onSettled(() =>
     expose({ kindHost: host, kindCheckpoint: { restore: (next: boolean) => setRestored(next) } }),
@@ -19,14 +19,18 @@ function Checkpoints(props: { motion?: CheckpointOptions["motion"] }) {
       <p id="above">Above</p>
       <Checkpoint
         id="checkpoint"
-        description="Before editing auth.ts"
         onRestore={restore}
         restored={restored()}
         motion={props.motion}
+        {...(props.scoped ? { ...SCOPED, onCompare: compare } : { description: "Before editing auth.ts" })}
       />
       <p id="below">Below</p>
     </div>
   );
 }
 
-export const cases = { all: () => <Checkpoints />, reduced: () => <Checkpoints motion="reduced" /> };
+export const cases = {
+  all: () => <Checkpoints />,
+  reduced: () => <Checkpoints motion="reduced" />,
+  scoped: () => <Checkpoints scoped />,
+};

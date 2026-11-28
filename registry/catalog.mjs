@@ -97,10 +97,11 @@ export const components = {
   },
   checkpoint: {
     group: "steps",
-    when: "a person can restore the conversation to an earlier point, after a dialog asks first.",
+    when: "a person can restore the code, the conversation or both to an earlier point, after a dialog says what's lost.",
     title: "Checkpoint",
-    description: "A marker in the conversation that restores to that point, after a dialog asks first.",
-    uses: ["internal-alert-dialog", "internal-tooltip"],
+    description:
+      "A marker in the conversation that restores to that point, after a dialog asks what to restore and says what's lost.",
+    uses: ["internal-alert-dialog", "internal-radio", "internal-tooltip"],
   },
   "model-selector": {
     group: "composer",

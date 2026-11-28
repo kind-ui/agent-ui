@@ -51,7 +51,7 @@ All 58 components, grouped by the job they do. The item is the React name: add `
 | `queue` | Queue | Prompts wait their turn, and a person can reorder, send now, edit or clear them; inside a Composer it docks to its top edge. |
 | `confirmation` | Confirmation | An action that isn't a tool call needs a person to approve or deny it. |
 | `question` | Question | The agent asks a person to choose an option or write an answer before it goes on. |
-| `checkpoint` | Checkpoint | A person can restore the conversation to an earlier point, after a dialog asks first. |
+| `checkpoint` | Checkpoint | A person can restore the code, the conversation or both to an earlier point, after a dialog says what's lost. |
 
 ## Developer output
 

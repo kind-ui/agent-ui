@@ -74,7 +74,7 @@ export const parityPages: Record<string, readonly ParityPage[]> = {
       interaction: press('[data-slot="kind-chain-of-thought-item-trigger"]'),
     },
   ],
-  checkpoint: [checkpoint],
+  checkpoint: [checkpoint, { ...checkpoint, case: "scoped" }],
   "code-block": [
     { c: "markdown", case: "highlight", interaction: press('[data-slot="kind-code-block-wrap"]') },
     { c: "markdown", case: "code-stream" },

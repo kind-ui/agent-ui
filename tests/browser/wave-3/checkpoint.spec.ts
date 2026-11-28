@@ -3,7 +3,11 @@ import { expect, type Page, test } from "@playwright/test";
 import { expectAgentActions } from "../agent-snapshot.js";
 
 type Fixture = {
-  kindHost: { restores: { source: string; resolve(): void; reject(): void }[]; permit: boolean };
+  kindHost: {
+    restores: { source: string; scope: string; resolve(): void; reject(): void }[];
+    compares: string[];
+    permit: boolean;
+  };
   kindCheckpoint: { restore(restored: boolean): void };
   kindAnnounced: string[];
   agent: { act(input: unknown): Promise<unknown> };
@@ -13,7 +17,7 @@ const checkpoint = (page: Page) => page.locator("#checkpoint");
 const trigger = (page: Page) => checkpoint(page).getByRole("button", { name: "Restore checkpoint" });
 // Firefox crashes running axe after a role query on these triggers (web decisions.md), so axe tests use this.
 const triggerButton = (page: Page) => checkpoint(page).locator("[data-checkpoint-trigger]");
-const dialog = (page: Page) => page.getByRole("alertdialog", { name: "Restore this checkpoint?" });
+const dialog = (page: Page) => page.getByRole("alertdialog", { name: "Restore to this point?" });
 const confirm = (page: Page) => dialog(page).getByRole("button", { name: "Restore" });
 const cancel = (page: Page) => dialog(page).getByRole("button", { name: "Cancel" });
 const part = (page: Page, name: string) =>
@@ -26,13 +30,13 @@ const settle = (page: Page, index: number, outcome: "resolve" | "reject") =>
     outcome,
   ] as const);
 const announced = (page: Page) => page.evaluate(() => (window as unknown as Fixture).kindAnnounced);
-const act = (page: Page, action: string) =>
+const act = (page: Page, action: string, args: unknown[] = []) =>
   page.evaluate(
-    (a) =>
+    ([a, rest]) =>
       (window as unknown as Fixture).agent
-        .act({ steps: [{ ref: "Checkpoint", action: a, args: [] }] })
+        .act({ steps: [{ ref: "Checkpoint", action: a, args: rest }] })
         .then(JSON.stringify, (error: Error) => error.message),
-    action,
+    [action, args] as const,
   );
 const settled = (page: Page) =>
   page.waitForFunction(() =>
@@ -181,6 +185,71 @@ test("an agent's restore needs a person, then opens the dialog and restores noth
   await expectAgentActions(page, "Checkpoint", ["restore", "press"]);
 });
 
+test("the scope chooses what to restore, and the loss sentence and note follow it", async ({ page }) => {
+  await open(page, "scoped");
+  await trigger(page).click();
+  const scopes = dialog(page).getByRole("radiogroup", { name: "Restore" });
+  await expect(dialog(page)).toHaveAccessibleDescription(
+    "Undoes changes to 3 files (+12 \u221240) and removes 4 later messages. Code from 2 messages can't be restored.",
+  );
+  await expect(
+    dialog(page).getByText("Before \u201cSwitch to the session table\u201d, 4 min ago."),
+  ).toBeVisible();
+  await expect(scopes.getByRole("radio", { name: "Code and conversation" })).toBeChecked();
+  await scopes.getByRole("radio", { name: "Code and conversation" }).focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(scopes.getByRole("radio", { name: "Code only" })).toBeChecked();
+  await expect(dialog(page)).toHaveAccessibleDescription(
+    "Undoes changes to 3 files (+12 \u221240). The conversation stays. Code from 2 messages can't be restored.",
+  );
+  await scopes.getByText("Conversation only").click();
+  await expect(dialog(page)).toHaveAccessibleDescription("Removes 4 later messages. The code stays.");
+  await confirm(page).click();
+  expect(await page.evaluate(() => (window as unknown as Fixture).kindHost.restores[0]?.scope)).toBe(
+    "conversation",
+  );
+  await settle(page, 0, "resolve");
+  await page.evaluate(() => (window as unknown as Fixture).kindCheckpoint.restore(true));
+  await expect(part(page, "restored")).toHaveText("Restored conversation4 messages");
+  await expect(part(page, "restored").locator("[data-checkpoint-outcome-meta]")).toHaveText("4 messages");
+});
+
+test("Compare calls the host and keeps the dialog open", async ({ page }) => {
+  await open(page, "scoped");
+  await trigger(page).click();
+  await dialog(page).getByRole("button", { name: "Compare" }).click();
+  await expect(dialog(page)).toBeVisible();
+  expect(await page.evaluate(() => (window as unknown as Fixture).kindHost.compares)).toEqual(["mouse"]);
+});
+
+test("an open dialog offers the agent setScope and compare, and refuses an unknown scope", async ({
+  page,
+}) => {
+  await open(page, "scoped");
+  await trigger(page).click();
+  await expectAgentActions(page, "Checkpoint", ["setScope", "compare", "press"]);
+  await page.evaluate(() => {
+    (window as unknown as Fixture).kindHost.permit = true;
+  });
+  expect(await act(page, "setScope", ["everything"])).not.toContain('"ok":true');
+  expect(await act(page, "setScope", ["code"])).toContain('"ok":true');
+  await expect(dialog(page).getByRole("radio", { name: "Code only" })).toBeChecked();
+  expect(await act(page, "compare")).toContain('"ok":true');
+  expect(await page.evaluate(() => (window as unknown as Fixture).kindHost.compares)).toEqual(["agent"]);
+});
+
+test("narrow, the dialog docks to the bottom as a sheet", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await open(page, "scoped");
+  await trigger(page).click();
+  const content = page.locator('[data-slot="alert-dialog-content"]');
+  await expect(content).toBeVisible();
+  await settled(page);
+  const box = await content.boundingBox();
+  expect(box && Math.round(box.y + box.height)).toBe(844);
+  expect(box?.width).toBe(390);
+});
+
 for (const [name, fixture, reducedMotion] of [
   ["the motion option", "reduced", null],
   ["prefers-reduced-motion", "all", "reduce"],
@@ -206,7 +275,7 @@ for (const [name, fixture, reducedMotion] of [
 for (const colorScheme of ["light", "dark"] as const) {
   test(`axe reports no violations with the dialog open in ${colorScheme} mode`, async ({ page }) => {
     await page.emulateMedia({ colorScheme, reducedMotion: "reduce" });
-    await open(page);
+    await open(page, "scoped");
     // The fixture page has no background of its own, which axe reads as white.
     await page.addStyleTag({ content: "html { background: var(--kind-color-surface); }" });
     const before = await new AxeBuilder({ page }).include("#root").analyze();
